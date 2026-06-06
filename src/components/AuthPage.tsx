@@ -56,6 +56,7 @@ export function AuthPage({
 
   // Staff specific inputs
   const [staffCode, setStaffCode] = useState(''); // e.g. "STAFF777" to register as staff!
+  const [staffRoleInput, setStaffRoleInput] = useState<'Director' | 'Administrator' | 'Moderator'>('Administrator');
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +111,7 @@ export function AuthPage({
         experience: [],
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
         isStaff: role === 'staff',
+        staffRole: role === 'staff' ? staffRoleInput : undefined,
         userStatus: 'active'
       };
 
@@ -126,13 +128,63 @@ export function AuthPage({
         clientName: role === 'client' ? clientCompanyName || fullName : undefined,
         organization: role === 'auditor' ? auditorOrg || 'State Compliance' : undefined,
         avatar: newGuardProfile.avatar,
-        hourlyRate: newGuardProfile.hourlyRateRequirement
+        hourlyRate: newGuardProfile.hourlyRateRequirement,
+        staffRole: role === 'staff' ? staffRoleInput : undefined
       });
 
     } else {
       // Signing In - search existing guard accounts first, or allow demo entry
       const emailLower = email.toLowerCase();
       
+      // Direct entry override for Director (m.white@signaturesecurityspecialist.com)
+      if (emailLower === 'm.white@signaturesecurityspecialist.com') {
+        if (password !== '#FuckinDstorm11') {
+          setErrorMsg('Invalid password for Director account.');
+          return;
+        }
+
+        const directorId = 'staff-director';
+        const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
+
+        const directorProfile: SecurityGuard = {
+          id: directorId,
+          name: 'M. White',
+          email: 'm.white@signaturesecurityspecialist.com',
+          badgeNumber: 'DIR-00001',
+          avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+          phone: '+1 (555) 999-1111',
+          bio: 'Director & Owner of Signature Security Specialist. Holds master override controls for security audits, dispatch approvals, and staff promotions.',
+          isArmed: true,
+          backgroundChecked: true,
+          verified: true,
+          rating: 5.0,
+          jobsCompleted: 150,
+          certifications: [],
+          experience: [],
+          hourlyRateRequirement: 100,
+          isStaff: true,
+          staffRole: 'Director',
+          userStatus: 'active'
+        };
+
+        // If not already in list, register
+        if (!matchedGuard) {
+          onSignUp(directorProfile, 'staff');
+        }
+
+        onSignIn({
+          id: matchedGuard?.id || directorId,
+          name: 'M. White',
+          email: 'm.white@signaturesecurityspecialist.com',
+          role: 'staff',
+          badgeNumber: 'DIR-00001',
+          avatar: directorProfile.avatar,
+          hourlyRate: 100,
+          staffRole: 'Director'
+        });
+        return;
+      }
+
       // General guard checks
       const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
 
@@ -159,7 +211,8 @@ export function AuthPage({
           role: resolvedRole,
           badgeNumber: matchedGuard.badgeNumber,
           avatar: matchedGuard.avatar,
-          hourlyRate: matchedGuard.hourlyRateRequirement
+          hourlyRate: matchedGuard.hourlyRateRequirement,
+          staffRole: matchedGuard.staffRole || (matchedGuard.isStaff ? 'Administrator' : undefined)
         });
       } else {
         setErrorMsg('Security account is not registered in our database. Please specify a valid email or create a new profile.');
@@ -424,6 +477,21 @@ export function AuthPage({
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 font-mono">Use passcode <strong className="text-slate-350">STAFF777</strong> to unlock administrative privileges in the database.</p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Staff Functional Designation</label>
+                <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2.5 rounded-lg">
+                  <select
+                    className="bg-slate-950 text-xs outline-none text-white w-full border-none cursor-pointer"
+                    value={staffRoleInput}
+                    onChange={(e) => setStaffRoleInput(e.target.value as any)}
+                  >
+                    <option value="Director">Director (Master Controls)</option>
+                    <option value="Administrator">Administrator (Operational Management)</option>
+                    <option value="Moderator">Moderator (Vetting & Compliance)</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}

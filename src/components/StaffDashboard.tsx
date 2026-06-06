@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SecurityGuard, SecurityRequest, Certification } from '../types';
+import { SecurityGuard, SecurityRequest, Certification, SessionUser } from '../types';
 import { 
   Users, 
   Shield, 
@@ -20,7 +20,8 @@ import {
   Loader2,
   Filter,
   CheckCircle,
-  FileCheck
+  FileCheck,
+  UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -36,6 +37,8 @@ interface StaffDashboardProps {
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
   isDbConnected: boolean;
+  currentUser: SessionUser;
+  onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
 }
 
 export function StaffDashboard({
@@ -49,7 +52,9 @@ export function StaffDashboard({
   onRejectCert,
   onRecordAuditViolation,
   onResetAuditFailures,
-  isDbConnected
+  isDbConnected,
+  currentUser,
+  onAddStaffProfile
 }: StaffDashboardProps) {
   const [activeTab, setActiveTab] = useState<'users' | 'requests' | 'claims' | 'audits'>('users');
   const [userSearchText, setUserSearchText] = useState('');
@@ -57,6 +62,15 @@ export function StaffDashboard({
   const [selectedUserFilter, setSelectedUserFilter] = useState<'all' | 'staff' | 'active' | 'suspended' | 'blocked'>('all');
   const [selectedRequestFilter, setSelectedRequestFilter] = useState<'all' | 'open' | 'assigned' | 'completed' | 'cancelled'>('all');
   const [actioningId, setActioningId] = useState<string | null>(null);
+
+  // States for Director onboarding staff members
+  const [onboardName, setOnboardName] = useState('');
+  const [onboardEmail, setOnboardEmail] = useState('');
+  const [onboardBadgeNumber, setOnboardBadgeNumber] = useState('');
+  const [onboardStaffRole, setOnboardStaffRole] = useState<'Director' | 'Administrator' | 'Moderator'>('Administrator');
+  const [onboarding, setOnboarding] = useState(false);
+  const [onboardMsg, setOnboardMsg] = useState('');
+  const [showOnboardForm, setShowOnboardForm] = useState(false);
 
   // Filter Guards / Users
   const filteredGuards = guards.filter(guard => {
@@ -97,6 +111,31 @@ export function StaffDashboard({
       }
     });
   });
+
+  const handleOnboardStaffSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOnboardMsg('');
+    if (!onboardName || !onboardEmail || !onboardBadgeNumber) {
+      setOnboardMsg('❌ All fields are required to onboard staff.');
+      return;
+    }
+    
+    setOnboarding(true);
+    try {
+      await onAddStaffProfile(onboardName, onboardEmail, onboardBadgeNumber, onboardStaffRole);
+      setOnboardMsg(`✅ Successfully onboarded ${onboardName} as ${onboardStaffRole}!`);
+      // Reset fields
+      setOnboardName('');
+      setOnboardEmail('');
+      setOnboardBadgeNumber('');
+      setOnboardStaffRole('Administrator');
+      setTimeout(() => setOnboardMsg(''), 6000);
+    } catch (err: any) {
+      setOnboardMsg(`❌ Failed to onboard staff: ${err?.message || err}`);
+    } finally {
+      setOnboarding(false);
+    }
+  };
 
   const handleToggleStaff = async (guardId: string, currentStatus?: boolean) => {
     setActioningId(`staff-${guardId}`);
@@ -271,6 +310,93 @@ export function StaffDashboard({
               </div>
             </div>
 
+            {/* Director Operator Suite */}
+            {currentUser.staffRole === 'Director' && (
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="w-4 h-4 text-emerald-450" />
+                    <div>
+                      <h4 className="text-xs font-bold font-mono text-emerald-400 uppercase tracking-wider">Director Operations Console</h4>
+                      <p className="text-[11px] text-slate-400">Add or onboard custom Administrator and Moderator personnel accounts directly into database.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowOnboardForm(!showOnboardForm)}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[10px] px-3.5 py-1.5 font-bold transition-all shrink-0 cursor-pointer"
+                  >
+                    {showOnboardForm ? 'CLOSE ONBOARDER' : 'ONBOARD NEW STAFF MEMBER'}
+                  </button>
+                </div>
+
+                {showOnboardForm && (
+                  <form onSubmit={handleOnboardStaffSubmit} className="mt-4 pt-4 border-t border-slate-900 grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fade-in text-white">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-slate-450 uppercase tracking-wider block">Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="John Miller"
+                        required
+                        className="w-full bg-slate-900 border border-slate-800 text-white p-2 rounded text-xs outline-none"
+                        value={onboardName}
+                        onChange={(e) => setOnboardName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-slate-450 uppercase tracking-wider block">Contact Email</label>
+                      <input
+                        type="email"
+                        placeholder="john.m@signaturesecurity.com"
+                        required
+                        className="w-full bg-slate-900 border border-slate-800 text-white p-2 rounded text-xs outline-none"
+                        value={onboardEmail}
+                        onChange={(e) => setOnboardEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-slate-455 uppercase tracking-wider block">Badge ID No</label>
+                      <input
+                        type="text"
+                        placeholder="ADMIN-802"
+                        required
+                        className="w-full bg-slate-900 border border-slate-800 text-white p-2 rounded text-xs outline-none font-mono uppercase"
+                        value={onboardBadgeNumber}
+                        onChange={(e) => setOnboardBadgeNumber(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-slate-455 uppercase tracking-wider block">Operational Role</label>
+                      <select
+                        className="w-full bg-slate-900 border border-slate-800 text-white p-2 rounded text-xs outline-none cursor-pointer"
+                        value={onboardStaffRole}
+                        onChange={(e) => setOnboardStaffRole(e.target.value as any)}
+                      >
+                        <option value="Administrator">Administrator (Operational Management)</option>
+                        <option value="Moderator">Moderator (Vetting & Compliance)</option>
+                        <option value="Director">Director (Master Override)</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-2.5 rounded border border-slate-850 mt-1">
+                      <p className="text-[10px] text-slate-400 font-mono">
+                        {onboardMsg ? (
+                          <span className="font-bold text-amber-300">{onboardMsg}</span>
+                        ) : (
+                          <span>✓ Automatically registers and syncs an active, verified staff profile.</span>
+                        )}
+                      </p>
+                      <button
+                        type="submit"
+                        disabled={onboarding}
+                        className="bg-white hover:bg-neutral-150 text-black text-[10px] font-mono font-bold px-4 py-2 uppercase tracking-wider shrink-0 cursor-pointer"
+                      >
+                        {onboarding ? 'ONBOARDING...' : 'EXECUTE ONBOARDING'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+
             {/* User Directory Rows */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredGuards.map((guard) => {
@@ -298,8 +424,13 @@ export function StaffDashboard({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-sans font-bold text-slate-900 text-sm">{guard.name}</span>
                             {isCurrentlyStaff && (
-                              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5">
-                                <Shield className="w-2.5 h-2.5 fill-indigo-800" /> Staff
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5 ${
+                                guard.staffRole === 'Director' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                guard.staffRole === 'Administrator' ? 'bg-indigo-100 text-indigo-850 border border-indigo-205' :
+                                guard.staffRole === 'Moderator' ? 'bg-amber-105 text-amber-850 border border-amber-200' :
+                                'bg-indigo-100 text-indigo-800'
+                              }`}>
+                                <Shield className="w-2.5 h-2.5 fill-current" /> {guard.staffRole || 'Staff'}
                               </span>
                             )}
                           </div>
@@ -365,83 +496,96 @@ export function StaffDashboard({
                     <div className="mt-5 pt-3.5 border-t border-slate-100 flex flex-col gap-3">
                       
                       {/* Privileges Toggle Option */}
-                      <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                        <div className="flex items-center gap-1.5">
-                          <Shield className="w-4 h-4 text-slate-500" />
-                          <div>
-                            <span className="font-bold text-slate-700 block">Operator Staff Status</span>
-                            <span className="text-[10px] text-slate-400">Allows management actions</span>
-                          </div>
-                        </div>
+                      {(() => {
+                        const isDesignatedDirector = currentUser.staffRole === 'Director';
+                        const canToggleStaff = isDesignatedDirector;
+                        const canChangeStatus = isDesignatedDirector || (currentUser.staffRole === 'Administrator' && !guard.isStaff);
 
-                        <button
-                          disabled={actioningId === `staff-${guard.id}`}
-                          onClick={() => handleToggleStaff(guard.id, isCurrentlyStaff)}
-                          className={`font-mono font-bold text-[10px] p-1.5 px-3 rounded-md transition-all ${
-                            isCurrentlyStaff
-                              ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          }`}
-                        >
-                          {actioningId === `staff-${guard.id}` ? (
-                            <Loader2 className="w-3 h-3 animate-spin mx-auto text-slate-400" />
-                          ) : isCurrentlyStaff ? (
-                            'REVOKE STAFF STATUS'
-                          ) : (
-                            'GRANT STAFF ROLE'
-                          )}
-                        </button>
-                      </div>
+                        return (
+                          <>
+                            <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                              <div className="flex items-center gap-1.5">
+                                <Shield className="w-4 h-4 text-slate-500" />
+                                <div>
+                                  <span className="font-bold text-slate-700 block">Operator Staff Status</span>
+                                  <span className="text-[10px] text-slate-400">
+                                    {guard.staffRole ? `${guard.staffRole} Privileges` : "Allows management actions"}
+                                  </span>
+                                </div>
+                              </div>
 
-                      {/* Status Management Bar */}
-                      <div className="flex items-center justify-between gap-2 text-xs">
-                        <span className="font-medium text-slate-500 font-mono">SET SECURITY RESTRAINTS:</span>
-                        <div className="flex gap-1">
-                          
-                          {/* Active Button */}
-                          <button
-                            title="Set Active Status"
-                            disabled={status === 'active' || actioningId === `status-${guard.id}`}
-                            onClick={() => handleChangeUserStatus(guard.id, 'active')}
-                            className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
-                              status === 'active' 
-                                ? 'bg-emerald-600 text-white' 
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            ACTIVE
-                          </button>
+                              <button
+                                disabled={!canToggleStaff || actioningId === `staff-${guard.id}`}
+                                onClick={() => handleToggleStaff(guard.id, isCurrentlyStaff)}
+                                title={!canToggleStaff ? "Only Directors can alter staff roles" : ""}
+                                className={`font-mono font-bold text-[10px] p-1.5 px-3 rounded-md transition-all ${
+                                  isCurrentlyStaff
+                                    ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-105'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                } ${!canToggleStaff ? 'opacity-40 cursor-not-allowed' : ''}`}
+                              >
+                                {actioningId === `staff-${guard.id}` ? (
+                                  <Loader2 className="w-3 h-3 animate-spin mx-auto text-slate-400" />
+                                ) : isCurrentlyStaff ? (
+                                  'REVOKE PRIVILEGE'
+                                ) : (
+                                  'GRANT STAFF ROLE'
+                                )}
+                              </button>
+                            </div>
 
-                          {/* Suspend Button */}
-                          <button
-                            title="Suspend Account"
-                            disabled={status === 'suspended' || actioningId === `status-${guard.id}`}
-                            onClick={() => handleChangeUserStatus(guard.id, 'suspended')}
-                            className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
-                              status === 'suspended' 
-                                ? 'bg-amber-500 text-white' 
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            SUSPEND
-                          </button>
+                            {/* Status Management Bar */}
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                              <span className="font-medium text-slate-500 font-mono">SET SECURITY RESTRAINTS:</span>
+                              <div className="flex gap-1">
+                                
+                                {/* Active Button */}
+                                <button
+                                  title={!canChangeStatus ? "Insufficient operational clearance" : "Set Active Status"}
+                                  disabled={status === 'active' || !canChangeStatus || actioningId === `status-${guard.id}`}
+                                  onClick={() => handleChangeUserStatus(guard.id, 'active')}
+                                  className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
+                                    status === 'active' 
+                                      ? 'bg-emerald-600 text-white' 
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  } ${!canChangeStatus ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                >
+                                  ACTIVE
+                                </button>
 
-                          {/* Block Button */}
-                          <button
-                            title="Block / Ban Account"
-                            disabled={status === 'blocked' || actioningId === `status-${guard.id}`}
-                            onClick={() => handleChangeUserStatus(guard.id, 'blocked')}
-                            className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
-                              status === 'blocked' 
-                                ? 'bg-red-650 text-white' 
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
-                            }`}
-                          >
-                            BLOCK
-                          </button>
+                                {/* Suspend Button */}
+                                <button
+                                  title={!canChangeStatus ? "Insufficient operational clearance" : "Suspend Account"}
+                                  disabled={status === 'suspended' || !canChangeStatus || actioningId === `status-${guard.id}`}
+                                  onClick={() => handleChangeUserStatus(guard.id, 'suspended')}
+                                  className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
+                                    status === 'suspended' 
+                                      ? 'bg-amber-500 text-white' 
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  } ${!canChangeStatus ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                >
+                                  SUSPEND
+                                </button>
 
-                        </div>
-                      </div>
+                                {/* Block Button */}
+                                <button
+                                  title={!canChangeStatus ? "Insufficient operational clearance" : "Block / Ban Account"}
+                                  disabled={status === 'blocked' || !canChangeStatus || actioningId === `status-${guard.id}`}
+                                  onClick={() => handleChangeUserStatus(guard.id, 'blocked')}
+                                  className={`p-1.5 px-2.5 rounded text-[10px] font-bold font-mono transition-colors ${
+                                    status === 'blocked' 
+                                      ? 'bg-red-650 text-white' 
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                  } ${!canChangeStatus ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                >
+                                  BLOCK
+                                </button>
+
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {status !== 'active' && (
                         <div className="bg-red-50 text-red-800 text-[10px] py-1.5 px-2.5 rounded border border-red-200 flex items-center gap-1">

@@ -154,6 +154,7 @@ export default function App() {
           experience: guardExps,
           hourlyRateRequirement: g.hourly_rate_requirement,
           isStaff: g.is_staff !== undefined ? g.is_staff : (g.id === 'guard-1'),
+          staffRole: g.staff_role || (g.id === 'guard-1' ? 'Director' : (g.is_staff ? 'Administrator' : undefined)),
           userStatus: g.user_status || 'active'
         };
       });
@@ -267,11 +268,64 @@ export default function App() {
           jobs_completed: newGuard.jobsCompleted,
           hourly_rate_requirement: newGuard.hourlyRateRequirement,
           is_staff: newGuard.isStaff,
+          staff_role: newGuard.staffRole,
           user_status: newGuard.userStatus || 'active'
         });
         if (error) console.error("Database table insertion error: ", error);
       } catch (err) {
         console.error("Database schema does not support full inline inserts yet, continuing locally.", err);
+      }
+    }
+  };
+
+  const handleAddStaffProfile = async (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => {
+    const randomId = `staff-${Date.now()}`;
+    const newStaff: SecurityGuard = {
+      id: randomId,
+      name: name,
+      email: email,
+      badgeNumber: badgeNumber,
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      phone: '+1 (555) 777-1010',
+      bio: `Operational ${staffRole}. Standard authorized management officer.`,
+      isArmed: false,
+      backgroundChecked: true,
+      verified: true,
+      rating: 5.0,
+      jobsCompleted: 0,
+      certifications: [],
+      experience: [],
+      hourlyRateRequirement: 0,
+      isStaff: true,
+      staffRole: staffRole,
+      userStatus: 'active'
+    };
+
+    setGuards(prev => [...prev, newStaff]);
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('guards').insert({
+          id: newStaff.id,
+          name: newStaff.name,
+          email: newStaff.email,
+          badge_number: newStaff.badgeNumber,
+          avatar: newStaff.avatar,
+          phone: newStaff.phone,
+          bio: newStaff.bio,
+          is_armed: newStaff.isArmed,
+          background_checked: newStaff.backgroundChecked,
+          verified: newStaff.verified,
+          rating: newStaff.rating,
+          jobs_completed: newStaff.jobsCompleted,
+          hourly_rate_requirement: newStaff.hourlyRateRequirement,
+          is_staff: true,
+          staff_role: newStaff.staffRole,
+          user_status: 'active'
+        });
+        if (error) console.error("Database table insertions error: ", error);
+      } catch (err) {
+        console.error("Database table insert error: ", err);
       }
     }
   };
@@ -909,6 +963,8 @@ export default function App() {
             onRecordAuditViolation={handleRecordAuditViolation}
             onResetAuditFailures={handleResetAuditFailures}
             isDbConnected={isDbConnected}
+            currentUser={currentUser}
+            onAddStaffProfile={handleAddStaffProfile}
           />
         )}
 

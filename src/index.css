@@ -34,63 +34,63 @@
   --color-uber-gray-500: #afafaf;
   --color-uber-gray-800: #1f1f1f;
   --color-uber-gray-900: #141414;
-  --color-uber-green: #06c167;
-  --color-uber-green-hover: #05a253;
+  --color-uber-green: var(--brand-primary);
+  --color-uber-green-hover: var(--brand-primary);
   --color-uber-sage: #53754b;
 }
 
 :root {
   --brand-primary: #84a279; /* Sage Green */
-  --brand-bg: #040704;
-  --brand-bg-sec: #0a0e08;
-  --brand-border: #141f12;
-  --brand-text: #f6f8f5;
+  --brand-bg: #000000; /* Pure Black background by default */
+  --brand-bg-sec: #080a08; /* Dark sage-tinted black panels */
+  --brand-border: #192218; /* Elegant dark sage-grey border */
+  --brand-text: #ffffff;
   --brand-text-muted: #adc1a3;
   --brand-accent: #ffffff;
   --brand-accent-text: #000000;
 }
 
 .theme-sage-dark {
-  --brand-primary: #84a279; /* Sage Green */
-  --brand-bg: #040704;
-  --brand-bg-sec: #0a0e08;
-  --brand-border: #141f12;
-  --brand-text: #f6f8f5;
-  --brand-text-muted: #adc1a3;
-  --brand-accent: #ffffff;
-  --brand-accent-text: #000000;
+  --brand-primary: #84a279; /* Clean Sage Green as primary */
+  --brand-bg: #000000; /* Pure Black background */
+  --brand-bg-sec: #080a08; /* Panel off-black */
+  --brand-border: #192218; /* Sage dark border */
+  --brand-text: #ffffff; /* White text */
+  --brand-text-muted: #adc1a3; /* Muted sage label text */
+  --brand-accent: #84a279; /* Sage accent highlights */
+  --brand-accent-text: #050a04;
 }
 
 .theme-sage-light {
-  --brand-primary: #4b6a43; /* Richer Sage Green for readibility */
-  --brand-bg: #f5f8f4;
-  --brand-bg-sec: #e3ebd2;
-  --brand-border: #cfdac9;
-  --brand-text: #0a0e08;
-  --brand-text-muted: #3a5c2d;
-  --brand-accent: #000000;
+  --brand-primary: #4b6a43; /* Readable dark-rich Sage Green */
+  --brand-bg: #ffffff; /* Pure White background */
+  --brand-bg-sec: #f6f8f5; /* Light creamy sage panels */
+  --brand-border: #cfdac9; /* Delicate light-sage boundaries */
+  --brand-text: #0a0e08; /* Solid dark text */
+  --brand-text-muted: #4b6a43; /* Medium sage labels */
+  --brand-accent: #4b6a43; /* Accent matches rich sage */
   --brand-accent-text: #ffffff;
 }
 
 .theme-grey-dark {
-  --brand-primary: #94a3b8; /* Slate Grey */
-  --brand-bg: #0f172a;
-  --brand-bg-sec: #1e293b;
-  --brand-border: #334155;
-  --brand-text: #f1f5f9;
-  --brand-text-muted: #94a3b8;
-  --brand-accent: #ffffff;
-  --brand-accent-text: #0f172a;
+  --brand-primary: #84a279; /* Sage Green remains main brand/accent highlight */
+  --brand-bg: #18181b; /* Zinc dark-grey background */
+  --brand-bg-sec: #27272a; /* Lighter zinc panel container */
+  --brand-border: #3f3f46; /* Charcoal zinc border */
+  --brand-text: #f4f4f5; /* Light silver text */
+  --brand-text-muted: #a1a1aa; /* Muted grey text */
+  --brand-accent: #84a279; /* Highlight active elements in sage green */
+  --brand-accent-text: #09090b;
 }
 
 .theme-grey-light {
-  --brand-primary: #475569; /* Slate Grey */
-  --brand-bg: #f8fafc;
-  --brand-bg-sec: #cbd5e1;
-  --brand-border: #94a3b8;
-  --brand-text: #0f172a;
-  --brand-text-muted: #475569;
-  --brand-accent: #000000;
+  --brand-primary: #4b6a43; /* Readable Sage Green as primary brand element */
+  --brand-bg: #f4f4f5; /* Soft light zinc grey background */
+  --brand-bg-sec: #e4e4e7; /* Muted light-grey panel surfaces */
+  --brand-border: #d4d4d8; /* Mid-grey card separation borders */
+  --brand-text: #09090b; /* Deep slate-charcoal text */
+  --brand-text-muted: #71717a; /* Muted zinc details */
+  --brand-accent: #4b6a43; /* Highlight elements in rich sage green */
   --brand-accent-text: #ffffff;
 }
 
@@ -150,4 +150,97 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Dynamic theme overrides to automatically adjust legacy white/blue card elements based on active theme */
+.theme-sage-dark, .theme-grey-dark {
+  .bg-white, 
+  .bg-slate-50, 
+  .bg-neutral-50, 
+  .bg-slate-50\/40, 
+  .bg-green-50\/40, 
+  .bg-blue-50\/40, 
+  .bg-blue-50, 
+  .bg-blue-105 {
+    background-color: var(--brand-bg-sec) !important;
+  }
+  
+  .text-slate-900, 
+  .text-neutral-900, 
+  .text-slate-800, 
+  .text-slate-705, 
+  .text-neutral-800, 
+  .text-black {
+    color: var(--brand-text) !important;
+  }
+  
+  .text-slate-500, 
+  .text-slate-600, 
+  .text-neutral-500, 
+  .text-neutral-400 {
+    color: var(--brand-text-muted) !important;
+  }
+  
+  .border-slate-200, 
+  .border-slate-100, 
+  .border-neutral-200, 
+  .border-neutral-900, 
+  .border-neutral-800, 
+  .border-slate-205, 
+  .border-dashed {
+    border-color: var(--brand-border) !important;
+  }
+  
+  /* Map hardcoded layout blues to Sage */
+  .bg-blue-600, .bg-blue-500 {
+    background-color: var(--brand-primary) !important;
+    color: #000000 !important;
+  }
+  
+  .hover\:bg-blue-700:hover {
+    background-color: var(--brand-text-muted) !important;
+    color: #000000 !important;
+  }
+  
+  .text-blue-600, .text-blue-700 {
+    color: var(--brand-primary) !important;
+  }
+}
+
+.theme-sage-light, .theme-grey-light {
+  .bg-white {
+    background-color: #ffffff !important;
+  }
+  
+  .bg-slate-50, .bg-neutral-50 {
+    background-color: var(--brand-bg-sec) !important;
+  }
+  
+  .text-slate-900, .text-neutral-900, .text-black {
+    color: var(--brand-text) !important;
+  }
+  
+  .text-slate-500, .text-slate-605, .text-slate-600 {
+    color: var(--brand-text-muted) !important;
+  }
+  
+  .border-slate-200, .border-slate-100 {
+    border-color: var(--brand-border) !important;
+  }
+
+  /* Map hardcoded layout blues to Sage */
+  .bg-blue-600, .bg-blue-500 {
+    background-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+  }
+  
+  .hover\:bg-blue-700:hover {
+    background-color: #3b5c2d !important;
+    color: #ffffff !important;
+  }
+  
+  .text-blue-600, .text-blue-700 {
+    color: var(--brand-primary) !important;
+  }
+}
+
 

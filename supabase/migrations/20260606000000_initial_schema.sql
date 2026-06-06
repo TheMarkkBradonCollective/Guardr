@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS guards (
     jobs_completed INTEGER DEFAULT 0,
     hourly_rate_requirement INTEGER,
     is_staff BOOLEAN DEFAULT FALSE,
+    staff_role TEXT DEFAULT NULL CHECK (staff_role IN ('Director', 'Administrator', 'Moderator')),
     user_status TEXT DEFAULT 'active' CHECK (user_status IN ('active', 'suspended', 'blocked')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

@@ -35,6 +35,7 @@ export interface SecurityGuard {
   experience: Experience[];
   hourlyRateRequirement?: number;
   isStaff?: boolean;
+  staffRole?: 'Director' | 'Administrator' | 'Moderator';
   userStatus?: 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
 }
@@ -133,5 +134,6 @@ export interface SessionUser {
   organization?: string;
   avatar?: string;
   hourlyRate?: number;
+  staffRole?: 'Director' | 'Administrator' | 'Moderator';
 }
 
