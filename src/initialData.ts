@@ -50,7 +50,9 @@ export const INITIAL_GUARDS: SecurityGuard[] = [
         description: 'Monitored private safehouse perimeters and acted as responsive rapid driver for high-net-worth clients.'
       }
     ],
-    hourlyRateRequirement: 45
+    hourlyRateRequirement: 45,
+    isStaff: true,
+    userStatus: 'active'
   },
   {
     id: 'guard-2',
@@ -94,7 +96,9 @@ export const INITIAL_GUARDS: SecurityGuard[] = [
         description: 'Managed asset sweeps and executive escorts inside high-luxury department stores and museums.'
       }
     ],
-    hourlyRateRequirement: 38
+    hourlyRateRequirement: 38,
+    isStaff: false,
+    userStatus: 'active'
   },
   {
     id: 'guard-3',
@@ -129,7 +133,9 @@ export const INITIAL_GUARDS: SecurityGuard[] = [
         description: 'Identified shoplifting coordinates, filed incident reports, and conducted crowd guidance during seasonal sales.'
       }
     ],
-    hourlyRateRequirement: 25
+    hourlyRateRequirement: 25,
+    isStaff: false,
+    userStatus: 'active'
   }
 ];
 

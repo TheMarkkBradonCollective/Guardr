@@ -1,10 +1,10 @@
 import React from 'react';
-import { Shield, User, Briefcase, Eye, ShieldCheck, Bell } from 'lucide-react';
+import { Shield, User, Briefcase, Eye, ShieldCheck, Bell, Lock } from 'lucide-react';
 import { SecurityGuard } from '../types';
 
 interface SimulatorHeaderProps {
-  currentPersona: 'client' | 'guard' | 'auditor';
-  setPersona: (persona: 'client' | 'guard' | 'auditor') => void;
+  currentPersona: 'client' | 'guard' | 'auditor' | 'staff';
+  setPersona: (persona: 'client' | 'guard' | 'auditor' | 'staff') => void;
   activeGuard: SecurityGuard;
   guardsList: SecurityGuard[];
   setActiveGuardId: (id: string) => void;
@@ -80,6 +80,20 @@ export function SimulatorHeader({
               <Shield className="w-3.5 h-3.5" />
               <span>COMPLIANCE AUDITOR</span>
             </button>
+
+            {/* Staff operations Tab button */}
+            <button
+              id="switch-persona-staff"
+              onClick={() => setPersona('staff')}
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                currentPersona === 'staff'
+                  ? 'bg-indigo-600 text-white shadow-md font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>STAFF CONSOLE</span>
+            </button>
             
           </div>
 
@@ -101,7 +115,7 @@ export function SimulatorHeader({
                 >
                   {guardsList.map((g) => (
                     <option key={g.id} value={g.id}>
-                      {g.name} ({g.verified ? '✓ Verified' : '⧗ Pending'})
+                      {g.name} ({g.verified ? '✓ Verified' : '⧗ Pending'}){g.isStaff ? ' [👑 Operations Staff]' : ''}
                     </option>
                   ))}
                 </select>
@@ -111,6 +125,12 @@ export function SimulatorHeader({
               <div className="text-right hidden sm:block font-mono text-[11px]">
                 <p className="text-red-400 font-mono font-bold tracking-widest text-[9px] uppercase">INSPECTION LEVEL</p>
                 <p className="text-slate-400">Sign-off Officer Privileges</p>
+              </div>
+            )}
+            {currentPersona === 'staff' && (
+              <div className="text-right hidden sm:block font-mono text-[11px]">
+                <p className="text-indigo-400 font-mono font-bold tracking-widest text-[9px] uppercase">OPERATIONS ROSTER</p>
+                <p className="text-slate-400">Primary Administrators</p>
               </div>
             )}
           </div>
@@ -127,6 +147,7 @@ export function SimulatorHeader({
               {currentPersona === 'client' && 'Simulation: Host security postings, run AI specifications optimization, and review deployments.'}
               {currentPersona === 'guard' && `Simulating guard ${activeGuard.name}. ${activeGuard.verified ? '✓ Certified: Fully cleared and compliant to accept live shifts.' : '⚠️ Credentials pending audit. Submit licenses below or switch to compliance auditor to approve.'}`}
               {currentPersona === 'auditor' && 'Audit Workspace: Review federal credentials, verify background registries, and approve dispatch files.' }
+              {currentPersona === 'staff' && 'Operations Desk: Control directory access, toggle operator admin status, suspend/block accounts, and approve postings.' }
             </span>
           </div>
           <span className="font-mono text-slate-500 hidden md:block">ISO-27001 Compliance Protocol</span>

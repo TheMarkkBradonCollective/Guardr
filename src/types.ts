@@ -34,6 +34,8 @@ export interface SecurityGuard {
   certifications: Certification[];
   experience: Experience[];
   hourlyRateRequirement?: number;
+  isStaff?: boolean;
+  userStatus?: 'active' | 'suspended' | 'blocked';
 }
 
 export interface SecurityRequest {
@@ -73,3 +75,16 @@ export interface AIAnalysisResult {
   notes: string;
   verifiedScope: string[];
 }
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'client' | 'guard' | 'auditor' | 'staff';
+  badgeNumber?: string;
+  clientName?: string;
+  organization?: string;
+  avatar?: string;
+  hourlyRate?: number;
+}
+

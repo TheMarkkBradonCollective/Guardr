@@ -65,6 +65,39 @@ export function GuardDashboard({
     alert("License uploaded! BSIS credentials pending auditor review. Switch to the Auditor Dashboard at the top of the screen to verify it!");
   };
 
+  const status = guard.userStatus || 'active';
+  if (status === 'suspended' || status === 'blocked') {
+    return (
+      <div className="bg-white border-2 border-red-200 rounded-3xl p-8 max-w-2xl mx-auto text-center space-y-6 shadow-md my-12 animate-fade-in">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
+            Account {status === 'suspended' ? 'Suspended' : 'Blocked / Terminated'}
+          </h2>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">
+            Your security personnel authorization file is currently restricted by platform operations staff. 
+            You are blocked from accepting new shift assignments, checking credentials, or collecting payments.
+          </p>
+        </div>
+        <div className="bg-slate-50 p-4 rounded-xl text-xs text-left font-mono border text-slate-500">
+          <div className="flex justify-between border-b pb-2 mb-2">
+            <span>OPERATOR BADGE:</span>
+            <span className="font-bold text-slate-800">{guard.badgeNumber}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>STATUS RESTRAINT:</span>
+            <span className="font-bold text-red-700 uppercase">{status}</span>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400">
+          Please contact our BSIS Operations & Investigations Division or switch to the <strong>Staff Console</strong> to reactivate your credentials.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       
