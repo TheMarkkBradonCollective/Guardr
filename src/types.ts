@@ -36,6 +36,7 @@ export interface SecurityGuard {
   hourlyRateRequirement?: number;
   isStaff?: boolean;
   userStatus?: 'active' | 'suspended' | 'blocked';
+  failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
 }
 
 export interface SecurityRequest {
@@ -59,6 +60,52 @@ export interface SecurityRequest {
   applicants: string[]; // List of guardIds who applied or accepted
   ratingGiven?: number;
   reviewText?: string;
+  // Dynamic Self-Audit Tracker
+  checkInAudit?: {
+    checkedAt: string;
+    uniform: {
+      shirt: boolean;
+      pants: boolean;
+      belt: boolean;
+      footwear: boolean;
+      badge: boolean;
+      equipment: boolean;
+    };
+    equipment: {
+      radio: boolean;
+      flashlight: boolean;
+      phoneCharged: boolean;
+      baton?: boolean;
+      spray?: boolean;
+      firearm?: boolean;
+    };
+    frontSelfie: string;
+    fullBodyPhoto: string;
+    signature: string;
+    gpsVerified: boolean;
+  };
+  midShiftAudits?: Array<{
+    checkedAt: string;
+    selfie: string;
+    uniformVerified: boolean;
+    equipmentVerified: boolean;
+  }>;
+  checkOutAudit?: {
+    checkedAt: string;
+    completed: boolean;
+    noViolations: boolean;
+    noEquipmentIssues: boolean;
+    endSelfie?: string;
+    dailyActivityReport: string;
+    incidentReport: {
+      hasIncident: boolean;
+      incidentType?: string;
+      priority?: 'low' | 'medium' | 'high';
+      description?: string;
+    };
+    clientNotes: string;
+    attachments?: string[];
+  };
 }
 
 export interface ChatMessage {

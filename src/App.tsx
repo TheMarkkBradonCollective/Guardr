@@ -589,6 +589,129 @@ export default function App() {
     }
   };
 
+  // 10. Core Self-Audit status transitions and logging
+  const handleUpdateJobAudit = async (
+    requestId: string,
+    auditPayload: {
+      checkInAudit?: any;
+      midShiftAudit?: any;
+      checkOutAudit?: any;
+      status?: SecurityRequest['status'];
+    }
+  ) => {
+    setRequests(prev => prev.map(r => {
+      if (r.id === requestId) {
+        const updated = { ...r };
+        if (auditPayload.checkInAudit) {
+          updated.checkInAudit = auditPayload.checkInAudit;
+        }
+        if (auditPayload.midShiftAudit) {
+          const currentAudits = updated.midShiftAudits || [];
+          updated.midShiftAudits = [...currentAudits, auditPayload.midShiftAudit];
+        }
+        if (auditPayload.checkOutAudit) {
+          updated.checkOutAudit = auditPayload.checkOutAudit;
+        }
+        if (auditPayload.status) {
+          updated.status = auditPayload.status;
+          
+          if (auditPayload.status === 'completed' && r.assignedGuardId) {
+            setGuards(prevG => prevG.map(g => {
+              if (g.id === r.assignedGuardId) {
+                return { ...g, jobsCompleted: g.jobsCompleted + 1 };
+              }
+              return g;
+            }));
+          }
+        }
+        return updated;
+      }
+      return r;
+    }));
+
+    if (isDbConnected) {
+      try {
+        const updateObj: any = {};
+        if (auditPayload.status) {
+          updateObj.status = auditPayload.status;
+        }
+        await supabase.from('security_requests').update(updateObj).eq('id', requestId);
+      } catch (err) {
+        console.error("Failed to sync audit state with live DB.", err);
+      }
+    }
+  };
+
+  // 11. Record compliance violations automatically
+  const handleRecordAuditViolation = async (guardId: string, reason?: string) => {
+    let autoSuspensionTriggered = false;
+
+    setGuards(prev => prev.map(g => {
+      if (g.id === guardId) {
+        const prevFails = g.failedAudits || 0;
+        const newFails = prevFails + 1;
+        const nextStatus = newFails >= 3 ? 'suspended' : g.userStatus || 'active';
+
+        if (newFails >= 3) {
+          autoSuspensionTriggered = true;
+        }
+
+        return {
+          ...g,
+          failedAudits: newFails,
+          userStatus: nextStatus as any
+        };
+      }
+      return g;
+    }));
+
+    if (autoSuspensionTriggered) {
+      alert(`🚨 AUTOMATED SYSTEM ACTION: Security officer has committed 3 uniform/gear code of conduct compliance violations. Their account has been automatically SUSPENDED immediately pending review.`);
+    } else {
+      alert(`⚠️ BSIS Warning Recorded: Compliance violation registered to account files.\nReason: ${reason || 'Failed dress/equipment audit'}`);
+    }
+
+    if (isDbConnected) {
+      try {
+        const targetG = guards.find(g => g.id === guardId);
+        if (targetG) {
+          const newFails = (targetG.failedAudits || 0) + 1;
+          const nextStatus = newFails >= 3 ? 'suspended' : targetG.userStatus || 'active';
+          await supabase.from('guards').update({
+            user_status: nextStatus
+          }).eq('id', guardId);
+        }
+      } catch (err) {
+        console.error("Database status update failed.", err);
+      }
+    }
+  };
+
+  const handleResetAuditFailures = async (guardId: string) => {
+    setGuards(prev => prev.map(g => {
+      if (g.id === guardId) {
+        return {
+          ...g,
+          failedAudits: 0,
+          userStatus: 'active'
+        };
+      }
+      return g;
+    }));
+    
+    alert("✓ Officer dress code penalty records have been reset. Account has been reinstated to Active status.");
+
+    if (isDbConnected) {
+      try {
+        await supabase.from('guards').update({
+          user_status: 'active'
+        }).eq('id', guardId);
+      } catch (err) {
+        console.error("Database status reset failed.", err);
+      }
+    }
+  };
+
   if (!currentUser) {
     if (isAuthView) {
       return (
@@ -748,6 +871,8 @@ export default function App() {
             requests={requests}
             onAddCertification={handleAddCertification}
             onAcceptJob={handleAcceptJob}
+            onUpdateJobAudit={handleUpdateJobAudit}
+            onRecordAuditViolation={handleRecordAuditViolation}
           />
         )}
 
@@ -772,6 +897,8 @@ export default function App() {
             onDenyRequest={handleDenyRequest}
             onApproveCert={handleApproveCert}
             onRejectCert={handleRejectCert}
+            onRecordAuditViolation={handleRecordAuditViolation}
+            onResetAuditFailures={handleResetAuditFailures}
             isDbConnected={isDbConnected}
           />
         )}
