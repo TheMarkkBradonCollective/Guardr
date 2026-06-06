@@ -30,15 +30,19 @@ CREATE TABLE IF NOT EXISTS guards (
 -- Enable RLS and setup policies for guards
 ALTER TABLE guards ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON guards;
 CREATE POLICY "Enable read access for all users" ON guards
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Enable insert access for all users" ON guards;
 CREATE POLICY "Enable insert access for all users" ON guards
     FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable update access for all users" ON guards;
 CREATE POLICY "Enable update access for all users" ON guards
     FOR UPDATE USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable delete access for all users" ON guards;
 CREATE POLICY "Enable delete access for all users" ON guards
     FOR DELETE USING (true);
 
@@ -61,15 +65,19 @@ CREATE TABLE IF NOT EXISTS certifications (
 -- Enable RLS and setup policies for certifications
 ALTER TABLE certifications ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON certifications;
 CREATE POLICY "Enable read access for all users" ON certifications
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Enable insert access for all users" ON certifications;
 CREATE POLICY "Enable insert access for all users" ON certifications
     FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable update access for all users" ON certifications;
 CREATE POLICY "Enable update access for all users" ON certifications
     FOR UPDATE USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable delete access for all users" ON certifications;
 CREATE POLICY "Enable delete access for all users" ON certifications
     FOR DELETE USING (true);
 
@@ -90,15 +98,19 @@ CREATE TABLE IF NOT EXISTS experience (
 -- Enable RLS and setup policies for experience
 ALTER TABLE experience ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON experience;
 CREATE POLICY "Enable read access for all users" ON experience
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Enable insert access for all users" ON experience;
 CREATE POLICY "Enable insert access for all users" ON experience
     FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable update access for all users" ON experience;
 CREATE POLICY "Enable update access for all users" ON experience
     FOR UPDATE USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable delete access for all users" ON experience;
 CREATE POLICY "Enable delete access for all users" ON experience
     FOR DELETE USING (true);
 
@@ -133,15 +145,19 @@ CREATE TABLE IF NOT EXISTS security_requests (
 -- Enable RLS and setup policies for security_requests
 ALTER TABLE security_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Enable read access for all users" ON security_requests;
 CREATE POLICY "Enable read access for all users" ON security_requests
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Enable insert access for all users" ON security_requests;
 CREATE POLICY "Enable insert access for all users" ON security_requests
     FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable update access for all users" ON security_requests;
 CREATE POLICY "Enable update access for all users" ON security_requests
     FOR UPDATE USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Enable delete access for all users" ON security_requests;
 CREATE POLICY "Enable delete access for all users" ON security_requests
     FOR DELETE USING (true);
 
