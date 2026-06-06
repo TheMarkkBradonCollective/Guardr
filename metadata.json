@@ -1,0 +1,6 @@
+{
+  "name": "Signature Security",
+  "description": "The on-demand security marketplace. Clients post Guard Requests; security guards build verified credential profiles and accept jobs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
