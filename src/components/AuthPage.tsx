@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Logo } from './Logo';
 import { 
   Shield, 
   Lock, 
@@ -12,9 +13,7 @@ import {
   HelpCircle,
   Unlock,
   Key,
-  Database,
-  ArrowLeft,
-  UserCheck
+  ArrowLeft
 } from 'lucide-react';
 import { SessionUser, SecurityGuard } from '../types';
 
@@ -143,9 +142,13 @@ export function AuthPage({
           return;
         }
 
-        // Detect appropriate role based on isStaff flag
-        let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = 'guard';
-        if (matchedGuard.isStaff) {
+        // Detect appropriate role based on isStaff or id prefix
+        let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = matchedGuard.isStaff ? 'staff' : 'guard';
+        if (matchedGuard.id.startsWith('client')) {
+          resolvedRole = 'client';
+        } else if (matchedGuard.id.startsWith('auditor')) {
+          resolvedRole = 'auditor';
+        } else if (matchedGuard.id.startsWith('staff')) {
           resolvedRole = 'staff';
         }
 
@@ -159,105 +162,38 @@ export function AuthPage({
           hourlyRate: matchedGuard.hourlyRateRequirement
         });
       } else {
-        // Fallback simulate login for generic clients or auditors if not found in guards list
-        let resolvedRole = role;
-        let displayName = email.split('@')[0];
-        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
-
-        onSignIn({
-          id: `${resolvedRole}-${Date.now()}`,
-          name: displayName,
-          email: email,
-          role: resolvedRole,
-          badgeNumber: `S-DEMO`,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-        });
+        setErrorMsg('Security account is not registered in our database. Please specify a valid email or create a new profile.');
       }
     }
   };
 
-  // Demo account quick logins for grading/testing checks
-  const handleQuickDemoLogin = (demoRole: 'staff' | 'guard-active' | 'guard-pending' | 'client' | 'auditor') => {
-    if (demoRole === 'staff') {
-      const staffGuard = guardsList.find(g => g.id === 'guard-1') || guardsList[0];
-      onSignIn({
-        id: staffGuard.id,
-        name: staffGuard.name,
-        email: staffGuard.email,
-        role: 'staff',
-        badgeNumber: staffGuard.badgeNumber,
-        avatar: staffGuard.avatar
-      });
-    } else if (demoRole === 'guard-active') {
-      const activeGuard = guardsList.find(g => g.id === 'guard-2') || guardsList[1];
-      onSignIn({
-        id: activeGuard.id,
-        name: activeGuard.name,
-        email: activeGuard.email,
-        role: 'guard',
-        badgeNumber: activeGuard.badgeNumber,
-        avatar: activeGuard.avatar,
-        hourlyRate: activeGuard.hourlyRateRequirement
-      });
-    } else if (demoRole === 'guard-pending') {
-      const pendingGuard = guardsList.find(g => g.id === 'guard-3') || guardsList[2];
-      onSignIn({
-        id: pendingGuard.id,
-        name: pendingGuard.name,
-        email: pendingGuard.email,
-        role: 'guard',
-        badgeNumber: pendingGuard.badgeNumber,
-        avatar: pendingGuard.avatar,
-        hourlyRate: pendingGuard.hourlyRateRequirement
-      });
-    } else if (demoRole === 'client') {
-      onSignIn({
-        id: 'client-1',
-        name: 'Sartorial Vanguard Group',
-        email: 'billing@sartorialvanguard.com',
-        role: 'client',
-        clientName: 'Sartorial Vanguard Group',
-        avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
-      });
-    } else if (demoRole === 'auditor') {
-      onSignIn({
-        id: 'auditor-gov',
-        name: 'Chief Inspector BSIS',
-        email: 'licensing@bsis.ca.gov',
-        role: 'auditor',
-        organization: 'BSIS Dept of Consumer Affairs',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
-      });
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center px-4 relative py-12" id="sigsec-auth-root">
+    <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4 relative py-12" id="sigsec-auth-root">
       
       {/* Background aesthetics */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#141414_1px,transparent_1px),linear-gradient(to_bottom,#141414_1px,transparent_1px)] bg-[size:5rem_5rem] pointer-events-none" />
 
       {/* Back button */}
       <button 
         onClick={onBackToHome}
-        className="absolute top-6 left-6 flex items-center space-x-1 font-mono text-xs text-slate-400 hover:text-white transition-colors bg-slate-900 border border-slate-800 p-2 rounded-xl cursor-pointer"
+        className="absolute top-6 left-6 flex items-center space-x-2 font-mono text-xs text-neutral-400 hover:text-white transition-all bg-neutral-950 border border-neutral-900 py-2.5 px-4 rounded-none cursor-pointer"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to Home</span>
       </button>
 
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800/80 rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+      <div className="w-full max-w-md bg-neutral-950 border border-neutral-900 p-8 shadow-none rounded-none relative overflow-hidden z-10">
         
         {/* Banner header logo */}
         <div className="flex flex-col items-center text-center space-y-2 mb-6">
-          <div className="w-12 h-12 bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center rounded-2xl shadow-inner">
-            <Shield className="w-6 h-6" />
+          <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 text-uber-green flex items-center justify-center">
+            <Logo size={24} className="text-uber-green" />
           </div>
           <h2 className="text-xl font-black font-sans tracking-tight">
             {isSignUp ? 'Create Platform Profile' : 'Credentials Sign In'}
           </h2>
           <p className="text-xs text-slate-400">
-            {isSignUp ? 'Onboard a secure profile file into the BSIS system' : 'Secure gateway into the Signature Security platform'}
+            {isSignUp ? 'Onboard a secure profile into our credentials database' : 'Secure gateway into the Signature Security platform'}
           </p>
         </div>
 
@@ -271,32 +207,32 @@ export function AuthPage({
 
         {/* Roles tab selector (SignUp only) */}
         {isSignUp && (
-          <div className="grid grid-cols-4 gap-1 bg-slate-950/80 p-1 border border-slate-800 rounded-lg mb-5 text-[10px] font-mono">
+          <div className="grid grid-cols-4 bg-black border border-neutral-900 p-1 mb-5 text-[10px] font-mono">
             <button
               type="button"
               onClick={() => { setRole('guard'); setErrorMsg(''); }}
-              className={`py-1.5 rounded font-bold uppercase transition-colors ${role === 'guard' ? 'bg-indigo-600 text-white' : 'text-slate-405 hover:text-white'}`}
+              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'guard' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
             >
               Guard
             </button>
             <button
               type="button"
               onClick={() => { setRole('client'); setErrorMsg(''); }}
-              className={`py-1.5 rounded font-bold uppercase transition-colors ${role === 'client' ? 'bg-indigo-600 text-white' : 'text-slate-405 hover:text-white'}`}
+              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'client' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
             >
               Client
             </button>
             <button
               type="button"
               onClick={() => { setRole('auditor'); setErrorMsg(''); }}
-              className={`py-1.5 rounded font-bold uppercase transition-colors ${role === 'auditor' ? 'bg-indigo-600 text-white' : 'text-slate-405 hover:text-white'}`}
+              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'auditor' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
             >
-              Auditor
+              Compliance Auditor
             </button>
             <button
               type="button"
               onClick={() => { setRole('staff'); setErrorMsg(''); }}
-              className={`py-1.5 rounded font-bold uppercase transition-colors ${role === 'staff' ? 'bg-indigo-600 text-white' : 'text-slate-405 hover:text-white'}`}
+              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'staff' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
             >
               Staff
             </button>
@@ -361,7 +297,7 @@ export function AuthPage({
             <div className="space-y-3.5 border-t border-slate-800/80 pt-3.5">
               
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">BSIS License Badge No</label>
+                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">State License Badge No</label>
                 <div className="relative flex items-center bg-slate-950 border border-slate-800 hover:border-slate-700 p-2.5 rounded-lg">
                   <Key className="absolute left-3 w-4 h-4 text-slate-500" />
                   <input
@@ -424,7 +360,7 @@ export function AuthPage({
                   className="rounded bg-slate-900 border-slate-850 text-indigo-600 focus:ring-0"
                 />
                 <label htmlFor="armed-check" className="text-xs text-slate-400 font-mono tracking-wide cursor-pointer select-none">
-                  Armed Security Permit Holder (BSIS)
+                  Armed Security Permit Holder (State Licensed)
                 </label>
               </div>
 
@@ -460,7 +396,7 @@ export function AuthPage({
                   <Briefcase className="absolute left-3 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
-                    placeholder="BSIS Department"
+                    placeholder="State License Board"
                     className="bg-transparent text-xs outline-none text-white w-full pl-7"
                     value={auditorOrg}
                     onChange={(e) => setAuditorOrg(e.target.value)}
@@ -495,7 +431,7 @@ export function AuthPage({
           {/* Submit Action */}
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold font-mono uppercase tracking-wider transition-all shadow-lg hover:shadow-indigo-500/15"
+            className="w-full h-12 bg-white hover:bg-neutral-100 text-black text-xs font-bold font-mono uppercase tracking-widest transition-all rounded-none border border-white cursor-pointer"
           >
             {isSignUp ? 'REGISTER PROFILE' : 'SIGN INTO PROFILE'}
           </button>
@@ -512,57 +448,13 @@ export function AuthPage({
               setIsSignUp(!isSignUp);
               setErrorMsg('');
             }}
-            className="text-indigo-400 hover:text-indigo-350 font-bold underline transition-colors cursor-pointer"
+            className="text-sage-400 hover:text-sage-300 font-bold underline transition-colors cursor-pointer"
           >
             {isSignUp ? 'Sign In Here' : 'Create Profile Here'}
           </button>
         </div>
 
-        {/* Dynamic Sandbox Quick Entry section for ease of evaluation and real demo flow */}
-        <div className="mt-8 border-t border-slate-800/80 pt-5 space-y-4">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-            <span>Operations & Grading Quick Demo Access</span>
-            <Database className="w-3.5 h-3.5" />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-            <button
-              onClick={() => handleQuickDemoLogin('staff')}
-              className="p-2 bg-slate-950 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900 rounded-lg text-left flex items-center justify-between"
-            >
-              <span>Alex M. (Staff Admin)</span>
-              <UserCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-            </button>
-            <button
-              onClick={() => handleQuickDemoLogin('guard-active')}
-              className="p-2 bg-slate-950 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900 rounded-lg text-left flex items-center justify-between"
-            >
-              <span>Sarah J. (Active Guard)</span>
-              <UserCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            </button>
-            <button
-              onClick={() => handleQuickDemoLogin('guard-pending')}
-              className="p-2 bg-slate-950 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900 rounded-lg text-left flex items-center justify-between"
-            >
-              <span>Liam V. (Pending Guard)</span>
-              <UserCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            </button>
-            <button
-              onClick={() => handleQuickDemoLogin('client')}
-              className="p-2 bg-slate-950 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900 rounded-lg text-left flex items-center justify-between"
-            >
-              <span>Sartorial G. (Client)</span>
-              <UserCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            </button>
-            <button
-              onClick={() => handleQuickDemoLogin('auditor')}
-              className="p-2 col-span-2 bg-slate-950 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900 rounded-lg text-left flex items-center justify-between"
-            >
-              <span>BSIS Auditor (Federal Compliance reviewer)</span>
-              <UserCheck className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-            </button>
-          </div>
-        </div>
+
 
       </div>
     </div>

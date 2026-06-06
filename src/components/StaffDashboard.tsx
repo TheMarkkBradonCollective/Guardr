@@ -334,7 +334,7 @@ export function StaffDashboard({
                         <span className="font-mono font-bold text-slate-800">{guard.badgeNumber}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400">BSIS Clearance:</span>
+                        <span className="text-slate-400">License Cleared:</span>
                         <span className={`font-semibold ${guard.verified ? 'text-blue-600' : 'text-amber-600'}`}>
                           {guard.verified ? '✓ Verified Certified' : '⚠ Pending Audit'}
                         </span>
@@ -591,7 +591,7 @@ export function StaffDashboard({
                 <CheckCircle className="w-4 h-4 text-indigo-600" /> Pending License & Claims Verification Queue
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Security personnel uploaded physical claims. Match BSIS records below to sign-off and authenticate.
+                Security personnel uploaded physical claims. Match state records below to sign-off and authenticate.
               </p>
             </div>
 
@@ -663,7 +663,7 @@ export function StaffDashboard({
                   🛡️ Live Shift Compliance Reports Audit
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  BSIS private security compliance audit logs. Inspect guard pre-shift outfitting photos, midpoint verification snaps, and final Daily Activity Reports (DAR) and Incident Report (IR) narratives.
+                  Compliance and private security audit logs. Inspect guard pre-shift outfitting photos, midpoint verification snaps, and final Daily Activity Reports (DAR) and Incident Report (IR) narratives.
                 </p>
               </div>
 

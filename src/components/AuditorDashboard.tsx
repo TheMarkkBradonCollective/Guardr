@@ -34,7 +34,7 @@ export function AuditorDashboard({
   onUpdateBackgroundChecked,
 }: AuditorDashboardProps) {
   const [selectedGuardId, setSelectedGuardId] = useState<string>(guards[2]?.id || guards[0]?.id || '');
-  const [auditReason, setAuditReason] = useState('BSIS State registry search returned valid unexpired status.');
+  const [auditReason, setAuditReason] = useState('Platform compliance audit: state license registry validated.');
   const [searchQuery, setSearchQuery] = useState('');
 
   // AI Verification State
@@ -97,14 +97,14 @@ export function AuditorDashboard({
       {/* Overview stats for Audit Compliance */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         
-        <div className="bg-slate-900 text-white p-5 rounded-xl border border-slate-800">
+         <div className="bg-slate-900 text-white p-5 rounded-xl border border-slate-800">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400 font-mono tracking-wider uppercase">Regulatory Status</span>
             <span className="text-[10px] bg-red-600 font-mono px-2 py-0.5 rounded-full font-bold">100% REGULATED</span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-bold font-mono text-white">BSIS compliant</h3>
-            <p className="text-[11px] text-slate-400 mt-1">Credentials synced with Department of Investigative Services</p>
+            <h3 className="text-2xl font-bold font-mono text-white">STANDARDS COMPLIANT</h3>
+            <p className="text-[11px] text-slate-400 mt-1">Guard licenses verified against state license criteria</p>
           </div>
         </div>
 
@@ -256,7 +256,7 @@ export function AuditorDashboard({
                     <span className={activeReviewGuard.isArmed ? 'text-red-700 font-bold' : 'text-slate-700'}>
                       {activeReviewGuard.isArmed ? '🔥 ARMED APPROVED' : '🛡️ UNARMED GENERAL PATROL'}
                     </span>
-                    <span className="text-[10px] text-slate-400">Derived fromBSIS file</span>
+                    <span className="text-[10px] text-slate-400">Verified State Record</span>
                   </div>
                 </div>
 

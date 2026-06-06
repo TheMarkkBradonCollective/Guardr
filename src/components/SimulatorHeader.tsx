@@ -1,4 +1,5 @@
 import React from 'react';
+import { Logo } from './Logo';
 import { Shield, User, Briefcase, Eye, ShieldCheck, Bell, Lock } from 'lucide-react';
 import { SecurityGuard } from '../types';
 
@@ -24,8 +25,8 @@ export function SimulatorHeader({
           
           {/* Logo Brand Group */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold text-white shadow-md animate-pulse">
-              S
+            <div className="w-8 h-8 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-center text-uber-green shadow-md">
+              <Logo size={18} className="text-uber-green" />
             </div>
             <div>
               <span className="font-mono text-[10px] text-blue-400 uppercase tracking-widest font-bold block">On-Demand Guard Network</span>

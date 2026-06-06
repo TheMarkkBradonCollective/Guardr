@@ -1,6 +1,6 @@
 {
-  "name": "Signature Security",
-  "description": "The on-demand security marketplace. Clients post Guard Requests; security guards build verified credential profiles and accept jobs.",
+  "name": "Guardr",
+  "description": "Premium on-demand tactical security marketplace with dispatch management, automated compliance, and real-time outfitting audits in Sage Green elegant aesthetics.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

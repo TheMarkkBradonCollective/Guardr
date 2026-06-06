@@ -4,15 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { INITIAL_GUARDS, INITIAL_REQUESTS } from './initialData';
 import { SecurityGuard, SecurityRequest, Certification, SessionUser } from './types';
-import { SimulatorHeader } from './components/SimulatorHeader';
 import { ClientDashboard } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { AuditorDashboard } from './components/AuditorDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
+import { Logo } from './components/Logo';
 import { Shield, Sparkles, RefreshCw, Layers, LogOut, User, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 
@@ -23,6 +22,15 @@ export default function App() {
   });
   const [isAuthView, setIsAuthView] = useState<boolean>(false);
   const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>('guard');
+  const [themeMode, setThemeMode] = useState<'sage-dark' | 'sage-light' | 'mono'>(() => {
+    const saved = localStorage.getItem('guardr_theme_mode');
+    return (saved as any) || 'sage-dark';
+  });
+
+  const changeThemeMode = (mode: 'sage-dark' | 'sage-light' | 'mono') => {
+    setThemeMode(mode);
+    localStorage.setItem('guardr_theme_mode', mode);
+  };
 
   const [persona, setPersona] = useState<'client' | 'guard' | 'auditor' | 'staff'>(() => {
     return currentUser ? currentUser.role : 'guard';
@@ -43,28 +51,30 @@ export default function App() {
 
   const [isDbConnected, setIsDbConnected] = useState<boolean>(false);
   const [syncing, setSyncing] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
 
   // Load and state management for guards & requests
-  const [guards, setGuards] = useState<SecurityGuard[]>(() => {
-    const saved = localStorage.getItem('sigsec_guards');
-    return saved ? JSON.parse(saved) : INITIAL_GUARDS;
-  });
-
-  const [requests, setRequests] = useState<SecurityRequest[]>(() => {
-    const saved = localStorage.getItem('sigsec_requests');
-    return saved ? JSON.parse(saved) : INITIAL_REQUESTS;
-  });
+  const [guards, setGuards] = useState<SecurityGuard[]>([]);
+  const [requests, setRequests] = useState<SecurityRequest[]>([]);
 
   // Load backend Supabase database state on mount
   useEffect(() => {
     const initDbSync = async () => {
-      const active = await isSupabaseConnected();
-      if (active) {
-        setIsDbConnected(true);
-        await loadSupabaseData();
-      } else {
+      try {
+        setLoading(true);
+        const active = await isSupabaseConnected();
+        if (active) {
+          setIsDbConnected(true);
+          await loadSupabaseData();
+        } else {
+          setIsDbConnected(false);
+        }
+      } catch (err) {
+        console.error("Supabase live connection failed:", err);
         setIsDbConnected(false);
+      } finally {
+        setLoading(false);
       }
     };
     initDbSync();
@@ -183,28 +193,7 @@ export default function App() {
     }
   };
 
-  // Sync to local storage
-  useEffect(() => {
-    localStorage.setItem('sigsec_guards', JSON.stringify(guards));
-  }, [guards]);
-
-  useEffect(() => {
-    localStorage.setItem('sigsec_requests', JSON.stringify(requests));
-  }, [requests]);
-
-  const activeGuard = guards.find(g => g.id === activeGuardId) || guards[0];
-
-  // RESET STATE handler (for effortless sandbox exploration)
-  const handleResetSimulation = () => {
-    if (window.confirm("Restore demo simulation states to defaults? All new postings and credentials uploads will be re-set.")) {
-      setGuards(INITIAL_GUARDS);
-      setRequests(INITIAL_REQUESTS);
-      setActiveGuardId('guard-3');
-      setPersona('guard');
-      localStorage.removeItem('sigsec_guards');
-      localStorage.removeItem('sigsec_requests');
-    }
-  };
+  const activeGuard = guards.find(g => g.id === activeGuardId) || guards[0] || {} as SecurityGuard;
 
   // 1. Swaps background check status
   const handleUpdateBackgroundChecked = async (guardId: string, status: boolean) => {
@@ -383,7 +372,7 @@ export default function App() {
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
       name: newCert.name || 'Custom Security License',
-      issuer: newCert.issuer || 'BSIS Authority',
+      issuer: newCert.issuer || 'State Licensing Bureau',
       number: newCert.number || 'LIC-000000',
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
@@ -668,7 +657,7 @@ export default function App() {
     if (autoSuspensionTriggered) {
       alert(`🚨 AUTOMATED SYSTEM ACTION: Security officer has committed 3 uniform/gear code of conduct compliance violations. Their account has been automatically SUSPENDED immediately pending review.`);
     } else {
-      alert(`⚠️ BSIS Warning Recorded: Compliance violation registered to account files.\nReason: ${reason || 'Failed dress/equipment audit'}`);
+      alert(`⚠️ Compliance Warning Recorded: Code of conduct violation registered to account files.\nReason: ${reason || 'Failed dress/equipment audit'}`);
     }
 
     if (isDbConnected) {
@@ -712,6 +701,15 @@ export default function App() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center font-mono">
+        <Logo className="text-uber-green animate-bounce mb-4" size={48} />
+        <span className="text-xs uppercase tracking-widest text-neutral-400">SIGSEC LIVE DATABASE DEPLOYMENT RESOLVING...</span>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     if (isAuthView) {
       return (
@@ -742,62 +740,133 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
+      themeMode === 'sage-dark' 
+        ? 'bg-[#040704] text-white' 
+        : themeMode === 'mono'
+          ? 'bg-black text-white'
+          : 'bg-white text-black'
+    }`}>
       
       {/* Real Authenticated Navigation Header */}
-      <header className="bg-slate-900 border-b border-slate-800 text-white py-4 px-4 sm:px-6 lg:px-8 sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <header className={`border-b sticky top-0 z-50 transition-colors duration-200 ${
+        themeMode === 'sage-dark' 
+          ? 'bg-black/95 border-neutral-900 text-white' 
+          : themeMode === 'mono'
+            ? 'bg-black border-neutral-900 text-white'
+            : 'bg-white border-neutral-200 text-black'
+      }`}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 px-4 sm:px-6 lg:px-8">
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded-xl">
-                <Shield className="w-5 h-5 animate-pulse" />
+              <div className={`p-2 transition-colors ${
+                themeMode === 'sage-dark' 
+                  ? 'bg-neutral-900 border border-neutral-800 text-uber-green' 
+                  : themeMode === 'mono'
+                    ? 'bg-white/10 border border-white/20 text-white'
+                    : 'bg-black border border-black text-white'
+              }`}>
+                <Logo className="text-current" size={20} />
               </div>
               <button 
                 onClick={handleSignOut}
                 className="text-left cursor-pointer hover:opacity-90 block"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-sm tracking-tight text-white uppercase">SIGSEC SYSTEMS</span>
-                  <span className="bg-emerald-950 text-emerald-400 border border-emerald-800/40 text-[8px] font-mono px-1.5 py-0.5 rounded uppercase font-extrabold tracking-wider">SECURE</span>
+                <div className="flex items-center gap-1.5 leading-none">
+                  <span className="font-extrabold text-lg tracking-tighter uppercase font-sans">Guardr</span>
+                  <span className="bg-white text-black border border-white text-[8px] font-mono px-1.5 py-0.5 rounded-none uppercase font-extrabold tracking-wider">SEC</span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-mono">BSIS California Escrow System</p>
+                <p className={`text-[9px] font-mono mt-0.5 ${themeMode === 'sage-light' ? 'text-neutral-500' : 'text-neutral-400'}`}>On-Demand Escrow Secure</p>
               </button>
             </div>
           </div>
 
-          {/* User profile action indicators and logout */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3 bg-slate-950 p-1.5 px-3 rounded-xl border border-slate-800">
+          {/* Theme customizer and profile info */}
+          <div className="flex flex-wrap items-center gap-4">
+            
+            {/* Precise Segmented Theme Switcher */}
+            <div className={`flex p-1 border text-[9px] font-mono ${
+              themeMode === 'sage-dark'
+                ? 'bg-black border-neutral-900'
+                : themeMode === 'mono'
+                  ? 'bg-neutral-950 border-neutral-900'
+                  : 'bg-neutral-50 border-neutral-200'
+            }`}>
+              <button 
+                onClick={() => changeThemeMode('sage-dark')}
+                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  themeMode === 'sage-dark' 
+                    ? 'bg-white text-black font-black' 
+                    : themeMode === 'sage-light' ? 'text-neutral-600 hover:text-black' : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                🌿 Sage Dark
+              </button>
+              <button 
+                onClick={() => changeThemeMode('sage-light')}
+                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  themeMode === 'sage-light' 
+                    ? 'bg-black text-white font-black' 
+                    : themeMode === 'sage-dark' ? 'text-neutral-400 hover:text-white' : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                🍵 Sage Light
+              </button>
+              <button 
+                onClick={() => changeThemeMode('mono')}
+                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  themeMode === 'mono' 
+                    ? 'bg-white text-black font-black' 
+                    : themeMode === 'sage-dark' ? 'text-neutral-400 hover:text-white' : 'text-neutral-650 hover:text-black'
+                }`}
+              >
+                ◼ Stark Mono
+              </button>
+            </div>
+
+            <div className={`flex items-center space-x-3 p-1.5 px-3 border transition-colors ${
+              themeMode === 'sage-dark'
+                ? 'bg-black border-neutral-905 text-white'
+                : themeMode === 'mono'
+                  ? 'bg-neutral-950 border-neutral-900 text-white'
+                  : 'bg-neutral-50 border-neutral-200 text-black'
+            }`}>
               {currentUser.avatar ? (
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name} 
-                  className="w-7 h-7 rounded-full border border-slate-850 object-cover" 
+                  className="w-7 h-7 border border-neutral-800 object-cover" 
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-bold text-xs font-mono">
                   {currentUser.name.slice(0, 2).toUpperCase()}
                 </div>
               )}
               <div className="text-left font-sans mr-1">
-                <h4 className="text-[11px] font-extrabold text-slate-100">{currentUser.name}</h4>
-                <p className="text-[9px] font-mono text-indigo-400 tracking-wider uppercase font-bold">
+                <h4 className="text-[11px] font-bold tracking-tight uppercase leading-none">{currentUser.name}</h4>
+                <p className="text-[8px] font-mono tracking-wider uppercase font-extrabold text-uber-green mt-1">
                   {currentUser.role === 'staff' 
                     ? 'Staff Controller' 
                     : currentUser.role === 'auditor' 
                       ? 'Compliance Officer' 
                       : currentUser.role === 'client' 
                         ? 'Corporate Client' 
-                        : 'BSIS Officer'}
+                        : 'Licensed Officer'}
                 </p>
               </div>
             </div>
 
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              className={`flex items-center space-x-1.5 px-3 py-1.5 border text-xs font-bold transition-all cursor-pointer font-mono uppercase ${
+                themeMode === 'sage-dark'
+                  ? 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-white'
+                  : themeMode === 'mono'
+                    ? 'bg-neutral-950 hover:bg-neutral-900 border-neutral-800 text-white'
+                    : 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-black'
+              }`}
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -810,46 +879,12 @@ export default function App() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
         
-        {/* Reset Sandbox & Database Sync Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white border border-slate-200 rounded-xl shadow-2xs">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase font-bold text-blue-600 font-mono tracking-widest">Platform Escrow Ledger</span>
-              {isDbConnected ? (
-                <span className="bg-blue-100 text-blue-800 text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                  SUPABASE SYSTEM ACTIVE
-                </span>
-              ) : (
-                <span className="bg-slate-100 text-slate-500 text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-slate-200">
-                  SANDBOX LOCAL STORAGE
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              {isDbConnected 
-                ? "All registrations and security dispatches are synchronized live to your Supabase PostgreSQL cluster." 
-                : "Shift rosters, security logs, and approvals are preserved in your secure browser cache."}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {isDbConnected && (
-              <button
-                onClick={loadSupabaseData}
-                disabled={syncing}
-                className="flex items-center space-x-1 font-mono text-[11px] text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/80 p-1.5 px-3 rounded-lg border border-blue-200 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-                <span>{syncing ? 'SYNC ARCHIVE' : 'PULL SUPABASE RECORDFILE'}</span>
-              </button>
-            )}
-            <button
-              onClick={handleResetSimulation}
-              className="flex items-center space-x-1 font-mono text-[11px] text-slate-400 hover:text-slate-900 border border-slate-200 hover:border-slate-400 p-1.5 px-3 rounded-lg transition-colors animate-pulse"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>RESET SANDBOX DATA</span>
-            </button>
+        {/* Simple live synchronized header badge */}
+        <div className="flex justify-between items-center pb-4 border-b border-neutral-900">
+          <h2 className="text-sm font-mono uppercase tracking-wider text-neutral-400">Live Security Operations Grid</h2>
+          <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 text-white text-[9px] font-mono px-2.5 py-1 font-bold">
+            <span className="w-1.5 h-1.5 bg-uber-green animate-pulse rounded-full"></span>
+            LIVE DATABASE SYNC ACTIVE
           </div>
         </div>
 
@@ -906,14 +941,20 @@ export default function App() {
       </main>
 
       {/* Footer Vetting disclaimers */}
-      <footer className="bg-white border-t border-slate-100 mt-12 py-6 text-center text-slate-400 text-xs">
+      <footer className={`border-t mt-12 py-8 text-center text-xs transition-all duration-200 ${
+        themeMode === 'sage-dark' 
+          ? 'bg-black border-neutral-900 text-neutral-500' 
+          : themeMode === 'mono'
+            ? 'bg-black border-neutral-900 text-neutral-500 font-mono'
+            : 'bg-neutral-50 border-neutral-200 text-neutral-600'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <Shield className="w-4 h-4 text-amber-600 animate-pulse" />
-            <span className="font-mono text-[11px] tracking-wide text-slate-500">Signature Security Systems — ISO-27001 Accredited Vetting Protocol</span>
+          <div className="flex items-center space-x-2 font-mono">
+            <Logo className="text-uber-green" size={16} />
+            <span className="text-[11px] tracking-wide uppercase font-bold">Guardr Operations Network</span>
           </div>
-          <div className="text-[10px] text-slate-450 font-mono">
-            State-mandated BSIS Private Security Compliance Verified • {new Date().getFullYear()} All rights reserved.
+          <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+            Verified Private Security Roster • Standardized Escrow Audits • {new Date().getFullYear()} All rights reserved.
           </div>
         </div>
       </footer>

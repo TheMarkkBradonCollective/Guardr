@@ -552,7 +552,7 @@ export function ClientDashboard({
             <ul className="text-[11px] font-mono text-slate-400 space-y-2">
               <li className="flex items-start gap-1.5">
                 <span className="text-blue-500 font-bold shrink-0">✓</span>
-                All onboarded guards hold audited BSIS licenses.
+                All onboarded guards hold audited active security licenses.
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-blue-500 font-bold shrink-0">✓</span>
