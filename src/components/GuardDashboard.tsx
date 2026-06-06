@@ -649,13 +649,13 @@ export function GuardDashboard({
             </div>
           </div>
 
-          {/* Compliance Info Banner if profile is not vetted yet */}
+          {/* Compliance Info Banner if profile is not approved yet */}
           {!guard.verified && (
             <div className="bg-amber-50 border border-amber-200 text-slate-800 p-4 rounded-xl animate-pulse text-xs space-y-2">
               <div className="flex gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-amber-800 font-mono text-[10px] uppercase">Awaiting auditor vetting</h4>
+                   <h4 className="font-bold text-amber-800 font-mono text-[10px] uppercase">Awaiting Compliance Review</h4>
                   <p className="text-slate-600 leading-normal mt-0.5">
                     Your state-licensed guard card certifications must be audited before active dispatches can be scheduled.
                   </p>

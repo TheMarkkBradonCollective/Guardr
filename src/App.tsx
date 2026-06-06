@@ -22,12 +22,12 @@ export default function App() {
   });
   const [isAuthView, setIsAuthView] = useState<boolean>(false);
   const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>('guard');
-  const [themeMode, setThemeMode] = useState<'sage-dark' | 'sage-light' | 'mono'>(() => {
+  const [themeMode, setThemeMode] = useState<'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light'>(() => {
     const saved = localStorage.getItem('guardr_theme_mode');
     return (saved as any) || 'sage-dark';
   });
 
-  const changeThemeMode = (mode: 'sage-dark' | 'sage-light' | 'mono') => {
+  const changeThemeMode = (mode: 'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light') => {
     setThemeMode(mode);
     localStorage.setItem('guardr_theme_mode', mode);
   };
@@ -740,33 +740,15 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
-      themeMode === 'sage-dark' 
-        ? 'bg-[#040704] text-white' 
-        : themeMode === 'mono'
-          ? 'bg-black text-white'
-          : 'bg-white text-black'
-    }`}>
+    <div className={`min-h-screen flex flex-col transition-colors duration-200 theme-${themeMode} bg-brand-bg text-brand-text font-sans`}>
       
       {/* Real Authenticated Navigation Header */}
-      <header className={`border-b sticky top-0 z-50 transition-colors duration-200 ${
-        themeMode === 'sage-dark' 
-          ? 'bg-black/95 border-neutral-900 text-white' 
-          : themeMode === 'mono'
-            ? 'bg-black border-neutral-900 text-white'
-            : 'bg-white border-neutral-200 text-black'
-      }`}>
+      <header className="border-b sticky top-0 z-50 transition-colors duration-200 bg-brand-bg-sec border-brand-border text-brand-text">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 px-4 sm:px-6 lg:px-8">
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`p-2 transition-colors ${
-                themeMode === 'sage-dark' 
-                  ? 'bg-neutral-900 border border-neutral-800 text-uber-green' 
-                  : themeMode === 'mono'
-                    ? 'bg-white/10 border border-white/20 text-white'
-                    : 'bg-black border border-black text-white'
-              }`}>
+              <div className="p-2 transition-colors bg-brand-bg border border-brand-border text-brand-primary">
                 <Logo className="text-current" size={20} />
               </div>
               <button 
@@ -775,9 +757,9 @@ export default function App() {
               >
                 <div className="flex items-center gap-1.5 leading-none">
                   <span className="font-extrabold text-lg tracking-tighter uppercase font-sans">Guardr</span>
-                  <span className="bg-white text-black border border-white text-[8px] font-mono px-1.5 py-0.5 rounded-none uppercase font-extrabold tracking-wider">SEC</span>
+                  <span className="bg-brand-accent text-brand-accent-text border border-brand-accent text-[8px] font-mono px-1.5 py-0.5 rounded-none uppercase font-extrabold tracking-wider">SEC</span>
                 </div>
-                <p className={`text-[9px] font-mono mt-0.5 ${themeMode === 'sage-light' ? 'text-neutral-500' : 'text-neutral-400'}`}>On-Demand Escrow Secure</p>
+                <p className="text-[9px] font-mono mt-0.5 text-brand-text-muted">On-Demand Escrow Secure</p>
               </button>
             </div>
           </div>
@@ -786,67 +768,65 @@ export default function App() {
           <div className="flex flex-wrap items-center gap-4">
             
             {/* Precise Segmented Theme Switcher */}
-            <div className={`flex p-1 border text-[9px] font-mono ${
-              themeMode === 'sage-dark'
-                ? 'bg-black border-neutral-900'
-                : themeMode === 'mono'
-                  ? 'bg-neutral-950 border-neutral-900'
-                  : 'bg-neutral-50 border-neutral-200'
-            }`}>
+            <div className="flex p-1 border text-[9px] font-mono bg-brand-bg border-brand-border">
               <button 
                 onClick={() => changeThemeMode('sage-dark')}
-                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   themeMode === 'sage-dark' 
-                    ? 'bg-white text-black font-black' 
-                    : themeMode === 'sage-light' ? 'text-neutral-600 hover:text-black' : 'text-neutral-400 hover:text-white'
+                    ? 'bg-brand-accent text-brand-accent-text font-black' 
+                    : 'text-brand-text-muted hover:text-brand-text'
                 }`}
               >
                 🌿 Sage Dark
               </button>
               <button 
                 onClick={() => changeThemeMode('sage-light')}
-                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   themeMode === 'sage-light' 
-                    ? 'bg-black text-white font-black' 
-                    : themeMode === 'sage-dark' ? 'text-neutral-400 hover:text-white' : 'text-neutral-400 hover:text-white'
+                    ? 'bg-brand-accent text-brand-accent-text font-black' 
+                    : 'text-brand-text-muted hover:text-brand-text'
                 }`}
               >
                 🍵 Sage Light
               </button>
               <button 
-                onClick={() => changeThemeMode('mono')}
-                className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  themeMode === 'mono' 
-                    ? 'bg-white text-black font-black' 
-                    : themeMode === 'sage-dark' ? 'text-neutral-400 hover:text-white' : 'text-neutral-650 hover:text-black'
+                onClick={() => changeThemeMode('grey-dark')}
+                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  themeMode === 'grey-dark' 
+                    ? 'bg-brand-accent text-brand-accent-text font-black' 
+                    : 'text-brand-text-muted hover:text-brand-text'
                 }`}
               >
-                ◼ Stark Mono
+                🌑 Grey Dark
+              </button>
+              <button 
+                onClick={() => changeThemeMode('grey-light')}
+                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  themeMode === 'grey-light' 
+                    ? 'bg-brand-accent text-brand-accent-text font-black' 
+                    : 'text-brand-text-muted hover:text-brand-text'
+                }`}
+              >
+                🔘 Grey Light
               </button>
             </div>
 
-            <div className={`flex items-center space-x-3 p-1.5 px-3 border transition-colors ${
-              themeMode === 'sage-dark'
-                ? 'bg-black border-neutral-905 text-white'
-                : themeMode === 'mono'
-                  ? 'bg-neutral-950 border-neutral-900 text-white'
-                  : 'bg-neutral-50 border-neutral-200 text-black'
-            }`}>
+            <div className="flex items-center space-x-3 p-1.5 px-3 border transition-colors bg-brand-bg border-brand-border text-brand-text">
               {currentUser.avatar ? (
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name} 
-                  className="w-7 h-7 border border-neutral-800 object-cover" 
+                  className="w-7 h-7 border border-brand-border object-cover" 
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-bold text-xs font-mono">
+                <div className="w-7 h-7 bg-brand-accent text-brand-accent-text flex items-center justify-center font-bold text-xs font-mono">
                   {currentUser.name.slice(0, 2).toUpperCase()}
                 </div>
               )}
               <div className="text-left font-sans mr-1">
                 <h4 className="text-[11px] font-bold tracking-tight uppercase leading-none">{currentUser.name}</h4>
-                <p className="text-[8px] font-mono tracking-wider uppercase font-extrabold text-uber-green mt-1">
+                <p className="text-[8px] font-mono tracking-wider uppercase font-extrabold text-brand-primary mt-1">
                   {currentUser.role === 'staff' 
                     ? 'Staff Controller' 
                     : currentUser.role === 'auditor' 
@@ -860,13 +840,7 @@ export default function App() {
 
             <button
               onClick={handleSignOut}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 border text-xs font-bold transition-all cursor-pointer font-mono uppercase ${
-                themeMode === 'sage-dark'
-                  ? 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-white'
-                  : themeMode === 'mono'
-                    ? 'bg-neutral-950 hover:bg-neutral-900 border-neutral-800 text-white'
-                    : 'bg-neutral-50 hover:bg-neutral-100 border-neutral-200 text-black'
-              }`}
+              className="flex items-center space-x-1.5 px-3 py-1.5 border text-xs font-bold transition-all cursor-pointer font-mono uppercase bg-brand-bg-sec hover:opacity-80 border-brand-border text-brand-text"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -940,17 +914,11 @@ export default function App() {
 
       </main>
 
-      {/* Footer Vetting disclaimers */}
-      <footer className={`border-t mt-12 py-8 text-center text-xs transition-all duration-200 ${
-        themeMode === 'sage-dark' 
-          ? 'bg-black border-neutral-900 text-neutral-500' 
-          : themeMode === 'mono'
-            ? 'bg-black border-neutral-900 text-neutral-500 font-mono'
-            : 'bg-neutral-50 border-neutral-200 text-neutral-600'
-      }`}>
+      {/* Footer disclaimers */}
+      <footer className="border-t mt-12 py-8 text-center text-xs transition-all duration-200 bg-brand-bg-sec border-brand-border text-brand-text-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2 font-mono">
-            <Logo className="text-uber-green" size={16} />
+            <Logo className="text-brand-primary" size={16} />
             <span className="text-[11px] tracking-wide uppercase font-bold">Guardr Operations Network</span>
           </div>
           <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-500">

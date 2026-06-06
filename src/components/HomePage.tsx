@@ -70,9 +70,9 @@ export function HomePage({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.1 }}
-              className="text-base sm:text-lg text-neutral-400 max-w-xl leading-relaxed font-sans"
+              className="text-sm sm:text-base text-neutral-400 max-w-xl leading-relaxed font-sans"
             >
-              The state-licensed double-sided dispatch network. Instantly secure physical protection or activate your guard card with automatic compliance audits, live background checks, and instantaneous payout routing.
+              We are an <span className="text-white font-semibold">independent contractor marketplace</span> connecting licensed security professionals directly with clients who post and manage their own service requests. <span className="text-uber-green font-semibold">We are not a vetting platform</span> — we provide direct community access with instant digital dispatch escrow verification and shift compliance checklists.
             </motion.p>
 
             <motion.div 
@@ -203,7 +203,7 @@ export function HomePage({
             <span className="text-[10px] text-uber-green font-mono tracking-widest font-extrabold block">LIVE FLEET ROSTER</span>
             <h2 className="text-2xl font-bold tracking-tight uppercase">Professional Officers</h2>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Vetted physical security operators matching the dispatch requirements.
+              Licensed independent security operators matching the dispatch requirements.
             </p>
           </div>
 
