@@ -1,20 +1,17 @@
 import React from 'react';
 import { 
-  Shield, 
-  Users, 
-  CheckCircle, 
-  Lock, 
-  Briefcase, 
-  ClipboardCheck, 
-  Award, 
-  TrendingUp, 
-  Activity, 
-  Zap, 
+  ShieldCheck, 
+  ArrowRight, 
+  MapPin, 
+  User, 
+  Compass, 
+  FileCheck, 
+  Smartphone,
+  ChevronRight,
+  Shield,
   Clock,
-  ArrowRight,
-  ShieldCheck,
-  Search,
-  Check
+  Briefcase,
+  Users
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SecurityRequest, SecurityGuard } from '../types';
@@ -34,255 +31,365 @@ export function HomePage({
   availableRequests,
   sampleGuards
 }: HomePageProps) {
-  const activeJobs = availableRequests.filter(r => r.status === 'open');
-
   return (
-    <div className="bg-black text-white min-h-screen font-sans selection:bg-uber-green selection:text-white relative" id="sigsec-landing-root">
+    <div className="bg-black text-white min-h-screen font-sans relative selection:bg-brand-primary selection:text-black overflow-hidden" id="guardr-landing-root">
       
-      {/* Crisp Grid Line Pattern for Uber feel */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#141414_1px,transparent_1px),linear-gradient(to_bottom,#141414_1px,transparent_1px)] bg-[size:5rem_5rem] pointer-events-none" />
+      {/* Subtle crisp geometric background grid lines */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0d110e_1px,transparent_1px),linear-gradient(to_bottom,#0d110e_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none opacity-80" />
 
-      {/* Hero Header Group */}
-      <section className="relative pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-start text-left">
+      {/* Modern Top Header / Portal Selector Bar */}
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-neutral-900 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black font-mono text-sm leading-none rounded-none tracking-tighter">
+              G
+            </div>
+            <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">Guardr</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-5">
+            <button 
+              onClick={() => onNavigateToAuth('client')} 
+              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
+            >
+              Client Login
+            </button>
+            <button 
+              onClick={() => onNavigateToAuth('guard')} 
+              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
+            >
+              Guard Portal
+            </button>
+            <button 
+              onClick={() => onNavigateToAuth('auditor')} 
+              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
+            >
+              Compliance Audit
+            </button>
+            <button 
+              onClick={() => onNavigateToAuth('staff')} 
+              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider border-l border-neutral-800 pl-4"
+            >
+              Operations Console
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={() => onNavigateToAuth('client')}
+              className="text-xs bg-neutral-900 border border-neutral-800 px-3 py-1.5 font-mono uppercase tracking-wider"
+            >
+              Enter Console
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* HERO SECTION */}
+      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center z-10">
         <motion.div 
-          initial={{ opacity: 0, y: 10 }} 
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 border border-neutral-800 text-uber-green text-[10px] font-mono uppercase tracking-widest mb-6"
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-3 py-1 bg-[#0b120c] border border-[#1b2f1d]/40 text-brand-primary text-[10px] font-mono uppercase tracking-wider mb-6"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-uber-green animate-pulse"></span>
-          <span>State Guard Card Standards Compliant</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+          <span>Verified Contractor Marketplace</span>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 w-full items-center">
-          <div className="lg:col-span-7 space-y-6">
-            <motion.h1 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.05 }}
-              className="text-5xl sm:text-7xl font-extrabold font-sans tracking-tighter text-white leading-none uppercase"
-            >
-              Guardr <br />
-              <span className="text-neutral-500 font-light">On-Demand</span> Security
-            </motion.h1>
+        <motion.h1 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white"
+        >
+          Guardr
+        </motion.h1>
 
-            <motion.p 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.1 }}
-              className="text-sm sm:text-base text-neutral-400 max-w-xl leading-relaxed font-sans"
-            >
-              We are an <span className="text-white font-semibold">independent contractor marketplace</span> connecting licensed security professionals directly with clients who post and manage their own service requests. <span className="text-uber-green font-semibold">We are not a vetting platform</span> — we provide direct community access with instant digital dispatch escrow verification and shift compliance checklists.
-            </motion.p>
+        <motion.p 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-lg sm:text-2xl font-mono text-brand-primary font-bold mt-3 tracking-wide uppercase"
+        >
+          Independent Security Staffing. On Demand.
+        </motion.p>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.15 }}
-              className="pt-4 flex flex-col sm:flex-row gap-3 items-stretch w-full max-w-lg"
-            >
-              <button
-                onClick={() => onNavigateToAuth('client')}
-                className="px-8 py-4 bg-white hover:bg-neutral-150 text-black font-bold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer group rounded-none"
-              >
-                <span>Request Dispatch</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-              
-              <button
-                onClick={() => onNavigateToAuth('guard')}
-                className="px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-bold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
-              >
-                <span>Register Guard Card</span>
-              </button>
-            </motion.div>
-          </div>
+        <motion.p 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto mt-6 leading-relaxed"
+        >
+          Guardr connects clients with verified independent security professionals ready for assignment.
+        </motion.p>
 
-          {/* Quick Dashboard Entry Portal right in the hero list */}
-          <div className="lg:col-span-5 bg-neutral-950 border border-neutral-900 p-6 sm:p-8 space-y-6">
-            <div className="border-b border-neutral-900 pb-4">
-              <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-extrabold block">Base Access</span>
-              <h3 className="text-lg font-bold tracking-tight uppercase text-white">Select Your Interface</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={() => onNavigateToAuth('client')}
-                className="w-full flex items-center justify-between p-4 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-left transition-all group"
-              >
-                <div>
-                  <h4 className="font-bold text-sm uppercase text-white group-hover:text-uber-green transition-colors">Corporate Clients</h4>
-                  <p className="text-[11px] text-neutral-400">Post Patrol orders, match guards, manage billing</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-colors" />
-              </button>
+        <motion.h3 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-sm font-mono text-neutral-450 uppercase tracking-widest font-extrabold mt-8 bg-neutral-950 p-2.5 max-w-md mx-auto border border-neutral-900"
+        >
+          📍 Anytime. Anywhere. Security, when you need it.
+        </motion.h3>
 
-              <button 
-                onClick={() => onNavigateToAuth('guard')}
-                className="w-full flex items-center justify-between p-4 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-left transition-all group"
-              >
-                <div>
-                  <h4 className="font-bold text-sm uppercase text-white group-hover:text-uber-green transition-colors">Licensed Guards</h4>
-                  <p className="text-[11px] text-neutral-400">Claim live shifts, self-audit uniform, get paid</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-colors" />
-              </button>
+        <motion.p 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+          className="text-xs sm:text-sm text-neutral-450 max-w-xl mx-auto mt-6 leading-relaxed font-sans"
+        >
+          We are an <span className="text-white font-medium">independent contractor marketplace</span> that connects licensed security professionals directly with clients who need coverage—fast, flexible, and transparent.
+        </motion.p>
 
-              <button 
-                onClick={() => onNavigateToAuth('auditor')}
-                className="w-full flex items-center justify-between p-4 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-left transition-all group"
-              >
-                <div>
-                  <h4 className="font-bold text-sm uppercase text-white group-hover:text-uber-green transition-colors">Compliance Auditors</h4>
-                  <p className="text-[11px] text-neutral-400">Review platform safety standard certifications and guard credentials</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-colors" />
-              </button>
-
-              <button 
-                onClick={() => onNavigateToAuth('staff')}
-                className="w-full flex items-center justify-between p-4 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-left transition-all group"
-              >
-                <div>
-                  <h4 className="font-bold text-sm uppercase text-white group-hover:text-uber-green transition-colors">Operations Controller</h4>
-                  <p className="text-[11px] text-neutral-400">Rosters, safety overrides, reset conduct files</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-colors" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Live Marketplace Statistics Banner */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.99 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.25 }}
-          className="mt-16 w-full bg-neutral-950 border border-neutral-900 p-6 sm:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 items-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mt-10 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto"
         >
-          <div className="font-mono space-y-1">
-            <p className="text-neutral-500 text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-uber-green" /> Active Officers
-            </p>
-            <p className="text-3xl font-extrabold text-white">{guardsCount}</p>
-            <p className="text-[9px] text-uber-green font-bold uppercase tracking-wider">✓ State Licensed</p>
-          </div>
-
-          <div className="font-mono space-y-1 lg:border-l lg:border-neutral-900 lg:pl-6">
-            <p className="text-neutral-500 text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-uber-green" /> Dispatch Requests
-            </p>
-            <p className="text-3xl font-extrabold text-white">{requestsCount}</p>
-            <p className="text-[9px] text-neutral-450 font-bold uppercase tracking-wider">⚡ Immediate Assignment</p>
-          </div>
-
-          <div className="font-mono space-y-1 lg:border-l lg:border-neutral-900 lg:pl-6">
-            <p className="text-neutral-500 text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
-              <ClipboardCheck className="w-3.5 h-3.5 text-uber-green" /> Audit Rating
-            </p>
-            <p className="text-3xl font-extrabold text-white">99.8%</p>
-            <p className="text-[9px] text-uber-green font-bold uppercase tracking-wider">🔒 Standard Met</p>
-          </div>
-
-          <div className="font-mono space-y-1 lg:border-l lg:border-neutral-900 lg:pl-6">
-            <p className="text-neutral-500 text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-uber-green" /> Matching ETA
-            </p>
-            <p className="text-3xl font-extrabold text-white">2.4m</p>
-            <p className="text-[9px] text-amber-400 font-bold uppercase tracking-wider">⚡ Instant Connection</p>
-          </div>
+          <button
+            onClick={() => onNavigateToAuth('client')}
+            className="flex-1 px-6 py-4 bg-white text-black font-sans font-extrabold text-xs tracking-wider uppercase transition-all hover:bg-neutral-200 cursor-pointer text-center"
+          >
+            Get Started
+          </button>
+          <button
+            onClick={() => onNavigateToAuth('guard')}
+            className="flex-1 px-6 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-sans font-extrabold text-xs tracking-wider uppercase transition-all cursor-pointer text-center"
+          >
+            Sign Up as a Guard
+          </button>
         </motion.div>
       </section>
 
-      {/* Live Directory Board & Open Assignments Preview - Uber Split Layout */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-neutral-900 grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
-        
-        {/* Guard Registry On Display */}
-        <div className="space-y-6 bg-neutral-950 border border-neutral-900 p-6 sm:p-8">
-          <div className="space-y-2 border-b border-neutral-900 pb-4">
-            <span className="text-[10px] text-uber-green font-mono tracking-widest font-extrabold block">LIVE FLEET ROSTER</span>
-            <h2 className="text-2xl font-bold tracking-tight uppercase">Professional Officers</h2>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Licensed independent security operators matching the dispatch requirements.
-            </p>
+      {/* SECTION 1: GET SECURITY COVERAGE */}
+      <section className="py-16 border-t border-neutral-900 bg-neutral-950/40 relative z-10 px-4">
+        <div className="max-w-4xl mx-auto bg-black border border-neutral-900 p-8 sm:p-12 space-y-6">
+          <div className="space-y-2">
+            <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">DIRECT ASSIGNMENT</span>
+            <h2 className="text-2xl sm:text-3xl font-sans font-black uppercase text-white tracking-tight">
+              Get Security Coverage When You Need It
+            </h2>
           </div>
 
-          <div className="space-y-3">
-            {sampleGuards.map((g) => (
-              <div key={g.id} className="flex items-center justify-between p-4 bg-neutral-900 border border-neutral-800 text-xs">
-                <div className="flex items-center space-x-3.5">
-                  <img src={g.avatar} alt={g.name} className="w-10 h-10 border border-neutral-900 object-cover" referrerPolicy="no-referrer" />
-                  <div>
-                    <h4 className="font-bold text-white text-sm tracking-tight">{g.name}</h4>
-                    <span className="text-[10px] text-neutral-400 font-mono block mt-0.5">{g.badgeNumber} • {g.isArmed ? 'ARMED PATROL' : 'UNARMED COMPLIANT'}</span>
-                  </div>
-                </div>
-                <div>
-                  <span className={`text-[9px] font-mono px-2 py-0.5 border ${
-                    g.verified 
-                      ? 'bg-neutral-950 text-uber-green border-uber-green/40' 
-                      : 'bg-neutral-950 text-amber-400 border-amber-400/40'
-                  }`}>
-                    {g.verified ? 'STATE VERIFIED' : 'PENDING AUDIT'}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <p className="text-base sm:text-lg text-neutral-200 font-mono italic">
+            Post a request. Get qualified guards. Confirm coverage.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="border border-neutral-900 bg-neutral-95 w-full p-4 font-mono text-[11px] text-brand-primary uppercase">
+              ⚡ No long hiring cycles.
+            </div>
+            <div className="border border-neutral-900 bg-neutral-95 w-full p-4 font-mono text-[11px] text-brand-primary uppercase">
+              🛡 No staffing middlemen.
+            </div>
           </div>
+
+          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed pt-2">
+            Guardr lets you request security personnel by time, location, and job type—then independent contractors choose the shifts that fit them.
+          </p>
         </div>
-
-        {/* Live Marketplace Postings Feed */}
-        <div className="space-y-6 bg-neutral-950 border border-neutral-900 p-6 sm:p-8">
-          <div className="space-y-2 border-b border-neutral-900 pb-4">
-            <span className="text-[10px] text-uber-green font-mono tracking-widest font-extrabold block">LIVE ASSIGNMENT FEED</span>
-            <h2 className="text-2xl font-bold tracking-tight uppercase">Open Deployments</h2>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Real-time security demands currently requested by corporate clients.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {activeJobs.slice(0, 3).map((job) => (
-              <div key={job.id} className="p-4 bg-neutral-900 border border-neutral-800 text-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] bg-neutral-950 border border-neutral-700 text-neutral-300 font-mono px-2.5 py-0.5 font-bold uppercase">{job.type}</span>
-                  <span className="text-white font-bold text-sm font-mono">${job.hourlyRate}/Hr</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-white tracking-tight">{job.title}</h4>
-                  <p className="text-neutral-400 text-[11px] mt-1 line-clamp-1">{job.description}</p>
-                </div>
-                <div className="flex justify-between items-center text-[10px] text-neutral-500 font-mono pt-2 border-t border-neutral-950">
-                  <span>📍 {job.location}</span>
-                  <span>⏱ {job.durationHours} Hours</span>
-                </div>
-              </div>
-            ))}
-
-            {activeJobs.length === 0 && (
-              <div className="text-center py-12 text-neutral-500 text-xs">
-                All assignments are currently filled. Sign of as a client to post a dispatch.
-              </div>
-            )}
-          </div>
-        </div>
-
       </section>
 
-      {/* Regulatory Compliance & Standards Detail Section */}
-      <section className="py-16 bg-black border-t border-neutral-950 px-4">
-        <div className="max-w-4xl mx-auto bg-neutral-950 p-8 border border-neutral-900 space-y-6">
-          <div className="flex items-start gap-4">
-            <ClipboardCheck className="w-6 h-6 text-uber-green shrink-0 mt-1" />
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold tracking-wider uppercase text-white font-mono">Platform Standards & Escrow Dispatch Protocol</h3>
-              <p className="text-xs text-neutral-400 leading-relaxed">
-                Platform deployment mandates double-verification on every contract. The client deposits the escrow, and the system locks the assignment window. Our compliance auditors crosscheck physical credentials against State license criteria prior to authorizing assignments. Any officer uniform violations or equipment checks are flagged automatically, protecting retail and private facilities from security compliance exposure.
-              </p>
+      {/* SECTION 2: HOW IT WORKS */}
+      <section className="py-20 border-t border-neutral-900 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto relative z-10">
+        <div className="text-center mb-12 space-y-2">
+          <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">TRANSPARENT SYSTEM</span>
+          <h2 className="text-3xl font-sans font-black uppercase text-white tracking-tight">How It Works</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          
+          {/* For Clients */}
+          <div className="bg-neutral-950 border border-neutral-900 p-6 sm:p-8 space-y-6">
+            <div className="border-b border-neutral-900 pb-4">
+              <span className="text-[10px] text-neutral-500 font-mono block mb-1">STAGING PORTAL</span>
+              <h3 className="text-lg font-sans font-bold uppercase text-white">For Clients</h3>
+            </div>
+
+            <ol className="space-y-4 text-xs font-mono">
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Create a request</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Open your client staging dashboard instantly.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Submit job details</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Specify date, time, location, and desired hourly rate.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Staff reviews and approves</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Our dispatch controller verifies and approves the post.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Qualified guards accept</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Licensed contract security personnel take the shift.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-brand-primary text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">5</span>
+                <div>
+                  <h4 className="text-brand-primary font-bold uppercase">Coverage begins</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Continuous field check-ins ensure total visibility.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          {/* For Guards */}
+          <div className="bg-neutral-950 border border-neutral-900 p-6 sm:p-8 space-y-6">
+            <div className="border-b border-neutral-900 pb-4">
+              <span className="text-[10px] text-neutral-500 font-mono block mb-1">INDEPENDENT CONTRACTOR</span>
+              <h3 className="text-lg font-sans font-bold uppercase text-white">For Guards</h3>
+            </div>
+
+            <ol className="space-y-4 text-xs font-mono">
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Sign up as an independent contractor</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Register your local license details on our dispatch ledger.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Upload certifications and credentials</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Present Guard Cards, weapons permits, and training files.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Get access to available shifts</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">View matching immediate coverage demands in real time.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
+                <div>
+                  <h4 className="text-white font-bold uppercase">Accept jobs that match your schedule</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans font-mono text-brand-primary">No quotas. Work whenever you decide is appropriate.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 bg-brand-primary text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">5</span>
+                <div>
+                  <h4 className="text-brand-primary font-bold uppercase">Work and get paid directly</h4>
+                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Get rapid contract digital remittance upon completion.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+        </div>
+      </section>
+
+      {/* SECTION 3: BUILT FOR FLEXIBILITY */}
+      <section className="py-16 border-t border-neutral-900 bg-neutral-950/20 relative z-10 px-4">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">OPERATIONAL DIVERSITY</span>
+            <h2 className="text-2xl sm:text-3xl font-sans font-black uppercase text-white tracking-tight">Built for Flexibility</h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
+              <span className="text-brand-primary text-xs uppercase block font-bold">Event Security</span>
+            </div>
+            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
+              <span className="text-brand-primary text-xs uppercase block font-bold">Construction Sites</span>
+            </div>
+            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
+              <span className="text-brand-primary text-xs uppercase block font-bold">Retail Protection</span>
+            </div>
+            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
+              <span className="text-brand-primary text-xs uppercase block font-bold">Nightlife & Events</span>
+            </div>
+            <div className="bg-neutral-950 border border-neutral-900 col-span-2 md:col-span-1 p-4 font-mono text-center">
+              <span className="text-brand-primary text-xs uppercase block font-bold">Short & Recurring</span>
+            </div>
+          </div>
+
+          <div className="text-center max-w-xl mx-auto text-xs sm:text-sm text-neutral-350 bg-neutral-950 border border-neutral-900 p-4 font-mono uppercase tracking-wide">
+            ⚠ Guardr is designed for real-world coverage needs that change by the hour, not by the month.
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4: INDEPENDENT TRANSPARENT FAST */}
+      <section className="py-16 border-t border-neutral-900 px-4">
+        <div className="max-w-3xl mx-auto space-y-6 bg-black border border-neutral-900 p-6 sm:p-10 text-center">
+          <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">PLATFORM MANDATES</span>
+          <h2 className="text-xl sm:text-2xl font-sans font-black uppercase text-white tracking-tight">
+            Independent. Transparent. Fast.
+          </h2>
+
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans max-w-xl mx-auto">
+            Every assignment is a direct agreement between clients and independent contractors.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[10px] font-mono pt-4 text-neutral-450">
+            <div className="border border-neutral-900 p-3 bg-neutral-950">
+              ✖ Guardr does not employ guards.
+            </div>
+            <div className="border border-neutral-900 p-3 bg-neutral-950">
+              ✖ Guardr does not guarantee placement.
+            </div>
+            <div className="border border-neutral-900 p-3 bg-neutral-950">
+              ✔ Guardr provides the system that makes connection possible.
             </div>
           </div>
         </div>
       </section>
+
+      {/* SECTION 5: SIGNUP BOTTOM PANEL */}
+      <section className="py-20 border-t border-neutral-900 bg-neutral-950/50 text-center relative z-10 px-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h2 className="text-3xl sm:text-4xl font-sans font-black uppercase tracking-tight text-white">
+            Start Using Guardr
+          </h2>
+
+          <p className="text-base sm:text-xl font-mono text-brand-primary font-bold uppercase">
+            Need coverage? Or ready to take shifts?
+          </p>
+
+          <p className="text-sm text-neutral-400">
+            Join Guardr today and stay ready.
+          </p>
+
+          <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4 max-w-sm mx-auto">
+            <button
+              onClick={() => onNavigateToAuth('client')}
+              className="flex-1 px-8 py-4 bg-white hover:bg-neutral-200 text-black font-sans font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+            >
+              Get Started
+            </button>
+            <button
+              onClick={() => onNavigateToAuth('guard')}
+              className="flex-1 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-sans font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+            >
+              Sign Up as a Guard
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Elegant minimalist footer */}
+      <footer className="py-12 border-t border-neutral-950 text-center text-neutral-600 font-mono text-[9px] uppercase tracking-widest relative z-10 bg-black">
+        <p>© {new Date().getFullYear()} G-U-A-R-D-R — ALL DATA STAGED ACCORDING TO STATE LICENSE LAWS</p>
+      </footer>
 
     </div>
   );
