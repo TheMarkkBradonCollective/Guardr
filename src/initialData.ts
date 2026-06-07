@@ -56,68 +56,7 @@ export const INITIAL_GUARDS: SecurityGuard[] = [
   }
 ];
 
-export const INITIAL_REQUESTS: SecurityRequest[] = [
-  {
-    id: 'req-1',
-    title: 'High-Profile Luxury Fashion Gala Security Detail',
-    description: 'Provide unarmed security specialists for access control, VIP arrivals, and red-carpet crowd logistics. Business professional suits required. Excellent posture and service communication are mandatory.',
-    clientId: 'client-1',
-    clientName: 'Sartorial Vanguard Group',
-    clientLogo: 'SV',
-    location: 'Metropolitan Art Pavilion, New York',
-    type: 'event',
-    armedRequired: false,
-    startDate: '2026-06-15T18:00:00Z',
-    endDate: '2026-06-16T01:00:00Z',
-    durationHours: 7,
-    hourlyRate: 50,
-    estimatedPayout: 350,
-    status: 'open',
-    assignedGuardId: null,
-    requiredCertifications: ['Vessel / Event Security Officer (VSO)', 'First Aid & CPR'],
-    applicants: []
-  },
-  {
-    id: 'req-2',
-    title: 'Executive Armed Escort & Asset Protection',
-    description: 'Armed escort needed to transport high-value jewelry artifacts from local vaults to auction house. Active concealed weapons permit, armed field certification, and military or high-risk private security background are strictly mandatory.',
-    clientId: 'client-2',
-    clientName: 'Aurelia Fine Gems',
-    clientLogo: 'AG',
-    location: 'Sotheby Vaults to Midtown Center',
-    type: 'armed-escort',
-    armedRequired: true,
-    startDate: '2026-06-18T10:00:00Z',
-    endDate: '2026-06-18T14:00:00Z',
-    durationHours: 4,
-    hourlyRate: 75,
-    estimatedPayout: 300,
-    status: 'open',
-    assignedGuardId: null,
-    requiredCertifications: ['State Armed Security Officer Guard Card', 'Tactical Combat Casualty Care (TCCC)'],
-    applicants: []
-  },
-  {
-    id: 'req-3',
-    title: 'Tech Campus Overnight Asset Protection',
-    description: 'Conduct vehicle and foot patrols for an offline data depot campus. Safeguard server assets, scan check-ins, and file digital incident sheets.',
-    clientId: 'client-3',
-    clientName: 'Lumina Systems Inc',
-    clientLogo: 'LS',
-    location: 'Industrial Park, Building B',
-    type: 'patrol',
-    armedRequired: false,
-    startDate: '2026-06-20T22:00:00Z',
-    endDate: '2026-06-21T06:00:00Z',
-    durationHours: 8,
-    hourlyRate: 35,
-    estimatedPayout: 280,
-    status: 'assigned',
-    assignedGuardId: 'guard-1', // Alex Mercer is pre-assigned to this active job
-    requiredCertifications: ['State Unarmed Guard Card License'],
-    applicants: ['guard-1']
-  }
-];
+export const INITIAL_REQUESTS: SecurityRequest[] = [];
 
 export const PREFAB_CERT_LIST = [
   'State Unarmed Guard Card License',

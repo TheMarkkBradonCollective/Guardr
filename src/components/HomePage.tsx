@@ -1,4 +1,5 @@
 import React from 'react';
+import { Logo } from './Logo';
 import { 
   ShieldCheck, 
   ArrowRight, 
@@ -41,9 +42,7 @@ export function HomePage({
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-neutral-900 px-4 sm:px-6 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-white text-black flex items-center justify-center font-black font-mono text-sm leading-none rounded-none tracking-tighter">
-              G
-            </div>
+            <Logo size={32} className="text-brand-primary shrink-0" />
             <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">Guardr</span>
           </div>
 
@@ -101,9 +100,10 @@ export function HomePage({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white"
+          className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white flex flex-col items-center justify-center gap-1"
         >
-          Guardr
+          <span>Guardr</span>
+          <span className="text-xs sm:text-sm font-mono tracking-[0.25em] text-neutral-400 uppercase font-bold mt-1">BY SIGNATURE SECURITY SPECIALIST</span>
         </motion.h1>
 
         <motion.p 

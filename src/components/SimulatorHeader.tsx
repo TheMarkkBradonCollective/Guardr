@@ -25,9 +25,7 @@ export function SimulatorHeader({
           
           {/* Logo Brand Group */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-neutral-950 border border-neutral-800 rounded flex items-center justify-center text-uber-green shadow-md">
-              <Logo size={18} className="text-uber-green" />
-            </div>
+            <Logo size={28} className="text-uber-green shrink-0" />
             <div>
               <span className="font-mono text-[10px] text-blue-400 uppercase tracking-widest font-bold block">On-Demand Guard Network</span>
               <h1 className="text-md font-bold tracking-tight text-white flex items-center gap-1.5 leading-none">

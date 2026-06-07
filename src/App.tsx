@@ -12,6 +12,7 @@ import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
+import { InstallPrompt } from './components/InstallPrompt';
 import { Shield, Sparkles, RefreshCw, Layers, LogOut, User, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 
@@ -767,29 +768,35 @@ export default function App() {
   if (!currentUser) {
     if (isAuthView) {
       return (
-        <AuthPage
-          onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
-          guardsList={guards}
-          onBackToHome={() => setIsAuthView(false)}
-          initialRole={initialAuthRole}
-        />
+        <>
+          <AuthPage
+            onSignIn={handleSignIn}
+            onSignUp={handleSignUp}
+            guardsList={guards}
+            onBackToHome={() => setIsAuthView(false)}
+            initialRole={initialAuthRole}
+          />
+          <InstallPrompt />
+        </>
       );
     }
 
     return (
-      <HomePage
-        onNavigateToAuth={(role) => {
-          if (role) {
-            setInitialAuthRole(role);
-          }
-          setIsAuthView(true);
-        }}
-        guardsCount={guards.length}
-        requestsCount={requests.length}
-        availableRequests={requests}
-        sampleGuards={guards.slice(0, 3)}
-      />
+      <>
+        <HomePage
+          onNavigateToAuth={(role) => {
+            if (role) {
+              setInitialAuthRole(role);
+            }
+            setIsAuthView(true);
+          }}
+          guardsCount={guards.length}
+          requestsCount={requests.length}
+          availableRequests={requests}
+          sampleGuards={guards.slice(0, 3)}
+        />
+        <InstallPrompt />
+      </>
     );
   }
 
@@ -802,9 +809,7 @@ export default function App() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 transition-colors bg-brand-bg border border-brand-border text-brand-primary">
-                <Logo className="text-current" size={20} />
-              </div>
+              <Logo className="text-brand-primary shrink-0" size={32} />
               <button 
                 onClick={handleSignOut}
                 className="text-left cursor-pointer hover:opacity-90 block"
@@ -982,7 +987,7 @@ export default function App() {
           </div>
         </div>
       </footer>
-
+      <InstallPrompt />
     </div>
   );
 }

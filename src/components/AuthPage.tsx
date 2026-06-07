@@ -239,9 +239,7 @@ export function AuthPage({
         
         {/* Banner header logo */}
         <div className="flex flex-col items-center text-center space-y-2 mb-6">
-          <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 text-uber-green flex items-center justify-center">
-            <Logo size={24} className="text-uber-green" />
-          </div>
+          <Logo size={40} className="text-brand-primary shrink-0" />
           <h2 className="text-xl font-black font-sans tracking-tight">
             {isSignUp ? 'Create Platform Profile' : 'Credentials Sign In'}
           </h2>

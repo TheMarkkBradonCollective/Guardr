@@ -1,6 +1,9 @@
 -- Supabase Migration: 20260606000002_cleanup_non_directors.sql
 -- Description: Clean up all initial non-director users/guards from the live database.
 
+-- Delete all security requests / jobs so they started blank
+DELETE FROM security_requests;
+
 -- Delete related certifications of other guards
 DELETE FROM certifications WHERE guard_id != 'guard-1';
 

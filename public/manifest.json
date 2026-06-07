@@ -1,0 +1,19 @@
+{
+  "name": "Guardr by Signature Security Specialist",
+  "short_name": "Guardr",
+  "description": "Independent Security Staffing. On Demand.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#84a279",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
