@@ -660,21 +660,3 @@ body[data-form-factor="desktop"] .tablet-card-lg {
 body[data-form-factor="desktop"] .staff-ops-root main {
   max-width: 1400px;
 }
-
-body[data-online="false"]::after {
-  content: 'Offline — changes will sync when connected';
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 9999;
-  background: #3d5a36;
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-  padding: 0.5rem;
-  pointer-events: none;
-}

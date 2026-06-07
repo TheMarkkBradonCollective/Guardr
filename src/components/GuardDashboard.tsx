@@ -51,7 +51,6 @@ export function GuardDashboard({
   onUpdateProfile,
 }: GuardDashboardProps) {
   const [activeTab, setActiveTab] = useState<GuardTab>('map');
-  const [isOnline, setIsOnline] = useState(true);
   const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
@@ -99,10 +98,10 @@ export function GuardDashboard({
     return all.find((j) => j.id === selectedJobId) ?? null;
   }, [filteredBrowseJobs, assignedJobs, selectedJobId]);
 
-  const mapJobs = useMemo(() => {
-    if (!isOnline) return assignedJobs;
-    return [...availableJobs, ...assignedJobs.filter((j) => j.status === 'accepted')];
-  }, [isOnline, availableJobs, assignedJobs]);
+  const mapJobs = useMemo(
+    () => [...availableJobs, ...assignedJobs.filter((j) => j.status === 'accepted')],
+    [availableJobs, assignedJobs]
+  );
 
   const earningsSummary = useMemo(() => computeEarningsSummary(completedJobs), [completedJobs]);
 
@@ -289,15 +288,6 @@ export function GuardDashboard({
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsOnline(!isOnline)}
-            className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border backdrop-blur-md transition-all ${
-              isOnline ? 'bg-brand-primary text-black border-brand-primary' : 'bg-black/85 text-white/50 border-white/10'
-            }`}
-          >
-            {isOnline ? 'Online' : 'Go Online'}
-          </button>
           {onSignOut && (
             <button
               type="button"
@@ -335,7 +325,6 @@ export function GuardDashboard({
           onSelectCategory={setSelectedCategory}
           onSelectJob={(job) => setSelectedJobId(job?.id ?? null)}
           onAcceptJob={handleAcceptJob}
-          isOnline={isOnline}
         />
       )}
 

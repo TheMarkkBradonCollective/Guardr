@@ -23,7 +23,6 @@ interface GuardBottomSheetProps {
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: SecurityRequest | null) => void;
   onAcceptJob: (jobId: string) => void;
-  isOnline: boolean;
 }
 
 export function GuardBottomSheet({
@@ -35,7 +34,6 @@ export function GuardBottomSheet({
   onSelectCategory,
   onSelectJob,
   onAcceptJob,
-  isOnline,
 }: GuardBottomSheetProps) {
   const [snap, setSnap] = useState<SheetSnap>('half');
   const startSnap = useRef<SheetSnap>('half');
@@ -59,17 +57,6 @@ export function GuardBottomSheet({
 
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
   const heightPx = vh * SNAP_HEIGHTS[snap];
-
-  if (!isOnline) {
-    return (
-      <div className="guardr-bottom-sheet guardr-bottom-sheet-uber rounded-t-2xl">
-        <div className="py-10 text-center">
-          <p className="font-black text-base uppercase tracking-tight">Go online to see jobs</p>
-          <p className="text-xs text-white/50 mt-2 font-mono">Tap Online in the header to start receiving assignments.</p>
-        </div>
-      </div>
-    );
-  }
 
   const sheetLabel = selectedJob
     ? 'Assignment Details'
