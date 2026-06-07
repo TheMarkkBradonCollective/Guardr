@@ -30,11 +30,14 @@ import {
   X,
   CheckCircle2,
   Pencil,
+  CreditCard,
 } from 'lucide-react';
+import { createCheckoutSession } from '../lib/stripeApi';
 
 interface ClientDashboardProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  clientEmail: string;
   isClientApproved?: boolean;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
   onEditRequest: (requestId: string, req: Partial<SecurityRequest>) => void;
@@ -47,6 +50,24 @@ interface ClientDashboardProps {
 
 function canClientModifyRequest(status: JobStatus): boolean {
   return status === 'pending-review' || status === 'open';
+}
+
+function paymentBadgeClass(status?: SecurityRequest['paymentStatus']): string {
+  switch (status) {
+    case 'paid': return 'badge-open';
+    case 'held': return 'badge-assigned';
+    case 'released': return 'badge-done';
+    default: return 'badge-assigned';
+  }
+}
+
+function paymentLabel(status?: SecurityRequest['paymentStatus']): string {
+  switch (status) {
+    case 'paid': return 'Paid';
+    case 'held': return 'Held';
+    case 'released': return 'Released';
+    default: return 'Unpaid';
+  }
 }
 
 function statusBadgeClass(status: JobStatus): string {
@@ -64,6 +85,7 @@ function statusBadgeClass(status: JobStatus): string {
 export function ClientDashboard({
   requests,
   guards,
+  clientEmail,
   isClientApproved = true,
   onPostRequest,
   onEditRequest,
@@ -97,10 +119,31 @@ export function ClientDashboard({
 
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote]     = useState<{ [reqId: string]: string }>({});
+  const [payingJobId, setPayingJobId] = useState<string | null>(null);
 
   const computedDurationHours = computeDurationHours(startDate, endDate);
   const computedPayout = Math.round(computedDurationHours * hourlyRate * 100) / 100;
   const computedGuardPay = computeGuardPay(hourlyRate);
+
+  const handlePayNow = async (req: SecurityRequest) => {
+    setPayingJobId(req.id);
+    try {
+      const amountCents = Math.round(req.estimatedPayout * 100);
+      const { url } = await createCheckoutSession({
+        jobId: req.id,
+        clientEmail,
+        jobTitle: req.title,
+        amountCents,
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Unable to start checkout');
+    } finally {
+      setPayingJobId(null);
+    }
+  };
 
   const handleCertsToggle = (cert: string) => {
     setSelectedCerts(prev =>
@@ -306,9 +349,14 @@ export function ClientDashboard({
                           <p className="text-[10px] font-mono text-brand-text-muted capitalize">{req.type.replace('-', ' ')} · {req.clientName}</p>
                         </div>
                       </div>
-                      <span className={`shrink-0 px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-wider ${statusBadgeClass(req.status)}`}>
-                        {JOB_STATUS_LABELS[req.status]}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-wider ${statusBadgeClass(req.status)}`}>
+                          {JOB_STATUS_LABELS[req.status]}
+                        </span>
+                        <span className={`px-2 py-1 text-[9px] font-mono font-bold uppercase ${paymentBadgeClass(req.paymentStatus)}`}>
+                          {paymentLabel(req.paymentStatus)}
+                        </span>
+                      </div>
                       {canClientModifyRequest(req.status) && (
                         <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto sm:ml-auto">
                           <button
@@ -376,9 +424,37 @@ export function ClientDashboard({
                       ))}
                     </div>
 
-                    {/* ── OPEN: show guards ─────────── */}
+                    {/* ── OPEN: pay + show guards ─────────── */}
                     {req.status === 'open' && (
                       <div className="pt-3 border-t border-brand-border space-y-3">
+                        {(!req.paymentStatus || req.paymentStatus === 'unpaid') && (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3">
+                            <div>
+                              <p className="text-[10px] font-mono uppercase text-brand-primary font-black">Payment Required</p>
+                              <p className="text-xs text-brand-text-muted mt-0.5">
+                                Pay ${req.estimatedPayout} to secure this approved job. Funds are held by Guardr until shift completion.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handlePayNow(req)}
+                              disabled={payingJobId === req.id}
+                              className="uber-button-sage h-9 px-5 text-xs font-black uppercase gap-1.5 shrink-0 disabled:opacity-50"
+                            >
+                              {payingJobId === req.id ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
+                              ) : (
+                                <><CreditCard className="w-3.5 h-3.5" /> Pay Now</>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                        {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
+                          <p className="text-[10px] font-mono text-emerald-400/90 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1.5 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Payment {paymentLabel(req.paymentStatus)} — you may hire a guard and start deployment.
+                          </p>
+                        )}
                         <div className="flex items-center justify-between">
                           <p className="uber-label">Qualified Guards</p>
                           <button
@@ -421,7 +497,8 @@ export function ClientDashboard({
                                 {guard.verified ? (
                                   <button
                                     onClick={() => onHireGuard(req.id, guard.id)}
-                                    className="uber-button-sage shrink-0 h-8 px-4 text-[10px] font-black uppercase gap-1"
+                                    disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
+                                    className="uber-button-sage shrink-0 h-8 px-4 text-[10px] font-black uppercase gap-1 disabled:opacity-40"
                                   >
                                     Hire <ChevronRight className="w-3 h-3" />
                                   </button>

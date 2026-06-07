@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SecurityGuard, SecurityRequest, Certification, SessionUser, Client } from '../types';
+import { SecurityGuard, SecurityRequest, Certification, SessionUser, Client, Payment } from '../types';
 import { formatDuration, formatShiftRange } from '../lib/dates';
 import { JOB_STATUS_LABELS } from '../lib/jobStatus';
 import {
@@ -41,6 +41,7 @@ interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
   requests: SecurityRequest[];
+  payments?: Payment[];
   onUpdateGuardStaffStatus: (guardId: string, isStaff: boolean) => Promise<void>;
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
   onApproveRequest: (requestId: string) => Promise<void>;
@@ -53,6 +54,8 @@ interface StaffDashboardProps {
   onRejectGuard: (guardId: string) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
+  onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
+  onRefundPayment?: (requestId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
@@ -62,6 +65,7 @@ export function StaffDashboard({
   guards,
   clients,
   requests,
+  payments = [],
   onUpdateGuardStaffStatus,
   onUpdateGuardUserStatus,
   onApproveRequest,
@@ -74,6 +78,8 @@ export function StaffDashboard({
   onRejectGuard,
   onRecordAuditViolation,
   onResetAuditFailures,
+  onReleasePayout,
+  onRefundPayment,
   isDbConnected,
   currentUser,
   onAddStaffProfile
@@ -1096,7 +1102,14 @@ export function StaffDashboard({
 
         {activeTab === 'finance' && showFinance && (
           <motion.div key="finance-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <AdminFinancePanel requests={requests} isDirector={currentUser.role === 'director'} />
+            <AdminFinancePanel
+              requests={requests}
+              guards={guards}
+              payments={payments}
+              isDirector={currentUser.role === 'director'}
+              onReleasePayout={onReleasePayout}
+              onRefundPayment={onRefundPayment}
+            />
           </motion.div>
         )}
 
