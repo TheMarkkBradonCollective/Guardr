@@ -1,20 +1,71 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Guardr
 
-# Run and deploy your AI Studio app
+**Anytime. Anywhere. Security, When You Need It.**
 
-This contains everything you need to run your app locally.
+Guardr is an independent contractor marketplace connecting licensed security professionals with clients who need security services. Think Uber for security — clients post requests, guards browse and accept available work.
 
-View your app in AI Studio: https://ai.studio/apps/2214f838-0953-4e74-906f-2f7ede6bc585
+## Product Overview
+
+- **Clients** post security requests with site details, schedules, and requirements
+- **Guards** browse open jobs, accept shifts, complete self-audits, and submit reports
+- **Staff** approve clients, guards, certifications, and job postings
+- **Admins** have full platform control
+
+Guardr is **not** an employer or staffing agency. It is a direct-connect marketplace.
+
+## Design
+
+- Uber-inspired, mobile-first UI
+- Sage green primary brand color (`#7C9A7A` / `#84a279`)
+- Three themes: Dark, Light, Grey
+- Large typography, minimal clutter, action-focused flows
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React + Vite + Tailwind CSS |
+| Backend | Supabase (PostgreSQL) |
+| Auth | Supabase Auth (demo uses local session) |
+| Payments | Stripe Connect (platform fee model) |
+| Hosting | Vercel |
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+cp .env.example .env.local   # optional: Supabase + Gemini keys
+npm run dev
+```
 
+Open `http://localhost:3000`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Job Status Flow
+
+```
+Draft → Pending Review → Open → Accepted → In Progress → Completed → Closed
+```
+
+## Payments Model
+
+| Role | Example |
+|------|---------|
+| Client rate | $35/hr |
+| Guard pay | $30/hr |
+| Platform fee | $5/hr |
+
+Duration is auto-calculated from start/end date-time — clients never enter duration manually.
+
+## MVP Features
+
+- Client & guard accounts with staff approval
+- Job posting with site name, address, uniform/equipment requirements
+- Job marketplace & acceptance
+- Pre-shift self-audits (appearance, equipment, selfie)
+- Shift reporting & ratings
+- Theme switching
+- Mobile-responsive PWA shell
+
+## Database Migrations
+
+Supabase migrations live in `supabase/migrations/`. Apply in order when connecting to a Supabase project.

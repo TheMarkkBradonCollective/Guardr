@@ -8,6 +8,9 @@ import {
   getDefaultShiftEnd,
   getDefaultShiftStart,
 } from '../lib/dates';
+import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../lib/payments';
+import { JOB_STATUS_LABELS } from '../lib/jobStatus';
+import { JobStatus } from '../types';
 import {
   Plus,
   MapPin,
@@ -26,33 +29,61 @@ import {
   Award,
   X,
   CheckCircle2,
+  Pencil,
 } from 'lucide-react';
 
 interface ClientDashboardProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  isClientApproved?: boolean;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
+  onEditRequest: (requestId: string, req: Partial<SecurityRequest>) => void;
+  onCancelRequest: (requestId: string) => void;
   onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   openPostForm?: boolean;
 }
 
+function canClientModifyRequest(status: JobStatus): boolean {
+  return status === 'pending-review' || status === 'open';
+}
+
+function statusBadgeClass(status: JobStatus): string {
+  switch (status) {
+    case 'open': return 'badge-open';
+    case 'pending-review': return 'badge-assigned';
+    case 'accepted': return 'badge-assigned';
+    case 'in-progress': return 'badge-active';
+    case 'completed': return 'badge-done';
+    case 'closed': return 'badge-done';
+    default: return 'badge-assigned';
+  }
+}
+
 export function ClientDashboard({
   requests,
   guards,
+  isClientApproved = true,
   onPostRequest,
+  onEditRequest,
+  onCancelRequest,
   onHireGuard,
   onUpdateStatus,
   onAddReview,
   openPostForm = false,
 }: ClientDashboardProps) {
   const [showAddForm, setShowAddForm] = useState(openPostForm);
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
   React.useEffect(() => { setShowAddForm(openPostForm); }, [openPostForm]);
 
   const [title, setTitle]           = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation]     = useState('');
+  const [siteName, setSiteName]     = useState('');
+  const [address, setAddress]       = useState('');
+  const [siteInstructions, setSiteInstructions] = useState('');
+  const [uniformRequirements, setUniformRequirements] = useState('');
+  const [equipmentRequirements, setEquipmentRequirements] = useState('');
+  const [guardsNeeded, setGuardsNeeded] = useState(1);
   const [type, setType]             = useState<JobType>('event');
   const [armedRequired, setArmedRequired] = useState(false);
   const [startDate, setStartDate]   = useState(getDefaultShiftStart);
@@ -69,6 +100,7 @@ export function ClientDashboard({
 
   const computedDurationHours = computeDurationHours(startDate, endDate);
   const computedPayout = Math.round(computedDurationHours * hourlyRate * 100) / 100;
+  const computedGuardPay = computeGuardPay(hourlyRate);
 
   const handleCertsToggle = (cert: string) => {
     setSelectedCerts(prev =>
@@ -77,8 +109,8 @@ export function ClientDashboard({
   };
 
   const handleAiAssist = async () => {
-    if (!title || !description) {
-      alert('Please enter a title and description first.');
+    if (!title || !siteInstructions) {
+      alert('Please enter a job title and site instructions first.');
       return;
     }
     setAiGenerating(true);
@@ -86,10 +118,10 @@ export function ClientDashboard({
       const response = await fetch('/api/generate-job-reqs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, rawDescription: description, startDate, endDate, type }),
+        body: JSON.stringify({ title, rawDescription: siteInstructions, startDate, endDate, type }),
       });
       const data = await response.json();
-      setDescription(data.refinedDescription || description);
+      setSiteInstructions(data.refinedDescription || siteInstructions);
       if (data.recommendedCertifications?.length) {
         const matching = PREFAB_CERT_LIST.filter(p =>
           data.recommendedCertifications.some((r: string) =>
@@ -109,20 +141,70 @@ export function ClientDashboard({
     }
   };
 
+  const resetForm = () => {
+    setTitle(''); setSiteName(''); setAddress(''); setSiteInstructions('');
+    setUniformRequirements(''); setEquipmentRequirements('');
+    setGuardsNeeded(1); setType('event'); setArmedRequired(false);
+    setStartDate(getDefaultShiftStart());
+    setEndDate(getDefaultShiftEnd(getDefaultShiftStart(), 8));
+    setHourlyRate(40);
+    setSelectedCerts(['First Aid & CPR / AED']);
+    setEditingRequestId(null);
+  };
+
+  const loadRequestIntoForm = (req: SecurityRequest) => {
+    setTitle(req.title);
+    setSiteName(req.siteName || '');
+    setAddress(req.address || req.location);
+    setSiteInstructions(req.siteInstructions || req.description);
+    setUniformRequirements(req.uniformRequirements || '');
+    setEquipmentRequirements(req.equipmentRequirements || '');
+    setGuardsNeeded(req.guardsNeeded || 1);
+    setType(req.type);
+    setArmedRequired(!!req.armedRequired);
+    setStartDate(req.startDate.slice(0, 16));
+    setEndDate(req.endDate.slice(0, 16));
+    setHourlyRate(req.hourlyRate);
+    setSelectedCerts(req.requiredCertifications.length ? req.requiredCertifications : ['First Aid & CPR / AED']);
+    setEditingRequestId(req.id);
+    setShowAddForm(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description || !location) { alert('Please fill in title, description, and location.'); return; }
+    if (!title || !siteName || !address) { alert('Please fill in job title, site name, and address.'); return; }
     if (computedDurationHours <= 0) { alert('End date/time must be after start date/time.'); return; }
-    onPostRequest({
-      title, description, location, type, armedRequired,
+    const payload = {
+      title, siteName, address,
+      siteInstructions,
+      uniformRequirements, equipmentRequirements,
+      guardsNeeded, type, armedRequired,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       durationHours: computedDurationHours,
       hourlyRate,
+      guardPay: computedGuardPay,
       estimatedPayout: computedPayout,
       requiredCertifications: selectedCerts,
-    });
-    setTitle(''); setDescription(''); setLocation(''); setShowAddForm(false);
+      description: siteInstructions,
+      location: `${siteName} — ${address}`,
+    };
+    if (editingRequestId) {
+      onEditRequest(editingRequestId, payload);
+      resetForm();
+      setShowAddForm(false);
+      alert('Request updated successfully.');
+      return;
+    }
+    onPostRequest(payload);
+    resetForm();
+    setShowAddForm(false);
+    alert('Security request submitted for staff review.');
+  };
+
+  const handleCancelRequest = (req: SecurityRequest) => {
+    if (!window.confirm(`Cancel "${req.title}"? This cannot be undone.`)) return;
+    onCancelRequest(req.id);
   };
 
   const handleRunAiMatch = async (req: SecurityRequest) => {
@@ -148,13 +230,24 @@ export function ClientDashboard({
 
   const statCards = [
     { icon: Shield,       label: 'Total Requests',    value: `${requests.length}` },
-    { icon: Activity,     label: 'Active Deployments', value: `${requests.filter(r => r.status === 'assigned' || r.status === 'in-progress').length}` },
+    { icon: Activity,     label: 'Active Deployments', value: `${requests.filter(r => r.status === 'accepted' || r.status === 'in-progress').length}` },
     { icon: CheckCircle2, label: 'Completed Shifts',  value: `${requests.filter(r => r.status === 'completed').length}` },
     { icon: User,         label: 'Available Guards',  value: `${guards.filter(g => g.verified).length} Verified` },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {!isClientApproved && (
+        <div className="uber-card border-amber-500/30 bg-amber-500/8 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-black text-sm uppercase tracking-tight">Account Pending Approval</p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              Submit your company information and await staff approval before posting security requests.
+            </p>
+          </div>
+        </div>
+      )}
       {/* ── STATS ──────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statCards.map(({ icon: Icon, label, value }) => (
@@ -182,10 +275,11 @@ export function ClientDashboard({
             </h2>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="uber-button-sage h-9 px-4 text-[11px] font-black uppercase tracking-wider gap-1.5"
+              disabled={!isClientApproved}
+              className="uber-button-sage h-9 px-4 text-[11px] font-black uppercase tracking-wider gap-1.5 disabled:opacity-40"
             >
               <Plus className="w-3.5 h-3.5" />
-              Post Shift
+              Post Request
             </button>
           </div>
 
@@ -212,18 +306,36 @@ export function ClientDashboard({
                           <p className="text-[10px] font-mono text-brand-text-muted capitalize">{req.type.replace('-', ' ')} · {req.clientName}</p>
                         </div>
                       </div>
-                      <span className={`shrink-0 px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-wider ${
-                        req.status === 'open'        ? 'badge-open' :
-                        req.status === 'assigned'    ? 'badge-assigned' :
-                        req.status === 'in-progress' ? 'badge-active' :
-                        'badge-done'
-                      }`}>
-                        {req.status === 'open'        && '⚡ Open'}
-                        {req.status === 'assigned'    && '🛡 Assigned'}
-                        {req.status === 'in-progress' && '🚨 On Patrol'}
-                        {req.status === 'completed'   && '✓ Complete'}
+                      <span className={`shrink-0 px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-wider ${statusBadgeClass(req.status)}`}>
+                        {JOB_STATUS_LABELS[req.status]}
                       </span>
+                      {canClientModifyRequest(req.status) && (
+                        <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto sm:ml-auto">
+                          <button
+                            type="button"
+                            onClick={() => loadRequestIntoForm(req)}
+                            className="uber-button-outline h-8 px-3 text-[10px] font-black uppercase gap-1"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelRequest(req)}
+                            className="h-8 px-3 text-[10px] font-black uppercase gap-1 border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <X className="w-3 h-3 inline" />
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
+
+                    {req.status === 'pending-review' && (
+                      <p className="text-[10px] font-mono text-amber-400/90 bg-amber-500/8 border border-amber-500/20 px-2.5 py-1.5">
+                        Awaiting staff review — you can edit or cancel until approved.
+                      </p>
+                    )}
 
                     {/* Description */}
                     <p className="text-xs text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">
@@ -324,7 +436,7 @@ export function ClientDashboard({
                     )}
 
                     {/* ── ASSIGNED: start deployment ─ */}
-                    {req.status === 'assigned' && hiredGuard && (
+                    {req.status === 'accepted' && hiredGuard && (
                       <div className="pt-3 border-t border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <img src={hiredGuard.avatar} alt={hiredGuard.name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
@@ -453,15 +565,15 @@ export function ClientDashboard({
               <div className="flex items-center justify-between">
                 <h3 className="font-black text-sm uppercase tracking-tight flex items-center gap-1.5">
                   <Plus className="w-4 h-4 text-brand-primary" />
-                  New Shift Request
+                  {editingRequestId ? 'Edit Shift Request' : 'New Shift Request'}
                 </h3>
-                <button type="button" onClick={() => setShowAddForm(false)} className="text-brand-text-muted hover:text-brand-text">
+                <button type="button" onClick={() => { resetForm(); setShowAddForm(false); }} className="text-brand-text-muted hover:text-brand-text">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div>
-                <label className="uber-label block mb-1.5">Shift Title</label>
+                <label className="uber-label block mb-1.5">Job Title</label>
                 <input
                   type="text"
                   required
@@ -470,6 +582,31 @@ export function ClientDashboard({
                   onChange={(e) => setTitle(e.target.value)}
                   className="uber-input"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="uber-label block mb-1.5">Site Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Riverside Amphitheater"
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
+                    className="uber-input"
+                  />
+                </div>
+                <div>
+                  <label className="uber-label block mb-1.5">Address</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Street address, city, state"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="uber-input"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -486,13 +623,13 @@ export function ClientDashboard({
                   </select>
                 </div>
                 <div>
-                  <label className="uber-label block mb-1.5">Location</label>
+                  <label className="uber-label block mb-1.5">Guards Needed</label>
                   <input
-                    type="text"
-                    required
-                    placeholder="Address or venue name"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={guardsNeeded}
+                    onChange={(e) => setGuardsNeeded(Number(e.target.value))}
                     className="uber-input"
                   />
                 </div>
@@ -539,7 +676,7 @@ export function ClientDashboard({
               </div>
 
               <div>
-                <label className="uber-label block mb-1.5">Hourly Rate ($/hr)</label>
+                <label className="uber-label block mb-1.5">Client Rate ($/hr)</label>
                 <input
                   type="number"
                   min="20" max="300"
@@ -547,6 +684,32 @@ export function ClientDashboard({
                   onChange={(e) => setHourlyRate(Number(e.target.value))}
                   className="uber-input"
                 />
+                <p className="text-[10px] font-mono text-brand-text-muted mt-1.5">
+                  Guard pay: ${computedGuardPay}/hr · Platform fee: ${PLATFORM_FEE_PER_HOUR}/hr
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="uber-label block mb-1.5">Uniform Requirements</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Black polo, black pants, black shoes"
+                    value={uniformRequirements}
+                    onChange={(e) => setUniformRequirements(e.target.value)}
+                    className="uber-input"
+                  />
+                </div>
+                <div>
+                  <label className="uber-label block mb-1.5">Equipment Requirements</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Radio, flashlight, duty belt"
+                    value={equipmentRequirements}
+                    onChange={(e) => setEquipmentRequirements(e.target.value)}
+                    className="uber-input"
+                  />
+                </div>
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -557,10 +720,9 @@ export function ClientDashboard({
                 <span className="text-xs font-mono text-brand-text-muted">⚠ Requires Armed Weapon Certification</span>
               </label>
 
-              {/* Description + AI */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="uber-label">Description</label>
+                  <label className="uber-label">Site Instructions</label>
                   <button
                     type="button"
                     onClick={handleAiAssist}
@@ -573,9 +735,9 @@ export function ClientDashboard({
                 <textarea
                   required
                   rows={3}
-                  placeholder="Describe the security requirements, site conditions, and expected responsibilities..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Post orders, access details, and site-specific instructions..."
+                  value={siteInstructions}
+                  onChange={(e) => setSiteInstructions(e.target.value)}
                   className="uber-input resize-none"
                 />
               </div>
@@ -597,10 +759,10 @@ export function ClientDashboard({
               </div>
 
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => setShowAddForm(false)} className="uber-button-outline h-10 px-4 text-xs font-black uppercase flex-1">Cancel</button>
+                <button type="button" onClick={() => { resetForm(); setShowAddForm(false); }} className="uber-button-outline h-10 px-4 text-xs font-black uppercase flex-1">Cancel</button>
                 <button type="submit" className="uber-button-sage h-10 px-4 text-xs font-black uppercase flex-1 gap-1.5">
                   <Shield className="w-3.5 h-3.5" />
-                  Publish Request
+                  {editingRequestId ? 'Save Changes' : 'Publish Request'}
                 </button>
               </div>
             </form>

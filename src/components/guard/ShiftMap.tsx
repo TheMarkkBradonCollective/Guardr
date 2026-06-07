@@ -3,12 +3,12 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-le
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { locationToCoords, METRO_CENTER } from '../../lib/geo';
-import { formatDuration, formatShiftRange } from '../../lib/dates';
+import { getGuardHourlyPay } from '../../lib/guardJobs';
 
-function createShiftIcon(payout: number, selected: boolean, armed: boolean) {
+function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
   return L.divIcon({
     className: 'guardr-shift-pin',
-    html: `<div class="guardr-shift-pin-inner ${selected ? 'guardr-shift-pin-selected' : ''} ${armed ? 'guardr-shift-pin-armed' : ''}">$${payout}</div>`,
+    html: `<div class="guardr-shift-pin-inner ${selected ? 'guardr-shift-pin-selected' : ''} ${armed ? 'guardr-shift-pin-armed' : ''}">$${hourlyPay}</div>`,
     iconSize: [48, 48],
     iconAnchor: [24, 24],
   });
@@ -90,7 +90,7 @@ export function ShiftMap({
           <Marker
             key={job.id}
             position={[coords.lat, coords.lng]}
-            icon={createShiftIcon(job.estimatedPayout, selectedJobId === job.id, job.armedRequired)}
+            icon={createShiftIcon(getGuardHourlyPay(job), selectedJobId === job.id, job.armedRequired)}
             eventHandlers={{
               click: () => onSelectJob(selectedJobId === job.id ? null : job.id),
             }}
@@ -99,9 +99,7 @@ export function ShiftMap({
               <div className="text-xs font-mono space-y-1 min-w-[180px]">
                 <p className="font-bold text-black uppercase text-[10px]">{job.title}</p>
                 <p className="text-neutral-600">{job.location}</p>
-                <p className="text-brand-primary font-black">${job.estimatedPayout}</p>
-                <p className="text-neutral-500">{formatShiftRange(job.startDate, job.endDate)}</p>
-                <p className="text-neutral-500">{formatDuration(job.durationHours)}</p>
+                <p className="text-brand-primary font-black">${getGuardHourlyPay(job)}/hr</p>
               </div>
             </Popup>
           </Marker>

@@ -14,15 +14,16 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { SessionUser, SecurityGuard, Client } from '../types';
+import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
+import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
 interface AuthPageProps {
   onSignIn: (user: SessionUser) => void;
-  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client' | 'auditor' | 'staff') => void;
+  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client') => void;
   guardsList: SecurityGuard[];
   clientsList: Client[];
   onBackToHome: () => void;
-  initialRole?: 'guard' | 'client' | 'auditor' | 'staff';
+  initialRole?: 'guard' | 'client';
   themeMode?: string;
 }
 
@@ -35,9 +36,7 @@ export function AuthPage({
   initialRole = 'client',
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
-  const [role, setRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>(
-    initialRole === 'auditor' || initialRole === 'staff' ? initialRole : initialRole
-  );
+  const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -52,9 +51,6 @@ export function AuthPage({
   const [isArmed, setIsArmed]         = useState(false);
 
   const [clientCompanyName, setClientCompanyName] = useState('');
-  const [auditorOrg, setAuditorOrg]               = useState('');
-  const [staffCode, setStaffCode]                 = useState('');
-  const [staffRoleInput, setStaffRoleInput] = useState<'Director' | 'Administrator' | 'Moderator'>('Administrator');
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,20 +62,12 @@ export function AuthPage({
     if (isSignUp) {
       if (!fullName) { setErrorMsg('Please enter your full name.'); return; }
 
-      if (role === 'staff' && staffCode.trim().toUpperCase() !== 'STAFF777') {
-        setErrorMsg('Invalid staff authorization code. Use "STAFF777" for demo access.');
-        return;
-      }
-
       const randomId = `${role}-${Date.now()}`;
       const avatarMap = {
-        guard:   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-        client:  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-        auditor: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-        staff:   'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+        guard: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        client: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
       };
 
-      // ── CLIENT: create a Client object, not a SecurityGuard ──
       if (role === 'client') {
         const clientProfile: Client = {
           id: randomId,
@@ -89,6 +77,7 @@ export function AuthPage({
           phone: phone || '+1 (555) 000-0000',
           avatar: avatarMap.client,
           totalRequests: 0,
+          approved: false,
         };
         onSignUp(clientProfile, 'client');
         onSignIn({
@@ -102,39 +91,34 @@ export function AuthPage({
         return;
       }
 
-      // ── GUARD / AUDITOR / STAFF: create a SecurityGuard object ──
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: fullName,
         email,
         badgeNumber: badgeNumber || `S-${Math.floor(10000 + Math.random() * 90000)}`,
-        avatar: avatarMap[role],
+        avatar: avatarMap.guard,
         phone: phone || '+1 (555) 000-0000',
-        bio: bio || (role === 'auditor' ? 'Compliance review officer.' : 'Administrative operator.'),
+        bio: bio || 'Licensed security professional.',
         isArmed,
-        backgroundChecked: role === 'auditor' || role === 'staff',
-        verified: role === 'auditor' || role === 'staff',
-        rating: 5.0,
+        backgroundChecked: false,
+        verified: false,
+        rating: 0,
         jobsCompleted: 0,
         certifications: [],
         experience: [],
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
-        isStaff: role === 'staff',
-        staffRole: role === 'staff' ? staffRoleInput : undefined,
         userStatus: 'active',
       };
 
-      onSignUp(newGuardProfile, role);
+      onSignUp(newGuardProfile, 'guard');
       onSignIn({
         id: randomId,
         name: fullName,
         email,
-        role,
+        role: 'guard',
         badgeNumber: newGuardProfile.badgeNumber,
-        organization: role === 'auditor' ? auditorOrg || 'State Compliance' : undefined,
         avatar: newGuardProfile.avatar,
         hourlyRate: newGuardProfile.hourlyRateRequirement,
-        staffRole: role === 'staff' ? staffRoleInput : undefined,
       });
       return;
     }
@@ -159,8 +143,17 @@ export function AuthPage({
         rating: 5.0, jobsCompleted: 150, certifications: [], experience: [],
         hourlyRateRequirement: 100, isStaff: true, staffRole: 'Director', userStatus: 'active',
       };
-      if (!matchedGuard) onSignUp(directorProfile, 'staff');
-      onSignIn({ id: matchedGuard?.id || directorId, name: 'M. White', email: 'm.white@signaturesecurityspecialist.com', role: 'staff', badgeNumber: 'DIR-00001', avatar: directorProfile.avatar, hourlyRate: 100, staffRole: 'Director' });
+      if (!matchedGuard) onSignUp(directorProfile, 'guard');
+      onSignIn({
+        id: matchedGuard?.id || directorId,
+        name: 'M. White',
+        email: 'm.white@signaturesecurityspecialist.com',
+        role: 'director',
+        badgeNumber: 'DIR-00001',
+        avatar: directorProfile.avatar,
+        hourlyRate: 100,
+        staffRole: 'Director',
+      });
       return;
     }
 
@@ -178,18 +171,22 @@ export function AuthPage({
       return;
     }
 
-    // Check guards/staff/auditors
     const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
     if (matchedGuard) {
       if (matchedGuard.userStatus === 'blocked') { setErrorMsg('Account blocked. Contact administration.'); return; }
-      let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = matchedGuard.isStaff ? 'staff' : 'guard';
-      if (matchedGuard.id.startsWith('auditor')) resolvedRole = 'auditor';
-      if (matchedGuard.id.startsWith('staff'))   resolvedRole = 'staff';
+      const platformRole: PlatformRole = resolvePlatformRole({
+        isStaff: matchedGuard.isStaff,
+        staffRole: matchedGuard.staffRole,
+      });
       onSignIn({
-        id: matchedGuard.id, name: matchedGuard.name, email: matchedGuard.email,
-        role: resolvedRole, badgeNumber: matchedGuard.badgeNumber, avatar: matchedGuard.avatar,
+        id: matchedGuard.id,
+        name: matchedGuard.name,
+        email: matchedGuard.email,
+        role: platformRole,
+        badgeNumber: matchedGuard.badgeNumber,
+        avatar: matchedGuard.avatar,
         hourlyRate: matchedGuard.hourlyRateRequirement,
-        staffRole: matchedGuard.staffRole || (matchedGuard.isStaff ? 'Administrator' : undefined),
+        staffRole: matchedGuard.staffRole,
       });
     } else {
       setErrorMsg('Account not found. Please sign up or check your email address.');
@@ -197,11 +194,9 @@ export function AuthPage({
   };
 
   const ROLES = [
-    { id: 'guard',   label: 'Guard',     desc: 'Security professional' },
-    { id: 'client',  label: 'Client',    desc: 'Needs security coverage' },
-    { id: 'auditor', label: 'Auditor',   desc: 'Compliance review' },
-    { id: 'staff',   label: 'Staff',     desc: 'Platform operations' },
-  ] as const;
+    { id: 'guard' as const, label: 'Guard', desc: 'Licensed security professional' },
+    { id: 'client' as const, label: 'Client', desc: 'Business seeking security' },
+  ];
 
   return (
     <div className="min-h-screen bg-brand-bg text-brand-text flex flex-col" id="guardr-auth-root">
@@ -379,45 +374,11 @@ export function AuthPage({
               </div>
             )}
 
-            {/* Auditor-specific fields */}
-            {isSignUp && role === 'auditor' && (
-              <div className="pt-3 border-t border-brand-border">
-                <label className="uber-label block mb-1.5">Regulatory Organization</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="State License Board"
-                  value={auditorOrg}
-                  onChange={(e) => setAuditorOrg(e.target.value)}
-                  className="uber-input"
-                />
-              </div>
-            )}
-
-            {/* Staff-specific fields */}
-            {isSignUp && role === 'staff' && (
-              <div className="space-y-3 pt-3 border-t border-brand-border">
-                <div>
-                  <label className="uber-label block mb-1.5">Staff Authorization Code</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="STAFF777"
-                    value={staffCode}
-                    onChange={(e) => setStaffCode(e.target.value)}
-                    className="uber-input font-mono uppercase tracking-widest"
-                  />
-                  <p className="text-[10px] text-brand-text-muted font-mono mt-1">Demo code: STAFF777</p>
-                </div>
-                <div>
-                  <label className="uber-label block mb-1.5">Staff Role</label>
-                  <select value={staffRoleInput} onChange={(e) => setStaffRoleInput(e.target.value as any)} className="uber-select">
-                    <option value="Director">Director — Master Controls</option>
-                    <option value="Administrator">Administrator — Operational</option>
-                    <option value="Moderator">Moderator — Compliance</option>
-                  </select>
-                </div>
-              </div>
+            {/* Platform staff sign in via Director-provisioned accounts */}
+            {!isSignUp && (
+              <p className="text-[10px] font-mono text-brand-text-muted text-center mt-4 leading-relaxed">
+                Platform staff ({ROLE_LABELS.moderator}, {ROLE_LABELS.administrator}, {ROLE_LABELS.director}) sign in with credentials provisioned by your Director.
+              </p>
             )}
 
             <button
