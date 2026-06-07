@@ -15,6 +15,7 @@ import { Logo } from './components/Logo';
 import { InstallPrompt } from './components/InstallPrompt';
 import { Shield, Sparkles, RefreshCw, Layers, LogOut, User, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
+import { computeDurationHours } from './lib/dates';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
@@ -462,6 +463,11 @@ export default function App() {
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
     const clientNameStr = currentUser?.clientName || currentUser?.name || 'Sartorial Vanguard Group';
     const logoInitials = clientNameStr.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase();
+    const startDate = newRequest.startDate || new Date().toISOString();
+    const endDate = newRequest.endDate || new Date(Date.now() + 8 * 3600000).toISOString();
+    const durationHours = newRequest.durationHours ?? computeDurationHours(startDate, endDate);
+    const hourlyRate = newRequest.hourlyRate || 35;
+    const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
       title: newRequest.title || 'Security Guard Deployment',
@@ -472,11 +478,11 @@ export default function App() {
       location: newRequest.location || 'Metropolitan Area',
       type: newRequest.type || 'event',
       armedRequired: newRequest.armedRequired || false,
-      startDate: newRequest.startDate || new Date().toISOString(),
-      endDate: newRequest.endDate || new Date().toISOString(),
-      durationHours: newRequest.durationHours || 8,
-      hourlyRate: newRequest.hourlyRate || 35,
-      estimatedPayout: newRequest.estimatedPayout || 280,
+      startDate,
+      endDate,
+      durationHours,
+      hourlyRate,
+      estimatedPayout,
       status: 'open',
       assignedGuardId: null,
       requiredCertifications: newRequest.requiredCertifications || [],

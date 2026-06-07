@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobType } from '../types';
 import { PREFAB_CERT_LIST } from '../initialData';
+import {
+  computeDurationHours,
+  formatDuration,
+  formatShiftRange,
+  getDefaultShiftEnd,
+  getDefaultShiftStart,
+} from '../lib/dates';
 import { 
   Plus, 
   MapPin, 
@@ -42,9 +49,12 @@ export function ClientDashboard({
   const [location, setLocation] = useState('');
   const [type, setType] = useState<JobType>('event');
   const [armedRequired, setArmedRequired] = useState(false);
-  const [startDate, setStartDate] = useState('2026-06-15T18:00');
-  const [durationHours, setDurationHours] = useState(8);
+  const [startDate, setStartDate] = useState(getDefaultShiftStart);
+  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(getDefaultShiftStart(), 8));
   const [hourlyRate, setHourlyRate] = useState(40);
+
+  const computedDurationHours = computeDurationHours(startDate, endDate);
+  const computedPayout = Math.round(computedDurationHours * hourlyRate * 100) / 100;
   const [selectedCerts, setSelectedCerts] = useState<string[]>(['First Aid & CPR / AED']);
   
   // AI Assist State
@@ -73,7 +83,8 @@ export function ClientDashboard({
         body: JSON.stringify({
           title,
           rawDescription: description,
-          durationHours,
+          startDate,
+          endDate,
           type
         })
       });
@@ -114,6 +125,10 @@ export function ClientDashboard({
       alert("Please fill in title, base description and deployment location.");
       return;
     }
+    if (computedDurationHours <= 0) {
+      alert("Shift end must be after shift start.");
+      return;
+    }
     onPostRequest({
       title,
       description,
@@ -121,10 +136,10 @@ export function ClientDashboard({
       type,
       armedRequired,
       startDate: new Date(startDate).toISOString(),
-      endDate: new Date(new Date(startDate).getTime() + durationHours * 3600000).toISOString(),
-      durationHours,
+      endDate: new Date(endDate).toISOString(),
+      durationHours: computedDurationHours,
       hourlyRate,
-      estimatedPayout: durationHours * hourlyRate,
+      estimatedPayout: computedPayout,
       requiredCertifications: selectedCerts,
     });
     // Reset Form
@@ -176,7 +191,7 @@ export function ClientDashboard({
       
       {/* Overview stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex items-center space-x-4">
+        <div className="bg-white p-5 rounded-none shadow-xs border border-slate-200 flex items-center space-x-4">
           <div className="bg-slate-50 p-3 rounded-lg text-blue-605">
             <Shield className="w-5 h-5 text-blue-600" />
           </div>
@@ -186,7 +201,7 @@ export function ClientDashboard({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex items-center space-x-4">
+        <div className="bg-white p-5 rounded-none shadow-xs border border-slate-200 flex items-center space-x-4">
           <div className="bg-green-50/40 p-3 rounded-lg text-green-700">
             <Check className="w-5 h-5 text-green-600" />
           </div>
@@ -198,7 +213,7 @@ export function ClientDashboard({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex items-center space-x-4">
+        <div className="bg-white p-5 rounded-none shadow-xs border border-slate-200 flex items-center space-x-4">
           <div className="bg-blue-50/40 p-3 rounded-lg text-blue-700">
             <Activity className="w-5 h-5 text-blue-600" />
           </div>
@@ -208,7 +223,7 @@ export function ClientDashboard({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex items-center space-x-4">
+        <div className="bg-white p-5 rounded-none shadow-xs border border-slate-200 flex items-center space-x-4">
           <div className="bg-blue-50/40 p-3 rounded-lg text-blue-700">
             <User className="w-5 h-5 text-blue-600" />
           </div>
@@ -232,7 +247,7 @@ export function ClientDashboard({
             </h2>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-blue-600 text-white font-semibold px-4.5 py-2 rounded-lg text-xs tracking-wide hover:bg-blue-700 shadow-sm transition-all flex items-center space-x-1.5"
+              className="uber-button-green text-xs px-4 py-2 h-auto shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>POST NEW SECURITY DEMAND</span>
@@ -296,9 +311,9 @@ export function ClientDashboard({
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className="truncate">{req.location}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-slate-600">
+                        <div className="flex items-center space-x-2 text-slate-600 col-span-2">
                           <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{req.durationHours} hrs deployment</span>
+                          <span className="truncate">{formatShiftRange(req.startDate, req.endDate)} ({formatDuration(req.durationHours)})</span>
                         </div>
                         <div className="flex items-center space-x-2 text-slate-600">
                           <DollarSign className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -619,6 +634,31 @@ export function ClientDashboard({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 tracking-wider block font-mono">SHIFT START DATE & TIME</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-none px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 tracking-wider block font-mono">SHIFT END DATE & TIME</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={endDate}
+                    min={startDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-none px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 tracking-wider block font-mono">SHIFT BUDGET RATE ($/HR)</label>
                   <input
                     type="number"
@@ -626,20 +666,15 @@ export function ClientDashboard({
                     max="200"
                     value={hourlyRate}
                     onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-none px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 tracking-wider block font-mono">SHIFT DURATION HOURS</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="168"
-                    value={durationHours}
-                    onChange={(e) => setDurationHours(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
-                  />
+                  <label className="text-[10px] font-bold text-slate-400 tracking-wider block font-mono">AUTO-CALCULATED DURATION</label>
+                  <div className={`w-full bg-slate-50 border border-slate-200 rounded-none px-3 py-1.5 text-xs font-mono ${computedDurationHours <= 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                    {computedDurationHours > 0 ? `${formatDuration(computedDurationHours)} • Est. $${computedPayout}` : 'End must be after start'}
+                  </div>
                 </div>
               </div>
 
@@ -720,7 +755,7 @@ export function ClientDashboard({
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white font-semibold px-4.5 py-2 rounded-lg hover:bg-blue-700 transition-all font-mono shadow-sm"
+                className="uber-button-green h-auto px-4.5 py-2 text-xs shadow-sm"
               >
                 PUBLISH DEMAND REQUEST
               </button>
