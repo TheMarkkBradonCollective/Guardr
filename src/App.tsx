@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser } from './types';
-import { isStaffRole, ROLE_LABELS } from './lib/permissions';
+import { isStaffRole } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
@@ -14,7 +14,6 @@ import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { InstallPrompt } from './components/InstallPrompt';
-import { LogOut } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
@@ -651,78 +650,35 @@ export default function App() {
     );
   }
 
-  // ── Staff (Moderator / Administrator / Director) ─────────────
+  // ── Staff Operations Command Center ─────────────────────────
   if (isStaffRole(currentUser.role)) {
-    const adminGuards = verifiedGuards;
-    const consoleTitle =
-      currentUser.role === 'director' ? 'Director Console' :
-      currentUser.role === 'administrator' ? 'Administrator Console' :
-      'Moderator Console';
-
     return (
-      <div className={`min-h-screen flex flex-col theme-${themeMode} bg-brand-bg text-brand-text`}>
-        <header className="sticky top-0 z-50 border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <Logo className="text-brand-primary shrink-0" size={26} />
-            <div>
-              <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr · {ROLE_LABELS[currentUser.role]}</p>
-              <h1 className="font-black text-sm uppercase tracking-tight">{consoleTitle}</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex border border-brand-border p-0.5 text-[9px] font-mono">
-              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => changeThemeMode(m)}
-                  className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-colors ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'}`}
-                >
-                  {m === 'dark' ? 'Dark' : m === 'light' ? 'Light' : 'Grey'}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-1.5 border border-brand-border px-3 py-1.5 text-xs font-mono font-bold uppercase hover:border-brand-primary transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Sign Out
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
-          <StaffDashboard
-            guards={adminGuards}
-            clients={clients}
-            requests={requests}
-            onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
-            onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
-            onApproveRequest={handleApproveRequest}
-            onDenyRequest={handleDenyRequest}
-            onApproveClient={handleApproveClient}
-            onRejectClient={handleRejectClient}
-            onApproveCert={handleApproveCert}
-            onRejectCert={handleRejectCert}
-            onApproveGuard={handleApproveGuard}
-            onRejectGuard={handleRejectGuard}
-            onRecordAuditViolation={handleRecordAuditViolation}
-            onResetAuditFailures={handleResetAuditFailures}
-            isDbConnected={isDbConnected}
-            currentUser={currentUser}
-            onAddStaffProfile={handleAddStaffProfile}
-          />
-        </main>
-
-        <footer className="border-t border-brand-border bg-brand-bg-sec px-6 py-3 text-[9px] font-mono uppercase text-brand-text-muted flex items-center justify-between">
-          <span className="flex items-center gap-1.5">
-            <Logo className="text-brand-primary" size={12} />
-            Guardr {ROLE_LABELS[currentUser.role]} Console
-          </span>
-          <span>© {new Date().getFullYear()}</span>
-        </footer>
+      <>
+        <StaffDashboard
+          guards={verifiedGuards}
+          clients={clients}
+          requests={requests}
+          onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
+          onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
+          onApproveRequest={handleApproveRequest}
+          onDenyRequest={handleDenyRequest}
+          onApproveClient={handleApproveClient}
+          onRejectClient={handleRejectClient}
+          onApproveCert={handleApproveCert}
+          onRejectCert={handleRejectCert}
+          onApproveGuard={handleApproveGuard}
+          onRejectGuard={handleRejectGuard}
+          onRecordAuditViolation={handleRecordAuditViolation}
+          onResetAuditFailures={handleResetAuditFailures}
+          isDbConnected={isDbConnected}
+          currentUser={currentUser}
+          onAddStaffProfile={handleAddStaffProfile}
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
+          onSignOut={handleSignOut}
+        />
         <InstallPrompt />
-      </div>
+      </>
     );
   }
 
