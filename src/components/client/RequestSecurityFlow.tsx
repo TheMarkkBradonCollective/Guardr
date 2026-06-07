@@ -10,6 +10,7 @@ import {
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
@@ -46,6 +47,7 @@ export function RequestSecurityFlow({
     preset === 'recurring' ? 'construction' : 'standing-guard'
   );
   const [address, setAddress] = useState('');
+  const [jobState, setJobState] = useState('');
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, preset === 'recurring' ? 12 : 8));
@@ -71,7 +73,7 @@ export function RequestSecurityFlow({
   const canNext = (): boolean => {
     switch (step) {
       case 1: return !!serviceId;
-      case 2: return address.trim().length > 3;
+      case 2: return address.trim().length > 3 && jobState.length === 2;
       case 3: return durationHours > 0;
       case 4: return effectiveGuards >= 1;
       case 5: return effectiveRate >= 20;
@@ -98,6 +100,7 @@ export function RequestSecurityFlow({
       title,
       siteName: siteName || title,
       address,
+      state: jobState.toUpperCase(),
       location: siteName ? `${siteName} — ${address}` : address,
       type: serviceToJobType(serviceId),
       guardsNeeded: effectiveGuards,
@@ -187,6 +190,20 @@ export function RequestSecurityFlow({
                 className="uber-input pl-10 h-14 text-base rounded-xl"
                 autoFocus
               />
+            </div>
+            <div>
+              <label className="uber-label block mb-1.5">State</label>
+              <select
+                value={jobState}
+                onChange={(e) => setJobState(e.target.value)}
+                className="uber-select w-full rounded-xl"
+                required
+              >
+                <option value="">Select state…</option>
+                {US_STATES.map(({ code, name }) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="uber-label block mb-1.5">Site name (optional)</label>
@@ -323,6 +340,10 @@ export function RequestSecurityFlow({
               <div className="flex justify-between text-sm">
                 <span className="text-brand-text-muted">Service</span>
                 <span className="font-bold">{selectedService.emoji} {selectedService.label}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-text-muted">State</span>
+                <span className="font-bold">{formatStateName(jobState)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-text-muted">Location</span>

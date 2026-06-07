@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { PREFAB_CERT_LIST } from '../../initialData';
+import { certRequiresState, getVerifiedLicensedStates } from '../../lib/guardLicenses';
+import { formatStateName, US_STATES } from '../../lib/states';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { Award, LogOut, Plus, Save, User } from 'lucide-react';
 
@@ -46,6 +48,7 @@ export function UserProfileScreen({
   const [certNumber, setCertNumber] = useState('');
   const [certIssueDate, setCertIssueDate] = useState('');
   const [certExpiryDate, setCertExpiryDate] = useState('');
+  const [certState, setCertState] = useState('');
   const [name, setName] = useState(currentUser.name);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
   const [bio, setBio] = useState(guard?.bio ?? '');
@@ -82,22 +85,27 @@ export function UserProfileScreen({
   const isGuardLike = currentUser.role === 'guard' || ['director', 'administrator', 'moderator'].includes(currentUser.role);
   const isClient = currentUser.role === 'client';
   const canManageCerts = currentUser.role === 'guard' && !!onAddCertification && !!guard;
+  const licensedStates = guard ? getVerifiedLicensedStates(guard) : [];
+  const certNeedsState = certRequiresState({ name: certName });
 
   const handleAddCert = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onAddCertification || !certIssuer.trim() || !certNumber.trim()) return;
+    if (certNeedsState && !certState) return;
     setAddingCert(true);
     try {
       await onAddCertification({
         name: certName,
         issuer: certIssuer.trim(),
         number: certNumber.trim(),
+        state: certNeedsState ? certState.toUpperCase() : undefined,
         issueDate: certIssueDate || new Date().toISOString().split('T')[0],
         expiryDate: certExpiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'pending',
       });
       setCertIssuer('');
       setCertNumber('');
+      setCertState('');
       setCertIssueDate('');
       setCertExpiryDate('');
       setShowAddCert(false);
@@ -214,7 +222,13 @@ export function UserProfileScreen({
 
           {!guard.verified && (
             <p className="text-[10px] font-mono text-amber-400 leading-relaxed">
-              Add your credentials here. Staff will review them before you can accept shifts.
+              Add guard card licenses by state. You can only accept shifts in states where staff has verified your card.
+            </p>
+          )}
+
+          {licensedStates.length > 0 && (
+            <p className="text-[10px] font-mono text-emerald-400 leading-relaxed">
+              Verified to work in: {licensedStates.map(formatStateName).join(', ')}
             </p>
           )}
 
@@ -222,12 +236,32 @@ export function UserProfileScreen({
             <form onSubmit={handleAddCert} className="space-y-3 pt-1 border-t border-brand-border">
               <div>
                 <label className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">Certification type</label>
-                <select value={certName} onChange={(e) => setCertName(e.target.value)} className="uber-select w-full mt-1">
+                <select
+                  value={certName}
+                  onChange={(e) => setCertName(e.target.value)}
+                  className="uber-select w-full mt-1"
+                >
                   {PREFAB_CERT_LIST.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
+              {certNeedsState && (
+                <div>
+                  <label className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">State</label>
+                  <select
+                    value={certState}
+                    onChange={(e) => setCertState(e.target.value)}
+                    required
+                    className="uber-select w-full mt-1"
+                  >
+                    <option value="">Select state…</option>
+                    {US_STATES.map(({ code, name }) => (
+                      <option key={code} value={code}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">Issuing body</label>
@@ -281,7 +315,9 @@ export function UserProfileScreen({
                 <div key={cert.id} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-brand-border bg-black/20">
                   <div className="min-w-0">
                     <p className="font-black text-xs">{cert.name}</p>
-                    <p className="text-[10px] font-mono text-brand-text-muted mt-1">{cert.issuer} · #{cert.number}</p>
+                    <p className="text-[10px] font-mono text-brand-text-muted mt-1">
+                      {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer} · #{cert.number}
+                    </p>
                     {cert.expiryDate && (
                       <p className="text-[10px] font-mono text-brand-text-muted">Expires {cert.expiryDate}</p>
                     )}

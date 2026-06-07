@@ -79,6 +79,7 @@ CREATE TABLE certifications (
     status TEXT NOT NULL CHECK (status IN ('verified', 'pending', 'rejected')),
     issue_date DATE NOT NULL,
     expiry_date DATE NOT NULL,
+    state TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -122,6 +123,7 @@ CREATE TABLE security_requests (
     client_rating NUMERIC(4, 2),
     site_name TEXT NOT NULL DEFAULT '',
     address TEXT NOT NULL DEFAULT '',
+    state TEXT NOT NULL DEFAULT '',
     location TEXT NOT NULL DEFAULT '',
     type TEXT NOT NULL,
     armed_required BOOLEAN NOT NULL DEFAULT FALSE,

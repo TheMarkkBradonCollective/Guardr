@@ -2,6 +2,10 @@ import { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { computeGuardEarnings, computeGuardPay } from './payments';
 import { estimateJobDistanceMiles } from './geo';
 import { formatDuration } from './dates';
+import {
+  guardCanWorkInState,
+  stateLicenseRequirementLabel,
+} from './guardLicenses';
 
 export const JOB_CATEGORIES = [
   { id: 'event', label: 'Event Security' },
@@ -56,19 +60,26 @@ export function getEstimatedGuardEarnings(job: SecurityRequest): number {
 }
 
 export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest): { checks: RequirementCheck[]; canAccept: boolean } {
-  const hasGuardCard = guard.certifications.some(
-    (c) => c.status === 'verified' && /guard card|guard card license|armed security officer/i.test(c.name)
-  );
+  const stateLabel = stateLicenseRequirementLabel(job);
+  const hasStateLicense = guardCanWorkInState(guard, job.state ?? '', job.armedRequired);
 
   const checks: RequirementCheck[] = [
-    { label: 'Guard Card', met: hasGuardCard },
+    {
+      label: stateLabel,
+      met: hasStateLicense,
+    },
     { label: 'Profile Approval', met: guard.verified },
   ];
 
   if (job.armedRequired) {
     checks.push({
       label: 'Armed Certification',
-      met: guard.isArmed && guard.certifications.some((c) => c.status === 'verified' && /armed/i.test(c.name)),
+      met: guard.certifications.some(
+        (c) =>
+          c.status === 'verified' &&
+          /armed/i.test(c.name) &&
+          (!job.state || c.state?.toUpperCase() === job.state.toUpperCase())
+      ),
     });
   }
 

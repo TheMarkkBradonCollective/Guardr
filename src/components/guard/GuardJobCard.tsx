@@ -9,6 +9,7 @@ import {
   getJobDistance,
 } from '../../lib/guardJobs';
 import { formatDuration } from '../../lib/dates';
+import { formatStateName } from '../../lib/states';
 import { MapPin, Star, Clock, Users, Check, X } from 'lucide-react';
 
 interface GuardJobCardProps {
@@ -36,7 +37,9 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
         <div className="flex justify-between items-start gap-2">
           <div className="min-w-0">
             <p className="font-bold text-sm truncate">{job.title}</p>
-            <p className="text-[11px] text-white/50 font-mono mt-0.5">{distance} mi · ${hourlyPay}/hr</p>
+            <p className="text-[11px] text-white/50 font-mono mt-0.5">
+              {job.state ? `${formatStateName(job.state)} · ` : ''}{distance} mi · ${hourlyPay}/hr
+            </p>
           </div>
           <p className="text-sm font-black font-mono text-brand-primary shrink-0">${estimated}</p>
         </div>
@@ -51,7 +54,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
           <h3 className="text-xl font-black tracking-tight leading-tight">{job.title}</h3>
           <p className="flex items-center gap-1.5 text-sm text-white/60 font-mono mt-2">
             <MapPin className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-            {distance} Miles Away
+            {job.state ? `${formatStateName(job.state)} · ` : ''}{distance} Miles Away
           </p>
         </div>
         {onClose && (

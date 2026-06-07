@@ -1,6 +1,7 @@
 import React from 'react';
 import { Client, SecurityGuard } from '../../types';
 import { getPendingCertifications } from '../../lib/staffOps';
+import { formatStateName } from '../../lib/states';
 import { Check, Info, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
@@ -123,7 +124,7 @@ export function StaffApprovals({
               <div key={cert.id} className="staff-ops-card flex flex-col sm:flex-row justify-between gap-4">
                 <div>
                   <p className="font-bold text-sm">{guard.name} — {cert.name}</p>
-                  <p className="text-xs font-mono text-brand-text-muted">{cert.issuer} · #{cert.number}</p>
+                  <p className="text-xs font-mono text-brand-text-muted">{cert.issuer} · #{cert.number}{cert.state ? ` · ${cert.state}` : ''}</p>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => onRejectCert(guard.id, cert.id)} className="staff-ops-btn-danger">Reject</button>

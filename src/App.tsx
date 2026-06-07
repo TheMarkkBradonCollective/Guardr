@@ -18,6 +18,7 @@ import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
+import { checkJobRequirements } from './lib/guardJobs';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 
@@ -134,6 +135,7 @@ export default function App() {
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
+          state: c.state ?? undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -155,6 +157,7 @@ export default function App() {
         clientRating: r.client_rating != null ? Number(r.client_rating) : undefined,
         siteName: r.site_name || undefined,
         address: r.address || undefined,
+        state: r.state || undefined,
         location: r.location, type: r.type,
         armedRequired: r.armed_required,
         guardsNeeded: r.guards_needed ?? 1,
@@ -273,6 +276,7 @@ export default function App() {
                 status: cert.status,
                 issue_date: cert.issueDate,
                 expiry_date: cert.expiryDate,
+                state: cert.state ?? null,
               }))
             );
           }
@@ -292,6 +296,7 @@ export default function App() {
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
       expiryDate: newCert.expiryDate || new Date().toISOString().split('T')[0],
+      state: newCert.state?.toUpperCase(),
     };
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
@@ -300,6 +305,7 @@ export default function App() {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
+          state: certWithId.state ?? null,
         });
       } catch (e) { console.error('Cert insert error:', e); }
     }
@@ -477,6 +483,7 @@ export default function App() {
       clientRating: clientRecord?.rating,
       siteName,
       address,
+      state: newRequest.state?.toUpperCase() || '',
       location,
       type: newRequest.type || 'event',
       armedRequired: newRequest.armedRequired || false,
@@ -509,7 +516,7 @@ export default function App() {
         await supabase.from('security_requests').insert({
           id: freshJob.id, title: freshJob.title, description: freshJob.description,
           client_id: freshJob.clientId, client_name: freshJob.clientName, client_logo: freshJob.clientLogo,
-          site_name: freshJob.siteName, address: freshJob.address,
+          site_name: freshJob.siteName, address: freshJob.address, state: freshJob.state ?? '',
           location: freshJob.location, type: freshJob.type, armed_required: freshJob.armedRequired,
           guards_needed: freshJob.guardsNeeded,
           uniform_requirements: freshJob.uniformRequirements,
@@ -595,6 +602,7 @@ export default function App() {
       guardPay: updates.guardPay ?? computeGuardPay(hourlyRate),
       estimatedPayout: updates.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100,
       location: siteName ? `${siteName} — ${address}` : address,
+      state: updates.state?.toUpperCase() ?? existing.state,
       description: updates.description || updates.siteInstructions || existing.description,
       status: existing.status === 'open' ? 'open' : 'pending-review',
     };
@@ -605,6 +613,7 @@ export default function App() {
         description: merged.description,
         site_name: merged.siteName,
         address: merged.address,
+        state: merged.state,
         location: merged.location,
         type: merged.type,
         armed_required: merged.armedRequired,
@@ -626,6 +635,14 @@ export default function App() {
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
     if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
+    const job = requests.find((r) => r.id === requestId);
+    if (job) {
+      const { canAccept } = checkJobRequirements(activeGuard, job);
+      if (!canAccept) {
+        alert('You do not meet the requirements for this shift. Add a verified guard card for the job state in your profile.');
+        return;
+      }
+    }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: activeGuardId, applicants: [...r.applicants, activeGuardId] } : r));
     if (isDbConnected) {
       await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: activeGuardId, applicants: [activeGuardId] }).eq('id', requestId);

@@ -41,6 +41,8 @@ export interface Certification {
   status: 'verified' | 'pending' | 'rejected';
   issueDate: string;
   expiryDate: string;
+  /** US state code — required for guard card licenses */
+  state?: string;
 }
 
 export interface Experience {
@@ -99,6 +101,7 @@ export interface SecurityRequest {
   clientRating?: number;
   siteName?: string;
   address?: string;
+  state?: string;
   location: string;
   type: JobType;
   armedRequired: boolean;
