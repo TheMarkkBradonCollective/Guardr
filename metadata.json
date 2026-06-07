@@ -2,5 +2,5 @@
   "name": "Guardr by Signature Security Specialist",
   "description": "Premium on-demand tactical security marketplace with dispatch management, automated compliance, and real-time outfitting audits in Sage Green elegant aesthetics.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

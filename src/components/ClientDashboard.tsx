@@ -18,8 +18,6 @@ import {
   Clock,
   DollarSign,
   Check,
-  Sparkles,
-  Loader2,
   User,
   AlertTriangle,
   Star,
@@ -91,10 +89,6 @@ export function ClientDashboard({
   const [hourlyRate, setHourlyRate] = useState(40);
   const [selectedCerts, setSelectedCerts] = useState<string[]>(['First Aid & CPR / AED']);
 
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiMatchingRequestId, setAiMatchingRequestId] = useState<string | null>(null);
-  const [aiMatchResults, setAiMatchResults] = useState<{ [guardId: string]: { score: number; compatibilitySummary: string } }>({});
-
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote]     = useState<{ [reqId: string]: string }>({});
 
@@ -106,39 +100,6 @@ export function ClientDashboard({
     setSelectedCerts(prev =>
       prev.includes(cert) ? prev.filter(c => c !== cert) : [...prev, cert]
     );
-  };
-
-  const handleAiAssist = async () => {
-    if (!title || !siteInstructions) {
-      alert('Please enter a job title and site instructions first.');
-      return;
-    }
-    setAiGenerating(true);
-    try {
-      const response = await fetch('/api/generate-job-reqs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, rawDescription: siteInstructions, startDate, endDate, type }),
-      });
-      const data = await response.json();
-      setSiteInstructions(data.refinedDescription || siteInstructions);
-      if (data.recommendedCertifications?.length) {
-        const matching = PREFAB_CERT_LIST.filter(p =>
-          data.recommendedCertifications.some((r: string) =>
-            r.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(r.toLowerCase())
-          )
-        );
-        if (matching.length) setSelectedCerts(matching);
-      }
-      if (data.riskLevel && (data.riskLevel.toLowerCase().includes('high') || data.riskLevel.toLowerCase().includes('critical') || armedRequired)) {
-        setHourlyRate(prev => Math.max(prev, 55));
-      }
-      alert(`AI generated tactical plan. Risk level: ${data.riskLevel || 'Standard'}`);
-    } catch {
-      alert('Using standard local rules.');
-    } finally {
-      setAiGenerating(false);
-    }
   };
 
   const resetForm = () => {
@@ -205,27 +166,6 @@ export function ClientDashboard({
   const handleCancelRequest = (req: SecurityRequest) => {
     if (!window.confirm(`Cancel "${req.title}"? This cannot be undone.`)) return;
     onCancelRequest(req.id);
-  };
-
-  const handleRunAiMatch = async (req: SecurityRequest) => {
-    setAiMatchingRequestId(req.id);
-    try {
-      const response = await fetch('/api/ai-match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job: req, guards }),
-      });
-      const data = await response.json();
-      if (data.matches?.length) {
-        const map: any = {};
-        data.matches.forEach((m: any) => { map[m.guardId] = { score: m.score, compatibilitySummary: m.compatibilitySummary }; });
-        setAiMatchResults(prev => ({ ...prev, ...map }));
-      }
-    } catch {
-      console.error('AI match error');
-    } finally {
-      setAiMatchingRequestId(null);
-    }
   };
 
   const statCards = [
@@ -379,23 +319,9 @@ export function ClientDashboard({
                     {/* ── OPEN: show guards ─────────── */}
                     {req.status === 'open' && (
                       <div className="pt-3 border-t border-brand-border space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="uber-label">Qualified Guards</p>
-                          <button
-                            onClick={() => handleRunAiMatch(req)}
-                            disabled={aiMatchingRequestId === req.id}
-                            className="uber-button-outline h-7 px-3 text-[10px] font-black uppercase gap-1 disabled:opacity-50"
-                          >
-                            {aiMatchingRequestId === req.id ? (
-                              <><Loader2 className="w-3 h-3 animate-spin" /> Ranking...</>
-                            ) : (
-                              <><Sparkles className="w-3 h-3" /> AI Match</>
-                            )}
-                          </button>
-                        </div>
+                        <p className="uber-label">Qualified Guards</p>
                         <div className="space-y-2">
                           {guards.map(guard => {
-                            const aiMatch = aiMatchResults[guard.id];
                             return (
                               <div key={guard.id} className="flex flex-col sm:flex-row sm:items-center gap-3 border border-brand-border p-3 hover:border-brand-primary transition-colors">
                                 <img src={guard.avatar} alt={guard.name} className="w-9 h-9 rounded-full object-cover border border-brand-border shrink-0" referrerPolicy="no-referrer" />
@@ -412,11 +338,6 @@ export function ClientDashboard({
                                   <p className="text-[10px] text-brand-text-muted font-mono mt-0.5">
                                     ★ {guard.rating} · {guard.jobsCompleted} jobs · ${guard.hourlyRateRequirement}/hr
                                   </p>
-                                  {aiMatch && (
-                                    <p className="text-[10px] text-brand-primary font-mono mt-1">
-                                      {aiMatch.score}% match — {aiMatch.compatibilitySummary}
-                                    </p>
-                                  )}
                                 </div>
                                 {guard.verified ? (
                                   <button
@@ -721,17 +642,7 @@ export function ClientDashboard({
               </label>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="uber-label">Site Instructions</label>
-                  <button
-                    type="button"
-                    onClick={handleAiAssist}
-                    disabled={aiGenerating}
-                    className="uber-button-outline h-6 px-2.5 text-[9px] font-black uppercase gap-1 disabled:opacity-50"
-                  >
-                    {aiGenerating ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating...</> : <><Sparkles className="w-3 h-3" /> AI Assist</>}
-                  </button>
-                </div>
+                <label className="uber-label block mb-1.5">Site Instructions</label>
                 <textarea
                   required
                   rows={3}

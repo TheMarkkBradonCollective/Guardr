@@ -34,7 +34,7 @@ Guardr is **not** an employer or staffing agency. It is a direct-connect marketp
 
 ```bash
 npm install
-cp .env.example .env.local   # optional: Supabase + Gemini keys
+cp .env.example .env.local   # optional: Supabase keys
 npm run dev
 ```
 
