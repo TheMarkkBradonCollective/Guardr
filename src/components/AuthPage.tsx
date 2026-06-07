@@ -14,7 +14,8 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
+import { SessionUser, SecurityGuard, Client, PlatformRole, Certification } from '../types';
+import { PREFAB_CERT_LIST } from '../initialData';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
 interface AuthPageProps {
@@ -44,7 +45,7 @@ export function AuthPage({
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
 
-  const [badgeNumber, setBadgeNumber] = useState('');
+  const [guardCardNumber, setGuardCardNumber] = useState('');
   const [phone, setPhone]             = useState('');
   const [bio, setBio]                 = useState('');
   const [hourlyRate, setHourlyRate]   = useState('35');
@@ -65,11 +66,12 @@ export function AuthPage({
       const randomId = `${role}-${Date.now()}`;
 
       if (role === 'client') {
+        const company = clientCompanyName.trim();
         const clientProfile: Client = {
           id: randomId,
           name: fullName,
           email,
-          companyName: clientCompanyName || fullName,
+          companyName: company,
           phone: phone || '',
           avatar: '',
           totalRequests: 0,
@@ -81,17 +83,36 @@ export function AuthPage({
           name: fullName,
           email,
           role: 'client',
-          clientName: clientCompanyName || fullName,
+          clientName: company || fullName,
           avatar: '',
         });
         return;
       }
 
+      if (!guardCardNumber.trim()) {
+        setErrorMsg('Guard card number is required.');
+        return;
+      }
+
+      const guardCardCertName = isArmed
+        ? PREFAB_CERT_LIST.find((c) => /armed security officer guard card/i.test(c)) ?? 'State Armed Security Officer Guard Card'
+        : PREFAB_CERT_LIST.find((c) => /unarmed guard card/i.test(c)) ?? 'State Unarmed Guard Card License';
+
+      const guardCardCert: Certification = {
+        id: `cert-${Date.now()}`,
+        name: guardCardCertName,
+        issuer: 'State Licensing Bureau',
+        number: guardCardNumber.trim(),
+        status: 'pending',
+        issueDate: new Date().toISOString().split('T')[0],
+        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      };
+
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: fullName,
         email,
-        badgeNumber: badgeNumber || `S-${Math.floor(10000 + Math.random() * 90000)}`,
+        badgeNumber: guardCardNumber.trim(),
         avatar: '',
         phone: phone || '',
         bio: bio || 'Licensed security professional.',
@@ -100,7 +121,7 @@ export function AuthPage({
         verified: false,
         rating: 0,
         jobsCompleted: 0,
-        certifications: [],
+        certifications: [guardCardCert],
         experience: [],
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
         userStatus: 'active',
@@ -325,15 +346,18 @@ export function AuthPage({
               <div className="space-y-3 pt-3 border-t border-brand-border">
                 <p className="uber-label">Guard Details</p>
                 <div>
-                  <label className="uber-label block mb-1.5">State License / Badge No</label>
+                  <label className="uber-label block mb-1.5">Guard Card Number</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. G-22109"
-                    value={badgeNumber}
-                    onChange={(e) => setBadgeNumber(e.target.value)}
+                    value={guardCardNumber}
+                    onChange={(e) => setGuardCardNumber(e.target.value)}
                     className="uber-input"
                   />
+                  <p className="text-[10px] font-mono text-brand-text-muted mt-1.5">
+                    Saved to your certifications for staff review.
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -368,11 +392,10 @@ export function AuthPage({
             {/* Client-specific fields */}
             {isSignUp && role === 'client' && (
               <div className="pt-3 border-t border-brand-border">
-                <label className="uber-label block mb-1.5">Business / Company Name</label>
+                <label className="uber-label block mb-1.5">Company Name <span className="text-brand-text-muted font-normal normal-case">(optional)</span></label>
                 <input
                   type="text"
-                  required
-                  placeholder="Acme Corp / Your Name"
+                  placeholder="Acme Corp"
                   value={clientCompanyName}
                   onChange={(e) => setClientCompanyName(e.target.value)}
                   className="uber-input"

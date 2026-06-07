@@ -261,6 +261,20 @@ export default function App() {
             is_staff: guard.isStaff, staff_role: guard.staffRole,
             user_status: guard.userStatus || 'active',
           });
+          if (guard.certifications.length > 0) {
+            await supabase.from('certifications').insert(
+              guard.certifications.map((cert) => ({
+                id: cert.id,
+                guard_id: guard.id,
+                name: cert.name,
+                issuer: cert.issuer,
+                number: cert.number,
+                status: cert.status,
+                issue_date: cert.issueDate,
+                expiry_date: cert.expiryDate,
+              }))
+            );
+          }
           await loadFromSupabase();
         } catch (e) { console.error('Guard DB insert error:', e); }
       }
