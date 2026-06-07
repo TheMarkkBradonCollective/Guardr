@@ -19,7 +19,7 @@ import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { INITIAL_GUARDS, INITIAL_REQUESTS, INITIAL_CLIENTS } from './initialData';
 
-type ThemeMode = 'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light';
+type ThemeMode = 'dark' | 'light' | 'grey';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -31,7 +31,7 @@ export default function App() {
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('guardr_theme_mode') as ThemeMode) || 'sage-dark';
+    return (localStorage.getItem('guardr_theme_mode') as ThemeMode) || 'dark';
   });
   const changeThemeMode = (mode: ThemeMode) => {
     setThemeMode(mode);
@@ -561,13 +561,13 @@ export default function App() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex border border-brand-border p-0.5 text-[9px] font-mono">
-            {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+            {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => changeThemeMode(m)}
                 className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-colors ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'}`}
               >
-                {m.replace('-', '\u00a0')}
+                {m === 'dark' ? 'Dark' : m === 'light' ? 'Light' : 'Grey'}
               </button>
             ))}
           </div>

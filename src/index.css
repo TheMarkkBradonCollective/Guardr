@@ -53,6 +53,7 @@
 }
 
 /* ─── THEME TOKENS ─────────────────────────────────────────── */
+/* Three themes: Dark (black), Light (white), Grey (zinc) — Sage Green is always primary */
 :root {
   --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
@@ -66,7 +67,8 @@
   --brand-accent-text:   #000000;
 }
 
-.theme-sage-dark {
+/* Dark — pure black, sage green accent */
+.theme-dark {
   --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
   --brand-bg:            #000000;
@@ -79,7 +81,8 @@
   --brand-accent-text:   #050a04;
 }
 
-.theme-sage-light {
+/* Light — pure white, rich sage green */
+.theme-light {
   --brand-primary:       #4b6a43;
   --brand-primary-hover: #3d5a36;
   --brand-bg:            #ffffff;
@@ -92,7 +95,8 @@
   --brand-accent-text:   #ffffff;
 }
 
-.theme-grey-dark {
+/* Grey — zinc grey, sage green accent */
+.theme-grey {
   --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
   --brand-bg:            #18181b;
@@ -103,19 +107,6 @@
   --brand-text-muted:    #a1a1aa;
   --brand-accent:        #84a279;
   --brand-accent-text:   #09090b;
-}
-
-.theme-grey-light {
-  --brand-primary:       #4b6a43;
-  --brand-primary-hover: #3d5a36;
-  --brand-bg:            #f4f4f5;
-  --brand-bg-sec:        #e4e4e7;
-  --brand-surface:       #d4d4d8;
-  --brand-border:        #d4d4d8;
-  --brand-text:          #09090b;
-  --brand-text-muted:    #71717a;
-  --brand-accent:        #4b6a43;
-  --brand-accent-text:   #ffffff;
 }
 
 /* ─── BASE ─────────────────────────────────────────────────── */
@@ -417,8 +408,8 @@
 }
 
 /* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */
-/* When dark theme is active, override legacy hardcoded light colors */
-.theme-sage-dark, .theme-grey-dark {
+/* Dark and Grey both have dark backgrounds — same overrides apply */
+.theme-dark, .theme-grey {
   /* Surface overrides */
   .bg-white        { background-color: var(--brand-bg-sec) !important; }
   .bg-slate-50     { background-color: var(--brand-surface) !important; }
@@ -481,7 +472,7 @@
 }
 
 /* Light theme adjustments */
-.theme-sage-light, .theme-grey-light {
+.theme-light {
   .bg-slate-900  { background-color: var(--brand-text) !important; }
   .bg-slate-50   { background-color: var(--brand-bg-sec) !important; }
   .text-slate-900, .text-neutral-900, .text-black { color: var(--brand-text) !important; }

@@ -22,7 +22,7 @@ import {
 import { motion } from 'motion/react';
 import { SecurityRequest, SecurityGuard } from '../types';
 
-type ThemeMode = 'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light';
+type ThemeMode = 'dark' | 'light' | 'grey';
 
 interface HomePageProps {
   onNavigateToAuth: (initialRole?: 'guard' | 'client') => void;
@@ -35,10 +35,9 @@ interface HomePageProps {
 }
 
 const THEME_LABELS: Record<ThemeMode, string> = {
-  'sage-dark':  'Dark',
-  'sage-light': 'Light',
-  'grey-dark':  'Grey Dark',
-  'grey-light': 'Grey Light',
+  'dark':  'Dark',
+  'light': 'Light',
+  'grey':  'Grey',
 };
 
 const STATS = [
@@ -109,7 +108,7 @@ export function HomePage({
           <div className="flex items-center gap-2">
             {/* Theme selector */}
             <div className="hidden sm:flex items-center gap-0.5 border border-brand-border p-0.5">
-              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => onChangeTheme(m)}
@@ -118,7 +117,7 @@ export function HomePage({
                     themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'
                   }`}
                 >
-                  {m === 'sage-dark' ? '●' : m === 'sage-light' ? '○' : m === 'grey-dark' ? '◑' : '◔'}
+                  {m === 'dark' ? '●' : m === 'light' ? '○' : '◑'}
                 </button>
               ))}
             </div>
@@ -461,7 +460,7 @@ export function HomePage({
             <span>© {new Date().getFullYear()} Guardr — Not a vetting agency. Not an employer. A marketplace.</span>
             <div className="flex items-center gap-1">
               <span>Theme:</span>
-              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => onChangeTheme(m)}
@@ -470,7 +469,7 @@ export function HomePage({
                     themeMode === m ? 'bg-brand-primary text-black' : 'hover:text-brand-text'
                   }`}
                 >
-                  {THEME_LABELS[m].replace(' ', '\u00a0')}
+                  {THEME_LABELS[m]}
                 </button>
               ))}
             </div>

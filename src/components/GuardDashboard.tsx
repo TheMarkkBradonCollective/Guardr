@@ -130,7 +130,7 @@ export function GuardDashboard({
   onUpdateJobAudit,
   onRecordAuditViolation,
   onSignOut,
-  themeMode = 'sage-dark',
+  themeMode = 'dark',
   onChangeTheme,
 }: GuardDashboardProps) {
   const [activeTab, setActiveTab] = useState<NavTab>('map');
