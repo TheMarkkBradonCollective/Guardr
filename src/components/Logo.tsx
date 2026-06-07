@@ -3,43 +3,21 @@ import React from 'react';
 interface LogoProps {
   className?: string;
   size?: number | string;
+  /** transparent PNG (default) or opaque JPG on black */
+  variant?: 'transparent' | 'opaque';
 }
 
-export function Logo({ className = "text-uber-green", size = 20 }: LogoProps) {
+export function Logo({ className = '', size = 20, variant = 'transparent' }: LogoProps) {
+  const src = variant === 'opaque' ? '/logo.jpg' : '/logo.png';
+
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 100"
+    <img
+      src={src}
+      alt="Guardr"
       width={size}
       height={size}
-      className={className}
-      fill="currentColor"
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M 50,15 
-          C 68,17 80,21 86,24 
-          A 4,4 0 0,1 88,28 
-          L 88,43 
-          H 76 
-          V 34 
-          C 71,32 62,30 50,28 
-          C 38,30 29,32 24,34 
-          L 24,66 
-          C 24,74 37,81 50,84 
-          C 63,81 76,74 76,66 
-          V 56 
-          H 50 
-          V 45 
-          H 88 
-          V 66 
-          C 88,78 71,87 50,90 
-          C 29,87 12,78 12,66 
-          L 12,28 
-          A 4,4 0 0,1 14,24 
-          C 20,21 32,17 50,15 Z"
-      />
-    </svg>
+      className={`object-contain shrink-0 select-none ${className}`}
+      draggable={false}
+    />
   );
 }

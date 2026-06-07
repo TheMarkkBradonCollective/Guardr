@@ -8,20 +8,26 @@
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
   "background_color": "#000000",
-  "theme_color": "#84a279",
+  "theme_color": "#9CAF88",
   "categories": ["business", "utilities", "productivity"],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
