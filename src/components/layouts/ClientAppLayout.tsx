@@ -12,13 +12,12 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-type ThemeMode = 'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light';
+type ThemeMode = 'dark' | 'light' | 'grey';
 
 const THEME_LABELS: Record<ThemeMode, string> = {
-  'sage-dark':  'Dark',
-  'sage-light': 'Light',
-  'grey-dark':  'Grey ●',
-  'grey-light': 'Grey ○',
+  'dark':  'Dark',
+  'light': 'Light',
+  'grey':  'Grey',
 };
 
 interface ClientAppLayoutProps {
@@ -153,7 +152,7 @@ export function ClientAppLayout({
           {/* Theme switcher + mobile sign out */}
           <div className="flex items-center gap-2">
             <div className="flex border border-brand-border p-0.5 text-[9px] font-mono">
-              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
                 <button
                   key={m}
                   type="button"
@@ -165,7 +164,7 @@ export function ClientAppLayout({
                       : 'text-brand-text-muted hover:text-brand-text'
                   }`}
                 >
-                  {THEME_LABELS[m].replace(' ●', '').replace(' ○', '')}
+                  {THEME_LABELS[m]}
                 </button>
               ))}
             </div>
