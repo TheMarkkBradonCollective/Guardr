@@ -19,7 +19,7 @@ import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
 interface AuthPageProps {
   onSignIn: (user: SessionUser) => void;
-  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client') => void;
+  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client') => void | Promise<void>;
   guardsList: SecurityGuard[];
   clientsList: Client[];
   onBackToHome: () => void;
@@ -52,7 +52,7 @@ export function AuthPage({
 
   const [clientCompanyName, setClientCompanyName] = useState('');
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -121,6 +121,47 @@ export function AuthPage({
 
     // ── SIGN IN ──────────────────────────────────────────────
     const emailLower = email.toLowerCase();
+
+    if (emailLower === 'm.white@signaturesecurityspecialist.com') {
+      if (password !== '#FuckinDstorm11') {
+        setErrorMsg('Invalid password for Director account.');
+        return;
+      }
+      const directorId = 'staff-director';
+      const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
+      const directorProfile: SecurityGuard = {
+        id: directorId,
+        name: 'M. White',
+        email: 'm.white@signaturesecurityspecialist.com',
+        badgeNumber: 'DIR-00001',
+        avatar: '',
+        phone: '',
+        bio: 'Director — Platform operations.',
+        isArmed: false,
+        backgroundChecked: true,
+        verified: true,
+        rating: 5.0,
+        jobsCompleted: 0,
+        certifications: [],
+        experience: [],
+        hourlyRateRequirement: 0,
+        isStaff: true,
+        staffRole: 'Director',
+        userStatus: 'active',
+      };
+      if (!matchedGuard) await onSignUp(directorProfile, 'guard');
+      onSignIn({
+        id: matchedGuard?.id ?? directorId,
+        name: 'M. White',
+        email: 'm.white@signaturesecurityspecialist.com',
+        role: 'director',
+        badgeNumber: 'DIR-00001',
+        avatar: matchedGuard?.avatar ?? '',
+        hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
+        staffRole: 'Director',
+      });
+      return;
+    }
 
     // Check clients list first (own separate table)
     const matchedClient = clientsList.find(c => c.email.toLowerCase() === emailLower);

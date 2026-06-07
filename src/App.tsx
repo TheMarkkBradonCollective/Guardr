@@ -38,8 +38,8 @@ export default function App() {
       const table = currentUser.role === 'client' ? 'clients' : 'guards';
       try {
         await supabase.from(table).update({ theme_preference: mode }).eq('id', currentUser.id);
-      } catch (e) {
-        console.error('Theme sync error:', e);
+      } catch {
+        /* theme_preference column may not exist yet */
       }
     }
   };
@@ -89,12 +89,13 @@ export default function App() {
     (async () => {
       try {
         setLoading(true);
-        if (await isSupabaseConnected()) {
-          setIsDbConnected(true);
-          await loadFromSupabase();
-        }
+        await loadFromSupabase();
       } catch (e) {
         console.error('Supabase init error:', e);
+        setGuards([]);
+        setClients([]);
+        setRequests([]);
+        setIsDbConnected(false);
       } finally {
         setLoading(false);
       }
@@ -103,16 +104,20 @@ export default function App() {
 
   const loadFromSupabase = async () => {
     try {
-      // Guards
-      const { data: dbGuards } = await supabase.from('guards').select('*');
-      // Clients
-      const { data: dbClients } = await supabase.from('clients').select('*');
-      // Certifications
-      const { data: dbCerts } = await supabase.from('certifications').select('*');
-      // Experience
-      const { data: dbExps } = await supabase.from('experience').select('*');
-      // Requests
-      const { data: dbRequests } = await supabase.from('security_requests').select('*');
+      const { data: dbGuards, error: guardsErr } = await supabase.from('guards').select('*');
+      const { data: dbClients, error: clientsErr } = await supabase.from('clients').select('*');
+      const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
+      const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
+      const { data: dbRequests, error: requestsErr } = await supabase.from('security_requests').select('*');
+
+      if (guardsErr || clientsErr || certsErr || expsErr || requestsErr) {
+        console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr });
+        setGuards([]);
+        setClients([]);
+        setRequests([]);
+        setIsDbConnected(false);
+        return;
+      }
 
       setGuards((dbGuards ?? []).map((g: any) => ({
         id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
@@ -170,9 +175,33 @@ export default function App() {
       setIsDbConnected(true);
     } catch (err) {
       console.error('Supabase load error:', err);
+      setGuards([]);
+      setClients([]);
+      setRequests([]);
       setIsDbConnected(false);
     }
   };
+
+  // Drop stale session if user no longer exists in DB
+  useEffect(() => {
+    if (!currentUser || loading) return;
+    const emailLower = currentUser.email.toLowerCase();
+    const exists =
+      currentUser.role === 'client'
+        ? clients.some((c) => c.email.toLowerCase() === emailLower)
+        : guards.some((g) => g.email.toLowerCase() === emailLower);
+    if (!exists) {
+      localStorage.removeItem('guardr_current_user');
+      setCurrentUser(null);
+    }
+  }, [currentUser, guards, clients, loading]);
+
+  // Refresh from DB when tab regains focus
+  useEffect(() => {
+    const onFocus = () => { void loadFromSupabase(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   // ── Derived ────────────────────────────────────────────────
   // Only real guards (not clients/auditors/staff-only accounts)
@@ -200,28 +229,24 @@ export default function App() {
    *   staff   → guards table
    */
   const handleSignUp = async (profile: SecurityGuard | Client, role: 'guard' | 'client') => {
+    if (!isDbConnected) {
+      alert('Database is not connected. Cannot create accounts until Supabase is linked.');
+      return;
+    }
     if (role === 'client') {
       const client = profile as Client;
-      setClients(prev => {
-        if (prev.some(c => c.id === client.id)) return prev;
-        return [...prev, client];
-      });
       if (isDbConnected) {
         try {
           await supabase.from('clients').insert({
             id: client.id, name: client.name, email: client.email,
             company_name: client.companyName, phone: client.phone,
             avatar: client.avatar, total_requests: 0, approved: false,
-            theme_preference: themeMode,
           });
+          await loadFromSupabase();
         } catch (e) { console.error('Client DB insert error:', e); }
       }
     } else {
       const guard = profile as SecurityGuard;
-      setGuards(prev => {
-        if (prev.some(g => g.id === guard.id)) return prev;
-        return [...prev, guard];
-      });
       if (isDbConnected) {
         try {
           await supabase.from('guards').insert({
@@ -234,8 +259,8 @@ export default function App() {
             hourly_rate_requirement: guard.hourlyRateRequirement,
             is_staff: guard.isStaff, staff_role: guard.staffRole,
             user_status: guard.userStatus || 'active',
-            theme_preference: themeMode,
           });
+          await loadFromSupabase();
         } catch (e) { console.error('Guard DB insert error:', e); }
       }
     }
