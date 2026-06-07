@@ -2,7 +2,9 @@ import React, { useRef, useState } from 'react';
 import { motion, PanInfo } from 'motion/react';
 import { SecurityRequest, SecurityGuard } from '../../types';
 import { JOB_CATEGORIES, JobCategoryId } from '../../lib/guardJobs';
+import { formatShiftRange } from '../../lib/dates';
 import { GuardJobCard } from './GuardJobCard';
+import { Calendar, ChevronRight } from 'lucide-react';
 
 export type SheetSnap = 'peek' | 'half' | 'full';
 
@@ -14,6 +16,7 @@ const SNAP_HEIGHTS: Record<SheetSnap, number> = {
 
 interface GuardBottomSheetProps {
   jobs: SecurityRequest[];
+  upcomingShifts?: SecurityRequest[];
   guard: SecurityGuard;
   selectedJob: SecurityRequest | null;
   selectedCategory: JobCategoryId | null;
@@ -25,6 +28,7 @@ interface GuardBottomSheetProps {
 
 export function GuardBottomSheet({
   jobs,
+  upcomingShifts = [],
   guard,
   selectedJob,
   selectedCategory,
@@ -67,6 +71,12 @@ export function GuardBottomSheet({
     );
   }
 
+  const sheetLabel = selectedJob
+    ? 'Assignment Details'
+    : upcomingShifts.length > 0
+      ? `${upcomingShifts.length} Upcoming · ${jobs.length} Available`
+      : `${jobs.length} Available Jobs`;
+
   return (
     <motion.div
       className="guardr-bottom-sheet guardr-bottom-sheet-uber rounded-t-2xl"
@@ -86,7 +96,7 @@ export function GuardBottomSheet({
         >
           <div className="w-10 h-1 rounded-full bg-white/25 mb-1" />
           <span className="text-[10px] font-mono uppercase text-white/40 tracking-widest">
-            {selectedJob ? 'Assignment Details' : `${jobs.length} Available Jobs`}
+            {sheetLabel}
           </span>
         </button>
 
@@ -103,6 +113,36 @@ export function GuardBottomSheet({
             />
           ) : (
             <div className="space-y-4">
+              {upcomingShifts.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-brand-primary" />
+                    <p className="text-[10px] font-mono uppercase text-white/50 tracking-widest">Upcoming Shifts</p>
+                  </div>
+                  {upcomingShifts.map((shift) => (
+                    <button
+                      key={shift.id}
+                      type="button"
+                      onClick={() => onSelectJob(shift)}
+                      className="w-full text-left rounded-xl border border-brand-primary/30 bg-brand-primary/10 p-3 hover:bg-brand-primary/15 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-black text-sm truncate">{shift.title}</p>
+                          <p className="text-[10px] font-mono text-white/50 mt-0.5 truncate">
+                            {formatShiftRange(shift.startDate, shift.endDate)}
+                          </p>
+                          <p className="text-[10px] font-mono text-brand-primary mt-1">
+                            ${shift.guardPay ?? shift.hourlyRate - 5}/hr · {shift.clientName}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-brand-primary shrink-0 mt-1" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 <button
                   type="button"
@@ -132,6 +172,7 @@ export function GuardBottomSheet({
               </div>
 
               <div className="space-y-2">
+                <p className="text-[10px] font-mono uppercase text-white/40 tracking-widest">Nearby Jobs</p>
                 {jobs.length === 0 ? (
                   <p className="text-center text-sm text-white/40 font-mono py-8">No jobs in this category right now.</p>
                 ) : (

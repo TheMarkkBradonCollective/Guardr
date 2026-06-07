@@ -2,6 +2,16 @@ import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest, Certification, SessionUser, Client } from '../types';
 import { formatDuration, formatShiftRange } from '../lib/dates';
 import { JOB_STATUS_LABELS } from '../lib/jobStatus';
+import {
+  canAccessFinancialControls,
+  canManageStaffAccounts,
+  canSuspendUsers,
+  canToggleStaffRole,
+  hasPermission,
+  ROLE_LABELS,
+} from '../lib/permissions';
+import { AdminFinancePanel } from './staff/AdminFinancePanel';
+import { RolePermissionsGuide, StaffRolesReference } from './staff/RolePermissionsGuide';
 import { 
   Users, 
   Shield, 
@@ -39,6 +49,8 @@ interface StaffDashboardProps {
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
+  onApproveGuard: (guardId: string) => void;
+  onRejectGuard: (guardId: string) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
   isDbConnected: boolean;
@@ -58,13 +70,15 @@ export function StaffDashboard({
   onRejectClient,
   onApproveCert,
   onRejectCert,
+  onApproveGuard,
+  onRejectGuard,
   onRecordAuditViolation,
   onResetAuditFailures,
   isDbConnected,
   currentUser,
   onAddStaffProfile
 }: StaffDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'clients' | 'requests' | 'claims' | 'audits'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'clients' | 'requests' | 'claims' | 'audits' | 'finance' | 'roles'>('clients');
   const [userSearchText, setUserSearchText] = useState('');
   const [requestSearchText, setRequestSearchText] = useState('');
   const [selectedUserFilter, setSelectedUserFilter] = useState<'all' | 'staff' | 'active' | 'suspended' | 'blocked'>('all');
@@ -80,7 +94,11 @@ export function StaffDashboard({
   const [onboardMsg, setOnboardMsg] = useState('');
   const [showOnboardForm, setShowOnboardForm] = useState(false);
 
-  // Filter Guards / Users
+  const showFinance = canAccessFinancialControls(currentUser);
+  const showStaffOnboard = canManageStaffAccounts(currentUser);
+  const canSuspend = canSuspendUsers(currentUser);
+  const canToggleStaff = canToggleStaffRole(currentUser);
+  const canApproveGuards = hasPermission(currentUser, 'moderator.approve_guards');
   const filteredGuards = guards.filter(guard => {
     const matchesSearch = 
       guard.name.toLowerCase().includes(userSearchText.toLowerCase()) ||
@@ -210,9 +228,11 @@ export function StaffDashboard({
                 </span>
               )}
             </div>
-            <h2 className="text-2xl font-black font-sans tracking-tight">System Operations Console</h2>
+            <h2 className="text-2xl font-black font-sans tracking-tight">{ROLE_LABELS[currentUser.role]} Console</h2>
             <p className="text-sm text-slate-405 mt-1 max-w-2xl">
-              Platform administration dashboard. Grant staff privileges, approve job post queries, override user access status (active, suspended, blocked), and confirm licensing files.
+              {currentUser.role === 'moderator' && 'Operations and support — approve accounts, review certifications and reports. No financial controls.'}
+              {currentUser.role === 'administrator' && 'Platform management — daily operations, payouts, fees, analytics, and user management.'}
+              {currentUser.role === 'director' && 'Owner-level access — full platform control, staff management, and financial oversight.'}
             </p>
           </div>
 
@@ -290,12 +310,38 @@ export function StaffDashboard({
                 }`}
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-yellow-500" />
-                <span>Shift Compliance ({requests.filter(r => r.checkInAudit || r.checkOutAudit).length})</span>
+                <span>Compliance ({requests.filter(r => r.checkInAudit || r.checkOutAudit).length})</span>
+              </button>
+
+              {showFinance && (
+                <button
+                  id="staff-tab-finance"
+                  onClick={() => setActiveTab('finance')}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                    activeTab === 'finance' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>Finance</span>
+                </button>
+              )}
+
+              <button
+                id="staff-tab-roles"
+                onClick={() => setActiveTab('roles')}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                  activeTab === 'roles' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Roles</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <RolePermissionsGuide currentRole={currentUser.role} />
 
       <AnimatePresence mode="wait">
         {activeTab === 'users' && (
@@ -337,7 +383,7 @@ export function StaffDashboard({
             </div>
 
             {/* Director Operator Suite */}
-            {currentUser.staffRole === 'Director' && (
+            {showStaffOnboard && (
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-white">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -496,6 +542,26 @@ export function StaffDashboard({
                           {guard.verified ? '✓ Verified Certified' : '⚠ Pending Audit'}
                         </span>
                       </div>
+                      {!guard.verified && canApproveGuards && !guard.isStaff && (
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => onApproveGuard(guard.id)}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-bold font-mono uppercase hover:bg-emerald-700 transition-colors"
+                          >
+                            <UserCheck className="w-3.5 h-3.5" />
+                            Approve Guard
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onRejectGuard(guard.id)}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold font-mono uppercase hover:bg-red-100 transition-colors"
+                          >
+                            <UserX className="w-3.5 h-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400 font-sans">Contact Phone:</span>
                         <span className="text-slate-700 font-mono">{guard.phone}</span>
@@ -523,9 +589,12 @@ export function StaffDashboard({
                       
                       {/* Privileges Toggle Option */}
                       {(() => {
-                        const isDesignatedDirector = currentUser.staffRole === 'Director';
-                        const canToggleStaff = isDesignatedDirector;
-                        const canChangeStatus = isDesignatedDirector || (currentUser.staffRole === 'Administrator' && !guard.isStaff);
+                        const rowCanToggleStaff = canToggleStaff;
+                        const canChangeStatus = canSuspend && (
+                          currentUser.role === 'director' ||
+                          currentUser.role === 'administrator' ||
+                          (currentUser.role === 'moderator' && !guard.isStaff)
+                        );
 
                         return (
                           <>
@@ -541,14 +610,14 @@ export function StaffDashboard({
                               </div>
 
                               <button
-                                disabled={!canToggleStaff || actioningId === `staff-${guard.id}`}
+                                disabled={!rowCanToggleStaff || actioningId === `staff-${guard.id}`}
                                 onClick={() => handleToggleStaff(guard.id, isCurrentlyStaff)}
-                                title={!canToggleStaff ? "Only Directors can alter staff roles" : ""}
+                                title={!rowCanToggleStaff ? "Only Directors can alter staff roles" : ""}
                                 className={`font-mono font-bold text-[10px] p-1.5 px-3 rounded-md transition-all ${
                                   isCurrentlyStaff
                                     ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-105'
                                     : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                } ${!canToggleStaff ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                } ${!rowCanToggleStaff ? 'opacity-40 cursor-not-allowed' : ''}`}
                               >
                                 {actioningId === `staff-${guard.id}` ? (
                                   <Loader2 className="w-3 h-3 animate-spin mx-auto text-slate-400" />
@@ -1022,6 +1091,18 @@ export function StaffDashboard({
                 </div>
               )}
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'finance' && showFinance && (
+          <motion.div key="finance-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <AdminFinancePanel requests={requests} isDirector={currentUser.role === 'director'} />
+          </motion.div>
+        )}
+
+        {activeTab === 'roles' && (
+          <motion.div key="roles-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+            <StaffRolesReference />
           </motion.div>
         )}
       </AnimatePresence>

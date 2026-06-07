@@ -29,6 +29,7 @@ import {
   Award,
   X,
   CheckCircle2,
+  Pencil,
 } from 'lucide-react';
 
 interface ClientDashboardProps {
@@ -36,10 +37,16 @@ interface ClientDashboardProps {
   guards: SecurityGuard[];
   isClientApproved?: boolean;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
+  onEditRequest: (requestId: string, req: Partial<SecurityRequest>) => void;
+  onCancelRequest: (requestId: string) => void;
   onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   openPostForm?: boolean;
+}
+
+function canClientModifyRequest(status: JobStatus): boolean {
+  return status === 'pending-review' || status === 'open';
 }
 
 function statusBadgeClass(status: JobStatus): string {
@@ -59,12 +66,15 @@ export function ClientDashboard({
   guards,
   isClientApproved = true,
   onPostRequest,
+  onEditRequest,
+  onCancelRequest,
   onHireGuard,
   onUpdateStatus,
   onAddReview,
   openPostForm = false,
 }: ClientDashboardProps) {
   const [showAddForm, setShowAddForm] = useState(openPostForm);
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
   React.useEffect(() => { setShowAddForm(openPostForm); }, [openPostForm]);
 
   const [title, setTitle]           = useState('');
@@ -131,11 +141,40 @@ export function ClientDashboard({
     }
   };
 
+  const resetForm = () => {
+    setTitle(''); setSiteName(''); setAddress(''); setSiteInstructions('');
+    setUniformRequirements(''); setEquipmentRequirements('');
+    setGuardsNeeded(1); setType('event'); setArmedRequired(false);
+    setStartDate(getDefaultShiftStart());
+    setEndDate(getDefaultShiftEnd(getDefaultShiftStart(), 8));
+    setHourlyRate(40);
+    setSelectedCerts(['First Aid & CPR / AED']);
+    setEditingRequestId(null);
+  };
+
+  const loadRequestIntoForm = (req: SecurityRequest) => {
+    setTitle(req.title);
+    setSiteName(req.siteName || '');
+    setAddress(req.address || req.location);
+    setSiteInstructions(req.siteInstructions || req.description);
+    setUniformRequirements(req.uniformRequirements || '');
+    setEquipmentRequirements(req.equipmentRequirements || '');
+    setGuardsNeeded(req.guardsNeeded || 1);
+    setType(req.type);
+    setArmedRequired(!!req.armedRequired);
+    setStartDate(req.startDate.slice(0, 16));
+    setEndDate(req.endDate.slice(0, 16));
+    setHourlyRate(req.hourlyRate);
+    setSelectedCerts(req.requiredCertifications.length ? req.requiredCertifications : ['First Aid & CPR / AED']);
+    setEditingRequestId(req.id);
+    setShowAddForm(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !siteName || !address) { alert('Please fill in job title, site name, and address.'); return; }
     if (computedDurationHours <= 0) { alert('End date/time must be after start date/time.'); return; }
-    onPostRequest({
+    const payload = {
       title, siteName, address,
       siteInstructions,
       uniformRequirements, equipmentRequirements,
@@ -149,11 +188,23 @@ export function ClientDashboard({
       requiredCertifications: selectedCerts,
       description: siteInstructions,
       location: `${siteName} — ${address}`,
-    });
-    setTitle(''); setSiteName(''); setAddress(''); setSiteInstructions('');
-    setUniformRequirements(''); setEquipmentRequirements('');
-    setGuardsNeeded(1); setShowAddForm(false);
+    };
+    if (editingRequestId) {
+      onEditRequest(editingRequestId, payload);
+      resetForm();
+      setShowAddForm(false);
+      alert('Request updated successfully.');
+      return;
+    }
+    onPostRequest(payload);
+    resetForm();
+    setShowAddForm(false);
     alert('Security request submitted for staff review.');
+  };
+
+  const handleCancelRequest = (req: SecurityRequest) => {
+    if (!window.confirm(`Cancel "${req.title}"? This cannot be undone.`)) return;
+    onCancelRequest(req.id);
   };
 
   const handleRunAiMatch = async (req: SecurityRequest) => {
@@ -258,7 +309,33 @@ export function ClientDashboard({
                       <span className={`shrink-0 px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-wider ${statusBadgeClass(req.status)}`}>
                         {JOB_STATUS_LABELS[req.status]}
                       </span>
+                      {canClientModifyRequest(req.status) && (
+                        <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto sm:ml-auto">
+                          <button
+                            type="button"
+                            onClick={() => loadRequestIntoForm(req)}
+                            className="uber-button-outline h-8 px-3 text-[10px] font-black uppercase gap-1"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelRequest(req)}
+                            className="h-8 px-3 text-[10px] font-black uppercase gap-1 border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <X className="w-3 h-3 inline" />
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
+
+                    {req.status === 'pending-review' && (
+                      <p className="text-[10px] font-mono text-amber-400/90 bg-amber-500/8 border border-amber-500/20 px-2.5 py-1.5">
+                        Awaiting staff review — you can edit or cancel until approved.
+                      </p>
+                    )}
 
                     {/* Description */}
                     <p className="text-xs text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">
@@ -488,9 +565,9 @@ export function ClientDashboard({
               <div className="flex items-center justify-between">
                 <h3 className="font-black text-sm uppercase tracking-tight flex items-center gap-1.5">
                   <Plus className="w-4 h-4 text-brand-primary" />
-                  New Shift Request
+                  {editingRequestId ? 'Edit Shift Request' : 'New Shift Request'}
                 </h3>
-                <button type="button" onClick={() => setShowAddForm(false)} className="text-brand-text-muted hover:text-brand-text">
+                <button type="button" onClick={() => { resetForm(); setShowAddForm(false); }} className="text-brand-text-muted hover:text-brand-text">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -682,10 +759,10 @@ export function ClientDashboard({
               </div>
 
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => setShowAddForm(false)} className="uber-button-outline h-10 px-4 text-xs font-black uppercase flex-1">Cancel</button>
+                <button type="button" onClick={() => { resetForm(); setShowAddForm(false); }} className="uber-button-outline h-10 px-4 text-xs font-black uppercase flex-1">Cancel</button>
                 <button type="submit" className="uber-button-sage h-10 px-4 text-xs font-black uppercase flex-1 gap-1.5">
                   <Shield className="w-3.5 h-3.5" />
-                  Publish Request
+                  {editingRequestId ? 'Save Changes' : 'Publish Request'}
                 </button>
               </div>
             </form>

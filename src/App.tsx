@@ -5,9 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser } from './types';
+import { isStaffRole, ROLE_LABELS } from './lib/permissions';
 import { ClientDashboard } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
-import { AuditorDashboard } from './components/AuditorDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
@@ -29,7 +29,7 @@ export default function App() {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
   const [isAuthView, setIsAuthView]       = useState(false);
-  const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>('client');
+  const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>('client');
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -175,7 +175,7 @@ export default function App() {
    *   auditor → guards table (auditor is a special reviewer role, same table)
    *   staff   → guards table
    */
-  const handleSignUp = async (profile: SecurityGuard | Client, role: 'guard' | 'client' | 'auditor' | 'staff') => {
+  const handleSignUp = async (profile: SecurityGuard | Client, role: 'guard' | 'client') => {
     if (role === 'client') {
       const client = profile as Client;
       setClients(prev => {
@@ -429,6 +429,60 @@ export default function App() {
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
   };
 
+  const handleCancelRequest = async (requestId: string) => {
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
+    if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
+  };
+
+  const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
+    const existing = requests.find(r => r.id === requestId);
+    if (!existing || (existing.status !== 'pending-review' && existing.status !== 'open')) {
+      alert('Only open or pending requests can be edited.');
+      return;
+    }
+    const startDate = updates.startDate || existing.startDate;
+    const endDate = updates.endDate || existing.endDate;
+    const durationHours = updates.durationHours ?? computeDurationHours(startDate, endDate);
+    const hourlyRate = updates.hourlyRate ?? existing.hourlyRate;
+    const siteName = updates.siteName ?? existing.siteName ?? '';
+    const address = updates.address ?? existing.address ?? existing.location;
+    const merged: Partial<SecurityRequest> = {
+      ...updates,
+      startDate,
+      endDate,
+      durationHours,
+      hourlyRate,
+      guardPay: updates.guardPay ?? computeGuardPay(hourlyRate),
+      estimatedPayout: updates.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100,
+      location: siteName ? `${siteName} — ${address}` : address,
+      description: updates.description || updates.siteInstructions || existing.description,
+      status: existing.status === 'open' ? 'open' : 'pending-review',
+    };
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...merged } : r));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({
+        title: merged.title,
+        description: merged.description,
+        site_name: merged.siteName,
+        address: merged.address,
+        location: merged.location,
+        type: merged.type,
+        armed_required: merged.armedRequired,
+        guards_needed: merged.guardsNeeded,
+        uniform_requirements: merged.uniformRequirements,
+        equipment_requirements: merged.equipmentRequirements,
+        site_instructions: merged.siteInstructions,
+        start_date: merged.startDate,
+        end_date: merged.endDate,
+        duration_hours: merged.durationHours,
+        hourly_rate: merged.hourlyRate,
+        guard_pay: merged.guardPay,
+        estimated_payout: merged.estimatedPayout,
+        required_certifications: merged.requiredCertifications,
+      }).eq('id', requestId);
+    }
+  };
+
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
     if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
@@ -519,7 +573,7 @@ export default function App() {
       <div className={`theme-${themeMode}`}>
         <HomePage
           onNavigateToAuth={(role) => {
-            if (role) setInitialAuthRole(role as 'guard' | 'client' | 'auditor' | 'staff');
+            if (role) setInitialAuthRole(role as 'guard' | 'client');
             setIsAuthView(true);
           }}
           guardsCount={verifiedGuards.filter(g => g.verified).length}
@@ -582,8 +636,10 @@ export default function App() {
             guards={hireableGuards}
             isClientApproved={isClientApproved}
             onPostRequest={(req) => { handlePostRequest(req); setClientSection('requests'); }}
+            onEditRequest={handleEditRequest}
             onHireGuard={handleHireGuard}
             onUpdateStatus={handleUpdateStatus}
+            onCancelRequest={handleCancelRequest}
             onAddReview={handleAddReview}
             openPostForm={clientSection === 'post'}
           />
@@ -593,56 +649,47 @@ export default function App() {
     );
   }
 
-  // ── Auditor / Staff view ────────────────────────────────────
-  // Only pass actual guards (not clients) to admin views
-  const adminGuards = verifiedGuards;
+  // ── Staff (Moderator / Administrator / Director) ─────────────
+  if (isStaffRole(currentUser.role)) {
+    const adminGuards = verifiedGuards;
+    const consoleTitle =
+      currentUser.role === 'director' ? 'Director Console' :
+      currentUser.role === 'administrator' ? 'Administrator Console' :
+      'Moderator Console';
 
-  return (
-    <div className={`min-h-screen flex flex-col theme-${themeMode} bg-brand-bg text-brand-text`}>
-      <header className="sticky top-0 z-50 border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <Logo className="text-brand-primary shrink-0" size={26} />
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr</p>
-            <h1 className="font-black text-sm uppercase tracking-tight">
-              {currentUser.role === 'staff' ? 'Operations Console' : 'Compliance Desk'}
-            </h1>
+    return (
+      <div className={`min-h-screen flex flex-col theme-${themeMode} bg-brand-bg text-brand-text`}>
+        <header className="sticky top-0 z-50 border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <Logo className="text-brand-primary shrink-0" size={26} />
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr · {ROLE_LABELS[currentUser.role]}</p>
+              <h1 className="font-black text-sm uppercase tracking-tight">{consoleTitle}</h1>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex border border-brand-border p-0.5 text-[9px] font-mono">
-            {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => changeThemeMode(m)}
-                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-colors ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'}`}
-              >
-                {m === 'dark' ? 'Dark' : m === 'light' ? 'Light' : 'Grey'}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex border border-brand-border p-0.5 text-[9px] font-mono">
+              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => changeThemeMode(m)}
+                  className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-colors ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'}`}
+                >
+                  {m === 'dark' ? 'Dark' : m === 'light' ? 'Light' : 'Grey'}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 border border-brand-border px-3 py-1.5 text-xs font-mono font-bold uppercase hover:border-brand-primary transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 border border-brand-border px-3 py-1.5 text-xs font-mono font-bold uppercase hover:border-brand-primary transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Sign Out
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
-        {currentUser.role === 'auditor' && (
-          <AuditorDashboard
-            guards={adminGuards}
-            onApproveGuard={handleApproveGuard}
-            onRejectGuard={handleRejectGuard}
-            onApproveCert={handleApproveCert}
-            onRejectCert={handleRejectCert}
-            onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
-          />
-        )}
-        {currentUser.role === 'staff' && (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
           <StaffDashboard
             guards={adminGuards}
             clients={clients}
@@ -655,23 +702,27 @@ export default function App() {
             onRejectClient={handleRejectClient}
             onApproveCert={handleApproveCert}
             onRejectCert={handleRejectCert}
+            onApproveGuard={handleApproveGuard}
+            onRejectGuard={handleRejectGuard}
             onRecordAuditViolation={handleRecordAuditViolation}
             onResetAuditFailures={handleResetAuditFailures}
             isDbConnected={isDbConnected}
             currentUser={currentUser}
             onAddStaffProfile={handleAddStaffProfile}
           />
-        )}
-      </main>
+        </main>
 
-      <footer className="border-t border-brand-border bg-brand-bg-sec px-6 py-3 text-[9px] font-mono uppercase text-brand-text-muted flex items-center justify-between">
-        <span className="flex items-center gap-1.5">
-          <Logo className="text-brand-primary" size={12} />
-          Guardr Admin Console
-        </span>
-        <span>© {new Date().getFullYear()}</span>
-      </footer>
-      <InstallPrompt />
-    </div>
-  );
+        <footer className="border-t border-brand-border bg-brand-bg-sec px-6 py-3 text-[9px] font-mono uppercase text-brand-text-muted flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Logo className="text-brand-primary" size={12} />
+            Guardr {ROLE_LABELS[currentUser.role]} Console
+          </span>
+          <span>© {new Date().getFullYear()}</span>
+        </footer>
+        <InstallPrompt />
+      </div>
+    );
+  }
+
+  return null;
 }

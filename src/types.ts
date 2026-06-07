@@ -27,6 +27,12 @@ export interface ShiftReport {
   submittedAt: string;
 }
 
+/** Platform user roles per Guardr spec */
+export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director';
+
+/** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
+export type StaffRole = 'Director' | 'Administrator' | 'Moderator';
+
 export interface Certification {
   id: string;
   name: string;
@@ -76,7 +82,7 @@ export interface SecurityGuard {
   experience: Experience[];
   hourlyRateRequirement?: number;
   isStaff?: boolean;
-  staffRole?: 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: StaffRole;
   userStatus?: 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
 }
@@ -174,12 +180,13 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
-  role: 'client' | 'guard' | 'auditor' | 'staff';
+  role: PlatformRole;
   badgeNumber?: string;
   clientName?: string;
   organization?: string;
   avatar?: string;
   hourlyRate?: number;
-  staffRole?: 'Director' | 'Administrator' | 'Moderator';
+  /** @deprecated Derive from role for staff accounts */
+  staffRole?: StaffRole;
 }
 

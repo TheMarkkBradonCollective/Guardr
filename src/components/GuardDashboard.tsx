@@ -64,6 +64,11 @@ export function GuardDashboard({
     [requests, guard.id]
   );
 
+  const upcomingShifts = useMemo(
+    () => assignedJobs.filter((r) => r.status === 'accepted'),
+    [assignedJobs]
+  );
+
   const activeShiftJob = useMemo(() => {
     const onDuty = assignedJobs.find((r) => r.status === 'in-progress');
     if (onDuty) return onDuty;
@@ -291,6 +296,7 @@ export function GuardDashboard({
       {activeTab === 'map' && !showShiftOverlay && (
         <GuardBottomSheet
           jobs={filteredBrowseJobs}
+          upcomingShifts={upcomingShifts}
           guard={guard}
           selectedJob={selectedJob?.status === 'open' ? selectedJob : null}
           selectedCategory={selectedCategory}
