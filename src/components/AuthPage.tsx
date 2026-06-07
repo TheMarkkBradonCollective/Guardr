@@ -14,8 +14,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { SessionUser, SecurityGuard, Client, PlatformRole, Certification } from '../types';
-import { PREFAB_CERT_LIST } from '../initialData';
+import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
 interface AuthPageProps {
@@ -45,7 +44,6 @@ export function AuthPage({
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
 
-  const [guardCardNumber, setGuardCardNumber] = useState('');
   const [phone, setPhone]             = useState('');
   const [bio, setBio]                 = useState('');
   const [hourlyRate, setHourlyRate]   = useState('35');
@@ -89,30 +87,11 @@ export function AuthPage({
         return;
       }
 
-      if (!guardCardNumber.trim()) {
-        setErrorMsg('Guard card number is required.');
-        return;
-      }
-
-      const guardCardCertName = isArmed
-        ? PREFAB_CERT_LIST.find((c) => /armed security officer guard card/i.test(c)) ?? 'State Armed Security Officer Guard Card'
-        : PREFAB_CERT_LIST.find((c) => /unarmed guard card/i.test(c)) ?? 'State Unarmed Guard Card License';
-
-      const guardCardCert: Certification = {
-        id: `cert-${Date.now()}`,
-        name: guardCardCertName,
-        issuer: 'State Licensing Bureau',
-        number: guardCardNumber.trim(),
-        status: 'pending',
-        issueDate: new Date().toISOString().split('T')[0],
-        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      };
-
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: fullName,
         email,
-        badgeNumber: guardCardNumber.trim(),
+        badgeNumber: `GR-${Math.floor(10000 + Math.random() * 90000)}`,
         avatar: '',
         phone: phone || '',
         bio: bio || 'Licensed security professional.',
@@ -121,7 +100,7 @@ export function AuthPage({
         verified: false,
         rating: 0,
         jobsCompleted: 0,
-        certifications: [guardCardCert],
+        certifications: [],
         experience: [],
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
         userStatus: 'active',
@@ -345,20 +324,9 @@ export function AuthPage({
             {isSignUp && role === 'guard' && (
               <div className="space-y-3 pt-3 border-t border-brand-border">
                 <p className="uber-label">Guard Details</p>
-                <div>
-                  <label className="uber-label block mb-1.5">Guard Card Number</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. G-22109"
-                    value={guardCardNumber}
-                    onChange={(e) => setGuardCardNumber(e.target.value)}
-                    className="uber-input"
-                  />
-                  <p className="text-[10px] font-mono text-brand-text-muted mt-1.5">
-                    Saved to your certifications for staff review.
-                  </p>
-                </div>
+                <p className="text-[10px] font-mono text-brand-text-muted leading-relaxed">
+                  Add your guard card and other credentials from your profile after signing up.
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="uber-label block mb-1.5">Phone</label>
