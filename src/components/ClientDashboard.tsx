@@ -33,6 +33,7 @@ interface ClientDashboardProps {
   onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  openPostForm?: boolean;
 }
 
 export function ClientDashboard({
@@ -42,8 +43,13 @@ export function ClientDashboard({
   onHireGuard,
   onUpdateStatus,
   onAddReview,
+  openPostForm = false,
 }: ClientDashboardProps) {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(openPostForm);
+
+  React.useEffect(() => {
+    setShowAddForm(openPostForm);
+  }, [openPostForm]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -243,7 +249,7 @@ export function ClientDashboard({
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-blue-600" /> Current Guard Deployments
+              <Shield className="w-4 h-4 text-blue-600" /> Your Shift Requests
             </h2>
             <button
               onClick={() => setShowAddForm(!showAddForm)}

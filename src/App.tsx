@@ -12,6 +12,7 @@ import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
+import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { InstallPrompt } from './components/InstallPrompt';
 import { Shield, Sparkles, RefreshCw, Layers, LogOut, User, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
@@ -53,6 +54,7 @@ export default function App() {
 
   const [isDbConnected, setIsDbConnected] = useState<boolean>(false);
   const [syncing, setSyncing] = useState<boolean>(false);
+  const [clientSection, setClientSection] = useState<'requests' | 'post'>('requests');
   const [loading, setLoading] = useState<boolean>(true);
 
 
@@ -806,103 +808,84 @@ export default function App() {
     );
   }
 
+  const clientRequests = requests.filter(
+    (r) => r.clientId === currentUser.id || r.clientName === currentUser.clientName || r.clientName === currentUser.name
+  );
+  const visibleClientRequests = clientRequests.length > 0 ? clientRequests : requests;
+
+  if (currentUser.role === 'guard') {
+    return (
+      <div className={`theme-${themeMode}`}>
+        <GuardDashboard
+          guard={activeGuard}
+          requests={requests}
+          onAddCertification={handleAddCertification}
+          onAcceptJob={handleAcceptJob}
+          onUpdateJobAudit={handleUpdateJobAudit}
+          onRecordAuditViolation={handleRecordAuditViolation}
+          onSignOut={handleSignOut}
+        />
+        <InstallPrompt />
+      </div>
+    );
+  }
+
+  if (currentUser.role === 'client') {
+    return (
+      <>
+        <ClientAppLayout
+          currentUser={currentUser}
+          themeMode={themeMode}
+          onSignOut={handleSignOut}
+          onChangeTheme={changeThemeMode}
+          activeSection={clientSection}
+          onNavigate={setClientSection}
+        >
+          <ClientDashboard
+            requests={visibleClientRequests}
+            guards={guards}
+            onPostRequest={(req) => {
+              handlePostRequest(req);
+              setClientSection('requests');
+            }}
+            onHireGuard={handleHireGuard}
+            onUpdateStatus={handleUpdateStatus}
+            onAddReview={handleAddReview}
+            openPostForm={clientSection === 'post'}
+          />
+        </ClientAppLayout>
+        <InstallPrompt />
+      </>
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 theme-${themeMode} bg-brand-bg text-brand-text font-sans`}>
-      
-      {/* Real Authenticated Navigation Header */}
       <header className="border-b sticky top-0 z-50 transition-colors duration-200 bg-brand-bg-sec border-brand-border text-brand-text">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 py-4 px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Logo className="text-brand-primary shrink-0" size={32} />
-              <button 
-                onClick={handleSignOut}
-                className="text-left cursor-pointer hover:opacity-90 block"
-              >
-                <div className="flex items-center gap-1.5 leading-none">
-                  <span className="font-extrabold text-lg tracking-tighter uppercase font-sans">Guardr</span>
-                  <span className="bg-brand-accent text-brand-accent-text border border-brand-accent text-[8px] font-mono px-1.5 py-0.5 rounded-none uppercase font-extrabold tracking-wider">SEC</span>
-                </div>
-                <p className="text-[9px] font-mono mt-0.5 text-brand-text-muted">On-Demand Escrow Secure</p>
-              </button>
+          <div className="flex items-center space-x-3">
+            <Logo className="text-brand-primary shrink-0" size={32} />
+            <div>
+              <span className="font-extrabold text-lg tracking-tighter uppercase font-sans">Guardr</span>
+              <p className="text-[9px] font-mono mt-0.5 text-brand-text-muted uppercase">
+                {currentUser.role === 'staff' ? 'Operations Console' : 'Compliance Audit Desk'}
+              </p>
             </div>
           </div>
-
-          {/* Theme customizer and profile info */}
           <div className="flex flex-wrap items-center gap-4">
-            
-            {/* Precise Segmented Theme Switcher */}
             <div className="flex p-1 border text-[9px] font-mono bg-brand-bg border-brand-border">
-              <button 
-                onClick={() => changeThemeMode('sage-dark')}
-                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  themeMode === 'sage-dark' 
-                    ? 'bg-brand-accent text-brand-accent-text font-black' 
-                    : 'text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                🌿 Sage Dark
-              </button>
-              <button 
-                onClick={() => changeThemeMode('sage-light')}
-                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  themeMode === 'sage-light' 
-                    ? 'bg-brand-accent text-brand-accent-text font-black' 
-                    : 'text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                🍵 Sage Light
-              </button>
-              <button 
-                onClick={() => changeThemeMode('grey-dark')}
-                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  themeMode === 'grey-dark' 
-                    ? 'bg-brand-accent text-brand-accent-text font-black' 
-                    : 'text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                🌑 Grey Dark
-              </button>
-              <button 
-                onClick={() => changeThemeMode('grey-light')}
-                className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  themeMode === 'grey-light' 
-                    ? 'bg-brand-accent text-brand-accent-text font-black' 
-                    : 'text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                🔘 Grey Light
-              </button>
+              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => changeThemeMode(mode)}
+                  className={`px-2.5 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    themeMode === mode ? 'bg-brand-accent text-brand-accent-text font-black' : 'text-brand-text-muted hover:text-brand-text'
+                  }`}
+                >
+                  {mode.replace('-', ' ')}
+                </button>
+              ))}
             </div>
-
-            <div className="flex items-center space-x-3 p-1.5 px-3 border transition-colors bg-brand-bg border-brand-border text-brand-text">
-              {currentUser.avatar ? (
-                <img 
-                  src={currentUser.avatar} 
-                  alt={currentUser.name} 
-                  className="w-7 h-7 border border-brand-border object-cover" 
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="w-7 h-7 bg-brand-accent text-brand-accent-text flex items-center justify-center font-bold text-xs font-mono">
-                  {currentUser.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div className="text-left font-sans mr-1">
-                <h4 className="text-[11px] font-bold tracking-tight uppercase leading-none">{currentUser.name}</h4>
-                <p className="text-[8px] font-mono tracking-wider uppercase font-extrabold text-brand-primary mt-1">
-                  {currentUser.role === 'staff' 
-                    ? 'Staff Controller' 
-                    : currentUser.role === 'auditor' 
-                      ? 'Compliance Officer' 
-                      : currentUser.role === 'client' 
-                        ? 'Corporate Client' 
-                        : 'Licensed Officer'}
-                </p>
-              </div>
-            </div>
-
             <button
               onClick={handleSignOut}
               className="flex items-center space-x-1.5 px-3 py-1.5 border text-xs font-bold transition-all cursor-pointer font-mono uppercase bg-brand-bg-sec hover:opacity-80 border-brand-border text-brand-text"
@@ -911,45 +894,10 @@ export default function App() {
               <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
-
         </div>
       </header>
 
-      {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
-        
-        {/* Simple live synchronized header badge */}
-        <div className="flex justify-between items-center pb-4 border-b border-neutral-900">
-          <h2 className="text-sm font-mono uppercase tracking-wider text-neutral-400">Live Security Operations Grid</h2>
-          <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 text-white text-[9px] font-mono px-2.5 py-1 font-bold">
-            <span className="w-1.5 h-1.5 bg-uber-green animate-pulse rounded-full"></span>
-            LIVE DATABASE SYNC ACTIVE
-          </div>
-        </div>
-
-        {/* Dashboards Routing strictly secured based on active logged-in role */}
-        {currentUser.role === 'client' && (
-          <ClientDashboard
-            requests={requests}
-            guards={guards}
-            onPostRequest={handlePostRequest}
-            onHireGuard={handleHireGuard}
-            onUpdateStatus={handleUpdateStatus}
-            onAddReview={handleAddReview}
-          />
-        )}
-
-        {currentUser.role === 'guard' && (
-          <GuardDashboard
-            guard={activeGuard}
-            requests={requests}
-            onAddCertification={handleAddCertification}
-            onAcceptJob={handleAcceptJob}
-            onUpdateJobAudit={handleUpdateJobAudit}
-            onRecordAuditViolation={handleRecordAuditViolation}
-          />
-        )}
-
         {currentUser.role === 'auditor' && (
           <AuditorDashboard
             guards={guards}
@@ -978,29 +926,13 @@ export default function App() {
             onAddStaffProfile={handleAddStaffProfile}
           />
         )}
-
       </main>
 
-      {/* Footer disclaimers */}
       <footer className="border-t mt-12 py-8 text-center text-xs transition-all duration-200 bg-brand-bg-sec border-brand-border text-brand-text-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2 font-mono">
             <Logo className="text-brand-primary" size={16} />
-            <span className="text-[11px] tracking-wide uppercase font-bold">Guardr Operations Network</span>
-          </div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 flex flex-col sm:items-end gap-1">
-            <span>Verified Private Security Roster • Standardized Escrow Audits • {new Date().getFullYear()}</span>
-            <span>
-              By{" "}
-              <a 
-                href="https://www.signaturesecurityspecialist.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-neutral-400 hover:text-brand-primary underline transition-colors"
-              >
-                Signature Security Specialist
-              </a>
-            </span>
+            <span className="text-[11px] tracking-wide uppercase font-bold">Guardr Admin Console</span>
           </div>
         </div>
       </footer>

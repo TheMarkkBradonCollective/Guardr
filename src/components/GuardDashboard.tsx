@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SecurityRequest, SecurityGuard, Certification } from '../types';
 import { PREFAB_CERT_LIST } from '../initialData';
 import { formatDuration, formatShiftRange } from '../lib/dates';
+import { ShiftMap } from './guard/ShiftMap';
+import { Logo } from './Logo';
 import { 
   Shield, 
   Clock, 
@@ -29,7 +31,8 @@ import {
   Navigation,
   Radio,
   ArrowRight,
-  ChevronLeft
+  ChevronLeft,
+  LogOut,
 } from 'lucide-react';
 
 // Signature drawing canvas component using mouse/touch events
@@ -133,6 +136,7 @@ interface GuardDashboardProps {
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; status?: SecurityRequest['status'] }) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
+  onSignOut?: () => void;
 }
 
 export function GuardDashboard({
@@ -141,7 +145,8 @@ export function GuardDashboard({
   onAddCertification,
   onAcceptJob,
   onUpdateJobAudit,
-  onRecordAuditViolation
+  onRecordAuditViolation,
+  onSignOut,
 }: GuardDashboardProps) {
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<'dispatch' | 'marketplace' | 'earnings' | 'credentials'>('dispatch');
@@ -220,6 +225,8 @@ export function GuardDashboard({
   const [cashoutAmount, setCashoutAmount] = useState<number | null>(null);
   const [cashoutTimer, setCashoutTimer] = useState<boolean>(false);
   const [isSearchingJobs, setIsSearchingJobs] = useState<boolean>(true);
+  const [selectedMapJobId, setSelectedMapJobId] = useState<string | null>(null);
+  const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   // Get filtered lists of requests
   const availableJobs = requests.filter(r => r.status === 'open');
@@ -227,6 +234,17 @@ export function GuardDashboard({
   const activeJobOnDuty = assignedJobs.find(r => r.status === 'in-progress');
   const assignedNotClockedIn = assignedJobs.find(r => r.status === 'assigned');
   const completedJobs = requests.filter(r => r.assignedGuardId === guard.id && r.status === 'completed');
+  const mapJobs = [...availableJobs, ...assignedJobs];
+  const selectedMapJob = mapJobs.find((j) => j.id === selectedMapJobId) ?? null;
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setGuardPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setGuardPosition(null),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
 
   // Calculates total of completed job payouts (mock wallet balance)
   const [digitalWalletBalance, setDigitalWalletBalance] = useState<number>(() => {
@@ -519,809 +537,143 @@ export function GuardDashboard({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto px-4 sm:px-6">
-      
-      {/* 1. Uber style top controller & radar status panel */}
-      <div className="bg-neutral-950 border border-neutral-900 p-6 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-5 rounded-none shadow-none">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <div className={`w-12 h-12 flex items-center justify-center border transition-all ${
-              isOnline ? 'bg-neutral-900 border-white text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400'
-            }`}>
-              <Compass className={`w-6 h-6 ${isOnline ? 'animate-spin' : ''}`} style={{ animationDuration: '10s' }} />
+    <div className="fixed inset-0 bg-black overflow-hidden">
+      <ShiftMap
+        jobs={isOnline ? mapJobs : assignedJobs}
+        selectedJobId={selectedMapJobId}
+        onSelectJob={setSelectedMapJobId}
+        guardPosition={guardPosition}
+      />
+
+      {/* Floating guard driver header — Uber style */}
+      <div className="absolute top-0 left-0 right-0 z-[1001] p-3 sm:p-4 pointer-events-none">
+        <div className="flex items-start justify-between gap-3 pointer-events-auto">
+          <div className="bg-neutral-950/95 border border-neutral-800 px-3 py-2 flex items-center gap-2 backdrop-blur-sm">
+            <Logo className="text-brand-primary shrink-0" size={22} />
+            <div>
+              <p className="text-[8px] font-mono uppercase text-neutral-500 leading-none">Guardr Driver</p>
+              <p className="text-xs font-black uppercase tracking-wide">{guard.name.split(' ')[0]}</p>
             </div>
-            {isOnline && (
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-white border border-neutral-950"></span>
-            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm uppercase tracking-wider font-mono">Guardr Dispatch</span>
-              <span className={`text-[9px] font-mono font-black py-0.5 px-2 ${
-                isOnline ? 'bg-white text-black' : 'bg-neutral-900 text-neutral-400 border border-neutral-800'
-              }`}>{isOnline ? 'LIVE' : 'STANDBY'}</span>
-            </div>
-            <p className="text-xs text-neutral-400 mt-0.5 font-mono">
-              {isOnline 
-                ? `Active Matchmaker • Online Session Duration: ${formatOnlineDuration(onlineSeconds)}` 
-                : 'Offline State • Go active to match security contracts.'}
-            </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsOnline(!isOnline)}
+              className={`px-3 py-2 text-[10px] font-black font-mono uppercase tracking-widest border backdrop-blur-sm ${
+                isOnline ? 'bg-white text-black border-white' : 'bg-neutral-950/95 text-neutral-400 border-neutral-800'
+              }`}
+            >
+              {isOnline ? 'ON-DUTY' : 'GO ONLINE'}
+            </button>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="p-2 bg-neutral-950/95 border border-neutral-800 text-white backdrop-blur-sm"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Uber segment tabs controller */}
-        <div className="flex flex-wrap items-center gap-3">
-          
-          {/* Go Online Slider */}
-          <div className="flex items-center bg-neutral-900 border border-neutral-800 p-1 rounded-none mr-2">
+        <div className="mt-2 flex gap-1 pointer-events-auto overflow-x-auto pb-1">
+          {(['dispatch', 'marketplace', 'earnings', 'credentials'] as const).map((tab) => (
             <button
-              onClick={() => setIsOnline(!isOnline)}
-              className={`px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-widest transition-all cursor-pointer rounded-none border ${
-                isOnline 
-                  ? 'bg-white text-black border-white font-black' 
-                  : 'bg-neutral-950 text-neutral-400 border-transparent'
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`shrink-0 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider border backdrop-blur-sm ${
+                activeTab === tab
+                  ? 'bg-brand-primary text-black border-brand-primary'
+                  : 'bg-neutral-950/90 text-neutral-400 border-neutral-800'
               }`}
             >
-              {isOnline ? 'ON-DUTY ACTIVE' : 'GO ONLINE'}
+              {tab === 'dispatch' && 'Map'}
+              {tab === 'marketplace' && `Shifts (${availableJobs.length})`}
+              {tab === 'earnings' && 'Wallet'}
+              {tab === 'credentials' && 'Licenses'}
             </button>
-          </div>
-
-          <div className="bg-neutral-900 p-1 border border-neutral-800 flex text-xs font-mono rounded-none">
-            <button 
-              onClick={() => setActiveTab('dispatch')}
-              className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer rounded-none ${activeTab === 'dispatch' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              ⚡ DISPATCH
-            </button>
-            <button 
-              onClick={() => setActiveTab('marketplace')}
-              className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer rounded-none ${activeTab === 'marketplace' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              💼 CONTRACTS ({availableJobs.length})
-            </button>
-            <button 
-              onClick={() => setActiveTab('earnings')}
-              className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer rounded-none ${activeTab === 'earnings' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              💳 WALLET
-            </button>
-            <button 
-              onClick={() => setActiveTab('credentials')}
-              className={`px-3 py-1.5 font-bold uppercase tracking-wider transition-all cursor-pointer rounded-none ${activeTab === 'credentials' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              🪪 STATE LICENSES
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Main viewport displays */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
-        {/* Left column: Quick mini metrics and badges always visible */}
-        <div className="space-y-6 lg:col-span-1">
-          
-          {/* Main quick stats widget */}
-          <div className="uber-panel space-y-4 text-brand-text">
-            <div className="flex items-center space-x-3 pb-3 border-b">
-              {guard.avatar ? (
-                <img src={guard.avatar} alt={guard.name} className="w-11 h-11 rounded-full object-cover border border-slate-300 shadow-sm" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-11 h-11 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
-                  {guard.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h4 className="font-extrabold text-[13px] leading-tight text-slate-900">{guard.name}</h4>
-                <div className="flex items-center gap-1.5 font-mono text-[9px] text-slate-500 mt-0.5">
-                  <span>{guard.badgeNumber}</span>
-                  <span>•</span>
-                  <span className={guard.isArmed ? 'text-red-600 font-bold' : 'text-slate-600'}>
-                    {guard.isArmed ? 'ARMED CERTIFIED' : 'UNARMED COMPLIANT'}
-                  </span>
-                </div>
-              </div>
+      {/* Dispatch bottom sheet over full-screen map */}
+      {activeTab === 'dispatch' && (
+        <div className="guardr-bottom-sheet p-4 space-y-3">
+          {!isOnline ? (
+            <div className="text-center py-6">
+              <Compass className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
+              <p className="text-sm font-bold uppercase">You are off-duty</p>
+              <p className="text-xs text-neutral-400 mt-1 font-mono">Go online to see shift locations on the map and accept contracts.</p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[9px] font-mono text-slate-400 block uppercase font-bold">WALLET BALANCE</span>
-                <span className="text-sm font-black font-mono text-slate-900">${digitalWalletBalance}</span>
-              </div>
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[9px] font-mono text-slate-400 block uppercase font-bold">SECURITY RATING</span>
-                <span className="text-sm font-black font-mono text-slate-900">★ {guard.rating > 0 ? guard.rating : '5.0'}</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-[10px] font-mono text-slate-500">
-              <div className="flex justify-between items-center bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                <span>AUDIT STATUS:</span>
-                <span className={`font-bold ${guard.verified ? 'text-emerald-600' : 'text-amber-500'}`}>
-                  {guard.verified ? 'APPROVED CARDR' : 'PENDING AUDIT'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                <span>VIOLATIONS PENALTY:</span>
-                <span className={`font-bold ${(guard.failedAudits || 0) > 0 ? 'text-red-600' : 'text-slate-400'}`}>
-                  {guard.failedAudits || 0} / 3 FAILURES
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Compliance Info Banner if profile is not approved yet */}
-          {!guard.verified && (
-            <div className="bg-amber-50 border border-amber-200 text-slate-800 p-4 rounded-xl animate-pulse text-xs space-y-2">
-              <div className="flex gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          ) : selectedMapJob ? (
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                   <h4 className="font-bold text-amber-800 font-mono text-[10px] uppercase">Awaiting Compliance Review</h4>
-                  <p className="text-slate-600 leading-normal mt-0.5">
-                    Your state-licensed guard card certifications must be audited before active dispatches can be scheduled.
+                  <p className="text-[9px] font-mono text-brand-primary uppercase font-black">{selectedMapJob.type.replace('-', ' ')}</p>
+                  <h3 className="font-bold text-sm">{selectedMapJob.title}</h3>
+                  <p className="text-xs text-neutral-400 flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3" /> {selectedMapJob.location}
                   </p>
+                  <p className="text-[10px] font-mono text-neutral-500 mt-1">{formatShiftRange(selectedMapJob.startDate, selectedMapJob.endDate)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-black font-mono text-brand-primary">${selectedMapJob.estimatedPayout}</p>
+                  <p className="text-[10px] font-mono text-neutral-500">${selectedMapJob.hourlyRate}/hr • {formatDuration(selectedMapJob.durationHours)}</p>
                 </div>
               </div>
-              <div className="bg-white border border-amber-100 p-2.5 rounded text-[10px] text-slate-500 leading-normal">
-                💡 <strong>Evaluation Shortcut:</strong> Switch role to <strong className="text-blue-600">Compliance Auditor</strong> using the top simulator header, approve "{guard.name}" profile, then switch back to instantly unlock dispatch!
-              </div>
+              {selectedMapJob.status === 'open' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAcceptJob(selectedMapJob.id);
+                    setIsNavigating(selectedMapJob.id);
+                    setSimulatedMiles(1.2);
+                    setSimulatedEta(4);
+                    alert('Shift accepted. Navigate to the pin and complete check-in when you arrive.');
+                  }}
+                  disabled={!guard.verified || (selectedMapJob.armedRequired && !guard.isArmed)}
+                  className="w-full py-3 bg-brand-primary text-black font-black font-mono text-xs uppercase tracking-wider disabled:opacity-40"
+                >
+                  Accept Shift
+                </button>
+              )}
+              <button type="button" onClick={() => setSelectedMapJobId(null)} className="w-full py-2 border border-neutral-700 text-[10px] font-mono uppercase text-neutral-400">
+                Close
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-[10px] font-mono uppercase text-neutral-500">
+                {availableJobs.length} open shifts on map • Session {formatOnlineDuration(onlineSeconds)}
+              </p>
+              <p className="text-xs text-neutral-400">Tap a sage pin to view shift details and accept.</p>
+              {availableJobs.slice(0, 3).map((job) => (
+                <button
+                  key={job.id}
+                  type="button"
+                  onClick={() => setSelectedMapJobId(job.id)}
+                  className="w-full text-left border border-neutral-800 p-3 hover:border-brand-primary transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold truncate pr-2">{job.title}</span>
+                    <span className="text-sm font-black font-mono text-brand-primary">${job.estimatedPayout}</span>
+                  </div>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{job.location}</p>
+                </button>
+              ))}
             </div>
           )}
         </div>
+      )}
 
-        {/* Right column: Main dynamic container depends on active page tab selection */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Tab 1:⚡ DISPATCH (Uber Cockpit Map and En Route compliance checkpoints) */}
-          {activeTab === 'dispatch' && (
-            <div className="space-y-6">
-              
-              {/* If operator is offline, prompt them to go online */}
-              {!isOnline ? (
-                <div className="bg-white border border-slate-200 p-12 text-center rounded-2xl shadow-sm text-slate-500 max-w-lg mx-auto">
-                  <Compass className="w-12 h-12 text-slate-300 mx-auto mb-4 stroke-1 animate-pulse" />
-                  <h4 className="font-bold text-slate-800 text-sm uppercase">You are currently Off-Duty</h4>
-                  <p className="text-xs text-slate-450 mt-1 max-w-sm mx-auto">Toggle the active slider in the top right controller bar to go online, accept high-payout dispatches, and commence compliance checkpoints.</p>
-                </div>
-              ) : (
-                <>
-                  {/* Uber style SVG Street Navigation GPS Map */}
-                  <div className="bg-slate-950 text-white rounded-none border border-slate-800 outline-none overflow-hidden relative shadow-2xl">
-                    
-                    {/* SVG Map grids */}
-                    <div className="relative h-64 bg-[#0a0f09] overflow-hidden">
-                      <svg className="absolute inset-0 w-full h-full opacity-35" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <pattern id="street-grid animate" width="40" height="40" patternUnits="userSpaceOnUse">
-                            <rect width="40" height="40" fill="none" />
-                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#223e1e" strokeWidth="0.75" />
-                          </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#street-grid animate)" />
-                        
-                        {/* Street layout lines */}
-                        <path d="M -50,60 L 600,60" fill="none" stroke="#162e15" strokeWidth="6" />
-                        <path d="M -50,190 L 600,190" fill="none" stroke="#162e15" strokeWidth="6" />
-                        <path d="M 110,-20 L 110,400" fill="none" stroke="#162e15" strokeWidth="6" />
-                        <path d="M 320,-20 L 320,400" fill="none" stroke="#162e15" strokeWidth="6" strokeDasharray="3,3" />
-                        
-                        {/* Connecting navigation route if en-route is active */}
-                        {isNavigating && (
-                          <path d="M 40,70 L 112,70 L 112,192 L 318,192 L 318,212" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="5,3" className="animate-pulse" />
-                        )}
-                      </svg>
-
-                      {/* Pulsing Target marker pin */}
-                      {isNavigating ? (
-                        <div className="absolute" style={{ left: '318px', top: '212px', transform: 'translate(-50%, -100%)' }}>
-                          <span className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-amber-500/30 animate-ping"></span>
-                          <MapPin className="w-6 h-6 text-amber-500 fill-amber-950 animate-bounce cursor-pointer" />
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-32 h-32 rounded-full border border-emerald-500/10 animate-ping pointer-events-none absolute"></div>
-                          <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 animate-pulse flex items-center justify-center">
-                            <Radio className="w-5 h-5 text-emerald-400 animate-pulse" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Moving driver guard dispatch vehicle dot on map */}
-                      {isNavigating && (
-                        <div className="absolute transition-all duration-1000" style={{ left: `${vehicleCoo.x}px`, top: `${vehicleCoo.y}px`, transform: 'translate(-50%, -50%)' }}>
-                          <span className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-emerald-400/20 animate-ping"></span>
-                          <div className="p-1 px-1.5 bg-emerald-500 text-slate-950 rounded-full flex items-center justify-center border border-white font-black text-[8px] tracking-tighter">
-                            🚓 PATROL
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Floating status details */}
-                      <div className="absolute top-3 left-3 bg-slate-950/95 border border-[#1d351a] p-2 px-3 rounded-lg text-[9px] font-mono tracking-wider space-y-0.5 shadow-xl">
-                        <p className="text-slate-400 uppercase">TELEMETRY SYSTEM</p>
-                        <p className="text-emerald-400 font-extrabold flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                          GPS LOCK {isOnline ? 'ACTIVE • 4.2M' : 'STANDBY'}
-                        </p>
-                      </div>
-
-                      {/* Simulation HUD if en-route */}
-                      {isNavigating && (
-                        <div className="absolute top-3 right-3 bg-slate-950/95 border border-amber-500/30 p-2 px-3 rounded-lg text-[9px] font-mono tracking-wider space-y-0.5 shadow-xl">
-                          <span className="text-yellow-400 block uppercase">EN-ROUTE TELEMETRY</span>
-                          <p className="text-slate-300">ETA: {simulatedEta} mins • {simulatedMiles} miles</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Navigation control overlay footer panel */}
-                    <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
-                      <div className="flex items-center space-x-2">
-                        {isNavigating ? (
-                          <>
-                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                            <span className="font-mono text-slate-400">Heading to patrol facility...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="font-mono text-emerald-400">Listening to active geofenced dispatches...</span>
-                          </>
-                        )}
-                      </div>
-
-                      {isNavigating && simulatedMiles > 0.1 && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setSimulatedMiles(0.02);
-                              setSimulatedEta(0);
-                              setVehicleCoo({ x: 320, y: 210 });
-                            }}
-                            className="bg-amber-500/10 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 p-1.5 px-3 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition-colors"
-                          >
-                            ⏩ FAST-FORWARD NAVIGATION (SIMULATE ARRIVAL)
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Incoming Uber Alert Ping Overlay (if online but no active trip) */}
-                  {availableJobs.length > 0 && !isNavigating && !activeJobOnDuty && (
-                    <div className="bg-[#111812] border-2 border-emerald-500 text-slate-100 p-5 rounded-3xl space-y-4 animate-bounce relative shadow-2xl">
-                      <div className="absolute top-2 right-2 flex items-center space-x-1 font-mono text-[8px] bg-emerald-950 text-emerald-400 py-0.5 px-1.5 rounded border border-emerald-800">
-                        <Activity className="w-3 h-3 text-emerald-400 animate-spin" />
-                        <span>RADAR MATCH!</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-extrabold uppercase">
-                            {availableJobs[0].type.replace('-', ' ')}
-                          </span>
-                          <h4 className="font-black text-white text-base mt-2">{availableJobs[0].title}</h4>
-                          <div className="flex items-center space-x-1.5 text-xs text-slate-400 mt-1">
-                            <MapPin className="w-4 h-4 text-emerald-500" />
-                            <span>{availableJobs[0].location}</span>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-[10px] uppercase font-mono block text-slate-400">Guaranteed pay</span>
-                          <span className="text-2xl font-mono text-emerald-400 font-extrabold">${availableJobs[0].estimatedPayout}</span>
-                          <span className="text-[10px] text-slate-450 block font-mono">${availableJobs[0].hourlyRate}/hr • {formatDuration(availableJobs[0].durationHours)}</span>
-                          <span className="text-[9px] text-brand-text-muted block font-mono mt-0.5">{formatShiftRange(availableJobs[0].startDate, availableJobs[0].endDate)}</span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-slate-300 line-clamp-2 bg-slate-950 p-3 rounded-xl border border-slate-850">
-                        {availableJobs[0].description}
-                      </p>
-
-                      <div className="flex items-center justify-between flex-wrap gap-2 pt-2 text-[10px] font-mono">
-                        <span className="text-emerald-500 font-extrabold flex items-center gap-1.5">
-                          ✓ Match score: 100% credential compliant
-                        </span>
-                        
-                        <button
-                          onClick={() => {
-                            if (!guard.verified) {
-                              alert("⚠️ Cannot accept dispatch. Audit is required first! Please verify credentials under the Auditor tab.");
-                              return;
-                            }
-                            onAcceptJob(availableJobs[0].id);
-                            setIsNavigating(availableJobs[0].id);
-                            setSimulatedMiles(1.2);
-                            setSimulatedEta(4);
-                            setVehicleCoo({ x: 40, y: 70 });
-                            setGpsVerified(false);
-                          }}
-                          className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center gap-1"
-                        >
-                          <span>SLIDE TO ACCEPT DISPATCH</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2. Active Trip En Route Section */}
-                  {isNavigating && (
-                    <div className="bg-slate-900 text-white rounded-3xl border border-slate-800 p-5 space-y-4 shadow-xl">
-                      {(() => {
-                        const activeNavJob = requests.find(r => r.id === isNavigating);
-                        if (!activeNavJob) return null;
-
-                        const arrivedOnScene = simulatedMiles <= 0.05;
-
-                        return (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                              <div className="flex items-center space-x-2">
-                                <span className="bg-amber-500 text-slate-950 font-mono text-[9px] uppercase font-bold py-0.5 px-2 rounded-md">
-                                  EN ROUTE
-                                </span>
-                                <h4 className="font-extrabold text-sm">{activeNavJob.title}</h4>
-                              </div>
-                              <span className="text-xs font-mono text-slate-400">{activeNavJob.location}</span>
-                            </div>
-
-                            <p className="text-xs text-slate-350">{activeNavJob.description}</p>
-
-                            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-850 flex items-center justify-between">
-                              <div className="font-mono text-xs">
-                                <span className="text-slate-500 uppercase block text-[8px]">PROXIMITY LOCK</span>
-                                <p className="text-slate-200 mt-0.5 font-bold">
-                                  GPS: {simulatedMiles} miles remaining
-                                </p>
-                              </div>
-                              <div className="font-mono text-right text-xs">
-                                <span className="text-slate-500 uppercase block text-[8px]">SHUTTLE ETA</span>
-                                <p className="text-amber-400 font-bold">
-                                  {simulatedEta} mins to destination
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Trigger pre-shift compliance (Phase 7) */}
-                            {arrivedOnScene ? (
-                              <div className="space-y-4 animate-fade-in pt-2">
-                                <div className="p-3 bg-emerald-950/40 border border-emerald-800/40 text-xs text-emerald-400 rounded-xl flex items-start gap-2">
-                                  <Info className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                                  <p>
-                                    📍 <strong>On-Scene Proximity Lock Acclaimed!</strong> Geofence unlocked. Please execute the following <strong>Pre-Shift Self Compliance Audit</strong> to clock-in.
-                                  </p>
-                                </div>
-
-                                <div className="pt-2">
-                                  <button
-                                    onClick={() => {
-                                      setCheckingInJobId(activeNavJob.id);
-                                      setActiveWorkflowStep('checks');
-                                      setGpsVerified(true);
-                                    }}
-                                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 font-bold font-mono text-slate-950 rounded-2xl text-xs uppercase cursor-pointer shadow-lg tracking-wider"
-                                  >
-                                    🚨 COMMENCE COMPLIANCE SELF-AUDIT DESK
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex items-center justify-between text-xs text-slate-400">
-                                <span>You must get within geofenced site radius to execute Check-In self audits.</span>
-                                <button 
-                                  onClick={() => {
-                                    setSimulatedMiles(0.02);
-                                    setSimulatedEta(0);
-                                    setVehicleCoo({ x: 320, y: 210 });
-                                  }}
-                                  className="text-amber-400 text-[10px] font-mono hover:underline font-bold"
-                                >
-                                  [Simulate Driving Site]
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* 3. Pre Shift Self-Audit Desk Workspace Tray (Phase 7) */}
-                  {checkingInJobId && (
-                    <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl text-white">
-                      <div className="flex items-center justify-between pb-3 border-b border-slate-850">
-                        <h5 className="text-[11px] font-mono font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Activity className="w-4 h-4 animate-spin text-amber-500" />
-                          Pre-Shift Outfitting Compliance Audit
-                        </h5>
-                        <button
-                          onClick={() => setCheckingInJobId(null)}
-                          className="text-[9px] px-2.5 py-1 text-slate-400 font-mono bg-slate-900 border border-slate-800 rounded-lg hover:text-white hover:border-slate-700 cursor-pointer"
-                        >
-                          Abort
-                        </button>
-                      </div>
-
-                      {/* step indices */}
-                      <div className="grid grid-cols-4 gap-1 text-[8px] font-mono font-bold text-center">
-                        <button onClick={() => setActiveWorkflowStep('gps')} className={`py-1.5 rounded ${activeWorkflowStep === 'gps' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400'}`}>1. GPS radar</button>
-                        <button onClick={() => setActiveWorkflowStep('checks')} className={`py-1.5 rounded ${activeWorkflowStep === 'checks' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400'}`}>2. Apparel Checks</button>
-                        <button onClick={() => setActiveWorkflowStep('photos')} className={`py-1.5 rounded ${activeWorkflowStep === 'photos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400'}`}>3. Selfies</button>
-                        <button onClick={() => setActiveWorkflowStep('sign')} className={`py-1.5 rounded ${activeWorkflowStep === 'sign' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400'}`}>4. Certified Sign</button>
-                      </div>
-
-                      {/* SUBSTEP 1: GPS GEOLOCATION CHECK */}
-                      {activeWorkflowStep === 'gps' && (
-                        <div className="p-4 bg-slate-900 rounded-2xl border border-slate-850 text-center space-y-3">
-                          <span className="text-[9px] font-mono block text-slate-400 uppercase">GEOFENCED DISPATCH BOUNDS</span>
-                          <div className="py-4 flex flex-col items-center">
-                            {gpsLoading ? (
-                              <div className="space-y-2">
-                                <div className="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mx-auto flex items-center justify-center">
-                                  <MapPin className="w-4 h-4 text-amber-500 animate-pulse" />
-                                </div>
-                                <p className="text-[10px] font-mono text-amber-400 animate-pulse">PINGING TELEMETRY TOWERS...</p>
-                              </div>
-                            ) : gpsVerified ? (
-                              <div className="space-y-2">
-                                <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto animate-bounce" />
-                                <p className="text-[10px] font-mono text-emerald-400 font-extrabold">✓ ESCROW SITE LOCATION LOCKED</p>
-                                <p className="text-[9px] text-slate-400">Positioned inside geofence bounds (12 meters to center)</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <MapPin className="w-8 h-8 text-slate-500 mx-auto" />
-                                <p className="text-[10px] font-mono text-slate-350">GPS Verification required to lock clock-in checks</p>
-                              </div>
-                            )}
-                          </div>
-                          {!gpsVerified && !gpsLoading && (
-                            <button onClick={handleGPSVerificationClick} className="w-full py-2 bg-sage-600 hover:bg-slate-750 font-mono text-[10px] font-bold rounded-lg cursor-pointer">📍 ACQUIRE DEVICE GPS LATENCY SIGNAL</button>
-                          )}
-                          {gpsVerified && (
-                            <button onClick={() => setActiveWorkflowStep('checks')} className="w-full py-2 bg-emerald-500 text-slate-950 font-mono text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-emerald-400 cursor-pointer">
-                              <span>Proceed to Dress-Check Checklists</span>
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* SUBSTEP 2: OUT-FITTING COMPLIANCE CHECKS */}
-                      {activeWorkflowStep === 'checks' && (
-                        <div className="space-y-3">
-                          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[10px] text-amber-350 flex gap-1.5 leading-normal">
-                            <Info className="w-4 h-4 text-amber-500 shrink-0" />
-                            <p><strong>Compliance Code Mandate:</strong> Unchecking clothing items triggers violation failures. Three compliance failures cause automatic system suspension.</p>
-                          </div>
-
-                          <div className="bg-slate-900 border border-slate-850 rounded-2xl p-3 space-y-2 text-xs">
-                            <span className="text-[9px] font-mono font-bold uppercase text-slate-400 border-b border-slate-850 pb-1 block">👚 Uniform Garments Checklist</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {Object.keys(uniformChecks).map(key => (
-                                <label key={key} className="flex items-center space-x-2 p-2 bg-slate-950/60 border border-slate-850 rounded-lg cursor-pointer">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={(uniformChecks as any)[key]} 
-                                    onChange={() => setUniformChecks(prev => ({ ...prev, [key]: !(prev as any)[key] }))}
-                                    className="rounded text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer" 
-                                  />
-                                  <span className="font-sans text-[11px] text-slate-200 capitalize">{key.replace('belt', 'duty belt').replace('footwear', 'composite shoes')} present</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="bg-slate-900 border border-slate-850 rounded-2xl p-3 space-y-2 text-xs">
-                            <span className="text-[9px] font-mono font-bold uppercase text-slate-400 border-b border-slate-850 pb-1 block">📻 Operational Tactical Equipment</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                              {Object.keys(equipmentChecks).map(key => (
-                                <label key={key} className="flex items-center space-x-2 p-2 bg-slate-950/60 border border-slate-850 rounded-lg cursor-pointer">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={(equipmentChecks as any)[key]} 
-                                    onChange={() => setEquipmentChecks(prev => ({ ...prev, [key]: !(prev as any)[key] }))}
-                                    className="rounded text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer" 
-                                  />
-                                  <span className="font-mono text-[9px] text-slate-350 capitalize">{key.replace('radio', 'Transceiver radio').replace('phoneCharged', 'Phone 80% charged')}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-
-                          <button onClick={() => setActiveWorkflowStep('photos')} className="w-full py-2 bg-sage-600 hover:bg-sage-700 font-mono text-[10px] font-bold rounded-lg cursor-pointer">Proceed to Photo Verification Scanner</button>
-                        </div>
-                      )}
-
-                      {/* SUBSTEP 3: COMPLIANCE PICTURE SNAPSHOTS */}
-                      {activeWorkflowStep === 'photos' && (
-                        <div className="space-y-3">
-                          <span className="text-[9px] font-mono text-slate-450 block text-center uppercase">Live Camera Feed snaps (Mandatory)</span>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
-                            <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl flex flex-col items-center justify-center space-y-2">
-                              <span className="text-[9px] font-mono text-slate-400 block uppercase">1. Front-Facing Selfie</span>
-                              {photoFront ? (
-                                <img src={photoFront} alt="selfie" className="w-20 h-20 rounded-full border border-slate-700 object-cover" />
-                              ) : (
-                                <div className="w-20 h-20 bg-slate-950 rounded-full border border-slate-800 flex items-center justify-center text-slate-500">
-                                  <Camera className="w-6 h-6" />
-                                </div>
-                              )}
-                              <button
-                                type="button"
-                                disabled={cameraLoading}
-                                onClick={() => triggerCameraSnapper('front')}
-                                className="px-2.5 py-1 bg-slate-900 border border-slate-700 font-bold font-mono text-[9px] rounded-lg hover:bg-slate-850 text-slate-400 hover:text-white shrink-0 cursor-pointer"
-                              >
-                                {cameraLoading && activeCamTarget === 'front' ? 'Capturing...' : '📷 Snap Selfie'}
-                              </button>
-                            </div>
-
-                            <div className="bg-slate-900 border border-slate-850 p-3 rounded-xl flex flex-col items-center justify-center space-y-2">
-                              <span className="text-[9px] font-mono text-slate-400 block uppercase">2. Full-Body check picture</span>
-                              {photoFull ? (
-                                <img src={photoFull} alt="full body" className="w-20 h-20 rounded-md border border-slate-700 object-cover" />
-                              ) : (
-                                <div className="w-20 h-20 bg-slate-950 rounded-md border border-slate-800 flex items-center justify-center text-slate-500">
-                                  <Camera className="w-6 h-6" />
-                                </div>
-                              )}
-                              <button
-                                type="button"
-                                disabled={cameraLoading}
-                                onClick={() => triggerCameraSnapper('full')}
-                                className="px-2.5 py-1 bg-slate-900 border border-slate-700 font-bold font-mono text-[9px] rounded-lg hover:bg-slate-850 text-slate-400 hover:text-white shrink-0 cursor-pointer"
-                              >
-                                {cameraLoading && activeCamTarget === 'full' ? 'Capturing...' : '📷 Snap Full-Body'}
-                              </button>
-                            </div>
-                          </div>
-
-                          <button onClick={() => setActiveWorkflowStep('sign')} className="w-full py-2 bg-sage-600 hover:bg-sage-700 font-mono text-[10px] font-bold rounded-lg cursor-pointer">Proceed to Digital Sign-Off lock</button>
-                        </div>
-                      )}
-
-                      {/* SUBSTEP 4: HAND-SIGNED CERTIFICATION LEGAL OFF */}
-                      {activeWorkflowStep === 'sign' && (
-                        <div className="space-y-4">
-                          <blockquote className="bg-slate-900/60 p-3 rounded-lg border-l-2 border-amber-500 text-[10px] text-slate-300 italic">
-                            "I certify under penalty of state regulatory compliance operational code that I am on scene at the designated coordinates, dressed in complete uniform outfit matching specifications, and fully equipped with compliance transceivers."
-                          </blockquote>
-
-                          <div className="space-y-3">
-                            <SignaturePad 
-                              onSave={(val) => setSignatureInked(val)} 
-                              initialSig={signatureInked} 
-                            />
-
-                            <div className="space-y-1">
-                              <label className="text-[9px] font-mono text-slate-400 uppercase">Print Legal Full Name</label>
-                              <input 
-                                type="text"
-                                required
-                                placeholder="State Approved Legal Legal Name"
-                                value={typedCheckInName}
-                                onChange={(e) => setTypedCheckInName(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-800 text-xs font-sans text-white p-2.5 rounded-lg focus:ring-0 text-black shadow-inner"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleCheckInComplete(checkingInJobId)}
-                            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-extrabold uppercase font-mono rounded-lg tracking-wider transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                            <span>LOCK AUDIT & CLOCK-IN SHIFT</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 4. Active Shift On Scene Patrol Ticker Controls */}
-                  {activeJobOnDuty && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 text-white space-y-4 shadow-xl">
-                      <div className="flex justify-between items-center pb-2 border-b border-slate-800 flex-wrap gap-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                          <span className="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[8px] font-mono px-2 py-0.5 rounded font-bold uppercase">Patrolling</span>
-                          <h4 className="font-extrabold text-xs">{activeJobOnDuty.title}</h4>
-                        </div>
-                        <span className="text-[10px] font-mono text-slate-450">Active on site: {activeJobOnDuty.location}</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                        <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850">
-                          <span className="text-[8px] font-mono text-slate-500 block uppercase">GUARANTEED INCOME</span>
-                          <p className="text-emerald-400 font-bold text-sm">${activeJobOnDuty.estimatedPayout} Payout</p>
-                        </div>
-                        <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850">
-                          <span className="text-[8px] font-mono text-slate-500 block uppercase">HOURLY SERVICE PAY</span>
-                          <p className="text-slate-200 font-bold text-sm">${activeJobOnDuty.hourlyRate} / hr</p>
-                        </div>
-                      </div>
-
-                      {/* Phase 7 Quick action triggers */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        
-                        <button
-                          onClick={() => {
-                            setMidShiftAuditParentId(activeJobOnDuty.id);
-                            setMidShiftPhoto(null);
-                            setMidShiftUniform(true);
-                            setMidShiftEquip(true);
-                          }}
-                          className="p-3 bg-slate-950 hover:bg-slate-850 text-amber-400 rounded-xl border border-slate-800 font-bold transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <ShieldAlert className="w-4 h-4 text-amber-500 animate-pulse" />
-                          <span>Trigger Randomized Integrity Test</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setCheckingOutJobId(activeJobOnDuty.id);
-                            setCheckoutCompleteCheck(true);
-                            setCheckoutNoViolations(true);
-                            setCheckoutNoEquipIssues(true);
-                          }}
-                          className="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 rounded-xl font-mono text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10 uppercase"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Finalize shift duties & clock-out</span>
-                        </button>
-                      </div>
-
-                      {/* Embedded randomized integrity check module */}
-                      {midShiftAuditParentId === activeJobOnDuty.id && (
-                        <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-4 animate-slide-up text-xs">
-                          <span className="text-[9px] font-mono text-amber-500 block uppercase tracking-wider font-extrabold pb-1 border-b border-slate-850">⚠️ RANDOM SITE INTEGRITY AUDIT DISPATCH</span>
-                          <p className="text-slate-400 leading-normal">Compliance Operations requires verified outfitting check-in right now to retain shift eligibility.</p>
-                          
-                          <div className="space-y-3">
-                            <label className="flex items-center space-x-2 p-2 bg-slate-900 border border-slate-850 rounded-lg cursor-pointer">
-                              <input type="checkbox" checked={midShiftUniform} onChange={() => setMidShiftUniform(!midShiftUniform)} className="rounded text-amber-500 focus:ring-0" />
-                              <span>Verify Apparel Shirt & Credentials visible</span>
-                            </label>
-                            
-                            <label className="flex items-center space-x-2 p-2 bg-slate-900 border border-slate-850 rounded-lg cursor-pointer">
-                              <input type="checkbox" checked={midShiftEquip} onChange={() => setMidShiftEquip(!midShiftEquip)} className="rounded text-amber-500 focus:ring-0" />
-                              <span>Verify heavy-duty Belt equipped with Transceiver</span>
-                            </label>
-
-                            <div className="bg-slate-900 p-3 rounded-lg border border-slate-850 flex flex-col items-center justify-center space-y-2">
-                              <span className="text-[9px] font-mono text-slate-400 block uppercase">Verify Selfie Snaps</span>
-                              {midShiftPhoto ? (
-                                <img src={midShiftPhoto} alt="mid check selfie" className="w-16 h-16 rounded-full border border-slate-700 object-cover" />
-                              ) : (
-                                <div className="w-16 h-16 bg-slate-950 rounded-full border border-slate-800 flex items-center justify-center text-slate-500">
-                                  <Camera className="w-5 h-5" />
-                                </div>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => triggerCameraSnapper('mid')}
-                                className="px-2 py-1 bg-slate-950 border border-slate-800 text-[9px] font-mono text-slate-350 hover:text-white rounded hover:border-slate-600 shrink-0 cursor-pointer"
-                              >
-                                {cameraLoading && activeCamTarget === 'mid' ? 'Snapping...' : '📷 Snapshot verification selfie'}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2 justify-end text-[10px]">
-                            <button onClick={() => setMidShiftAuditParentId(null)} className="px-3 py-1 bg-slate-900 text-slate-400 rounded-lg">Dismiss</button>
-                            <button onClick={() => handleMidShiftAuditSubmit(activeJobOnDuty.id)} className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold font-mono uppercase rounded-lg shadow cursor-pointer">🔒 LOCK MID-SHIFT COMPLIANCE</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Embedded Shift checkout module (Phase 7 Daily Activity / Incidents Reports) */}
-                      {checkingOutJobId === activeJobOnDuty.id && (
-                        <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl space-y-4 animate-slide-up text-xs">
-                          <span className="text-[9px] font-mono text-emerald-400 uppercase font-black tracking-wider block border-b border-slate-850 pb-1">🔒 Daily Activity & incident reporting Desk</span>
-                          
-                          <div className="space-y-3">
-                            <label className="flex items-center space-x-2 p-2 bg-slate-900 border border-slate-850 rounded-lg cursor-pointer select-none">
-                              <input type="checkbox" checked={checkoutCompleteCheck} onChange={() => setCheckoutCompleteCheck(!checkoutCompleteCheck)} className="rounded text-emerald-500 focus:ring-0" />
-                              <span>Verify Shift Duties Completed entirely</span>
-                            </label>
-
-                            {/* Unsplash end selfie snapper */}
-                            <div className="bg-slate-900 border border-slate-850 p-3 rounded-lg flex flex-col items-center justify-center space-y-1">
-                              <span className="text-[8px] font-mono text-slate-400 block uppercase">3. End-Shift Handover Selfie</span>
-                              {checkoutPhotoEnd ? (
-                                <img src={checkoutPhotoEnd} alt="checkout selfie" className="w-16 h-16 rounded-full border border-slate-700 object-cover" />
-                              ) : (
-                                <div className="w-16 h-16 bg-slate-950 rounded-full border border-slate-800 flex items-center justify-center text-slate-500">
-                                  <Camera className="w-5 h-5" />
-                                </div>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => triggerCameraSnapper('end')}
-                                className="px-2.5 py-1 bg-slate-950 border border-slate-800 text-[9px] font-mono text-slate-350 hover:text-white rounded shrink-0 cursor-pointer"
-                              >
-                                {cameraLoading && activeCamTarget === 'end' ? 'Snapping...' : '📷 Capture Out selfie'}
-                              </button>
-                            </div>
-
-                            {/* DAR note log */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-mono text-slate-450 block uppercase">Daily Activity Report (DAR) Log *</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setDarNote("Executed routine perimeter sweeps. Verified secure padlocks on all loading docks. No unauthorized personnel encountered. Facility secure during shift duration.")}
-                                  className="text-[8px] font-mono text-emerald-400 hover:underline font-bold"
-                                >
-                                  [Populate Standard DAR]
-                                </button>
-                              </div>
-                              <textarea
-                                rows={3}
-                                placeholder="Detail hourly patrols, site findings..."
-                                value={darNote}
-                                onChange={(e) => setDarNote(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs focus:ring-0 text-white placeholder:text-slate-600"
-                              />
-                            </div>
-
-                            {/* Incident report checkbox toggler */}
-                            <div className="bg-slate-905 border border-slate-850 p-3 rounded-xl space-y-2">
-                              <label className="flex items-center space-x-2.5 cursor-pointer text-red-400 font-extrabold">
-                                <input type="checkbox" checked={hasIncidentReport} onChange={() => setHasIncidentReport(!hasIncidentReport)} className="rounded text-red-500 focus:ring-0" />
-                                <span className="text-[10px] uppercase font-mono tracking-wider">💥 REGISTER STATE INCIDENT REPORT (IR)</span>
-                              </label>
-
-                              {hasIncidentReport && (
-                                <div className="space-y-3 pt-2">
-                                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div>
-                                      <span className="text-slate-400 uppercase block font-mono text-[8px]">IR Type</span>
-                                      <select value={incidentSelection} onChange={(e) => setIncidentSelection(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white">
-                                        <option value="Disturbance">Disturbance / Loud Noise</option>
-                                        <option value="Trespassing">Trespassing / Burglar Ejected</option>
-                                        <option value="Medical Assistance">Medical dispatcher performed</option>
-                                        <option value="Property Damage">Vandalism / Weapon damage</option>
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <span className="text-slate-450 uppercase block font-mono text-[8px]">Priority Severity</span>
-                                      <div className="flex gap-1">
-                                        {['low', 'medium', 'high'].map(p => (
-                                          <button key={p} type="button" onClick={() => setIncidentPriority(p as any)} className={`flex-1 py-1 rounded font-mono text-[9px] uppercase border font-extrabold cursor-pointer ${incidentPriority === p ? 'bg-red-600 border-red-650 text-white font-black' : 'bg-slate-900 text-slate-450 border-slate-800'}`}>
-                                            {p}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] font-mono text-slate-450 block uppercase">Coordinated response narrative</span>
-                                    <textarea value={incidentDescription} onChange={(e) => setIncidentDescription(e.target.value)} rows={2} placeholder="Detail intruder presence, client assets compromised..." className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white placeholder:text-slate-600" />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <button onClick={() => handleCheckOutCompleteSubmit(activeJobOnDuty.id)} className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-mono text-xs font-black uppercase rounded-lg tracking-wider cursor-pointer">
-                            🔒 Submit Daily activity logs & Check-Out
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
+      {/* Non-map panels slide over full screen */}
+      {activeTab !== 'dispatch' && (
+        <div className="absolute inset-0 z-[1002] bg-brand-bg overflow-y-auto pt-28 pb-8 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
           {/* Tab 2:💼 BOARD (Available assignments marketplace) */}
           {activeTab === 'marketplace' && (
             <div className="space-y-4">
@@ -1611,6 +963,7 @@ export function GuardDashboard({
         </div>
 
       </div>
+      )}
 
     </div>
   );
