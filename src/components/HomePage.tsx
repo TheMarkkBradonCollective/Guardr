@@ -25,7 +25,7 @@ import { SecurityRequest, SecurityGuard } from '../types';
 type ThemeMode = 'dark' | 'light' | 'grey';
 
 interface HomePageProps {
-  onNavigateToAuth: (initialRole?: 'guard' | 'client') => void;
+  onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   guardsCount: number;
   requestsCount: number;
   availableRequests: SecurityRequest[];
@@ -92,13 +92,13 @@ export function HomePage({
 
           <nav className="hidden md:flex items-center gap-6">
             <button
-              onClick={() => onNavigateToAuth('client')}
+              onClick={() => onNavigateToAuth('client', 'sign-in')}
               className="text-brand-text-muted hover:text-brand-text transition-colors font-mono text-[11px] uppercase tracking-wider"
             >
               Client Portal
             </button>
             <button
-              onClick={() => onNavigateToAuth('guard')}
+              onClick={() => onNavigateToAuth('guard', 'sign-in')}
               className="text-brand-text-muted hover:text-brand-text transition-colors font-mono text-[11px] uppercase tracking-wider"
             >
               Guard Portal
@@ -122,10 +122,10 @@ export function HomePage({
               ))}
             </div>
             <button
-              onClick={() => onNavigateToAuth('client')}
+              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
               className="uber-button-sage px-4 h-9 text-[11px] font-black uppercase tracking-wider"
             >
-              Get Started
+              Login
             </button>
           </div>
         </div>
@@ -186,17 +186,17 @@ export function HomePage({
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <button
-              onClick={() => onNavigateToAuth('client')}
+              onClick={() => onNavigateToAuth('client', 'sign-up')}
               className="uber-button-sage w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
               Find Security
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onNavigateToAuth('guard')}
+              onClick={() => onNavigateToAuth('guard', 'sign-in')}
               className="uber-button-outline w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Become a Guard
+              Guard Sign In
               <ChevronRight className="w-4 h-4" />
             </button>
           </motion.div>
@@ -301,10 +301,10 @@ export function HomePage({
 
           <div className="mt-8 text-center">
             <button
-              onClick={() => onNavigateToAuth(activeHow)}
+              onClick={() => onNavigateToAuth(activeHow, activeHow === 'client' ? 'sign-up' : 'sign-in')}
               className="uber-button-sage px-8 h-11 text-xs font-black uppercase tracking-wider gap-2"
             >
-              {activeHow === 'client' ? 'Post Your First Shift' : 'Join as a Guard'}
+              {activeHow === 'client' ? 'Create Client Account' : 'Guard Sign In'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -342,7 +342,7 @@ export function HomePage({
                 <h2 className="text-2xl font-black tracking-tighter">Open Shifts Right Now</h2>
               </div>
               <button
-                onClick={() => onNavigateToAuth('guard')}
+                onClick={() => onNavigateToAuth('guard', 'sign-in')}
                 className="uber-button-outline h-9 px-4 text-[11px] font-black uppercase gap-1.5"
               >
                 See All <ArrowRight className="w-3.5 h-3.5" />
@@ -374,7 +374,7 @@ export function HomePage({
                       <p className="text-[10px] font-mono text-brand-text-muted">${req.hourlyRate}/hr</p>
                     </div>
                     <button
-                      onClick={() => onNavigateToAuth('guard')}
+                      onClick={() => onNavigateToAuth('guard', 'sign-in')}
                       className="uber-button-sage h-8 px-3 text-[10px] font-black uppercase gap-1"
                     >
                       Apply <ChevronRight className="w-3 h-3" />
@@ -445,17 +445,17 @@ export function HomePage({
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => onNavigateToAuth('client')}
+              onClick={() => onNavigateToAuth('client', 'sign-up')}
               className="uber-button-sage px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
               Find Security
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onNavigateToAuth('guard')}
+              onClick={() => onNavigateToAuth('guard', 'sign-in')}
               className="uber-button-outline px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Become a Guard
+              Guard Sign In
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -474,8 +474,8 @@ export function HomePage({
               </div>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
-              <button onClick={() => onNavigateToAuth('client')} className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Client Portal</button>
-              <button onClick={() => onNavigateToAuth('guard')}  className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Guard Portal</button>
+              <button onClick={() => onNavigateToAuth('client', 'sign-in')} className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Client Portal</button>
+              <button onClick={() => onNavigateToAuth('guard', 'sign-in')}  className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Guard Portal</button>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-brand-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[10px] font-mono text-brand-text-muted uppercase tracking-wide">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 import {
   Shield,
@@ -24,6 +24,7 @@ interface AuthPageProps {
   clientsList: Client[];
   onBackToHome: () => void;
   initialRole?: 'guard' | 'client';
+  initialMode?: 'sign-in' | 'sign-up';
   themeMode?: string;
 }
 
@@ -34,8 +35,9 @@ export function AuthPage({
   clientsList,
   onBackToHome,
   initialRole = 'client',
+  initialMode = 'sign-in',
 }: AuthPageProps) {
-  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +51,12 @@ export function AuthPage({
   const [hourlyRate, setHourlyRate]   = useState('35');
 
   const [clientCompanyName, setClientCompanyName] = useState('');
+
+  useEffect(() => {
+    setRole(initialRole === 'guard' ? 'guard' : 'client');
+    setIsSignUp(initialMode === 'sign-up');
+    setErrorMsg('');
+  }, [initialRole, initialMode]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

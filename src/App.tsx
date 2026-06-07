@@ -28,6 +28,7 @@ export default function App() {
   });
   const [isAuthView, setIsAuthView]       = useState(false);
   const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>('client');
+  const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -702,6 +703,7 @@ export default function App() {
             clientsList={clients}
             onBackToHome={() => setIsAuthView(false)}
             initialRole={initialAuthRole}
+            initialMode={initialAuthMode}
             themeMode={themeMode}
           />
           <InstallPrompt />
@@ -711,8 +713,9 @@ export default function App() {
     return (
       <div className={`theme-${themeMode}`}>
         <HomePage
-          onNavigateToAuth={(role) => {
-            if (role) setInitialAuthRole(role as 'guard' | 'client');
+          onNavigateToAuth={(role, mode) => {
+            if (role) setInitialAuthRole(role);
+            setInitialAuthMode(mode ?? 'sign-in');
             setIsAuthView(true);
           }}
           guardsCount={verifiedGuards.filter(g => g.verified).length}
