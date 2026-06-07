@@ -18,6 +18,18 @@ export interface Experience {
   description: string;
 }
 
+/** A client account — stored separately from guards */
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string;
+  phone: string;
+  avatar: string;
+  totalRequests: number;
+  createdAt?: string;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;

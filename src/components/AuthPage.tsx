@@ -14,12 +14,13 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { SessionUser, SecurityGuard } from '../types';
+import { SessionUser, SecurityGuard, Client } from '../types';
 
 interface AuthPageProps {
   onSignIn: (user: SessionUser) => void;
-  onSignUp: (newGuard: SecurityGuard, role: 'guard' | 'client' | 'auditor' | 'staff') => void;
+  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client' | 'auditor' | 'staff') => void;
   guardsList: SecurityGuard[];
+  clientsList: Client[];
   onBackToHome: () => void;
   initialRole?: 'guard' | 'client' | 'auditor' | 'staff';
   themeMode?: string;
@@ -29,8 +30,9 @@ export function AuthPage({
   onSignIn,
   onSignUp,
   guardsList,
+  clientsList,
   onBackToHome,
-  initialRole = 'guard',
+  initialRole = 'client',
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [role, setRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>(
@@ -77,6 +79,30 @@ export function AuthPage({
         staff:   'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
       };
 
+      // ── CLIENT: create a Client object, not a SecurityGuard ──
+      if (role === 'client') {
+        const clientProfile: Client = {
+          id: randomId,
+          name: fullName,
+          email,
+          companyName: clientCompanyName || fullName,
+          phone: phone || '+1 (555) 000-0000',
+          avatar: avatarMap.client,
+          totalRequests: 0,
+        };
+        onSignUp(clientProfile, 'client');
+        onSignIn({
+          id: randomId,
+          name: fullName,
+          email,
+          role: 'client',
+          clientName: clientCompanyName || fullName,
+          avatar: avatarMap.client,
+        });
+        return;
+      }
+
+      // ── GUARD / AUDITOR / STAFF: create a SecurityGuard object ──
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: fullName,
@@ -84,7 +110,7 @@ export function AuthPage({
         badgeNumber: badgeNumber || `S-${Math.floor(10000 + Math.random() * 90000)}`,
         avatar: avatarMap[role],
         phone: phone || '+1 (555) 000-0000',
-        bio: bio || (role === 'client' ? 'Registered business client.' : role === 'auditor' ? 'Compliance review officer.' : 'Administrative operator.'),
+        bio: bio || (role === 'auditor' ? 'Compliance review officer.' : 'Administrative operator.'),
         isArmed,
         backgroundChecked: role === 'auditor' || role === 'staff',
         verified: role === 'auditor' || role === 'staff',
@@ -105,7 +131,6 @@ export function AuthPage({
         email,
         role,
         badgeNumber: newGuardProfile.badgeNumber,
-        clientName: role === 'client' ? clientCompanyName || fullName : undefined,
         organization: role === 'auditor' ? auditorOrg || 'State Compliance' : undefined,
         avatar: newGuardProfile.avatar,
         hourlyRate: newGuardProfile.hourlyRateRequirement,
@@ -114,7 +139,7 @@ export function AuthPage({
       return;
     }
 
-    // Sign In
+    // ── SIGN IN ──────────────────────────────────────────────
     const emailLower = email.toLowerCase();
 
     // Director override
@@ -139,11 +164,25 @@ export function AuthPage({
       return;
     }
 
+    // Check clients list first (own separate table)
+    const matchedClient = clientsList.find(c => c.email.toLowerCase() === emailLower);
+    if (matchedClient) {
+      onSignIn({
+        id: matchedClient.id,
+        name: matchedClient.name,
+        email: matchedClient.email,
+        role: 'client',
+        clientName: matchedClient.companyName || matchedClient.name,
+        avatar: matchedClient.avatar,
+      });
+      return;
+    }
+
+    // Check guards/staff/auditors
     const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
     if (matchedGuard) {
       if (matchedGuard.userStatus === 'blocked') { setErrorMsg('Account blocked. Contact administration.'); return; }
       let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = matchedGuard.isStaff ? 'staff' : 'guard';
-      if (matchedGuard.id.startsWith('client'))  resolvedRole = 'client';
       if (matchedGuard.id.startsWith('auditor')) resolvedRole = 'auditor';
       if (matchedGuard.id.startsWith('staff'))   resolvedRole = 'staff';
       onSignIn({
