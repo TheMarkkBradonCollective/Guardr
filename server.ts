@@ -3,11 +3,15 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
+import { registerStripeRoutes } from './server/stripe';
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
+
+// Stripe webhook + API routes (webhook uses raw body internally)
+registerStripeRoutes(app);
 
 app.use(express.json());
 
@@ -34,7 +38,11 @@ function getGemini() {
 
 // Ensure error handling doesn't expose raw stacktraces in responses
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', hasGeminiKey: !!process.env.GEMINI_API_KEY });
+  res.json({
+    status: 'ok',
+    hasGeminiKey: !!process.env.GEMINI_API_KEY,
+    hasStripeKey: !!process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder',
+  });
 });
 
 // API endpoint 1: Validate/Verify guard credentials using Gemini

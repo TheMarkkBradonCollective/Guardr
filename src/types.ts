@@ -65,6 +65,22 @@ export interface Client {
   createdAt?: string;
 }
 
+export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
+
+export type PaymentRecordStatus = 'pending' | 'paid' | 'held' | 'released' | 'failed' | 'refunded';
+
+export interface Payment {
+  id: string;
+  jobId: string;
+  amount: number;
+  stripeSessionId?: string;
+  stripePaymentIntentId?: string;
+  stripeTransferId?: string;
+  status: PaymentRecordStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -85,6 +101,7 @@ export interface SecurityGuard {
   staffRole?: StaffRole;
   userStatus?: 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
+  stripeConnectAccountId?: string;
 }
 
 export interface SecurityRequest {
@@ -112,6 +129,8 @@ export interface SecurityRequest {
   platformFeePerHour?: number;
   estimatedPayout: number;
   status: JobStatus;
+  stripePaymentIntentId?: string;
+  paymentStatus?: PaymentStatus;
   assignedGuardId: string | null;
   requiredCertifications: string[];
   applicants: string[];
