@@ -794,7 +794,6 @@ export default function App() {
             onUpdateStatus={handleUpdateStatus}
             onCancelRequest={handleCancelRequest}
             onAddReview={handleAddReview}
-            onPaymentComplete={(jobId) => handleJobPaymentStatus(jobId, 'paid')}
             openPostForm={clientSection === 'post'}
           />
         </ClientAppLayout>

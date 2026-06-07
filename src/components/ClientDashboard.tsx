@@ -93,7 +93,6 @@ export function ClientDashboard({
   onHireGuard,
   onUpdateStatus,
   onAddReview,
-  onPaymentComplete,
   openPostForm = false,
 }: ClientDashboardProps) {
   const [showAddForm, setShowAddForm] = useState(openPostForm);
