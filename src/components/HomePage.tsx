@@ -150,15 +150,24 @@ export function HomePage({
             Independent Security Contractor Marketplace
           </motion.div>
 
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            className="text-brand-primary text-sm sm:text-base font-mono tracking-wide mb-4"
+          >
+            Anytime. Anywhere. Security, When You Need It.
+          </motion.p>
+
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] mb-6"
           >
-            Security on
+            Security Staffing,
             <br />
-            <span className="text-brand-primary">your schedule.</span>
+            <span className="text-brand-primary">On Demand.</span>
           </motion.h1>
 
           <motion.p
@@ -167,8 +176,7 @@ export function HomePage({
             transition={{ duration: 0.5, delay: 0.14 }}
             className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10"
           >
-            Guardr connects clients who need licensed security with vetted independent professionals — for any event, any shift, any time.
-            Post a job in minutes. Guards accept only work they're certified for.
+            Connect with licensed security professionals for events, properties, construction sites, businesses, and long-term contracts.
           </motion.p>
 
           <motion.div
@@ -181,14 +189,14 @@ export function HomePage({
               onClick={() => onNavigateToAuth('client')}
               className="uber-button-sage w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Post a Shift
+              Find Security
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => onNavigateToAuth('guard')}
               className="uber-button-outline w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Find Work
+              Become a Guard
               <ChevronRight className="w-4 h-4" />
             </button>
           </motion.div>
@@ -222,6 +230,20 @@ export function HomePage({
               Guardr is a direct-connect platform. We do not vet, employ, or represent any security professional. Clients post and manage their own requests. Licensed security contractors browse and accept work independently. All credential verification is performed by the guard and displayed on their public profile.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── ABOUT GUARDR ───────────────────────────────── */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 border-t border-brand-border">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="uber-label mb-3">About Guardr</p>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tighter mb-4">
+            The Uber of Security
+          </h2>
+          <p className="text-brand-text-muted text-sm sm:text-base leading-relaxed">
+            Guardr is an independent contractor marketplace connecting licensed security professionals with clients who need security services.
+            Clients post requests. Guards choose the work they want. Fast, simple, and built for modern security operations.
+          </p>
         </div>
       </section>
 
@@ -426,14 +448,14 @@ export function HomePage({
               onClick={() => onNavigateToAuth('client')}
               className="uber-button-sage px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Post a Shift
+              Find Security
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => onNavigateToAuth('guard')}
               className="uber-button-outline px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Join as a Guard
+              Become a Guard
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

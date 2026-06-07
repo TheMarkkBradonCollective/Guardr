@@ -132,6 +132,7 @@
   background: var(--brand-bg-sec);
   border: 1px solid var(--brand-border);
   padding: 1.25rem;
+  border-radius: 0.75rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 

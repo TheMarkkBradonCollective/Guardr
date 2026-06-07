@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SecurityRequest, SecurityGuard, Certification } from '../types';
 import { PREFAB_CERT_LIST } from '../initialData';
 import { formatDuration, formatShiftRange } from '../lib/dates';
+import { estimateJobDistanceMiles } from '../lib/geo';
+import { computeGuardEarnings } from '../lib/payments';
 import { ShiftMap } from './guard/ShiftMap';
 import { Logo } from './Logo';
 import {
@@ -149,13 +151,23 @@ export function GuardDashboard({
   const [expiryDate, setExpiryDate] = useState('2028-01-01');
 
   const [checkingInJobId, setCheckingInJobId] = useState<string | null>(null);
-  const [uniformChecks, setUniformChecks] = useState({ shirt: false, pants: false, belt: false, footwear: false, badge: false, equipment: false });
-  const [equipmentChecks, setEquipmentChecks] = useState({ radio: false, flashlight: false, phoneCharged: false, baton: false, spray: false, firearm: false });
+  const [uniformChecks, setUniformChecks] = useState({
+    uniformPresent: false,
+    blackShoes: false,
+    dutyBelt: false,
+    nameBadge: false,
+    professionalAppearance: false,
+  });
+  const [equipmentChecks, setEquipmentChecks] = useState({
+    radio: false,
+    flashlight: false,
+    requiredEquipment: false,
+  });
   const [photoFront, setPhotoFront] = useState<string | null>(null);
   const [photoFull, setPhotoFull] = useState<string | null>(null);
   const [typedCheckInName, setTypedCheckInName] = useState('');
   const [signatureInked, setSignatureInked] = useState('');
-  const [activeWorkflowStep, setActiveWorkflowStep] = useState<'gps' | 'checks' | 'photos' | 'sign'>('gps');
+  const [activeWorkflowStep, setActiveWorkflowStep] = useState<'gps' | 'checks' | 'photos'>('gps');
   const [cameraLoading, setCameraLoading] = useState(false);
   const [activeCamTarget, setActiveCamTarget] = useState<'front' | 'full' | 'mid' | 'end' | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -184,7 +196,7 @@ export function GuardDashboard({
   const availableJobs = requests.filter(r => r.status === 'open');
   const assignedJobs = requests.filter(r => r.assignedGuardId === guard.id && r.status !== 'completed');
   const activeJobOnDuty = assignedJobs.find(r => r.status === 'in-progress');
-  const assignedNotClockedIn = assignedJobs.find(r => r.status === 'assigned');
+  const assignedNotClockedIn = assignedJobs.find(r => r.status === 'accepted');
   const completedJobs = requests.filter(r => r.assignedGuardId === guard.id && r.status === 'completed');
   const mapJobs = [...availableJobs, ...assignedJobs];
   const selectedMapJob = mapJobs.find(j => j.id === selectedMapJobId) ?? null;
@@ -250,21 +262,41 @@ export function GuardDashboard({
     }, 1200);
   };
 
+  const UNIFORM_LABELS: Record<keyof typeof uniformChecks, string> = {
+    uniformPresent: 'Uniform Present',
+    blackShoes: 'Black Shoes',
+    dutyBelt: 'Duty Belt',
+    nameBadge: 'Name Badge',
+    professionalAppearance: 'Professional Appearance',
+  };
+
+  const EQUIPMENT_LABELS: Record<keyof typeof equipmentChecks, string> = {
+    radio: 'Radio',
+    flashlight: 'Flashlight',
+    requiredEquipment: 'Required Equipment',
+  };
+
   const handleCheckInComplete = (requestId: string) => {
-    const failedUniform = !uniformChecks.shirt || !uniformChecks.pants || !uniformChecks.footwear || !uniformChecks.badge;
-    if (!photoFront || !photoFull) { alert('⚠ Both check-in photos are required.'); return; }
-    if (!typedCheckInName || !signatureInked) { alert('⚠ Typed name and digital signature are required.'); return; }
+    const failedUniform = !uniformChecks.uniformPresent || !uniformChecks.blackShoes || !uniformChecks.nameBadge;
+    if (!photoFront) { alert('Selfie upload is required to submit your audit.'); return; }
     if (failedUniform) {
-      if (!window.confirm('⚠ Uniform check incomplete. This will log a compliance failure. Proceed?')) return;
-      onRecordAuditViolation(guard.id, 'Pre-Shift Outfitting Violation');
+      if (!window.confirm('Uniform check incomplete. This will log a compliance failure. Proceed?')) return;
+      onRecordAuditViolation(guard.id, 'Pre-Shift Appearance Violation');
     }
     onUpdateJobAudit(requestId, {
       status: 'in-progress',
-      checkInAudit: { checkedAt: new Date().toLocaleTimeString(), gpsVerified: true, uniformChecks, equipmentChecks, selfieUrl: photoFront, fullBodyUrl: photoFull, officerSignature: signatureInked, officerCertifiedName: typedCheckInName, compliant: !failedUniform }
+      checkInAudit: {
+        checkedAt: new Date().toLocaleTimeString(),
+        gpsVerified: true,
+        uniform: uniformChecks,
+        equipment: equipmentChecks,
+        selfieUpload: photoFront,
+        readyForDuty: !failedUniform,
+      },
     });
     setCheckingInJobId(null); setIsNavigating(null); setGpsVerified(false);
     setPhotoFront(null); setPhotoFull(null); setTypedCheckInName(''); setSignatureInked('');
-    alert('✓ Pre-shift audit complete. Shift started!');
+    alert('✓ Self-audit submitted. Ready for duty!');
   };
 
   const handleMidShiftAuditSubmit = (requestId: string) => {
@@ -279,7 +311,7 @@ export function GuardDashboard({
     if (!checkoutCompleteCheck) { alert('Please confirm shift duties are complete.'); return; }
     if (!darNote) { alert('Daily Activity Report note is required.'); return; }
     const req = requests.find(r => r.id === requestId);
-    const payout = req ? req.estimatedPayout : 0;
+    const payout = req ? computeGuardEarnings(req.durationHours, req.hourlyRate) : 0;
     onUpdateJobAudit(requestId, {
       status: 'completed',
       checkOutAudit: { checkedAt: new Date().toLocaleTimeString(), completed: checkoutCompleteCheck, noViolations: checkoutNoViolations, noEquipmentIssues: checkoutNoEquipIssues, endSelfie: checkoutPhotoEnd || undefined, dailyActivityReport: darNote, incidentReport: { hasIncident: hasIncidentReport, incidentType: hasIncidentReport ? incidentSelection : undefined, priority: hasIncidentReport ? incidentPriority : undefined, description: hasIncidentReport ? incidentDescription : undefined }, clientNotes }
@@ -448,7 +480,7 @@ export function GuardDashboard({
                   Accept Shift · ${selectedMapJob.estimatedPayout}
                 </button>
               )}
-              {selectedMapJob.status === 'assigned' && selectedMapJob.assignedGuardId === guard.id && (
+              {selectedMapJob.status === 'accepted' && selectedMapJob.assignedGuardId === guard.id && (
                 <button
                   type="button"
                   onClick={() => setCheckingInJobId(selectedMapJob.id)}
@@ -587,10 +619,14 @@ export function GuardDashboard({
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-xl font-black font-mono text-brand-primary">${job.estimatedPayout}</p>
-                            <p className="text-[10px] font-mono text-brand-text-muted">${job.hourlyRate}/hr</p>
+                            <p className="text-lg font-black font-mono text-brand-primary shrink-0">${job.guardPay ?? job.hourlyRate - 5}/hr</p>
                             <p className="text-[10px] font-mono text-brand-text-muted">{formatDuration(job.durationHours)}</p>
                           </div>
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-brand-text-muted">
+                          <span className="flex items-center gap-1"><Star className="w-3 h-3 text-brand-primary" />Client {job.clientRating?.toFixed(1) ?? '—'}</span>
+                          <span className="flex items-center gap-1"><Navigation className="w-3 h-3 text-brand-primary" />{estimateJobDistanceMiles(job.location, job.id)} mi</span>
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-brand-primary" />{formatShiftRange(job.startDate, job.endDate)}</span>
                         </div>
                         <p className="text-xs text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">{job.description}</p>
                         {/* Cert check */}
@@ -687,7 +723,7 @@ export function GuardDashboard({
                             <p className="font-bold text-xs">{job.title}</p>
                             <p className="text-[10px] text-brand-text-muted font-mono">{job.location}</p>
                           </div>
-                          <p className="text-lg font-black font-mono text-brand-primary shrink-0">+${job.estimatedPayout}</p>
+                          <p className="text-lg font-black font-mono text-brand-primary shrink-0">+${computeGuardEarnings(job.durationHours, job.hourlyRate)}</p>
                         </div>
                       ))}
                     </div>
@@ -810,8 +846,8 @@ export function GuardDashboard({
             <div className="p-4 space-y-4">
               {/* Steps */}
               <div className="flex gap-1">
-                {(['gps','checks','photos','sign'] as const).map((step, i) => (
-                  <div key={step} className={`flex-1 h-1 ${activeWorkflowStep === step || (i < ['gps','checks','photos','sign'].indexOf(activeWorkflowStep)) ? 'bg-brand-primary' : 'bg-brand-border'}`} />
+                {(['gps','checks','photos'] as const).map((step, i) => (
+                  <div key={step} className={`flex-1 h-1 ${activeWorkflowStep === step || (i < ['gps','checks','photos'].indexOf(activeWorkflowStep)) ? 'bg-brand-primary' : 'bg-brand-border'}`} />
                 ))}
               </div>
 
@@ -839,9 +875,9 @@ export function GuardDashboard({
               {/* Step 2: Uniform/Equipment checks */}
               {activeWorkflowStep === 'checks' && (
                 <div className="space-y-3">
-                  <p className="uber-label">Step 2 — Uniform & Equipment Checklist</p>
+                  <p className="uber-label">Step 2 — Appearance & Equipment Check</p>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-brand-text-muted uppercase mb-2">Uniform</p>
+                    <p className="text-[10px] font-mono text-brand-text-muted uppercase mb-2">Appearance Check</p>
                     {(Object.keys(uniformChecks) as (keyof typeof uniformChecks)[]).map(key => (
                       <label key={key} className="flex items-center gap-2 cursor-pointer py-1">
                         <div
@@ -850,12 +886,12 @@ export function GuardDashboard({
                         >
                           {uniformChecks[key] && <Check className="w-2.5 h-2.5 text-black" />}
                         </div>
-                        <span className="text-xs font-mono capitalize">{key}</span>
+                        <span className="text-xs font-mono">{UNIFORM_LABELS[key]}</span>
                       </label>
                     ))}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-brand-text-muted uppercase mb-2">Equipment</p>
+                    <p className="text-[10px] font-mono text-brand-text-muted uppercase mb-2">Equipment Check</p>
                     {(Object.keys(equipmentChecks) as (keyof typeof equipmentChecks)[]).map(key => (
                       <label key={key} className="flex items-center gap-2 cursor-pointer py-1">
                         <div
@@ -864,69 +900,37 @@ export function GuardDashboard({
                         >
                           {equipmentChecks[key] && <Check className="w-2.5 h-2.5 text-black" />}
                         </div>
-                        <span className="text-xs font-mono capitalize">{String(key).replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="text-xs font-mono">{EQUIPMENT_LABELS[key]}</span>
                       </label>
                     ))}
                   </div>
-                  <button onClick={() => setActiveWorkflowStep('photos')} className="w-full py-2.5 bg-brand-primary text-black font-black font-mono text-xs uppercase">Continue to Photos</button>
+                  <button onClick={() => setActiveWorkflowStep('photos')} className="w-full py-2.5 bg-brand-primary text-black font-black font-mono text-xs uppercase">Continue to Verification</button>
                 </div>
               )}
 
               {/* Step 3: Photos */}
               {activeWorkflowStep === 'photos' && (
                 <div className="space-y-3">
-                  <p className="uber-label">Step 3 — Verification Photos</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-mono text-brand-text-muted">Front selfie</p>
-                      {photoFront ? (
-                        <img src={photoFront} className="w-full h-24 object-cover border border-brand-primary/30" alt="front" />
-                      ) : (
-                        <button
-                          onClick={() => triggerCamera('front')}
-                          disabled={cameraLoading && activeCamTarget === 'front'}
-                          className="w-full h-24 border border-brand-border flex items-center justify-center hover:border-brand-primary transition-colors"
-                        >
-                          <Camera className="w-6 h-6 text-brand-text-muted" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-mono text-brand-text-muted">Full body</p>
-                      {photoFull ? (
-                        <img src={photoFull} className="w-full h-24 object-cover border border-brand-primary/30" alt="full" />
-                      ) : (
-                        <button
-                          onClick={() => triggerCamera('full')}
-                          disabled={cameraLoading && activeCamTarget === 'full'}
-                          className="w-full h-24 border border-brand-border flex items-center justify-center hover:border-brand-primary transition-colors"
-                        >
-                          <Camera className="w-6 h-6 text-brand-text-muted" />
-                        </button>
-                      )}
-                    </div>
+                  <p className="uber-label">Step 3 — Selfie Upload</p>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-mono text-brand-text-muted">Verification selfie</p>
+                    {photoFront ? (
+                      <img src={photoFront} className="w-full h-32 object-cover border border-brand-primary/30 rounded-lg" alt="selfie" />
+                    ) : (
+                      <button
+                        onClick={() => triggerCamera('front')}
+                        disabled={cameraLoading && activeCamTarget === 'front'}
+                        className="w-full h-32 border border-brand-border rounded-lg flex items-center justify-center hover:border-brand-primary transition-colors"
+                      >
+                        <Camera className="w-6 h-6 text-brand-text-muted" />
+                      </button>
+                    )}
                   </div>
-                  {photoFront && photoFull && (
-                    <button onClick={() => setActiveWorkflowStep('sign')} className="w-full py-2.5 bg-brand-primary text-black font-black font-mono text-xs uppercase">Continue to Signature</button>
+                  {photoFront && checkingInJobId && (
+                    <button onClick={() => handleCheckInComplete(checkingInJobId)} className="w-full py-3 bg-brand-primary text-black font-black font-mono text-xs uppercase">
+                      Submit Audit — Ready For Duty
+                    </button>
                   )}
-                </div>
-              )}
-
-              {/* Step 4: Signature */}
-              {activeWorkflowStep === 'sign' && (
-                <div className="space-y-3">
-                  <p className="uber-label">Step 4 — Digital Signature</p>
-                  <div>
-                    <label className="uber-label block mb-1.5">Type Your Full Name</label>
-                    <input type="text" placeholder="Officer Full Name" value={typedCheckInName} onChange={(e) => setTypedCheckInName(e.target.value)} className="uber-input" />
-                  </div>
-                  <SignaturePad onSave={setSignatureInked} />
-                  <button
-                    onClick={() => handleCheckInComplete(checkingInJobId)}
-                    className="w-full py-3 bg-brand-primary text-black font-black font-mono text-xs uppercase"
-                  >
-                    Complete Check-In & Start Shift
-                  </button>
                 </div>
               )}
             </div>

@@ -1,5 +1,32 @@
 export type JobType = 'event' | 'patrol' | 'armed-escort' | 'bodyguard' | 'asset-protection' | 'long-term' | 'other';
 
+export type JobStatus =
+  | 'draft'
+  | 'pending-review'
+  | 'open'
+  | 'accepted'
+  | 'in-progress'
+  | 'completed'
+  | 'closed';
+
+export type ReportType =
+  | 'daily-activity'
+  | 'incident'
+  | 'property-damage'
+  | 'maintenance'
+  | 'trespass';
+
+export interface ShiftReport {
+  id: string;
+  requestId: string;
+  guardId: string;
+  type: ReportType;
+  notes: string;
+  photos: string[];
+  attachments: string[];
+  submittedAt: string;
+}
+
 export interface Certification {
   id: string;
   name: string;
@@ -27,6 +54,8 @@ export interface Client {
   phone: string;
   avatar: string;
   totalRequests: number;
+  approved?: boolean;
+  rating?: number;
   createdAt?: string;
 }
 
@@ -59,43 +88,47 @@ export interface SecurityRequest {
   clientId: string;
   clientName: string;
   clientLogo: string;
+  clientRating?: number;
+  siteName?: string;
+  address?: string;
   location: string;
   type: JobType;
   armedRequired: boolean;
+  guardsNeeded?: number;
+  uniformRequirements?: string;
+  equipmentRequirements?: string;
+  siteInstructions?: string;
   startDate: string;
   endDate: string;
   durationHours: number;
   hourlyRate: number;
+  guardPay?: number;
+  platformFeePerHour?: number;
   estimatedPayout: number;
-  status: 'open' | 'assigned' | 'in-progress' | 'completed' | 'cancelled';
+  status: JobStatus;
   assignedGuardId: string | null;
   requiredCertifications: string[];
-  applicants: string[]; // List of guardIds who applied or accepted
+  applicants: string[];
   ratingGiven?: number;
   reviewText?: string;
   // Dynamic Self-Audit Tracker
   checkInAudit?: {
     checkedAt: string;
     uniform: {
-      shirt: boolean;
-      pants: boolean;
-      belt: boolean;
-      footwear: boolean;
-      badge: boolean;
-      equipment: boolean;
+      uniformPresent: boolean;
+      blackShoes: boolean;
+      dutyBelt: boolean;
+      nameBadge: boolean;
+      professionalAppearance: boolean;
     };
     equipment: {
       radio: boolean;
       flashlight: boolean;
-      phoneCharged: boolean;
-      baton?: boolean;
-      spray?: boolean;
-      firearm?: boolean;
+      requiredEquipment: boolean;
     };
-    frontSelfie: string;
-    fullBodyPhoto: string;
-    signature: string;
+    selfieUpload: string;
     gpsVerified: boolean;
+    readyForDuty?: boolean;
   };
   midShiftAudits?: Array<{
     checkedAt: string;
@@ -119,6 +152,7 @@ export interface SecurityRequest {
     clientNotes: string;
     attachments?: string[];
   };
+  reports?: ShiftReport[];
 }
 
 export interface ChatMessage {

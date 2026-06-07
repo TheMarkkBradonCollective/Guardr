@@ -89,6 +89,7 @@ export function AuthPage({
           phone: phone || '+1 (555) 000-0000',
           avatar: avatarMap.client,
           totalRequests: 0,
+          approved: false,
         };
         onSignUp(clientProfile, 'client');
         onSignIn({
