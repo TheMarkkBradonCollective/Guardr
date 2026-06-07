@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest, Certification, SessionUser } from '../types';
+import { formatDuration, formatShiftRange } from '../lib/dates';
 import { 
   Users, 
   Shield, 
@@ -663,11 +664,13 @@ export function StaffDashboard({
                     <p className="text-xs text-slate-500 line-clamp-2 max-w-3xl leading-relaxed">{req.description}</p>
                     
                     <div className="flex items-center gap-3 text-xs font-mono text-slate-400 mt-2 flex-wrap">
+                      <span>Shift: <strong className="text-slate-800">{formatShiftRange(req.startDate, req.endDate)}</strong></span>
+                      <span>•</span>
+                      <span>Duration: <strong className="text-slate-800">{formatDuration(req.durationHours)}</strong></span>
+                      <span>•</span>
                       <span>Rate: <strong className="text-slate-800">${req.hourlyRate}/hr</strong></span>
                       <span>•</span>
-                      <span>Total hours: <strong className="text-slate-800">{req.durationHours} hrs</strong></span>
-                      <span>•</span>
-                      <span>Estimated Payout: <strong className="text-blue-600 font-black">${req.estimatedPayout}</strong></span>
+                      <span>Est. Payout: <strong className="text-blue-600 font-black">${req.estimatedPayout}</strong></span>
                     </div>
                   </div>
 

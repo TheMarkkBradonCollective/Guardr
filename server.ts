@@ -121,7 +121,15 @@ app.post('/api/verify-credentials', async (req, res) => {
 
 // API endpoint 2: Generate rich Security Requirements and suggested certifications from a job prompt
 app.post('/api/generate-job-reqs', async (req, res) => {
-  const { title, rawDescription, durationHours, type } = req.body;
+  const { title, rawDescription, startDate, endDate, durationHours, type } = req.body;
+  const shiftDuration = durationHours ?? (
+    startDate && endDate
+      ? Math.round(((new Date(endDate).getTime() - new Date(startDate).getTime()) / 3600000) * 100) / 100
+      : 8
+  );
+  const shiftWindow = startDate && endDate
+    ? `from ${startDate} to ${endDate} (${shiftDuration} hours total)`
+    : `${shiftDuration} hours`;
 
   const ai = getGemini();
   if (!ai) {
@@ -139,7 +147,7 @@ app.post('/api/generate-job-reqs', async (req, res) => {
   }
 
   try {
-    const prompt = `As a security architect, analyze this job request of type '${type}' with duration of ${durationHours} hours.
+    const prompt = `As a security architect, analyze this job request of type '${type}' scheduled ${shiftWindow}.
     Title: ${title}
     Description: ${rawDescription}
     

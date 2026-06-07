@@ -20,8 +20,9 @@
   --color-sage-300: #adc1a3;
   --color-sage-400: #84a279;
   --color-sage-550: #53754b;
-  --color-sage-600: #1f1f1f;
-  --color-sage-700: #292929;
+  --color-sage-600: #53754b;
+  --color-sage-700: #4b6a43;
+  --color-sage-750: #3d5a36;
   --color-sage-800: #0a0e08;
   --color-sage-900: #060805;
   --color-sage-950: #000000;
@@ -35,12 +36,13 @@
   --color-uber-gray-800: #1f1f1f;
   --color-uber-gray-900: #141414;
   --color-uber-green: var(--brand-primary);
-  --color-uber-green-hover: var(--brand-primary);
+  --color-uber-green-hover: var(--brand-primary-hover);
   --color-uber-sage: #53754b;
 }
 
 :root {
   --brand-primary: #84a279; /* Sage Green */
+  --brand-primary-hover: #6d8a63;
   --brand-bg: #000000; /* Pure Black background by default */
   --brand-bg-sec: #080a08; /* Dark sage-tinted black panels */
   --brand-border: #192218; /* Elegant dark sage-grey border */
@@ -52,6 +54,7 @@
 
 .theme-sage-dark {
   --brand-primary: #84a279; /* Clean Sage Green as primary */
+  --brand-primary-hover: #6d8a63;
   --brand-bg: #000000; /* Pure Black background */
   --brand-bg-sec: #080a08; /* Panel off-black */
   --brand-border: #192218; /* Sage dark border */
@@ -63,6 +66,7 @@
 
 .theme-sage-light {
   --brand-primary: #4b6a43; /* Readable dark-rich Sage Green */
+  --brand-primary-hover: #3d5a36;
   --brand-bg: #ffffff; /* Pure White background */
   --brand-bg-sec: #f6f8f5; /* Light creamy sage panels */
   --brand-border: #cfdac9; /* Delicate light-sage boundaries */
@@ -74,6 +78,7 @@
 
 .theme-grey-dark {
   --brand-primary: #84a279; /* Sage Green remains main brand/accent highlight */
+  --brand-primary-hover: #6d8a63;
   --brand-bg: #18181b; /* Zinc dark-grey background */
   --brand-bg-sec: #27272a; /* Lighter zinc panel container */
   --brand-border: #3f3f46; /* Charcoal zinc border */
@@ -85,6 +90,7 @@
 
 .theme-grey-light {
   --brand-primary: #4b6a43; /* Readable Sage Green as primary brand element */
+  --brand-primary-hover: #3d5a36;
   --brand-bg: #f4f4f5; /* Soft light zinc grey background */
   --brand-bg-sec: #e4e4e7; /* Muted light-grey panel surfaces */
   --brand-border: #d4d4d8; /* Mid-grey card separation borders */
@@ -130,7 +136,19 @@
 }
 
 .uber-button-green {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-green text-uber-white border-uber-green hover:bg-uber-green-hover;
+  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-green text-white border-uber-green hover:bg-uber-green-hover;
+}
+
+.uber-panel {
+  @apply bg-brand-bg-sec border border-brand-border p-5 rounded-none transition-all;
+}
+
+.uber-label {
+  @apply text-[10px] font-bold text-brand-text-muted tracking-wider uppercase font-mono;
+}
+
+.uber-input {
+  @apply w-full bg-brand-bg border border-brand-border rounded-none px-3 py-2 text-xs text-brand-text outline-none font-mono focus:border-brand-primary transition-colors;
 }
 
 .animate-fade-in {
@@ -204,6 +222,24 @@
   .text-blue-600, .text-blue-700 {
     color: var(--brand-primary) !important;
   }
+
+  /* Map emerald dispatch accents to Sage brand */
+  .text-emerald-400, .text-emerald-500, .text-emerald-600 {
+    color: var(--brand-primary) !important;
+  }
+  .bg-emerald-500, .bg-emerald-600 {
+    background-color: var(--brand-primary) !important;
+    color: #000000 !important;
+  }
+  .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover, .hover\:bg-emerald-600:hover {
+    background-color: var(--brand-primary-hover) !important;
+  }
+  .border-emerald-500, .border-emerald-800 {
+    border-color: var(--brand-primary) !important;
+  }
+  .bg-emerald-950, .bg-emerald-950\/40 {
+    background-color: color-mix(in srgb, var(--brand-primary) 12%, #000) !important;
+  }
 }
 
 .theme-sage-light, .theme-grey-light {
@@ -240,6 +276,23 @@
   
   .text-blue-600, .text-blue-700 {
     color: var(--brand-primary) !important;
+  }
+
+  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 {
+    color: var(--brand-primary) !important;
+  }
+  .bg-emerald-500, .bg-emerald-600 {
+    background-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+  }
+  .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover, .hover\:bg-emerald-600:hover {
+    background-color: var(--brand-primary-hover) !important;
+  }
+  .border-emerald-200, .border-emerald-300, .border-emerald-500 {
+    border-color: var(--brand-primary) !important;
+  }
+  .bg-emerald-50, .bg-emerald-50\/25 {
+    background-color: color-mix(in srgb, var(--brand-primary) 8%, #fff) !important;
   }
 }
 

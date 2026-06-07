@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SecurityRequest, SecurityGuard, Certification } from '../types';
 import { PREFAB_CERT_LIST } from '../initialData';
+import { formatDuration, formatShiftRange } from '../lib/dates';
 import { 
   Shield, 
   Clock, 
@@ -535,7 +536,7 @@ export function GuardDashboard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm uppercase tracking-wider font-mono">Uber Escrow Dispatch</span>
+              <span className="font-extrabold text-sm uppercase tracking-wider font-mono">Guardr Dispatch</span>
               <span className={`text-[9px] font-mono font-black py-0.5 px-2 ${
                 isOnline ? 'bg-white text-black' : 'bg-neutral-900 text-neutral-400 border border-neutral-800'
               }`}>{isOnline ? 'LIVE' : 'STANDBY'}</span>
@@ -601,7 +602,7 @@ export function GuardDashboard({
         <div className="space-y-6 lg:col-span-1">
           
           {/* Main quick stats widget */}
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4 shadow-3xs text-slate-800">
+          <div className="uber-panel space-y-4 text-brand-text">
             <div className="flex items-center space-x-3 pb-3 border-b">
               {guard.avatar ? (
                 <img src={guard.avatar} alt={guard.name} className="w-11 h-11 rounded-full object-cover border border-slate-300 shadow-sm" referrerPolicy="no-referrer" />
@@ -685,7 +686,7 @@ export function GuardDashboard({
               ) : (
                 <>
                   {/* Uber style SVG Street Navigation GPS Map */}
-                  <div className="bg-slate-950 text-white rounded-3xl border border-slate-800 outline-none overflow-hidden relative shadow-2xl">
+                  <div className="bg-slate-950 text-white rounded-none border border-slate-800 outline-none overflow-hidden relative shadow-2xl">
                     
                     {/* SVG Map grids */}
                     <div className="relative h-64 bg-[#0a0f09] overflow-hidden">
@@ -809,7 +810,8 @@ export function GuardDashboard({
                         <div className="text-right">
                           <span className="text-[10px] uppercase font-mono block text-slate-400">Guaranteed pay</span>
                           <span className="text-2xl font-mono text-emerald-400 font-extrabold">${availableJobs[0].estimatedPayout}</span>
-                          <span className="text-[10px] text-slate-450 block font-mono">${availableJobs[0].hourlyRate}/hr • {availableJobs[0].durationHours} hrs</span>
+                          <span className="text-[10px] text-slate-450 block font-mono">${availableJobs[0].hourlyRate}/hr • {formatDuration(availableJobs[0].durationHours)}</span>
+                          <span className="text-[9px] text-brand-text-muted block font-mono mt-0.5">{formatShiftRange(availableJobs[0].startDate, availableJobs[0].endDate)}</span>
                         </div>
                       </div>
 
@@ -1362,7 +1364,8 @@ export function GuardDashboard({
                           <div className="text-right">
                             <span className="text-slate-400 text-[10px] block font-mono uppercase">ESTIMATED PAYOUT</span>
                             <span className="text-lg font-bold font-mono text-slate-900">${job.estimatedPayout}</span>
-                            <span className="text-[10px] text-slate-450 block font-mono">${job.hourlyRate}/hr • {job.durationHours} hrs</span>
+                            <span className="text-[10px] text-slate-450 block font-mono">${job.hourlyRate}/hr • {formatDuration(job.durationHours)}</span>
+                            <span className="text-[9px] text-brand-text-muted block font-mono mt-0.5">{formatShiftRange(job.startDate, job.endDate)}</span>
                           </div>
                         </div>
 
