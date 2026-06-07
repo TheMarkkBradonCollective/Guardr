@@ -7,6 +7,7 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
   --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
   --color-brand-bg: var(--brand-bg);
   --color-brand-bg-sec: var(--brand-bg-sec);
   --color-brand-border: var(--brand-border);
@@ -14,144 +15,313 @@
   --color-brand-text-muted: var(--brand-text-muted);
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-text: var(--brand-accent-text);
+  --color-brand-surface: var(--brand-surface);
   
-  --color-sage-50: #f6f8f5;
+  /* Sage scale */
+  --color-sage-50:  #f6f8f5;
   --color-sage-100: #e7ece4;
+  --color-sage-150: #d8e2d4;
   --color-sage-200: #cfdac9;
   --color-sage-300: #adc1a3;
   --color-sage-400: #84a279;
-  --color-sage-550: #53754b;
+  --color-sage-500: #6b8f5e;
+  --color-sage-550: #5e8152;
   --color-sage-600: #53754b;
   --color-sage-700: #4b6a43;
   --color-sage-750: #3d5a36;
-  --color-sage-800: #0a0e08;
-  --color-sage-900: #060805;
-  --color-sage-950: #000000;
+  --color-sage-800: #2a3f25;
+  --color-sage-850: #1a2818;
+  --color-sage-900: #0f1a0d;
+  --color-sage-950: #070d06;
   
-  --color-uber-black: #000000;
-  --color-uber-white: #ffffff;
-  --color-uber-gray-50: #f6f6f6;
+  /* Uber system neutrals */
+  --color-uber-black:    #000000;
+  --color-uber-white:    #ffffff;
+  --color-uber-gray-50:  #f6f6f6;
   --color-uber-gray-100: #eeeeee;
   --color-uber-gray-200: #e2e2e2;
-  --color-uber-gray-500: #afafaf;
+  --color-uber-gray-300: #cbcbcb;
+  --color-uber-gray-400: #afafaf;
+  --color-uber-gray-500: #757575;
+  --color-uber-gray-600: #545454;
+  --color-uber-gray-700: #333333;
   --color-uber-gray-800: #1f1f1f;
   --color-uber-gray-900: #141414;
-  --color-uber-green: var(--brand-primary);
+  --color-uber-green:      var(--brand-primary);
   --color-uber-green-hover: var(--brand-primary-hover);
   --color-uber-sage: #53754b;
 }
 
+/* ─── THEME TOKENS ─────────────────────────────────────────── */
 :root {
-  --brand-primary: #84a279; /* Sage Green */
+  --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
-  --brand-bg: #000000; /* Pure Black background by default */
-  --brand-bg-sec: #080a08; /* Dark sage-tinted black panels */
-  --brand-border: #192218; /* Elegant dark sage-grey border */
-  --brand-text: #ffffff;
-  --brand-text-muted: #adc1a3;
-  --brand-accent: #ffffff;
-  --brand-accent-text: #000000;
+  --brand-bg:            #000000;
+  --brand-bg-sec:        #080a08;
+  --brand-surface:       #0e120d;
+  --brand-border:        #192218;
+  --brand-text:          #ffffff;
+  --brand-text-muted:    #adc1a3;
+  --brand-accent:        #ffffff;
+  --brand-accent-text:   #000000;
 }
 
 .theme-sage-dark {
-  --brand-primary: #84a279; /* Clean Sage Green as primary */
+  --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
-  --brand-bg: #000000; /* Pure Black background */
-  --brand-bg-sec: #080a08; /* Panel off-black */
-  --brand-border: #192218; /* Sage dark border */
-  --brand-text: #ffffff; /* White text */
-  --brand-text-muted: #adc1a3; /* Muted sage label text */
-  --brand-accent: #84a279; /* Sage accent highlights */
-  --brand-accent-text: #050a04;
+  --brand-bg:            #000000;
+  --brand-bg-sec:        #080a08;
+  --brand-surface:       #0d110c;
+  --brand-border:        #192218;
+  --brand-text:          #ffffff;
+  --brand-text-muted:    #adc1a3;
+  --brand-accent:        #84a279;
+  --brand-accent-text:   #050a04;
 }
 
 .theme-sage-light {
-  --brand-primary: #4b6a43; /* Readable dark-rich Sage Green */
+  --brand-primary:       #4b6a43;
   --brand-primary-hover: #3d5a36;
-  --brand-bg: #ffffff; /* Pure White background */
-  --brand-bg-sec: #f6f8f5; /* Light creamy sage panels */
-  --brand-border: #cfdac9; /* Delicate light-sage boundaries */
-  --brand-text: #0a0e08; /* Solid dark text */
-  --brand-text-muted: #4b6a43; /* Medium sage labels */
-  --brand-accent: #4b6a43; /* Accent matches rich sage */
-  --brand-accent-text: #ffffff;
+  --brand-bg:            #ffffff;
+  --brand-bg-sec:        #f6f8f5;
+  --brand-surface:       #edf2eb;
+  --brand-border:        #cfdac9;
+  --brand-text:          #0a0e08;
+  --brand-text-muted:    #4b6a43;
+  --brand-accent:        #4b6a43;
+  --brand-accent-text:   #ffffff;
 }
 
 .theme-grey-dark {
-  --brand-primary: #84a279; /* Sage Green remains main brand/accent highlight */
+  --brand-primary:       #84a279;
   --brand-primary-hover: #6d8a63;
-  --brand-bg: #18181b; /* Zinc dark-grey background */
-  --brand-bg-sec: #27272a; /* Lighter zinc panel container */
-  --brand-border: #3f3f46; /* Charcoal zinc border */
-  --brand-text: #f4f4f5; /* Light silver text */
-  --brand-text-muted: #a1a1aa; /* Muted grey text */
-  --brand-accent: #84a279; /* Highlight active elements in sage green */
-  --brand-accent-text: #09090b;
+  --brand-bg:            #18181b;
+  --brand-bg-sec:        #27272a;
+  --brand-surface:       #303033;
+  --brand-border:        #3f3f46;
+  --brand-text:          #f4f4f5;
+  --brand-text-muted:    #a1a1aa;
+  --brand-accent:        #84a279;
+  --brand-accent-text:   #09090b;
 }
 
 .theme-grey-light {
-  --brand-primary: #4b6a43; /* Readable Sage Green as primary brand element */
+  --brand-primary:       #4b6a43;
   --brand-primary-hover: #3d5a36;
-  --brand-bg: #f4f4f5; /* Soft light zinc grey background */
-  --brand-bg-sec: #e4e4e7; /* Muted light-grey panel surfaces */
-  --brand-border: #d4d4d8; /* Mid-grey card separation borders */
-  --brand-text: #09090b; /* Deep slate-charcoal text */
-  --brand-text-muted: #71717a; /* Muted zinc details */
-  --brand-accent: #4b6a43; /* Highlight elements in rich sage green */
-  --brand-accent-text: #ffffff;
+  --brand-bg:            #f4f4f5;
+  --brand-bg-sec:        #e4e4e7;
+  --brand-surface:       #d4d4d8;
+  --brand-border:        #d4d4d8;
+  --brand-text:          #09090b;
+  --brand-text-muted:    #71717a;
+  --brand-accent:        #4b6a43;
+  --brand-accent-text:   #ffffff;
 }
 
+/* ─── BASE ─────────────────────────────────────────────────── */
 @layer base {
   body {
-    @apply bg-brand-bg text-brand-text antialiased font-sans transition-colors duration-200;
+    background: var(--brand-bg);
+    color: var(--brand-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  *, *::before, *::after {
+    box-sizing: border-box;
   }
 }
 
-/* Sharp elements following Base Design guidelines: square or extremely clean small rounds */
+/* ─── UBER-INSPIRED UTILITY CLASSES ────────────────────────── */
+
+/* Card surfaces */
 .uber-card {
-  @apply bg-white border border-uber-gray-200 p-6 rounded-none transition-all;
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  padding: 1.25rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.uber-card-dark {
-  @apply bg-uber-black border border-uber-gray-800 p-6 rounded-none text-white transition-all;
+.uber-card:hover {
+  border-color: var(--brand-primary);
 }
 
+.uber-card-flat {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  padding: 1.25rem;
+}
+
+/* Buttons — all share base styles without @apply chaining */
 .uber-button {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none;
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  outline: none;
+  user-select: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
 }
 
 .uber-button-primary {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-black text-uber-white border-uber-black hover:bg-uber-gray-900 active:bg-uber-gray-800;
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: var(--brand-text);
+  color: var(--brand-bg);
+  border: 1px solid var(--brand-text);
+  font-family: var(--font-sans);
 }
+.uber-button-primary:hover { opacity: 0.9; }
 
-.uber-button-primary-dark {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-white text-uber-black border-uber-white hover:bg-uber-gray-50 active:bg-uber-gray-100;
+.uber-button-sage {
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: var(--brand-primary);
+  color: #000000;
+  border: 1px solid var(--brand-primary);
+  font-family: var(--font-sans);
 }
-
-.uber-button-secondary {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-gray-50 text-uber-black border-uber-gray-200 hover:bg-uber-gray-100;
-}
-
-.uber-button-secondary-dark {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-gray-900 text-uber-white border-uber-gray-800 hover:bg-uber-gray-800;
+.uber-button-sage:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
 }
 
 .uber-button-green {
-  @apply h-12 px-6 font-bold text-sm tracking-wide uppercase transition-all duration-150 inline-flex items-center justify-center border focus:outline-none select-none bg-uber-green text-white border-uber-green hover:bg-uber-green-hover;
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: var(--brand-primary);
+  color: #000000;
+  border: 1px solid var(--brand-primary);
+  font-family: var(--font-sans);
+}
+.uber-button-green:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
 }
 
+.uber-button-outline {
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--brand-text);
+  border: 1px solid var(--brand-border);
+  font-family: var(--font-sans);
+}
+.uber-button-outline:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Panels */
 .uber-panel {
-  @apply bg-brand-bg-sec border border-brand-border p-5 rounded-none transition-all;
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  padding: 1.25rem;
 }
 
+/* Form inputs */
 .uber-label {
-  @apply text-[10px] font-bold text-brand-text-muted tracking-wider uppercase font-mono;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  color: var(--brand-text-muted);
 }
 
 .uber-input {
-  @apply w-full bg-brand-bg border border-brand-border rounded-none px-3 py-2 text-xs text-brand-text outline-none font-mono focus:border-brand-primary transition-colors;
+  width: 100%;
+  background: var(--brand-bg);
+  border: 1px solid var(--brand-border);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--brand-text);
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.uber-input:focus {
+  border-color: var(--brand-primary);
+}
+.uber-input::placeholder {
+  color: var(--brand-text-muted);
+  opacity: 0.7;
 }
 
+.uber-select {
+  width: 100%;
+  background: var(--brand-bg);
+  border: 1px solid var(--brand-border);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--brand-text);
+  font-family: var(--font-mono);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+.uber-select:focus {
+  border-color: var(--brand-primary);
+}
+
+/* Status badges */
+.badge-open     { background: color-mix(in srgb, var(--brand-primary) 12%, transparent); color: var(--brand-primary); border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent); padding: 0.25rem 0.6rem; font-size: 0.625rem; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+.badge-assigned { background: color-mix(in srgb, var(--brand-text-muted) 12%, transparent); color: var(--brand-text-muted); border: 1px solid color-mix(in srgb, var(--brand-text-muted) 25%, transparent); padding: 0.25rem 0.6rem; font-size: 0.625rem; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+.badge-active   { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #f59e0b; border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent); padding: 0.25rem 0.6rem; font-size: 0.625rem; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+.badge-done     { background: color-mix(in srgb, var(--brand-primary) 8%, transparent); color: var(--brand-text-muted); border: 1px solid var(--brand-border); padding: 0.25rem 0.6rem; font-size: 0.625rem; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ─── ANIMATIONS ───────────────────────────────────────────── */
 .animate-fade-in {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -160,152 +330,28 @@
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.animate-slide-down {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Dynamic theme overrides to automatically adjust legacy white/blue card elements based on active theme */
-.theme-sage-dark, .theme-grey-dark {
-  .bg-white, 
-  .bg-slate-50, 
-  .bg-neutral-50, 
-  .bg-slate-50\/40, 
-  .bg-green-50\/40, 
-  .bg-blue-50\/40, 
-  .bg-blue-50, 
-  .bg-blue-105 {
-    background-color: var(--brand-bg-sec) !important;
-  }
-  
-  .text-slate-900, 
-  .text-neutral-900, 
-  .text-slate-800, 
-  .text-slate-705, 
-  .text-neutral-800, 
-  .text-black {
-    color: var(--brand-text) !important;
-  }
-  
-  .text-slate-500, 
-  .text-slate-600, 
-  .text-neutral-500, 
-  .text-neutral-400 {
-    color: var(--brand-text-muted) !important;
-  }
-  
-  .border-slate-200, 
-  .border-slate-100, 
-  .border-neutral-200, 
-  .border-neutral-900, 
-  .border-neutral-800, 
-  .border-slate-205, 
-  .border-dashed {
-    border-color: var(--brand-border) !important;
-  }
-  
-  /* Map hardcoded layout blues to Sage */
-  .bg-blue-600, .bg-blue-500 {
-    background-color: var(--brand-primary) !important;
-    color: #000000 !important;
-  }
-  
-  .hover\:bg-blue-700:hover {
-    background-color: var(--brand-text-muted) !important;
-    color: #000000 !important;
-  }
-  
-  .text-blue-600, .text-blue-700 {
-    color: var(--brand-primary) !important;
-  }
-
-  /* Map emerald dispatch accents to Sage brand */
-  .text-emerald-400, .text-emerald-500, .text-emerald-600 {
-    color: var(--brand-primary) !important;
-  }
-  .bg-emerald-500, .bg-emerald-600 {
-    background-color: var(--brand-primary) !important;
-    color: #000000 !important;
-  }
-  .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover, .hover\:bg-emerald-600:hover {
-    background-color: var(--brand-primary-hover) !important;
-  }
-  .border-emerald-500, .border-emerald-800 {
-    border-color: var(--brand-primary) !important;
-  }
-  .bg-emerald-950, .bg-emerald-950\/40 {
-    background-color: color-mix(in srgb, var(--brand-primary) 12%, #000) !important;
-  }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.theme-sage-light, .theme-grey-light {
-  .bg-white {
-    background-color: #ffffff !important;
-  }
-  
-  .bg-slate-50, .bg-neutral-50 {
-    background-color: var(--brand-bg-sec) !important;
-  }
-  
-  .text-slate-900, .text-neutral-900, .text-black {
-    color: var(--brand-text) !important;
-  }
-  
-  .text-slate-500, .text-slate-605, .text-slate-600 {
-    color: var(--brand-text-muted) !important;
-  }
-  
-  .border-slate-200, .border-slate-100 {
-    border-color: var(--brand-border) !important;
-  }
-
-  /* Map hardcoded layout blues to Sage */
-  .bg-blue-600, .bg-blue-500 {
-    background-color: var(--brand-primary) !important;
-    color: #ffffff !important;
-  }
-  
-  .hover\:bg-blue-700:hover {
-    background-color: #3b5c2d !important;
-    color: #ffffff !important;
-  }
-  
-  .text-blue-600, .text-blue-700 {
-    color: var(--brand-primary) !important;
-  }
-
-  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 {
-    color: var(--brand-primary) !important;
-  }
-  .bg-emerald-500, .bg-emerald-600 {
-    background-color: var(--brand-primary) !important;
-    color: #ffffff !important;
-  }
-  .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover, .hover\:bg-emerald-600:hover {
-    background-color: var(--brand-primary-hover) !important;
-  }
-  .border-emerald-200, .border-emerald-300, .border-emerald-500 {
-    border-color: var(--brand-primary) !important;
-  }
-  .bg-emerald-50, .bg-emerald-50\/25 {
-    background-color: color-mix(in srgb, var(--brand-primary) 8%, #fff) !important;
-  }
-}
-
-/* Guard full-screen map (Uber driver style) */
-.guardr-map-root {
-  @apply absolute inset-0;
-}
-
-.guardr-map-container {
-  @apply h-full w-full;
-  background: #0a0a0a;
-}
+/* ─── GUARD MAP / UBER DRIVER LAYOUT ───────────────────────── */
+.guardr-map-root      { position: absolute; inset: 0; }
+.guardr-map-container { height: 100%; width: 100%; background: #0a0a0a; }
 
 .guardr-shift-pin,
 .guardr-guard-pin {
@@ -314,41 +360,152 @@
 }
 
 .guardr-shift-pin-inner {
-  @apply flex items-center justify-center font-mono font-black text-[10px] text-black border-2 border-black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.625rem;
+  color: #000000;
   width: 44px;
   height: 44px;
   border-radius: 50%;
   background: var(--brand-primary);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  border: 2px solid #000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.55);
 }
 
 .guardr-shift-pin-selected .guardr-shift-pin-inner {
-  transform: scale(1.15);
-  box-shadow: 0 0 0 4px rgba(132, 162, 121, 0.35), 0 4px 14px rgba(0, 0, 0, 0.5);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--brand-primary) 35%, transparent), 0 4px 16px rgba(0,0,0,0.5);
 }
 
 .guardr-shift-pin-armed .guardr-shift-pin-inner {
   border-color: #ef4444;
+  background: color-mix(in srgb, var(--brand-primary) 80%, #ef4444);
 }
 
 .guardr-guard-pin-inner {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #ffffff;
   border: 3px solid #000000;
-  box-shadow: 0 0 0 6px rgba(132, 162, 121, 0.25);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-primary) 30%, transparent);
 }
 
 .guardr-map-popup .leaflet-popup-content-wrapper {
   border-radius: 0;
   border: 1px solid #e2e2e2;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
+/* Uber-style bottom sheet over map */
 .guardr-bottom-sheet {
-  @apply absolute bottom-0 left-0 right-0 z-[1000] bg-neutral-950 border-t border-neutral-800 text-white;
-  max-height: 55vh;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  color: white;
+  background: rgba(5, 5, 5, 0.97);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  max-height: 58vh;
   overflow-y: auto;
+  padding: 1rem;
 }
 
+/* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */
+/* When dark theme is active, override legacy hardcoded light colors */
+.theme-sage-dark, .theme-grey-dark {
+  /* Surface overrides */
+  .bg-white        { background-color: var(--brand-bg-sec) !important; }
+  .bg-slate-50     { background-color: var(--brand-surface) !important; }
+  .bg-neutral-50   { background-color: var(--brand-surface) !important; }
+  .bg-slate-100    { background-color: var(--brand-bg-sec) !important; }
+  .bg-neutral-100  { background-color: var(--brand-bg-sec) !important; }
 
+  /* Text overrides */
+  .text-slate-900, .text-neutral-900, .text-black { color: var(--brand-text) !important; }
+  .text-slate-800, .text-neutral-800              { color: var(--brand-text) !important; }
+  .text-slate-700, .text-neutral-700              { color: var(--brand-text) !important; }
+  .text-slate-600, .text-slate-500                { color: var(--brand-text-muted) !important; }
+  .text-neutral-500, .text-neutral-400            { color: var(--brand-text-muted) !important; }
+
+  /* Border overrides */
+  .border-slate-200, .border-slate-100, .border-slate-50  { border-color: var(--brand-border) !important; }
+  .border-neutral-200, .border-neutral-100                { border-color: var(--brand-border) !important; }
+  .border-slate-205, .border-dashed                       { border-color: var(--brand-border) !important; }
+
+  /* Blue → Sage */
+  .bg-blue-600, .bg-blue-500   { background-color: var(--brand-primary) !important; color: #000 !important; }
+  .hover\:bg-blue-700:hover    { background-color: var(--brand-primary-hover) !important; }
+  .text-blue-600, .text-blue-700, .text-blue-400 { color: var(--brand-primary) !important; }
+  .bg-blue-50, .bg-blue-50\/55 { background-color: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec)) !important; }
+  .border-blue-200, .border-blue-600 { border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--brand-border)) !important; }
+  .text-blue-800, .text-blue-900 { color: var(--brand-primary) !important; }
+
+  /* Emerald → Sage */
+  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 { color: var(--brand-primary) !important; }
+  .bg-emerald-500, .bg-emerald-600  { background-color: var(--brand-primary) !important; color: #000 !important; }
+  .hover\:bg-emerald-400:hover      { background-color: var(--brand-primary-hover) !important; }
+  .border-emerald-500, .border-emerald-800  { border-color: var(--brand-primary) !important; }
+  .bg-emerald-50\/25, .bg-emerald-50        { background-color: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec)) !important; }
+  .border-emerald-100, .border-emerald-200  { border-color: var(--brand-border) !important; }
+  .bg-green-50\/40     { background-color: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-bg-sec)) !important; }
+  
+  /* Red badges stay red */
+  .bg-red-50\/25 { background-color: color-mix(in srgb, #ef4444 8%, var(--brand-bg-sec)) !important; }
+  .border-red-100, .border-red-200 { border-color: color-mix(in srgb, #ef4444 30%, var(--brand-border)) !important; }
+
+  /* Amber accent stays amber */
+  .bg-amber-50, .border-amber-200 { opacity: 0.85; }
+
+  /* Inputs in dark mode */
+  input, select, textarea {
+    background: var(--brand-bg) !important;
+    color: var(--brand-text) !important;
+    border-color: var(--brand-border) !important;
+  }
+  input::placeholder, textarea::placeholder { color: var(--brand-text-muted) !important; opacity: 0.7; }
+  input:focus, select:focus, textarea:focus { border-color: var(--brand-primary) !important; outline: none; }
+  select option { background: var(--brand-bg-sec); color: var(--brand-text); }
+
+  /* Slate-900/800 backgrounds */
+  .bg-slate-900  { background-color: var(--brand-bg-sec) !important; }
+  .bg-slate-950  { background-color: var(--brand-bg) !important; }
+  .text-slate-100, .text-slate-200, .text-slate-300 { color: var(--brand-text) !important; }
+  .text-slate-400 { color: var(--brand-text-muted) !important; }
+  .border-slate-800, .border-slate-850 { border-color: var(--brand-border) !important; }
+}
+
+/* Light theme adjustments */
+.theme-sage-light, .theme-grey-light {
+  .bg-slate-900  { background-color: var(--brand-text) !important; }
+  .bg-slate-50   { background-color: var(--brand-bg-sec) !important; }
+  .text-slate-900, .text-neutral-900, .text-black { color: var(--brand-text) !important; }
+  .text-slate-600, .text-slate-500 { color: var(--brand-text-muted) !important; }
+  .border-slate-200, .border-slate-100 { border-color: var(--brand-border) !important; }
+  
+  /* Blue → Sage for light */
+  .bg-blue-600, .bg-blue-500    { background-color: var(--brand-primary) !important; color: #fff !important; }
+  .hover\:bg-blue-700:hover     { background-color: var(--brand-primary-hover) !important; }
+  .text-blue-600, .text-blue-700, .text-blue-400 { color: var(--brand-primary) !important; }
+  .bg-blue-50\/55, .bg-blue-50  { background-color: color-mix(in srgb, var(--brand-primary) 8%, #fff) !important; }
+  .border-blue-200              { border-color: color-mix(in srgb, var(--brand-primary) 30%, #fff) !important; }
+  .text-blue-800, .text-blue-900, .text-blue-100 { color: var(--brand-primary) !important; }
+
+  /* Emerald → Sage for light */
+  .bg-emerald-500, .bg-emerald-600 { background-color: var(--brand-primary) !important; color: #fff !important; }
+  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 { color: var(--brand-primary) !important; }
+  .bg-emerald-50\/25, .bg-emerald-50 { background-color: color-mix(in srgb, var(--brand-primary) 8%, #fff) !important; }
+  .border-emerald-100, .border-emerald-200, .border-emerald-300 { border-color: color-mix(in srgb, var(--brand-primary) 30%, #fff) !important; }
+  .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover { background-color: var(--brand-primary-hover) !important; }
+}
+
+/* ─── SCROLLBAR ────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--brand-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }

@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
-import { 
-  Shield, 
-  Lock, 
-  User, 
-  Mail, 
-  Briefcase, 
-  Phone, 
-  FileText, 
-  DollarSign, 
-  CheckCircle,
-  HelpCircle,
-  Unlock,
+import {
+  Shield,
+  User,
+  Mail,
+  Briefcase,
+  Phone,
+  DollarSign,
+  Lock,
   Key,
-  ArrowLeft
+  ArrowLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { SessionUser, SecurityGuard } from '../types';
 
@@ -23,88 +22,72 @@ interface AuthPageProps {
   guardsList: SecurityGuard[];
   onBackToHome: () => void;
   initialRole?: 'guard' | 'client' | 'auditor' | 'staff';
+  themeMode?: string;
 }
 
-export function AuthPage({ 
-  onSignIn, 
-  onSignUp, 
-  guardsList, 
+export function AuthPage({
+  onSignIn,
+  onSignUp,
+  guardsList,
   onBackToHome,
-  initialRole = 'guard' 
+  initialRole = 'guard',
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
-  const [role, setRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>(initialRole);
+  const [role, setRole] = useState<'guard' | 'client' | 'auditor' | 'staff'>(
+    initialRole === 'auditor' || initialRole === 'staff' ? initialRole : initialRole
+  );
   const [errorMsg, setErrorMsg] = useState<string>('');
-  
-  // Shared Form inputs
-  const [email, setEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  
-  // Guard specific inputs
-  const [badgeNumber, setBadgeNumber] = useState('');
-  const [phone, setPhone] = useState('');
-  const [bio, setBio] = useState('');
-  const [hourlyRate, setHourlyRate] = useState('35');
-  const [isArmed, setIsArmed] = useState(false);
-  
-  // Client specific inputs
-  const [clientCompanyName, setClientCompanyName] = useState('');
-  
-  // Auditor specific inputs
-  const [auditorOrg, setAuditorOrg] = useState('');
 
-  // Staff specific inputs
-  const [staffCode, setStaffCode] = useState(''); // e.g. "STAFF777" to register as staff!
+  const [badgeNumber, setBadgeNumber] = useState('');
+  const [phone, setPhone]             = useState('');
+  const [bio, setBio]                 = useState('');
+  const [hourlyRate, setHourlyRate]   = useState('35');
+  const [isArmed, setIsArmed]         = useState(false);
+
+  const [clientCompanyName, setClientCompanyName] = useState('');
+  const [auditorOrg, setAuditorOrg]               = useState('');
+  const [staffCode, setStaffCode]                 = useState('');
   const [staffRoleInput, setStaffRoleInput] = useState<'Director' | 'Administrator' | 'Moderator'>('Administrator');
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email) {
-      setErrorMsg('Email address is required.');
-      return;
-    }
-    if (!password || password.length < 4) {
-      setErrorMsg('Password must be at least 4 characters long.');
-      return;
-    }
+    if (!email) { setErrorMsg('Email address is required.'); return; }
+    if (!password || password.length < 4) { setErrorMsg('Password must be at least 4 characters.'); return; }
 
     if (isSignUp) {
-      if (!fullName) {
-        setErrorMsg('Please specify your Full Name.');
-        return;
-      }
+      if (!fullName) { setErrorMsg('Please enter your full name.'); return; }
 
-      // Check Staff signup passcode
       if (role === 'staff' && staffCode.trim().toUpperCase() !== 'STAFF777') {
-        setErrorMsg('Invalid staff authorization passcode. Use "STAFF777" for operation demo privileges.');
+        setErrorMsg('Invalid staff authorization code. Use "STAFF777" for demo access.');
         return;
       }
 
       const randomId = `${role}-${Date.now()}`;
-      
-      // Setup default avatar based on role
       const avatarMap = {
-        guard: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-        client: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+        guard:   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        client:  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
         auditor: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-        staff: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80'
+        staff:   'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
       };
 
-      // Create new guard representation even if client/auditor (so they enter directory seamlessly)
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: fullName,
-        email: email,
+        email,
         badgeNumber: badgeNumber || `S-${Math.floor(10000 + Math.random() * 90000)}`,
         avatar: avatarMap[role],
         phone: phone || '+1 (555) 000-0000',
-        bio: bio || `${role === 'client' ? 'Registered business contracting client.' : role === 'auditor' ? 'Regulatory compliance review officer.' : 'Administrative system operator.'}`,
-        isArmed: isArmed,
-        backgroundChecked: role === 'auditor' || role === 'staff' ? true : false,
-        verified: role === 'auditor' || role === 'staff' ? true : false,
+        bio: bio || (role === 'client' ? 'Registered business client.' : role === 'auditor' ? 'Compliance review officer.' : 'Administrative operator.'),
+        isArmed,
+        backgroundChecked: role === 'auditor' || role === 'staff',
+        verified: role === 'auditor' || role === 'staff',
         rating: 5.0,
         jobsCompleted: 0,
         certifications: [],
@@ -112,416 +95,320 @@ export function AuthPage({
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
         isStaff: role === 'staff',
         staffRole: role === 'staff' ? staffRoleInput : undefined,
-        userStatus: 'active'
+        userStatus: 'active',
       };
 
-      // Call SignUp Prop
       onSignUp(newGuardProfile, role);
-
-      // Instantly Sign In as the newly registered user
       onSignIn({
         id: randomId,
         name: fullName,
-        email: email,
-        role: role,
+        email,
+        role,
         badgeNumber: newGuardProfile.badgeNumber,
         clientName: role === 'client' ? clientCompanyName || fullName : undefined,
         organization: role === 'auditor' ? auditorOrg || 'State Compliance' : undefined,
         avatar: newGuardProfile.avatar,
         hourlyRate: newGuardProfile.hourlyRateRequirement,
-        staffRole: role === 'staff' ? staffRoleInput : undefined
+        staffRole: role === 'staff' ? staffRoleInput : undefined,
       });
+      return;
+    }
 
-    } else {
-      // Signing In - search existing guard accounts first, or allow demo entry
-      const emailLower = email.toLowerCase();
-      
-      // Direct entry override for Director (m.white@signaturesecurityspecialist.com)
-      if (emailLower === 'm.white@signaturesecurityspecialist.com') {
-        if (password !== '#FuckinDstorm11') {
-          setErrorMsg('Invalid password for Director account.');
-          return;
-        }
+    // Sign In
+    const emailLower = email.toLowerCase();
 
-        const directorId = 'staff-director';
-        const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
-
-        const directorProfile: SecurityGuard = {
-          id: directorId,
-          name: 'M. White',
-          email: 'm.white@signaturesecurityspecialist.com',
-          badgeNumber: 'DIR-00001',
-          avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
-          phone: '+1 (555) 999-1111',
-          bio: 'Director & Owner of Signature Security Specialist. Holds master override controls for security audits, dispatch approvals, and staff promotions.',
-          isArmed: true,
-          backgroundChecked: true,
-          verified: true,
-          rating: 5.0,
-          jobsCompleted: 150,
-          certifications: [],
-          experience: [],
-          hourlyRateRequirement: 100,
-          isStaff: true,
-          staffRole: 'Director',
-          userStatus: 'active'
-        };
-
-        // If not already in list, register
-        if (!matchedGuard) {
-          onSignUp(directorProfile, 'staff');
-        }
-
-        onSignIn({
-          id: matchedGuard?.id || directorId,
-          name: 'M. White',
-          email: 'm.white@signaturesecurityspecialist.com',
-          role: 'staff',
-          badgeNumber: 'DIR-00001',
-          avatar: directorProfile.avatar,
-          hourlyRate: 100,
-          staffRole: 'Director'
-        });
-        return;
-      }
-
-      // General guard checks
+    // Director override
+    if (emailLower === 'm.white@signaturesecurityspecialist.com') {
+      if (password !== '#FuckinDstorm11') { setErrorMsg('Invalid password for Director account.'); return; }
+      const directorId = 'staff-director';
       const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
+      const directorProfile: SecurityGuard = {
+        id: directorId,
+        name: 'M. White',
+        email: 'm.white@signaturesecurityspecialist.com',
+        badgeNumber: 'DIR-00001',
+        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
+        phone: '+1 (555) 999-1111',
+        bio: 'Director & Founder of Guardr. Platform master control access.',
+        isArmed: true, backgroundChecked: true, verified: true,
+        rating: 5.0, jobsCompleted: 150, certifications: [], experience: [],
+        hourlyRateRequirement: 100, isStaff: true, staffRole: 'Director', userStatus: 'active',
+      };
+      if (!matchedGuard) onSignUp(directorProfile, 'staff');
+      onSignIn({ id: matchedGuard?.id || directorId, name: 'M. White', email: 'm.white@signaturesecurityspecialist.com', role: 'staff', badgeNumber: 'DIR-00001', avatar: directorProfile.avatar, hourlyRate: 100, staffRole: 'Director' });
+      return;
+    }
 
-      if (matchedGuard) {
-        if (matchedGuard.userStatus === 'blocked') {
-          setErrorMsg('Account blocked. Your operational access card has been revoked by administration.');
-          return;
-        }
-
-        // Detect appropriate role based on isStaff or id prefix
-        let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = matchedGuard.isStaff ? 'staff' : 'guard';
-        if (matchedGuard.id.startsWith('client')) {
-          resolvedRole = 'client';
-        } else if (matchedGuard.id.startsWith('auditor')) {
-          resolvedRole = 'auditor';
-        } else if (matchedGuard.id.startsWith('staff')) {
-          resolvedRole = 'staff';
-        }
-
-        onSignIn({
-          id: matchedGuard.id,
-          name: matchedGuard.name,
-          email: matchedGuard.email,
-          role: resolvedRole,
-          badgeNumber: matchedGuard.badgeNumber,
-          avatar: matchedGuard.avatar,
-          hourlyRate: matchedGuard.hourlyRateRequirement,
-          staffRole: matchedGuard.staffRole || (matchedGuard.isStaff ? 'Administrator' : undefined)
-        });
-      } else {
-        setErrorMsg('Security account is not registered in our database. Please specify a valid email or create a new profile.');
-      }
+    const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
+    if (matchedGuard) {
+      if (matchedGuard.userStatus === 'blocked') { setErrorMsg('Account blocked. Contact administration.'); return; }
+      let resolvedRole: 'guard' | 'client' | 'auditor' | 'staff' = matchedGuard.isStaff ? 'staff' : 'guard';
+      if (matchedGuard.id.startsWith('client'))  resolvedRole = 'client';
+      if (matchedGuard.id.startsWith('auditor')) resolvedRole = 'auditor';
+      if (matchedGuard.id.startsWith('staff'))   resolvedRole = 'staff';
+      onSignIn({
+        id: matchedGuard.id, name: matchedGuard.name, email: matchedGuard.email,
+        role: resolvedRole, badgeNumber: matchedGuard.badgeNumber, avatar: matchedGuard.avatar,
+        hourlyRate: matchedGuard.hourlyRateRequirement,
+        staffRole: matchedGuard.staffRole || (matchedGuard.isStaff ? 'Administrator' : undefined),
+      });
+    } else {
+      setErrorMsg('Account not found. Please sign up or check your email address.');
     }
   };
 
+  const ROLES = [
+    { id: 'guard',   label: 'Guard',     desc: 'Security professional' },
+    { id: 'client',  label: 'Client',    desc: 'Needs security coverage' },
+    { id: 'auditor', label: 'Auditor',   desc: 'Compliance review' },
+    { id: 'staff',   label: 'Staff',     desc: 'Platform operations' },
+  ] as const;
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4 relative py-12" id="sigsec-auth-root">
-      
-      {/* Background aesthetics */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#141414_1px,transparent_1px),linear-gradient(to_bottom,#141414_1px,transparent_1px)] bg-[size:5rem_5rem] pointer-events-none" />
-
-      {/* Back button */}
-      <button 
-        onClick={onBackToHome}
-        className="absolute top-6 left-6 flex items-center space-x-2 font-mono text-xs text-neutral-400 hover:text-white transition-all bg-neutral-950 border border-neutral-900 py-2.5 px-4 rounded-none cursor-pointer"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        <span>Back to Home</span>
-      </button>
-
-      <div className="w-full max-w-md bg-neutral-950 border border-neutral-900 p-8 shadow-none rounded-none relative overflow-hidden z-10">
-        
-        {/* Banner header logo */}
-        <div className="flex flex-col items-center text-center space-y-2 mb-6">
-          <Logo size={40} className="text-brand-primary shrink-0" />
-          <h2 className="text-xl font-black font-sans tracking-tight">
-            {isSignUp ? 'Create Platform Profile' : 'Credentials Sign In'}
-          </h2>
-          <p className="text-xs text-slate-400">
-            {isSignUp ? 'Onboard a secure profile into our credentials database' : 'Secure gateway into the Signature Security platform'}
-          </p>
+    <div className="min-h-screen bg-brand-bg text-brand-text flex flex-col" id="guardr-auth-root">
+      {/* Top nav bar */}
+      <header className="border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between">
+        <button
+          onClick={onBackToHome}
+          className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-xs font-mono uppercase tracking-wider"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back
+        </button>
+        <div className="flex items-center gap-2">
+          <Logo size={22} className="text-brand-primary" />
+          <span className="font-black text-sm tracking-tighter uppercase">Guardr</span>
         </div>
+        <div className="w-16" /> {/* balance */}
+      </header>
 
-        {/* System Messages */}
-        {errorMsg && (
-          <div className="mb-5 bg-red-950/50 text-red-300 border border-red-500/20 text-xs py-2.5 px-3 rounded-lg flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-            <span>{errorMsg}</span>
+      <div className="flex flex-1 items-start justify-center px-4 py-12">
+        <div className="w-full max-w-md animate-fade-in">
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex w-14 h-14 bg-brand-primary items-center justify-center mb-4">
+              <Shield className="w-7 h-7 text-black" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tighter uppercase">
+              {isSignUp ? 'Create Account' : 'Sign In'}
+            </h1>
+            <p className="text-brand-text-muted text-xs font-mono mt-1">
+              {isSignUp ? 'Join the Guardr marketplace' : 'Access your Guardr dashboard'}
+            </p>
           </div>
-        )}
 
-        {/* Roles tab selector (SignUp only) */}
-        {isSignUp && (
-          <div className="grid grid-cols-4 bg-black border border-neutral-900 p-1 mb-5 text-[10px] font-mono">
-            <button
-              type="button"
-              onClick={() => { setRole('guard'); setErrorMsg(''); }}
-              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'guard' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              Guard
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRole('client'); setErrorMsg(''); }}
-              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'client' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              Client
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRole('auditor'); setErrorMsg(''); }}
-              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'auditor' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              Compliance Auditor
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRole('staff'); setErrorMsg(''); }}
-              className={`py-2 font-bold uppercase transition-all tracking-wider ${role === 'staff' ? 'bg-white text-black font-black' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              Staff
-            </button>
-          </div>
-        )}
+          {/* Error */}
+          {errorMsg && (
+            <div className="mb-5 flex items-center gap-2 border border-red-500/30 bg-red-500/8 text-red-400 text-xs font-mono px-3 py-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+              {errorMsg}
+            </div>
+          )}
 
-        {/* Main form */}
-        <form onSubmit={handleAuthSubmit} className="space-y-4">
-          
-          {/* Sign Up Fields */}
+          {/* Role selector (sign up only) */}
           {isSignUp && (
-            <div className="space-y-1">
-              <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Full Name / Profile Name</label>
-              <div className="relative flex items-center bg-slate-950 border border-slate-800 hover:border-slate-700 p-2.5 rounded-lg">
-                <User className="absolute left-3 w-4 h-4 text-slate-500" />
+            <div className="mb-6">
+              <p className="uber-label mb-2">Account Type</p>
+              <div className="grid grid-cols-2 gap-2">
+                {ROLES.map(({ id, label, desc }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => { setRole(id); setErrorMsg(''); }}
+                    className={`text-left border p-3 transition-all ${
+                      role === id
+                        ? 'border-brand-primary bg-brand-primary/8'
+                        : 'border-brand-border hover:border-brand-primary/50 bg-brand-bg-sec'
+                    }`}
+                  >
+                    <p className={`text-xs font-black uppercase font-mono ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
+                    <p className="text-[10px] text-brand-text-muted mt-0.5">{desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+
+            {isSignUp && (
+              <div>
+                <label className="uber-label block mb-1.5">Full Name</label>
                 <input
                   type="text"
-                  placeholder="Officer Alex / Corp Representative"
-                  className="bg-transparent text-xs outline-none text-white w-full pl-7"
+                  required
+                  placeholder={role === 'client' ? 'Your Name / Contact Person' : 'Officer Full Name'}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  required
+                  className="uber-input"
                 />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Email field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Contact Email</label>
-            <div className="relative flex items-center bg-slate-950 border border-slate-800 hover:border-slate-700 p-2.5 rounded-lg block">
-              <Mail className="absolute left-3 w-4 h-4 text-slate-500" />
+            <div>
+              <label className="uber-label block mb-1.5">Email Address</label>
               <input
                 type="email"
-                placeholder="officer@sigsec.com"
-                className="bg-transparent text-xs outline-none text-white w-full pl-7"
+                required
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                className="uber-input"
               />
             </div>
-          </div>
 
-          {/* Password field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Access Password</label>
-            <div className="relative flex items-center bg-slate-950 border border-slate-800 hover:border-slate-700 p-2.5 rounded-lg">
-              <Lock className="absolute left-3 w-4 h-4 text-slate-500" />
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="bg-transparent text-xs outline-none text-white w-full pl-7"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            <div>
+              <label className="uber-label block mb-1.5">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="uber-input pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Guard signup specific fields */}
-          {isSignUp && role === 'guard' && (
-            <div className="space-y-3.5 border-t border-slate-800/80 pt-3.5">
-              
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">State License Badge No</label>
-                <div className="relative flex items-center bg-slate-950 border border-slate-800 hover:border-slate-700 p-2.5 rounded-lg">
-                  <Key className="absolute left-3 w-4 h-4 text-slate-500" />
+            {/* Guard-specific fields */}
+            {isSignUp && role === 'guard' && (
+              <div className="space-y-3 pt-3 border-t border-brand-border">
+                <p className="uber-label">Guard Details</p>
+                <div>
+                  <label className="uber-label block mb-1.5">State License / Badge No</label>
                   <input
                     type="text"
-                    placeholder="S-22109 or G-77291"
-                    className="bg-transparent text-xs outline-none text-white w-full pl-7"
+                    required
+                    placeholder="e.g. G-22109"
                     value={badgeNumber}
                     onChange={(e) => setBadgeNumber(e.target.value)}
-                    required
+                    className="uber-input"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-slate-400 tracking-wider block">Phone Number</label>
-                  <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2 rounded-lg">
-                    <Phone className="absolute left-2 w-3.5 h-3.5 text-slate-500" />
-                    <input
-                      type="text"
-                      placeholder="+1 (555)"
-                      className="bg-transparent text-xs outline-none text-white w-full pl-6"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="uber-label block mb-1.5">Phone</label>
+                    <input type="text" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="uber-input" />
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-1.5">Hourly Rate ($)</label>
+                    <input type="number" min="15" max="300" placeholder="35" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className="uber-input" />
                   </div>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-slate-400 tracking-wider block">Hourly rate ($)</label>
-                  <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2 rounded-lg">
-                    <DollarSign className="absolute left-2 w-3.5 h-3.5 text-slate-500" />
-                    <input
-                      type="number"
-                      placeholder="35"
-                      className="bg-transparent text-xs outline-none text-white w-full pl-6"
-                      value={hourlyRate}
-                      onChange={(e) => setHourlyRate(e.target.value)}
-                    />
-                  </div>
+                <div>
+                  <label className="uber-label block mb-1.5">Professional Bio</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Years of experience, specialties, previous roles..."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    className="uber-input resize-none"
+                  />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Professional Biography</label>
-                <textarea
-                  placeholder="List tactical training or private security escrow hours..."
-                  className="bg-slate-950 text-xs border border-slate-800 p-2.5 rounded-lg outline-none text-white w-full h-16 resize-none"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                <input
-                  type="checkbox"
-                  id="armed-check"
-                  checked={isArmed}
-                  onChange={(e) => setIsArmed(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-850 text-indigo-600 focus:ring-0"
-                />
-                <label htmlFor="armed-check" className="text-xs text-slate-400 font-mono tracking-wide cursor-pointer select-none">
-                  Armed Security Permit Holder (State Licensed)
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <div className={`w-4 h-4 border flex items-center justify-center shrink-0 transition-colors ${isArmed ? 'bg-brand-primary border-brand-primary' : 'border-brand-border'}`}>
+                    {isArmed && <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </div>
+                  <input type="checkbox" checked={isArmed} onChange={(e) => setIsArmed(e.target.checked)} className="sr-only" />
+                  <span className="text-xs font-mono text-brand-text-muted group-hover:text-brand-text transition-colors">Armed Security Permit Holder</span>
                 </label>
               </div>
+            )}
 
-            </div>
-          )}
-
-          {/* Client signup specific fields */}
-          {isSignUp && role === 'client' && (
-            <div className="space-y-3 border-t border-slate-800/80 pt-3.5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Business / Company Name</label>
-                <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2.5 rounded-lg">
-                  <Briefcase className="absolute left-3 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="Sartorial Security Corp"
-                    className="bg-transparent text-xs outline-none text-white w-full pl-7"
-                    value={clientCompanyName}
-                    onChange={(e) => setClientCompanyName(e.target.value)}
-                    required
-                  />
-                </div>
+            {/* Client-specific fields */}
+            {isSignUp && role === 'client' && (
+              <div className="pt-3 border-t border-brand-border">
+                <label className="uber-label block mb-1.5">Business / Company Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Acme Corp / Your Name"
+                  value={clientCompanyName}
+                  onChange={(e) => setClientCompanyName(e.target.value)}
+                  className="uber-input"
+                />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Auditor signup specific fields */}
-          {isSignUp && role === 'auditor' && (
-            <div className="space-y-3 border-t border-slate-800/80 pt-3.5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Regulatory Organization</label>
-                <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2.5 rounded-lg">
-                  <Briefcase className="absolute left-3 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    placeholder="State License Board"
-                    className="bg-transparent text-xs outline-none text-white w-full pl-7"
-                    value={auditorOrg}
-                    onChange={(e) => setAuditorOrg(e.target.value)}
-                    required
-                  />
-                </div>
+            {/* Auditor-specific fields */}
+            {isSignUp && role === 'auditor' && (
+              <div className="pt-3 border-t border-brand-border">
+                <label className="uber-label block mb-1.5">Regulatory Organization</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="State License Board"
+                  value={auditorOrg}
+                  onChange={(e) => setAuditorOrg(e.target.value)}
+                  className="uber-input"
+                />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Staff signup activation code */}
-          {isSignUp && role === 'staff' && (
-            <div className="space-y-3 border-t border-slate-800/80 pt-3.5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Staff Operations Code</label>
-                <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2.5 rounded-lg">
-                  <Lock className="absolute left-3 w-4 h-4 text-slate-500" />
+            {/* Staff-specific fields */}
+            {isSignUp && role === 'staff' && (
+              <div className="space-y-3 pt-3 border-t border-brand-border">
+                <div>
+                  <label className="uber-label block mb-1.5">Staff Authorization Code</label>
                   <input
                     type="text"
-                    placeholder="Enter STAFF777"
-                    className="bg-transparent text-xs outline-none text-white w-full pl-7 font-mono font-bold text-amber-400 uppercase"
+                    required
+                    placeholder="STAFF777"
                     value={staffCode}
                     onChange={(e) => setStaffCode(e.target.value)}
-                    required
+                    className="uber-input font-mono uppercase tracking-widest"
                   />
+                  <p className="text-[10px] text-brand-text-muted font-mono mt-1">Demo code: STAFF777</p>
                 </div>
-                <p className="text-[10px] text-slate-500 font-mono">Use passcode <strong className="text-slate-350">STAFF777</strong> to unlock administrative privileges in the database.</p>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Staff Functional Designation</label>
-                <div className="relative flex items-center bg-slate-950 border border-slate-800 p-2.5 rounded-lg">
-                  <select
-                    className="bg-slate-950 text-xs outline-none text-white w-full border-none cursor-pointer"
-                    value={staffRoleInput}
-                    onChange={(e) => setStaffRoleInput(e.target.value as any)}
-                  >
-                    <option value="Director">Director (Master Controls)</option>
-                    <option value="Administrator">Administrator (Operational Management)</option>
-                    <option value="Moderator">Moderator (Vetting & Compliance)</option>
+                <div>
+                  <label className="uber-label block mb-1.5">Staff Role</label>
+                  <select value={staffRoleInput} onChange={(e) => setStaffRoleInput(e.target.value as any)} className="uber-select">
+                    <option value="Director">Director — Master Controls</option>
+                    <option value="Administrator">Administrator — Operational</option>
+                    <option value="Moderator">Moderator — Compliance</option>
                   </select>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Submit Action */}
-          <button
-            type="submit"
-            className="w-full h-12 bg-white hover:bg-neutral-100 text-black text-xs font-bold font-mono uppercase tracking-widest transition-all rounded-none border border-white cursor-pointer"
-          >
-            {isSignUp ? 'REGISTER PROFILE' : 'SIGN INTO PROFILE'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="uber-button-sage w-full h-12 text-sm font-black uppercase tracking-wider gap-2 mt-2"
+            >
+              {isSignUp ? 'Create Account' : 'Sign In'}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </form>
 
-        {/* Change auth mode */}
-        <div className="mt-6 text-center text-xs">
-          <span className="text-slate-500">
-            {isSignUp ? 'Already have an existing profile?' : 'Register fresh security credentials?'}
-          </span>{' '}
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setErrorMsg('');
-            }}
-            className="text-sage-400 hover:text-sage-300 font-bold underline transition-colors cursor-pointer"
-          >
-            {isSignUp ? 'Sign In Here' : 'Create Profile Here'}
-          </button>
+          {/* Switch auth mode */}
+          <div className="mt-6 text-center text-xs font-mono">
+            <span className="text-brand-text-muted">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+            </span>{' '}
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }}
+              className="text-brand-primary hover:underline font-bold transition-colors"
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
+          </div>
+
+          {/* Disclaimer */}
+          <p className="mt-8 text-center text-[10px] font-mono text-brand-text-muted leading-relaxed opacity-70">
+            Guardr is an independent contractor marketplace. We do not employ or vet security professionals. All licensing is the responsibility of the individual contractor.
+          </p>
         </div>
-
-
-
       </div>
     </div>
   );

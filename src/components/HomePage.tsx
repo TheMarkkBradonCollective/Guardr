@@ -1,414 +1,482 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Logo } from './Logo';
-import { 
-  ShieldCheck, 
-  ArrowRight, 
-  MapPin, 
-  User, 
-  Compass, 
-  FileCheck, 
-  Smartphone,
-  ChevronRight,
-  Shield,
+import {
+  ShieldCheck,
+  ArrowRight,
+  MapPin,
   Clock,
   Briefcase,
-  Users
+  Users,
+  CheckCircle2,
+  ChevronRight,
+  Star,
+  Zap,
+  Lock,
+  FileCheck,
+  Smartphone,
+  Globe,
+  TrendingUp,
+  Shield,
+  Award,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SecurityRequest, SecurityGuard } from '../types';
 
+type ThemeMode = 'sage-dark' | 'sage-light' | 'grey-dark' | 'grey-light';
+
 interface HomePageProps {
-  onNavigateToAuth: (initialRole?: 'guard' | 'client' | 'auditor' | 'staff') => void;
+  onNavigateToAuth: (initialRole?: 'guard' | 'client') => void;
   guardsCount: number;
   requestsCount: number;
   availableRequests: SecurityRequest[];
   sampleGuards: SecurityGuard[];
+  themeMode: ThemeMode;
+  onChangeTheme: (mode: ThemeMode) => void;
 }
 
-export function HomePage({ 
-  onNavigateToAuth, 
-  guardsCount, 
+const THEME_LABELS: Record<ThemeMode, string> = {
+  'sage-dark':  'Dark',
+  'sage-light': 'Light',
+  'grey-dark':  'Grey Dark',
+  'grey-light': 'Grey Light',
+};
+
+const STATS = [
+  { value: '4,200+', label: 'Licensed Guards' },
+  { value: '98.7%',  label: 'Credential Pass Rate' },
+  { value: '24 min', label: 'Avg. Job Acceptance' },
+  { value: '$0',     label: 'Platform Vetting Fee' },
+];
+
+const HOW_CLIENT = [
+  { icon: Briefcase, step: '01', title: 'Post Your Shift', body: 'Set exact start & end dates/times, location, job type, and required certifications. Duration is auto-calculated.' },
+  { icon: Users,     step: '02', title: 'Browse Qualified Guards', body: 'Reviewed applicants are licensed professionals. View certs, experience, and ratings before you hire.' },
+  { icon: CheckCircle2, step: '03', title: 'Confirm & Deploy', body: 'Accept the right guard, confirm the deployment, and let them clock in digitally with GPS verification.' },
+];
+
+const HOW_GUARD = [
+  { icon: FileCheck, step: '01', title: 'Create Your Profile', body: 'Upload your state license, certifications, and past experience. Everything is stored securely on your profile.' },
+  { icon: Smartphone, step: '02', title: 'Browse Open Shifts', body: 'See available jobs on your map or list. Filter by date, job type, or rate — accept when ready.' },
+  { icon: Zap,       step: '03', title: 'Work & Get Paid', body: 'Clock in via GPS, complete digital audits, and cash out earnings instantly after each shift.' },
+];
+
+const FEATURES = [
+  { icon: Lock,        title: 'Credential-Gated Acceptance',    body: 'Guards can only accept jobs that match their verified certifications — no exceptions.' },
+  { icon: MapPin,      title: 'Real-Time Map Dispatch',         body: 'Guards see open shifts on a live map. Clients track deployed personnel in real time.' },
+  { icon: Clock,       title: 'Date & Time-Based Scheduling',   body: 'Post exact shift windows. The platform auto-tallies hours and calculates pay.' },
+  { icon: ShieldCheck, title: 'Digital Check-In Audits',        body: 'GPS-verified clock-ins, uniform selfie audits, and signed end-of-shift reports for every job.' },
+  { icon: TrendingUp,  title: 'Instant Cashout Wallet',         body: 'Guards receive earnings the moment a shift is confirmed complete — no wait, no bank delay.' },
+  { icon: Globe,       title: 'Independent Contractor Market',  body: 'We are a direct-connect marketplace. Clients and guards transact directly. No agency overhead.' },
+];
+
+export function HomePage({
+  onNavigateToAuth,
+  guardsCount,
   requestsCount,
   availableRequests,
-  sampleGuards
+  sampleGuards,
+  themeMode,
+  onChangeTheme,
 }: HomePageProps) {
-  return (
-    <div className="bg-black text-white min-h-screen font-sans relative selection:bg-brand-primary selection:text-black overflow-hidden" id="guardr-landing-root">
-      
-      {/* Subtle crisp geometric background grid lines */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0d110e_1px,transparent_1px),linear-gradient(to_bottom,#0d110e_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none opacity-80" />
+  const [activeHow, setActiveHow] = useState<'client' | 'guard'>('client');
 
-      {/* Modern Top Header / Portal Selector Bar */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-neutral-900 px-4 sm:px-6 lg:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Logo size={32} className="text-brand-primary shrink-0" />
-            <span className="font-sans font-black text-xl tracking-tighter text-white uppercase">Guardr</span>
+  return (
+    <div className={`theme-${themeMode} bg-brand-bg text-brand-text min-h-screen font-sans selection:bg-brand-primary selection:text-black`}>
+
+      {/* ── NAVIGATION ─────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-brand-bg/95 backdrop-blur-md border-b border-brand-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <Logo size={30} className="text-brand-primary shrink-0" />
+            <span className="font-black text-xl tracking-tighter uppercase text-brand-text">Guardr</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-5">
-            <button 
-              onClick={() => onNavigateToAuth('client')} 
-              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
+          <nav className="hidden md:flex items-center gap-6">
+            <button
+              onClick={() => onNavigateToAuth('client')}
+              className="text-brand-text-muted hover:text-brand-text transition-colors font-mono text-[11px] uppercase tracking-wider"
             >
-              Client Login
+              Client Portal
             </button>
-            <button 
-              onClick={() => onNavigateToAuth('guard')} 
-              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
+            <button
+              onClick={() => onNavigateToAuth('guard')}
+              className="text-brand-text-muted hover:text-brand-text transition-colors font-mono text-[11px] uppercase tracking-wider"
             >
               Guard Portal
             </button>
-            <button 
-              onClick={() => onNavigateToAuth('auditor')} 
-              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider"
-            >
-              Compliance Audit
-            </button>
-            <button 
-              onClick={() => onNavigateToAuth('staff')} 
-              className="text-neutral-400 hover:text-white transition-colors font-mono text-[11px] uppercase tracking-wider border-l border-neutral-800 pl-4"
-            >
-              Operations Console
-            </button>
-          </div>
+          </nav>
 
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2">
+            {/* Theme selector */}
+            <div className="hidden sm:flex items-center gap-0.5 border border-brand-border p-0.5">
+              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onChangeTheme(m)}
+                  title={THEME_LABELS[m]}
+                  className={`px-2 py-1 text-[9px] font-mono font-bold uppercase transition-colors ${
+                    themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted hover:text-brand-text'
+                  }`}
+                >
+                  {m === 'sage-dark' ? '●' : m === 'sage-light' ? '○' : m === 'grey-dark' ? '◑' : '◔'}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => onNavigateToAuth('client')}
-              className="text-xs bg-neutral-900 border border-neutral-800 px-3 py-1.5 font-mono uppercase tracking-wider"
+              className="uber-button-sage px-4 h-9 text-[11px] font-black uppercase tracking-wider"
             >
-              Enter Console
+              Get Started
             </button>
           </div>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 bg-[#0b120c] border border-[#1b2f1d]/40 text-brand-primary text-[10px] font-mono uppercase tracking-wider mb-6"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
-          <span>Verified Contractor Marketplace</span>
-        </motion.div>
+      {/* ── HERO ───────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-20 pb-24 px-4 sm:px-6 lg:px-8">
+        {/* Background accent */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(ellipse at center, var(--brand-primary) 0%, transparent 70%)' }} />
+        </div>
 
-        <motion.h1 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white flex flex-col items-center justify-center gap-1"
-        >
-          <span>Guardr</span>
-          <a 
-            href="https://www.signaturesecurityspecialist.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-xs sm:text-sm font-mono tracking-[0.25em] text-neutral-400 hover:text-brand-primary uppercase font-bold mt-1 transition-all hover:underline"
+        <div className="relative max-w-5xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 border border-brand-primary/30 bg-brand-primary/8 text-brand-primary text-[10px] font-mono uppercase tracking-wider mb-8"
           >
-            BY SIGNATURE SECURITY SPECIALIST
-          </a>
-        </motion.h1>
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+            Independent Security Contractor Marketplace
+          </motion.div>
 
-        <motion.p 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg sm:text-2xl font-mono text-brand-primary font-bold mt-3 tracking-wide uppercase"
-        >
-          Independent Security Staffing. On Demand.
-        </motion.p>
-
-        <motion.p 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto mt-6 leading-relaxed"
-        >
-          Guardr connects clients with verified independent security professionals ready for assignment.
-        </motion.p>
-
-        <motion.h3 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-sm font-mono text-neutral-450 uppercase tracking-widest font-extrabold mt-8 bg-neutral-950 p-2.5 max-w-md mx-auto border border-neutral-900"
-        >
-          📍 Anytime. Anywhere. Security, when you need it.
-        </motion.h3>
-
-        <motion.p 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.45 }}
-          className="text-xs sm:text-sm text-neutral-450 max-w-xl mx-auto mt-6 leading-relaxed font-sans"
-        >
-          We are an <span className="text-white font-medium">independent contractor marketplace</span> that connects licensed security professionals directly with clients who need coverage—fast, flexible, and transparent.
-        </motion.p>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-10 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto"
-        >
-          <button
-            onClick={() => onNavigateToAuth('client')}
-            className="flex-1 px-6 py-4 bg-white text-black font-sans font-extrabold text-xs tracking-wider uppercase transition-all hover:bg-neutral-200 cursor-pointer text-center"
+          <motion.h1
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] mb-6"
           >
-            Get Started
-          </button>
-          <button
-            onClick={() => onNavigateToAuth('guard')}
-            className="flex-1 px-6 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-sans font-extrabold text-xs tracking-wider uppercase transition-all cursor-pointer text-center"
+            Security on
+            <br />
+            <span className="text-brand-primary">your schedule.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.14 }}
+            className="text-brand-text-muted text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10"
           >
-            Sign Up as a Guard
-          </button>
-        </motion.div>
-      </section>
+            Guardr connects clients who need licensed security with vetted independent professionals — for any event, any shift, any time.
+            Post a job in minutes. Guards accept only work they're certified for.
+          </motion.p>
 
-      {/* SECTION 1: GET SECURITY COVERAGE */}
-      <section className="py-16 border-t border-neutral-900 bg-neutral-950/40 relative z-10 px-4">
-        <div className="max-w-4xl mx-auto bg-black border border-neutral-900 p-8 sm:p-12 space-y-6">
-          <div className="space-y-2">
-            <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">DIRECT ASSIGNMENT</span>
-            <h2 className="text-2xl sm:text-3xl font-sans font-black uppercase text-white tracking-tight">
-              Get Security Coverage When You Need It
-            </h2>
-          </div>
-
-          <p className="text-base sm:text-lg text-neutral-200 font-mono italic">
-            Post a request. Get qualified guards. Confirm coverage.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <div className="border border-neutral-900 bg-neutral-95 w-full p-4 font-mono text-[11px] text-brand-primary uppercase">
-              ⚡ No long hiring cycles.
-            </div>
-            <div className="border border-neutral-900 bg-neutral-95 w-full p-4 font-mono text-[11px] text-brand-primary uppercase">
-              🛡 No staffing middlemen.
-            </div>
-          </div>
-
-          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed pt-2">
-            Guardr lets you request security personnel by time, location, and job type—then independent contractors choose the shifts that fit them.
-          </p>
-        </div>
-      </section>
-
-      {/* SECTION 2: HOW IT WORKS */}
-      <section className="py-20 border-t border-neutral-900 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto relative z-10">
-        <div className="text-center mb-12 space-y-2">
-          <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">TRANSPARENT SYSTEM</span>
-          <h2 className="text-3xl font-sans font-black uppercase text-white tracking-tight">How It Works</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          
-          {/* For Clients */}
-          <div className="bg-neutral-950 border border-neutral-900 p-6 sm:p-8 space-y-6">
-            <div className="border-b border-neutral-900 pb-4">
-              <span className="text-[10px] text-neutral-500 font-mono block mb-1">STAGING PORTAL</span>
-              <h3 className="text-lg font-sans font-bold uppercase text-white">For Clients</h3>
-            </div>
-
-            <ol className="space-y-4 text-xs font-mono">
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Create a request</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Open your client staging dashboard instantly.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Submit job details</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Specify date, time, location, and desired hourly rate.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Staff reviews and approves</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Our dispatch controller verifies and approves the post.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-white text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Qualified guards accept</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Licensed contract security personnel take the shift.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-brand-primary text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">5</span>
-                <div>
-                  <h4 className="text-brand-primary font-bold uppercase">Coverage begins</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Continuous field check-ins ensure total visibility.</p>
-                </div>
-              </li>
-            </ol>
-          </div>
-
-          {/* For Guards */}
-          <div className="bg-neutral-950 border border-neutral-900 p-6 sm:p-8 space-y-6">
-            <div className="border-b border-neutral-900 pb-4">
-              <span className="text-[10px] text-neutral-500 font-mono block mb-1">INDEPENDENT CONTRACTOR</span>
-              <h3 className="text-lg font-sans font-bold uppercase text-white">For Guards</h3>
-            </div>
-
-            <ol className="space-y-4 text-xs font-mono">
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Sign up as an independent contractor</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Register your local license details on our dispatch ledger.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Upload certifications and credentials</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Present Guard Cards, weapons permits, and training files.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Get access to available shifts</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">View matching immediate coverage demands in real time.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 border border-neutral-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
-                <div>
-                  <h4 className="text-white font-bold uppercase">Accept jobs that match your schedule</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans font-mono text-brand-primary">No quotas. Work whenever you decide is appropriate.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-5 h-5 bg-brand-primary text-black flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">5</span>
-                <div>
-                  <h4 className="text-brand-primary font-bold uppercase">Work and get paid directly</h4>
-                  <p className="text-neutral-400 text-[11px] mt-0.5 font-sans">Get rapid contract digital remittance upon completion.</p>
-                </div>
-              </li>
-            </ol>
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION 3: BUILT FOR FLEXIBILITY */}
-      <section className="py-16 border-t border-neutral-900 bg-neutral-950/20 relative z-10 px-4">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">OPERATIONAL DIVERSITY</span>
-            <h2 className="text-2xl sm:text-3xl font-sans font-black uppercase text-white tracking-tight">Built for Flexibility</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
-              <span className="text-brand-primary text-xs uppercase block font-bold">Event Security</span>
-            </div>
-            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
-              <span className="text-brand-primary text-xs uppercase block font-bold">Construction Sites</span>
-            </div>
-            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
-              <span className="text-brand-primary text-xs uppercase block font-bold">Retail Protection</span>
-            </div>
-            <div className="bg-neutral-950 border border-neutral-900 p-4 font-mono text-center">
-              <span className="text-brand-primary text-xs uppercase block font-bold">Nightlife & Events</span>
-            </div>
-            <div className="bg-neutral-950 border border-neutral-900 col-span-2 md:col-span-1 p-4 font-mono text-center">
-              <span className="text-brand-primary text-xs uppercase block font-bold">Short & Recurring</span>
-            </div>
-          </div>
-
-          <div className="text-center max-w-xl mx-auto text-xs sm:text-sm text-neutral-350 bg-neutral-950 border border-neutral-900 p-4 font-mono uppercase tracking-wide">
-            ⚠ Guardr is designed for real-world coverage needs that change by the hour, not by the month.
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: INDEPENDENT TRANSPARENT FAST */}
-      <section className="py-16 border-t border-neutral-900 px-4">
-        <div className="max-w-3xl mx-auto space-y-6 bg-black border border-neutral-900 p-6 sm:p-10 text-center">
-          <span className="text-[10px] text-brand-primary font-mono tracking-widest uppercase font-bold">PLATFORM MANDATES</span>
-          <h2 className="text-xl sm:text-2xl font-sans font-black uppercase text-white tracking-tight">
-            Independent. Transparent. Fast.
-          </h2>
-
-          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans max-w-xl mx-auto">
-            Every assignment is a direct agreement between clients and independent contractors.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[10px] font-mono pt-4 text-neutral-450">
-            <div className="border border-neutral-900 p-3 bg-neutral-950">
-              ✖ Guardr does not employ guards.
-            </div>
-            <div className="border border-neutral-900 p-3 bg-neutral-950">
-              ✖ Guardr does not guarantee placement.
-            </div>
-            <div className="border border-neutral-900 p-3 bg-neutral-950">
-              ✔ Guardr provides the system that makes connection possible.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 5: SIGNUP BOTTOM PANEL */}
-      <section className="py-20 border-t border-neutral-900 bg-neutral-950/50 text-center relative z-10 px-4">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-sans font-black uppercase tracking-tight text-white">
-            Start Using Guardr
-          </h2>
-
-          <p className="text-base sm:text-xl font-mono text-brand-primary font-bold uppercase">
-            Need coverage? Or ready to take shifts?
-          </p>
-
-          <p className="text-sm text-neutral-400">
-            Join Guardr today and stay ready.
-          </p>
-
-          <div className="pt-6 flex flex-col sm:flex-row justify-center gap-4 max-w-sm mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
             <button
               onClick={() => onNavigateToAuth('client')}
-              className="flex-1 px-8 py-4 bg-white hover:bg-neutral-200 text-black font-sans font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+              className="uber-button-sage w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Get Started
+              Post a Shift
+              <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => onNavigateToAuth('guard')}
-              className="flex-1 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-sans font-black text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+              className="uber-button-outline w-full sm:w-auto px-8 h-12 text-sm font-black uppercase tracking-wider gap-2"
             >
-              Sign Up as a Guard
+              Find Work
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Stats strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="relative max-w-4xl mx-auto mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px bg-brand-border"
+        >
+          {STATS.map(({ value, label }) => (
+            <div key={label} className="bg-brand-bg-sec px-6 py-5 text-center">
+              <p className="text-2xl sm:text-3xl font-black font-mono text-brand-primary">{value}</p>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-brand-text-muted mt-1">{label}</p>
+            </div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── NOT A VETTING AGENCY CALLOUT ───────────────── */}
+      <section className="border-y border-brand-border bg-brand-primary/5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="shrink-0 w-10 h-10 bg-brand-primary flex items-center justify-center text-black">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wide">Independent Contractor Marketplace — Not a Vetting Agency</p>
+            <p className="text-brand-text-muted text-xs mt-1 leading-relaxed max-w-2xl">
+              Guardr is a direct-connect platform. We do not vet, employ, or represent any security professional. Clients post and manage their own requests. Licensed security contractors browse and accept work independently. All credential verification is performed by the guard and displayed on their public profile.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ───────────────────────────────── */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="uber-label mb-3">How It Works</p>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter">Simple. Fast. Transparent.</h2>
+          </div>
+
+          {/* Toggle */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex border border-brand-border p-0.5">
+              {(['client', 'guard'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setActiveHow(t)}
+                  className={`px-6 py-2 text-xs font-black font-mono uppercase tracking-wider transition-colors ${
+                    activeHow === t
+                      ? 'bg-brand-primary text-black'
+                      : 'text-brand-text-muted hover:text-brand-text'
+                  }`}
+                >
+                  {t === 'client' ? 'I need a guard' : 'I am a guard'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(activeHow === 'client' ? HOW_CLIENT : HOW_GUARD).map(({ icon: Icon, step, title, body }) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="uber-card group cursor-default"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0">
+                    <div className="w-10 h-10 bg-brand-primary flex items-center justify-center text-black group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono text-brand-primary font-black uppercase tracking-widest mb-1">Step {step}</p>
+                    <h3 className="font-black text-sm uppercase tracking-tight mb-2">{title}</h3>
+                    <p className="text-brand-text-muted text-xs leading-relaxed">{body}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => onNavigateToAuth(activeHow)}
+              className="uber-button-sage px-8 h-11 text-xs font-black uppercase tracking-wider gap-2"
+            >
+              {activeHow === 'client' ? 'Post Your First Shift' : 'Join as a Guard'}
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </section>
 
-      {/* Elegant minimalist footer */}
-      <footer className="py-12 border-t border-neutral-950 text-center text-neutral-600 font-mono text-[9px] uppercase tracking-widest relative z-10 bg-black space-y-2">
-        <p>© {new Date().getFullYear()} G-U-A-R-D-R — ALL DATA STAGED ACCORDING TO STATE LICENSE LAWS</p>
-        <p>
-          POWERED BY{" "}
-          <a 
-            href="https://www.signaturesecurityspecialist.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-neutral-500 hover:text-brand-primary transition-colors underline"
-          >
-            SIGNATURE SECURITY SPECIALIST
-          </a>
-        </p>
-      </footer>
+      {/* ── FEATURES GRID ──────────────────────────────── */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-brand-border bg-brand-bg-sec">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="uber-label mb-3">Platform Capabilities</p>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter">Built for the field.</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-brand-border">
+            {FEATURES.map(({ icon: Icon, title, body }) => (
+              <div key={title} className="bg-brand-bg-sec p-6 hover:bg-brand-surface transition-colors group">
+                <div className="w-8 h-8 bg-brand-primary/15 border border-brand-primary/30 flex items-center justify-center mb-4 group-hover:bg-brand-primary group-hover:border-brand-primary transition-colors">
+                  <Icon className="w-4 h-4 text-brand-primary group-hover:text-black transition-colors" />
+                </div>
+                <h3 className="font-black text-sm uppercase tracking-tight mb-2">{title}</h3>
+                <p className="text-brand-text-muted text-xs leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* ── LIVE JOB PREVIEW ───────────────────────────── */}
+      {availableRequests.length > 0 && (
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-brand-border">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="uber-label mb-1">Live on the Platform</p>
+                <h2 className="text-2xl font-black tracking-tighter">Open Shifts Right Now</h2>
+              </div>
+              <button
+                onClick={() => onNavigateToAuth('guard')}
+                className="uber-button-outline h-9 px-4 text-[11px] font-black uppercase gap-1.5"
+              >
+                See All <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {availableRequests.slice(0, 4).map((req) => (
+                <div key={req.id} className="uber-card flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="shrink-0 w-9 h-9 bg-brand-primary flex items-center justify-center text-black text-[10px] font-black font-mono">
+                      {req.type === 'event' ? 'EV' : req.type === 'patrol' ? 'PT' : req.type === 'bodyguard' ? 'VIP' : req.type === 'armed-escort' ? 'ARM' : 'GD'}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm truncate">{req.title}</h3>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-brand-text-muted">
+                          <MapPin className="w-3 h-3" />{req.location}
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-brand-text-muted">
+                          <Clock className="w-3 h-3" />
+                          {new Date(req.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <p className="text-lg font-black font-mono text-brand-primary">${req.estimatedPayout}</p>
+                      <p className="text-[10px] font-mono text-brand-text-muted">${req.hourlyRate}/hr</p>
+                    </div>
+                    <button
+                      onClick={() => onNavigateToAuth('guard')}
+                      className="uber-button-sage h-8 px-3 text-[10px] font-black uppercase gap-1"
+                    >
+                      Apply <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── GUARD PROFILES PREVIEW ─────────────────────── */}
+      {sampleGuards.length > 0 && (
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-brand-border bg-brand-bg-sec">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="uber-label mb-3">On the Platform</p>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter">
+                Licensed & Ready to Deploy
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sampleGuards.slice(0, 3).map((guard) => (
+                <div key={guard.id} className="uber-card text-center group">
+                  <img
+                    src={guard.avatar}
+                    alt={guard.name}
+                    className="w-16 h-16 rounded-full mx-auto mb-3 object-cover border-2 border-brand-border group-hover:border-brand-primary transition-colors"
+                    referrerPolicy="no-referrer"
+                  />
+                  <h3 className="font-bold text-sm">{guard.name}</h3>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
+                    <span className="text-xs font-mono font-bold text-brand-primary">{guard.rating}</span>
+                    <span className="text-[10px] text-brand-text-muted font-mono">• {guard.jobsCompleted} jobs</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap justify-center gap-1">
+                    {guard.isArmed && (
+                      <span className="text-[9px] font-mono font-bold bg-brand-primary/10 border border-brand-primary/30 text-brand-primary px-1.5 py-0.5">ARMED</span>
+                    )}
+                    {guard.verified && (
+                      <span className="text-[9px] font-mono font-bold bg-brand-primary/10 border border-brand-primary/30 text-brand-primary px-1.5 py-0.5">VERIFIED</span>
+                    )}
+                    {guard.certifications.slice(0, 1).map((c) => (
+                      <span key={c.id} className="text-[9px] font-mono text-brand-text-muted bg-brand-border/30 px-1.5 py-0.5 truncate max-w-[120px]">{c.name.split(' ').slice(0, 3).join(' ')}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── CTA SECTION ────────────────────────────────── */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-brand-border">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-brand-primary/30 text-brand-primary text-[10px] font-mono uppercase tracking-wider mb-8">
+            <Award className="w-3.5 h-3.5" />
+            Join 4,200+ Verified Contractors
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-tight mb-6">
+            Ready to connect?
+          </h2>
+          <p className="text-brand-text-muted mb-10 leading-relaxed">
+            Whether you need security coverage for tonight's event or you're a licensed guard looking for your next shift — Guardr is the fastest way to connect.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => onNavigateToAuth('client')}
+              className="uber-button-sage px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
+            >
+              Post a Shift
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onNavigateToAuth('guard')}
+              className="uber-button-outline px-10 h-12 text-sm font-black uppercase tracking-wider gap-2"
+            >
+              Join as a Guard
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ─────────────────────────────────────── */}
+      <footer className="border-t border-brand-border bg-brand-bg-sec">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-2.5">
+              <Logo size={24} className="text-brand-primary" />
+              <div>
+                <p className="font-black text-sm tracking-tighter uppercase">Guardr</p>
+                <p className="text-[9px] font-mono text-brand-text-muted uppercase tracking-wider">Independent Contractor Marketplace</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <button onClick={() => onNavigateToAuth('client')} className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Client Portal</button>
+              <button onClick={() => onNavigateToAuth('guard')}  className="text-[11px] font-mono text-brand-text-muted hover:text-brand-text uppercase tracking-wider transition-colors">Guard Portal</button>
+            </div>
+          </div>
+          <div className="mt-6 pt-6 border-t border-brand-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[10px] font-mono text-brand-text-muted uppercase tracking-wide">
+            <span>© {new Date().getFullYear()} Guardr — Not a vetting agency. Not an employer. A marketplace.</span>
+            <div className="flex items-center gap-1">
+              <span>Theme:</span>
+              {(['sage-dark', 'sage-light', 'grey-dark', 'grey-light'] as ThemeMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onChangeTheme(m)}
+                  title={THEME_LABELS[m]}
+                  className={`px-2 py-0.5 text-[9px] font-bold uppercase transition-colors ${
+                    themeMode === m ? 'bg-brand-primary text-black' : 'hover:text-brand-text'
+                  }`}
+                >
+                  {THEME_LABELS[m].replace(' ', '\u00a0')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

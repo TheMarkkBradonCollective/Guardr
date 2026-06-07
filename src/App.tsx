@@ -17,6 +17,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { Shield, Sparkles, RefreshCw, Layers, LogOut, User, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
+import { INITIAL_GUARDS, INITIAL_REQUESTS } from './initialData';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
@@ -59,8 +60,8 @@ export default function App() {
 
 
   // Load and state management for guards & requests
-  const [guards, setGuards] = useState<SecurityGuard[]>([]);
-  const [requests, setRequests] = useState<SecurityRequest[]>([]);
+  const [guards, setGuards] = useState<SecurityGuard[]>(INITIAL_GUARDS);
+  const [requests, setRequests] = useState<SecurityRequest[]>(INITIAL_REQUESTS);
 
   // Load backend Supabase database state on mount
   useEffect(() => {
@@ -186,9 +187,9 @@ export default function App() {
         reviewText: r.review_text ?? undefined
       }));
 
-      // Set state securely
-      setGuards(mappedGuards);
-      setRequests(mappedRequests);
+      // Set state securely - merge with initial data so sample data persists even if DB is empty
+      if (mappedGuards.length > 0) setGuards(mappedGuards);
+      if (mappedRequests.length > 0) setRequests(mappedRequests);
       setIsDbConnected(true);
     } catch (err) {
       console.error("Supabase load failed, continuing with offline LocalStore sync.", err);
@@ -766,9 +767,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center font-mono">
-        <Logo className="text-uber-green animate-bounce mb-4" size={48} />
-        <span className="text-xs uppercase tracking-widest text-neutral-400">SIGSEC LIVE DATABASE DEPLOYMENT RESOLVING...</span>
+      <div className={`theme-${themeMode} min-h-screen bg-brand-bg text-brand-text flex flex-col justify-center items-center font-mono`}>
+        <Logo className="text-brand-primary mb-4 animate-pulse" size={48} />
+        <span className="text-xs uppercase tracking-widest text-brand-text-muted">Connecting to Guardr...</span>
       </div>
     );
   }
@@ -776,35 +777,36 @@ export default function App() {
   if (!currentUser) {
     if (isAuthView) {
       return (
-        <>
+        <div className={`theme-${themeMode}`}>
           <AuthPage
             onSignIn={handleSignIn}
             onSignUp={handleSignUp}
             guardsList={guards}
             onBackToHome={() => setIsAuthView(false)}
             initialRole={initialAuthRole}
+            themeMode={themeMode}
           />
           <InstallPrompt />
-        </>
+        </div>
       );
     }
 
     return (
-      <>
+      <div className={`theme-${themeMode}`}>
         <HomePage
           onNavigateToAuth={(role) => {
-            if (role) {
-              setInitialAuthRole(role);
-            }
+            if (role) setInitialAuthRole(role as 'guard' | 'client' | 'auditor' | 'staff');
             setIsAuthView(true);
           }}
           guardsCount={guards.length}
           requestsCount={requests.length}
           availableRequests={requests}
           sampleGuards={guards.slice(0, 3)}
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
         />
         <InstallPrompt />
-      </>
+      </div>
     );
   }
 
@@ -824,6 +826,8 @@ export default function App() {
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}
           onSignOut={handleSignOut}
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
         />
         <InstallPrompt />
       </div>
