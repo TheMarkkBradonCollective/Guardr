@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser } from './types';
 import { isStaffRole, ROLE_LABELS } from './lib/permissions';
-import { ClientDashboard } from './components/ClientDashboard';
+import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
@@ -54,7 +54,7 @@ export default function App() {
   const [requests, setRequests] = useState<SecurityRequest[]>(INITIAL_REQUESTS);
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
-  const [clientSection, setClientSection] = useState<'requests' | 'post'>('requests');
+  const [clientView, setClientView] = useState<ClientView>('home');
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {
@@ -628,20 +628,22 @@ export default function App() {
           themeMode={themeMode}
           onSignOut={handleSignOut}
           onChangeTheme={changeThemeMode}
-          activeSection={clientSection}
-          onNavigate={setClientSection}
+          activeView={clientView}
+          onNavigate={setClientView}
         >
           <ClientDashboard
+            companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
             requests={myRequests}
             guards={hireableGuards}
             isClientApproved={isClientApproved}
-            onPostRequest={(req) => { handlePostRequest(req); setClientSection('requests'); }}
+            activeView={clientView}
+            onViewChange={setClientView}
+            onPostRequest={handlePostRequest}
             onEditRequest={handleEditRequest}
             onHireGuard={handleHireGuard}
             onUpdateStatus={handleUpdateStatus}
             onCancelRequest={handleCancelRequest}
             onAddReview={handleAddReview}
-            openPostForm={clientSection === 'post'}
           />
         </ClientAppLayout>
         <InstallPrompt />

@@ -146,6 +146,43 @@
   padding: 1.25rem;
 }
 
+.client-action-card {
+  position: relative;
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  min-height: 6.5rem;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.client-action-card:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.client-coverage-card {
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: border-color 0.15s ease;
+}
+
+.client-coverage-card:hover {
+  border-color: var(--brand-primary);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Buttons — all share base styles without @apply chaining */
 .uber-button {
   height: 3rem;
