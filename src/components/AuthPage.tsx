@@ -47,7 +47,6 @@ export function AuthPage({
   const [phone, setPhone]             = useState('');
   const [bio, setBio]                 = useState('');
   const [hourlyRate, setHourlyRate]   = useState('35');
-  const [isArmed, setIsArmed]         = useState(false);
 
   const [clientCompanyName, setClientCompanyName] = useState('');
 
@@ -95,7 +94,7 @@ export function AuthPage({
         avatar: '',
         phone: phone || '',
         bio: bio || 'Licensed security professional.',
-        isArmed,
+        isArmed: false,
         backgroundChecked: false,
         verified: false,
         rating: 0,
@@ -347,13 +346,6 @@ export function AuthPage({
                     className="uber-input resize-none"
                   />
                 </div>
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <div className={`w-4 h-4 border flex items-center justify-center shrink-0 transition-colors ${isArmed ? 'bg-brand-primary border-brand-primary' : 'border-brand-border'}`}>
-                    {isArmed && <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                  </div>
-                  <input type="checkbox" checked={isArmed} onChange={(e) => setIsArmed(e.target.checked)} className="sr-only" />
-                  <span className="text-xs font-mono text-brand-text-muted group-hover:text-brand-text transition-colors">Armed Security Permit Holder</span>
-                </label>
               </div>
             )}
 
