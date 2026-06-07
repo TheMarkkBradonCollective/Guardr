@@ -1,0 +1,92 @@
+import React from 'react';
+import { EarningsSummary } from '../../lib/guardJobs';
+import { SecurityRequest } from '../../types';
+import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
+import { TrendingUp, Wallet } from 'lucide-react';
+
+interface GuardEarningsPanelProps {
+  summary: EarningsSummary;
+  completedJobs: SecurityRequest[];
+  balance: number;
+  onCashOut: () => void;
+  cashoutPending?: boolean;
+}
+
+export function GuardEarningsPanel({
+  summary,
+  completedJobs,
+  balance,
+  onCashOut,
+  cashoutPending = false,
+}: GuardEarningsPanelProps) {
+  const periods = [
+    { label: 'Today', value: summary.today },
+    { label: 'This Week', value: summary.week },
+    { label: 'This Month', value: summary.month },
+    { label: 'Lifetime', value: summary.lifetime },
+  ];
+
+  return (
+    <div className="absolute inset-0 z-[1002] bg-brand-bg overflow-y-auto pt-20 pb-24 px-4">
+      <div className="max-w-lg mx-auto space-y-6 animate-fade-in">
+        <div>
+          <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest mb-1">Earnings</p>
+          <h2 className="text-2xl font-black tracking-tight">Your Pay</h2>
+        </div>
+
+        <div className="rounded-2xl bg-gradient-to-br from-brand-primary/15 to-transparent border border-brand-primary/30 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-mono uppercase text-brand-primary flex items-center gap-1.5">
+              <Wallet className="w-4 h-4" /> Available Balance
+            </p>
+            <span className="text-[9px] font-mono bg-brand-primary/15 text-brand-primary px-2 py-0.5 rounded-full uppercase">Stripe Connect</span>
+          </div>
+          <p className="text-4xl font-black font-mono">${balance.toFixed(2)}</p>
+          <button
+            type="button"
+            onClick={onCashOut}
+            disabled={balance <= 0 || cashoutPending}
+            className="w-full py-3 rounded-xl bg-brand-primary text-black font-black text-xs uppercase tracking-wider disabled:opacity-40"
+          >
+            {cashoutPending ? 'Processing...' : 'Cash Out'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {periods.map(({ label, value }) => (
+            <div key={label} className="uber-card rounded-2xl p-4">
+              <p className="text-[10px] font-mono uppercase text-brand-text-muted mb-1">{label}</p>
+              <p className="text-2xl font-black font-mono text-brand-primary">${value.toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h3 className="font-black text-sm uppercase tracking-tight flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-brand-primary" />
+            Recent Shifts
+          </h3>
+          {completedJobs.length === 0 ? (
+            <div className="uber-card rounded-2xl py-12 text-center">
+              <p className="text-brand-text-muted text-sm font-mono">Complete shifts to see earnings here.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {completedJobs.slice(0, 8).map((job) => (
+                <div key={job.id} className="uber-card rounded-xl flex items-center justify-between gap-3 p-3">
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm truncate">{job.title}</p>
+                    <p className="text-[10px] font-mono text-brand-text-muted">{job.clientName}</p>
+                  </div>
+                  <p className="text-lg font-black font-mono text-brand-primary shrink-0">
+                    +${getEstimatedGuardEarnings(job)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -408,6 +408,23 @@
   padding: 1rem;
 }
 
+.guardr-bottom-sheet-uber {
+  bottom: 4.5rem;
+  z-index: 1001;
+  background: rgba(8, 8, 8, 0.98);
+  border-top: 1px solid rgba(132, 162, 121, 0.2);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+  touch-action: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */
 /* Dark and Grey both have dark backgrounds — same overrides apply */
 .theme-dark, .theme-grey {
