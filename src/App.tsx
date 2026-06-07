@@ -282,7 +282,7 @@ export default function App() {
   };
 
   // ── Certification CRUD ─────────────────────────────────────
-  const handleAddCertification = async (newCert: Partial<Certification>) => {
+  const handleAddCertification = async (guardId: string, newCert: Partial<Certification>) => {
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
       name: newCert.name || 'Security License',
@@ -292,11 +292,11 @@ export default function App() {
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
       expiryDate: newCert.expiryDate || new Date().toISOString().split('T')[0],
     };
-    setGuards(prev => prev.map(g => g.id === activeGuardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
+    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
       try {
         await supabase.from('certifications').insert({
-          id: certWithId.id, guard_id: activeGuardId, name: certWithId.name,
+          id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
         });
@@ -742,7 +742,7 @@ export default function App() {
         <GuardDashboard
           guard={activeGuard}
           requests={requests}
-          onAddCertification={handleAddCertification}
+          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
           onAcceptJob={handleAcceptJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}

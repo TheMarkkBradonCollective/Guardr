@@ -41,6 +41,7 @@ export function GuardDashboard({
   guard,
   requests,
   currentUser,
+  onAddCertification,
   onAcceptJob,
   onUpdateJobAudit,
   onRecordAuditViolation,
@@ -372,6 +373,7 @@ export function GuardDashboard({
             onSignOut={onSignOut}
             guard={guard}
             onSave={onUpdateProfile}
+            onAddCertification={onAddCertification}
           />
         </div>
       )}
