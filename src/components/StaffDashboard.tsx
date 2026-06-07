@@ -4,6 +4,7 @@ import {
   canAccessFinancialControls,
   canManageStaffAccounts,
   canSuspendUsers,
+  canToggleStaffRole,
 } from '../lib/permissions';
 import {
   buildDisputes,
@@ -57,6 +58,7 @@ export function StaffDashboard({
   guards,
   clients,
   requests,
+  onUpdateGuardStaffStatus,
   onUpdateGuardUserStatus,
   onApproveRequest,
   onDenyRequest,
@@ -80,6 +82,7 @@ export function StaffDashboard({
   const showFinance = canAccessFinancialControls(currentUser);
   const showStaffOnboard = canManageStaffAccounts(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
+  const canToggleStaff = canToggleStaffRole(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -128,8 +131,10 @@ export function StaffDashboard({
             guards={guards}
             requests={requests}
             canSuspend={canSuspend}
+            canToggleStaff={canToggleStaff}
             onApproveGuard={onApproveGuard}
             onUpdateUserStatus={onUpdateGuardUserStatus}
+            onUpdateStaffStatus={onUpdateGuardStaffStatus}
             onResetAuditFailures={onResetAuditFailures}
           />
         );

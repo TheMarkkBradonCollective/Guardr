@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Logo } from '../Logo';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { StaffSection } from '../../lib/staffOps';
 import { AppBottomNav } from '../layouts/AppBottomNav';
+import { StaffMoreMenu } from './StaffMoreMenu';
 import {
   AlertTriangle,
   BarChart3,
@@ -13,6 +14,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  MoreHorizontal,
   Radio,
   Scale,
   Settings,
@@ -42,7 +44,7 @@ interface StaffOpsLayoutProps {
   badges?: Partial<Record<StaffSection, number>>;
 }
 
-const MOBILE_NAV: StaffSection[] = ['overview', 'live-jobs', 'approvals', 'profile'];
+const MOBILE_PRIMARY: StaffSection[] = ['overview', 'live-jobs', 'approvals'];
 
 export function StaffOpsLayout({
   children,
@@ -55,6 +57,7 @@ export function StaffOpsLayout({
   isDbConnected,
   badges = {},
 }: StaffOpsLayoutProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
 
   const NAV: NavItem[] = [
@@ -74,15 +77,40 @@ export function StaffOpsLayout({
 
   const visibleNav = NAV.filter((item) => !item.adminOnly || showFinance);
 
-  const mobileNavItems = MOBILE_NAV.map((id) => {
-    const item = NAV.find((n) => n.id === id)!;
-    return {
-      id: item.id,
-      label: item.label.split(' ')[0],
-      icon: item.icon,
-      badge: item.badge,
-    };
-  });
+  const moreSections = useMemo(
+    () => visibleNav.filter((item) => !MOBILE_PRIMARY.includes(item.id)),
+    [visibleNav]
+  );
+
+  const isMoreSectionActive = moreSections.some((item) => item.id === activeSection);
+
+  const mobileNavItems = [
+    ...MOBILE_PRIMARY.map((id) => {
+      const item = NAV.find((n) => n.id === id)!;
+      return {
+        id: item.id,
+        label: item.label.split(' ')[0],
+        icon: item.icon,
+        badge: item.badge,
+      };
+    }),
+    {
+      id: 'more',
+      label: 'More',
+      icon: MoreHorizontal,
+      badge: moreSections.reduce((sum, item) => sum + (item.badge ?? 0), 0) || undefined,
+    },
+  ];
+
+  const handleMobileNavigate = (id: string) => {
+    if (id === 'more') {
+      setMoreOpen(true);
+      return;
+    }
+    onNavigate(id as StaffSection);
+  };
+
+  const mobileActiveId = isMoreSectionActive ? 'more' : activeSection;
 
   return (
     <div className={`theme-${themeMode} fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text staff-ops-root`}>
@@ -172,11 +200,20 @@ export function StaffOpsLayout({
 
         <AppBottomNav
           items={mobileNavItems}
-          activeId={activeSection}
-          onNavigate={(id) => onNavigate(id as StaffSection)}
+          activeId={mobileActiveId}
+          onNavigate={handleMobileNavigate}
           className="md:hidden"
         />
       </div>
+
+      {moreOpen && (
+        <StaffMoreMenu
+          items={moreSections}
+          activeSection={activeSection}
+          onNavigate={onNavigate}
+          onClose={() => setMoreOpen(false)}
+        />
+      )}
     </div>
   );
 }
