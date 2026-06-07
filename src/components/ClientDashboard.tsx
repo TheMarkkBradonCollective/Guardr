@@ -10,7 +10,7 @@ import { LiveCoverageScreen } from './client/LiveCoverageScreen';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 
-export type ClientView = 'home' | 'request' | 'coverage' | 'reports' | 'requests';
+export type ClientView = 'home' | 'request' | 'coverage' | 'reports' | 'requests' | 'profile';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -78,8 +78,12 @@ export function ClientDashboard({
     }
   };
 
+  const wrap = (node: React.ReactNode) => (
+    <div className="h-full overflow-y-auto overscroll-contain">{node}</div>
+  );
+
   if (view === 'request') {
-    return (
+    return wrap(
       <RequestSecurityFlow
         isClientApproved={isClientApproved}
         preset={flowPreset}
@@ -93,7 +97,7 @@ export function ClientDashboard({
   }
 
   if (view === 'coverage') {
-    return (
+    return wrap(
       <LiveCoverageScreen
         requests={requests}
         guards={guards}
@@ -103,7 +107,7 @@ export function ClientDashboard({
   }
 
   if (view === 'reports') {
-    return (
+    return wrap(
       <ClientReportsScreen
         reports={recentReports}
         onBack={() => navigate('home')}
@@ -112,7 +116,7 @@ export function ClientDashboard({
   }
 
   if (view === 'requests') {
-    return (
+    return wrap(
       <ClientRequestsList
         requests={requests}
         guards={guards}
@@ -128,7 +132,7 @@ export function ClientDashboard({
     );
   }
 
-  return (
+  return wrap(
     <ClientHomeScreen
       companyName={companyName}
       coverage={coverage}

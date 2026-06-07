@@ -12,7 +12,8 @@ export type StaffSection =
   | 'payments'
   | 'disputes'
   | 'analytics'
-  | 'settings';
+  | 'settings'
+  | 'profile';
 
 export type DispatchJobStatus =
   | 'pending-assignment'

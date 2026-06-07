@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { SecurityRequest, SecurityGuard, Certification } from '../types';
+import { SecurityRequest, SecurityGuard, Certification, SessionUser } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -7,8 +7,9 @@ import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardOpportunitiesPanel } from './guard/GuardOpportunitiesPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
+import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { Logo } from './Logo';
-import { AlertTriangle, LogOut, Map, DollarSign, Compass } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Compass, User } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
@@ -23,24 +24,30 @@ import { computeGuardEarnings } from '../lib/payments';
 interface GuardDashboardProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
+  currentUser: SessionUser;
   onAddCertification: (cert: Partial<Certification>) => void;
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
-  onSignOut?: () => void;
-  themeMode?: string;
-  onChangeTheme?: (mode: string) => void;
+  onSignOut: () => void;
+  themeMode: string;
+  onChangeTheme: (mode: string) => void;
+  onUpdateProfile: (payload: ProfileSavePayload) => void | Promise<void>;
 }
 
-type GuardTab = 'map' | 'earnings' | 'opportunities';
+type GuardTab = 'map' | 'earnings' | 'opportunities' | 'profile';
 
 export function GuardDashboard({
   guard,
   requests,
+  currentUser,
   onAcceptJob,
   onUpdateJobAudit,
   onRecordAuditViolation,
   onSignOut,
+  themeMode,
+  onChangeTheme,
+  onUpdateProfile,
 }: GuardDashboardProps) {
   const [activeTab, setActiveTab] = useState<GuardTab>('map');
   const [isOnline, setIsOnline] = useState(true);
@@ -250,17 +257,18 @@ export function GuardDashboard({
   }
 
   const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
-  const showBottomNav = !showShiftOverlay;
 
   const BOTTOM_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
-    { id: 'earnings', icon: DollarSign, label: 'Earnings' },
     { id: 'opportunities', icon: Compass, label: 'Jobs' },
+    { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'profile', icon: User, label: 'Profile' },
   ];
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
-      {/* Map — always visible on map tab */}
+    <div className={`theme-${themeMode} fixed inset-0 bg-black overflow-hidden flex flex-col h-dvh max-h-dvh`}>
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+      {/* Map — visible on map tab */}
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
@@ -290,8 +298,13 @@ export function GuardDashboard({
             {isOnline ? 'Online' : 'Go Online'}
           </button>
           {onSignOut && (
-            <button type="button" onClick={onSignOut} className="p-2.5 rounded-xl bg-black/85 border border-white/10 text-white/50 hover:text-white backdrop-blur-md" aria-label="Sign out">
-              <LogOut className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className="p-2.5 rounded-xl bg-black/85 border border-white/10 text-white/70 hover:text-white backdrop-blur-md"
+              aria-label="Profile"
+            >
+              <User className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -326,6 +339,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'earnings' && (
+        <div className="absolute inset-0 bg-brand-bg overflow-y-auto overscroll-contain pb-24">
         <GuardEarningsPanel
           summary={earningsSummary}
           completedJobs={completedJobs}
@@ -333,9 +347,11 @@ export function GuardDashboard({
           onCashOut={handleCashOut}
           cashoutPending={cashoutPending}
         />
+        </div>
       )}
 
       {activeTab === 'opportunities' && (
+        <div className="absolute inset-0 bg-brand-bg overflow-hidden pb-24">
         <GuardOpportunitiesPanel
           jobs={availableJobs}
           guard={guard}
@@ -344,18 +360,33 @@ export function GuardDashboard({
           onSelectJob={setSelectedJobId}
           onAcceptJob={handleAcceptJob}
         />
+        </div>
       )}
 
-      {/* Bottom tab bar */}
-      {showBottomNav && (
-      <div className="absolute bottom-0 left-0 right-0 z-[1002] p-3 pb-4 pointer-events-none">
-        <div className="pointer-events-auto max-w-md mx-auto flex bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1">
+      {activeTab === 'profile' && (
+        <div className="absolute inset-0 bg-brand-bg overflow-hidden pb-24">
+          <UserProfileScreen
+            currentUser={currentUser}
+            themeMode={themeMode as 'dark' | 'light' | 'grey'}
+            onChangeTheme={onChangeTheme}
+            onSignOut={onSignOut}
+            guard={guard}
+            onSave={onUpdateProfile}
+          />
+        </div>
+      )}
+
+      </div>
+
+      {/* Bottom tab bar — always visible */}
+      <div className="shrink-0 z-[1002] px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-black/95 border-t border-white/10">
+        <div className="max-w-md mx-auto flex bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1">
           {BOTTOM_TABS.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all min-h-[52px] ${
                 activeTab === id ? 'bg-brand-primary text-black' : 'text-white/45 hover:text-white/70'
               }`}
             >
@@ -365,7 +396,6 @@ export function GuardDashboard({
           ))}
         </div>
       </div>
-      )}
 
       {showSelfAudit && (
         <GuardSelfAuditModal

@@ -24,6 +24,7 @@ import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -49,6 +50,7 @@ interface StaffDashboardProps {
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
+  onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
 }
 
 export function StaffDashboard({
@@ -71,6 +73,7 @@ export function StaffDashboard({
   themeMode,
   onChangeTheme,
   onSignOut,
+  onUpdateGuardProfile,
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>('overview');
 
@@ -166,6 +169,19 @@ export function StaffDashboard({
             onAddStaffProfile={onAddStaffProfile}
           />
         ) : null;
+      case 'profile': {
+        const staffGuard = guards.find((g) => g.id === currentUser.id) ?? null;
+        return (
+          <UserProfileScreen
+            currentUser={currentUser}
+            themeMode={themeMode}
+            onChangeTheme={onChangeTheme}
+            onSignOut={onSignOut}
+            guard={staffGuard}
+            onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
+          />
+        );
+      }
       default:
         return null;
     }

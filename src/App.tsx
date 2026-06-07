@@ -19,6 +19,7 @@ import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
+import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -313,6 +314,79 @@ export default function App() {
   const handleUpdateBackgroundChecked = async (guardId: string, status: boolean) => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, backgroundChecked: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ background_checked: status }).eq('id', guardId);
+  };
+
+  const syncSessionUser = (patch: Partial<SessionUser>) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      localStorage.setItem('guardr_current_user', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleUpdateGuardProfile = async (guardId: string, payload: ProfileSavePayload) => {
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              name: payload.name,
+              phone: payload.phone,
+              bio: payload.bio ?? g.bio,
+              hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
+            }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('guards')
+        .update({
+          name: payload.name,
+          phone: payload.phone,
+          bio: payload.bio ?? '',
+          hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
+        })
+        .eq('id', guardId);
+    }
+    if (currentUser?.id === guardId) {
+      syncSessionUser({
+        name: payload.name,
+        hourlyRate: payload.hourlyRateRequirement ?? currentUser.hourlyRate,
+      });
+    }
+  };
+
+  const handleUpdateClientProfile = async (clientId: string, payload: ProfileSavePayload) => {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId
+          ? {
+              ...c,
+              name: payload.name,
+              phone: payload.phone,
+              companyName: payload.companyName ?? c.companyName,
+            }
+          : c
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('clients')
+        .update({
+          name: payload.name,
+          phone: payload.phone,
+          company_name: payload.companyName ?? '',
+        })
+        .eq('id', clientId);
+    }
+    if (currentUser?.id === clientId) {
+      syncSessionUser({
+        name: payload.name,
+        clientName: payload.companyName ?? currentUser.clientName,
+      });
+    }
   };
 
   // ── Staff controls ─────────────────────────────────────────
@@ -661,6 +735,8 @@ export default function App() {
           onSignOut={handleSignOut}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
+          onUpdateProfile={(payload) => handleUpdateGuardProfile(activeGuard.id, payload)}
+          currentUser={currentUser}
         />
         <InstallPrompt />
       </div>
@@ -690,20 +766,31 @@ export default function App() {
           activeView={clientView}
           onNavigate={setClientView}
         >
-          <ClientDashboard
-            companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
-            requests={myRequests}
-            guards={hireableGuards}
-            isClientApproved={isClientApproved}
-            activeView={clientView}
-            onViewChange={setClientView}
-            onPostRequest={handlePostRequest}
-            onEditRequest={handleEditRequest}
-            onHireGuard={handleHireGuard}
-            onUpdateStatus={handleUpdateStatus}
-            onCancelRequest={handleCancelRequest}
-            onAddReview={handleAddReview}
-          />
+          {clientView === 'profile' ? (
+            <UserProfileScreen
+              currentUser={currentUser}
+              themeMode={themeMode}
+              onChangeTheme={changeThemeMode}
+              onSignOut={handleSignOut}
+              client={clientRecord ?? null}
+              onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
+            />
+          ) : (
+            <ClientDashboard
+              companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
+              requests={myRequests}
+              guards={hireableGuards}
+              isClientApproved={isClientApproved}
+              activeView={clientView}
+              onViewChange={setClientView}
+              onPostRequest={handlePostRequest}
+              onEditRequest={handleEditRequest}
+              onHireGuard={handleHireGuard}
+              onUpdateStatus={handleUpdateStatus}
+              onCancelRequest={handleCancelRequest}
+              onAddReview={handleAddReview}
+            />
+          )}
         </ClientAppLayout>
         <InstallPrompt />
       </>
@@ -736,6 +823,7 @@ export default function App() {
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
+          onUpdateGuardProfile={handleUpdateGuardProfile}
         />
         <InstallPrompt />
       </>

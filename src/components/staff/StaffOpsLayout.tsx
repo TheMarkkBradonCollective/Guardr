@@ -3,6 +3,7 @@ import { Logo } from '../Logo';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { StaffSection } from '../../lib/staffOps';
+import { AppBottomNav } from '../layouts/AppBottomNav';
 import {
   AlertTriangle,
   BarChart3,
@@ -16,6 +17,7 @@ import {
   Scale,
   Settings,
   Shield,
+  User,
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -39,6 +41,8 @@ interface StaffOpsLayoutProps {
   isDbConnected: boolean;
   badges?: Partial<Record<StaffSection, number>>;
 }
+
+const MOBILE_NAV: StaffSection[] = ['overview', 'live-jobs', 'approvals', 'profile'];
 
 export function StaffOpsLayout({
   children,
@@ -65,16 +69,27 @@ export function StaffOpsLayout({
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'System Settings', icon: Settings, adminOnly: true },
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   const visibleNav = NAV.filter((item) => !item.adminOnly || showFinance);
 
+  const mobileNavItems = MOBILE_NAV.map((id) => {
+    const item = NAV.find((n) => n.id === id)!;
+    return {
+      id: item.id,
+      label: item.label.split(' ')[0],
+      icon: item.icon,
+      badge: item.badge,
+    };
+  });
+
   return (
-    <div className={`min-h-screen flex theme-${themeMode} bg-brand-bg text-brand-text staff-ops-root`}>
+    <div className={`theme-${themeMode} fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text staff-ops-root`}>
       <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-black shrink-0">
         <div className="p-4 border-b border-brand-border">
           <div className="flex items-center gap-2">
-            <Logo className="text-brand-primary shrink-0" size={24} />
+            <Logo size={24} />
             <div>
               <p className="text-[8px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr</p>
               <p className="font-black text-xs uppercase tracking-tight">Ops Center</p>
@@ -128,48 +143,39 @@ export function StaffOpsLayout({
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between gap-4 shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <header className="shrink-0 border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 md:hidden">
-            <Logo className="text-brand-primary" size={22} />
+            <Logo size={22} />
             <span className="font-black text-xs uppercase">Ops Center</span>
           </div>
           <p className="hidden md:block text-xs font-mono uppercase tracking-widest text-brand-text-muted">
             Guardr Operations Command Center
           </p>
-          <div className="flex items-center gap-2">
-            <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
-              {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => onChangeTheme(m)}
-                  className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
+          <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
+            {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => onChangeTheme(m)}
+                className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
+              >
+                {m}
+              </button>
+            ))}
           </div>
         </header>
 
-        <div className="md:hidden flex overflow-x-auto border-b border-brand-border bg-black/50 gap-1 p-2 scrollbar-hide">
-          {visibleNav.slice(0, 7).map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onNavigate(id)}
-              className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase ${
-                activeSection === id ? 'bg-brand-primary text-black' : 'text-brand-text-muted'
-              }`}
-            >
-              <Icon className="w-3 h-3" />
-              {label.split(' ')[0]}
-            </button>
-          ))}
-        </div>
+        <main className="flex-1 min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="h-full overflow-y-auto overscroll-contain">{children}</div>
+        </main>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
+        <AppBottomNav
+          items={mobileNavItems}
+          activeId={activeSection}
+          onNavigate={(id) => onNavigate(id as StaffSection)}
+          className="md:hidden"
+        />
       </div>
     </div>
   );
