@@ -628,3 +628,53 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--brand-border); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
+/* ─── CROSS-PLATFORM / PWA ───────────────────────────────────── */
+@supports (padding: env(safe-area-inset-top)) {
+  body.pwa-standalone #root {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+body[data-form-factor="mobile"] .guard-touch-target {
+  min-height: 48px;
+}
+
+body[data-form-factor="tablet"] .tablet-split-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 38%) 1fr;
+  gap: 1.25rem;
+  align-items: start;
+  min-height: 60vh;
+}
+
+body[data-form-factor="tablet"] .tablet-card-lg,
+body[data-form-factor="desktop"] .tablet-card-lg {
+  padding: 1.25rem;
+  border-radius: 1rem;
+}
+
+body[data-form-factor="desktop"] .staff-ops-root main {
+  max-width: 1400px;
+}
+
+body[data-online="false"]::after {
+  content: 'Offline — changes will sync when connected';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #3d5a36;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 0.5rem;
+  pointer-events: none;
+}

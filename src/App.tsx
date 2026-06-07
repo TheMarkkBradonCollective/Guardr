@@ -18,7 +18,7 @@ import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
-type ThemeMode = 'dark' | 'light' | 'grey';
+import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -29,13 +29,31 @@ export default function App() {
   const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>('client');
 
   // ── Theme ──────────────────────────────────────────────────
-  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('guardr_theme_mode') as ThemeMode) || 'dark';
-  });
-  const changeThemeMode = (mode: ThemeMode) => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
+  const changeThemeMode = async (mode: ThemeMode) => {
     setThemeMode(mode);
-    localStorage.setItem('guardr_theme_mode', mode);
+    saveTheme(mode, currentUser?.id);
+    applyThemeToDocument(mode);
+    if (isDbConnected && currentUser) {
+      const table = currentUser.role === 'client' ? 'clients' : 'guards';
+      try {
+        await supabase.from(table).update({ theme_preference: mode }).eq('id', currentUser.id);
+      } catch (e) {
+        console.error('Theme sync error:', e);
+      }
+    }
   };
+
+  useEffect(() => {
+    applyThemeToDocument(themeMode);
+  }, [themeMode]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const local = loadTheme(currentUser.id);
+    setThemeMode(local);
+    applyThemeToDocument(local);
+  }, [currentUser?.id]);
 
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
@@ -52,6 +70,19 @@ export default function App() {
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const profile =
+      currentUser.role === 'client'
+        ? clients.find((c) => c.id === currentUser.id)
+        : guards.find((g) => g.id === currentUser.id);
+    if (profile?.themePreference) {
+      setThemeMode(profile.themePreference);
+      saveTheme(profile.themePreference, currentUser.id);
+      applyThemeToDocument(profile.themePreference);
+    }
+  }, [currentUser, guards, clients]);
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {
@@ -92,6 +123,7 @@ export default function App() {
         isStaff: g.is_staff,
         staffRole: g.staff_role,
         userStatus: g.user_status || 'active',
+        themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
@@ -107,6 +139,7 @@ export default function App() {
         totalRequests: c.total_requests || 0,
         approved: c.approved ?? false,
         rating: c.rating != null ? Number(c.rating) : undefined,
+        themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
       })));
 
       setRequests((dbRequests ?? []).map((r: any) => ({
@@ -179,6 +212,7 @@ export default function App() {
             id: client.id, name: client.name, email: client.email,
             company_name: client.companyName, phone: client.phone,
             avatar: client.avatar, total_requests: 0, approved: false,
+            theme_preference: themeMode,
           });
         } catch (e) { console.error('Client DB insert error:', e); }
       }
@@ -200,6 +234,7 @@ export default function App() {
             hourly_rate_requirement: guard.hourlyRateRequirement,
             is_staff: guard.isStaff, staff_role: guard.staffRole,
             user_status: guard.userStatus || 'active',
+            theme_preference: themeMode,
           });
         } catch (e) { console.error('Guard DB insert error:', e); }
       }

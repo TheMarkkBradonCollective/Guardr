@@ -63,6 +63,7 @@ export interface Client {
   approved?: boolean;
   rating?: number;
   createdAt?: string;
+  themePreference?: 'dark' | 'light' | 'grey';
 }
 
 export interface SecurityGuard {
@@ -85,6 +86,7 @@ export interface SecurityGuard {
   staffRole?: StaffRole;
   userStatus?: 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
+  themePreference?: 'dark' | 'light' | 'grey';
 }
 
 export interface SecurityRequest {

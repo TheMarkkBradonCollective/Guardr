@@ -3,7 +3,10 @@ const CACHE_NAME = 'guardr-cache-v1';
 const OFFLINE_URLS = [
   '/',
   '/index.html',
+  '/logo.png',
   '/logo.svg',
+  '/icon-192.png',
+  '/icon-512.png',
   '/manifest.json'
 ];
 

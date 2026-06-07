@@ -71,7 +71,7 @@ export function StaffOpsLayout({
 
   return (
     <div className={`min-h-screen flex theme-${themeMode} bg-brand-bg text-brand-text staff-ops-root`}>
-      <aside className="hidden lg:flex w-56 flex-col border-r border-brand-border bg-black shrink-0">
+      <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-black shrink-0">
         <div className="p-4 border-b border-brand-border">
           <div className="flex items-center gap-2">
             <Logo className="text-brand-primary shrink-0" size={24} />
@@ -130,11 +130,11 @@ export function StaffOpsLayout({
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between gap-4 shrink-0">
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <Logo className="text-brand-primary" size={22} />
             <span className="font-black text-xs uppercase">Ops Center</span>
           </div>
-          <p className="hidden lg:block text-xs font-mono uppercase tracking-widest text-brand-text-muted">
+          <p className="hidden md:block text-xs font-mono uppercase tracking-widest text-brand-text-muted">
             Guardr Operations Command Center
           </p>
           <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export function StaffOpsLayout({
           </div>
         </header>
 
-        <div className="lg:hidden flex overflow-x-auto border-b border-brand-border bg-black/50 gap-1 p-2 scrollbar-hide">
+        <div className="md:hidden flex overflow-x-auto border-b border-brand-border bg-black/50 gap-1 p-2 scrollbar-hide">
           {visibleNav.slice(0, 7).map(({ id, label, icon: Icon }) => (
             <button
               key={id}

@@ -32,6 +32,7 @@ CREATE TABLE guards (
     staff_role TEXT CHECK (staff_role IN ('Director', 'Administrator', 'Moderator')),
     user_status TEXT NOT NULL DEFAULT 'active' CHECK (user_status IN ('active', 'suspended', 'blocked')),
     failed_audits INTEGER NOT NULL DEFAULT 0,
+    theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -55,6 +56,7 @@ CREATE TABLE clients (
     total_requests INTEGER NOT NULL DEFAULT 0,
     approved BOOLEAN NOT NULL DEFAULT FALSE,
     rating NUMERIC(4, 2),
+    theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 

@@ -49,10 +49,10 @@ export function ClientAppLayout({
 
   return (
     <div className={`min-h-screen flex theme-${themeMode} bg-brand-bg text-brand-text`}>
-      <aside className="hidden lg:flex w-60 flex-col border-r border-brand-border bg-brand-bg-sec shrink-0">
+      <aside className="hidden md:flex w-60 flex-col border-r border-brand-border bg-brand-bg-sec shrink-0">
         <div className="p-5 border-b border-brand-border">
           <div className="flex items-center gap-2.5">
-            <Logo className="text-brand-primary shrink-0" size={26} />
+            <Logo size={26} />
             <div>
               <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr</p>
               <h1 className="font-black text-sm uppercase tracking-tight">Client</h1>
@@ -101,11 +101,11 @@ export function ClientAppLayout({
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between gap-4 shrink-0">
-          <div className="flex items-center gap-2 lg:hidden">
-            <Logo className="text-brand-primary shrink-0" size={22} />
+          <div className="flex items-center gap-2 md:hidden">
+            <Logo size={22} />
             <p className="font-black text-xs uppercase truncate">{clientLabel}</p>
           </div>
-          <div className="hidden lg:flex items-center gap-2 text-brand-text-muted">
+          <div className="hidden md:flex items-center gap-2 text-brand-text-muted">
             <Shield className="w-4 h-4 text-brand-primary" />
             <span className="text-xs font-mono uppercase tracking-wide">Operations Dashboard</span>
           </div>
@@ -127,7 +127,7 @@ export function ClientAppLayout({
             <button
               type="button"
               onClick={onSignOut}
-              className="lg:hidden flex items-center gap-1 border border-brand-border px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase rounded-lg"
+              className="md:hidden flex items-center gap-1 border border-brand-border px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase rounded-lg"
             >
               <LogOut className="w-3 h-3" />
             </button>
@@ -135,7 +135,7 @@ export function ClientAppLayout({
         </header>
 
         {!isFlowView && (
-          <div className="lg:hidden flex border-b border-brand-border bg-brand-bg-sec">
+          <div className="md:hidden flex border-b border-brand-border bg-brand-bg-sec">
             {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

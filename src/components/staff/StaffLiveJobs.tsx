@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { DISPATCH_STATUS_LABEL, getDispatchStatus } from '../../lib/staffOps';
+import { useDevice } from '../../lib/platform';
 import { AlertTriangle, Search, X } from 'lucide-react';
 
 interface StaffLiveJobsProps {
@@ -11,16 +12,87 @@ interface StaffLiveJobsProps {
   onDenyRequest: (id: string) => void;
 }
 
+function JobDetailPanel({
+  req,
+  guards,
+  onApproveRequest,
+  onDenyRequest,
+}: {
+  req: SecurityRequest;
+  guards: SecurityGuard[];
+  onApproveRequest: (id: string) => void;
+  onDenyRequest: (id: string) => void;
+}) {
+  const dispatch = getDispatchStatus(req);
+  const statusCfg = DISPATCH_STATUS_LABEL[dispatch];
+  const assigned = guards.find((g) => g.id === req.assignedGuardId);
+
+  return (
+    <div className="staff-ops-card h-full space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border ${statusCfg.className}`}>
+          {statusCfg.emoji} {statusCfg.label}
+        </span>
+        <span className="text-[10px] font-mono text-brand-text-muted">{req.id}</span>
+      </div>
+      <h3 className="font-black text-lg">{req.title}</h3>
+      <p className="text-sm font-mono text-brand-text-muted">{req.clientName} · {req.location}</p>
+      {req.siteName && <p className="text-xs text-brand-text-muted">Site: {req.siteName}</p>}
+      {req.address && <p className="text-xs text-brand-text-muted">{req.address}</p>}
+      <p className="text-xs text-brand-text-muted">
+        {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)} · ${req.hourlyRate}/hr
+      </p>
+      <p className="text-sm">
+        Assigned: <strong>{assigned ? assigned.name : 'Unassigned'}</strong>
+        {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
+      </p>
+      {req.description && (
+        <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
+      )}
+      <div className="flex flex-wrap gap-2 pt-2">
+        {req.status === 'pending-review' && (
+          <button type="button" onClick={() => onApproveRequest(req.id)} className="staff-ops-btn-primary text-[10px]">
+            Approve Job
+          </button>
+        )}
+        {assigned && (
+          <button type="button" onClick={() => alert('Reassign guard — select from roster.')} className="staff-ops-btn-outline text-[10px]">
+            Reassign
+          </button>
+        )}
+        <button type="button" onClick={() => alert('Backup guard added to job.')} className="staff-ops-btn-outline text-[10px]">
+          Add Backup
+        </button>
+        {dispatch === 'incident-flagged' && (
+          <button type="button" onClick={() => alert('Incident escalated to supervisor.')} className="staff-ops-btn-danger text-[10px]">
+            <AlertTriangle className="w-3 h-3" /> Escalate
+          </button>
+        )}
+        {req.status !== 'completed' && (
+          <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
+            <X className="w-3 h-3" /> Cancel
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyRequest }: StaffLiveJobsProps) {
   const [search, setSearch] = useState('');
-  const live = requests.filter((r) => r.status !== 'closed');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
+  const live = requests.filter((r) => r.status !== 'closed');
   const filtered = live.filter(
     (r) =>
       r.title.toLowerCase().includes(search.toLowerCase()) ||
       r.clientName.toLowerCase().includes(search.toLowerCase()) ||
       r.location.toLowerCase().includes(search.toLowerCase())
   );
+
+  const selected = filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null;
 
   return (
     <div className="space-y-6 max-w-6xl animate-fade-in">
@@ -40,65 +112,56 @@ export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyReques
         />
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((req) => {
-          const dispatch = getDispatchStatus(req);
-          const statusCfg = DISPATCH_STATUS_LABEL[dispatch];
-          const assigned = guards.find((g) => g.id === req.assignedGuardId);
-
-          return (
-            <div key={req.id} className="staff-ops-card">
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border ${statusCfg.className}`}>
-                      {statusCfg.emoji} {statusCfg.label}
-                    </span>
-                    <span className="text-[10px] font-mono text-brand-text-muted">{req.id}</span>
-                  </div>
-                  <h3 className="font-black text-base">{req.title}</h3>
-                  <p className="text-xs font-mono text-brand-text-muted">{req.clientName} · {req.location}</p>
-                  <p className="text-xs text-brand-text-muted">{formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)} · ${req.hourlyRate}/hr</p>
-                  <p className="text-xs">
-                    Assigned:{' '}
-                    <strong>{assigned ? assigned.name : 'Unassigned'}</strong>
-                    {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  {req.status === 'pending-review' && (
-                    <button type="button" onClick={() => onApproveRequest(req.id)} className="staff-ops-btn-primary text-[10px]">
-                      Approve Job
-                    </button>
-                  )}
-                  {assigned && (
-                    <button type="button" onClick={() => alert('Reassign guard — select from roster.')} className="staff-ops-btn-outline text-[10px]">
-                      Reassign
-                    </button>
-                  )}
-                  <button type="button" onClick={() => alert('Backup guard added to job.')} className="staff-ops-btn-outline text-[10px]">
-                    Add Backup
-                  </button>
-                  {dispatch === 'incident-flagged' && (
-                    <button type="button" onClick={() => alert('Incident escalated to supervisor.')} className="staff-ops-btn-danger text-[10px]">
-                      <AlertTriangle className="w-3 h-3" /> Escalate
-                    </button>
-                  )}
-                  {req.status !== 'completed' && (
-                    <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
-                      <X className="w-3 h-3" /> Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
+      {filtered.length === 0 ? (
+        <p className="text-center text-sm text-brand-text-muted font-mono py-12">No jobs match your search.</p>
+      ) : splitView ? (
+        <div className="tablet-split-panel">
+          <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+            {filtered.map((req) => {
+              const dispatch = getDispatchStatus(req);
+              const statusCfg = DISPATCH_STATUS_LABEL[dispatch];
+              const isActive = selected?.id === req.id;
+              return (
+                <button
+                  key={req.id}
+                  type="button"
+                  onClick={() => setSelectedId(req.id)}
+                  className={`w-full text-left staff-ops-card p-3 transition-colors ${
+                    isActive ? 'ring-2 ring-brand-primary' : 'hover:bg-white/5'
+                  }`}
+                >
+                  <span className={`text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border ${statusCfg.className}`}>
+                    {statusCfg.label}
+                  </span>
+                  <p className="font-black text-sm mt-2 truncate">{req.title}</p>
+                  <p className="text-[10px] font-mono text-brand-text-muted truncate">{req.clientName}</p>
+                </button>
+              );
+            })}
+          </div>
+          {selected && (
+            <JobDetailPanel
+              req={selected}
+              guards={guards}
+              onApproveRequest={onApproveRequest}
+              onDenyRequest={onDenyRequest}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((req) => (
+            <div key={req.id}>
+              <JobDetailPanel
+                req={req}
+                guards={guards}
+                onApproveRequest={onApproveRequest}
+                onDenyRequest={onDenyRequest}
+              />
             </div>
-          );
-        })}
-        {filtered.length === 0 && (
-          <p className="text-center text-sm text-brand-text-muted font-mono py-12">No jobs match your search.</p>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
