@@ -28,6 +28,7 @@ export interface Client {
   avatar: string;
   totalRequests: number;
   createdAt?: string;
+  themePreference?: 'dark' | 'light' | 'grey';
 }
 
 export interface SecurityGuard {
@@ -50,6 +51,7 @@ export interface SecurityGuard {
   staffRole?: 'Director' | 'Administrator' | 'Moderator';
   userStatus?: 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
+  themePreference?: 'dark' | 'light' | 'grey';
 }
 
 export interface SecurityRequest {

@@ -46,7 +46,7 @@ export function ClientAppLayout({
     <div className={`min-h-screen flex theme-${themeMode} bg-brand-bg text-brand-text`}>
       
       {/* ── SIDEBAR (desktop) ──────────────────────── */}
-      <aside className="hidden lg:flex w-64 flex-col border-r border-brand-border bg-brand-bg-sec shrink-0">
+      <aside className="hidden md:flex w-64 flex-col border-r border-brand-border bg-brand-bg-sec shrink-0">
         
         {/* Brand */}
         <div className="p-5 border-b border-brand-border">
@@ -133,7 +133,7 @@ export function ClientAppLayout({
         <header className="border-b border-brand-border bg-brand-bg-sec px-4 sm:px-6 h-14 flex items-center justify-between gap-4 shrink-0">
           
           {/* Mobile brand */}
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <Logo className="text-brand-primary shrink-0" size={22} />
             <div>
               <p className="text-[9px] font-mono uppercase text-brand-text-muted tracking-widest">Client</p>
@@ -142,7 +142,7 @@ export function ClientAppLayout({
           </div>
 
           {/* Desktop page title */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             <Briefcase className="w-4 h-4 text-brand-primary" />
             <h2 className="font-black text-sm uppercase tracking-tight">
               {activeSection === 'post' ? 'Post New Shift' : 'Shift Management'}
@@ -171,7 +171,7 @@ export function ClientAppLayout({
             <button
               type="button"
               onClick={onSignOut}
-              className="lg:hidden flex items-center gap-1 border border-brand-border px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase hover:border-brand-primary transition-colors"
+              className="md:hidden flex items-center gap-1 border border-brand-border px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase hover:border-brand-primary transition-colors"
             >
               <LogOut className="w-3 h-3" />
               Out
@@ -180,7 +180,7 @@ export function ClientAppLayout({
         </header>
 
         {/* Mobile nav strip */}
-        <div className="lg:hidden flex border-b border-brand-border bg-brand-bg-sec">
+        <div className="md:hidden flex border-b border-brand-border bg-brand-bg-sec">
           <button
             type="button"
             onClick={() => onNavigate?.('requests')}
