@@ -103,7 +103,14 @@ export function HomePage({
           className="text-5xl sm:text-7xl font-sans font-black tracking-tight leading-none uppercase text-white flex flex-col items-center justify-center gap-1"
         >
           <span>Guardr</span>
-          <span className="text-xs sm:text-sm font-mono tracking-[0.25em] text-neutral-400 uppercase font-bold mt-1">BY SIGNATURE SECURITY SPECIALIST</span>
+          <a 
+            href="https://www.signaturesecurityspecialist.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-xs sm:text-sm font-mono tracking-[0.25em] text-neutral-400 hover:text-brand-primary uppercase font-bold mt-1 transition-all hover:underline"
+          >
+            BY SIGNATURE SECURITY SPECIALIST
+          </a>
         </motion.h1>
 
         <motion.p 
@@ -387,8 +394,19 @@ export function HomePage({
       </section>
 
       {/* Elegant minimalist footer */}
-      <footer className="py-12 border-t border-neutral-950 text-center text-neutral-600 font-mono text-[9px] uppercase tracking-widest relative z-10 bg-black">
+      <footer className="py-12 border-t border-neutral-950 text-center text-neutral-600 font-mono text-[9px] uppercase tracking-widest relative z-10 bg-black space-y-2">
         <p>© {new Date().getFullYear()} G-U-A-R-D-R — ALL DATA STAGED ACCORDING TO STATE LICENSE LAWS</p>
+        <p>
+          POWERED BY{" "}
+          <a 
+            href="https://www.signaturesecurityspecialist.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-neutral-500 hover:text-brand-primary transition-colors underline"
+          >
+            SIGNATURE SECURITY SPECIALIST
+          </a>
+        </p>
       </footer>
 
     </div>

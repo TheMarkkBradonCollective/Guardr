@@ -982,8 +982,19 @@ export default function App() {
             <Logo className="text-brand-primary" size={16} />
             <span className="text-[11px] tracking-wide uppercase font-bold">Guardr Operations Network</span>
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-500">
-            Verified Private Security Roster • Standardized Escrow Audits • {new Date().getFullYear()} All rights reserved.
+          <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 flex flex-col sm:items-end gap-1">
+            <span>Verified Private Security Roster • Standardized Escrow Audits • {new Date().getFullYear()}</span>
+            <span>
+              By{" "}
+              <a 
+                href="https://www.signaturesecurityspecialist.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-neutral-400 hover:text-brand-primary underline transition-colors"
+              >
+                Signature Security Specialist
+              </a>
+            </span>
           </div>
         </div>
       </footer>
