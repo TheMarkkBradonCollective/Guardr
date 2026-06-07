@@ -18,8 +18,6 @@ import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
-import { INITIAL_GUARDS, INITIAL_REQUESTS, INITIAL_CLIENTS } from './initialData';
-
 type ThemeMode = 'dark' | 'light' | 'grey';
 
 export default function App() {
@@ -41,16 +39,16 @@ export default function App() {
 
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
-    currentUser?.role === 'guard' ? currentUser.id : 'guard-1'
+    currentUser?.role === 'guard' ? currentUser.id : ''
   );
   useEffect(() => {
     if (currentUser?.role === 'guard') setActiveGuardId(currentUser.id);
   }, [currentUser]);
 
   // ── DB state ───────────────────────────────────────────────
-  const [guards,   setGuards]   = useState<SecurityGuard[]>(INITIAL_GUARDS);
-  const [clients,  setClients]  = useState<Client[]>(INITIAL_CLIENTS);
-  const [requests, setRequests] = useState<SecurityRequest[]>(INITIAL_REQUESTS);
+  const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
+  const [clients,  setClients]  = useState<Client[]>([]);
+  const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
@@ -85,62 +83,56 @@ export default function App() {
       // Requests
       const { data: dbRequests } = await supabase.from('security_requests').select('*');
 
-      if (dbGuards?.length) {
-        setGuards(dbGuards.map((g: any) => ({
-          id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
-          avatar: g.avatar, phone: g.phone, bio: g.bio,
-          isArmed: g.is_armed, backgroundChecked: g.background_checked, verified: g.verified,
-          rating: Number(g.rating), jobsCompleted: g.jobs_completed,
-          hourlyRateRequirement: g.hourly_rate_requirement,
-          isStaff: g.is_staff,
-          staffRole: g.staff_role,
-          userStatus: g.user_status || 'active',
-          certifications: (dbCerts || []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
-            id: c.id, name: c.name, issuer: c.issuer, number: c.number,
-            status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
-          })),
-          experience: (dbExps || []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
-            id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
-          })),
-        })));
-      }
+      setGuards((dbGuards ?? []).map((g: any) => ({
+        id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
+        avatar: g.avatar, phone: g.phone, bio: g.bio,
+        isArmed: g.is_armed, backgroundChecked: g.background_checked, verified: g.verified,
+        rating: Number(g.rating), jobsCompleted: g.jobs_completed,
+        hourlyRateRequirement: g.hourly_rate_requirement,
+        isStaff: g.is_staff,
+        staffRole: g.staff_role,
+        userStatus: g.user_status || 'active',
+        certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
+          id: c.id, name: c.name, issuer: c.issuer, number: c.number,
+          status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
+        })),
+        experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
+          id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
+        })),
+      })));
 
-      if (dbClients?.length) {
-        setClients(dbClients.map((c: any) => ({
-          id: c.id, name: c.name, email: c.email,
-          companyName: c.company_name, phone: c.phone, avatar: c.avatar,
-          totalRequests: c.total_requests || 0,
-          approved: c.approved ?? false,
-          rating: c.rating != null ? Number(c.rating) : undefined,
-        })));
-      }
+      setClients((dbClients ?? []).map((c: any) => ({
+        id: c.id, name: c.name, email: c.email,
+        companyName: c.company_name, phone: c.phone, avatar: c.avatar,
+        totalRequests: c.total_requests || 0,
+        approved: c.approved ?? false,
+        rating: c.rating != null ? Number(c.rating) : undefined,
+      })));
 
-      if (dbRequests?.length) {
-        setRequests(dbRequests.map((r: any) => ({
-          id: r.id, title: r.title, description: r.description,
-          clientId: r.client_id, clientName: r.client_name, clientLogo: r.client_logo,
-          clientRating: r.client_rating != null ? Number(r.client_rating) : undefined,
-          siteName: r.site_name || undefined,
-          address: r.address || undefined,
-          location: r.location, type: r.type,
-          armedRequired: r.armed_required,
-          guardsNeeded: r.guards_needed ?? 1,
-          uniformRequirements: r.uniform_requirements || undefined,
-          equipmentRequirements: r.equipment_requirements || undefined,
-          siteInstructions: r.site_instructions || undefined,
-          startDate: r.start_date, endDate: r.end_date,
-          durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
-          guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
-          platformFeePerHour: r.platform_fee_per_hour ?? PLATFORM_FEE_PER_HOUR,
-          estimatedPayout: r.estimated_payout,
-          status: normalizeJobStatus(r.status),
-          assignedGuardId: r.assigned_guard_id,
-          requiredCertifications: r.required_certifications || [],
-          applicants: r.applicants || [],
-          ratingGiven: r.rating_given ?? undefined,
-          reviewText: r.review_text ?? undefined,
-        })));
-      }
+      setRequests((dbRequests ?? []).map((r: any) => ({
+        id: r.id, title: r.title, description: r.description,
+        clientId: r.client_id, clientName: r.client_name, clientLogo: r.client_logo,
+        clientRating: r.client_rating != null ? Number(r.client_rating) : undefined,
+        siteName: r.site_name || undefined,
+        address: r.address || undefined,
+        location: r.location, type: r.type,
+        armedRequired: r.armed_required,
+        guardsNeeded: r.guards_needed ?? 1,
+        uniformRequirements: r.uniform_requirements || undefined,
+        equipmentRequirements: r.equipment_requirements || undefined,
+        siteInstructions: r.site_instructions || undefined,
+        startDate: r.start_date, endDate: r.end_date,
+        durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
+        guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
+        platformFeePerHour: r.platform_fee_per_hour ?? PLATFORM_FEE_PER_HOUR,
+        estimatedPayout: r.estimated_payout,
+        status: normalizeJobStatus(r.status),
+        assignedGuardId: r.assigned_guard_id,
+        requiredCertifications: r.required_certifications || [],
+        applicants: r.applicants || [],
+        ratingGiven: r.rating_given ?? undefined,
+        reviewText: r.review_text ?? undefined,
+      })));
 
       setIsDbConnected(true);
     } catch (err) {
@@ -277,7 +269,7 @@ export default function App() {
   const handleAddStaffProfile = async (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => {
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`, name, email, badgeNumber,
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      avatar: '',
       phone: '', bio: `${staffRole} — Platform operations.`,
       isArmed: false, backgroundChecked: true, verified: true,
       rating: 5.0, jobsCompleted: 0, certifications: [], experience: [],
@@ -589,6 +581,14 @@ export default function App() {
 
   // ── Guard view ─────────────────────────────────────────────
   if (currentUser.role === 'guard') {
+    if (!activeGuard?.id) {
+      return (
+        <div className={`theme-${themeMode} min-h-screen flex flex-col items-center justify-center p-8 text-center`}>
+          <p className="text-brand-text-muted font-mono text-sm mb-4">Loading your guard profile…</p>
+          <button type="button" onClick={handleSignOut} className="text-xs font-mono text-brand-primary uppercase">Sign out</button>
+        </div>
+      );
+    }
     return (
       <div className={`theme-${themeMode}`}>
         <GuardDashboard

@@ -63,10 +63,6 @@ export function AuthPage({
       if (!fullName) { setErrorMsg('Please enter your full name.'); return; }
 
       const randomId = `${role}-${Date.now()}`;
-      const avatarMap = {
-        guard: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-        client: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      };
 
       if (role === 'client') {
         const clientProfile: Client = {
@@ -74,8 +70,8 @@ export function AuthPage({
           name: fullName,
           email,
           companyName: clientCompanyName || fullName,
-          phone: phone || '+1 (555) 000-0000',
-          avatar: avatarMap.client,
+          phone: phone || '',
+          avatar: '',
           totalRequests: 0,
           approved: false,
         };
@@ -86,7 +82,7 @@ export function AuthPage({
           email,
           role: 'client',
           clientName: clientCompanyName || fullName,
-          avatar: avatarMap.client,
+          avatar: '',
         });
         return;
       }
@@ -96,8 +92,8 @@ export function AuthPage({
         name: fullName,
         email,
         badgeNumber: badgeNumber || `S-${Math.floor(10000 + Math.random() * 90000)}`,
-        avatar: avatarMap.guard,
-        phone: phone || '+1 (555) 000-0000',
+        avatar: '',
+        phone: phone || '',
         bio: bio || 'Licensed security professional.',
         isArmed,
         backgroundChecked: false,
@@ -125,37 +121,6 @@ export function AuthPage({
 
     // ── SIGN IN ──────────────────────────────────────────────
     const emailLower = email.toLowerCase();
-
-    // Director override
-    if (emailLower === 'm.white@signaturesecurityspecialist.com') {
-      if (password !== '#FuckinDstorm11') { setErrorMsg('Invalid password for Director account.'); return; }
-      const directorId = 'staff-director';
-      const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
-      const directorProfile: SecurityGuard = {
-        id: directorId,
-        name: 'M. White',
-        email: 'm.white@signaturesecurityspecialist.com',
-        badgeNumber: 'DIR-00001',
-        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
-        phone: '+1 (555) 999-1111',
-        bio: 'Director & Founder of Guardr. Platform master control access.',
-        isArmed: true, backgroundChecked: true, verified: true,
-        rating: 5.0, jobsCompleted: 150, certifications: [], experience: [],
-        hourlyRateRequirement: 100, isStaff: true, staffRole: 'Director', userStatus: 'active',
-      };
-      if (!matchedGuard) onSignUp(directorProfile, 'guard');
-      onSignIn({
-        id: matchedGuard?.id || directorId,
-        name: 'M. White',
-        email: 'm.white@signaturesecurityspecialist.com',
-        role: 'director',
-        badgeNumber: 'DIR-00001',
-        avatar: directorProfile.avatar,
-        hourlyRate: 100,
-        staffRole: 'Director',
-      });
-      return;
-    }
 
     // Check clients list first (own separate table)
     const matchedClient = clientsList.find(c => c.email.toLowerCase() === emailLower);

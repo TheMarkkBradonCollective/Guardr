@@ -129,7 +129,7 @@ export function computePlatformStats(
 
 export function buildPlatformActivityFeed(
   guards: SecurityGuard[],
-  clients: Client[],
+  _clients: Client[],
   requests: SecurityRequest[]
 ): OpsActivityItem[] {
   const items: OpsActivityItem[] = [];
@@ -180,24 +180,6 @@ export function buildPlatformActivityFeed(
     }
   }
 
-  for (const client of clients) {
-    if (client.approved) {
-      items.push({
-        id: `client-${client.id}-approved`,
-        timestamp: client.createdAt ?? new Date().toISOString(),
-        message: `Client account approved — ${client.companyName}`,
-        sortKey: Date.now() - 3600000,
-      });
-    }
-  }
-
-  items.push({
-    id: 'payment-release',
-    timestamp: new Date().toISOString(),
-    message: 'Payment released for completed shift batch',
-    sortKey: Date.now(),
-  });
-
   return items.sort((a, b) => b.sortKey - a.sortKey).slice(0, 30);
 }
 
@@ -223,59 +205,36 @@ export function buildIncidents(
     });
   }
 
-  if (incidents.length === 0) {
-    incidents.push({
-      id: 'inc-seed-1',
-      requestId: 'req-demo-1',
-      severity: 'low',
-      location: 'Riverside Amphitheater — Austin TX',
-      guardName: 'Jordan Rivera',
-      clientName: 'Prism Events Co.',
-      description: 'Minor crowd surge at west gate — de-escalated without injury.',
-      timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-      status: 'reviewing',
-    });
-  }
-
   return incidents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
 export function buildDisputes(
-  requests: SecurityRequest[],
-  guards: SecurityGuard[]
+  _requests: SecurityRequest[],
+  _guards: SecurityGuard[]
 ): OpsDispute[] {
-  const disputes: OpsDispute[] = [];
-  const completedNoRating = requests.filter((r) => r.status === 'completed' && !r.ratingGiven);
+  return [];
+}
 
-  completedNoRating.slice(0, 2).forEach((req, i) => {
-    disputes.push({
-      id: `disp-${req.id}`,
-      type: i === 0 ? 'payment' : 'service',
-      jobTitle: req.title,
-      guardName: guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Guard',
-      clientName: req.clientName,
-      guardStatement: 'Shift completed per post orders. All checkpoints logged.',
-      clientStatement: 'Coverage ended 15 minutes early according to site supervisor.',
-      status: 'open',
-      openedAt: req.checkOutAudit?.checkedAt ?? req.endDate,
-    });
-  });
+export function computeWeeklyCompletedJobs(requests: SecurityRequest[]): number[] {
+  const dayLabels = 7;
+  const counts = Array(dayLabels).fill(0);
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  startOfWeek.setHours(0, 0, 0, 0);
 
-  if (disputes.length === 0) {
-    disputes.push({
-      id: 'disp-seed-1',
-      type: 'no-show',
-      jobTitle: 'Warehouse Perimeter Patrol',
-      guardName: 'Jordan Rivera',
-      clientName: 'Acme Construction',
-      guardStatement: 'Arrived on site but access gate was locked — waited 45 min.',
-      clientStatement: 'Guard never checked in according to site log.',
-      status: 'open',
-      openedAt: new Date(Date.now() - 86400000).toISOString(),
-    });
+  for (const req of requests) {
+    if (req.status !== 'completed') continue;
+    const completedAt = req.checkOutAudit?.checkedAt ?? req.endDate;
+    if (!completedAt) continue;
+    const d = new Date(completedAt);
+    if (Number.isNaN(d.getTime()) || d < startOfWeek) continue;
+    const dayIndex = (d.getDay() + 6) % 7;
+    counts[dayIndex] += 1;
   }
 
-  return disputes;
+  const max = Math.max(...counts, 1);
+  return counts.map((n) => Math.round((n / max) * 100));
 }
 
 export function computeAnalytics(

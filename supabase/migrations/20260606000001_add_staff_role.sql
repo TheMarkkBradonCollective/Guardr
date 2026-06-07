@@ -17,9 +17,3 @@ BEGIN
     ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
     ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check CHECK (staff_role IN ('Director', 'Administrator', 'Moderator'));
 END $$;
-
--- 2. Update existing staff guards
--- By default, set guard-1 (Alex Mercer) as Director, matching frontend default fallback
-UPDATE guards 
-SET staff_role = 'Director' 
-WHERE id = 'guard-1' AND staff_role IS NULL;

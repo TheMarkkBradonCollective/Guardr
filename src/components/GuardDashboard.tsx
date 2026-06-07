@@ -132,9 +132,27 @@ export function GuardDashboard({
 
   const captureSelfie = useCallback((): Promise<string | null> => {
     return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&fit=crop&q=80');
-      }, 900);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        resolve(null);
+        return;
+      }
+      navigator.mediaDevices
+        .getUserMedia({ video: { facingMode: 'user' }, audio: false })
+        .then((stream) => {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.playsInline = true;
+          video.onloadeddata = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d')?.drawImage(video, 0, 0);
+            stream.getTracks().forEach((track) => track.stop());
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          };
+          void video.play();
+        })
+        .catch(() => resolve(null));
     });
   }, []);
 

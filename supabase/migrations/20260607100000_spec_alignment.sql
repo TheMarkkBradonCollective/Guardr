@@ -5,8 +5,6 @@
 ----------------------------------------------------
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT FALSE;
 
-UPDATE clients SET approved = TRUE WHERE approved IS NULL OR approved = FALSE;
-
 ----------------------------------------------------
 -- 2. Expand security_requests with spec fields
 ----------------------------------------------------

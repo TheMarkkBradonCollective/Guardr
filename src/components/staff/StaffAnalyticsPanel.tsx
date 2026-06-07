@@ -1,5 +1,5 @@
 import React from 'react';
-import { computeAnalytics } from '../../lib/staffOps';
+import { computeAnalytics, computeWeeklyCompletedJobs } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 
 interface StaffAnalyticsPanelProps {
@@ -11,6 +11,8 @@ interface StaffAnalyticsPanelProps {
 
 export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials }: StaffAnalyticsPanelProps) {
   const data = computeAnalytics(guards, clients, requests);
+  const weeklyTrend = computeWeeklyCompletedJobs(requests);
+  const hasWeeklyData = weeklyTrend.some((h) => h > 0);
 
   const metrics = [
     ...(showFinancials ? [{ label: 'Total Platform Revenue', value: `$${data.totalRevenue.toLocaleString()}`, pct: null }] : []),
@@ -45,14 +47,18 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
 
       <div className="staff-ops-card">
         <h3 className="text-xs font-mono uppercase text-brand-text-muted mb-4">Completed Jobs Trend</h3>
-        <div className="flex items-end gap-2 h-32">
-          {[40, 55, 48, 67, 52, 71, data.completedJobs || 45].map((h, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full bg-brand-primary/80 rounded-t" style={{ height: `${Math.min(100, h)}%` }} />
-              <span className="text-[8px] font-mono text-brand-text-muted">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
-            </div>
-          ))}
-        </div>
+        {hasWeeklyData ? (
+          <div className="flex items-end gap-2 h-32">
+            {weeklyTrend.map((h, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full bg-brand-primary/80 rounded-t" style={{ height: `${Math.min(100, h)}%` }} />
+                <span className="text-[8px] font-mono text-brand-text-muted">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-brand-text-muted font-mono py-8 text-center">No completed jobs this week yet.</p>
+        )}
       </div>
     </div>
   );
