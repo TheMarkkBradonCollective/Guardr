@@ -38,7 +38,23 @@ cp .env.example .env.local   # optional: Supabase keys
 npm run dev
 ```
 
-Open `http://localhost:3000`
+Open [https://guardr.co](https://guardr.co) in production, or `http://localhost:3000` locally.
+
+### Production environment (guardr.co)
+
+Set these in your hosting provider (Vercel, Railway, etc.):
+
+```env
+APP_URL=https://guardr.co
+VITE_APP_URL=https://guardr.co
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+**Stripe webhook endpoint:** `https://guardr.co/api/stripe/webhook`
+
+**Supabase auth redirect URLs:** add `https://guardr.co/**` in Supabase → Authentication → URL configuration.
 
 ## Job Status Flow
 

@@ -1,5 +1,6 @@
 {
-  "name": "Guardr by Signature Security Specialist",
+  "id": "https://guardr.co/",
+  "name": "Guardr",
   "short_name": "Guardr",
   "description": "Independent Security Staffing. On Demand.",
   "start_url": "/",

@@ -11,9 +11,7 @@ function getStripe(): Stripe | null {
   return new Stripe(key);
 }
 
-function getAppUrl(): string {
-  return process.env.APP_URL || 'http://localhost:3000';
-}
+import { getSiteUrl } from './siteConfig';
 
 function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
   const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
@@ -286,7 +284,7 @@ export function registerStripeRoutes(app: Express) {
     }
 
     try {
-      const base = getAppUrl();
+      const base = getSiteUrl();
       const link = await stripe.accountLinks.create({
         account: accountId,
         refresh_url: `${base}/?stripe_connect=refresh`,
@@ -337,7 +335,7 @@ export function registerStripeRoutes(app: Express) {
     }
 
     try {
-      const base = getAppUrl();
+      const base = getSiteUrl();
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         customer_email: clientEmail,
