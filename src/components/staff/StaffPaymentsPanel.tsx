@@ -1,14 +1,25 @@
 import React from 'react';
-import { SecurityRequest } from '../../types';
+import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import { AdminFinancePanel } from './AdminFinancePanel';
 import { computeGuardEarnings, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 
 interface StaffPaymentsPanelProps {
   requests: SecurityRequest[];
+  guards: SecurityGuard[];
+  payments: Payment[];
   isDirector: boolean;
+  onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
+  onRefundPayment?: (requestId: string) => Promise<void>;
 }
 
-export function StaffPaymentsPanel({ requests, isDirector }: StaffPaymentsPanelProps) {
+export function StaffPaymentsPanel({
+  requests,
+  guards,
+  payments,
+  isDirector,
+  onReleasePayout,
+  onRefundPayment,
+}: StaffPaymentsPanelProps) {
   const pending = requests.filter((r) => r.status === 'completed' && !r.ratingGiven);
   const completed = requests.filter((r) => r.status === 'completed');
   const failed: SecurityRequest[] = [];
@@ -20,7 +31,14 @@ export function StaffPaymentsPanel({ requests, isDirector }: StaffPaymentsPanelP
         <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">Stripe Connect · Payouts & platform revenue</p>
       </div>
 
-      <AdminFinancePanel requests={requests} isDirector={isDirector} />
+      <AdminFinancePanel
+        requests={requests}
+        guards={guards}
+        payments={payments}
+        isDirector={isDirector}
+        onReleasePayout={onReleasePayout}
+        onRefundPayment={onRefundPayment}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {[

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser } from './types';
+import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser, Payment, PaymentStatus } from './types';
 import { isStaffRole } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
@@ -18,6 +18,7 @@ import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
+import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 
@@ -68,6 +69,7 @@ export default function App() {
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
@@ -110,9 +112,10 @@ export default function App() {
       const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
       const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
       const { data: dbRequests, error: requestsErr } = await supabase.from('security_requests').select('*');
+      const { data: dbPayments, error: paymentsErr } = await supabase.from('payments').select('*');
 
-      if (guardsErr || clientsErr || certsErr || expsErr || requestsErr) {
-        console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr });
+      if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
+        console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
         setGuards([]);
         setClients([]);
         setRequests([]);
@@ -129,6 +132,7 @@ export default function App() {
         isStaff: g.is_staff,
         staffRole: g.staff_role,
         userStatus: g.user_status || 'active',
+        stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
@@ -171,6 +175,20 @@ export default function App() {
         applicants: r.applicants || [],
         ratingGiven: r.rating_given ?? undefined,
         reviewText: r.review_text ?? undefined,
+        stripePaymentIntentId: r.stripe_payment_intent_id || undefined,
+        paymentStatus: r.payment_status || 'unpaid',
+      })));
+
+      setPayments((dbPayments ?? []).map((p: any) => ({
+        id: p.id,
+        jobId: p.job_id,
+        amount: Number(p.amount),
+        stripeSessionId: p.stripe_session_id || undefined,
+        stripePaymentIntentId: p.stripe_payment_intent_id || undefined,
+        stripeTransferId: p.stripe_transfer_id || undefined,
+        status: p.status,
+        createdAt: p.created_at,
+        updatedAt: p.updated_at,
       })));
 
       setIsDbConnected(true);
@@ -473,6 +491,7 @@ export default function App() {
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
       status: 'pending-review',
+      paymentStatus: 'unpaid',
       assignedGuardId: null,
       requiredCertifications: newRequest.requiredCertifications || [],
       applicants: [],
@@ -504,6 +523,7 @@ export default function App() {
           duration_hours: freshJob.durationHours, hourly_rate: freshJob.hourlyRate,
           guard_pay: freshJob.guardPay, platform_fee_per_hour: freshJob.platformFeePerHour,
           estimated_payout: freshJob.estimatedPayout, status: freshJob.status,
+          payment_status: 'unpaid',
           assigned_guard_id: freshJob.assignedGuardId,
           required_certifications: freshJob.requiredCertifications,
           applicants: freshJob.applicants,
@@ -517,15 +537,41 @@ export default function App() {
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] }).eq('id', requestId);
   };
 
+  const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, paymentStatus } : r));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ payment_status: paymentStatus }).eq('id', requestId);
+    }
+  };
+
   const handleUpdateStatus = async (requestId: string, status: SecurityRequest['status']) => {
+    const req = requests.find(r => r.id === requestId);
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       if (status === 'completed' && r.assignedGuardId) {
         setGuards(pg => pg.map(g => g.id === r.assignedGuardId ? { ...g, jobsCompleted: g.jobsCompleted + 1 } : g));
       }
-      return { ...r, status };
+      const paymentStatus =
+        status === 'completed' && r.paymentStatus === 'paid' ? 'held' as const : r.paymentStatus;
+      return { ...r, status, paymentStatus };
     }));
-    if (isDbConnected) await supabase.from('security_requests').update({ status }).eq('id', requestId);
+    if (isDbConnected) {
+      const updates: Record<string, unknown> = { status };
+      if (status === 'completed' && req?.paymentStatus === 'paid') {
+        updates.payment_status = 'held';
+      }
+      await supabase.from('security_requests').update(updates).eq('id', requestId);
+    }
+    if (status === 'completed' && req?.paymentStatus === 'paid') {
+      try {
+        await holdJobPayment(requestId);
+        setPayments(prev => prev.map(p =>
+          p.jobId === requestId && p.status === 'paid' ? { ...p, status: 'held' } : p
+        ));
+      } catch (e) {
+        console.error('Hold payment error:', e);
+      }
+    }
   };
 
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
@@ -630,13 +676,113 @@ export default function App() {
         if (payload.status === 'completed' && r.assignedGuardId) {
           setGuards(pg => pg.map(g => g.id === r.assignedGuardId ? { ...g, jobsCompleted: g.jobsCompleted + 1 } : g));
         }
+        if (payload.status === 'completed' && r.paymentStatus === 'paid') {
+          updated.paymentStatus = 'held';
+        }
       }
       return updated;
     }));
     if (isDbConnected && payload.status) {
-      await supabase.from('security_requests').update({ status: payload.status }).eq('id', requestId);
+      const updates: Record<string, unknown> = { status: payload.status };
+      const req = requests.find(r => r.id === requestId);
+      if (payload.status === 'completed' && req?.paymentStatus === 'paid') {
+        updates.payment_status = 'held';
+      }
+      await supabase.from('security_requests').update(updates).eq('id', requestId);
+    }
+    if (payload.status === 'completed') {
+      const req = requests.find(r => r.id === requestId);
+      if (req?.paymentStatus === 'paid') {
+        try {
+          await holdJobPayment(requestId);
+        } catch (e) {
+          console.error('Hold payment error:', e);
+        }
+      }
     }
   };
+
+  const handleReleasePayout = async (requestId: string, force = false) => {
+    const req = requests.find(r => r.id === requestId);
+    if (!req?.assignedGuardId) {
+      alert('No guard assigned to this job.');
+      return;
+    }
+    const guard = guards.find(g => g.id === req.assignedGuardId);
+    if (!guard?.stripeConnectAccountId) {
+      alert('Guard has not connected a Stripe account.');
+      return;
+    }
+    try {
+      const result = await releasePayout({
+        jobId: requestId,
+        guardConnectAccountId: guard.stripeConnectAccountId,
+        hourlyRate: req.hourlyRate,
+        durationHours: req.durationHours,
+        force,
+      });
+      await handleJobPaymentStatus(requestId, 'released');
+      setPayments(prev => prev.map(p =>
+        p.jobId === requestId ? { ...p, status: 'released', stripeTransferId: result.transferId } : p
+      ));
+      alert(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Payout failed');
+    }
+  };
+
+  const handleRefundPayment = async (requestId: string) => {
+    const req = requests.find(r => r.id === requestId);
+    if (!req?.stripePaymentIntentId) {
+      alert('No payment to refund for this job.');
+      return;
+    }
+    try {
+      await refundPayment({ paymentIntentId: req.stripePaymentIntentId, jobId: requestId });
+      await handleJobPaymentStatus(requestId, 'unpaid');
+      setPayments(prev => prev.map(p =>
+        p.jobId === requestId ? { ...p, status: 'refunded' } : p
+      ));
+      alert('Payment refunded successfully.');
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Refund failed');
+    }
+  };
+
+  const handleUpdateGuardStripeAccount = async (guardId: string, accountId: string) => {
+    setGuards(prev => prev.map(g =>
+      g.id === guardId ? { ...g, stripeConnectAccountId: accountId } : g
+    ));
+    if (isDbConnected) {
+      await supabase.from('guards').update({ stripe_connect_account_id: accountId }).eq('id', guardId);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentResult = params.get('payment');
+    const jobId = params.get('job_id');
+    if (paymentResult === 'success' && jobId) {
+      handleJobPaymentStatus(jobId, 'paid');
+      setPayments(prev => {
+        const exists = prev.some(p => p.jobId === jobId);
+        if (exists) {
+          return prev.map(p => p.jobId === jobId ? { ...p, status: 'paid' } : p);
+        }
+        const req = requests.find(r => r.id === jobId);
+        return [...prev, {
+          id: `pay-${Date.now()}`,
+          jobId,
+          amount: req?.estimatedPayout ?? 0,
+          status: 'paid' as const,
+        }];
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (paymentResult === 'cancelled') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [requests]);
 
   // ── Compliance violations ──────────────────────────────────
   const handleRecordAuditViolation = async (guardId: string, reason?: string) => {
@@ -728,10 +874,12 @@ export default function App() {
         <GuardDashboard
           guard={activeGuard}
           requests={requests}
+          payments={payments}
           onAddCertification={handleAddCertification}
           onAcceptJob={handleAcceptJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}
+          onUpdateStripeAccount={handleUpdateGuardStripeAccount}
           onSignOut={handleSignOut}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
@@ -780,6 +928,7 @@ export default function App() {
               companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
               requests={myRequests}
               guards={hireableGuards}
+              clientEmail={currentUser.email}
               isClientApproved={isClientApproved}
               activeView={clientView}
               onViewChange={setClientView}
@@ -805,6 +954,7 @@ export default function App() {
           guards={verifiedGuards}
           clients={clients}
           requests={requests}
+          payments={payments}
           onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
@@ -817,6 +967,8 @@ export default function App() {
           onRejectGuard={handleRejectGuard}
           onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
+          onReleasePayout={handleReleasePayout}
+          onRefundPayment={handleRefundPayment}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}
