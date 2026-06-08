@@ -1,21 +1,19 @@
-import { createRequire } from 'module';
 import type Stripe from 'stripe';
 
-const require = createRequire(import.meta.url);
-
 let stripe: Stripe | null | undefined;
+let stripePromise: Promise<Stripe | null> | undefined;
 
-export function getStripe(): Stripe | null {
+export async function getStripe(): Promise<Stripe | null> {
   if (stripe !== undefined) return stripe;
-
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') {
-    stripe = null;
-    return null;
+  if (!stripePromise) {
+    stripePromise = (async () => {
+      const key = process.env.STRIPE_SECRET_KEY;
+      if (!key || key === 'sk_test_placeholder') return null;
+      const { default: StripeSdk } = await import('stripe');
+      return new StripeSdk(key);
+    })();
   }
-
-  const StripeSdk = require('stripe') as typeof import('stripe').default;
-  stripe = new StripeSdk(key);
+  stripe = await stripePromise;
   return stripe;
 }
 

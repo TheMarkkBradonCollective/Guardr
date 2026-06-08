@@ -5,7 +5,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { getSupabaseAdmin } = await import('../_lib/supabaseAdmin');
-  const db = getSupabaseAdmin();
+  const db = await getSupabaseAdmin();
   if (!db) {
     return res.status(200).json({ payments: [] });
   }

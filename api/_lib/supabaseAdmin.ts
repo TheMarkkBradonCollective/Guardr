@@ -1,24 +1,26 @@
-import { createRequire } from 'module';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const require = createRequire(import.meta.url);
+let adminClient: SupabaseClient | null | undefined;
+let adminPromise: Promise<SupabaseClient | null> | undefined;
 
-let adminClient: SupabaseClient | null = null;
+export async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
+  if (adminClient !== undefined) return adminClient;
+  if (!adminPromise) {
+    adminPromise = (async () => {
+      const url =
+        process.env.SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.VITE_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export function getSupabaseAdmin(): SupabaseClient | null {
-  if (adminClient) return adminClient;
+      if (!url || !key) return null;
 
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) return null;
-
-  const { createClient } = require('@supabase/supabase-js') as typeof import('@supabase/supabase-js');
-  adminClient = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+      const { createClient } = await import('@supabase/supabase-js');
+      return createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    })();
+  }
+  adminClient = await adminPromise;
   return adminClient;
 }

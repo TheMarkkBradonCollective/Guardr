@@ -2,8 +2,9 @@ import type Stripe from 'stripe';
 
 export { computeGuardPayoutCents, getStripe } from './stripeClient';
 
+import { getSupabaseAdmin } from './supabaseAdmin';
+
 async function getDb() {
-  const { getSupabaseAdmin } = await import('./supabaseAdmin');
   return getSupabaseAdmin();
 }
 

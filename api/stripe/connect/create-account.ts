@@ -6,7 +6,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) {
     return res.status(503).json({ error: 'Stripe is not configured' });
   }
@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { getSupabaseAdmin } = await import('../../_lib/supabaseAdmin');
-    const db = getSupabaseAdmin();
+    const db = await getSupabaseAdmin();
     let accountId: string | null = null;
 
     if (db) {
