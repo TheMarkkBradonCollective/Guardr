@@ -144,18 +144,13 @@ export function UserProfileScreen({
         )}
         <Field label="Phone" value={phone} onChange={setPhone} editing={editing} type="tel" />
         {isGuardLike && (
-          <>
-            <Field label="Badge" value={guard?.badgeNumber ?? currentUser.badgeNumber ?? '—'} editing={false} readOnly />
-            {isGuardLike && (
-              <Field
-                label="Minimum hourly rate ($)"
-                value={hourlyRate}
-                onChange={setHourlyRate}
-                editing={editing}
-                type="number"
-              />
-            )}
-          </>
+          <Field
+            label="Minimum hourly rate ($)"
+            value={hourlyRate}
+            onChange={setHourlyRate}
+            editing={editing}
+            type="number"
+          />
         )}
         {guard?.verified != null && (
           <div className="flex justify-between text-sm py-2 border-t border-brand-border">

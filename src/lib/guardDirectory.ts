@@ -50,7 +50,9 @@ export function filterGuardsByQuery(guards: SecurityGuard[], query: string): Sec
     (g) =>
       g.name.toLowerCase().includes(q) ||
       g.bio.toLowerCase().includes(q) ||
-      g.badgeNumber.toLowerCase().includes(q) ||
+      (g.summary?.toLowerCase().includes(q) ?? false) ||
+      (g.headline?.toLowerCase().includes(q) ?? false) ||
+      (g.about?.toLowerCase().includes(q) ?? false) ||
       g.experience.some(
         (e) =>
           e.title.toLowerCase().includes(q) ||
