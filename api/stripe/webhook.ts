@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe, processStripeWebhookEvent } from '../../server/stripeShared';
+import { getStripe, processStripeWebhookEvent } from '../_lib/stripeShared';
 
 export const config = {
   api: {

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../../server/stripeShared';
-import { getSupabaseAdmin } from '../../../server/supabaseAdmin';
-import { getSiteUrl } from '../../../server/siteConfig';
+import { getStripe } from '../../_lib/stripeShared';
+import { getSupabaseAdmin } from '../../_lib/supabaseAdmin';
+import { getSiteUrl } from '../../_lib/siteConfig';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

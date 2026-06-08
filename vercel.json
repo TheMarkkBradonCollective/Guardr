@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "server/**"
+      "includeFiles": "api/_lib/**"
     }
   }
 }
