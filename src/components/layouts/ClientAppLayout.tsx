@@ -37,7 +37,7 @@ export function ClientAppLayout({
     <div className={`theme-${themeMode} h-full`}>
       <RoleAppShell
         title={clientLabel}
-        subtitle="Client"
+        subtitle="Client dashboard"
         navItems={NAV}
         activeNavId={hideBottomNav ? 'home' : activeView}
         onNavigate={(id) => onNavigate?.(id as ClientView)}

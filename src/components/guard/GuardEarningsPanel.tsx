@@ -42,8 +42,8 @@ export function GuardEarningsPanel({
     <div className="absolute inset-0 z-[1002] bg-brand-bg overflow-y-auto pt-20 pb-24 px-4">
       <div className="max-w-lg mx-auto space-y-6 animate-fade-in">
         <div>
-          <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest mb-1">Earnings</p>
-          <h2 className="text-2xl font-black tracking-tight">Your Pay</h2>
+          <p className="text-sm text-brand-text-muted mb-1">Earnings</p>
+          <h2 className="text-2xl font-bold tracking-tight">Your pay</h2>
         </div>
 
         {!stripeReady && onConnectStripe && (
