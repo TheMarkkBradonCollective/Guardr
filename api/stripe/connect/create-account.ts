@@ -56,6 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
+        country: 'US',
         email,
         metadata: { guard_id: guardId },
         capabilities: { transfers: { requested: true } },
@@ -73,6 +74,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to create Connect account';
     console.error('Connect account error:', message);
+
+    if (message.includes("signed up for Connect")) {
+      const isLive = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
+      return res.status(503).json({
+        error: isLive
+          ? 'Guardr’s Stripe account must finish Connect platform setup before guards can onboard. In Stripe Dashboard go to Connect → Get started and complete your platform profile (this is separate from webhooks).'
+          : 'Enable Stripe Connect in test mode: Stripe Dashboard → switch to Test mode → Connect → Get started, then use your sk_test_ key in Vercel.',
+        code: 'connect_platform_not_enabled',
+      });
+    }
+
     return res.status(500).json({ error: message });
   }
 }

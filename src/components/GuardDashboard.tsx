@@ -278,7 +278,16 @@ export function GuardDashboard({
       const { url } = await createConnectAccountLink(accountId);
       window.location.href = url;
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Failed to start Stripe onboarding');
+      const message = e instanceof Error ? e.message : 'Failed to start Stripe onboarding';
+      if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
+        alert(
+          'Stripe Connect is not fully activated on the Guardr platform account yet.\n\n' +
+            'Setting up webhooks is not the same as enabling Connect.\n\n' +
+            'In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.'
+        );
+      } else {
+        alert(message);
+      }
     } finally {
       setConnectPending(false);
     }

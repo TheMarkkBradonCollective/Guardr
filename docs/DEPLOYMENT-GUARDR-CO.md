@@ -118,15 +118,31 @@ Vercel issues SSL automatically once DNS is correct.
 
 ---
 
-## Part 4 — Stripe (you already started)
+## Part 4 — Stripe
 
-Confirm in Stripe Dashboard:
+### A. Webhooks (payments)
 
 | Setting | Value |
 |---------|--------|
-| Webhook endpoint | `https://guardr.co/api/stripe/webhook` |
-| Checkout success URL | Uses `APP_URL` → `https://guardr.co/?payment=success&...` |
-| Connect return URL | `https://guardr.co/?stripe_connect=success` |
+| Webhook endpoint | `https://www.guardr.co/api/stripe/webhook` |
+| Events | `checkout.session.completed`, `payment_intent.succeeded`, `transfer.*` |
+
+### B. Stripe Connect (guard payouts) — required separately
+
+**Webhooks alone do not enable Connect.** Guards cannot onboard until the platform account completes Connect setup.
+
+1. Open [Stripe Dashboard → Connect](https://dashboard.stripe.com/connect)
+2. Click **Get started** and complete your **platform profile** (business details, payout settings)
+3. For **live** guard onboarding you must use `sk_live_` **and** have Connect approved for live mode
+4. For testing first: switch to **Test mode** → Connect → Get started → use `sk_test_` keys in Vercel
+
+If guards see *"You can only create new accounts if you've signed up for Connect"*, the platform profile is not finished — not a bug in Guardr.
+
+| Setting | Value |
+|---------|--------|
+| Connect return URL | `https://www.guardr.co/?stripe_connect=success` |
+| Connect refresh URL | `https://www.guardr.co/?stripe_connect=refresh` |
+| Checkout success URL | Uses `APP_URL` → `https://www.guardr.co/?payment=success&...` |
 
 ---
 
