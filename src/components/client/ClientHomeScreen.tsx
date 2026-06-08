@@ -7,7 +7,15 @@ import {
   formatShiftTimeRange,
   getUpcomingCoverage,
 } from '../../lib/clientCoverage';
-import { ChevronRight, Shield } from 'lucide-react';
+import {
+  ChevronRight,
+  Shield,
+  Calendar,
+  Building2,
+  FileText,
+  Radio,
+  Plus,
+} from 'lucide-react';
 
 export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage';
 
@@ -20,17 +28,17 @@ interface ClientHomeScreenProps {
   onAction: (action: ClientHomeAction) => void;
 }
 
-const QUICK_ACTIONS: { id: ClientHomeAction; emoji: string; label: string; sub: string }[] = [
-  { id: 'request', emoji: '🛡️', label: 'Request Security', sub: 'On-demand coverage' },
-  { id: 'schedule', emoji: '📅', label: 'Schedule Future Coverage', sub: 'Plan ahead' },
-  { id: 'recurring', emoji: '🏢', label: 'Recurring Site Coverage', sub: 'Weekly / monthly' },
-  { id: 'reports', emoji: '📋', label: 'View Reports', sub: 'Activity & incidents' },
+const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
+  { id: 'request', icon: Plus, label: 'Request security', sub: 'On-demand coverage', accent: true },
+  { id: 'schedule', icon: Calendar, label: 'Schedule coverage', sub: 'Plan ahead' },
+  { id: 'recurring', icon: Building2, label: 'Recurring sites', sub: 'Weekly / monthly' },
+  { id: 'reports', icon: FileText, label: 'View reports', sub: 'Activity & incidents' },
 ];
 
 const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
-  incident: 'Incident Report',
-  activity: 'Activity Report',
-  property: 'Property Report',
+  incident: 'Incident report',
+  activity: 'Activity report',
+  property: 'Property report',
 };
 
 export function ClientHomeScreen({
@@ -44,143 +52,154 @@ export function ClientHomeScreen({
   const upcoming = getUpcomingCoverage(requests);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in pb-8">
-      {/* Header */}
-      <div>
-        <p className="text-sm text-brand-text-muted font-mono">👋 Welcome Back</p>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-1">{companyName}</h1>
-      </div>
-
-      {!isClientApproved && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4 text-sm text-brand-text-muted">
-          Your company account is pending staff approval. You can explore the dashboard, but posting requests is disabled until approved.
+    <div className="h-full overflow-y-auto overscroll-contain">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 animate-fade-in pb-8">
+        {/* Greeting */}
+        <div>
+          <p className="text-sm text-brand-text-muted">Welcome back</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
         </div>
-      )}
 
-      {/* Active Security Coverage hero */}
-      <section className="rounded-2xl bg-gradient-to-br from-brand-primary/20 via-brand-primary/10 to-transparent border border-brand-primary/25 p-6 sm:p-8">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-brand-primary mb-4">Active Security Coverage</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-          <div>
-            <p className="text-3xl sm:text-4xl font-black">{coverage.activeAssignments}</p>
-            <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase tracking-wide">Active Assignments</p>
-          </div>
-          <div>
-            <p className="text-3xl sm:text-4xl font-black">{coverage.guardsOnDuty}</p>
-            <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase tracking-wide">Guards On Duty</p>
-          </div>
-          <div>
-            <p className="text-3xl sm:text-4xl font-black">{coverage.guardsArriving}</p>
-            <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase tracking-wide">
-              {coverage.guardsArriving > 0 && coverage.arrivingTimeLabel
-                ? `Guard Arriving at ${coverage.arrivingTimeLabel}`
-                : 'Guards Arriving'}
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => onAction('coverage')}
-          className="uber-button-sage w-full sm:w-auto h-12 px-8 text-sm font-black uppercase tracking-wide"
-        >
-          View Live Coverage
-        </button>
-      </section>
-
-      {/* Quick Actions */}
-      <section>
-        <h2 className="text-xs font-mono uppercase tracking-widest text-brand-text-muted mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.id}
-              type="button"
-              disabled={!isClientApproved && action.id !== 'reports'}
-              onClick={() => onAction(action.id)}
-              className="client-action-card text-left disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="text-2xl">{action.emoji}</span>
-              <div className="mt-3">
-                <p className="font-black text-sm">{action.label}</p>
-                <p className="text-[11px] font-mono text-brand-text-muted mt-0.5">{action.sub}</p>
-              </div>
-              <ChevronRight className="absolute top-5 right-4 w-4 h-4 text-brand-text-muted" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Upcoming Coverage carousel */}
-      <section>
-        <h2 className="text-xs font-mono uppercase tracking-widest text-brand-text-muted mb-3">Upcoming Coverage</h2>
-        {upcoming.length === 0 ? (
-          <div className="uber-card-flat rounded-2xl p-8 text-center text-sm text-brand-text-muted font-mono">
-            No upcoming coverage scheduled. Tap Request Security to get started.
-          </div>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
-            {upcoming.map((req) => (
-              <div
-                key={req.id}
-                className="client-coverage-card snap-start shrink-0 w-[min(100%,280px)]"
-              >
-                <div className="flex items-start gap-2 mb-3">
-                  <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <p className="font-black text-sm leading-snug">{req.title}</p>
-                </div>
-                <p className="text-[11px] font-mono text-brand-primary uppercase tracking-wide">
-                  {formatCoverageDateLabel(req.startDate)}
-                </p>
-                <p className="text-xs font-mono text-brand-text-muted mt-1">
-                  {formatShiftTimeRange(req.startDate, req.endDate)}
-                </p>
-                <p className="text-xs font-mono text-brand-text mt-3 pt-3 border-t border-brand-border">
-                  {req.guardsNeeded ?? 1} Guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} Assigned
-                </p>
-              </div>
-            ))}
+        {!isClientApproved && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4 text-sm text-brand-text-muted">
+            Your account is pending approval. You can explore the dashboard, but posting requests is disabled until approved.
           </div>
         )}
-      </section>
 
-      {/* Recent Reports */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-brand-text-muted">Recent Reports</h2>
-          {recentReports.length > 0 && (
+        {/* Coverage hero card */}
+        <section className="app-card overflow-hidden p-0">
+          <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
+            <div className="flex items-center gap-2 mb-5">
+              <Radio className="w-5 h-5 text-brand-primary" />
+              <p className="text-sm font-semibold text-brand-primary">Active coverage</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div>
+                <p className="text-3xl font-bold">{coverage.activeAssignments}</p>
+                <p className="text-xs text-brand-text-muted mt-1">Active</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">{coverage.guardsOnDuty}</p>
+                <p className="text-xs text-brand-text-muted mt-1">On duty</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">{coverage.guardsArriving}</p>
+                <p className="text-xs text-brand-text-muted mt-1">
+                  {coverage.guardsArriving > 0 && coverage.arrivingTimeLabel
+                    ? `Arriving ${coverage.arrivingTimeLabel}`
+                    : 'Arriving'}
+                </p>
+              </div>
+            </div>
             <button
               type="button"
-              onClick={() => onAction('reports')}
-              className="text-[10px] font-mono font-bold uppercase text-brand-primary hover:underline"
+              onClick={() => onAction('coverage')}
+              className="uber-button-sage w-full sm:w-auto"
             >
-              View all
+              View live coverage
             </button>
-          )}
-        </div>
-        {recentReports.length === 0 ? (
-          <div className="uber-card-flat rounded-2xl p-6 text-sm text-brand-text-muted font-mono">
-            Reports from completed shifts will appear here.
           </div>
-        ) : (
-          <div className="space-y-3">
-            {recentReports.slice(0, 4).map((report) => (
+        </section>
+
+        {/* Quick actions */}
+        <section>
+          <h2 className="text-sm font-semibold text-brand-text-muted mb-3">Quick actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {QUICK_ACTIONS.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.id}
+                  type="button"
+                  disabled={!isClientApproved && action.id !== 'reports'}
+                  onClick={() => onAction(action.id)}
+                  className={`client-action-card text-left disabled:opacity-40 disabled:cursor-not-allowed ${
+                    action.accent ? 'border-brand-primary/30' : ''
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                    action.accent ? 'bg-brand-primary text-brand-accent-text' : 'bg-brand-primary/10 text-brand-primary'
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <p className="font-semibold">{action.label}</p>
+                  <p className="text-sm text-brand-text-muted mt-0.5">{action.sub}</p>
+                  <ChevronRight className="absolute top-5 right-4 w-5 h-5 text-brand-text-muted" />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Upcoming */}
+        <section>
+          <h2 className="text-sm font-semibold text-brand-text-muted mb-3">Upcoming coverage</h2>
+          {upcoming.length === 0 ? (
+            <div className="app-card text-center py-10 text-sm text-brand-text-muted">
+              No upcoming coverage. Tap Request security to get started.
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {upcoming.map((req) => (
+                <div key={req.id} className="client-coverage-card snap-start shrink-0 w-[min(100%,260px)]">
+                  <div className="flex items-start gap-2 mb-3">
+                    <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                    <p className="font-semibold text-sm leading-snug">{req.title}</p>
+                  </div>
+                  <p className="text-sm font-medium text-brand-primary">
+                    {formatCoverageDateLabel(req.startDate)}
+                  </p>
+                  <p className="text-xs text-brand-text-muted mt-1">
+                    {formatShiftTimeRange(req.startDate, req.endDate)}
+                  </p>
+                  <p className="text-xs text-brand-text mt-3 pt-3 border-t border-brand-border">
+                    {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} assigned
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Reports */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-brand-text-muted">Recent reports</h2>
+            {recentReports.length > 0 && (
               <button
-                key={report.id}
                 type="button"
                 onClick={() => onAction('reports')}
-                className="w-full uber-card-flat rounded-xl p-4 text-left hover:border-brand-primary/40 transition-colors"
+                className="text-sm font-semibold text-brand-primary hover:underline"
               >
-                <p className="text-[10px] font-mono uppercase text-brand-primary tracking-wide">
-                  {REPORT_TYPE_LABEL[report.type]}
-                </p>
-                <p className="font-bold text-sm mt-1">{report.title}</p>
-                <p className="text-xs text-brand-text-muted mt-1 line-clamp-2">{report.summary}</p>
-                <p className="text-[10px] font-mono text-brand-text-muted mt-2">{report.siteName}</p>
+                View all
               </button>
-            ))}
+            )}
           </div>
-        )}
-      </section>
+          {recentReports.length === 0 ? (
+            <div className="app-card py-8 text-center text-sm text-brand-text-muted">
+              Reports from completed shifts will appear here.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentReports.slice(0, 4).map((report) => (
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => onAction('reports')}
+                  className="w-full app-card text-left hover:border-brand-primary/30 transition-colors"
+                >
+                  <p className="text-xs font-medium text-brand-primary">
+                    {REPORT_TYPE_LABEL[report.type]}
+                  </p>
+                  <p className="font-semibold mt-1">{report.title}</p>
+                  <p className="text-sm text-brand-text-muted mt-1 line-clamp-2">{report.summary}</p>
+                  <p className="text-xs text-brand-text-muted mt-2">{report.siteName}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

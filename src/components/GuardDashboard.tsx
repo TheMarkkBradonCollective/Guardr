@@ -320,7 +320,7 @@ export function GuardDashboard({
   ];
 
   return (
-    <div className={`theme-${themeMode} fixed inset-0 bg-black overflow-hidden flex flex-col h-dvh max-h-dvh`}>
+    <div className={`theme-${themeMode} fixed inset-0 bg-brand-bg overflow-hidden flex flex-col h-dvh max-h-dvh`}>
       <div className="flex-1 min-h-0 relative overflow-hidden">
       {/* Map — visible on map tab */}
       {activeTab === 'map' && (
@@ -334,11 +334,11 @@ export function GuardDashboard({
 
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-[1001] p-3 flex items-center justify-between pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2 bg-black/85 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
-          <Logo className="text-brand-primary" size={22} />
+        <div className="pointer-events-auto flex items-center gap-2 bg-brand-surface/95 backdrop-blur-xl rounded-2xl px-3.5 py-2.5 border border-brand-border shadow-lg">
+          <Logo className="text-brand-primary" size={24} />
           <div>
-            <p className="text-[8px] font-mono uppercase text-white/40 leading-none">Guardr</p>
-            <p className="text-sm font-black leading-tight">{guard.name.split(' ')[0]}</p>
+            <p className="text-[10px] font-medium text-brand-text-muted leading-none">Guardr</p>
+            <p className="text-sm font-semibold leading-tight">{guard.name.split(' ')[0]}</p>
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
@@ -346,7 +346,7 @@ export function GuardDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('profile')}
-              className="p-2.5 rounded-xl bg-black/85 border border-white/10 text-white/70 hover:text-white backdrop-blur-md"
+              className="p-2.5 rounded-xl bg-brand-surface/95 border border-brand-border text-brand-text-muted hover:text-brand-text backdrop-blur-xl shadow-lg"
               aria-label="Profile"
             >
               <User className="w-4 h-4" />
@@ -432,16 +432,16 @@ export function GuardDashboard({
 
       </div>
 
-      {/* Bottom tab bar — always visible */}
-      <div className="shrink-0 z-[1002] px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-black/95 border-t border-white/10">
-        <div className="max-w-md mx-auto flex bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1">
+      {/* Bottom tab bar — Uber driver style */}
+      <nav className="app-bottom-nav shrink-0 z-[1002] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="app-bottom-nav-pill max-w-md mx-auto flex p-1.5">
           {BOTTOM_TABS.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all min-h-[52px] ${
-                activeTab === id ? 'bg-brand-primary text-black' : 'text-white/45 hover:text-white/70'
+              className={`app-bottom-nav-item flex-1 flex flex-col items-center gap-1 py-2 min-h-[52px] ${
+                activeTab === id ? 'app-bottom-nav-item--active' : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -449,7 +449,7 @@ export function GuardDashboard({
             </button>
           ))}
         </div>
-      </div>
+      </nav>
 
       {showSelfAudit && (
         <GuardSelfAuditModal

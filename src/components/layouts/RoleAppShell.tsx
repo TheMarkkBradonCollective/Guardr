@@ -28,33 +28,26 @@ export function RoleAppShell({
   headerRight,
   variant = 'default',
 }: RoleAppShellProps) {
-  const isDark = variant === 'dark';
+  const isMapMode = variant === 'dark';
 
   return (
     <div
-      className={`role-app-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden ${
-        isDark ? 'bg-black text-white' : 'bg-brand-bg text-brand-text'
-      }`}
+      className={`role-app-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text`}
     >
       <header
-        className={`shrink-0 h-14 px-4 flex items-center justify-between gap-3 border-b ${
-          isDark ? 'border-white/10 bg-black/90' : 'border-brand-border bg-brand-bg-sec'
+        className={`shrink-0 h-14 px-4 flex items-center justify-between gap-3 border-b border-brand-border ${
+          isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : 'bg-brand-bg-sec'
         }`}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Logo size={22} />
+        <div className="flex items-center gap-3 min-w-0">
+          <Logo size={28} />
           <div className="min-w-0">
-            <p className={`text-[8px] font-mono uppercase leading-none ${isDark ? 'text-white/40' : 'text-brand-text-muted'}`}>
-              Guardr
-            </p>
-            <p className="text-sm font-black truncate leading-tight">{title}</p>
+            {subtitle && (
+              <p className="text-[11px] font-medium text-brand-text-muted leading-none mb-0.5">{subtitle}</p>
+            )}
+            <p className="text-base font-semibold truncate leading-tight">{title}</p>
           </div>
         </div>
-        {subtitle && (
-          <p className={`hidden sm:block text-[10px] font-mono uppercase truncate ${isDark ? 'text-white/50' : 'text-brand-text-muted'}`}>
-            {subtitle}
-          </p>
-        )}
         {headerRight && <div className="shrink-0">{headerRight}</div>}
       </header>
 
@@ -65,7 +58,6 @@ export function RoleAppShell({
           items={navItems}
           activeId={activeNavId}
           onNavigate={onNavigate}
-          className={isDark ? 'bg-black/95 border-white/10' : ''}
         />
       )}
     </div>

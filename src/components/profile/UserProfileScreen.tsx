@@ -5,10 +5,8 @@ import { certRequiresState, getVerifiedLicensedStates } from '../../lib/guardLic
 import { formatStateName, US_STATES } from '../../lib/states';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { Award, LogOut, Plus, Save, User } from 'lucide-react';
-
-type ThemeMode = 'dark' | 'light' | 'grey';
-
-const THEME_LABELS: Record<ThemeMode, string> = { dark: 'Dark', light: 'Light', grey: 'Grey' };
+import { ThemeToggle } from '../ui/ThemeToggle';
+import type { ThemeMode } from '../../lib/platform/theme';
 
 export interface ProfileSavePayload {
   name: string;
@@ -121,14 +119,14 @@ export function UserProfileScreen({
   };
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain px-4 py-5 max-w-lg mx-auto space-y-5 animate-fade-in">
+    <div className="h-full overflow-y-auto overscroll-contain px-4 py-6 max-w-lg mx-auto space-y-5 animate-fade-in">
       <div className="flex flex-col items-center text-center pt-2">
-        <div className="w-20 h-20 rounded-2xl bg-brand-primary text-black flex items-center justify-center font-black text-2xl font-mono mb-3">
+        <div className="w-20 h-20 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center font-bold text-2xl mb-3 ring-4 ring-brand-primary/20">
           {initials}
         </div>
-        <h1 className="text-xl font-black">{name}</h1>
-        <p className="text-xs font-mono uppercase text-brand-text-muted mt-1">{roleLabel}</p>
-        <p className="text-[11px] font-mono text-brand-text-muted mt-0.5">{currentUser.email}</p>
+        <h1 className="text-xl font-bold">{name}</h1>
+        <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
+        <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>
       </div>
 
       <div className="flex gap-2">
@@ -136,23 +134,23 @@ export function UserProfileScreen({
           type="button"
           onClick={() => (editing ? void handleSave() : setEditing(true))}
           disabled={saving}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-primary text-black font-black text-xs uppercase tracking-wider disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 uber-button-sage h-11 text-sm disabled:opacity-50"
         >
           {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
-          {editing ? (saving ? 'Saving…' : 'Save Profile') : 'Edit Profile'}
+          {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
         </button>
         {editing && (
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="px-4 py-3 rounded-xl border border-brand-border font-mono text-xs uppercase font-bold"
+            className="px-4 uber-button-outline h-11 text-sm"
           >
             Cancel
           </button>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="app-card space-y-4">
         <Field label="Full name" value={name} onChange={setName} editing={editing} />
         {isClient && (
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
@@ -171,7 +169,7 @@ export function UserProfileScreen({
               />
             )}
             <div>
-              <label className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">Bio</label>
+              <label className="uber-label">Bio</label>
               {editing ? (
                 <textarea
                   value={bio}
@@ -186,17 +184,17 @@ export function UserProfileScreen({
           </>
         )}
         {guard?.verified != null && (
-          <div className="flex justify-between text-xs font-mono py-2 border-b border-brand-border">
-            <span className="text-brand-text-muted uppercase">Verification</span>
-            <span className={guard.verified ? 'text-emerald-400' : 'text-amber-400'}>
+          <div className="flex justify-between text-sm py-2 border-t border-brand-border">
+            <span className="text-brand-text-muted">Verification</span>
+            <span className={`font-medium ${guard.verified ? 'text-brand-primary' : 'text-amber-400'}`}>
               {guard.verified ? 'Verified' : 'Pending'}
             </span>
           </div>
         )}
         {client?.approved != null && (
-          <div className="flex justify-between text-xs font-mono py-2 border-b border-brand-border">
-            <span className="text-brand-text-muted uppercase">Account status</span>
-            <span className={client.approved ? 'text-emerald-400' : 'text-amber-400'}>
+          <div className="flex justify-between text-sm py-2 border-t border-brand-border">
+            <span className="text-brand-text-muted">Account status</span>
+            <span className={`font-medium ${client.approved ? 'text-brand-primary' : 'text-amber-400'}`}>
               {client.approved ? 'Approved' : 'Pending approval'}
             </span>
           </div>
@@ -206,14 +204,14 @@ export function UserProfileScreen({
       {canManageCerts && guard && (
         <div className="staff-ops-card space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-brand-primary" />
+            <p className="uber-label flex items-center gap-1.5">
+              <Award className="w-4 h-4 text-brand-primary" />
               Certifications
             </p>
             <button
               type="button"
               onClick={() => setShowAddCert((v) => !v)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-primary text-black text-[9px] font-black uppercase"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
             >
               <Plus className="w-3 h-3" />
               Add
@@ -332,31 +330,18 @@ export function UserProfileScreen({
         </div>
       )}
 
-      <div className="staff-ops-card space-y-3">
-        <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">Appearance</p>
-        <div className="flex border border-brand-border rounded-xl overflow-hidden text-[10px] font-mono">
-          {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => onChangeTheme(m)}
-              className={`flex-1 py-2.5 font-bold uppercase ${
-                themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'
-              }`}
-            >
-              {THEME_LABELS[m]}
-            </button>
-          ))}
-        </div>
+      <div className="app-card space-y-3">
+        <p className="uber-label">Appearance</p>
+        <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
       </div>
 
       <button
         type="button"
         onClick={onSignOut}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-red-500/40 text-red-400 font-black text-xs uppercase tracking-wider hover:bg-red-500/10 transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/10 transition-colors"
       >
         <LogOut className="w-4 h-4" />
-        Sign Out
+        Sign out
       </button>
     </div>
   );
@@ -379,7 +364,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">{label}</label>
+      <label className="uber-label">{label}</label>
       {editing && !readOnly && onChange ? (
         <input
           type={type}
