@@ -4,7 +4,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { getSupabaseAdmin } = await import('../_lib/supabaseAdmin');
+  const { getSupabaseAdmin } = await import('../../lib/supabaseAdmin');
   const db = await getSupabaseAdmin();
   if (!db) {
     return res.status(200).json({ payments: [] });
