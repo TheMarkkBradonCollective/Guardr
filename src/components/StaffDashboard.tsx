@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Client, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { Certification, Client, Experience, GuardEducation, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import {
   canAccessFinancialControls,
   canManageStaffAccounts,
@@ -55,6 +55,9 @@ interface StaffDashboardProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => void | Promise<void>;
+  onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onEnterGuardMode?: () => void;
 }
 
@@ -83,6 +86,9 @@ export function StaffDashboard({
   onChangeTheme,
   onSignOut,
   onUpdateGuardProfile,
+  onAddCertification,
+  onAddExperience,
+  onAddEducation,
   onEnterGuardMode,
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>('overview');
@@ -199,6 +205,9 @@ export function StaffDashboard({
             onSignOut={onSignOut}
             guard={staffGuard}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
+            onAddCertification={staffGuard && onAddCertification ? (cert) => onAddCertification(currentUser.id, cert) : undefined}
+            onAddExperience={onAddExperience ? (exp) => onAddExperience(currentUser.id, exp) : undefined}
+            onAddEducation={onAddEducation ? (edu) => onAddEducation(currentUser.id, edu) : undefined}
           />
         );
       }

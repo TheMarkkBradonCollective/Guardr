@@ -6,13 +6,14 @@ import {
 } from '../lib/clientCoverage';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
+import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { LiveCoverageScreen } from './client/LiveCoverageScreen';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
 
-export type ClientView = 'home' | 'request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile';
+export type ClientView = 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -95,8 +96,7 @@ export function ClientDashboard({
 
   const startDirectGuardRequest = (guard: SecurityGuard) => {
     setRequestTargetGuard(guard);
-    setFlowPreset('direct');
-    navigate('request');
+    navigate('direct-request');
   };
 
   const wrap = (node: React.ReactNode) => (
@@ -108,15 +108,28 @@ export function ClientDashboard({
       <RequestSecurityFlow
         isClientApproved={isClientApproved}
         preset={flowPreset}
-        preselectedGuard={requestTargetGuard}
+        onBack={() => navigate('home')}
+        onSubmit={(req) => {
+          onPostRequest(req);
+          navigate('home');
+        }}
+      />
+    );
+  }
+
+  if (view === 'direct-request' && requestTargetGuard) {
+    return (
+      <DirectGuardRequestFlow
+        guard={requestTargetGuard}
+        isClientApproved={isClientApproved}
         onBack={() => {
           setRequestTargetGuard(null);
-          navigate(requestTargetGuard ? 'guards' : 'home');
+          navigate('guards');
         }}
         onSubmit={(req) => {
           onPostRequest(req);
           setRequestTargetGuard(null);
-          navigate('home');
+          navigate('requests');
         }}
       />
     );

@@ -32,7 +32,7 @@ interface ClientHomeScreenProps {
 
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
   { id: 'request', icon: Plus, label: 'Request security', sub: 'Open to any guard', accent: true },
-  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Profiles & direct requests' },
+  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes, licenses & certs' },
   { id: 'schedule', icon: Calendar, label: 'Schedule coverage', sub: 'Plan ahead' },
   { id: 'recurring', icon: Building2, label: 'Recurring sites', sub: 'Weekly / monthly' },
   { id: 'reports', icon: FileText, label: 'View reports', sub: 'Activity & incidents' },

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirectory';
+import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { Search, Shield, Star, ChevronRight } from 'lucide-react';
 
 interface GuardDirectoryScreenProps {
@@ -26,7 +27,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Find a guard</h1>
           <p className="text-sm text-brand-text-muted mt-1">
-            Browse verified professionals, view experience, and request someone directly.
+            Read full resumes, licenses, and experience — or post a general job from Home.
           </p>
         </div>
         <div className="relative">
@@ -72,19 +73,20 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-brand-text-muted mt-0.5">
+                  <p className="text-xs text-brand-primary font-medium mt-0.5 truncate">{getGuardDisplayHeadline(guard)}</p>
+                  <div className="flex items-center gap-2 text-sm text-brand-text-muted mt-1">
                     <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />
                     <span>{guard.rating.toFixed(1)}</span>
                     <span>·</span>
                     <span>{guard.jobsCompleted} shifts</span>
-                    {guard.isArmed && (
+                    {guard.yearsExperience != null && guard.yearsExperience > 0 && (
                       <>
                         <span>·</span>
-                        <span>Armed</span>
+                        <span>{guard.yearsExperience}yr exp</span>
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-brand-text-muted mt-1 line-clamp-2">{guard.bio || 'Licensed security professional.'}</p>
+                  <p className="text-sm text-brand-text-muted mt-1 line-clamp-2">{getGuardDisplaySummary(guard)}</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
               </button>

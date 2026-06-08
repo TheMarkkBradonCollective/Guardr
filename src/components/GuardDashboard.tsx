@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { SecurityRequest, SecurityGuard, Certification, Payment, SessionUser } from '../types';
+import { SecurityRequest, SecurityGuard, Certification, Payment, SessionUser, Experience, GuardEducation } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -29,6 +29,8 @@ interface GuardDashboardProps {
   currentUser: SessionUser;
   payments?: Payment[];
   onAddCertification: (cert: Partial<Certification>) => void;
+  onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
+  onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
@@ -49,6 +51,8 @@ export function GuardDashboard({
   currentUser,
   payments = [],
   onAddCertification,
+  onAddExperience,
+  onAddEducation,
   onAcceptJob,
   onUpdateJobAudit,
   onRecordAuditViolation,
@@ -453,6 +457,8 @@ export function GuardDashboard({
             guard={guard}
             onSave={onUpdateProfile}
             onAddCertification={onAddCertification}
+            onAddExperience={onAddExperience}
+            onAddEducation={onAddEducation}
           />
         </div>
       )}

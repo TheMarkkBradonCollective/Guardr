@@ -1,0 +1,533 @@
+import React, { useState } from 'react';
+import {
+  Certification,
+  Experience,
+  GuardEducation,
+  GUARD_SPECIALTY_OPTIONS,
+  SecurityGuard,
+} from '../../types';
+import {
+  getGuardCertifications,
+  getGuardLicenses,
+  joinTagInput,
+  LICENSE_CERT_OPTIONS,
+  parseTagInput,
+  TRAINING_CERT_OPTIONS,
+} from '../../lib/guardResume';
+import { formatStateName, US_STATES } from '../../lib/states';
+import { Award, BookOpen, Briefcase, GraduationCap, Plus, Shield } from 'lucide-react';
+
+export interface GuardResumeSavePayload {
+  headline: string;
+  summary: string;
+  about: string;
+  skills: string[];
+  languages: string[];
+  serviceAreas: string[];
+  specialties: string[];
+  yearsExperience?: number;
+  availabilityNotes: string;
+  hourlyRateRequirement?: number;
+}
+
+interface GuardResumeEditorProps {
+  guard: SecurityGuard;
+  editing: boolean;
+  payload: GuardResumeSavePayload;
+  onChange: (patch: Partial<GuardResumeSavePayload>) => void;
+  onAddLicense?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+}
+
+export function GuardResumeEditor({
+  guard,
+  editing,
+  payload,
+  onChange,
+  onAddLicense,
+  onAddCertification,
+  onAddExperience,
+  onAddEducation,
+}: GuardResumeEditorProps) {
+  const licenses = getGuardLicenses(guard);
+  const certifications = getGuardCertifications(guard);
+
+  const [showAddLicense, setShowAddLicense] = useState(false);
+  const [showAddCert, setShowAddCert] = useState(false);
+  const [showAddExp, setShowAddExp] = useState(false);
+  const [showAddEdu, setShowAddEdu] = useState(false);
+
+  const [licenseName, setLicenseName] = useState<string>(LICENSE_CERT_OPTIONS[0]);
+  const [licenseState, setLicenseState] = useState('');
+  const [licenseIssuer, setLicenseIssuer] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+
+  const [certName, setCertName] = useState<string>(TRAINING_CERT_OPTIONS[0]);
+  const [certIssuer, setCertIssuer] = useState('');
+  const [certNumber, setCertNumber] = useState('');
+
+  const [expTitle, setExpTitle] = useState('');
+  const [expCompany, setExpCompany] = useState('');
+  const [expPeriod, setExpPeriod] = useState('');
+  const [expDescription, setExpDescription] = useState('');
+
+  const [eduSchool, setEduSchool] = useState('');
+  const [eduDegree, setEduDegree] = useState('');
+  const [eduField, setEduField] = useState('');
+  const [eduPeriod, setEduPeriod] = useState('');
+  const [eduDescription, setEduDescription] = useState('');
+
+  const toggleSpecialty = (value: string) => {
+    const set = new Set(payload.specialties);
+    if (set.has(value)) set.delete(value);
+    else set.add(value);
+    onChange({ specialties: [...set] });
+  };
+
+  const toggleServiceArea = (code: string) => {
+    const set = new Set(payload.serviceAreas);
+    if (set.has(code)) set.delete(code);
+    else set.add(code);
+    onChange({ serviceAreas: [...set] });
+  };
+
+  const submitLicense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddLicense || !licenseIssuer.trim() || !licenseNumber.trim() || !licenseState) return;
+    await onAddLicense({
+      name: licenseName,
+      issuer: licenseIssuer.trim(),
+      number: licenseNumber.trim(),
+      state: licenseState.toUpperCase(),
+      status: 'pending',
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+    setLicenseIssuer('');
+    setLicenseNumber('');
+    setLicenseState('');
+    setShowAddLicense(false);
+  };
+
+  const submitCert = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddCertification || !certIssuer.trim() || !certNumber.trim()) return;
+    await onAddCertification({
+      name: certName,
+      issuer: certIssuer.trim(),
+      number: certNumber.trim(),
+      status: 'pending',
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+    setCertIssuer('');
+    setCertNumber('');
+    setShowAddCert(false);
+  };
+
+  const submitExperience = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddExperience || !expTitle.trim() || !expCompany.trim()) return;
+    await onAddExperience({
+      title: expTitle.trim(),
+      company: expCompany.trim(),
+      period: expPeriod.trim() || 'Present',
+      description: expDescription.trim(),
+    });
+    setExpTitle('');
+    setExpCompany('');
+    setExpPeriod('');
+    setExpDescription('');
+    setShowAddExp(false);
+  };
+
+  const submitEducation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddEducation || !eduSchool.trim()) return;
+    await onAddEducation({
+      school: eduSchool.trim(),
+      degree: eduDegree.trim(),
+      field: eduField.trim(),
+      period: eduPeriod.trim(),
+      description: eduDescription.trim(),
+    });
+    setEduSchool('');
+    setEduDegree('');
+    setEduField('');
+    setEduPeriod('');
+    setEduDescription('');
+    setShowAddEdu(false);
+  };
+
+  return (
+    <div className="space-y-5">
+      <section className="app-card space-y-4">
+        <p className="uber-label flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-brand-primary" />
+          Professional resume
+        </p>
+        <ResumeField
+          label="Headline"
+          value={payload.headline}
+          editing={editing}
+          onChange={(v) => onChange({ headline: v })}
+          placeholder="e.g. Executive Protection Specialist"
+        />
+        <ResumeField
+          label="Summary"
+          value={payload.summary}
+          editing={editing}
+          onChange={(v) => onChange({ summary: v })}
+          placeholder="One or two sentences clients see in search results"
+          multiline
+          rows={2}
+        />
+        <ResumeField
+          label="Full description"
+          value={payload.about}
+          editing={editing}
+          onChange={(v) => onChange({ about: v })}
+          placeholder="Your full resume — background, approach, sites you've worked, what you're looking for. Build this over time."
+          multiline
+          rows={8}
+        />
+        <ResumeField
+          label="Years of experience"
+          value={payload.yearsExperience != null ? String(payload.yearsExperience) : ''}
+          editing={editing}
+          onChange={(v) => onChange({ yearsExperience: v ? parseInt(v, 10) || undefined : undefined })}
+          type="number"
+        />
+        <ResumeField
+          label="Skills"
+          value={editing ? joinTagInput(payload.skills) : formatSkillList(payload.skills)}
+          editing={editing}
+          onChange={(v) => onChange({ skills: parseTagInput(v) })}
+          placeholder="Surveillance, de-escalation, report writing"
+        />
+        <ResumeField
+          label="Languages"
+          value={editing ? joinTagInput(payload.languages) : joinTagInput(payload.languages)}
+          editing={editing}
+          onChange={(v) => onChange({ languages: parseTagInput(v) })}
+          placeholder="English, Spanish"
+        />
+        <ResumeField
+          label="Availability"
+          value={payload.availabilityNotes}
+          editing={editing}
+          onChange={(v) => onChange({ availabilityNotes: v })}
+          placeholder="Nights, weekends, 24hr notice for travel…"
+          multiline
+          rows={2}
+        />
+      </section>
+
+      <section className="app-card space-y-3">
+        <p className="uber-label">Specialties</p>
+        <div className="flex flex-wrap gap-2">
+          {GUARD_SPECIALTY_OPTIONS.map((opt) => {
+            const active = payload.specialties.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                disabled={!editing}
+                onClick={() => toggleSpecialty(opt)}
+                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!editing ? 'opacity-80' : ''}`}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="app-card space-y-3">
+        <p className="uber-label">Service areas (states)</p>
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+          {US_STATES.map(({ code, name }) => {
+            const active = payload.serviceAreas.includes(code);
+            return (
+              <button
+                key={code}
+                type="button"
+                disabled={!editing}
+                onClick={() => toggleServiceArea(code)}
+                className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!editing ? 'opacity-80' : ''}`}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <CredentialSection
+        title="State licenses"
+        subtitle="Guard cards by state — verified by staff before you can work there"
+        icon={Shield}
+        items={licenses}
+        canAdd={editing && !!onAddLicense}
+        onAdd={() => setShowAddLicense((v) => !v)}
+        showForm={showAddLicense}
+        form={
+          <form onSubmit={submitLicense} className="space-y-3 border-t border-brand-border pt-3">
+            <select value={licenseName} onChange={(e) => setLicenseName(e.target.value)} className="uber-select w-full">
+              {LICENSE_CERT_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            <select value={licenseState} onChange={(e) => setLicenseState(e.target.value)} required className="uber-select w-full">
+              <option value="">State…</option>
+              {US_STATES.map(({ code, name }) => (
+                <option key={code} value={code}>{name}</option>
+              ))}
+            </select>
+            <input className="uber-input w-full" placeholder="Issuing body" value={licenseIssuer} onChange={(e) => setLicenseIssuer(e.target.value)} required />
+            <input className="uber-input w-full" placeholder="License / card #" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} required />
+            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Submit license</button>
+          </form>
+        }
+        renderMeta={(cert) => (
+          <>
+            {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer} · #{cert.number}
+          </>
+        )}
+      />
+
+      <CredentialSection
+        title="Certifications & training"
+        subtitle="CPR, armed courses, medical — separate from state guard cards"
+        icon={Award}
+        items={certifications}
+        canAdd={editing && !!onAddCertification}
+        onAdd={() => setShowAddCert((v) => !v)}
+        showForm={showAddCert}
+        form={
+          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+            <select value={certName} onChange={(e) => setCertName(e.target.value)} className="uber-select w-full">
+              {TRAINING_CERT_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            <input className="uber-input w-full" placeholder="Issuing organization" value={certIssuer} onChange={(e) => setCertIssuer(e.target.value)} required />
+            <input className="uber-input w-full" placeholder="Certificate #" value={certNumber} onChange={(e) => setCertNumber(e.target.value)} required />
+            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Submit certification</button>
+          </form>
+        }
+        renderMeta={(cert) => <>{cert.issuer} · #{cert.number}</>}
+      />
+
+      <ExperienceSection
+        title="Work experience"
+        icon={Briefcase}
+        items={guard.experience}
+        canAdd={editing && !!onAddExperience}
+        onAdd={() => setShowAddExp((v) => !v)}
+        showForm={showAddExp}
+        form={
+          <form onSubmit={submitExperience} className="space-y-3 border-t border-brand-border pt-3">
+            <input className="uber-input w-full" placeholder="Job title" value={expTitle} onChange={(e) => setExpTitle(e.target.value)} required />
+            <input className="uber-input w-full" placeholder="Company / site" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
+            <input className="uber-input w-full" placeholder="Period (e.g. 2020 – 2024)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
+            <textarea className="uber-input w-full resize-none" rows={3} placeholder="What you did, sites, responsibilities…" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} />
+            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Add experience</button>
+          </form>
+        }
+      />
+
+      <ExperienceSection
+        title="Education"
+        icon={GraduationCap}
+        items={(guard.education ?? []).map((e) => ({
+          id: e.id,
+          title: e.degree ? `${e.degree}${e.field ? ` in ${e.field}` : ''}` : e.field || 'Education',
+          company: e.school,
+          period: e.period,
+          description: e.description ?? '',
+        }))}
+        canAdd={editing && !!onAddEducation}
+        onAdd={() => setShowAddEdu((v) => !v)}
+        showForm={showAddEdu}
+        form={
+          <form onSubmit={submitEducation} className="space-y-3 border-t border-brand-border pt-3">
+            <input className="uber-input w-full" placeholder="School / academy" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} required />
+            <input className="uber-input w-full" placeholder="Degree or program" value={eduDegree} onChange={(e) => setEduDegree(e.target.value)} />
+            <input className="uber-input w-full" placeholder="Field of study" value={eduField} onChange={(e) => setEduField(e.target.value)} />
+            <input className="uber-input w-full" placeholder="Years" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
+            <textarea className="uber-input w-full resize-none" rows={2} placeholder="Notes (optional)" value={eduDescription} onChange={(e) => setEduDescription(e.target.value)} />
+            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Add education</button>
+          </form>
+        }
+      />
+    </div>
+  );
+}
+
+function formatSkillList(skills: string[]): string {
+  return skills.length ? skills.join(' · ') : '—';
+}
+
+function ResumeField({
+  label,
+  value,
+  editing,
+  onChange,
+  placeholder,
+  multiline,
+  rows = 3,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  editing: boolean;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
+  rows?: number;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="uber-label">{label}</label>
+      {editing ? (
+        multiline ? (
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={rows}
+            placeholder={placeholder}
+            className="uber-input w-full mt-1 resize-none"
+          />
+        ) : (
+          <input
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className="uber-input w-full mt-1"
+          />
+        )
+      ) : (
+        <p className="text-sm mt-1 text-brand-text-muted whitespace-pre-wrap">{value || '—'}</p>
+      )}
+    </div>
+  );
+}
+
+function CredentialSection({
+  title,
+  subtitle,
+  icon: Icon,
+  items,
+  canAdd,
+  onAdd,
+  showForm,
+  form,
+  renderMeta,
+}: {
+  title: string;
+  subtitle: string;
+  icon: typeof Shield;
+  items: Certification[];
+  canAdd: boolean;
+  onAdd: () => void;
+  showForm: boolean;
+  form: React.ReactNode;
+  renderMeta: (cert: Certification) => React.ReactNode;
+}) {
+  return (
+    <section className="app-card space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="uber-label flex items-center gap-2">
+            <Icon className="w-4 h-4 text-brand-primary" />
+            {title}
+          </p>
+          <p className="text-xs text-brand-text-muted mt-1">{subtitle}</p>
+        </div>
+        {canAdd && (
+          <button type="button" onClick={onAdd} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold shrink-0">
+            <Plus className="w-3 h-3" />
+            Add
+          </button>
+        )}
+      </div>
+      {showForm && form}
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="text-xs text-brand-text-muted text-center py-4">None listed yet.</p>
+        ) : (
+          items.map((cert) => (
+            <div key={cert.id} className="p-3 rounded-xl surface-muted flex justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm">{cert.name}</p>
+                <p className="text-xs text-brand-text-muted mt-1">{renderMeta(cert)}</p>
+              </div>
+              <span className={`shrink-0 text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${
+                cert.status === 'verified' ? 'text-brand-primary border-brand-primary/30' : 'text-brand-text-muted border-brand-border'
+              }`}>
+                {cert.status}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ExperienceSection({
+  title,
+  icon: Icon,
+  items,
+  canAdd,
+  onAdd,
+  showForm,
+  form,
+}: {
+  title: string;
+  icon: typeof Briefcase;
+  items: Experience[];
+  canAdd: boolean;
+  onAdd: () => void;
+  showForm: boolean;
+  form: React.ReactNode;
+}) {
+  return (
+    <section className="app-card space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="uber-label flex items-center gap-2">
+          <Icon className="w-4 h-4 text-brand-primary" />
+          {title}
+        </p>
+        {canAdd && (
+          <button type="button" onClick={onAdd} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold">
+            <Plus className="w-3 h-3" />
+            Add
+          </button>
+        )}
+      </div>
+      {showForm && form}
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="text-xs text-brand-text-muted text-center py-4">None listed yet — add to build your resume.</p>
+        ) : (
+          items.map((exp) => (
+            <div key={exp.id} className="p-3 rounded-xl surface-muted">
+              <p className="font-semibold text-sm">{exp.title}</p>
+              <p className="text-sm text-brand-primary mt-0.5">{exp.company}</p>
+              <p className="text-xs text-brand-text-muted mt-1">{exp.period}</p>
+              {exp.description && (
+                <p className="text-sm text-brand-text-muted mt-2 leading-relaxed whitespace-pre-wrap">{exp.description}</p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}

@@ -32,7 +32,7 @@ export function ClientAppLayout({
   onNavigate,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
-  const hideBottomNav = activeView === 'request';
+  const hideBottomNav = activeView === 'request' || activeView === 'direct-request';
 
   return (
     <div className="page-shell h-full">

@@ -51,7 +51,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
   }
 
   const isUpcoming = job.status === 'accepted';
-  const isDirectRequest = !!job.preferredGuardId;
+  const isDirectRequest = job.requestType === 'direct';
 
   return (
     <div className="space-y-4">
@@ -64,7 +64,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
           )}
           {isDirectRequest && job.status === 'open' && (
             <span className="inline-block text-xs font-semibold text-amber-400 bg-amber-500/15 px-2.5 py-1 rounded-full mb-2 ml-0">
-              Direct request for you
+              Client sent you this assignment
             </span>
           )}
           <h3 className="text-xl font-bold tracking-tight leading-tight">{job.title}</h3>

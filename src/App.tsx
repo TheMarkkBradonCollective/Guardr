@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser, Payment, PaymentStatus } from './types';
+import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser, Payment, PaymentStatus, Experience, GuardEducation } from './types';
 import { isStaffRole } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
@@ -110,15 +110,30 @@ export default function App() {
     })();
   }, []);
 
+  const parseJsonStringArray = (val: unknown): string[] => {
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   const loadFromSupabase = async () => {
     try {
       const { data: dbGuards, error: guardsErr } = await supabase.from('guards').select('*');
       const { data: dbClients, error: clientsErr } = await supabase.from('clients').select('*');
       const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
       const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
+      const { data: dbEducation, error: eduErr } = await supabase.from('education').select('*');
       const { data: dbRequests, error: requestsErr } = await supabase.from('security_requests').select('*');
       const { data: dbPayments, error: paymentsErr } = await supabase.from('payments').select('*');
 
+      if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
       if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
         setGuards([]);
@@ -131,6 +146,15 @@ export default function App() {
       setGuards((dbGuards ?? []).map((g: any) => ({
         id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
         avatar: g.avatar, phone: g.phone, bio: g.bio,
+        headline: g.headline || undefined,
+        summary: g.summary || undefined,
+        about: g.about || undefined,
+        skills: parseJsonStringArray(g.skills),
+        languages: parseJsonStringArray(g.languages),
+        serviceAreas: parseJsonStringArray(g.service_areas),
+        specialties: parseJsonStringArray(g.specialties),
+        yearsExperience: g.years_experience ?? undefined,
+        availabilityNotes: g.availability_notes || undefined,
         isArmed: g.is_armed, backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
         hourlyRateRequirement: g.hourly_rate_requirement,
@@ -146,6 +170,10 @@ export default function App() {
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
+        })),
+        education: (dbEducation ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
+          id: e.id, school: e.school, degree: e.degree, field: e.field,
+          period: e.period, description: e.description ?? '',
         })),
       })));
 
@@ -178,7 +206,8 @@ export default function App() {
         estimatedPayout: r.estimated_payout,
         status: normalizeJobStatus(r.status),
         assignedGuardId: r.assigned_guard_id,
-        preferredGuardId: r.preferred_guard_id ?? undefined,
+        requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
+        targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
         requiredCertifications: r.required_certifications || [],
         applicants: r.applicants || [],
         ratingGiven: r.rating_given ?? undefined,
@@ -308,6 +337,49 @@ export default function App() {
     }
   };
 
+  const handleAddExperience = async (guardId: string, exp: Omit<Experience, 'id'>) => {
+    const row: Experience = { id: `exp-${Date.now()}`, ...exp };
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, experience: [...g.experience, row] } : g))
+    );
+    if (isDbConnected) {
+      try {
+        await supabase.from('experience').insert({
+          id: row.id,
+          guard_id: guardId,
+          title: row.title,
+          company: row.company,
+          period: row.period,
+          description: row.description,
+        });
+      } catch (e) {
+        console.error('Experience insert error:', e);
+      }
+    }
+  };
+
+  const handleAddEducation = async (guardId: string, edu: Omit<GuardEducation, 'id'>) => {
+    const row: GuardEducation = { id: `edu-${Date.now()}`, ...edu };
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, education: [...(g.education ?? []), row] } : g))
+    );
+    if (isDbConnected) {
+      try {
+        await supabase.from('education').insert({
+          id: row.id,
+          guard_id: guardId,
+          school: row.school,
+          degree: row.degree,
+          field: row.field,
+          period: row.period,
+          description: row.description ?? '',
+        });
+      } catch (e) {
+        console.error('Education insert error:', e);
+      }
+    }
+  };
+
   // ── Certification CRUD ─────────────────────────────────────
   const handleAddCertification = async (guardId: string, newCert: Partial<Certification>) => {
     const certWithId: Certification = {
@@ -376,7 +448,16 @@ export default function App() {
               ...g,
               name: payload.name,
               phone: payload.phone,
-              bio: payload.bio ?? g.bio,
+              bio: payload.bio ?? payload.summary ?? g.bio,
+              headline: payload.headline ?? g.headline,
+              summary: payload.summary ?? g.summary,
+              about: payload.about ?? g.about,
+              skills: payload.skills ?? g.skills,
+              languages: payload.languages ?? g.languages,
+              serviceAreas: payload.serviceAreas ?? g.serviceAreas,
+              specialties: payload.specialties ?? g.specialties,
+              yearsExperience: payload.yearsExperience ?? g.yearsExperience,
+              availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
             }
           : g
@@ -388,7 +469,16 @@ export default function App() {
         .update({
           name: payload.name,
           phone: payload.phone,
-          bio: payload.bio ?? '',
+          bio: payload.bio ?? payload.summary ?? '',
+          headline: payload.headline ?? '',
+          summary: payload.summary ?? '',
+          about: payload.about ?? '',
+          skills: payload.skills ?? [],
+          languages: payload.languages ?? [],
+          service_areas: payload.serviceAreas ?? [],
+          specialties: payload.specialties ?? [],
+          years_experience: payload.yearsExperience ?? null,
+          availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
         })
         .eq('id', guardId);
@@ -519,7 +609,8 @@ export default function App() {
       status: 'pending-review',
       paymentStatus: 'unpaid',
       assignedGuardId: null,
-      preferredGuardId: newRequest.preferredGuardId ?? null,
+      requestType: newRequest.requestType ?? 'marketplace',
+      targetGuardId: newRequest.requestType === 'direct' ? (newRequest.targetGuardId ?? null) : null,
       requiredCertifications: newRequest.requiredCertifications || [],
       applicants: [],
     };
@@ -552,7 +643,8 @@ export default function App() {
           estimated_payout: freshJob.estimatedPayout, status: freshJob.status,
           payment_status: 'unpaid',
           assigned_guard_id: freshJob.assignedGuardId,
-          preferred_guard_id: freshJob.preferredGuardId ?? null,
+          request_type: freshJob.requestType ?? 'marketplace',
+          target_guard_id: freshJob.targetGuardId ?? null,
           required_certifications: freshJob.requiredCertifications,
           applicants: freshJob.applicants,
         });
@@ -689,8 +781,8 @@ export default function App() {
     if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
-      if (job.preferredGuardId && job.preferredGuardId !== activeGuardId) {
-        alert('This request was sent directly to another guard.');
+      if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
+        alert('This assignment was sent to another guard from their profile.');
         return;
       }
       const { canAccept } = checkJobRequirements(activeGuard, job);
@@ -920,6 +1012,8 @@ export default function App() {
           requests={requests}
           payments={payments}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
+          onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
+          onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
           onAcceptJob={handleAcceptJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}
@@ -1003,6 +1097,8 @@ export default function App() {
             requests={requests}
             payments={payments}
             onAddCertification={(cert) => handleAddCertification(staffGuardProfile.id, cert)}
+            onAddExperience={(exp) => handleAddExperience(staffGuardProfile.id, exp)}
+            onAddEducation={(edu) => handleAddEducation(staffGuardProfile.id, edu)}
             onAcceptJob={handleAcceptJob}
             onUpdateJobAudit={handleUpdateJobAudit}
             onRecordAuditViolation={handleRecordAuditViolation}
@@ -1047,6 +1143,9 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
+          onAddCertification={handleAddCertification}
+          onAddExperience={handleAddExperience}
+          onAddEducation={handleAddEducation}
           onEnterGuardMode={() => setStaffGuardMode(true)}
         />
         <InstallPrompt />

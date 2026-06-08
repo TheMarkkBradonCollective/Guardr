@@ -53,6 +53,33 @@ export interface Experience {
   description: string;
 }
 
+export interface GuardEducation {
+  id: string;
+  school: string;
+  degree: string;
+  field: string;
+  period: string;
+  description?: string;
+}
+
+/** How a security request was created */
+export type RequestType = 'marketplace' | 'direct';
+
+export const GUARD_SPECIALTY_OPTIONS = [
+  'Event security',
+  'Corporate / office',
+  'Construction site',
+  'Residential / HOA',
+  'Retail & loss prevention',
+  'Executive protection',
+  'Armed transport',
+  'Fire watch',
+  'Hospital / healthcare',
+  'School / campus',
+] as const;
+
+export type GuardSpecialty = (typeof GUARD_SPECIALTY_OPTIONS)[number];
+
 /** A client account — stored separately from guards */
 export interface Client {
   id: string;
@@ -91,7 +118,21 @@ export interface SecurityGuard {
   badgeNumber: string;
   avatar: string;
   phone: string;
+  /** @deprecated Use summary/about — kept for legacy rows */
   bio: string;
+  /** Professional title, e.g. "Executive Protection Specialist" */
+  headline?: string;
+  /** Short elevator pitch shown on directory cards */
+  summary?: string;
+  /** Full resume-style description guards build over time */
+  about?: string;
+  skills?: string[];
+  languages?: string[];
+  /** US state codes where guard advertises availability */
+  serviceAreas?: string[];
+  specialties?: string[];
+  yearsExperience?: number;
+  availabilityNotes?: string;
   isArmed: boolean;
   backgroundChecked: boolean;
   verified: boolean;
@@ -99,6 +140,7 @@ export interface SecurityGuard {
   jobsCompleted: number;
   certifications: Certification[];
   experience: Experience[];
+  education?: GuardEducation[];
   hourlyRateRequirement?: number;
   isStaff?: boolean;
   staffRole?: StaffRole;
@@ -137,8 +179,10 @@ export interface SecurityRequest {
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;
   assignedGuardId: string | null;
-  /** When set, only this guard can accept the job (direct client request) */
-  preferredGuardId?: string | null;
+  /** marketplace = open post for any guard; direct = client sent from a guard profile */
+  requestType?: RequestType;
+  /** Set only when requestType is direct */
+  targetGuardId?: string | null;
   requiredCertifications: string[];
   applicants: string[];
   ratingGiven?: number;

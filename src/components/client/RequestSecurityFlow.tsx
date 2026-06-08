@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import { SecurityRequest } from '../../types';
 import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
@@ -15,12 +15,11 @@ import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
 
-export type RequestFlowPreset = 'default' | 'schedule' | 'recurring' | 'direct';
+export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
 interface RequestSecurityFlowProps {
   isClientApproved: boolean;
   preset?: RequestFlowPreset;
-  preselectedGuard?: SecurityGuard | null;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -30,11 +29,9 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Revie
 export function RequestSecurityFlow({
   isClientApproved,
   preset = 'default',
-  preselectedGuard = null,
   onBack,
   onSubmit,
 }: RequestSecurityFlowProps) {
-  const isDirectRequest = preset === 'direct' && !!preselectedGuard;
   const defaultStart = useMemo(() => {
     if (preset === 'schedule' || preset === 'recurring') {
       const d = new Date();
@@ -86,19 +83,12 @@ export function RequestSecurityFlow({
 
   const goNext = () => {
     if (!canNext()) return;
-    if (step < 6) {
-      let next = (step + 1) as FlowStep;
-      if (isDirectRequest && next === 4) next = 5;
-      setStep(next);
-    }
+    if (step < 6) setStep((s) => (s + 1) as FlowStep);
   };
 
   const goBack = () => {
-    if (step > 1) {
-      let prev = (step - 1) as FlowStep;
-      if (isDirectRequest && prev === 4) prev = 3;
-      setStep(prev);
-    } else onBack();
+    if (step > 1) setStep((s) => (s - 1) as FlowStep);
+    else onBack();
   };
 
   const handleSubmit = () => {
@@ -107,25 +97,21 @@ export function RequestSecurityFlow({
       return;
     }
     onSubmit({
-      title: isDirectRequest ? `${title} — ${preselectedGuard!.name}` : title,
+      requestType: 'marketplace',
+      title,
       siteName: siteName || title,
       address,
       state: jobState.toUpperCase(),
       location: siteName ? `${siteName} — ${address}` : address,
       type: serviceToJobType(serviceId),
-      guardsNeeded: isDirectRequest ? 1 : effectiveGuards,
-      preferredGuardId: isDirectRequest ? preselectedGuard!.id : null,
+      guardsNeeded: effectiveGuards,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
-      estimatedPayout: isDirectRequest
-        ? Math.round(durationHours * effectiveRate * 100) / 100
-        : estimatedTotal,
-      description: isDirectRequest
-        ? `Direct request for ${preselectedGuard!.name} — ${selectedService.label} at ${address}.`
-        : `${selectedService.label} coverage at ${address}.`,
+      estimatedPayout: estimatedTotal,
+      description: `${selectedService.label} coverage at ${address}.`,
       siteInstructions: `${selectedService.label} post orders for ${siteName || address}.`,
       requiredCertifications: ['State Unarmed Guard Card License'],
       armedRequired: false,
@@ -135,15 +121,6 @@ export function RequestSecurityFlow({
 
   return (
     <div className="max-w-lg mx-auto h-full flex flex-col animate-fade-in client-content-shell">
-      {isDirectRequest && preselectedGuard && (
-        <div className="mb-4 rounded-2xl border border-brand-primary/30 bg-brand-primary/10 p-4">
-          <p className="text-xs font-semibold text-brand-primary uppercase tracking-wide">Direct guard request</p>
-          <p className="font-bold mt-1">{preselectedGuard.name}</p>
-          <p className="text-sm text-brand-text-muted mt-0.5">
-            This request goes straight to them — not posted to the general marketplace.
-          </p>
-        </div>
-      )}
       {/* Top bar — Uber-style */}
       <div className="flex items-center gap-3 mb-6 shrink-0">
         <button type="button" onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface transition-colors" aria-label="Back">
@@ -377,17 +354,10 @@ export function RequestSecurityFlow({
                 <span className="text-brand-text-muted">Schedule</span>
                 <span className="font-bold">{formatDuration(durationHours)}</span>
               </div>
-              {isDirectRequest && preselectedGuard ? (
-                <div className="flex justify-between text-sm">
-                  <span className="text-brand-text-muted">Requested guard</span>
-                  <span className="font-bold">{preselectedGuard.name}</span>
-                </div>
-              ) : (
-                <div className="flex justify-between text-sm">
-                  <span className="text-brand-text-muted">Guards</span>
-                  <span className="font-bold">{effectiveGuards}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-text-muted">Guards needed</span>
+                <span className="font-bold">{effectiveGuards}</span>
+              </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-text-muted">Rate</span>
                 <span className="font-bold">${effectiveRate}/hr</span>
