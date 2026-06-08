@@ -1,5 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../../lib/stripeClient';
+
+async function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key === 'sk_test_placeholder') return null;
+  const { default: StripeSdk } = await import('stripe');
+  return new StripeSdk(key);
+}
+
+async function getSupabaseAdmin() {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -23,7 +42,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
 
-    const { getSupabaseAdmin } = await import('../../../lib/supabaseAdmin');
     const db = await getSupabaseAdmin();
     if (db && jobId) {
       await db.from('security_requests').update({ payment_status: 'unpaid' }).eq('id', jobId);

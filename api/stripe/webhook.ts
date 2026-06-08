@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../lib/stripeClient';
-import { processStripeWebhookEvent } from '../../lib/stripeShared';
+import type Stripe from 'stripe';
 
 export const config = {
   api: {
@@ -8,13 +7,29 @@ export const config = {
   },
 };
 
+async function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key === 'sk_test_placeholder') return null;
+  const { default: StripeSdk } = await import('stripe');
+  return new StripeSdk(key);
+}
+
+async function getSupabaseAdmin() {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 async function readRawBody(req: VercelRequest): Promise<Buffer> {
-  if (Buffer.isBuffer(req.body)) {
-    return req.body;
-  }
-  if (typeof req.body === 'string') {
-    return Buffer.from(req.body, 'utf8');
-  }
+  if (Buffer.isBuffer(req.body)) return req.body;
+  if (typeof req.body === 'string') return Buffer.from(req.body, 'utf8');
 
   const chunks: Buffer[] = [];
   await new Promise<void>((resolve, reject) => {
@@ -27,6 +42,141 @@ async function readRawBody(req: VercelRequest): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+async function markJobPaid(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = await getSupabaseAdmin();
+  if (!db) return;
+
+  const amount = amountCents / 100;
+
+  await db
+    .from('security_requests')
+    .update({
+      payment_status: 'paid',
+      stripe_payment_intent_id: paymentIntentId,
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+    });
+  }
+}
+
+async function markJobReleased(jobId: string, transferId: string) {
+  const db = await getSupabaseAdmin();
+  if (!db) return;
+
+  await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
+  await db
+    .from('payments')
+    .update({
+      status: 'released',
+      stripe_transfer_id: transferId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('job_id', jobId);
+}
+
+async function processStripeWebhookEvent(event: Stripe.Event) {
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const jobId = session.metadata?.job_id;
+      if (!jobId) break;
+
+      const paymentIntentId =
+        typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id ?? null;
+
+      await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      break;
+    }
+
+    case 'payment_intent.succeeded': {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      const jobId = intent.metadata?.job_id;
+      if (!jobId) break;
+
+      const db = await getSupabaseAdmin();
+      if (db) {
+        await db
+          .from('security_requests')
+          .update({
+            payment_status: 'paid',
+            stripe_payment_intent_id: intent.id,
+          })
+          .eq('id', jobId);
+
+        await db
+          .from('payments')
+          .update({
+            status: 'paid',
+            stripe_payment_intent_id: intent.id,
+            amount: (intent.amount_received ?? intent.amount) / 100,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('job_id', jobId);
+      }
+      break;
+    }
+
+    case 'transfer.created':
+    case 'transfer.updated': {
+      const transfer = event.data.object as Stripe.Transfer;
+      const jobId = transfer.metadata?.job_id;
+      if (jobId && !transfer.reversed) {
+        await markJobReleased(jobId, transfer.id);
+      }
+      break;
+    }
+
+    case 'transfer.reversed': {
+      const transfer = event.data.object as Stripe.Transfer;
+      const jobId = transfer.metadata?.job_id;
+      const db = await getSupabaseAdmin();
+      if (db && jobId) {
+        await db
+          .from('payments')
+          .update({ status: 'failed', updated_at: new Date().toISOString() })
+          .eq('job_id', jobId);
+      }
+      console.error('Stripe transfer reversed:', transfer.id, jobId);
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -36,7 +186,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!stripe || !webhookSecret) {
-    console.warn('Stripe webhook: missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET');
     return res.status(503).json({ error: 'Stripe webhooks not configured' });
   }
 
@@ -45,13 +194,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing stripe-signature header' });
   }
 
-  let event;
+  let event: Stripe.Event;
   try {
     const rawBody = await readRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid signature';
-    console.error('Webhook signature verification failed:', message);
     return res.status(400).json({ error: `Webhook Error: ${message}` });
   }
 

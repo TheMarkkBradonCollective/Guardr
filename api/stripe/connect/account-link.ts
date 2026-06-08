@@ -1,6 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../../lib/stripeClient';
-import { getSiteUrl } from '../../../lib/siteConfig';
+
+function getSiteUrl(): string {
+  const configured = process.env.APP_URL?.trim().replace(/\/$/, '');
+  if (configured) return configured;
+  return process.env.VERCEL ? 'https://www.guardr.co' : 'http://localhost:3000';
+}
+
+async function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key === 'sk_test_placeholder') return null;
+  const { default: StripeSdk } = await import('stripe');
+  return new StripeSdk(key);
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

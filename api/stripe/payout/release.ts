@@ -1,6 +1,31 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { computeGuardPayoutCents, getStripe } from '../../../lib/stripeClient';
-import { markJobReleased } from '../../../lib/stripeShared';
+
+const GUARD_PAY_PLATFORM_FEE = 5;
+
+function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
+  const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
+  return Math.round(durationHours * guardPay * 100);
+}
+
+async function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || key === 'sk_test_placeholder') return null;
+  const { default: StripeSdk } = await import('stripe');
+  return new StripeSdk(key);
+}
+
+async function getSupabaseAdmin() {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -26,7 +51,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { getSupabaseAdmin } = await import('../../../lib/supabaseAdmin');
   const db = await getSupabaseAdmin();
   if (db) {
     const { data: job } = await db
@@ -65,7 +89,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       metadata: { job_id: jobId },
     });
 
-    await markJobReleased(jobId, transfer.id);
+    if (db) {
+      await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
+      await db
+        .from('payments')
+        .update({
+          status: 'released',
+          stripe_transfer_id: transfer.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('job_id', jobId);
+    }
 
     return res.status(200).json({
       transferId: transfer.id,
