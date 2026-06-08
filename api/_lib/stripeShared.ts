@@ -1,17 +1,10 @@
-import Stripe from 'stripe';
-import { getSupabaseAdmin } from './supabaseAdmin';
+import type Stripe from 'stripe';
 
-const GUARD_PAY_PLATFORM_FEE = 5;
+export { computeGuardPayoutCents, getStripe } from './stripeClient';
 
-export function getStripe(): Stripe | null {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') return null;
-  return new Stripe(key);
-}
-
-export function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
-  const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
-  return Math.round(durationHours * guardPay * 100);
+async function getDb() {
+  const { getSupabaseAdmin } = await import('./supabaseAdmin');
+  return getSupabaseAdmin();
 }
 
 export async function markJobPaid(
@@ -20,7 +13,7 @@ export async function markJobPaid(
   sessionId: string,
   amountCents: number
 ) {
-  const db = getSupabaseAdmin();
+  const db = await getDb();
   if (!db) return;
 
   const amount = amountCents / 100;
@@ -62,7 +55,7 @@ export async function markJobPaid(
 }
 
 export async function markJobHeld(jobId: string) {
-  const db = getSupabaseAdmin();
+  const db = await getDb();
   if (!db) return;
 
   await db.from('security_requests').update({ payment_status: 'held' }).eq('id', jobId);
@@ -74,7 +67,7 @@ export async function markJobHeld(jobId: string) {
 }
 
 export async function markJobReleased(jobId: string, transferId: string) {
-  const db = getSupabaseAdmin();
+  const db = await getDb();
   if (!db) return;
 
   await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
@@ -109,7 +102,7 @@ export async function processStripeWebhookEvent(event: Stripe.Event) {
       const jobId = intent.metadata?.job_id;
       if (!jobId) break;
 
-      const db = getSupabaseAdmin();
+      const db = await getDb();
       if (db) {
         await db
           .from('security_requests')
@@ -145,7 +138,7 @@ export async function processStripeWebhookEvent(event: Stripe.Event) {
     case 'transfer.reversed': {
       const transfer = event.data.object as Stripe.Transfer;
       const jobId = transfer.metadata?.job_id;
-      const db = getSupabaseAdmin();
+      const db = await getDb();
       if (db && jobId) {
         await db
           .from('payments')

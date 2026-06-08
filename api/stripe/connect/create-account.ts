@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../_lib/stripeShared';
-import { getSupabaseAdmin } from '../../_lib/supabaseAdmin';
+import { getStripe } from '../../_lib/stripeClient';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -23,6 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const { getSupabaseAdmin } = await import('../../_lib/supabaseAdmin');
     const db = getSupabaseAdmin();
     let accountId: string | null = null;
 

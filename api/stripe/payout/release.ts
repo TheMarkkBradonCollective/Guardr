@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { computeGuardPayoutCents, getStripe, markJobReleased } from '../../_lib/stripeShared';
-import { getSupabaseAdmin } from '../../_lib/supabaseAdmin';
+import { computeGuardPayoutCents, getStripe } from '../../_lib/stripeClient';
+import { markJobReleased } from '../../_lib/stripeShared';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -26,6 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  const { getSupabaseAdmin } = await import('../../_lib/supabaseAdmin');
   const db = getSupabaseAdmin();
   if (db) {
     const { data: job } = await db

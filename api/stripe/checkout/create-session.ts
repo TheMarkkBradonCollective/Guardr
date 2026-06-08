@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStripe } from '../../_lib/stripeShared';
-import { getSupabaseAdmin } from '../../_lib/supabaseAdmin';
+import { getStripe } from '../../_lib/stripeClient';
 import { getSiteUrl } from '../../_lib/siteConfig';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,6 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cancel_url: `${base}/?payment=cancelled&job_id=${jobId}`,
     });
 
+    const { getSupabaseAdmin } = await import('../../_lib/supabaseAdmin');
     const db = getSupabaseAdmin();
     if (db) {
       await db.from('payments').insert({
