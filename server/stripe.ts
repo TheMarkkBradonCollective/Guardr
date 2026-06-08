@@ -2,6 +2,7 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import Stripe from 'stripe';
 import { getSupabaseAdmin } from './supabaseAdmin';
+import { getSiteUrl } from './siteConfig';
 
 const GUARD_PAY_PLATFORM_FEE = 5;
 
@@ -10,8 +11,6 @@ function getStripe(): Stripe | null {
   if (!key || key === 'sk_test_placeholder') return null;
   return new Stripe(key);
 }
-
-import { getSiteUrl } from './siteConfig';
 
 function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
   const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
@@ -92,10 +91,10 @@ async function markJobReleased(jobId: string, transferId: string) {
     .eq('job_id', jobId);
 }
 
-export function registerStripeRoutes(app: Express) {
+/** Stripe webhook — must be registered before express.json() middleware */
+export function registerStripeWebhook(app: Express) {
   const stripe = getStripe();
 
-  // Webhook must receive raw body — registered before express.json() in server.ts
   app.post(
     '/api/stripe/webhook',
     express.raw({ type: 'application/json' }),
@@ -213,6 +212,10 @@ export function registerStripeRoutes(app: Express) {
       return res.json({ received: true });
     }
   );
+}
+
+export function registerStripeRoutes(app: Express) {
+  const stripe = getStripe();
 
   // ── Connect: create Express account ────────────────────────
   app.post('/api/stripe/connect/create-account', async (req: Request, res: Response) => {

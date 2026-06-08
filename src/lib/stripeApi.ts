@@ -1,5 +1,23 @@
 /** Client-side helpers for Guardr Stripe API routes (secrets stay server-side). */
 
+async function parseApiResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!text) {
+    throw new Error(res.ok ? 'Empty server response' : `Server error (${res.status})`);
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const preview = text.slice(0, 120).replace(/\s+/g, ' ');
+    if (preview.toLowerCase().includes('server error')) {
+      throw new Error(
+        'API server is down. Check Vercel env vars (STRIPE_SECRET_KEY, SUPABASE_URL) and redeploy.'
+      );
+    }
+    throw new Error(`Server returned invalid response: ${preview}`);
+  }
+}
+
 export async function createCheckoutSession(params: {
   jobId: string;
   clientEmail: string;
@@ -11,7 +29,7 @@ export async function createCheckoutSession(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
-  const data = await res.json();
+  const data = await parseApiResponse<{ url: string; sessionId: string; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to create checkout session');
   return data;
 }
@@ -26,7 +44,7 @@ export async function createConnectAccount(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
-  const data = await res.json();
+  const data = await parseApiResponse<{ accountId: string; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to create Connect account');
   return data;
 }
@@ -37,7 +55,7 @@ export async function createConnectAccountLink(accountId: string): Promise<{ url
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ accountId }),
   });
-  const data = await res.json();
+  const data = await parseApiResponse<{ url: string; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to create onboarding link');
   return data;
 }
@@ -48,7 +66,12 @@ export async function getConnectAccountStatus(accountId: string): Promise<{
   detailsSubmitted: boolean;
 }> {
   const res = await fetch(`/api/stripe/connect/status/${accountId}`);
-  const data = await res.json();
+  const data = await parseApiResponse<{
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+    error?: string;
+  }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to fetch Connect status');
   return data;
 }
@@ -65,7 +88,7 @@ export async function releasePayout(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
-  const data = await res.json();
+  const data = await parseApiResponse<{ transferId: string; amountCents: number; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Payout release failed');
   return data;
 }
@@ -77,7 +100,7 @@ export async function holdJobPayment(jobId: string): Promise<void> {
     body: JSON.stringify({ jobId }),
   });
   if (!res.ok) {
-    const data = await res.json();
+    const data = await parseApiResponse<{ error?: string }>(res);
     throw new Error(data.error || 'Failed to hold payment');
   }
 }
@@ -92,7 +115,7 @@ export async function refundPayment(params: {
     body: JSON.stringify(params),
   });
   if (!res.ok) {
-    const data = await res.json();
+    const data = await parseApiResponse<{ error?: string }>(res);
     throw new Error(data.error || 'Refund failed');
   }
 }
@@ -110,15 +133,24 @@ export async function fetchPayments(): Promise<
   }>
 > {
   const res = await fetch('/api/stripe/payments');
-  const data = await res.json();
+  const data = await parseApiResponse<{ payments?: unknown[]; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to load payments');
-  return data.payments ?? [];
+  return (data.payments ?? []) as Array<{
+    id: string;
+    job_id: string;
+    amount: number;
+    stripe_session_id?: string;
+    stripe_payment_intent_id?: string;
+    stripe_transfer_id?: string;
+    status: string;
+    created_at?: string;
+  }>;
 }
 
 export async function isStripeConfigured(): Promise<boolean> {
   try {
     const res = await fetch('/api/stripe/health');
-    const data = await res.json();
+    const data = await parseApiResponse<{ configured?: boolean }>(res);
     return !!data.configured;
   } catch {
     return false;
