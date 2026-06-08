@@ -15,9 +15,10 @@ import {
   FileText,
   Radio,
   Plus,
+  ClipboardList,
 } from 'lucide-react';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -97,6 +98,37 @@ export function ClientHomeScreen({
               className="uber-button-sage w-full sm:w-auto"
             >
               View live coverage
+            </button>
+          </div>
+        </section>
+
+        {/* Coverage overview cards */}
+        <section>
+          <h2 className="text-sm font-semibold text-brand-text-muted mb-3">Your coverage</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => onAction('coverage')} className="app-card text-left p-5 hover:border-brand-primary/30">
+              <Radio className="w-5 h-5 text-brand-primary mb-3" />
+              <p className="font-semibold">Active coverage</p>
+              <p className="text-2xl font-bold mt-1">{coverage.guardsOnDuty}</p>
+              <p className="text-xs text-brand-text-muted">guards on duty</p>
+            </button>
+            <button type="button" onClick={() => onAction('schedule')} className="app-card text-left p-5 hover:border-brand-primary/30">
+              <Calendar className="w-5 h-5 text-brand-primary mb-3" />
+              <p className="font-semibold">Upcoming</p>
+              <p className="text-2xl font-bold mt-1">{upcoming.length}</p>
+              <p className="text-xs text-brand-text-muted">scheduled shifts</p>
+            </button>
+            <button type="button" onClick={() => onAction('reports')} className="app-card text-left p-5 hover:border-brand-primary/30">
+              <FileText className="w-5 h-5 text-brand-primary mb-3" />
+              <p className="font-semibold">Recent reports</p>
+              <p className="text-2xl font-bold mt-1">{recentReports.length}</p>
+              <p className="text-xs text-brand-text-muted">this month</p>
+            </button>
+            <button type="button" onClick={() => onAction('requests')} className="app-card text-left p-5 hover:border-brand-primary/30">
+              <ClipboardList className="w-5 h-5 text-brand-primary mb-3" />
+              <p className="font-semibold">Open requests</p>
+              <p className="text-2xl font-bold mt-1">{requests.filter((r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review').length}</p>
+              <p className="text-xs text-brand-text-muted">pending</p>
             </button>
           </div>
         </section>

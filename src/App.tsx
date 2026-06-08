@@ -848,9 +848,9 @@ export default function App() {
   // ── Render ─────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className={`theme-${themeMode} min-h-screen bg-brand-bg text-brand-text flex flex-col justify-center items-center gap-4`}>
+      <div className="page-shell min-h-screen flex flex-col justify-center items-center gap-4">
         <Logo className="text-brand-primary animate-pulse" size={48} />
-        <p className="text-xs font-mono uppercase tracking-widest text-brand-text-muted">Loading Guardr...</p>
+        <p className="text-sm text-brand-text-muted">Loading Guardr…</p>
       </div>
     );
   }
@@ -858,7 +858,7 @@ export default function App() {
   if (!currentUser) {
     if (isAuthView) {
       return (
-        <div className={`theme-${themeMode}`}>
+        <>
           <AuthPage
             onSignIn={handleSignIn}
             onSignUp={handleSignUp}
@@ -870,11 +870,11 @@ export default function App() {
             themeMode={themeMode}
           />
           <InstallPrompt />
-        </div>
+        </>
       );
     }
     return (
-      <div className={`theme-${themeMode}`}>
+      <>
         <HomePage
           onNavigateToAuth={(role, mode) => {
             if (role) setInitialAuthRole(role);
@@ -889,7 +889,7 @@ export default function App() {
           onChangeTheme={changeThemeMode}
         />
         <InstallPrompt />
-      </div>
+      </>
     );
   }
 
@@ -897,14 +897,14 @@ export default function App() {
   if (currentUser.role === 'guard') {
     if (!activeGuard?.id) {
       return (
-        <div className={`theme-${themeMode} min-h-screen flex flex-col items-center justify-center p-8 text-center`}>
-          <p className="text-brand-text-muted font-mono text-sm mb-4">Loading your guard profile…</p>
-          <button type="button" onClick={handleSignOut} className="text-xs font-mono text-brand-primary uppercase">Sign out</button>
+        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center">
+          <p className="text-brand-text-muted text-sm mb-4">Loading your guard profile…</p>
+          <button type="button" onClick={handleSignOut} className="text-sm font-medium text-brand-primary">Sign out</button>
         </div>
       );
     }
     return (
-      <div className={`theme-${themeMode}`}>
+      <>
         <GuardDashboard
           guard={activeGuard}
           requests={requests}
@@ -921,7 +921,7 @@ export default function App() {
           currentUser={currentUser}
         />
         <InstallPrompt />
-      </div>
+      </>
     );
   }
 

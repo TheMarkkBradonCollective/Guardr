@@ -22,7 +22,7 @@ export function StaffMoreMenu({ items, activeSection, onNavigate, onClose }: Sta
       <button
         type="button"
         aria-label="Close menu"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 modal-overlay"
         onClick={onClose}
       />
       <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] rounded-t-2xl border-t border-brand-border bg-brand-bg-sec shadow-2xl animate-fade-in">
@@ -51,7 +51,7 @@ export function StaffMoreMenu({ items, activeSection, onNavigate, onClose }: Sta
                   className={`relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border min-h-[88px] transition-colors ${
                     active
                       ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                      : 'border-brand-border bg-black/20 text-brand-text-muted hover:text-brand-text hover:border-brand-primary/40'
+                      : 'border-brand-border bg-brand-surface text-brand-text-muted hover:text-brand-text hover:border-brand-primary/40'
                   }`}
                 >
                   <Icon className="w-5 h-5 shrink-0" />

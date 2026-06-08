@@ -113,8 +113,8 @@ export function StaffOpsLayout({
   const mobileActiveId = isMoreSectionActive ? 'more' : activeSection;
 
   return (
-    <div className={`theme-${themeMode} fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text staff-ops-root`}>
-      <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-black shrink-0">
+    <div className="page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden staff-ops-root">
+      <aside className="hidden md:flex w-56 flex-col border-r border-brand-border bg-brand-bg-sec shrink-0">
         <div className="p-4 border-b border-brand-border">
           <div className="flex items-center gap-2">
             <Logo size={24} />
@@ -134,17 +134,17 @@ export function StaffOpsLayout({
               key={id}
               type="button"
               onClick={() => onNavigate(id)}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-left text-[11px] font-mono font-bold uppercase tracking-wide transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
                 activeSection === id
-                  ? 'bg-brand-primary text-black'
-                  : 'text-brand-text-muted hover:text-brand-text hover:bg-white/5'
+                  ? 'bg-brand-primary text-brand-accent-text'
+                  : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
               }`}
             >
               <Icon className="w-3.5 h-3.5 shrink-0" />
               <span className="flex-1 truncate">{label}</span>
               {badge != null && badge > 0 && (
-                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
-                  activeSection === id ? 'bg-black/20 text-black' : 'bg-brand-primary/20 text-brand-primary'
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
+                  activeSection === id ? 'bg-brand-accent-text/20 text-brand-accent-text' : 'bg-brand-primary/15 text-brand-primary'
                 }`}>
                   {badge}
                 </span>
