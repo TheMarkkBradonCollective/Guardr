@@ -6,5 +6,7 @@ export const SITE_DOMAIN = 'guardr.co';
 export function getSiteUrl(): string {
   const configured = process.env.APP_URL?.trim().replace(/\/$/, '');
   if (configured) return configured;
-  return process.env.NODE_ENV === 'production' ? PRODUCTION_SITE_URL : 'http://localhost:3000';
+  return process.env.NODE_ENV === 'production' || process.env.VERCEL
+    ? PRODUCTION_SITE_URL
+    : 'http://localhost:3000';
 }

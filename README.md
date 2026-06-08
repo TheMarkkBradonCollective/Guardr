@@ -30,6 +30,10 @@ Guardr is **not** an employer or staffing agency. It is a direct-connect marketp
 | Payments | Stripe Connect (platform fee model) |
 | Hosting | Vercel |
 
+## Deploy to guardr.co
+
+Full step-by-step: **[docs/DEPLOYMENT-GUARDR-CO.md](docs/DEPLOYMENT-GUARDR-CO.md)** (Vercel + GoDaddy DNS + Supabase + Stripe)
+
 ## Run Locally
 
 ```bash

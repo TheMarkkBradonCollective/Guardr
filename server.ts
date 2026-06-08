@@ -2,24 +2,12 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
-import { registerStripeRoutes } from './server/stripe';
+import { createApiApp } from './server/createApp';
 
 dotenv.config();
 
-const app = express();
-const PORT = 3000;
-
-// Stripe webhook + API routes (webhook uses raw body internally)
-registerStripeRoutes(app);
-
-app.use(express.json());
-
-app.get('/api/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder',
-  });
-});
+const app = createApiApp();
+const PORT = Number(process.env.PORT) || 3000;
 
 async function configureServer() {
   if (process.env.NODE_ENV !== 'production') {
