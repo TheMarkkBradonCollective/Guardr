@@ -64,8 +64,10 @@ export default function App() {
     currentUser?.role === 'guard' ? currentUser.id : ''
   );
   useEffect(() => {
-    if (currentUser?.role === 'guard') setActiveGuardId(currentUser.id);
-  }, [currentUser]);
+    if (!currentUser) return;
+    if (currentUser.role === 'guard') setActiveGuardId(currentUser.id);
+    else if (isStaffRole(currentUser.role) && staffGuardMode) setActiveGuardId(currentUser.id);
+  }, [currentUser, staffGuardMode]);
 
   // ── DB state ───────────────────────────────────────────────
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
@@ -75,6 +77,7 @@ export default function App() {
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
+  const [staffGuardMode, setStaffGuardMode] = useState(false);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -175,6 +178,7 @@ export default function App() {
         estimatedPayout: r.estimated_payout,
         status: normalizeJobStatus(r.status),
         assignedGuardId: r.assigned_guard_id,
+        preferredGuardId: r.preferred_guard_id ?? undefined,
         requiredCertifications: r.required_certifications || [],
         applicants: r.applicants || [],
         ratingGiven: r.rating_given ?? undefined,
@@ -515,6 +519,7 @@ export default function App() {
       status: 'pending-review',
       paymentStatus: 'unpaid',
       assignedGuardId: null,
+      preferredGuardId: newRequest.preferredGuardId ?? null,
       requiredCertifications: newRequest.requiredCertifications || [],
       applicants: [],
     };
@@ -547,6 +552,7 @@ export default function App() {
           estimated_payout: freshJob.estimatedPayout, status: freshJob.status,
           payment_status: 'unpaid',
           assigned_guard_id: freshJob.assignedGuardId,
+          preferred_guard_id: freshJob.preferredGuardId ?? null,
           required_certifications: freshJob.requiredCertifications,
           applicants: freshJob.applicants,
         });
@@ -683,6 +689,10 @@ export default function App() {
     if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
+      if (job.preferredGuardId && job.preferredGuardId !== activeGuardId) {
+        alert('This request was sent directly to another guard.');
+        return;
+      }
       const { canAccept } = checkJobRequirements(activeGuard, job);
       if (!canAccept) {
         alert('You do not meet the requirements for this shift. Add a verified guard card for the job state in your profile.');
@@ -935,8 +945,8 @@ export default function App() {
       r.clientName === currentUser.clientName ||
       r.clientName === currentUser.name
     );
-    // Guards available to hire (only real verified guards, no clients/auditors)
-    const hireableGuards = verifiedGuards.filter(g => !g.isStaff);
+    // Verified guards available to browse/hire (includes staff who work shifts)
+    const hireableGuards = verifiedGuards.filter((g) => g.verified);
 
     return (
       <>
@@ -960,6 +970,7 @@ export default function App() {
           ) : (
             <ClientDashboard
               companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
+              clientId={currentUser.id}
               requests={myRequests}
               guards={hireableGuards}
               clientEmail={currentUser.email}
@@ -982,6 +993,32 @@ export default function App() {
 
   // ── Staff Operations Command Center ─────────────────────────
   if (isStaffRole(currentUser.role)) {
+    const staffGuardProfile = guards.find((g) => g.id === currentUser.id);
+
+    if (staffGuardMode && staffGuardProfile) {
+      return (
+        <>
+          <GuardDashboard
+            guard={staffGuardProfile}
+            requests={requests}
+            payments={payments}
+            onAddCertification={(cert) => handleAddCertification(staffGuardProfile.id, cert)}
+            onAcceptJob={handleAcceptJob}
+            onUpdateJobAudit={handleUpdateJobAudit}
+            onRecordAuditViolation={handleRecordAuditViolation}
+            onUpdateStripeAccount={handleUpdateGuardStripeAccount}
+            onSignOut={handleSignOut}
+            themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
+            onUpdateProfile={(payload) => handleUpdateGuardProfile(staffGuardProfile.id, payload)}
+            currentUser={currentUser}
+            onExitGuardMode={() => setStaffGuardMode(false)}
+          />
+          <InstallPrompt />
+        </>
+      );
+    }
+
     return (
       <>
         <StaffDashboard
@@ -1010,6 +1047,7 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
+          onEnterGuardMode={() => setStaffGuardMode(true)}
         />
         <InstallPrompt />
       </>

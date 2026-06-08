@@ -620,19 +620,45 @@ html.theme-grey {
   background: var(--brand-surface);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--brand-border);
-  max-height: 58vh;
-  overflow-y: auto;
-  padding: 1rem;
+  overflow: hidden;
+  padding: 0;
   box-shadow: var(--shadow-nav);
 }
 
 .guardr-bottom-sheet-uber {
-  bottom: 4.5rem;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   z-index: 1001;
   background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
-  touch-action: none;
+}
+
+.guardr-active-shift {
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.guardr-side-panel {
+  position: absolute;
+  top: 4.5rem;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  width: min(420px, 42vw);
+  background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-nav);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.guard-scroll-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */
@@ -745,6 +771,35 @@ html.theme-light, .theme-light {
 
 body[data-form-factor="mobile"] .guard-touch-target {
   min-height: 48px;
+}
+
+body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+body[data-form-factor="tablet"] .guard-map-layout .guardr-map-root {
+  right: min(380px, 40vw);
+}
+
+body[data-form-factor="desktop"] .guard-map-layout .guardr-map-root {
+  right: min(420px, 38vw);
+}
+
+body[data-form-factor="tablet"] .guard-side-panel,
+body[data-form-factor="desktop"] .guard-side-panel {
+  bottom: 0;
+  top: 0;
+  border-top-left-radius: 1.25rem;
+}
+
+body[data-form-factor="tablet"] .client-content-shell {
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+body[data-form-factor="desktop"] .client-content-shell {
+  max-width: 1200px;
+  margin-inline: auto;
 }
 
 body[data-form-factor="tablet"] .tablet-split-panel {

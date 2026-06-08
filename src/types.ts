@@ -137,6 +137,8 @@ export interface SecurityRequest {
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;
   assignedGuardId: string | null;
+  /** When set, only this guard can accept the job (direct client request) */
+  preferredGuardId?: string | null;
   requiredCertifications: string[];
   applicants: string[];
   ratingGiven?: number;

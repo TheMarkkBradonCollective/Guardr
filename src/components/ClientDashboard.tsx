@@ -9,11 +9,14 @@ import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurity
 import { LiveCoverageScreen } from './client/LiveCoverageScreen';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
+import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
+import { GuardProfileScreen } from './client/GuardProfileScreen';
 
-export type ClientView = 'home' | 'request' | 'coverage' | 'reports' | 'requests' | 'profile';
+export type ClientView = 'home' | 'request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile';
 
 interface ClientDashboardProps {
   companyName: string;
+  clientId: string;
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
@@ -30,6 +33,7 @@ interface ClientDashboardProps {
 
 export function ClientDashboard({
   companyName,
+  clientId,
   requests,
   guards,
   clientEmail,
@@ -44,6 +48,8 @@ export function ClientDashboard({
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
+  const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
+  const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -80,7 +86,17 @@ export function ClientDashboard({
       case 'requests':
         navigate('requests');
         break;
+      case 'guards':
+        setSelectedGuard(null);
+        navigate('guards');
+        break;
     }
+  };
+
+  const startDirectGuardRequest = (guard: SecurityGuard) => {
+    setRequestTargetGuard(guard);
+    setFlowPreset('direct');
+    navigate('request');
   };
 
   const wrap = (node: React.ReactNode) => (
@@ -92,11 +108,36 @@ export function ClientDashboard({
       <RequestSecurityFlow
         isClientApproved={isClientApproved}
         preset={flowPreset}
-        onBack={() => navigate('home')}
+        preselectedGuard={requestTargetGuard}
+        onBack={() => {
+          setRequestTargetGuard(null);
+          navigate(requestTargetGuard ? 'guards' : 'home');
+        }}
         onSubmit={(req) => {
           onPostRequest(req);
+          setRequestTargetGuard(null);
           navigate('home');
         }}
+      />
+    );
+  }
+
+  if (view === 'guards') {
+    if (selectedGuard) {
+      return (
+        <GuardProfileScreen
+          guard={selectedGuard}
+          clientId={clientId}
+          requests={requests}
+          onBack={() => setSelectedGuard(null)}
+          onRequestGuard={startDirectGuardRequest}
+        />
+      );
+    }
+    return (
+      <GuardDirectoryScreen
+        guards={guards}
+        onSelectGuard={setSelectedGuard}
       />
     );
   }

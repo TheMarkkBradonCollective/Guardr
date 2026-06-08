@@ -1,0 +1,61 @@
+import { SecurityGuard, SecurityRequest } from '../types';
+
+export interface GuardWorkHistoryItem {
+  requestId: string;
+  title: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  status: SecurityRequest['status'];
+  ratingGiven?: number;
+  reviewText?: string;
+}
+
+/** Verified guards available for clients to browse and hire (includes staff who work shifts) */
+export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
+  return guards
+    .filter((g) => g.verified && g.userStatus !== 'suspended' && g.userStatus !== 'blocked')
+    .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
+}
+
+export function getGuardHistoryWithClient(
+  guardId: string,
+  clientId: string,
+  requests: SecurityRequest[]
+): GuardWorkHistoryItem[] {
+  return requests
+    .filter(
+      (r) =>
+        r.assignedGuardId === guardId &&
+        (r.clientId === clientId || r.status === 'completed' || r.status === 'in-progress' || r.status === 'accepted')
+    )
+    .filter((r) => r.clientId === clientId)
+    .map((r) => ({
+      requestId: r.id,
+      title: r.title,
+      location: r.location,
+      startDate: r.startDate,
+      endDate: r.endDate,
+      status: r.status,
+      ratingGiven: r.ratingGiven,
+      reviewText: r.reviewText,
+    }))
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+}
+
+export function filterGuardsByQuery(guards: SecurityGuard[], query: string): SecurityGuard[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return guards;
+  return guards.filter(
+    (g) =>
+      g.name.toLowerCase().includes(q) ||
+      g.bio.toLowerCase().includes(q) ||
+      g.badgeNumber.toLowerCase().includes(q) ||
+      g.experience.some(
+        (e) =>
+          e.title.toLowerCase().includes(q) ||
+          e.company.toLowerCase().includes(q) ||
+          e.description.toLowerCase().includes(q)
+      )
+  );
+}

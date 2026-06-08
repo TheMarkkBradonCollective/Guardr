@@ -81,6 +81,7 @@ const GUARD_PERMISSIONS: Permission[] = [
 ];
 
 const MODERATOR_PERMISSIONS: Permission[] = [
+  ...GUARD_PERMISSIONS,
   'moderator.approve_guards',
   'moderator.approve_clients',
   'moderator.review_certifications',

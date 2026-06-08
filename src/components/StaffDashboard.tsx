@@ -55,6 +55,7 @@ interface StaffDashboardProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  onEnterGuardMode?: () => void;
 }
 
 export function StaffDashboard({
@@ -82,6 +83,7 @@ export function StaffDashboard({
   onChangeTheme,
   onSignOut,
   onUpdateGuardProfile,
+  onEnterGuardMode,
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>('overview');
 
@@ -215,6 +217,7 @@ export function StaffDashboard({
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
       badges={badges}
+      onEnterGuardMode={onEnterGuardMode}
     >
       {renderSection()}
     </StaffOpsLayout>

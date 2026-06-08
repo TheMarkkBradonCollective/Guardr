@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, PanInfo } from 'motion/react';
 import { SecurityRequest, SecurityGuard } from '../../types';
-import { JOB_CATEGORIES, JobCategoryId } from '../../lib/guardJobs';
-import { formatShiftRange } from '../../lib/dates';
-import { GuardJobCard } from './GuardJobCard';
-import { Calendar, ChevronRight } from 'lucide-react';
+import { JobCategoryId } from '../../lib/guardJobs';
+import { GuardJobsPanelContent } from './GuardJobsPanelContent';
+import { useDevice } from '../../lib/platform';
 
 export type SheetSnap = 'peek' | 'half' | 'full';
 
@@ -25,6 +24,24 @@ interface GuardBottomSheetProps {
   onAcceptJob: (jobId: string) => void;
 }
 
+function useViewportHeight(): number {
+  const [vh, setVh] = useState(() =>
+    typeof window !== 'undefined' ? window.innerHeight : 800
+  );
+
+  useEffect(() => {
+    const update = () => setVh(window.innerHeight);
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return vh;
+}
+
 export function GuardBottomSheet({
   jobs,
   upcomingShifts = [],
@@ -35,8 +52,15 @@ export function GuardBottomSheet({
   onSelectJob,
   onAcceptJob,
 }: GuardBottomSheetProps) {
-  const [snap, setSnap] = useState<SheetSnap>('half');
+  const { formFactor } = useDevice();
+  const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
+  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'full' : 'half');
   const startSnap = useRef<SheetSnap>('half');
+  const vh = useViewportHeight();
+
+  useEffect(() => {
+    if (selectedJob) setSnap('full');
+  }, [selectedJob?.id]);
 
   const cycleSnap = (direction: 'up' | 'down') => {
     const order: SheetSnap[] = ['peek', 'half', 'full'];
@@ -51,123 +75,72 @@ export function GuardBottomSheet({
     else setSnap(startSnap.current);
   };
 
-  const handleDragStart = () => {
-    startSnap.current = snap;
-  };
-
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
-  const heightPx = vh * SNAP_HEIGHTS[snap];
-
   const sheetLabel = selectedJob
-    ? 'Assignment details'
+    ? selectedJob.status === 'open'
+      ? 'Assignment details'
+      : 'Upcoming shift'
     : upcomingShifts.length > 0
       ? `${upcomingShifts.length} upcoming · ${jobs.length} available`
       : `${jobs.length} available assignments`;
+
+  const panelContent = (
+    <GuardJobsPanelContent
+      jobs={jobs}
+      upcomingShifts={upcomingShifts}
+      guard={guard}
+      selectedJob={selectedJob}
+      selectedCategory={selectedCategory}
+      onSelectCategory={onSelectCategory}
+      onSelectJob={onSelectJob}
+      onAcceptJob={onAcceptJob}
+    />
+  );
+
+  if (isSidePanel) {
+    return (
+      <aside className="guardr-side-panel guard-side-panel">
+        <div className="shrink-0 px-4 py-3 border-b border-brand-border">
+          <p className="text-xs font-medium text-brand-text-muted">{sheetLabel}</p>
+        </div>
+        <div className="guard-scroll-panel px-4 py-4 pb-6">{panelContent}</div>
+      </aside>
+    );
+  }
+
+  const heightPx = vh * SNAP_HEIGHTS[snap];
 
   return (
     <motion.div
       className="guardr-bottom-sheet guardr-bottom-sheet-uber rounded-t-2xl"
       style={{ height: heightPx }}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={0.08}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      animate={{ height: heightPx }}
+      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
     >
       <div className="flex flex-col h-full">
-        <button
-          type="button"
-          className="w-full py-3 flex flex-col items-center shrink-0 touch-none"
-          onClick={() => setSnap(snap === 'full' ? 'half' : snap === 'half' ? 'peek' : 'full')}
-          aria-label="Expand or collapse"
+        <motion.div
+          className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+          drag="y"
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={0.08}
+          onDragStart={() => {
+            startSnap.current = snap;
+          }}
+          onDragEnd={handleDragEnd}
         >
-          <div className="w-10 h-1 rounded-full sheet-handle mb-2" />
-          <span className="text-xs font-medium text-brand-text-muted">{sheetLabel}</span>
-        </button>
+          <button
+            type="button"
+            className="w-full py-3 flex flex-col items-center"
+            onClick={() =>
+              setSnap(snap === 'full' ? 'half' : snap === 'half' ? 'peek' : 'full')
+            }
+            aria-label="Expand or collapse"
+          >
+            <div className="w-10 h-1 rounded-full sheet-handle mb-2" />
+            <span className="text-xs font-medium text-brand-text-muted">{sheetLabel}</span>
+          </button>
+        </motion.div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6 min-h-0">
-          {selectedJob ? (
-            <GuardJobCard
-              job={selectedJob}
-              guard={guard}
-              onClose={() => onSelectJob(null)}
-              onAccept={() => {
-                onAcceptJob(selectedJob.id);
-                onSelectJob(null);
-              }}
-            />
-          ) : (
-            <div className="space-y-5">
-              {upcomingShifts.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-brand-primary" />
-                    <p className="text-sm font-medium text-brand-text-muted">Upcoming assignments</p>
-                  </div>
-                  {upcomingShifts.map((shift) => (
-                    <button
-                      key={shift.id}
-                      type="button"
-                      onClick={() => onSelectJob(shift)}
-                      className="w-full text-left rounded-2xl border border-brand-primary/30 bg-brand-primary/8 p-4 hover:bg-brand-primary/12 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">{shift.title}</p>
-                          <p className="text-sm text-brand-text-muted mt-1 truncate">
-                            {formatShiftRange(shift.startDate, shift.endDate)}
-                          </p>
-                          <p className="text-sm font-medium text-brand-primary mt-1">
-                            ${shift.guardPay ?? shift.hourlyRate - 5}/hr
-                          </p>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-brand-primary shrink-0" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                <button
-                  type="button"
-                  onClick={() => onSelectCategory(null)}
-                  className={`chip shrink-0 ${!selectedCategory ? 'chip-active' : 'chip-inactive'}`}
-                >
-                  All
-                </button>
-                {JOB_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => onSelectCategory(selectedCategory === cat.id ? null : cat.id)}
-                    className={`chip shrink-0 ${selectedCategory === cat.id ? 'chip-active' : 'chip-inactive'}`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-brand-text-muted">Nearby jobs</p>
-                {jobs.length === 0 ? (
-                  <p className="text-center text-brand-text-muted py-10">No jobs in this category right now.</p>
-                ) : (
-                  jobs.map((job) => (
-                    <div key={job.id}>
-                      <GuardJobCard
-                        job={job}
-                        guard={guard}
-                        compact
-                        onSelect={() => onSelectJob(job)}
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="guard-scroll-panel flex-1 px-4 pb-6 min-h-0">{panelContent}</div>
       </div>
     </motion.div>
   );

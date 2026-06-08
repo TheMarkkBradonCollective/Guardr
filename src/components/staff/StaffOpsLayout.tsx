@@ -42,6 +42,7 @@ interface StaffOpsLayoutProps {
   onSignOut: () => void;
   isDbConnected: boolean;
   badges?: Partial<Record<StaffSection, number>>;
+  onEnterGuardMode?: () => void;
 }
 
 const MOBILE_PRIMARY: StaffSection[] = ['overview', 'live-jobs', 'approvals'];
@@ -56,6 +57,7 @@ export function StaffOpsLayout({
   onSignOut,
   isDbConnected,
   badges = {},
+  onEnterGuardMode,
 }: StaffOpsLayoutProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
@@ -154,6 +156,16 @@ export function StaffOpsLayout({
         </nav>
 
         <div className="p-3 border-t border-brand-border space-y-2">
+          {onEnterGuardMode && (
+            <button
+              type="button"
+              onClick={onEnterGuardMode}
+              className="w-full flex items-center justify-center gap-2 bg-brand-primary/15 border border-brand-primary/30 py-2.5 text-[10px] font-mono font-bold uppercase rounded-lg text-brand-primary hover:bg-brand-primary/25 transition-colors"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Guard shift mode
+            </button>
+          )}
           {isDbConnected && (
             <p className="text-[9px] font-mono text-emerald-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -180,6 +192,16 @@ export function StaffOpsLayout({
           <p className="hidden md:block text-xs font-mono uppercase tracking-widest text-brand-text-muted">
             Guardr Operations Command Center
           </p>
+          {onEnterGuardMode && (
+            <button
+              type="button"
+              onClick={onEnterGuardMode}
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary/10 text-[10px] font-mono font-bold uppercase text-brand-primary"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Shifts
+            </button>
+          )}
           <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
             {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
               <button

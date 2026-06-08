@@ -50,11 +50,24 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
     );
   }
 
+  const isUpcoming = job.status === 'accepted';
+  const isDirectRequest = !!job.preferredGuardId;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-2xl font-bold tracking-tight leading-tight">{job.title}</h3>
+          {isUpcoming && (
+            <span className="inline-block text-xs font-semibold text-brand-primary bg-brand-primary/15 px-2.5 py-1 rounded-full mb-2">
+              Upcoming shift
+            </span>
+          )}
+          {isDirectRequest && job.status === 'open' && (
+            <span className="inline-block text-xs font-semibold text-amber-400 bg-amber-500/15 px-2.5 py-1 rounded-full mb-2 ml-0">
+              Direct request for you
+            </span>
+          )}
+          <h3 className="text-xl font-bold tracking-tight leading-tight">{job.title}</h3>
           <p className="flex items-center gap-1.5 text-sm text-brand-text-muted mt-2">
             <MapPin className="w-4 h-4 text-brand-primary shrink-0" />
             {job.state ? `${formatStateName(job.state)} · ` : ''}{distance} mi away
@@ -81,9 +94,9 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
         </div>
       </div>
 
-      <div className="rounded-2xl bg-brand-primary/10 border border-brand-primary/25 p-5">
+      <div className="rounded-2xl bg-brand-primary/10 border border-brand-primary/25 p-4">
         <p className="text-sm text-brand-text-muted mb-1">Estimated earnings</p>
-        <p className="text-4xl font-bold text-brand-primary">${estimated}</p>
+        <p className="text-3xl font-bold text-brand-primary">${estimated}</p>
       </div>
 
       {job.clientRating != null && (

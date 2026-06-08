@@ -13,6 +13,7 @@ import { AlertTriangle, Map, DollarSign, Compass, User } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
+  guardCanViewJob,
   JobCategoryId,
   loadShiftPhase,
   saveShiftPhase,
@@ -36,6 +37,8 @@ interface GuardDashboardProps {
   themeMode: string;
   onChangeTheme: (mode: string) => void;
   onUpdateProfile: (payload: ProfileSavePayload) => void | Promise<void>;
+  /** When staff toggles into guard shift mode */
+  onExitGuardMode?: () => void;
 }
 
 type GuardTab = 'map' | 'earnings' | 'opportunities' | 'profile';
@@ -54,6 +57,7 @@ export function GuardDashboard({
   themeMode,
   onChangeTheme,
   onUpdateProfile,
+  onExitGuardMode,
 }: GuardDashboardProps) {
   const [activeTab, setActiveTab] = useState<GuardTab>('map');
   const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
@@ -68,7 +72,10 @@ export function GuardDashboard({
   const [dutySeconds, setDutySeconds] = useState(0);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
 
-  const availableJobs = useMemo(() => requests.filter((r) => r.status === 'open'), [requests]);
+  const availableJobs = useMemo(
+    () => requests.filter((r) => guardCanViewJob(guard, r)),
+    [requests, guard]
+  );
   const assignedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status !== 'completed' && r.status !== 'closed'),
     [requests, guard.id]
@@ -330,7 +337,7 @@ export function GuardDashboard({
 
   return (
     <div className="page-shell fixed inset-0 overflow-hidden flex flex-col h-dvh max-h-dvh">
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+      <div className={`flex-1 min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {/* Map — visible on map tab */}
       {activeTab === 'map' && (
         <ShiftMap
@@ -351,6 +358,15 @@ export function GuardDashboard({
           </div>
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
+          {onExitGuardMode && (
+            <button
+              type="button"
+              onClick={onExitGuardMode}
+              className="px-3 py-2 rounded-xl bg-brand-surface/95 border border-brand-border text-xs font-semibold text-brand-text-muted hover:text-brand-text backdrop-blur-xl shadow-lg"
+            >
+              Staff ops
+            </button>
+          )}
           {onSignOut && (
             <button
               type="button"
@@ -383,7 +399,7 @@ export function GuardDashboard({
           jobs={filteredBrowseJobs}
           upcomingShifts={upcomingShifts}
           guard={guard}
-          selectedJob={selectedJob?.status === 'open' ? selectedJob : null}
+          selectedJob={selectedJob}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           onSelectJob={(job) => setSelectedJobId(job?.id ?? null)}
@@ -392,7 +408,8 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'earnings' && (
-        <div className="absolute inset-0 bg-brand-bg overflow-y-auto overscroll-contain pb-24">
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
+        <div className="guard-scroll-panel flex-1">
         <GuardEarningsPanel
           summary={earningsSummary}
           completedJobs={completedJobs}
@@ -410,10 +427,11 @@ export function GuardDashboard({
           })}
         />
         </div>
+        </div>
       )}
 
       {activeTab === 'opportunities' && (
-        <div className="absolute inset-0 bg-brand-bg overflow-hidden pb-24">
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
         <GuardOpportunitiesPanel
           jobs={availableJobs}
           guard={guard}
@@ -426,7 +444,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'profile' && (
-        <div className="absolute inset-0 bg-brand-bg overflow-hidden pb-24">
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
           <UserProfileScreen
             currentUser={currentUser}
             themeMode={themeMode as 'dark' | 'light' | 'grey'}

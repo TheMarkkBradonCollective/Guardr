@@ -2,7 +2,7 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { Home, Radio, ClipboardList, User } from 'lucide-react';
+import { Home, Radio, ClipboardList, User, Users } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -18,6 +18,7 @@ interface ClientAppLayoutProps {
 
 const NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'home', label: 'Home', icon: Home },
+  { id: 'guards', label: 'Guards', icon: Users },
   { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'requests', label: 'Requests', icon: ClipboardList },
   { id: 'profile', label: 'Profile', icon: User },

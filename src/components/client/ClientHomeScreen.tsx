@@ -16,9 +16,10 @@ import {
   Radio,
   Plus,
   ClipboardList,
+  Users,
 } from 'lucide-react';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -30,7 +31,8 @@ interface ClientHomeScreenProps {
 }
 
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
-  { id: 'request', icon: Plus, label: 'Request security', sub: 'On-demand coverage', accent: true },
+  { id: 'request', icon: Plus, label: 'Request security', sub: 'Open to any guard', accent: true },
+  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Profiles & direct requests' },
   { id: 'schedule', icon: Calendar, label: 'Schedule coverage', sub: 'Plan ahead' },
   { id: 'recurring', icon: Building2, label: 'Recurring sites', sub: 'Weekly / monthly' },
   { id: 'reports', icon: FileText, label: 'View reports', sub: 'Activity & incidents' },

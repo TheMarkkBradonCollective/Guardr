@@ -95,6 +95,13 @@ export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest)
   return { checks, canAccept: checks.every((c) => c.met) };
 }
 
+/** Open jobs visible on a guard's map/list (respects direct client requests) */
+export function guardCanViewJob(guard: SecurityGuard, job: SecurityRequest): boolean {
+  if (job.status !== 'open') return false;
+  if (job.preferredGuardId && job.preferredGuardId !== guard.id) return false;
+  return true;
+}
+
 export function sortJobs(jobs: SecurityRequest[], sortBy: JobSortKey): SecurityRequest[] {
   return [...jobs].sort((a, b) => {
     switch (sortBy) {
