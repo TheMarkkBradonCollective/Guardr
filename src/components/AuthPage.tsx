@@ -206,7 +206,7 @@ export function AuthPage({
   ];
 
   return (
-    <div className="min-h-screen bg-brand-bg text-brand-text flex flex-col" id="guardr-auth-root">
+    <div className="page-shell min-h-screen flex flex-col" id="guardr-auth-root">
       <header className="px-4 sm:px-6 h-16 flex items-center justify-between">
         <button
           onClick={onBackToHome}

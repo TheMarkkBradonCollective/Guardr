@@ -2,7 +2,13 @@ export type ThemeMode = 'dark' | 'light' | 'grey';
 
 export const THEME_MODES: ThemeMode[] = ['dark', 'light', 'grey'];
 
-/** Sage-green shell default — dark mode with sage accent */
+export const THEME_LABELS: Record<ThemeMode, string> = {
+  dark: 'Dark',
+  light: 'Light',
+  grey: 'Shade',
+};
+
+/** Default — deep charcoal dark mode with sage accent */
 export const DEFAULT_THEME: ThemeMode = 'dark';
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
@@ -30,7 +36,14 @@ export function saveTheme(mode: ThemeMode, userId?: string | null): void {
   if (userId) localStorage.setItem(userThemeKey(userId), mode);
 }
 
+/** Apply theme class to <html> so every screen inherits background, text, and surfaces */
 export function applyThemeToDocument(mode: ThemeMode): void {
   if (typeof document === 'undefined') return;
-  document.documentElement.dataset.theme = mode;
+  const html = document.documentElement;
+  for (const m of THEME_MODES) {
+    html.classList.remove(`theme-${m}`);
+  }
+  html.classList.add(`theme-${mode}`);
+  html.dataset.theme = mode;
+  html.style.colorScheme = mode === 'light' || mode === 'grey' ? 'light' : 'dark';
 }

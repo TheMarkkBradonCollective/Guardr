@@ -59,10 +59,10 @@ export function GuardBottomSheet({
   const heightPx = vh * SNAP_HEIGHTS[snap];
 
   const sheetLabel = selectedJob
-    ? 'Assignment Details'
+    ? 'Assignment details'
     : upcomingShifts.length > 0
-      ? `${upcomingShifts.length} Upcoming · ${jobs.length} Available`
-      : `${jobs.length} Available Jobs`;
+      ? `${upcomingShifts.length} upcoming · ${jobs.length} available`
+      : `${jobs.length} available assignments`;
 
   return (
     <motion.div
@@ -81,10 +81,8 @@ export function GuardBottomSheet({
           onClick={() => setSnap(snap === 'full' ? 'half' : snap === 'half' ? 'peek' : 'full')}
           aria-label="Expand or collapse"
         >
-          <div className="w-10 h-1 rounded-full bg-white/25 mb-1" />
-          <span className="text-[10px] font-mono uppercase text-white/40 tracking-widest">
-            {sheetLabel}
-          </span>
+          <div className="w-10 h-1 rounded-full sheet-handle mb-2" />
+          <span className="text-xs font-medium text-brand-text-muted">{sheetLabel}</span>
         </button>
 
         <div className="flex-1 overflow-y-auto px-4 pb-6 min-h-0">
@@ -99,31 +97,31 @@ export function GuardBottomSheet({
               }}
             />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {upcomingShifts.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-brand-primary" />
-                    <p className="text-[10px] font-mono uppercase text-white/50 tracking-widest">Upcoming Shifts</p>
+                    <Calendar className="w-4 h-4 text-brand-primary" />
+                    <p className="text-sm font-medium text-brand-text-muted">Upcoming assignments</p>
                   </div>
                   {upcomingShifts.map((shift) => (
                     <button
                       key={shift.id}
                       type="button"
                       onClick={() => onSelectJob(shift)}
-                      className="w-full text-left rounded-xl border border-brand-primary/30 bg-brand-primary/10 p-3 hover:bg-brand-primary/15 transition-colors"
+                      className="w-full text-left rounded-2xl border border-brand-primary/30 bg-brand-primary/8 p-4 hover:bg-brand-primary/12 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-black text-sm truncate">{shift.title}</p>
-                          <p className="text-[10px] font-mono text-white/50 mt-0.5 truncate">
+                          <p className="font-semibold truncate">{shift.title}</p>
+                          <p className="text-sm text-brand-text-muted mt-1 truncate">
                             {formatShiftRange(shift.startDate, shift.endDate)}
                           </p>
-                          <p className="text-[10px] font-mono text-brand-primary mt-1">
-                            ${shift.guardPay ?? shift.hourlyRate - 5}/hr · {shift.clientName}
+                          <p className="text-sm font-medium text-brand-primary mt-1">
+                            ${shift.guardPay ?? shift.hourlyRate - 5}/hr
                           </p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-brand-primary shrink-0 mt-1" />
+                        <ChevronRight className="w-5 h-5 text-brand-primary shrink-0" />
                       </div>
                     </button>
                   ))}
@@ -134,11 +132,7 @@ export function GuardBottomSheet({
                 <button
                   type="button"
                   onClick={() => onSelectCategory(null)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold font-mono uppercase tracking-wide border transition-colors ${
-                    !selectedCategory
-                      ? 'bg-brand-primary text-black border-brand-primary'
-                      : 'bg-white/5 text-white/60 border-white/10'
-                  }`}
+                  className={`chip shrink-0 ${!selectedCategory ? 'chip-active' : 'chip-inactive'}`}
                 >
                   All
                 </button>
@@ -147,11 +141,7 @@ export function GuardBottomSheet({
                     key={cat.id}
                     type="button"
                     onClick={() => onSelectCategory(selectedCategory === cat.id ? null : cat.id)}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold font-mono uppercase tracking-wide border transition-colors ${
-                      selectedCategory === cat.id
-                        ? 'bg-brand-primary text-black border-brand-primary'
-                        : 'bg-white/5 text-white/60 border-white/10'
-                    }`}
+                    className={`chip shrink-0 ${selectedCategory === cat.id ? 'chip-active' : 'chip-inactive'}`}
                   >
                     {cat.label}
                   </button>
@@ -159,9 +149,9 @@ export function GuardBottomSheet({
               </div>
 
               <div className="space-y-2">
-                <p className="text-[10px] font-mono uppercase text-white/40 tracking-widest">Nearby Jobs</p>
+                <p className="text-sm font-medium text-brand-text-muted">Nearby jobs</p>
                 {jobs.length === 0 ? (
-                  <p className="text-center text-sm text-white/40 font-mono py-8">No jobs in this category right now.</p>
+                  <p className="text-center text-brand-text-muted py-10">No jobs in this category right now.</p>
                 ) : (
                   jobs.map((job) => (
                     <div key={job.id}>

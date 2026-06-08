@@ -77,6 +77,9 @@ export function ClientDashboard({
       case 'coverage':
         navigate('coverage');
         break;
+      case 'requests':
+        navigate('requests');
+        break;
     }
   };
 

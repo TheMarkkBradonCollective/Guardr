@@ -34,7 +34,7 @@ export function ClientAppLayout({
   const hideBottomNav = activeView === 'request';
 
   return (
-    <div className={`theme-${themeMode} h-full`}>
+    <div className="page-shell h-full">
       <RoleAppShell
         title={clientLabel}
         subtitle="Client dashboard"

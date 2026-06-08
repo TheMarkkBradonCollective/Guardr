@@ -310,7 +310,7 @@ export function UserProfileScreen({
               <p className="text-xs font-mono text-brand-text-muted text-center py-4">No certifications yet.</p>
             ) : (
               guard.certifications.map((cert) => (
-                <div key={cert.id} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-brand-border bg-black/20">
+                <div key={cert.id} className="flex items-start justify-between gap-3 p-3 rounded-xl surface-muted">
                   <div className="min-w-0">
                     <p className="font-black text-xs">{cert.name}</p>
                     <p className="text-[10px] font-mono text-brand-text-muted mt-1">

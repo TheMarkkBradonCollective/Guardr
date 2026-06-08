@@ -320,7 +320,7 @@ export function GuardDashboard({
   ];
 
   return (
-    <div className={`theme-${themeMode} fixed inset-0 bg-brand-bg overflow-hidden flex flex-col h-dvh max-h-dvh`}>
+    <div className="page-shell fixed inset-0 overflow-hidden flex flex-col h-dvh max-h-dvh">
       <div className="flex-1 min-h-0 relative overflow-hidden">
       {/* Map — visible on map tab */}
       {activeTab === 'map' && (
@@ -460,13 +460,13 @@ export function GuardDashboard({
       )}
 
       {showCheckout && activeShiftJob && (
-        <div className="absolute inset-0 z-[1003] bg-black/90 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="font-black text-lg">End Shift?</h3>
-            <p className="text-sm text-white/60">Confirm you are leaving the site and your shift duties are complete.</p>
+        <div className="absolute inset-0 z-[1003] modal-overlay flex items-center justify-center p-4">
+          <div className="w-full max-w-sm modal-panel p-6 space-y-4">
+            <h3 className="font-bold text-lg">End shift?</h3>
+            <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your shift duties are complete.</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 py-3 rounded-xl border border-white/15 text-xs font-black uppercase">Cancel</button>
-              <button type="button" onClick={handleCheckoutConfirm} className="flex-1 py-3 rounded-xl bg-brand-primary text-black font-black text-xs uppercase">Confirm</button>
+              <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">Cancel</button>
+              <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">Confirm</button>
             </div>
           </div>
         </div>
