@@ -1,5 +1,6 @@
 /** Production site URL — used when APP_URL is not set in production */
-export const PRODUCTION_SITE_URL = 'https://guardr.co';
+/** Use www until apex SSL is fully provisioned on Vercel */
+export const PRODUCTION_SITE_URL = 'https://www.guardr.co';
 
 export const SITE_DOMAIN = 'guardr.co';
 

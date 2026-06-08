@@ -37,9 +37,11 @@ Never put `service_role` in frontend code or `VITE_*` variables.
 
 | Field | Value |
 |-------|--------|
-| **Site URL** | `https://guardr.co` |
-| **Redirect URLs** | `https://guardr.co/**` |
-| | `https://www.guardr.co/**` (if you use www) |
+| **Site URL** | `https://www.guardr.co` |
+| **Redirect URLs** | `https://www.guardr.co/**` |
+| | `https://guardr.co/**` |
+
+**Important:** Use `www.guardr.co` as your primary URL until both domains show valid SSL in Vercel. If `guardr.co` (without www) shows `ERR_FAILED` in the browser, the apex domain SSL is not set up yet — use www or fix DNS below.
 
 Click **Save**.
 
@@ -52,8 +54,8 @@ Click **Save**.
 3. Add these for **Production** (and Preview if you want):
 
 ```
-APP_URL=https://guardr.co
-VITE_APP_URL=https://guardr.co
+APP_URL=https://www.guardr.co
+VITE_APP_URL=https://www.guardr.co
 
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
@@ -71,9 +73,11 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 ### Verify API works
 After deploy, open:
 ```
-https://guardr.co/api/health
+https://www.guardr.co/api/health
 ```
 You should see JSON with `"status":"ok"`.
+
+If `https://guardr.co` (without www) shows `ERR_FAILED`, use `www` until apex SSL is valid in Vercel → Domains.
 
 ---
 
