@@ -16,6 +16,7 @@ interface ClientDashboardProps {
   companyName: string;
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  clientEmail: string;
   isClientApproved?: boolean;
   activeView?: ClientView;
   onViewChange?: (view: ClientView) => void;
@@ -31,6 +32,7 @@ export function ClientDashboard({
   companyName,
   requests,
   guards,
+  clientEmail,
   isClientApproved = true,
   activeView,
   onViewChange,
@@ -120,6 +122,7 @@ export function ClientDashboard({
       <ClientRequestsList
         requests={requests}
         guards={guards}
+        clientEmail={clientEmail}
         onCancelRequest={onCancelRequest}
         onHireGuard={onHireGuard}
         onUpdateStatus={onUpdateStatus}

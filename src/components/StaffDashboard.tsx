@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Client, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { Client, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import {
   canAccessFinancialControls,
   canManageStaffAccounts,
@@ -33,6 +33,7 @@ interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
   requests: SecurityRequest[];
+  payments?: Payment[];
   onUpdateGuardStaffStatus: (guardId: string, isStaff: boolean) => Promise<void>;
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
   onApproveRequest: (requestId: string) => Promise<void>;
@@ -45,6 +46,8 @@ interface StaffDashboardProps {
   onRejectGuard: (guardId: string) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
+  onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
+  onRefundPayment?: (requestId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
@@ -58,6 +61,7 @@ export function StaffDashboard({
   guards,
   clients,
   requests,
+  payments = [],
   onUpdateGuardStaffStatus,
   onUpdateGuardUserStatus,
   onApproveRequest,
@@ -69,6 +73,8 @@ export function StaffDashboard({
   onApproveGuard,
   onRejectGuard,
   onResetAuditFailures,
+  onReleasePayout,
+  onRefundPayment,
   isDbConnected,
   currentUser,
   onAddStaffProfile,
@@ -153,7 +159,14 @@ export function StaffDashboard({
         return <StaffIncidentsPanel incidents={incidents} />;
       case 'payments':
         return showFinance ? (
-          <StaffPaymentsPanel requests={requests} isDirector={currentUser.role === 'director'} />
+          <StaffPaymentsPanel
+            requests={requests}
+            guards={guards}
+            payments={payments}
+            isDirector={currentUser.role === 'director'}
+            onReleasePayout={onReleasePayout}
+            onRefundPayment={onRefundPayment}
+          />
         ) : null;
       case 'disputes':
         return <StaffDisputesPanel disputes={disputes} />;

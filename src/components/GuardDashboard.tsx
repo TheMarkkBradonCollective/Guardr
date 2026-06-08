@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { SecurityRequest, SecurityGuard, Certification, SessionUser } from '../types';
+import { SecurityRequest, SecurityGuard, Certification, Payment, SessionUser } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -20,15 +20,18 @@ import {
   sortJobs,
 } from '../lib/guardJobs';
 import { computeGuardEarnings } from '../lib/payments';
+import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
   currentUser: SessionUser;
+  payments?: Payment[];
   onAddCertification: (cert: Partial<Certification>) => void;
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
+  onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
   onSignOut: () => void;
   themeMode: string;
   onChangeTheme: (mode: string) => void;
@@ -41,10 +44,12 @@ export function GuardDashboard({
   guard,
   requests,
   currentUser,
+  payments = [],
   onAddCertification,
   onAcceptJob,
   onUpdateJobAudit,
   onRecordAuditViolation,
+  onUpdateStripeAccount,
   onSignOut,
   themeMode,
   onChangeTheme,
@@ -58,6 +63,8 @@ export function GuardDashboard({
   const [showCheckout, setShowCheckout] = useState(false);
   const [ratingJob, setRatingJob] = useState<SecurityRequest | null>(null);
   const [cashoutPending, setCashoutPending] = useState(false);
+  const [connectPending, setConnectPending] = useState(false);
+  const [connectReady, setConnectReady] = useState(false);
   const [dutySeconds, setDutySeconds] = useState(0);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
 
@@ -104,6 +111,27 @@ export function GuardDashboard({
   );
 
   const earningsSummary = useMemo(() => computeEarningsSummary(completedJobs), [completedJobs]);
+
+  const releasedEarnings = useMemo(
+    () => requests
+      .filter(r => r.assignedGuardId === guard.id && r.paymentStatus === 'released')
+      .reduce((s, j) => s + computeGuardEarnings(j.durationHours, j.hourlyRate), 0),
+    [requests, guard.id]
+  );
+
+  const pendingPayout = useMemo(
+    () => requests
+      .filter(r => r.assignedGuardId === guard.id && r.paymentStatus === 'held')
+      .reduce((s, j) => s + computeGuardEarnings(j.durationHours, j.hourlyRate), 0),
+    [requests, guard.id]
+  );
+
+  useEffect(() => {
+    if (!guard.stripeConnectAccountId) return;
+    getConnectAccountStatus(guard.stripeConnectAccountId)
+      .then((s) => setConnectReady(s.payoutsEnabled && s.detailsSubmitted))
+      .catch(() => setConnectReady(false));
+  }, [guard.stripeConnectAccountId]);
 
   const [walletBalance, setWalletBalance] = useState(() => {
     try {
@@ -234,7 +262,33 @@ export function GuardDashboard({
     setRatingJob(activeShiftJob);
   };
 
+  const handleConnectStripe = async () => {
+    setConnectPending(true);
+    try {
+      let accountId = guard.stripeConnectAccountId;
+      if (!accountId) {
+        const result = await createConnectAccount({
+          guardId: guard.id,
+          email: guard.email,
+          name: guard.name,
+        });
+        accountId = result.accountId;
+        onUpdateStripeAccount?.(guard.id, accountId);
+      }
+      const { url } = await createConnectAccountLink(accountId);
+      window.location.href = url;
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Failed to start Stripe onboarding');
+    } finally {
+      setConnectPending(false);
+    }
+  };
+
   const handleCashOut = () => {
+    if (!connectReady) {
+      alert('Connect your Stripe account to receive payouts.');
+      return;
+    }
     if (walletBalance <= 0) return;
     setCashoutPending(true);
     setTimeout(() => {
@@ -333,9 +387,18 @@ export function GuardDashboard({
         <GuardEarningsPanel
           summary={earningsSummary}
           completedJobs={completedJobs}
-          balance={walletBalance}
+          balance={releasedEarnings}
+          pendingPayout={pendingPayout}
+          stripeConnected={!!guard.stripeConnectAccountId}
+          stripeReady={connectReady}
+          connectPending={connectPending}
+          onConnectStripe={handleConnectStripe}
           onCashOut={handleCashOut}
           cashoutPending={cashoutPending}
+          payments={payments.filter(p => {
+            const job = requests.find(r => r.id === p.jobId);
+            return job?.assignedGuardId === guard.id;
+          })}
         />
         </div>
       )}
