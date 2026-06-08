@@ -118,7 +118,7 @@ export function RequestSecurityFlow({
       description: `${selectedService.label} coverage at ${address}.`,
       siteInstructions: `${selectedService.label} post orders for ${siteName || address}.`,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
-      armedRequired: armedRequired || requiredCerts.includes('bsis-exposed-firearm'),
+      armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
     });
     onBack();
   };

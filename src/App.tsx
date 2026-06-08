@@ -59,16 +59,6 @@ export default function App() {
     applyThemeToDocument(local);
   }, [currentUser?.id]);
 
-  // ── Active guard identity ──────────────────────────────────
-  const [activeGuardId, setActiveGuardId] = useState<string>(() =>
-    currentUser?.role === 'guard' ? currentUser.id : ''
-  );
-  useEffect(() => {
-    if (!currentUser) return;
-    if (currentUser.role === 'guard') setActiveGuardId(currentUser.id);
-    else if (isStaffRole(currentUser.role) && staffGuardMode) setActiveGuardId(currentUser.id);
-  }, [currentUser, staffGuardMode]);
-
   // ── DB state ───────────────────────────────────────────────
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
   const [clients,  setClients]  = useState<Client[]>([]);
@@ -78,6 +68,16 @@ export default function App() {
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
   const [staffGuardMode, setStaffGuardMode] = useState(false);
+
+  // ── Active guard identity ──────────────────────────────────
+  const [activeGuardId, setActiveGuardId] = useState<string>(() =>
+    currentUser?.role === 'guard' ? currentUser.id : ''
+  );
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role === 'guard') setActiveGuardId(currentUser.id);
+    else if (isStaffRole(currentUser.role) && staffGuardMode) setActiveGuardId(currentUser.id);
+  }, [currentUser, staffGuardMode]);
 
   useEffect(() => {
     if (!currentUser) return;

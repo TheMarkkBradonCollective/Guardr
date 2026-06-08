@@ -208,7 +208,9 @@ export function GuardCredentialsPanel({
                 </p>
               ) : (
                 items.map((cert) => (
-                  <CredentialRow key={cert.id} cert={cert} />
+                  <div key={cert.id}>
+                    <CredentialRow cert={cert} />
+                  </div>
                 ))
               )}
             </div>
