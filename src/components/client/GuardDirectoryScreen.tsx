@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirectory';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
+import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { Search, Shield, Star, ChevronRight } from 'lucide-react';
 
 interface GuardDirectoryScreenProps {
@@ -87,6 +88,9 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                     )}
                   </div>
                   <p className="text-sm text-brand-text-muted mt-1 line-clamp-2">{getGuardDisplaySummary(guard)}</p>
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                    <CertBadgeRow guard={guard} showCaBaseline={false} />
+                  </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
               </button>

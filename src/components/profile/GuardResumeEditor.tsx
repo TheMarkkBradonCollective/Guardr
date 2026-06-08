@@ -6,16 +6,10 @@ import {
   GUARD_SPECIALTY_OPTIONS,
   SecurityGuard,
 } from '../../types';
-import {
-  getGuardCertifications,
-  getGuardLicenses,
-  joinTagInput,
-  LICENSE_CERT_OPTIONS,
-  parseTagInput,
-  TRAINING_CERT_OPTIONS,
-} from '../../lib/guardResume';
-import { formatStateName, US_STATES } from '../../lib/states';
-import { Award, BookOpen, Briefcase, GraduationCap, Plus, Shield } from 'lucide-react';
+import { joinTagInput, parseTagInput } from '../../lib/guardResume';
+import { US_STATES } from '../../lib/states';
+import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
+import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 
 export interface GuardResumeSavePayload {
   headline: string;
@@ -35,7 +29,6 @@ interface GuardResumeEditorProps {
   editing: boolean;
   payload: GuardResumeSavePayload;
   onChange: (patch: Partial<GuardResumeSavePayload>) => void;
-  onAddLicense?: (cert: Partial<Certification>) => void | Promise<void>;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
@@ -46,27 +39,12 @@ export function GuardResumeEditor({
   editing,
   payload,
   onChange,
-  onAddLicense,
   onAddCertification,
   onAddExperience,
   onAddEducation,
 }: GuardResumeEditorProps) {
-  const licenses = getGuardLicenses(guard);
-  const certifications = getGuardCertifications(guard);
-
-  const [showAddLicense, setShowAddLicense] = useState(false);
-  const [showAddCert, setShowAddCert] = useState(false);
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
-
-  const [licenseName, setLicenseName] = useState<string>(LICENSE_CERT_OPTIONS[0]);
-  const [licenseState, setLicenseState] = useState('');
-  const [licenseIssuer, setLicenseIssuer] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
-
-  const [certName, setCertName] = useState<string>(TRAINING_CERT_OPTIONS[0]);
-  const [certIssuer, setCertIssuer] = useState('');
-  const [certNumber, setCertNumber] = useState('');
 
   const [expTitle, setExpTitle] = useState('');
   const [expCompany, setExpCompany] = useState('');
@@ -91,40 +69,6 @@ export function GuardResumeEditor({
     if (set.has(code)) set.delete(code);
     else set.add(code);
     onChange({ serviceAreas: [...set] });
-  };
-
-  const submitLicense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!onAddLicense || !licenseIssuer.trim() || !licenseNumber.trim() || !licenseState) return;
-    await onAddLicense({
-      name: licenseName,
-      issuer: licenseIssuer.trim(),
-      number: licenseNumber.trim(),
-      state: licenseState.toUpperCase(),
-      status: 'pending',
-      issueDate: new Date().toISOString().split('T')[0],
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
-    setLicenseIssuer('');
-    setLicenseNumber('');
-    setLicenseState('');
-    setShowAddLicense(false);
-  };
-
-  const submitCert = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!onAddCertification || !certIssuer.trim() || !certNumber.trim()) return;
-    await onAddCertification({
-      name: certName,
-      issuer: certIssuer.trim(),
-      number: certNumber.trim(),
-      status: 'pending',
-      issueDate: new Date().toISOString().split('T')[0],
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
-    setCertIssuer('');
-    setCertNumber('');
-    setShowAddCert(false);
   };
 
   const submitExperience = async (e: React.FormEvent) => {
@@ -265,60 +209,10 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      <CredentialSection
-        title="State licenses"
-        subtitle="Guard cards by state — verified by staff before you can work there"
-        icon={Shield}
-        items={licenses}
-        canAdd={editing && !!onAddLicense}
-        onAdd={() => setShowAddLicense((v) => !v)}
-        showForm={showAddLicense}
-        form={
-          <form onSubmit={submitLicense} className="space-y-3 border-t border-brand-border pt-3">
-            <select value={licenseName} onChange={(e) => setLicenseName(e.target.value)} className="uber-select w-full">
-              {LICENSE_CERT_OPTIONS.map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <select value={licenseState} onChange={(e) => setLicenseState(e.target.value)} required className="uber-select w-full">
-              <option value="">State…</option>
-              {US_STATES.map(({ code, name }) => (
-                <option key={code} value={code}>{name}</option>
-              ))}
-            </select>
-            <input className="uber-input w-full" placeholder="Issuing body" value={licenseIssuer} onChange={(e) => setLicenseIssuer(e.target.value)} required />
-            <input className="uber-input w-full" placeholder="License / card #" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} required />
-            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Submit license</button>
-          </form>
-        }
-        renderMeta={(cert) => (
-          <>
-            {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer} · #{cert.number}
-          </>
-        )}
-      />
-
-      <CredentialSection
-        title="Certifications & training"
-        subtitle="CPR, armed courses, medical — separate from state guard cards"
-        icon={Award}
-        items={certifications}
-        canAdd={editing && !!onAddCertification}
-        onAdd={() => setShowAddCert((v) => !v)}
-        showForm={showAddCert}
-        form={
-          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-            <select value={certName} onChange={(e) => setCertName(e.target.value)} className="uber-select w-full">
-              {TRAINING_CERT_OPTIONS.map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <input className="uber-input w-full" placeholder="Issuing organization" value={certIssuer} onChange={(e) => setCertIssuer(e.target.value)} required />
-            <input className="uber-input w-full" placeholder="Certificate #" value={certNumber} onChange={(e) => setCertNumber(e.target.value)} required />
-            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Submit certification</button>
-          </form>
-        }
-        renderMeta={(cert) => <>{cert.issuer} · #{cert.number}</>}
+      <GuardCredentialsPanel
+        guard={guard}
+        editing={editing}
+        onAddCertification={onAddCertification}
       />
 
       <ExperienceSection
@@ -415,68 +309,6 @@ function ResumeField({
         <p className="text-sm mt-1 text-brand-text-muted whitespace-pre-wrap">{value || '—'}</p>
       )}
     </div>
-  );
-}
-
-function CredentialSection({
-  title,
-  subtitle,
-  icon: Icon,
-  items,
-  canAdd,
-  onAdd,
-  showForm,
-  form,
-  renderMeta,
-}: {
-  title: string;
-  subtitle: string;
-  icon: typeof Shield;
-  items: Certification[];
-  canAdd: boolean;
-  onAdd: () => void;
-  showForm: boolean;
-  form: React.ReactNode;
-  renderMeta: (cert: Certification) => React.ReactNode;
-}) {
-  return (
-    <section className="app-card space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="uber-label flex items-center gap-2">
-            <Icon className="w-4 h-4 text-brand-primary" />
-            {title}
-          </p>
-          <p className="text-xs text-brand-text-muted mt-1">{subtitle}</p>
-        </div>
-        {canAdd && (
-          <button type="button" onClick={onAdd} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold shrink-0">
-            <Plus className="w-3 h-3" />
-            Add
-          </button>
-        )}
-      </div>
-      {showForm && form}
-      <div className="space-y-2">
-        {items.length === 0 ? (
-          <p className="text-xs text-brand-text-muted text-center py-4">None listed yet.</p>
-        ) : (
-          items.map((cert) => (
-            <div key={cert.id} className="p-3 rounded-xl surface-muted flex justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-semibold text-sm">{cert.name}</p>
-                <p className="text-xs text-brand-text-muted mt-1">{renderMeta(cert)}</p>
-              </div>
-              <span className={`shrink-0 text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${
-                cert.status === 'verified' ? 'text-brand-primary border-brand-primary/30' : 'text-brand-text-muted border-brand-border'
-              }`}>
-                {cert.status}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-    </section>
   );
 }
 

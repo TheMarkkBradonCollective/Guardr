@@ -2,13 +2,16 @@ import React, { useMemo } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardHistoryWithClient } from '../../lib/guardDirectory';
 import {
+  certDisplayName,
   formatServiceAreas,
   formatSkillList,
-  getGuardCertifications,
   getGuardDisplayHeadline,
   getGuardDisplaySummary,
-  getGuardLicenses,
 } from '../../lib/guardResume';
+import { groupGuardCertsByCategory } from '../../lib/certMatching';
+import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
+import { CertBadgeRow } from '../guard/CertBadgeRow';
+import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
 import {
   ArrowLeft,
@@ -53,10 +56,19 @@ export function GuardProfileScreen({
     [guard.id, clientId, requests]
   );
 
-  const licenses = getGuardLicenses(guard).filter((c) => c.status === 'verified');
-  const pendingLicenses = getGuardLicenses(guard).filter((c) => c.status === 'pending');
-  const certifications = getGuardCertifications(guard).filter((c) => c.status === 'verified');
+  const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const aboutText = guard.about?.trim() || guard.bio?.trim();
+
+  const credentialSections: CertCategory[] = [
+    'guard-card',
+    'bsis-required',
+    'bsis-training',
+    'bsis-permit',
+    'medical',
+    'fema',
+    'security-advanced',
+    'industry',
+  ];
 
   return (
     <div className="h-full flex flex-col overflow-hidden client-content-shell">
@@ -103,6 +115,8 @@ export function GuardProfileScreen({
             </div>
           </div>
 
+          <CertBadgeRow guard={guard} />
+
           {/* Full description */}
           {aboutText && (
             <section className="space-y-2">
@@ -143,60 +157,37 @@ export function GuardProfileScreen({
             </section>
           )}
 
-          {/* Licenses — separate */}
-          <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              State licenses
-            </h2>
-            {licenses.length === 0 && pendingLicenses.length === 0 ? (
-              <div className="app-card text-sm text-brand-text-muted">No state guard cards on file.</div>
-            ) : (
-              <div className="space-y-2">
-                {licenses.map((lic) => (
-                  <div key={lic.id} className="app-card flex justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">{lic.name}</p>
-                      <p className="text-xs text-brand-text-muted mt-1">
-                        {lic.state ? `${lic.state} · ` : ''}{lic.issuer} · #{lic.number}
-                      </p>
-                      {lic.expiryDate && <p className="text-xs text-brand-text-muted">Expires {lic.expiryDate}</p>}
+          {credentialSections.map((category) => {
+            const items = (groupedCerts[category] ?? []).filter((c) => c.status === 'verified');
+            const pending = (groupedCerts[category] ?? []).filter((c) => c.status === 'pending');
+            if (items.length === 0 && pending.length === 0) return null;
+            return (
+              <section key={category} className="space-y-2">
+                <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
+                  {category === 'guard-card' ? <Shield className="w-4 h-4" /> : <Award className="w-4 h-4" />}
+                  {CERT_CATEGORY_LABELS[category]}
+                </h2>
+                <div className="space-y-2">
+                  {items.map((cert) => (
+                    <div key={cert.id} className="app-card flex justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-sm">{certDisplayName(cert)}</p>
+                        <p className="text-xs text-brand-text-muted mt-1">
+                          {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-brand-primary shrink-0">Verified</span>
                     </div>
-                    <span className="text-xs font-semibold text-brand-primary shrink-0">Verified</span>
-                  </div>
-                ))}
-                {pendingLicenses.map((lic) => (
-                  <div key={lic.id} className="app-card opacity-70 flex justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">{lic.name}</p>
-                      <p className="text-xs text-brand-text-muted mt-1">{lic.state} · pending verification</p>
+                  ))}
+                  {pending.map((cert) => (
+                    <div key={cert.id} className="app-card opacity-70 text-xs text-brand-text-muted">
+                      {certDisplayName(cert)} — pending verification
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Certifications — separate */}
-          {certifications.length > 0 && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-                <Award className="w-4 h-4" />
-                Certifications & training
-              </h2>
-              <div className="space-y-2">
-                {certifications.map((cert) => (
-                  <div key={cert.id} className="app-card flex justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">{cert.name}</p>
-                      <p className="text-xs text-brand-text-muted mt-1">{cert.issuer} · #{cert.number}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-brand-primary shrink-0">Verified</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  ))}
+                </div>
+              </section>
+            );
+          })}
 
           {guard.experience.length > 0 && (
             <section className="space-y-2">

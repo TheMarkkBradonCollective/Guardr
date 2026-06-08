@@ -176,7 +176,6 @@ export function UserProfileScreen({
           editing={editing}
           payload={resume}
           onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement }))}
-          onAddLicense={onAddCertification}
           onAddCertification={onAddCertification}
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}

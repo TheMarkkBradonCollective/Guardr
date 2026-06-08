@@ -4,8 +4,11 @@ import { estimateJobDistanceMiles } from './geo';
 import { formatDuration } from './dates';
 import {
   guardCanWorkInState,
+  guardHasFirearmPermit,
   stateLicenseRequirementLabel,
 } from './guardLicenses';
+import { guardHasVerifiedCert } from './certMatching';
+import { requirementLabel } from './certCatalog';
 
 export const JOB_CATEGORIES = [
   { id: 'event', label: 'Event Security' },
@@ -73,23 +76,19 @@ export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest)
 
   if (job.armedRequired) {
     checks.push({
-      label: 'Armed Certification',
-      met: guard.certifications.some(
-        (c) =>
-          c.status === 'verified' &&
-          /armed/i.test(c.name) &&
-          (!job.state || c.state?.toUpperCase() === job.state.toUpperCase())
-      ),
+      label: 'BSIS Exposed Firearm Permit',
+      met: guardHasFirearmPermit(guard),
     });
   }
 
-  for (const cert of job.requiredCertifications) {
-    const met = guard.certifications.some(
-      (c) =>
-        c.status === 'verified' &&
-        (c.name.toLowerCase().includes(cert.toLowerCase()) || cert.toLowerCase().includes(c.name.toLowerCase()))
-    );
-    checks.push({ label: cert, met });
+  const seen = new Set<string>();
+  for (const certId of job.requiredCertifications) {
+    if (certId === 'bsis-guard-card' || seen.has(certId)) continue;
+    seen.add(certId);
+    checks.push({
+      label: requirementLabel(certId),
+      met: guardHasVerifiedCert(guard, certId, job.state),
+    });
   }
 
   return { checks, canAccept: checks.every((c) => c.met) };

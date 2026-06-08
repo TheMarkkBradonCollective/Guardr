@@ -12,10 +12,12 @@ import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../.
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, MapPin, Search, Shield } from 'lucide-react';
+import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
+import { requirementLabel } from '../../lib/certCatalog';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 'Review'];
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
@@ -45,6 +47,7 @@ export function DirectGuardRequestFlow({
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
   const [notes, setNotes] = useState('');
+  const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
 
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
@@ -60,12 +63,13 @@ export function DirectGuardRequestFlow({
       case 2: return address.trim().length > 3 && jobState.length === 2;
       case 3: return durationHours > 0;
       case 4: return effectiveRate >= 20;
+      case 5: return true;
       default: return true;
     }
   };
 
   const goNext = () => {
-    if (!canNext() || step >= 5) return;
+    if (!canNext() || step >= 6) return;
     setStep((s) => (s + 1) as FlowStep);
   };
 
@@ -97,8 +101,8 @@ export function DirectGuardRequestFlow({
       estimatedPayout: estimatedTotal,
       description: notes.trim() || `Direct assignment request for ${guard.name}. ${selectedService.label} at ${address}.`,
       siteInstructions: notes.trim() || `${selectedService.label} post orders for ${siteName || address}.`,
-      requiredCertifications: ['State Unarmed Guard Card License'],
-      armedRequired: false,
+      requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
+      armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
     });
   };
 
@@ -131,7 +135,7 @@ export function DirectGuardRequestFlow({
           </button>
           <div className="flex-1">
             <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest">
-              Step {step} of 5 · {STEP_LABELS[step - 1]}
+              Step {step} of 6 · {STEP_LABELS[step - 1]}
             </p>
             <div className="flex gap-1 mt-2">
               {STEP_LABELS.map((_, i) => (
@@ -225,6 +229,14 @@ export function DirectGuardRequestFlow({
         )}
 
         {step === 5 && (
+          <JobCertRequirementsPicker
+            selected={requiredCerts}
+            onChange={setRequiredCerts}
+            jobState={jobState}
+          />
+        )}
+
+        {step === 6 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Review & send</h2>
             <div className="app-card space-y-3 text-sm">
@@ -234,6 +246,14 @@ export function DirectGuardRequestFlow({
               <Row label="Location" value={address} />
               <Row label="Schedule" value={formatDuration(durationHours)} />
               <Row label="Rate" value={`$${effectiveRate}/hr`} />
+              <div>
+                <p className="text-brand-text-muted mb-1">Required credentials</p>
+                <div className="flex flex-wrap gap-1">
+                  {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
+                    <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
+                  ))}
+                </div>
+              </div>
               <div className="border-t border-brand-border pt-3 flex justify-between font-bold">
                 <span>Estimated total</span>
                 <span className="text-brand-primary">${estimatedTotal}</span>
@@ -245,7 +265,7 @@ export function DirectGuardRequestFlow({
       </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95">
-        {step < 5 ? (
+        {step < 6 ? (
           <button type="button" onClick={goNext} disabled={!canNext()} className="uber-button-sage w-full h-12 disabled:opacity-40 gap-2">
             Continue <ArrowRight className="w-4 h-4" />
           </button>

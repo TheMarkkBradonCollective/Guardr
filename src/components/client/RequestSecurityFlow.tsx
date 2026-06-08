@@ -12,8 +12,10 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
+import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
+import { requirementLabel } from '../../lib/certCatalog';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
@@ -24,7 +26,7 @@ interface RequestSecurityFlowProps {
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Review'];
 
 export function RequestSecurityFlow({
   isClientApproved,
@@ -56,6 +58,7 @@ export function RequestSecurityFlow({
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
   const [customTitle, setCustomTitle] = useState('');
+  const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
 
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
@@ -77,13 +80,14 @@ export function RequestSecurityFlow({
       case 3: return durationHours > 0;
       case 4: return effectiveGuards >= 1;
       case 5: return effectiveRate >= 20;
+      case 6: return true;
       default: return true;
     }
   };
 
   const goNext = () => {
     if (!canNext()) return;
-    if (step < 6) setStep((s) => (s + 1) as FlowStep);
+    if (step < 7) setStep((s) => (s + 1) as FlowStep);
   };
 
   const goBack = () => {
@@ -113,8 +117,8 @@ export function RequestSecurityFlow({
       estimatedPayout: estimatedTotal,
       description: `${selectedService.label} coverage at ${address}.`,
       siteInstructions: `${selectedService.label} post orders for ${siteName || address}.`,
-      requiredCertifications: ['State Unarmed Guard Card License'],
-      armedRequired: false,
+      requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
+      armedRequired: armedRequired || requiredCerts.includes('bsis-exposed-firearm'),
     });
     onBack();
   };
@@ -128,7 +132,7 @@ export function RequestSecurityFlow({
         </button>
         <div className="flex-1">
           <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest">
-            Step {step} of 6 · {STEP_LABELS[step - 1]}
+            Step {step} of 7 · {STEP_LABELS[step - 1]}
           </p>
           <div className="flex gap-1 mt-2">
             {STEP_LABELS.map((_, i) => (
@@ -335,6 +339,14 @@ export function RequestSecurityFlow({
         )}
 
         {step === 6 && (
+          <JobCertRequirementsPicker
+            selected={requiredCerts}
+            onChange={setRequiredCerts}
+            jobState={jobState}
+          />
+        )}
+
+        {step === 7 && (
           <div className="space-y-4">
             <h2 className="text-xl font-black">Review request</h2>
             <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 space-y-4">
@@ -362,6 +374,14 @@ export function RequestSecurityFlow({
                 <span className="text-brand-text-muted">Rate</span>
                 <span className="font-bold">${effectiveRate}/hr</span>
               </div>
+              <div className="text-sm border-t border-brand-border pt-3">
+                <span className="text-brand-text-muted">Required credentials</span>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
+                    <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
+                  ))}
+                </div>
+              </div>
               <div className="border-t border-brand-border pt-4 space-y-2">
                 <div className="flex justify-between font-black">
                   <span>Estimated cost</span>
@@ -380,7 +400,7 @@ export function RequestSecurityFlow({
       {/* Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
         <div className="max-w-lg mx-auto">
-          {step < 6 ? (
+          {step < 7 ? (
             <button
               type="button"
               onClick={goNext}

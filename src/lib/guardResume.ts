@@ -1,15 +1,16 @@
 import { Certification, SecurityGuard } from '../types';
+import { resolveCertCatalogId, getCertCatalogEntry } from './certCatalog';
 import { isGuardCardCert } from './guardLicenses';
 import { formatStateName } from './states';
 
-/** State guard card licenses — separate from training certifications */
+/** BSIS guard cards only */
 export function getGuardLicenses(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((c) => isGuardCardCert(c.name));
+  return guard.certifications.filter((c) => isGuardCardCert(c));
 }
 
-/** CPR, armed specialty, medical, etc. — not state guard cards */
+/** All training certs, permits, and credentials except guard cards */
 export function getGuardCertifications(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter((c) => !isGuardCardCert(c.name));
+  return guard.certifications.filter((c) => !isGuardCardCert(c));
 }
 
 export function getGuardDisplaySummary(guard: SecurityGuard): string {
@@ -35,20 +36,6 @@ export function formatServiceAreas(areas: string[] | undefined): string {
   return areas.map((code) => formatStateName(code)).join(', ');
 }
 
-export const LICENSE_CERT_OPTIONS = [
-  'State Unarmed Guard Card License',
-  'State Armed Security Officer Guard Card',
-] as const;
-
-export const TRAINING_CERT_OPTIONS = [
-  'First Aid & CPR / AED',
-  'Vessel / Event Security Officer (VSO)',
-  'Tactical Combat Casualty Care (TCCC)',
-  'Executive Close Protection Certified (ECP)',
-  'NRA Professional Range Safety Guard License',
-  'Crisis De-escalation & Mental Health First Responder',
-] as const;
-
 export function parseTagInput(value: string): string[] {
   return value
     .split(/[,;]+/)
@@ -58,4 +45,9 @@ export function parseTagInput(value: string): string[] {
 
 export function joinTagInput(tags: string[] | undefined): string {
   return tags?.join(', ') ?? '';
+}
+
+export function certDisplayName(cert: Certification): string {
+  const id = resolveCertCatalogId(cert);
+  return id ? (getCertCatalogEntry(id)?.name ?? cert.name) : cert.name;
 }

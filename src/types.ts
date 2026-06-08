@@ -33,6 +33,16 @@ export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
 export type StaffRole = 'Director' | 'Administrator' | 'Moderator';
 
+export type CertCategory =
+  | 'guard-card'
+  | 'bsis-required'
+  | 'bsis-training'
+  | 'bsis-permit'
+  | 'medical'
+  | 'fema'
+  | 'security-advanced'
+  | 'industry';
+
 export interface Certification {
   id: string;
   name: string;
@@ -41,8 +51,11 @@ export interface Certification {
   status: 'verified' | 'pending' | 'rejected';
   issueDate: string;
   expiryDate: string;
-  /** US state code — required for guard card licenses */
+  /** US state code — required for BSIS guard cards */
   state?: string;
+  /** Links to certCatalog entry */
+  catalogId?: string;
+  category?: CertCategory;
 }
 
 export interface Experience {
@@ -183,6 +196,7 @@ export interface SecurityRequest {
   requestType?: RequestType;
   /** Set only when requestType is direct */
   targetGuardId?: string | null;
+  /** Catalog IDs from certCatalog — used for job matching filters */
   requiredCertifications: string[];
   applicants: string[];
   ratingGiven?: number;

@@ -167,6 +167,8 @@ export default function App() {
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
           state: c.state ?? undefined,
+          catalogId: c.catalog_id ?? undefined,
+          category: c.category ?? undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -384,13 +386,15 @@ export default function App() {
   const handleAddCertification = async (guardId: string, newCert: Partial<Certification>) => {
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
-      name: newCert.name || 'Security License',
-      issuer: newCert.issuer || 'State Licensing Bureau',
+      name: newCert.name || 'BSIS Guard Card',
+      issuer: newCert.issuer || 'BSIS',
       number: newCert.number || 'LIC-000000',
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
       expiryDate: newCert.expiryDate || new Date().toISOString().split('T')[0],
       state: newCert.state?.toUpperCase(),
+      catalogId: newCert.catalogId,
+      category: newCert.category,
     };
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
@@ -400,6 +404,8 @@ export default function App() {
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
           state: certWithId.state ?? null,
+          catalog_id: certWithId.catalogId ?? null,
+          category: certWithId.category ?? null,
         });
       } catch (e) { console.error('Cert insert error:', e); }
     }
