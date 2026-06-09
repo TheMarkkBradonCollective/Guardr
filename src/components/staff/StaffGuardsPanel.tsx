@@ -22,6 +22,7 @@ interface StaffGuardsPanelProps {
   onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   initialSelectedId?: string | null;
+  onOpenJob?: (jobId: string) => void;
 }
 
 export function StaffGuardsPanel({
@@ -36,6 +37,7 @@ export function StaffGuardsPanel({
   onRejectGuard,
   onUpdateBackgroundChecked,
   initialSelectedId = null,
+  onOpenJob,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<GuardFilter>('field');
@@ -67,6 +69,7 @@ export function StaffGuardsPanel({
         onApproveGuard,
         onRejectGuard,
         onUpdateBackgroundChecked,
+        onOpenJob,
       }
     : null;
 

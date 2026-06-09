@@ -6,9 +6,10 @@ import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
+import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfListCard, WfMetricTile, WfSearchBar } from '../ui/wireframe';
-import { Briefcase, X } from 'lucide-react';
+import { WfBadge, WfMetricTile, WfSearchBar } from '../ui/wireframe';
+import { ArrowLeft, X } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
@@ -17,6 +18,7 @@ interface StaffJobsPanelProps {
   guards: SecurityGuard[];
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  initialSelectedId?: string | null;
 }
 
 function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
@@ -70,11 +72,13 @@ function JobDetailPanel({
   guards,
   onApproveRequest,
   onDenyRequest,
+  onBack,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  onBack?: () => void;
 }) {
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
@@ -82,6 +86,12 @@ function JobDetailPanel({
 
   return (
     <div className="staff-detail-pane h-full space-y-4">
+      {onBack && (
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+          <ArrowLeft className="w-4 h-4" />
+          Back to jobs
+        </button>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
         <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
@@ -123,10 +133,11 @@ export function StaffJobsPanel({
   guards,
   onApproveRequest,
   onDenyRequest,
+  initialSelectedId = null,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
@@ -143,7 +154,8 @@ export function StaffJobsPanel({
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [requests, filter, search]);
 
-  const selected = filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null;
+  const selected = filtered.find((r) => r.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
+  const showDetailOnly = Boolean(selected && !splitView);
 
   const filters: { id: JobsFilter; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -152,63 +164,72 @@ export function StaffJobsPanel({
     { id: 'done', label: 'Done' },
   ];
 
+  function renderJobCard(req: SecurityRequest, isActive: boolean) {
+    const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
+    return (
+      <JobListCard
+        key={req.id}
+        job={req}
+        subtitle={req.clientName}
+        meta={
+          <div className="flex flex-wrap items-center gap-1.5">
+            <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+            <span>{assignedGuard ? `Guard: ${assignedGuard.name}` : 'Unassigned'}</span>
+          </div>
+        }
+        onClick={() => setSelectedId(req.id)}
+        selected={isActive}
+        showStatus={false}
+      />
+    );
+  }
+
   return (
     <div className="animate-fade-in space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {filters.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              filter === f.id
-                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {!showDetailOnly && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  filter === f.id
+                    ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
+                    : 'border-brand-border text-brand-text-muted hover:text-brand-text'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
 
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search client, location, title..."
-        className="max-w-md"
-      />
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search client, location, title..."
+            className="max-w-md"
+          />
+        </>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
+      ) : showDetailOnly && selected ? (
+        <JobDetailPanel
+          req={selected}
+          guards={guards}
+          onApproveRequest={onApproveRequest}
+          onDenyRequest={onDenyRequest}
+          onBack={() => setSelectedId(null)}
+        />
       ) : splitView ? (
         <div className="tablet-split-panel">
           <div className="max-h-[70vh] overflow-y-auto pr-1">
-          <AppItemCardStack>
-            {filtered.map((req) => {
-              const isActive = selected?.id === req.id;
-              const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
-              return (
-                <WfListCard
-                  key={req.id}
-                  avatar={
-                    <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-brand-primary" />
-                    </div>
-                  }
-                  title={req.title}
-                  subtitle={req.clientName}
-                  meta={
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                      <span>{assignedGuard ? `Guard: ${assignedGuard.name}` : 'Unassigned'}</span>
-                    </div>
-                  }
-                  onClick={() => setSelectedId(req.id)}
-                  className={isActive ? 'app-item-card-selected' : ''}
-                />
-              );
-            })}
-          </AppItemCardStack>
+            <AppItemCardStack>
+              {filtered.map((req) => renderJobCard(req, selected?.id === req.id))}
+            </AppItemCardStack>
           </div>
           {selected && (
             <JobDetailPanel
@@ -220,17 +241,9 @@ export function StaffJobsPanel({
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((req) => (
-            <JobDetailPanel
-              key={req.id}
-              req={req}
-              guards={guards}
-              onApproveRequest={onApproveRequest}
-              onDenyRequest={onDenyRequest}
-            />
-          ))}
-        </div>
+        <AppItemCardStack>
+          {filtered.map((req) => renderJobCard(req, false))}
+        </AppItemCardStack>
       )}
     </div>
   );

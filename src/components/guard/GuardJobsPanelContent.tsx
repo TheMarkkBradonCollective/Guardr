@@ -3,6 +3,7 @@ import { SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { JOB_CATEGORIES, JobCategoryId, getGuardHourlyPay } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
+import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
 import { Calendar, ChevronRight } from 'lucide-react';
 
@@ -53,15 +54,10 @@ export function GuardJobsPanelContent({
             <Calendar className="w-4 h-4 text-brand-primary" />
             <p className="text-sm font-medium text-brand-text-muted">Upcoming assignments</p>
           </div>
-          {upcomingShifts.map((shift) => (
-            <button
-              key={shift.id}
-              type="button"
-              onClick={() => onSelectJob(shift)}
-              className="w-full text-left rounded-2xl border border-brand-primary/30 bg-brand-primary/8 p-4 hover:bg-brand-primary/12 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+          <AppItemCardStack>
+            {upcomingShifts.map((shift) => (
+              <AppItemCard key={shift.id} onClick={() => onSelectJob(shift)} className="border-brand-primary/30 bg-brand-primary/8">
+                <div className="min-w-0 flex-1 text-left">
                   <p className="font-semibold truncate">{shift.title}</p>
                   <p className="text-sm text-brand-text-muted mt-1 truncate">
                     {formatShiftRange(shift.startDate, shift.endDate)}
@@ -71,9 +67,9 @@ export function GuardJobsPanelContent({
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-primary shrink-0" />
-              </div>
-            </button>
-          ))}
+              </AppItemCard>
+            ))}
+          </AppItemCardStack>
         </div>
       )}
 
@@ -102,16 +98,17 @@ export function GuardJobsPanelContent({
         {jobs.length === 0 ? (
           <p className="text-center text-brand-text-muted py-10">No jobs in this category right now.</p>
         ) : (
-          jobs.map((job) => (
-            <div key={job.id}>
+          <AppItemCardStack>
+            {jobs.map((job) => (
               <GuardJobCard
+                key={job.id}
                 job={job}
                 guard={guard}
                 compact
                 onSelect={() => onSelectJob(job)}
               />
-            </div>
-          ))
+            ))}
+          </AppItemCardStack>
         )}
       </div>
     </div>

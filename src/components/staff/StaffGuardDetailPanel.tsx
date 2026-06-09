@@ -8,11 +8,11 @@ import {
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
-import { AppList, AppListRow } from '../ui/app/AppPrimitives';
+import { JobListCard } from '../jobs/JobListCard';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Check, X } from 'lucide-react';
 
 interface StaffGuardDetailPanelProps {
@@ -27,6 +27,7 @@ interface StaffGuardDetailPanelProps {
   onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onBack?: () => void;
+  onOpenJob?: (jobId: string) => void;
   compact?: boolean;
 }
 
@@ -42,6 +43,7 @@ export function StaffGuardDetailPanel({
   onRejectGuard,
   onUpdateBackgroundChecked,
   onBack,
+  onOpenJob,
   compact = false,
 }: StaffGuardDetailPanelProps) {
   const accountStatus = guard.userStatus || 'active';
@@ -209,17 +211,16 @@ export function StaffGuardDetailPanel({
             {guardJobs.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No assignments on record.</p>
             ) : (
-              <AppList>
+              <AppItemCardStack>
                 {guardJobs.map((job) => (
-                  <AppListRow key={job.id} className="flex-col !items-stretch gap-1">
-                    <p className="text-sm font-semibold truncate">{job.title}</p>
-                    <p className="text-xs text-brand-text-muted">
-                      {job.clientName} · {job.status.replace('-', ' ')}
-                    </p>
-                    <p className="text-xs text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
-                  </AppListRow>
+                  <JobListCard
+                    key={job.id}
+                    job={job}
+                    subtitle={`${job.clientName} · ${job.status.replace('-', ' ')}`}
+                    onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
+                  />
                 ))}
-              </AppList>
+              </AppItemCardStack>
             )}
           </section>
         </>

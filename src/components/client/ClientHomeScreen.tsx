@@ -155,7 +155,12 @@ export function ClientHomeScreen({
           ) : (
             <div className="app-scroll-row scrollbar-hide pb-1">
               {upcoming.map((req) => (
-                <div key={req.id} className="app-h-tile app-surface-band flex flex-col gap-2 snap-start shrink-0 w-[min(100%,260px)] !m-0">
+                <button
+                  key={req.id}
+                  type="button"
+                  onClick={() => onAction('requests')}
+                  className="app-item-card app-item-card-align-top flex-col !items-stretch gap-2 snap-start shrink-0 w-[min(100%,260px)] text-left"
+                >
                   <div className="flex items-start gap-2">
                     <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                     <p className="font-semibold text-sm leading-snug">{req.title}</p>
@@ -169,7 +174,7 @@ export function ClientHomeScreen({
                   <p className="text-xs text-brand-text pt-2 border-t border-brand-border">
                     {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} assigned
                   </p>
-                </div>
+                </button>
               ))}
             </div>
           )}
