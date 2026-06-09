@@ -157,9 +157,12 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_payment_method TEX
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_to_stripe BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
 
 -- Backfill nulls so NOT NULL constraints can apply
 UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
+UPDATE security_requests SET cash_deposited_amount = estimated_payout
+  WHERE cash_deposited_to_stripe = TRUE AND cash_deposited_amount = 0;
 UPDATE security_requests SET site_name = '' WHERE site_name IS NULL;
 UPDATE security_requests SET address = '' WHERE address IS NULL;
 UPDATE security_requests SET state = '' WHERE state IS NULL;

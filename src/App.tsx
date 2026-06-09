@@ -23,6 +23,9 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
+  getCashDepositedAmount,
+  getRemainingStripeDeposit,
+  getRequiredStripeDeposit,
   guardPayoutAmount,
   isCashClientPayment,
   parsePaymentMethod,
@@ -288,6 +291,7 @@ export default function App() {
         clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
         guardPayoutMethod: parsePaymentMethod(r.guard_payout_method),
         cashDepositedToStripe: !!r.cash_deposited_to_stripe,
+        cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
         cashDepositedAt: r.cash_deposited_at || undefined,
       })));
 
@@ -928,7 +932,14 @@ export default function App() {
     setRequests((prev) =>
       prev.map((r) =>
         r.id === requestId
-          ? { ...r, paymentStatus: 'paid', clientPaymentMethod: 'cash', cashDepositedToStripe: false }
+          ? {
+              ...r,
+              paymentStatus: 'paid',
+              clientPaymentMethod: 'cash',
+              cashDepositedToStripe: false,
+              cashDepositedAmount: 0,
+              cashDepositedAt: undefined,
+            }
           : r
       )
     );
@@ -958,6 +969,7 @@ export default function App() {
           client_payment_method: 'cash',
           cash_deposited_to_stripe: false,
           cash_deposited_at: null,
+          cash_deposited_amount: 0,
         })
         .eq('id', requestId);
       if (existingPayment) {
@@ -1049,28 +1061,44 @@ export default function App() {
       alert('This job does not have client cash waiting to be deposited.');
       return;
     }
-    if (
-      !window.confirm(
-        `Record that $${req.estimatedPayout} from "${req.title}" was deposited to the platform Stripe balance?`
-      )
-    ) {
+    const depositAmount = getRemainingStripeDeposit(req);
+    const requiredTotal = getRequiredStripeDeposit(req);
+    const confirmMessage =
+      requiredTotal < req.estimatedPayout
+        ? `Record that $${depositAmount} (platform fee) from "${req.title}" was deposited to the platform Stripe balance?`
+        : `Record that $${depositAmount} from "${req.title}" was deposited to the platform Stripe balance?`;
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     const depositedAt = new Date().toISOString();
+    const newDepositedAmount = Math.round((getCashDepositedAmount(req) + depositAmount) * 100) / 100;
+    const fullyDeposited = newDepositedAmount >= requiredTotal - 0.01;
+
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === requestId ? { ...r, cashDepositedToStripe: true, cashDepositedAt: depositedAt } : r
+        r.id === requestId
+          ? {
+              ...r,
+              cashDepositedAmount: newDepositedAmount,
+              cashDepositedToStripe: fullyDeposited,
+              cashDepositedAt: depositedAt,
+            }
+          : r
       )
     );
 
     if (isDbConnected) {
       await supabase
         .from('security_requests')
-        .update({ cash_deposited_to_stripe: true, cash_deposited_at: depositedAt })
+        .update({
+          cash_deposited_amount: newDepositedAmount,
+          cash_deposited_to_stripe: fullyDeposited,
+          cash_deposited_at: depositedAt,
+        })
         .eq('id', requestId);
     }
-    alert(`Recorded $${req.estimatedPayout} deposited to Stripe for this job.`);
+    alert(`Recorded $${depositAmount} deposited to Stripe for this job.`);
   };
 
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {

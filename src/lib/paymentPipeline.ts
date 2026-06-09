@@ -1,10 +1,12 @@
 import { SecurityRequest } from '../types';
 import {
   clientPaymentDisplay,
+  getRemainingStripeDeposit,
   guardPayoutDisplay,
   isCashAwaitingStripeDeposit,
   isCashClientPayment,
   isCashGuardPayout,
+  isStripeDepositSatisfied,
 } from './cashPayments';
 import { computeGuardEarnings } from './payments';
 
@@ -20,6 +22,7 @@ export type PaymentPipelineStage =
 export function getPaymentPipelineStage(req: SecurityRequest): PaymentPipelineStage {
   if (req.status === 'closed') return 'closed';
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'awaiting-client';
+  // Fee deposit can still be owed after guard cash payout — check before "settled"
   if (isCashAwaitingStripeDeposit(req)) return 'cash-deposit-pending';
   if (req.paymentStatus === 'released') return 'settled';
   if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus)) {
@@ -39,7 +42,7 @@ export const PIPELINE_SECTION_META: Record<
   'cash-deposit-pending': {
     title: 'Deposit client cash to Stripe',
     description:
-      'Client paid cash. Director must record when that money is deposited to the platform Stripe balance before paying guards via Stripe.',
+      'Client paid cash. Deposit the full job amount before a Stripe guard payout, or only the platform fee if the guard was paid in cash.',
   },
   'client-paid-active': {
     title: 'Paid — shift in progress',
@@ -99,7 +102,7 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
 export function paymentPipelineSummary(requests: SecurityRequest[]) {
   const groups = groupRequestsByPipeline(requests);
   const awaitingClientTotal = groups.awaitingClient.reduce((s, r) => s + r.estimatedPayout, 0);
-  const cashDepositTotal = groups.cashDepositPending.reduce((s, r) => s + r.estimatedPayout, 0);
+  const cashDepositTotal = groups.cashDepositPending.reduce((s, r) => s + getRemainingStripeDeposit(r), 0);
   const guardPayoutDue = groups.awaitingGuardPayout.reduce(
     (s, r) => s + computeGuardEarnings(r.durationHours, r.hourlyRate),
     0
@@ -133,7 +136,7 @@ export function platformFundsBadgeClass(req: SecurityRequest): string {
   if (isCashAwaitingStripeDeposit(req)) {
     return 'text-orange-300 border-orange-500/40 bg-orange-500/10';
   }
-  if (isCashClientPayment(req) && req.cashDepositedToStripe) {
+  if (isCashClientPayment(req) && isStripeDepositSatisfied(req)) {
     return 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10';
   }
   if (!isCashClientPayment(req) && req.paymentStatus && req.paymentStatus !== 'unpaid') {

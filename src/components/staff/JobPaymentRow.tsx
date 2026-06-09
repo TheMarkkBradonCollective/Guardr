@@ -6,9 +6,13 @@ import {
   canDirectorMarkGuardPaidCash,
   canStripePayGuard,
   clientPaymentDisplay,
+  getCashDepositedAmount,
   guardPayoutAmount,
   guardPayoutDisplay,
+  isCashGuardPayout,
   platformFundsDisplay,
+  stripeDepositDescription,
+  stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import {
@@ -100,9 +104,10 @@ export function JobPaymentRow({
               Ledger ${payment.amount} · {payment.paymentMethod || 'stripe'} · {payment.status}
             </p>
           )}
-          {req.cashDepositedAt && (
+          {getCashDepositedAmount(req) > 0 && (
             <p className="text-[10px] font-mono text-emerald-400/80 mt-1">
-              Deposited to Stripe {new Date(req.cashDepositedAt).toLocaleString()}
+              ${getCashDepositedAmount(req)} in Stripe
+              {req.cashDepositedAt ? ` · ${new Date(req.cashDepositedAt).toLocaleString()}` : ''}
             </p>
           )}
         </div>
@@ -130,18 +135,21 @@ export function JobPaymentRow({
           )}
 
           {canDeposit && (
-            <button
-              type="button"
-              onClick={() => run('deposit', onDepositCashToStripe)}
-              disabled={busy !== null}
-              className="staff-ops-btn-primary text-[10px] gap-1.5"
-            >
-              {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
-              Deposit ${req.estimatedPayout} to Stripe
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => run('deposit', onDepositCashToStripe)}
+                disabled={busy !== null}
+                className="staff-ops-btn-primary text-[10px] gap-1.5"
+              >
+                {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
+                {stripeDepositLabel(req)}
+              </button>
+              <p className="text-[10px] font-mono text-brand-text-muted w-full">{stripeDepositDescription(req)}</p>
+            </>
           )}
 
-          {canPayGuard && onReleasePayout && !readOnly && !stripePayAllowed && (
+          {canPayGuard && onReleasePayout && !readOnly && !stripePayAllowed && !isCashGuardPayout(req) && (
             <p className="text-[10px] font-mono text-orange-400 w-full">
               Deposit client cash to Stripe before paying this guard via Connect.
             </p>
