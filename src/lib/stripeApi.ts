@@ -18,6 +18,22 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
   }
 }
 
+export async function createCashDepositCheckoutSession(params: {
+  jobId: string;
+  directorEmail: string;
+  jobTitle: string;
+  amountCents: number;
+}): Promise<{ url: string; sessionId: string }> {
+  const res = await fetch('/api/stripe/checkout/cash-deposit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await parseApiResponse<{ url: string; sessionId: string; error?: string }>(res);
+  if (!res.ok) throw new Error(data.error || 'Failed to start card payment for cash deposit');
+  return data;
+}
+
 export async function createCheckoutSession(params: {
   jobId: string;
   clientEmail: string;

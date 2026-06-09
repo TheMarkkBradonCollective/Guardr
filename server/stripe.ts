@@ -76,6 +76,84 @@ async function markJobHeld(jobId: string) {
     .in('status', ['paid']);
 }
 
+function computeRequiredCashDeposit(job: {
+  estimated_payout: number;
+  duration_hours: number;
+  platform_fee_per_hour?: number | null;
+  guard_payout_method?: string | null;
+}): number {
+  const feePerHour = job.platform_fee_per_hour ?? GUARD_PAY_PLATFORM_FEE;
+  if (job.guard_payout_method === 'cash') {
+    return Math.round(job.duration_hours * feePerHour * 100) / 100;
+  }
+  return Number(job.estimated_payout);
+}
+
+async function markCashDeposit(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = getSupabaseAdmin();
+  if (!db) return;
+
+  const { data: job } = await db
+    .from('security_requests')
+    .select(
+      'estimated_payout, duration_hours, platform_fee_per_hour, guard_payout_method, cash_deposited_amount, client_payment_method'
+    )
+    .eq('id', jobId)
+    .maybeSingle();
+
+  if (!job || job.client_payment_method !== 'cash') return;
+
+  const depositAmount = amountCents / 100;
+  const currentDeposited = Number(job.cash_deposited_amount ?? 0);
+  const newDeposited = Math.round((currentDeposited + depositAmount) * 100) / 100;
+  const requiredTotal = computeRequiredCashDeposit(job);
+  const fullyDeposited = newDeposited >= requiredTotal - 0.01;
+  const depositedAt = new Date().toISOString();
+
+  await db
+    .from('security_requests')
+    .update({
+      cash_deposited_amount: newDeposited,
+      cash_deposited_to_stripe: fullyDeposited,
+      cash_deposited_at: depositedAt,
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount: depositAmount,
+        payment_method: 'stripe',
+        updated_at: depositedAt,
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-deposit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount: depositAmount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+  }
+}
+
 async function markJobReleased(jobId: string, transferId: string) {
   const db = getSupabaseAdmin();
   if (!db) return;
@@ -133,12 +211,11 @@ export function registerStripeWebhook(app: Express) {
                 ? session.payment_intent
                 : session.payment_intent?.id ?? null;
 
-            await markJobPaid(
-              jobId,
-              paymentIntentId,
-              session.id,
-              session.amount_total ?? 0
-            );
+            if (session.metadata?.checkout_type === 'cash_deposit') {
+              await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+            } else {
+              await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+            }
             break;
           }
 
@@ -146,6 +223,23 @@ export function registerStripeWebhook(app: Express) {
             const intent = event.data.object as Stripe.PaymentIntent;
             const jobId = intent.metadata?.job_id;
             if (!jobId) break;
+
+            if (intent.metadata?.checkout_type === 'cash_deposit') {
+              const db = getSupabaseAdmin();
+              if (db) {
+                await db
+                  .from('payments')
+                  .update({
+                    status: 'paid',
+                    stripe_payment_intent_id: intent.id,
+                    amount: (intent.amount_received ?? intent.amount) / 100,
+                    payment_method: 'stripe',
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('stripe_payment_intent_id', intent.id);
+              }
+              break;
+            }
 
             const db = getSupabaseAdmin();
             if (db) {
@@ -316,6 +410,70 @@ export function registerStripeRoutes(app: Express) {
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to retrieve account';
+      return res.status(500).json({ error: message });
+    }
+  });
+
+  // ── Checkout: Director pays client cash into Stripe with their card ──
+  app.post('/api/stripe/checkout/cash-deposit', async (req: Request, res: Response) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe is not configured' });
+    }
+
+    const { jobId, directorEmail, jobTitle, amountCents } = req.body as {
+      jobId?: string;
+      directorEmail?: string;
+      jobTitle?: string;
+      amountCents?: number;
+    };
+
+    if (!jobId || !directorEmail || !amountCents || amountCents < 50) {
+      return res.status(400).json({ error: 'jobId, directorEmail, and amountCents (≥50) are required' });
+    }
+
+    try {
+      const base = getSiteUrl();
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: directorEmail,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: 'usd',
+              unit_amount: amountCents,
+              product_data: {
+                name: jobTitle ? `Cash deposit — ${jobTitle}` : `Cash deposit — ${jobId}`,
+                description:
+                  'Pay with your card to fund the platform Stripe balance for a client cash job (same as a client card payment).',
+              },
+            },
+          },
+        ],
+        payment_intent_data: {
+          metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
+        },
+        metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
+        success_url: `${base}/?deposit=success&job_id=${jobId}`,
+        cancel_url: `${base}/?deposit=cancelled&job_id=${jobId}`,
+      });
+
+      const db = getSupabaseAdmin();
+      if (db) {
+        await db.from('payments').insert({
+          id: `pay-deposit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          job_id: jobId,
+          amount: amountCents / 100,
+          stripe_session_id: session.id,
+          status: 'pending',
+          payment_method: 'stripe',
+        });
+      }
+
+      return res.json({ sessionId: session.id, url: session.url });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create cash deposit checkout';
+      console.error('Cash deposit checkout error:', message);
       return res.status(500).json({ error: message });
     }
   });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Banknote, CreditCard, DollarSign, TrendingUp, Wallet } from 'lucide-react';
+import { ArrowRight, Banknote, CreditCard, DollarSign, TrendingUp } from 'lucide-react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import {
   PIPELINE_SECTION_META,
@@ -130,14 +130,14 @@ export function StaffPaymentsPanel({
       <div className="staff-ops-card p-4 space-y-3">
         <p className="text-xs text-brand-text-muted leading-relaxed">
           Card jobs land in Stripe automatically. Cash jobs need Director steps: record what the client handed
-          you, then record what goes back to Stripe. If the guard is paid through Stripe Connect, the{' '}
-          <span className="text-brand-text">full job amount</span> should be logged in Stripe — but that can
-          happen after the guard payout. If the guard was paid in cash, only the platform fee needs to go to Stripe.
+          you, then <span className="text-brand-text">pay that amount into Stripe with your own card</span> — the
+          same card checkout a client would use. Full job amount if the guard is paid via Connect (can be after
+          payout), or platform fee only if the guard was paid cash.
         </p>
         <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-mono font-bold uppercase">
           <span className="px-2 py-1 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10">Client pays</span>
           <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-orange-500/40 text-orange-300 bg-orange-500/10">Deposit cash</span>
+          <span className="px-2 py-1 rounded border border-orange-500/40 text-orange-300 bg-orange-500/10">Pay card → Stripe</span>
           <ArrowRight className="w-3 h-3 text-brand-text-muted" />
           <span className="px-2 py-1 rounded border border-brand-border text-brand-text-muted">Shift runs</span>
           <ArrowRight className="w-3 h-3 text-brand-text-muted" />
@@ -146,7 +146,7 @@ export function StaffPaymentsPanel({
         <div className="flex flex-wrap gap-4 text-[10px] font-mono text-brand-text-muted pt-1">
           <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Card = auto in Stripe</span>
           <span className="flex items-center gap-1"><Banknote className="w-3 h-3" /> Cash = Director records</span>
-          <span className="flex items-center gap-1"><Wallet className="w-3 h-3" /> Deposit = cash → Stripe ledger</span>
+          <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Card pay = fund Stripe balance</span>
         </div>
       </div>
 
@@ -157,7 +157,7 @@ export function StaffPaymentsPanel({
           <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.awaitingClientTotal}</p>
         </div>
         <div className="staff-ops-card p-4 ring-1 ring-orange-500/30">
-          <p className="text-[10px] font-mono uppercase text-orange-300">Cash to deposit</p>
+          <p className="text-[10px] font-mono uppercase text-orange-300">Card pay due</p>
           <p className="text-2xl font-black font-mono mt-1 text-orange-300">{summary.cashDepositPending.length}</p>
           <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.cashDepositTotal}</p>
         </div>
@@ -221,8 +221,7 @@ export function StaffPaymentsPanel({
         </div>
         {isDirector && (
           <p className="text-[10px] font-mono text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-2">
-            Director only: record client cash, deposit that cash to Stripe, and record cash guard payouts.
-            This keeps physical cash and the platform ledger aligned.
+            Director only: record client cash, pay into Stripe with your card when ready, and record cash guard payouts.
           </p>
         )}
       </div>

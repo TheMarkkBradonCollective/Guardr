@@ -40,9 +40,9 @@ export const PIPELINE_SECTION_META: Record<
     description: 'Client has not paid. Director can record cash received on site.',
   },
   'cash-deposit-pending': {
-    title: 'Deposit client cash to Stripe',
+    title: 'Pay client cash into Stripe',
     description:
-      'Client paid cash. Record deposits to Stripe for the ledger — full job amount if guard is paid via Connect (can be after payout), or platform fee only if guard was paid cash.',
+      'Client paid cash. Director pays with their own card (Stripe Checkout) — full job amount if guard is paid via Connect, or platform fee only if guard was paid cash. Can be done after guard payout.',
   },
   'client-paid-active': {
     title: 'Paid — shift in progress',

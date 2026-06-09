@@ -67,6 +67,86 @@ export async function markJobHeld(jobId: string) {
     .in('status', ['paid']);
 }
 
+const GUARD_PAY_PLATFORM_FEE = 5;
+
+function computeRequiredCashDeposit(job: {
+  estimated_payout: number;
+  duration_hours: number;
+  platform_fee_per_hour?: number | null;
+  guard_payout_method?: string | null;
+}): number {
+  const feePerHour = job.platform_fee_per_hour ?? GUARD_PAY_PLATFORM_FEE;
+  if (job.guard_payout_method === 'cash') {
+    return Math.round(job.duration_hours * feePerHour * 100) / 100;
+  }
+  return Number(job.estimated_payout);
+}
+
+export async function markCashDeposit(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = await getDb();
+  if (!db) return;
+
+  const { data: job } = await db
+    .from('security_requests')
+    .select(
+      'estimated_payout, duration_hours, platform_fee_per_hour, guard_payout_method, cash_deposited_amount, client_payment_method'
+    )
+    .eq('id', jobId)
+    .maybeSingle();
+
+  if (!job || job.client_payment_method !== 'cash') return;
+
+  const depositAmount = amountCents / 100;
+  const currentDeposited = Number(job.cash_deposited_amount ?? 0);
+  const newDeposited = Math.round((currentDeposited + depositAmount) * 100) / 100;
+  const requiredTotal = computeRequiredCashDeposit(job);
+  const fullyDeposited = newDeposited >= requiredTotal - 0.01;
+  const depositedAt = new Date().toISOString();
+
+  await db
+    .from('security_requests')
+    .update({
+      cash_deposited_amount: newDeposited,
+      cash_deposited_to_stripe: fullyDeposited,
+      cash_deposited_at: depositedAt,
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount: depositAmount,
+        payment_method: 'stripe',
+        updated_at: depositedAt,
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-deposit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount: depositAmount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+  }
+}
+
 export async function markJobReleased(jobId: string, transferId: string) {
   const db = await getDb();
   if (!db) return;
@@ -94,7 +174,11 @@ export async function processStripeWebhookEvent(event: Stripe.Event) {
           ? session.payment_intent
           : session.payment_intent?.id ?? null;
 
-      await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      if (session.metadata?.checkout_type === 'cash_deposit') {
+        await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      } else {
+        await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      }
       break;
     }
 
@@ -102,6 +186,23 @@ export async function processStripeWebhookEvent(event: Stripe.Event) {
       const intent = event.data.object as Stripe.PaymentIntent;
       const jobId = intent.metadata?.job_id;
       if (!jobId) break;
+
+      if (intent.metadata?.checkout_type === 'cash_deposit') {
+        const db = await getDb();
+        if (db) {
+          await db
+            .from('payments')
+            .update({
+              status: 'paid',
+              stripe_payment_intent_id: intent.id,
+              amount: (intent.amount_received ?? intent.amount) / 100,
+              payment_method: 'stripe',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_payment_intent_id', intent.id);
+        }
+        break;
+      }
 
       const db = await getDb();
       if (db) {

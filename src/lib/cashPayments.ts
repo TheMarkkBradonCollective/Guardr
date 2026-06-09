@@ -81,27 +81,27 @@ export function canStripePayGuard(req: SecurityRequest): boolean {
 
 export function stripeDepositLabel(req: SecurityRequest): string {
   const remaining = getRemainingStripeDeposit(req);
-  if (remaining <= 0) return 'Deposited to Stripe';
+  if (remaining <= 0) return 'Paid into Stripe';
   if (isCashGuardPayout(req) || getRequiredStripeDeposit(req) < req.estimatedPayout) {
-    return `Deposit $${remaining} platform fee`;
+    return `Pay $${remaining} platform fee (card)`;
   }
-  return `Deposit $${remaining} full amount`;
+  return `Pay $${remaining} with card`;
 }
 
 export function stripeDepositDescription(req: SecurityRequest): string {
   if (isCashGuardPayout(req)) {
-    return 'Guard was paid cash — deposit only the platform fee to Stripe.';
+    return 'Guard was paid cash — pay the platform fee with your card (same checkout as a client would use).';
   }
-  return 'Client paid cash — record the full job amount in Stripe when it is deposited (can be after guard payout).';
+  return 'Client paid cash — pay the job amount with your own card to fund Stripe (can be after guard payout).';
 }
 
 export function clientPaymentDisplay(req: SecurityRequest): string {
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'Unpaid';
   if (isCashClientPayment(req)) {
     if (isCashAwaitingStripeDeposit(req)) {
-      return isCashGuardPayout(req) ? 'Paid cash · fee deposit pending' : 'Paid cash · deposit pending';
+      return isCashGuardPayout(req) ? 'Paid cash · fee due (card)' : 'Paid cash · card payment due';
     }
-    return 'Paid cash · in Stripe';
+    return 'Paid cash · funded in Stripe';
   }
   switch (req.paymentStatus) {
     case 'paid':
@@ -121,9 +121,9 @@ export function platformFundsDisplay(req: SecurityRequest): string {
     return 'Stripe (card)';
   }
   if (isCashAwaitingStripeDeposit(req)) {
-    return isCashGuardPayout(req) ? 'Guard cash · fee due' : 'Cash in hand';
+    return isCashGuardPayout(req) ? 'Guard cash · fee due (card)' : 'Cash in hand · pay card';
   }
-  return isCashGuardPayout(req) ? 'Fee in Stripe' : 'Cash in Stripe';
+  return isCashGuardPayout(req) ? 'Fee in Stripe' : 'Funded in Stripe';
 }
 
 export function guardPayoutDisplay(req: SecurityRequest): string {

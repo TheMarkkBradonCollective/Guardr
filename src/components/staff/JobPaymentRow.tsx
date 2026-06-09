@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Banknote, CreditCard, Loader2, RotateCcw, Wallet } from 'lucide-react';
+import { Banknote, CreditCard, Loader2, RotateCcw } from 'lucide-react';
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
@@ -106,7 +106,7 @@ export function JobPaymentRow({
           )}
           {getCashDepositedAmount(req) > 0 && (
             <p className="text-[10px] font-mono text-emerald-400/80 mt-1">
-              ${getCashDepositedAmount(req)} in Stripe
+              ${getCashDepositedAmount(req)} paid into Stripe (card)
               {req.cashDepositedAt ? ` · ${new Date(req.cashDepositedAt).toLocaleString()}` : ''}
             </p>
           )}
@@ -142,7 +142,7 @@ export function JobPaymentRow({
                 disabled={busy !== null}
                 className="staff-ops-btn-primary text-[10px] gap-1.5"
               >
-                {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
+                {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
                 {stripeDepositLabel(req)}
               </button>
               <p className="text-[10px] font-mono text-brand-text-muted w-full">{stripeDepositDescription(req)}</p>

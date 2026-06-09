@@ -23,9 +23,7 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
-  getCashDepositedAmount,
   getRemainingStripeDeposit,
-  getRequiredStripeDeposit,
   guardPayoutAmount,
   isCashClientPayment,
   parsePaymentMethod,
@@ -51,7 +49,7 @@ import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs } from './lib/guardJobView';
 import { checkJobRequirements } from './lib/guardJobs';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
-import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
+import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { SupportScreen } from './components/support/SupportScreen';
@@ -1054,52 +1052,34 @@ export default function App() {
 
   const handleDepositCashToStripe = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can record cash deposits to Stripe.');
+      alert('Only the Director can pay client cash into Stripe.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorDepositCashToStripe(req)) {
-      alert('This job does not have client cash waiting to be deposited.');
+      alert('This job does not need a card payment into Stripe right now.');
       return;
     }
     const depositAmount = getRemainingStripeDeposit(req);
-    const requiredTotal = getRequiredStripeDeposit(req);
-    const confirmMessage =
-      requiredTotal < req.estimatedPayout
-        ? `Record that $${depositAmount} (platform fee) from "${req.title}" was deposited to the platform Stripe balance?`
-        : `Record that $${depositAmount} from "${req.title}" was deposited to the platform Stripe balance?`;
-    if (!window.confirm(confirmMessage)) {
+    const amountCents = Math.round(depositAmount * 100);
+    if (amountCents < 50) {
+      alert('Deposit amount is too small to charge.');
       return;
     }
 
-    const depositedAt = new Date().toISOString();
-    const newDepositedAmount = Math.round((getCashDepositedAmount(req) + depositAmount) * 100) / 100;
-    const fullyDeposited = newDepositedAmount >= requiredTotal - 0.01;
-
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              cashDepositedAmount: newDepositedAmount,
-              cashDepositedToStripe: fullyDeposited,
-              cashDepositedAt: depositedAt,
-            }
-          : r
-      )
-    );
-
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          cash_deposited_amount: newDepositedAmount,
-          cash_deposited_to_stripe: fullyDeposited,
-          cash_deposited_at: depositedAt,
-        })
-        .eq('id', requestId);
+    try {
+      const { url } = await createCashDepositCheckoutSession({
+        jobId: requestId,
+        directorEmail: currentUser.email,
+        jobTitle: req.title,
+        amountCents,
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Unable to start card checkout');
     }
-    alert(`Recorded $${depositAmount} deposited to Stripe for this job.`);
   };
 
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
@@ -1396,6 +1376,16 @@ export default function App() {
       window.history.replaceState({}, '', window.location.pathname);
     }
     if (paymentResult === 'cancelled') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    const depositResult = params.get('deposit');
+    if (depositResult === 'success' && jobId) {
+      void loadFromSupabase();
+      window.history.replaceState({}, '', window.location.pathname);
+      alert('Card payment received — Stripe balance will update for this job shortly.');
+    }
+    if (depositResult === 'cancelled') {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [requests]);
