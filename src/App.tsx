@@ -1371,9 +1371,13 @@ export default function App() {
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
           onDenyRequest={handleDenyRequest}
+          onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
+          onApproveGuard={handleApproveGuard}
+          onRejectGuard={handleRejectGuard}
+          onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
           onResetAuditFailures={handleResetAuditFailures}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}

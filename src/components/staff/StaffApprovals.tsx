@@ -7,12 +7,14 @@ interface StaffApprovalsProps {
   guards: SecurityGuard[];
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
+  onViewGuard?: (guardId: string) => void;
 }
 
 export function StaffApprovals({
   guards,
   onApproveCert,
   onRejectCert,
+  onViewGuard,
 }: StaffApprovalsProps) {
   const pendingCerts = getPendingCertifications(guards);
 
@@ -55,7 +57,12 @@ export function StaffApprovals({
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+                  {onViewGuard && (
+                    <button type="button" onClick={() => onViewGuard(guard.id)} className="staff-ops-btn-outline">
+                      View profile
+                    </button>
+                  )}
                   <button type="button" onClick={() => onRejectCert(guard.id, cert.id)} className="staff-ops-btn-danger">
                     <X className="w-3.5 h-3.5" /> Reject
                   </button>

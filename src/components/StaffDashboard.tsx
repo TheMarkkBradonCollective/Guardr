@@ -59,6 +59,7 @@ interface StaffDashboardProps {
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuard: (guardId: string) => void;
   onRejectGuard: (guardId: string) => void;
+  onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
@@ -85,9 +86,13 @@ export function StaffDashboard({
   onUpdateGuardUserStatus,
   onApproveRequest,
   onDenyRequest,
+  onApproveClient,
   onRejectClient,
   onApproveCert,
   onRejectCert,
+  onApproveGuard,
+  onRejectGuard,
+  onUpdateBackgroundChecked,
   onResetAuditFailures,
   onReleasePayout,
   onRefundPayment,
@@ -103,6 +108,14 @@ export function StaffDashboard({
   initialSection = 'overview',
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>(initialSection);
+  const [selectedGuardId, setSelectedGuardId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+
+  const navigateSection = (next: StaffSection) => {
+    setSection(next);
+    if (next !== 'guards') setSelectedGuardId(null);
+    if (next !== 'clients') setSelectedClientId(null);
+  };
 
   const showFinance = canAccessFinancialControls(currentUser);
   const showStaffOnboard = canManageStaffAccounts(currentUser);
@@ -136,6 +149,10 @@ export function StaffDashboard({
             guards={guards}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
+            onViewGuard={(guardId) => {
+              setSelectedGuardId(guardId);
+              setSection('guards');
+            }}
           />
         );
       case 'live-jobs':
@@ -155,6 +172,12 @@ export function StaffDashboard({
             canSuspend={canSuspend}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onResetAuditFailures={onResetAuditFailures}
+            onApproveCert={onApproveCert}
+            onRejectCert={onRejectCert}
+            onApproveGuard={onApproveGuard}
+            onRejectGuard={onRejectGuard}
+            onUpdateBackgroundChecked={onUpdateBackgroundChecked}
+            initialSelectedId={selectedGuardId}
           />
         );
       case 'clients':
@@ -162,7 +185,9 @@ export function StaffDashboard({
           <StaffClientsPanel
             clients={clients}
             requests={requests}
+            onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
+            initialSelectedId={selectedClientId}
           />
         );
       case 'reports':
@@ -226,7 +251,7 @@ export function StaffDashboard({
     <StaffOpsLayout
       currentUser={currentUser}
       activeSection={section}
-      onNavigate={setSection}
+      onNavigate={navigateSection}
       themeMode={themeMode}
       onChangeTheme={onChangeTheme}
       onSignOut={onSignOut}
