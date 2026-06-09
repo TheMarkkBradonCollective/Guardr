@@ -195,7 +195,7 @@ export function GuardCredentialsPanel({
     <div className="space-y-4">
       <GuardQualificationPanel guard={guard} />
 
-      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1 bg-brand-primary/5 border-brand-primary/20">
+      <div className="app-form-section space-y-1">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Upload credentials for the Inactive→Active pathway, then add any others you hold — permits, medical, extra training,
@@ -209,7 +209,7 @@ export function GuardCredentialsPanel({
         const isOpen = openSection === category;
 
         const sectionCard = (
-          <section key={category} className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+          <section key={category} className="app-form-section space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="uber-label flex items-center gap-2">
@@ -319,7 +319,7 @@ export function GuardCredentialsPanel({
         return (
           <React.Fragment key="guard-and-bsis-training">
             {sectionCard}
-            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 border-brand-primary/20">
+            <section className="app-form-section space-y-3 border-brand-primary/20">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -430,7 +430,7 @@ export function GuardCredentialsPanel({
               onAddCertification={onAddCertification}
               onDeleteCertification={onDeleteCertification}
             />
-            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+            <section className="app-form-section space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -509,7 +509,7 @@ export function GuardCredentialsPanel({
                 )}
               </div>
             </section>
-            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+            <section className="app-form-section space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -616,7 +616,7 @@ function CredentialRow({
 }) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
   return (
-    <div className="wf-list-card gap-3">
+    <div className="app-list-row app-list-row-align-top">
       <div className="min-w-0 flex gap-3">
         {cert.imageUrl && (
           <img

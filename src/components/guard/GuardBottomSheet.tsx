@@ -9,10 +9,12 @@ import { useDevice } from '../../lib/platform';
 export type SheetSnap = 'peek' | 'half' | 'full';
 
 const SNAP_HEIGHTS: Record<SheetSnap, number> = {
-  peek: 0.22,
-  half: 0.48,
-  full: 0.88,
+  peek: 0.17,
+  half: 0.38,
+  full: 0.62,
 };
+
+const SNAP_MAX_PX = 520;
 
 interface GuardBottomSheetProps {
   jobs: GuardJobView[];
@@ -55,12 +57,12 @@ export function GuardBottomSheet({
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
-  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'full' : 'peek');
+  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'half' : 'peek');
   const startSnap = useRef<SheetSnap>('peek');
   const vh = useViewportHeight();
 
   useEffect(() => {
-    setSnap(selectedJob ? 'full' : 'peek');
+    setSnap(selectedJob ? 'half' : 'peek');
   }, [selectedJob?.id]);
 
   const cycleSnap = (direction: 'up' | 'down') => {
@@ -108,7 +110,7 @@ export function GuardBottomSheet({
     );
   }
 
-  const heightPx = vh * SNAP_HEIGHTS[snap];
+  const heightPx = Math.min(vh * SNAP_HEIGHTS[snap], SNAP_MAX_PX);
 
   return (
     <motion.div

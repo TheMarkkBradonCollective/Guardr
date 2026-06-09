@@ -12,6 +12,7 @@ import {
   unsubscribeFromPush,
 } from '../../lib/push';
 import { sendTestPush, subscribePush, unsubscribePush } from '../../lib/pushApi';
+import { AppFormSection } from '../ui/app/AppPrimitives';
 
 interface PushNotificationsPanelProps {
   currentUser: SessionUser;
@@ -88,15 +89,15 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
 
   if (!supported) {
     return (
-      <div className="app-card space-y-2">
+      <AppFormSection>
         <p className="uber-label">Push notifications</p>
-        <p className="text-sm text-brand-text-muted">This browser does not support Web Push.</p>
-      </div>
+        <p className="text-sm text-brand-text-muted mt-2">This browser does not support Web Push.</p>
+      </AppFormSection>
     );
   }
 
   return (
-    <div className="app-card space-y-4">
+    <AppFormSection className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="uber-label">Push notifications</p>
@@ -104,11 +105,11 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
             Receive dispatch alerts and assignment updates when Guardr is closed.
           </p>
         </div>
-        {enabled ? <Bell className="w-5 h-5 text-brand-primary" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
+        {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
       </div>
 
       {!configured && (
-        <p className="text-xs text-amber-400/90">
+        <p className="text-xs text-amber-600">
           Server VAPID keys are not configured yet. Add VITE_VAPID_PUBLIC_KEY to enable subscriptions.
         </p>
       )}
@@ -165,24 +166,22 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
         </div>
       )}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          disabled={busy || !enabled}
-          onClick={() => void handleTest()}
-          className="flex-1 flex items-center justify-center gap-2 uber-button-outline h-11 text-sm disabled:opacity-50"
-        >
-          <Send className="w-4 h-4" />
-          Test notification
-        </button>
-      </div>
+      <button
+        type="button"
+        disabled={busy || !enabled}
+        onClick={() => void handleTest()}
+        className="w-full flex items-center justify-center gap-2 app-button-outline !h-11 !text-sm disabled:opacity-50"
+      >
+        <Send className="w-4 h-4" />
+        Test notification
+      </button>
 
       <p className="text-xs text-brand-text-muted">
         Permission: {permission}
         {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
       </p>
 
-      {message && <p className="text-xs text-brand-primary">{message}</p>}
-    </div>
+      {message && <p className="text-xs text-brand-text-muted">{message}</p>}
+    </AppFormSection>
   );
 }

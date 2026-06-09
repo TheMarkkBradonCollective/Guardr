@@ -29,7 +29,7 @@ const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
-const SHELL_HEADER_VIEWS: ClientView[] = ['profile', 'support'];
+const SHELL_HEADER_VIEWS: ClientView[] = [];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   profile: 'Profile',
@@ -44,7 +44,7 @@ export function ClientAppLayout({
   onNavigate,
 }: ClientAppLayoutProps) {
   const showShellHeader = SHELL_HEADER_VIEWS.includes(activeView);
-  const screenTitle = VIEW_TITLES[activeView] ?? '';
+  const screenTitle = VIEW_TITLES[activeView] ?? 'Health';
 
   const moreFooter = (
     <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">

@@ -10,6 +10,7 @@ import { Experience, GuardEducation } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
+import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -149,13 +150,13 @@ export function UserProfileScreen({
   const canBuildResume = isGuardLike && !!guard;
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain px-4 py-6 max-w-lg mx-auto space-y-5 animate-fade-in">
-      <div className="flex flex-col items-center text-center pt-2">
+    <AppScreen className="pb-8">
+      <div className="flex flex-col items-center text-center px-5 pt-4 pb-6">
         <div className="relative mb-3">
-          <ProfileAvatar src={avatar} name={name} size="xl" className="ring-4 ring-brand-primary/20" />
+          <ProfileAvatar src={avatar} name={name} size="xl" />
           <label
-            className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-md ${
-              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:scale-105 transition-transform'
+            className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg ${
+              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer'
             }`}
             title="Change profile photo"
           >
@@ -163,25 +164,25 @@ export function UserProfileScreen({
             <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
           </label>
         </div>
-        {photoError && <p className="text-xs text-red-400 mb-2">{photoError}</p>}
+        {photoError && <p className="text-xs text-red-500 mb-2">{photoError}</p>}
         {avatar && (
           <button
             type="button"
             onClick={() => void handleRemovePhoto()}
             disabled={photoSaving}
-            className="text-xs text-brand-text-muted hover:text-red-400 flex items-center gap-1 mb-2 disabled:opacity-50"
+            className="text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mb-2 disabled:opacity-50"
           >
             <X className="w-3 h-3" />
             Remove photo
           </button>
         )}
         {photoSaving && <p className="text-xs text-brand-text-muted mb-2">Saving photo…</p>}
-        <h1 className="text-xl font-bold">{name}</h1>
+        <h2 className="text-xl font-bold">{name}</h2>
         <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
         <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="px-5 flex gap-2 mb-2">
         <button
           type="button"
           onClick={() => (editing ? void handleSave() : setEditing(true))}
@@ -202,7 +203,7 @@ export function UserProfileScreen({
         )}
       </div>
 
-      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
+      <AppFormSection className="space-y-4">
         <Field label="Full name" value={name} onChange={setName} editing={editing} />
         {isClient && (
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
@@ -220,12 +221,10 @@ export function UserProfileScreen({
         {guard && (
           <div className="flex justify-between text-sm py-2 border-t border-brand-border">
             <span className="text-brand-text-muted">Guard status</span>
-            <span className="font-medium text-brand-primary">
-              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}
-            </span>
+            <span className="font-medium">{GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}</span>
           </div>
         )}
-      </div>
+      </AppFormSection>
 
       {canBuildResume && guard && (
         <GuardResumeEditor
@@ -242,20 +241,22 @@ export function UserProfileScreen({
 
       <PushNotificationsPanel currentUser={currentUser} />
 
-      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
-        <p className="uber-label">Appearance</p>
+      <AppFormSection>
+        <p className="uber-label mb-3">Appearance</p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
-      </div>
+      </AppFormSection>
 
-      <button
-        type="button"
-        onClick={onSignOut}
-        className="w-full app-button-outline !text-red-400 !border-red-500/40 hover:!bg-red-500/10"
-      >
-        <LogOut className="w-4 h-4" />
-        Sign out
-      </button>
-    </div>
+      <div className="px-5 pt-4">
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="w-full app-button-outline !text-red-500 !border-red-500/30 hover:!bg-red-500/5"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign out
+        </button>
+      </div>
+    </AppScreen>
   );
 }
 

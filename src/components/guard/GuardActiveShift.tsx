@@ -9,7 +9,6 @@ import {
   guardClockOutBlockedMessage,
   shiftClockOutOpensAt,
 } from '../../lib/shiftWindow';
-import { WfMetricTile } from '../ui/wireframe';
 import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
@@ -62,7 +61,7 @@ export function GuardActiveShift({
   const clockOutMsg = guardClockOutBlockedMessage(job, now);
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-[1001] max-h-[88%] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
+    <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
       <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-4" />
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
@@ -84,16 +83,16 @@ export function GuardActiveShift({
           ))}
         </div>
 
-        <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+        <div className="space-y-4 py-2 border-t border-b border-brand-border">
           <div className="flex items-start gap-3 w-full">
-            <MapPin className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+            <MapPin className="w-5 h-5 shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
               <p className="text-sm text-brand-text-muted">Location</p>
               <p className="font-medium mt-0.5">{address}</p>
             </div>
           </div>
           <div className="flex items-start gap-3 w-full">
-            <Phone className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+            <Phone className="w-5 h-5 shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
               <p className="text-sm text-brand-text-muted">Client</p>
               <p className="font-medium mt-0.5">{job.clientName}</p>
@@ -102,16 +101,17 @@ export function GuardActiveShift({
         </div>
 
         {phase === 'on-duty' && (
-          <div className="text-center py-6 rounded-2xl bg-brand-primary/10 border border-brand-primary/20">
-            <WfMetricTile label="Time on site" value={formatTimer(dutySeconds)} accent className="!border-0 !bg-transparent text-center" />
+          <div className="text-center py-5 border-b border-brand-border">
+            <p className="text-xs text-brand-text-muted mb-1">Time on site</p>
+            <p className="text-3xl font-bold tracking-tight">{formatTimer(dutySeconds)}</p>
             <p className="text-sm text-brand-text-muted mt-2">{formatDuration(job.durationHours)} scheduled</p>
           </div>
         )}
 
         {job.siteInstructions && (
-          <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2">
-            <p className="text-sm text-brand-text-muted flex items-center gap-1.5">
-              <FileText className="w-4 h-4" /> Site instructions
+          <div className="py-2 border-b border-brand-border">
+            <p className="text-sm text-brand-text-muted flex items-center gap-1.5 mb-2">
+              <FileText className="w-4 h-4" strokeWidth={1.5} /> Site instructions
             </p>
             <p className="text-sm leading-relaxed">{job.siteInstructions}</p>
           </div>

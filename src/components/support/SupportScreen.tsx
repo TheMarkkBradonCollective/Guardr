@@ -17,13 +17,8 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
-import { WfBadge, WfListCard, WfSectionHeader } from '../ui/wireframe';
-import {
-  ArrowLeft,
-  FileText,
-  MessageCircle,
-  Send,
-} from 'lucide-react';
+import { AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
+import { ArrowLeft, ChevronRight, FileText, MessageCircle, Send } from 'lucide-react';
 
 type SupportView = 'home' | 'chat' | 'report' | 'thread';
 
@@ -119,39 +114,36 @@ export function SupportScreen({
     }
   };
 
-  const header = (title: string, subtitle?: string) => (
-    <div className="shrink-0 flex items-center gap-3 mb-6">
-      {onBack && view === 'home' && (
-        <button type="button" onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface" aria-label="Back">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-      )}
-      {view !== 'home' && (
-        <button
-          type="button"
-          onClick={() => {
-            setView('home');
-            setActiveTicketId(null);
-          }}
-          className="p-2 -ml-2 rounded-full hover:bg-brand-surface"
-          aria-label="Back to support home"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-      )}
-      <div>
-        <p className="text-sm text-brand-text-muted">Support</p>
-        <h1 className="text-lg font-bold">{title}</h1>
-        {subtitle && <p className="text-sm text-brand-text-muted mt-0.5">{subtitle}</p>}
-      </div>
-    </div>
+  const backButton = (toHome = false) => (
+    <button
+      type="button"
+      onClick={() => {
+        if (toHome && onBack) onBack();
+        else {
+          setView('home');
+          setActiveTicketId(null);
+        }
+      }}
+      className="p-2 -ml-2 text-brand-text"
+      aria-label="Back"
+    >
+      <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
+    </button>
   );
 
   if (view === 'thread' && activeTicket) {
     return (
-      <div className="h-full flex flex-col max-w-2xl mx-auto p-4 sm:p-6">
-        {header(activeTicket.subject, `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`)}
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 mb-4 wf-list-card flex-col items-stretch !flex !flex-col !p-4">
+      <div className="h-full flex flex-col bg-brand-bg">
+        <div className="shrink-0 flex items-center gap-2 px-3 pt-2 pb-3 border-b border-brand-border">
+          {backButton()}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm truncate">{activeTicket.subject}</p>
+            <p className="text-xs text-brand-text-muted truncate">
+              {categoryLabel(activeTicket.category)} · {SUPPORT_STATUS_LABEL[activeTicket.status]}
+            </p>
+          </div>
+        </div>
+        <div className="app-chat-pane space-y-3">
           {activeTicket.messages.map((msg) => {
             const mine = msg.senderId === currentUser.id;
             const staff = isStaffRole(msg.senderRole);
@@ -160,26 +152,22 @@ export function SupportScreen({
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     staff
-                      ? 'bg-brand-primary/15 border border-brand-primary/30 text-brand-text'
+                      ? 'bg-brand-bg-sec text-brand-text'
                       : mine
                         ? 'bg-brand-primary text-brand-accent-text'
-                        : 'bg-brand-bg-sec border border-brand-border'
+                        : 'bg-brand-bg-sec text-brand-text'
                   }`}
                 >
-                  <p className="text-xs opacity-70 mb-1">
-                    {staff ? 'Guardr staff' : msg.senderName}
-                  </p>
+                  <p className="text-xs opacity-70 mb-1">{staff ? 'Guardr staff' : msg.senderName}</p>
                   <p className="whitespace-pre-wrap">{msg.body}</p>
-                  <p className="text-xs opacity-60 mt-1">
-                    {new Date(msg.createdAt).toLocaleString()}
-                  </p>
+                  <p className="text-xs opacity-60 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
                 </div>
               </div>
             );
           })}
         </div>
         {activeTicket.status !== 'resolved' ? (
-          <div className="flex gap-2 shrink-0">
+          <div className="shrink-0 flex gap-2 p-3 border-t border-brand-border">
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -197,7 +185,9 @@ export function SupportScreen({
             </button>
           </div>
         ) : (
-          <p className="text-sm text-brand-text-muted text-center">This conversation is resolved. Open a new message if you need more help.</p>
+          <p className="shrink-0 text-sm text-brand-text-muted text-center p-4 border-t border-brand-border">
+            This conversation is resolved. Open a new message if you need more help.
+          </p>
         )}
       </div>
     );
@@ -205,9 +195,13 @@ export function SupportScreen({
 
   if (view === 'report') {
     return (
-      <div className="h-full overflow-y-auto max-w-2xl mx-auto p-4 sm:p-6">
-        {header('File a report', 'Describe the issue — staff will review and follow up.')}
-        <form onSubmit={(e) => void handleSubmitReport(e)} className="space-y-4">
+      <AppScreen className="pb-8">
+        <div className="flex items-center gap-2 px-3 pt-2 mb-2">
+          {backButton()}
+          <h1 className="text-[1.75rem] font-bold tracking-tight">File a report</h1>
+        </div>
+        <p className="text-sm text-brand-text-muted px-5 mb-6">Describe the issue — staff will review and follow up.</p>
+        <form onSubmit={(e) => void handleSubmitReport(e)} className="px-5 space-y-4">
           <div>
             <label className="uber-label block mb-1">Category</label>
             <select
@@ -271,70 +265,63 @@ export function SupportScreen({
             Submit report to staff
           </button>
         </form>
-      </div>
+      </AppScreen>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto max-w-2xl mx-auto p-4 sm:p-6">
-      {header('Help & support', 'Message Guardr staff or submit a report.')}
+    <AppScreen className="pb-8">
+      <AppScreenTitle>Support</AppScreenTitle>
+      <p className="text-sm text-brand-text-muted px-5 -mt-3 mb-6">Message Guardr staff or submit a report.</p>
 
-      <div className="grid sm:grid-cols-2 gap-3 mb-8">
-        <button
-          type="button"
-          onClick={() => void startKind('chat')}
-          disabled={submitting}
-          className="wf-list-card flex-col items-start !flex !flex-col hover:border-brand-primary/40 transition-colors disabled:opacity-50"
-        >
-          <MessageCircle className="w-8 h-8 text-brand-primary mb-3" />
-          <p className="font-semibold">Message staff</p>
-          <p className="text-sm text-brand-text-muted mt-1">Chat with the Guardr operations team.</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => void startKind('report')}
-          className="wf-list-card flex-col items-start !flex !flex-col hover:border-brand-primary/40 transition-colors"
-        >
-          <FileText className="w-8 h-8 text-brand-primary mb-3" />
-          <p className="font-semibold">File a report</p>
-          <p className="text-sm text-brand-text-muted mt-1">Submit an issue, safety concern, or complaint.</p>
-        </button>
+      <AppList>
+        <AppListRow onClick={() => !submitting && void startKind('chat')} className="!py-4">
+          <MessageCircle className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+          <div className="flex-1 min-w-0 text-left">
+            <p className="font-semibold text-sm">Message staff</p>
+            <p className="text-sm text-brand-text-muted mt-0.5">Chat with the Guardr operations team.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
+        </AppListRow>
+        <AppListRow onClick={() => void startKind('report')} className="!py-4">
+          <FileText className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+          <div className="flex-1 min-w-0 text-left">
+            <p className="font-semibold text-sm">File a report</p>
+            <p className="text-sm text-brand-text-muted mt-0.5">Submit an issue, safety concern, or complaint.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
+        </AppListRow>
+      </AppList>
+
+      <div className="app-section-head mt-8">
+        <h2>Your conversations</h2>
       </div>
 
-      <WfSectionHeader title="Your conversations" />
-
       {myTickets.length === 0 ? (
-        <p className="text-sm text-brand-text-muted text-center py-8 wf-list-card justify-center">
+        <p className="text-sm text-brand-text-muted text-center py-10 px-5">
           No support threads yet. Message staff or file a report to get started.
         </p>
       ) : (
-        <ul className="space-y-2">
+        <AppList>
           {myTickets.map((ticket) => (
-            <li key={ticket.id}>
-              <WfListCard
-                title={ticket.subject}
-                subtitle={
-                  <>
-                    {categoryLabel(ticket.category)}
-                    {ticket.priority !== 'normal' ? ` · ${priorityLabel(ticket.priority)}` : ''}
-                    {' · '}
-                    {new Date(ticket.updatedAt).toLocaleString()}
-                  </>
-                }
-                meta={
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <WfBadge tone="default">{ticket.kind === 'report' ? 'Report' : 'Chat'}</WfBadge>
-                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
-                      {SUPPORT_STATUS_LABEL[ticket.status]}
-                    </WfBadge>
-                  </div>
-                }
-                onClick={() => openThread(ticket.id)}
-              />
-            </li>
+            <AppListRow key={ticket.id} onClick={() => openThread(ticket.id)} className="app-list-row-align-top !items-start !py-4">
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-semibold text-sm">{ticket.subject}</p>
+                <p className="text-xs text-brand-text-muted mt-1">
+                  {categoryLabel(ticket.category)}
+                  {ticket.priority !== 'normal' ? ` · ${priorityLabel(ticket.priority)}` : ''}
+                  {' · '}
+                  {new Date(ticket.updatedAt).toLocaleString()}
+                </p>
+                <p className="text-xs text-brand-text-muted mt-1">
+                  {ticket.kind === 'report' ? 'Report' : 'Chat'} · {SUPPORT_STATUS_LABEL[ticket.status]}
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0 mt-0.5" />
+            </AppListRow>
           ))}
-        </ul>
+        </AppList>
       )}
-    </div>
+    </AppScreen>
   );
 }

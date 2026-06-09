@@ -109,7 +109,7 @@ export function GuardResumeEditor({
 
   return (
     <div className="space-y-5">
-      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
+      <section className="app-form-section space-y-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
           Professional resume
@@ -171,7 +171,7 @@ export function GuardResumeEditor({
         />
       </section>
 
-      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+      <section className="app-form-section space-y-3">
         <p className="uber-label">Specialties</p>
         <div className="flex flex-wrap gap-2">
           {GUARD_SPECIALTY_OPTIONS.map((opt) => {
@@ -191,7 +191,7 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+      <section className="app-form-section space-y-3">
         <p className="uber-label">Service areas (states)</p>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
           {US_STATES.map(({ code, name }) => {
@@ -333,7 +333,7 @@ function ExperienceSection({
   form: React.ReactNode;
 }) {
   return (
-    <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+    <section className="app-form-section space-y-3">
       <div className="flex items-center justify-between gap-2 w-full">
         <p className="uber-label flex items-center gap-2">
           <Icon className="w-4 h-4 text-brand-primary" />
@@ -352,7 +352,7 @@ function ExperienceSection({
           <p className="text-xs text-brand-text-muted text-center py-4">None listed yet — add to build your resume.</p>
         ) : (
           items.map((exp) => (
-            <div key={exp.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
+            <div key={exp.id} className="app-list-subrow">
               <p className="font-semibold text-sm">{exp.title}</p>
               <p className="text-sm text-brand-primary mt-0.5">{exp.company}</p>
               <p className="text-xs text-brand-text-muted mt-1">{exp.period}</p>
