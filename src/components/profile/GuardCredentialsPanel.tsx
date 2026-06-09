@@ -17,12 +17,11 @@ import {
   BSIS_PTA_UOF_COMBINED_ID,
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
-import { formatStateName, US_STATES } from '../../lib/states';
-import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
+import { US_STATES } from '../../lib/states';
+import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
-import { isCertExpired } from '../../lib/certStatus';
-import { Award, BookOpen, ImagePlus, Shield, Trash2 } from 'lucide-react';
+import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 const CREDENTIAL_SECTIONS: {
@@ -295,22 +294,22 @@ export function GuardCredentialsPanel({
               </form>
             )}
 
-            <div className="border-t border-brand-border">
-              {items.length === 0 ? (
-                <p className="text-xs text-brand-text-muted py-3">
-                  No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
-                </p>
-              ) : (
-                items.map((cert) => (
-                  <CredentialRow
+            {items.length === 0 ? (
+              <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+                No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
+              </p>
+            ) : (
+              <div className="app-cert-item-stack border-t border-brand-border">
+                {items.map((cert) => (
+                  <CertItemCard
                     key={cert.id}
                     cert={cert}
                     editing={editing}
                     onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         );
 
@@ -409,20 +408,20 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="border-t border-brand-border">
-                {ptaUofItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted py-3">No PTA/UOF training on file.</p>
-                ) : (
-                  ptaUofItems.map((cert) => (
-                    <CredentialRow
+              {ptaUofItems.length === 0 ? (
+                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
+              ) : (
+                <div className="app-cert-item-stack border-t border-brand-border">
+                  {ptaUofItems.map((cert) => (
+                    <CertItemCard
                       key={cert.id}
                       cert={cert}
                       editing={editing}
                       onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                     />
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
             <GuardThirtyTwoHourPanel
               guard={guard}
@@ -494,20 +493,20 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="border-t border-brand-border">
-                {refresherItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted py-3">No refresher course on file.</p>
-                ) : (
-                  refresherItems.map((cert) => (
-                    <CredentialRow
+              {refresherItems.length === 0 ? (
+                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No refresher course on file.</p>
+              ) : (
+                <div className="app-cert-item-stack border-t border-brand-border">
+                  {refresherItems.map((cert) => (
+                    <CertItemCard
                       key={cert.id}
                       cert={cert}
                       editing={editing}
                       onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                     />
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
             <section className="app-form-section space-y-3">
               <div className="flex items-start justify-between gap-2">
@@ -581,76 +580,26 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="border-t border-brand-border">
-                {otherBsisItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted py-3">
-                    No other BSIS training on file.
-                  </p>
-                ) : (
-                  otherBsisItems.map((cert) => (
-                    <CredentialRow
+              {otherBsisItems.length === 0 ? (
+                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+                  No other BSIS training on file.
+                </p>
+              ) : (
+                <div className="app-cert-item-stack border-t border-brand-border">
+                  {otherBsisItems.map((cert) => (
+                    <CertItemCard
                       key={cert.id}
                       cert={cert}
                       editing={editing}
                       onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                     />
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
           </React.Fragment>
         );
       })}
-    </div>
-  );
-}
-
-function CredentialRow({
-  cert,
-  editing,
-  onDelete,
-}: {
-  cert: Certification;
-  editing: boolean;
-  onDelete?: () => void;
-}) {
-  const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
-  return (
-    <div className="app-list-subrow flex items-start justify-between gap-3">
-      <div className="min-w-0 flex gap-3">
-        {cert.imageUrl && (
-          <img
-            src={cert.imageUrl}
-            alt={`${cert.name} document`}
-            className="w-14 h-14 rounded-lg object-cover border border-brand-border shrink-0"
-          />
-        )}
-        <div className="min-w-0">
-          <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>
-          <p className="text-xs text-brand-text-muted mt-1">
-            {cert.state ? `${formatStateName(cert.state)} · ` : ''}
-            {cert.issuer} · #{cert.number}
-          </p>
-          {cert.expiryDate && (
-            <p className={`text-xs ${isCertExpired(cert) ? 'text-amber-400' : 'text-brand-text-muted'}`}>
-              {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
-        <CredentialStatusBadges cert={cert} />
-        {editing && onDelete && (
-          <button
-            type="button"
-            onClick={onDelete}
-            className="text-xs text-red-400 flex items-center gap-1 hover:underline"
-          >
-            <Trash2 className="w-3 h-3" />
-            Delete
-          </button>
-        )}
-      </div>
     </div>
   );
 }

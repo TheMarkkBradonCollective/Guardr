@@ -11,7 +11,7 @@ import {
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
+import { CertItemCard } from '../credentials/CertItemCard';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
@@ -153,17 +153,9 @@ export function GuardProfileScreen({
                   {category === 'guard-card' ? <Shield className="w-4 h-4 text-brand-text-muted" /> : <Award className="w-4 h-4 text-brand-text-muted" />}
                   <h2 className="app-section-title mb-0">{CERT_CATEGORY_LABELS[category]}</h2>
                 </div>
-                <div className="space-y-2">
+                <div className="app-cert-item-stack !pt-0">
                   {items.map((cert) => (
-                    <div key={cert.id} className="wf-list-card gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{certDisplayName(cert)}</p>
-                        <p className="text-xs text-brand-text-muted mt-1">
-                          {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
-                        </p>
-                      </div>
-                      <CredentialStatusBadges cert={cert} />
-                    </div>
+                    <CertItemCard key={cert.id} cert={cert} />
                   ))}
                 </div>
               </section>

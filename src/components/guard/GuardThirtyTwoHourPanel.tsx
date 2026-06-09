@@ -4,17 +4,15 @@ import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog
 import {
   getCourseUploadStatus,
   getCourseUploadStatusLabel,
-  isCertExpired,
 } from '../../lib/certStatus';
-import { CredentialStatusBadges } from './CredentialStatusBadge';
+import { CertItemCard } from '../credentials/CertItemCard';
 import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
-import { formatStateName } from '../../lib/states';
-import { BookOpen, Check, ImagePlus, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Check, ImagePlus, Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
@@ -148,26 +146,25 @@ export function GuardThirtyTwoHourPanel({
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
         <div className="app-medication-progress">
-          <div
-            className="app-medication-progress-fill"
-            style={{ width: `${progressPct}%` }}
-          />
+          <div className="app-medication-progress-fill" style={{ width: `${progressPct}%` }} />
         </div>
       </div>
 
-      <div className="border-t border-brand-border pt-3 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+      <div className="border-t border-brand-border pt-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
           Completion certificate (optional shortcut)
         </p>
         {rollupCerts.length > 0 ? (
-          rollupCerts.map((cert) => (
-            <ThirtyTwoHourCertRow
-              key={cert.id}
-              cert={cert}
-              editing={editing}
-              onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
-            />
-          ))
+          <div className="app-cert-item-stack !pt-0">
+            {rollupCerts.map((cert) => (
+              <CertItemCard
+                key={cert.id}
+                cert={cert}
+                editing={editing}
+                onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+              />
+            ))}
+          </div>
         ) : (
           <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
         )}
@@ -191,7 +188,6 @@ export function GuardThirtyTwoHourPanel({
           const uploadStatus = getCourseUploadStatus(guard, course.id);
           const onFile = uploadStatus !== 'missing';
           const uploaded = certsForCatalogId(guard, course.id);
-          const isAdding = addingCatalogId === course.id;
 
           return (
             <div key={course.id} className="app-list-subrow space-y-2">
@@ -205,18 +201,22 @@ export function GuardThirtyTwoHourPanel({
                 </span>
               </div>
 
-              {uploaded.map((cert) => (
-                <ThirtyTwoHourCertRow
-                  key={cert.id}
-                  cert={cert}
-                  editing={editing}
-                  compact
-                  showUploadBadge={false}
-                  onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
-                />
-              ))}
+              {uploaded.length > 0 && (
+                <div className="app-cert-item-stack !pt-0">
+                  {uploaded.map((cert) => (
+                    <CertItemCard
+                      key={cert.id}
+                      cert={cert}
+                      editing={editing}
+                      compact
+                      showUploadBadge={false}
+                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
 
-              {editing && onAddCertification && !isAdding && (
+              {editing && onAddCertification && addingCatalogId !== course.id && (
                 <button
                   type="button"
                   onClick={() => startAdd(course.id)}
@@ -274,55 +274,5 @@ export function GuardThirtyTwoHourPanel({
         </form>
       )}
     </section>
-  );
-}
-
-function ThirtyTwoHourCertRow({
-  cert,
-  editing,
-  compact = false,
-  showUploadBadge = true,
-  onDelete,
-}: {
-  cert: Certification;
-  editing: boolean;
-  compact?: boolean;
-  showUploadBadge?: boolean;
-  onDelete?: () => void;
-}) {
-  const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
-  return (
-    <div className={`flex justify-between gap-3 ${compact ? 'pl-3 border-l border-brand-border' : ''}`}>
-      <div className="min-w-0 flex gap-3">
-        {cert.imageUrl && !compact && (
-          <img
-            src={cert.imageUrl}
-            alt={`${cert.name} document`}
-            className="w-12 h-12 rounded-lg object-cover shrink-0"
-          />
-        )}
-        <div className="min-w-0">
-          {!compact && <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>}
-          <p className={`text-xs text-brand-text-muted ${compact ? '' : 'mt-0.5'}`}>
-            {cert.state ? `${formatStateName(cert.state)} · ` : ''}
-            {cert.issuer} · #{cert.number}
-          </p>
-          {cert.expiryDate && (
-            <p className={`text-xs mt-0.5 ${isCertExpired(cert) ? 'text-amber-600' : 'text-brand-text-muted'}`}>
-              {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
-        {editing && onDelete && (
-          <button type="button" onClick={onDelete} className="text-xs text-red-500 flex items-center gap-1 hover:underline">
-            <Trash2 className="w-3 h-3" />
-            Delete
-          </button>
-        )}
-      </div>
-    </div>
   );
 }

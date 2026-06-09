@@ -1552,6 +1552,28 @@ button.app-list-row:active {
   border-bottom: none;
 }
 
+/* License / cert items only — soft card surfaces for individual documents */
+.app-cert-item-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.75rem;
+}
+
+.app-cert-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  background: var(--brand-bg-sec);
+  border-radius: 1.25rem;
+}
+
+.app-cert-item-compact {
+  padding: 0.875rem 1rem;
+}
+
 .app-inline-banner {
   margin: 0 1.25rem;
   padding: 1rem 0;
