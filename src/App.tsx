@@ -127,7 +127,7 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
-  const [clientView, setClientView] = useState<ClientView>('home');
+  const [clientView, setClientView] = useState<ClientView>('map');
   const [pushDeepLink, setPushDeepLink] = useState<PushDeepLink | null>(() =>
     parsePushDeepLink(window.location.pathname + window.location.search)
   );
@@ -1650,6 +1650,8 @@ export default function App() {
     return (
       <>
         <HomePage
+          themeMode={themeMode}
+          onChangeTheme={changeThemeMode}
           onNavigateToAuth={(role, mode) => {
             setInitialAuthRole(role ?? 'client');
             setInitialAuthMode(mode ?? 'sign-in');

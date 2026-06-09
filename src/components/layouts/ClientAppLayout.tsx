@@ -2,7 +2,8 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { Home, MessageSquare, Calendar, Pill, Activity, User, LifeBuoy, LogOut } from 'lucide-react';
+import { THEME_LABELS } from '../../lib/platform/theme';
+import { Home, Map, ClipboardList, User, Users, LifeBuoy, Radio, LogOut } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -17,34 +18,58 @@ interface ClientAppLayoutProps {
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
-  { id: 'message', label: 'Message', icon: MessageSquare },
-  { id: 'appointment', label: 'Appointment', icon: Calendar },
-  { id: 'medication', label: 'Medication', icon: Pill },
-  { id: 'tracker', label: 'Tracker', icon: Activity },
+  { id: 'guards', label: 'Guards', icon: Users },
+  { id: 'requests', label: 'Requests', icon: ClipboardList },
 ];
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'support', label: 'Support', icon: LifeBuoy },
+  { id: 'profile', label: 'Profile', icon: User },
 ];
 
-const SHELL_HEADER_VIEWS: ClientView[] = [];
-
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
-  profile: 'Profile',
+  map: 'Map',
+  home: 'Home',
+  guards: 'Guards',
+  coverage: 'Live coverage',
+  requests: 'Requests',
   support: 'Support',
+  profile: 'Profile',
+  request: 'New request',
+  'direct-request': 'Request guard',
+  reports: 'Reports',
 };
 
 export function ClientAppLayout({
   children,
   currentUser,
+  themeMode,
   onSignOut,
-  activeView = 'home',
+  onChangeTheme,
+  activeView = 'map',
   onNavigate,
 }: ClientAppLayoutProps) {
-  const showShellHeader = SHELL_HEADER_VIEWS.includes(activeView);
-  const screenTitle = VIEW_TITLES[activeView] ?? 'Health';
+  const clientLabel = currentUser.clientName || currentUser.name;
+  const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
+  const fullBleed = activeView === 'map' || activeView === 'coverage';
+
+  const themeToggle = (
+    <div className="segmented-control">
+      {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onChangeTheme(m)}
+          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
+        >
+          {THEME_LABELS[m]}
+        </button>
+      ))}
+    </div>
+  );
 
   const moreFooter = (
     <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
@@ -56,18 +81,19 @@ export function ClientAppLayout({
   return (
     <RoleAppShell
       title={screenTitle}
+      locationLabel={clientLabel}
       avatarUrl={currentUser.avatar}
       avatarName={currentUser.name}
       onAvatarClick={() => onNavigate?.('profile')}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
-      activeNavId={activeView === 'search' ? 'home' : activeView}
+      activeNavId={activeView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
+      headerRight={themeToggle}
       moreMenuFooter={moreFooter}
-      moreMenuTitle="Menu"
-      fullBleed
-      hideHeader={!showShellHeader}
-      flatNav
+      moreMenuTitle="Client menu"
+      fullBleed={fullBleed}
+      variant={activeView === 'map' ? 'dark' : 'default'}
     >
       {children}
     </RoleAppShell>
