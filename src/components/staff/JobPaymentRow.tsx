@@ -21,6 +21,7 @@ import {
   guardPayoutBadgeClass,
   platformFundsBadgeClass,
 } from '../../lib/paymentPipeline';
+import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 
 interface JobPaymentRowProps {
@@ -52,6 +53,8 @@ export function JobPaymentRow({
 
   const stage = getPaymentPipelineStage(req);
   const guardAmount = guardPayoutAmount(req);
+  const platformRevenue =
+    Math.round((req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * req.durationHours * 100) / 100;
   const canMarkClientCash = isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
   const canPayGuard = stage === 'awaiting-guard-payout' && !!guard;
@@ -112,10 +115,12 @@ export function JobPaymentRow({
           )}
         </div>
 
-        <div className="text-right shrink-0">
-          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Guard earns</p>
-          <p className="text-lg font-black font-mono text-brand-primary">${guardAmount}</p>
-          <p className="text-[9px] font-mono text-brand-text-muted">Client bill ${req.estimatedPayout}</p>
+        <div className="text-right shrink-0 space-y-1">
+          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Platform revenue</p>
+          <p className="text-2xl font-black font-mono text-brand-primary">${platformRevenue}</p>
+          <p className="text-[10px] font-mono text-brand-text-muted">
+            Client bill ${req.estimatedPayout} · Guard pay ${guardAmount}
+          </p>
         </div>
       </div>
 

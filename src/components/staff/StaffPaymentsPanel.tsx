@@ -5,6 +5,7 @@ import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
+import { guardPayoutAmount } from '../../lib/cashPayments';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { JobPaymentRow } from './JobPaymentRow';
 
@@ -102,6 +103,8 @@ export function StaffPaymentsPanel({
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
   const completed = requests.filter((r) => r.status === 'completed');
+  const completedClientBill = completed.reduce((sum, r) => sum + r.estimatedPayout, 0);
+  const completedGuardPay = completed.reduce((sum, r) => sum + guardPayoutAmount(r), 0);
   const platformFees = completed.reduce(
     (sum, r) => sum + (r.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * r.durationHours,
     0
@@ -200,24 +203,18 @@ export function StaffPaymentsPanel({
           <DollarSign className="w-4 h-4 text-brand-primary" />
           Completed shift revenue
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="border border-brand-border rounded-lg p-3">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted">Gross client volume</p>
-            <p className="text-xl font-black font-mono mt-1">
-              ${completed.reduce((s, r) => s + r.estimatedPayout, 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="border border-brand-border rounded-lg p-3">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> Guard payouts
-            </p>
-            <p className="text-xl font-black font-mono mt-1">${summary.settledGuardTotal.toLocaleString()}</p>
-          </div>
-          <div className="border border-brand-border rounded-lg p-3">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted">Platform fees</p>
-            <p className="text-xl font-black font-mono mt-1">${Math.round(platformFees * 100) / 100}</p>
-            <p className="text-[9px] font-mono text-brand-text-muted mt-1">${PLATFORM_FEE_PER_HOUR}/hr per shift</p>
-          </div>
+        <div className="border border-brand-primary/30 bg-brand-primary/8 rounded-xl p-5">
+          <p className="text-[10px] font-mono uppercase text-brand-text-muted flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> Platform revenue
+          </p>
+          <p className="text-3xl font-black font-mono text-brand-primary mt-1">
+            ${Math.round(platformFees * 100) / 100}
+          </p>
+          <p className="text-sm font-mono text-brand-text-muted mt-2">
+            Client bill ${Math.round(completedClientBill * 100) / 100} · Guard pay $
+            {Math.round(completedGuardPay * 100) / 100}
+          </p>
+          <p className="text-[9px] font-mono text-brand-text-muted mt-1">${PLATFORM_FEE_PER_HOUR}/hr per shift</p>
         </div>
         {isDirector && (
           <p className="text-[10px] font-mono text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-2">
