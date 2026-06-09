@@ -73,6 +73,19 @@ interface StaffDashboardProps {
   isDbConnected: boolean;
   currentUser: SessionUser;
   onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
+  onAddGuardProfile: (input: {
+    name: string;
+    email: string;
+    phone?: string;
+    badgeNumber?: string;
+    hourlyRate?: number;
+  }) => Promise<string>;
+  onAddClientProfile: (input: {
+    name: string;
+    email: string;
+    companyName?: string;
+    phone?: string;
+  }) => Promise<string>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
@@ -111,6 +124,8 @@ export function StaffDashboard({
   isDbConnected,
   currentUser,
   onAddStaffProfile,
+  onAddGuardProfile,
+  onAddClientProfile,
   themeMode,
   onChangeTheme,
   onSignOut,
@@ -222,6 +237,7 @@ export function StaffDashboard({
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
+            onAddGuard={onAddGuardProfile}
           />
         );
       case 'team':
@@ -243,6 +259,7 @@ export function StaffDashboard({
             onRejectClient={onRejectClient}
             initialSelectedId={selectedClientId}
             onOpenJob={openJob}
+            onAddClient={onAddClientProfile}
           />
         );
       case 'incidents':

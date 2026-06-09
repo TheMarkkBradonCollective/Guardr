@@ -163,6 +163,11 @@ export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.suspend_users');
 }
 
+/** Staff can onboard new field guards and client accounts from the ops console */
+export function canOnboardPlatformUsers(user: Pick<SessionUser, 'role'>): boolean {
+  return isStaffRole(user.role);
+}
+
 export function canToggleStaffRole(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_moderators');
 }

@@ -794,6 +794,112 @@ export default function App() {
     if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
   };
 
+  const assertEmailAvailable = (email: string) => {
+    const emailLower = email.trim().toLowerCase();
+    if (guards.some((g) => g.email.toLowerCase() === emailLower)) {
+      throw new Error('This email is already registered to a guard or staff account.');
+    }
+    if (clients.some((c) => c.email.toLowerCase() === emailLower)) {
+      throw new Error('This email is already registered to a client account.');
+    }
+    return emailLower;
+  };
+
+  const handleAddGuardProfile = async (input: {
+    name: string;
+    email: string;
+    phone?: string;
+    badgeNumber?: string;
+    hourlyRate?: number;
+  }): Promise<string> => {
+    const emailLower = assertEmailAvailable(input.email);
+    const newGuard: SecurityGuard = {
+      id: `guard-${Date.now()}`,
+      name: input.name.trim(),
+      email: input.email.trim(),
+      badgeNumber: input.badgeNumber?.trim() || `GR-${Math.floor(10000 + Math.random() * 90000)}`,
+      avatar: '',
+      phone: input.phone?.trim() || '',
+      bio: 'Licensed security professional.',
+      isArmed: false,
+      backgroundChecked: false,
+      verified: false,
+      rating: 0,
+      jobsCompleted: 0,
+      certifications: [],
+      experience: [],
+      hourlyRateRequirement: input.hourlyRate ?? 35,
+      userStatus: 'active',
+      isStaff: false,
+    };
+    setGuards((prev) => [...prev, newGuard]);
+    if (isDbConnected) {
+      try {
+        await supabase.from('guards').insert({
+          id: newGuard.id,
+          name: newGuard.name,
+          email: emailLower,
+          badge_number: newGuard.badgeNumber,
+          avatar: newGuard.avatar,
+          phone: newGuard.phone,
+          bio: newGuard.bio,
+          is_armed: false,
+          background_checked: false,
+          verified: false,
+          rating: 0,
+          jobs_completed: 0,
+          hourly_rate_requirement: newGuard.hourlyRateRequirement,
+          is_staff: false,
+          user_status: 'active',
+        });
+      } catch (e) {
+        setGuards((prev) => prev.filter((g) => g.id !== newGuard.id));
+        console.error('Guard insert error:', e);
+        throw new Error('Could not save guard to the database.');
+      }
+    }
+    return newGuard.id;
+  };
+
+  const handleAddClientProfile = async (input: {
+    name: string;
+    email: string;
+    companyName?: string;
+    phone?: string;
+  }): Promise<string> => {
+    const emailLower = assertEmailAvailable(input.email);
+    const newClient: Client = {
+      id: `client-${Date.now()}`,
+      name: input.name.trim(),
+      email: input.email.trim(),
+      companyName: input.companyName?.trim() || input.name.trim(),
+      phone: input.phone?.trim() || '',
+      avatar: '',
+      totalRequests: 0,
+      approved: true,
+    };
+    setClients((prev) => [...prev, newClient]);
+    if (isDbConnected) {
+      try {
+        await supabase.from('clients').insert({
+          id: newClient.id,
+          name: newClient.name,
+          email: emailLower,
+          company_name: newClient.companyName,
+          phone: newClient.phone,
+          avatar: newClient.avatar,
+          total_requests: 0,
+          approved: true,
+        });
+      } catch (e) {
+        setClients((prev) => prev.filter((c) => c.id !== newClient.id));
+        console.error('Client insert error:', e);
+        throw new Error('Could not save client to the database.');
+      }
+    }
+    return newClient.id;
+  };
+
   const handleAddStaffProfile = async (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => {
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`, name, email, badgeNumber,
@@ -1879,6 +1985,8 @@ export default function App() {
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}
+          onAddGuardProfile={handleAddGuardProfile}
+          onAddClientProfile={handleAddClientProfile}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

@@ -5,6 +5,7 @@ import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { StaffAddClientForm } from './StaffAddClientForm';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -13,6 +14,12 @@ interface StaffClientsPanelProps {
   onRejectClient: (id: string) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
+  onAddClient?: (input: {
+    name: string;
+    email: string;
+    companyName?: string;
+    phone?: string;
+  }) => Promise<string>;
 }
 
 export function StaffClientsPanel({
@@ -22,6 +29,7 @@ export function StaffClientsPanel({
   onRejectClient,
   initialSelectedId = null,
   onOpenJob,
+  onAddClient,
 }: StaffClientsPanelProps) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
@@ -75,9 +83,20 @@ export function StaffClientsPanel({
     <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
-          <p className="text-sm text-brand-text-muted">
-            Click a client to open their profile and manage their account
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <p className="text-sm text-brand-text-muted flex-1">
+              Click a client to open their profile and manage their account.
+            </p>
+            {onAddClient && (
+              <StaffAddClientForm
+                onAdd={onAddClient}
+                onCreated={(clientId) => {
+                  setSearch('');
+                  setSelectedId(clientId);
+                }}
+              />
+            )}
+          </div>
 
           <WfSearchBar
             value={search}
@@ -90,7 +109,9 @@ export function StaffClientsPanel({
 
       {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
-          No clients match your search.
+          {clients.length === 0
+            ? 'No clients yet. Use Add client above to onboard the first account.'
+            : 'No clients match your search.'}
         </p>
       ) : showDetailOnly && selected ? (
         <StaffClientDetailPanel

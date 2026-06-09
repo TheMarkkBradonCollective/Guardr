@@ -6,6 +6,7 @@ import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { StaffAddGuardForm } from './StaffAddGuardForm';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -20,6 +21,13 @@ interface StaffGuardsPanelProps {
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
+  onAddGuard?: (input: {
+    name: string;
+    email: string;
+    phone?: string;
+    badgeNumber?: string;
+    hourlyRate?: number;
+  }) => Promise<string>;
 }
 
 export function StaffGuardsPanel({
@@ -35,6 +43,7 @@ export function StaffGuardsPanel({
   onUpdateBackgroundChecked,
   initialSelectedId = null,
   onOpenJob,
+  onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
@@ -103,9 +112,20 @@ export function StaffGuardsPanel({
     <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
-          <p className="text-sm text-brand-text-muted">
-            Field guards who accept shifts — click a profile to verify credentials and manage their account.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <p className="text-sm text-brand-text-muted flex-1">
+              Field guards who accept shifts — click a profile to verify credentials and manage their account.
+            </p>
+            {onAddGuard && (
+              <StaffAddGuardForm
+                onAdd={onAddGuard}
+                onCreated={(guardId) => {
+                  setSearch('');
+                  setSelectedId(guardId);
+                }}
+              />
+            )}
+          </div>
           <WfSearchBar
             value={search}
             onChange={setSearch}
@@ -117,7 +137,9 @@ export function StaffGuardsPanel({
 
       {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
-          No field guards match your search.
+          {roster.length === 0
+            ? 'No field guards yet. Use Add guard above to create the first profile.'
+            : 'No field guards match your search.'}
         </p>
       ) : showDetailOnly && detailProps ? (
         <StaffGuardDetailPanel {...detailProps} onBack={() => setSelectedId(null)} />
