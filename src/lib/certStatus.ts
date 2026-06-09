@@ -1,6 +1,6 @@
 import { Certification, SecurityGuard } from '../types';
+import { resolveCertCatalogId } from './certCatalog';
 import {
-  guardHasCredentialOnFile,
   guardHasCredentialUploaded,
   guardHasGuardrVerifiedCredential,
   isCertExpired,
@@ -24,15 +24,39 @@ export function getCredentialStatusBadgeClass(cert: Certification): string {
 
 export type CourseUploadStatus = 'missing' | 'on-file' | 'verified' | 'expired';
 
+function matchingUploadedCerts(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): Certification[] {
+  return guard.certifications.filter((cert) => {
+    if (cert.status === 'rejected') return false;
+    if (resolveCertCatalogId(cert) !== catalogId) return false;
+    if (catalogId === 'bsis-guard-card' && jobState) {
+      return cert.state?.toUpperCase() === jobState.toUpperCase();
+    }
+    return true;
+  });
+}
+
 export function getCourseUploadStatus(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): CourseUploadStatus {
   if (!guardHasCredentialUploaded(guard, catalogId, jobState)) return 'missing';
-  if (guardHasGuardrVerifiedCredential(guard, catalogId, jobState)) return 'verified';
-  if (guardHasCredentialOnFile(guard, catalogId, jobState)) return 'on-file';
-  return 'expired';
+
+  const certs = matchingUploadedCerts(guard, catalogId, jobState);
+  const allExpired = certs.length > 0 && certs.every(isCertExpired);
+
+  if (catalogId === 'bsis-guard-card' && allExpired) return 'expired';
+
+  if (guardHasGuardrVerifiedCredential(guard, catalogId, jobState)) {
+    return allExpired ? 'expired' : 'verified';
+  }
+
+  if (allExpired) return 'expired';
+  return 'on-file';
 }
 
 export function getCourseUploadStatusLabel(status: CourseUploadStatus): string {

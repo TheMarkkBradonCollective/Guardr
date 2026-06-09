@@ -323,22 +323,14 @@ export function GuardCredentialsPanel({
                   </p>
                   <p
                     className={`text-xs font-semibold mt-2 ${
-                      ptaUofProgress.ptaUofTraining
-                        ? 'text-brand-primary'
-                        : guardHasCredentialUploaded(guard, BSIS_PTA_UOF_COMBINED_ID) ||
-                            (guardHasCredentialUploaded(guard, 'bsis-power-to-arrest') &&
-                              guardHasCredentialUploaded(guard, 'bsis-appropriate-use-of-force'))
-                          ? 'text-amber-400'
-                          : 'text-brand-text-muted'
+                      ptaUofProgress.ptaUofTraining ? 'text-brand-primary' : 'text-brand-text-muted'
                     }`}
                   >
                     {ptaUofProgress.ptaUofTraining
                       ? ptaUofProgress.ptaUofCombined
                         ? 'Combined 8-hr certificate on file'
                         : 'Legacy separate PTA & UOF certs on file'
-                      : ptaUofItems.length > 0
-                        ? 'On file · Expired — upload current 8-hr PTA/UOF'
-                        : 'Not yet on file'}
+                      : 'Not yet on file'}
                   </p>
                 </div>
                 {editing && onAddCertification && (

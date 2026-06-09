@@ -98,8 +98,28 @@ function isCertNotExpired(cert: Certification): boolean {
   return !isCertExpired(cert);
 }
 
+/** Only the BSIS guard card must be unexpired to count toward qualification. */
+function expiryBlocksQualification(catalogId: string): boolean {
+  return catalogId === 'bsis-guard-card';
+}
+
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
   return resolveCertCatalogId(cert) === catalogId;
+}
+
+function matchingCredentials(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): Certification[] {
+  return guard.certifications.filter((cert) => {
+    if (cert.status === 'rejected') return false;
+    if (!certMatchesCatalogId(cert, catalogId)) return false;
+    if (catalogId === 'bsis-guard-card' && jobState) {
+      return cert.state?.toUpperCase() === jobState.toUpperCase();
+    }
+    return true;
+  });
 }
 
 /** Uploaded and not rejected — includes expired (for display). */
@@ -118,18 +138,17 @@ export function guardHasCredentialUploaded(
   });
 }
 
-/** Uploaded, not rejected, and not expired — counts toward qualification. */
+/**
+ * Uploaded and not rejected — counts toward qualification.
+ * Training and permits may be expired; only the guard card must be current.
+ */
 export function guardHasCredentialOnFile(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): boolean {
-  return guard.certifications.some((cert) => {
-    if (cert.status === 'rejected' || !isCertNotExpired(cert)) return false;
-    if (!certMatchesCatalogId(cert, catalogId)) return false;
-    if (catalogId === 'bsis-guard-card' && jobState) {
-      return cert.state?.toUpperCase() === jobState.toUpperCase();
-    }
+  return matchingCredentials(guard, catalogId, jobState).some((cert) => {
+    if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });
 }
@@ -139,14 +158,20 @@ export function guardHasGuardrVerifiedCredential(
   catalogId: string,
   jobState?: string
 ): boolean {
-  return guard.certifications.some((cert) => {
-    if (cert.status !== 'verified' || !isCertNotExpired(cert)) return false;
-    if (!certMatchesCatalogId(cert, catalogId)) return false;
-    if (catalogId === 'bsis-guard-card' && jobState) {
-      return cert.state?.toUpperCase() === jobState.toUpperCase();
-    }
+  return matchingCredentials(guard, catalogId, jobState).some((cert) => {
+    if (cert.status !== 'verified') return false;
+    if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });
+}
+
+/** Guard card uploaded but past expiry — blocks Level 1. */
+export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'): boolean {
+  const state = jobState || 'CA';
+  return (
+    guardHasCredentialUploaded(guard, 'bsis-guard-card', state) &&
+    !guardHasCredentialOnFile(guard, 'bsis-guard-card', state)
+  );
 }
 
 /** Combined 8-hr PTA/UOF cert, or legacy pair of separate uploads. */
@@ -217,6 +242,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   return {
     level: getGuardQualificationLevel(guard, jobState),
     guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
+    guardCardExpired: guardHasExpiredGuardCard(guard, jobState),
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', jobState),
     ptaUofTraining: guardMeetsPtaUofTraining(guard),
     ptaUofCombined,

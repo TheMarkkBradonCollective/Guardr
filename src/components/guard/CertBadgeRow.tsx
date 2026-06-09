@@ -18,7 +18,13 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
   const progress = getQualificationProgress(guard, jobState);
 
   const requiredRows = [
-    { id: 'bsis-guard-card', label: 'Guard Card', onFile: progress.guardCard, verified: progress.guardCardVerified },
+    {
+      id: 'bsis-guard-card',
+      label: 'Guard Card',
+      onFile: progress.guardCard,
+      expired: progress.guardCardExpired,
+      verified: progress.guardCardVerified,
+    },
     {
       id: 'bsis-pta-uof',
       label: 'PTA & UOF (8 hr)',
@@ -59,20 +65,22 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Required to work</p>
           <div className="flex flex-wrap gap-1.5">
-            {requiredRows.map(({ id, label, onFile, verified }) => (
+            {requiredRows.map(({ id, label, onFile, expired, verified }) => (
               <span
                 key={id}
                 className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
-                  onFile
-                    ? verified
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                      : 'bg-brand-primary/15 text-brand-primary border-brand-primary/30'
-                    : 'bg-brand-border/20 text-brand-text-muted border-brand-border'
+                  expired
+                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                    : onFile
+                      ? verified
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-brand-primary/15 text-brand-primary border-brand-primary/30'
+                      : 'bg-brand-border/20 text-brand-text-muted border-brand-border'
                 }`}
               >
-                {onFile && <Check className="w-3 h-3" />}
+                {(onFile || expired) && <Check className="w-3 h-3" />}
                 {label}
-                {onFile && verified ? ' ✓' : onFile ? ' (on file)' : ''}
+                {expired ? ' (expired)' : onFile && verified ? ' ✓' : onFile ? ' (on file)' : ''}
               </span>
             ))}
           </div>

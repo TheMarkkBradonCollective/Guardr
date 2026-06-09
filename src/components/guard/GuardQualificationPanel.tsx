@@ -33,7 +33,13 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
         : undefined;
 
   const rows = [
-    { label: 'BSIS Guard Card (valid)', met: progress.guardCard, verified: progress.guardCardVerified },
+    {
+      label: 'BSIS Guard Card (valid)',
+      met: progress.guardCard,
+      expired: progress.guardCardExpired,
+      verified: progress.guardCardVerified,
+      detail: progress.guardCardExpired ? 'Guard card on file but expired — upload a valid card' : undefined,
+    },
     {
       label: '8-Hour Power to Arrest & Appropriate Use of Force (2-part)',
       met: progress.ptaUofTraining,
@@ -76,9 +82,19 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
               <p className={row.met ? 'text-brand-text' : 'text-brand-text-muted'}>{row.label}</p>
               {row.detail && <p className="text-xs text-brand-text-muted mt-0.5">{row.detail}</p>}
             </div>
-            <span className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${row.met ? 'text-brand-primary' : 'text-brand-text-muted'}`}>
-              {row.met ? <Check className="w-3.5 h-3.5" /> : '—'}
-              {row.met && row.verified ? ' · Verified' : row.met ? ' · On file' : ''}
+            <span
+              className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${
+                row.expired ? 'text-amber-400' : row.met ? 'text-brand-primary' : 'text-brand-text-muted'
+              }`}
+            >
+              {row.met ? <Check className="w-3.5 h-3.5" /> : row.expired ? '!' : '—'}
+              {row.expired
+                ? ' · On file · Expired'
+                : row.met && row.verified
+                  ? ' · Verified'
+                  : row.met
+                    ? ' · On file'
+                    : ''}
             </span>
           </div>
         ))}
