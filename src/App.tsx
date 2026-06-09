@@ -28,6 +28,11 @@ import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
+import {
+  AddCertificationResult,
+  normalizeCertNumber,
+  validateCertNumberAvailable,
+} from './lib/certUniqueness';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
@@ -401,6 +406,20 @@ export default function App() {
             user_status: guard.userStatus || 'active',
           });
           if (guard.certifications.length > 0) {
+            const seenNumbers = new Set<string>();
+            for (const cert of guard.certifications) {
+              const key = normalizeCertNumber(cert.number);
+              if (!key) continue;
+              if (seenNumbers.has(key)) {
+                throw new Error('Duplicate certificate numbers are not allowed on one profile.');
+              }
+              seenNumbers.add(key);
+              const available = validateCertNumberAvailable(guards, {
+                number: cert.number,
+                guardId: guard.id,
+              });
+              if (!available.ok) throw new Error(available.error);
+            }
             await supabase.from('certifications').insert(
               guard.certifications.map((cert) => ({
                 id: cert.id,
@@ -465,12 +484,21 @@ export default function App() {
   };
 
   // ── Certification CRUD ─────────────────────────────────────
-  const handleAddCertification = async (guardId: string, newCert: Partial<Certification>) => {
+  const handleAddCertification = async (
+    guardId: string,
+    newCert: Partial<Certification>
+  ): Promise<AddCertificationResult> => {
+    const available = validateCertNumberAvailable(guards, {
+      number: newCert.number ?? '',
+      guardId,
+    });
+    if (!available.ok) return available;
+
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
       name: newCert.name || 'BSIS Guard Card',
       issuer: newCert.issuer || 'BSIS',
-      number: newCert.number || 'LIC-000000',
+      number: newCert.number!.trim(),
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
       expiryDate: newCert.expiryDate || new Date().toISOString().split('T')[0],
@@ -482,7 +510,7 @@ export default function App() {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
       try {
-        await supabase.from('certifications').insert({
+        const { error } = await supabase.from('certifications').insert({
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
@@ -491,8 +519,37 @@ export default function App() {
           category: certWithId.category ?? null,
           image_url: certWithId.imageUrl ?? null,
         });
-      } catch (e) { console.error('Cert insert error:', e); }
+        if (error) {
+          setGuards(prev =>
+            prev.map(g =>
+              g.id === guardId
+                ? { ...g, certifications: g.certifications.filter((c) => c.id !== certWithId.id) }
+                : g
+            )
+          );
+          if (error.code === '23505') {
+            return {
+              ok: false,
+              error:
+                'This certificate or license number is already registered. Each number can only be linked to one profile.',
+            };
+          }
+          console.error('Cert insert error:', error);
+          return { ok: false, error: 'Could not save credential. Please try again.' };
+        }
+      } catch (e) {
+        setGuards(prev =>
+          prev.map(g =>
+            g.id === guardId
+              ? { ...g, certifications: g.certifications.filter((c) => c.id !== certWithId.id) }
+              : g
+          )
+        );
+        console.error('Cert insert error:', e);
+        return { ok: false, error: 'Could not save credential. Please try again.' };
+      }
     }
+    return { ok: true };
   };
 
   const handleDeleteCertification = async (guardId: string, certId: string) => {

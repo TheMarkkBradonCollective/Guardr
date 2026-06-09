@@ -16,13 +16,14 @@ import {
 } from '../../lib/guardQualification';
 import { formatStateName } from '../../lib/states';
 import { BookOpen, Check, ImagePlus, Plus, Trash2 } from 'lucide-react';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
-  onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
 }
 
@@ -48,6 +49,7 @@ export function GuardThirtyTwoHourPanel({
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [formError, setFormError] = useState('');
 
   const rollupCerts = useMemo(
     () =>
@@ -70,6 +72,7 @@ export function GuardThirtyTwoHourPanel({
     setIssueDate('');
     setExpiryDate('');
     setImageUrl(undefined);
+    setFormError('');
   };
 
   const startAdd = (catalogId: string) => {
@@ -79,6 +82,7 @@ export function GuardThirtyTwoHourPanel({
     setIssueDate('');
     setExpiryDate('');
     setImageUrl(undefined);
+    setFormError('');
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,11 +95,12 @@ export function GuardThirtyTwoHourPanel({
 
   const submitCert = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
     if (!onAddCertification || !addingCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(addingCatalogId);
     if (!entry) return;
 
-    await onAddCertification({
+    const result = await onAddCertification({
       catalogId: entry.id,
       category: entry.category,
       name: entry.name,
@@ -106,6 +111,10 @@ export function GuardThirtyTwoHourPanel({
       status: 'pending',
       imageUrl,
     });
+    if (!result.ok) {
+      setFormError(result.error);
+      return;
+    }
     resetForm();
   };
 
@@ -260,6 +269,7 @@ export function GuardThirtyTwoHourPanel({
           {imageUrl && (
             <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
           )}
+          {formError && <p className="text-xs text-red-400">{formError}</p>}
           <div className="flex gap-2">
             <button type="button" onClick={resetForm} className="flex-1 uber-button-secondary h-11 text-sm">
               Cancel

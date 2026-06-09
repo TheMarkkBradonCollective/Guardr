@@ -25,7 +25,7 @@ interface UserProfileScreenProps {
   onSave: (payload: ProfileSavePayload) => void | Promise<void>;
   guard?: SecurityGuard | null;
   client?: Client | null;
-  onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => Promise<import('../../lib/certUniqueness').AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;

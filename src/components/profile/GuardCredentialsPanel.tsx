@@ -23,6 +23,7 @@ import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { isCertExpired } from '../../lib/certStatus';
 import { Award, BookOpen, ImagePlus, Shield, Trash2 } from 'lucide-react';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -73,7 +74,7 @@ type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-pta-uof';
 interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
   editing: boolean;
-  onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
 }
 
@@ -93,6 +94,7 @@ export function GuardCredentialsPanel({
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
+  const [formError, setFormError] = useState('');
 
   const resetForm = () => {
     setSelectedCatalogId('');
@@ -103,6 +105,7 @@ export function GuardCredentialsPanel({
     setIssueDate('');
     setExpiryDate('');
     setImageUrl(undefined);
+    setFormError('');
     setOpenSection(null);
   };
 
@@ -116,6 +119,7 @@ export function GuardCredentialsPanel({
 
   const submitCert = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
     if (!onAddCertification || !selectedCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(selectedCatalogId);
     if (!entry) return;
@@ -123,7 +127,7 @@ export function GuardCredentialsPanel({
     const isOther = selectedCatalogId === 'other-credential';
     if (isOther && !customCertName.trim()) return;
 
-    await onAddCertification({
+    const result = await onAddCertification({
       catalogId: entry.id,
       category: entry.category,
       name: isOther ? customCertName.trim() : entry.name,
@@ -135,6 +139,10 @@ export function GuardCredentialsPanel({
       status: 'pending',
       imageUrl,
     });
+    if (!result.ok) {
+      setFormError(result.error);
+      return;
+    }
     resetForm();
   };
 
@@ -280,6 +288,7 @@ export function GuardCredentialsPanel({
                 {imageUrl && (
                   <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                 )}
+                {formError && <p className="text-xs text-red-400">{formError}</p>}
                 <button type="submit" className="w-full uber-button-sage h-11 text-sm">
                   Upload credential
                 </button>
@@ -391,6 +400,7 @@ export function GuardCredentialsPanel({
                   {imageUrl && (
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
+                  {formError && <p className="text-xs text-red-400">{formError}</p>}
                   <button type="submit" className="w-full uber-button-sage h-11 text-sm">
                     Upload credential
                   </button>
@@ -475,6 +485,7 @@ export function GuardCredentialsPanel({
                   {imageUrl && (
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
+                  {formError && <p className="text-xs text-red-400">{formError}</p>}
                   <button type="submit" className="w-full uber-button-sage h-11 text-sm">
                     Upload credential
                   </button>
@@ -561,6 +572,7 @@ export function GuardCredentialsPanel({
                   {imageUrl && (
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
+                  {formError && <p className="text-xs text-red-400">{formError}</p>}
                   <button type="submit" className="w-full uber-button-sage h-11 text-sm">
                     Upload credential
                   </button>

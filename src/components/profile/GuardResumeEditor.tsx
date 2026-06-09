@@ -29,7 +29,7 @@ interface GuardResumeEditorProps {
   editing: boolean;
   payload: GuardResumeSavePayload;
   onChange: (patch: Partial<GuardResumeSavePayload>) => void;
-  onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => Promise<import('../../lib/certUniqueness').AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;

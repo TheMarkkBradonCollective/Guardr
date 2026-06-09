@@ -34,13 +34,14 @@ import {
 import { computeGuardEarnings } from '../lib/payments';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
+import type { AddCertificationResult } from '../lib/certUniqueness';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
   currentUser: SessionUser;
   payments?: Payment[];
-  onAddCertification: (cert: Partial<Certification>) => void;
+  onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
@@ -348,7 +349,7 @@ export function GuardDashboard({
       <div className="flex min-h-screen items-center justify-center bg-brand-bg p-6">
         <div className="uber-card max-w-md w-full text-center space-y-5 rounded-2xl">
           <AlertTriangle className="w-10 h-10 text-red-400 mx-auto" />
-          <h2 className="font-black text-lg uppercase">Account {userStatus}</h2>
+          <h2 className="font-black text-lg uppercase">Account {GUARD_STATUS_LABELS[userStatus]}</h2>
           <p className="text-brand-text-muted text-sm">Contact Guardr support to restore access.</p>
         </div>
       </div>
