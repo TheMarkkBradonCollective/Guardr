@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { AppList, AppListRow, AppScreen, AppScreenTitle } from './AppPrimitives';
+import { AppList, AppListRow, AppScreen } from './AppPrimitives';
 import { MOCK_TRACKER_METRICS } from './mockData';
 
 const RECENT_READINGS = [
