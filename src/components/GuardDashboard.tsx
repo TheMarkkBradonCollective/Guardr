@@ -68,6 +68,9 @@ interface GuardDashboardProps {
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
   initialTab?: GuardTab;
+  /** Controlled tab — when set, parent owns navigation state (URL sync). */
+  tab?: GuardTab;
+  onTabChange?: (tab: GuardTab) => void;
 }
 
 export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'support' | 'profile';
@@ -106,10 +109,25 @@ export function GuardDashboard({
   variant = 'standalone',
   shiftTab = 'map',
   initialTab = 'map',
+  tab: controlledTab,
+  onTabChange,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
-  const [standaloneTab, setStandaloneTab] = useState<GuardTab>(initialTab);
-  const activeTab = isEmbedded ? shiftTab : standaloneTab;
+  const isControlled = controlledTab !== undefined;
+  const [standaloneTab, setStandaloneTab] = useState<GuardTab>(controlledTab ?? initialTab);
+  const activeTab = isEmbedded ? shiftTab : (isControlled ? controlledTab : standaloneTab);
+
+  const setTab = useCallback(
+    (next: GuardTab) => {
+      if (!isControlled) setStandaloneTab(next);
+      onTabChange?.(next);
+    },
+    [isControlled, onTabChange]
+  );
+
+  useEffect(() => {
+    if (isControlled && controlledTab) setStandaloneTab(controlledTab);
+  }, [controlledTab, isControlled]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
@@ -243,7 +261,7 @@ export function GuardDashboard({
     onAcceptJob(jobId);
     updatePhase(jobId, 'upcoming');
     setSelectedJobId(null);
-    if (!isEmbedded) setStandaloneTab('myJobs');
+    if (!isEmbedded) setTab('myJobs');
   };
 
   const handleArrived = () => {
@@ -592,10 +610,10 @@ export function GuardDashboard({
       locationLabel={guard.name}
       avatarUrl={guard.avatar}
       avatarName={guard.name}
-      onAvatarClick={() => setStandaloneTab('profile')}
+      onAvatarClick={() => setTab('profile')}
       navItems={NAV_TABS}
       activeNavId={activeTab}
-      onNavigate={(id) => setStandaloneTab(id as GuardTab)}
+      onNavigate={(id) => setTab(id as GuardTab)}
       headerRight={themeToggle}
       fullBleed={activeTab === 'map'}
       variant={activeTab === 'map' ? 'dark' : 'default'}

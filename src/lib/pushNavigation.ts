@@ -1,4 +1,5 @@
 import type { GuardTab } from '../components/GuardDashboard';
+import { parseAppRoute, type AppRoute } from './appNavigation';
 import type { StaffSection } from './staffOps';
 
 export interface PushDeepLink {
@@ -8,25 +9,20 @@ export interface PushDeepLink {
 }
 
 export function parsePushDeepLink(url: string): PushDeepLink | null {
-  try {
-    const parsed = new URL(url, window.location.origin);
-    const path = parsed.pathname.replace(/\/$/, '') || '/';
+  const route = parseAppRoute(url);
+  if (!route) return null;
 
-    if (path === '/dispatch') {
-      return { staffSection: 'jobs' };
-    }
+  const link: PushDeepLink = {};
+  if (route.staffSection) link.staffSection = route.staffSection;
+  if (route.guardTab) link.guardTab = route.guardTab;
+  if (route.guardId) link.guardId = route.guardId;
+  return link;
+}
 
-    if (path === '/guard') {
-      return { guardTab: 'map' };
-    }
-
-    const guardMatch = path.match(/^\/guard\/([^/]+)$/);
-    if (guardMatch) {
-      return { guardTab: 'map', guardId: guardMatch[1] };
-    }
-
-    return null;
-  } catch {
-    return null;
+export function pushDeepLinkToRoute(link: PushDeepLink): AppRoute | null {
+  if (link.staffSection) return { role: 'staff', staffSection: link.staffSection };
+  if (link.guardTab || link.guardId) {
+    return { role: 'guard', guardTab: link.guardTab ?? 'map', guardId: link.guardId };
   }
+  return null;
 }
