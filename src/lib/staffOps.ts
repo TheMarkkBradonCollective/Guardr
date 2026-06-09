@@ -5,6 +5,10 @@ export type StaffSection =
   | 'overview'
   | 'approvals'
   | 'live-jobs'
+  | 'map'
+  | 'my-jobs'
+  | 'my-pay'
+  | 'my-help'
   | 'guards'
   | 'clients'
   | 'reports'
@@ -15,6 +19,29 @@ export type StaffSection =
   | 'analytics'
   | 'settings'
   | 'profile';
+
+export type StaffShiftSection = 'map' | 'my-jobs' | 'my-pay' | 'my-help';
+
+const SHIFT_SECTIONS: StaffShiftSection[] = ['map', 'my-jobs', 'my-pay', 'my-help'];
+
+export function isStaffShiftSection(section: StaffSection): section is StaffShiftSection {
+  return SHIFT_SECTIONS.includes(section as StaffShiftSection);
+}
+
+export type GuardShiftTab = 'map' | 'opportunities' | 'earnings' | 'support'; // subset of GuardDashboard tabs
+
+export function staffSectionToShiftTab(section: StaffShiftSection): GuardShiftTab {
+  switch (section) {
+    case 'map':
+      return 'map';
+    case 'my-jobs':
+      return 'opportunities';
+    case 'my-pay':
+      return 'earnings';
+    case 'my-help':
+      return 'support';
+  }
+}
 
 export type DispatchJobStatus =
   | 'pending-assignment'

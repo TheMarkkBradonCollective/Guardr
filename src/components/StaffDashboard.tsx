@@ -1,5 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { Certification, Client, Experience, GuardEducation, Payment, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import {
+  Certification,
+  Client,
+  CreateSupportTicketInput,
+  Experience,
+  GuardEducation,
+  Payment,
+  SecurityGuard,
+  SecurityRequest,
+  SessionUser,
+  SupportTicket,
+  SupportTicketStatus,
+} from '../types';
 import {
   canAccessFinancialControls,
   canManageStaffAccounts,
@@ -11,6 +23,8 @@ import {
   buildIncidents,
   buildPlatformActivityFeed,
   computePlatformStats,
+  isStaffShiftSection,
+  staffSectionToShiftTab,
   StaffSection,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
@@ -23,13 +37,13 @@ import { StaffReportsPanel } from './staff/StaffReportsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
-import { SupportTicket, SupportTicketStatus } from '../types';
 import { openTicketCount } from '../lib/support';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { findGuardProfileForUser } from '../lib/guardDirectory';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
+import { GuardDashboard } from './GuardDashboard';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -63,9 +77,12 @@ interface StaffDashboardProps {
   onAddCertification?: (guardId: string, cert: Partial<Certification>) => void | Promise<void>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
-  onEnterGuardMode?: () => void;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
+  onAcceptJob: (requestId: string) => void;
+  onUpdateJobAudit: (requestId: string, auditPayload: unknown) => void;
+  onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
 }
 
 export function StaffDashboard({
@@ -97,11 +114,16 @@ export function StaffDashboard({
   onAddCertification,
   onAddExperience,
   onAddEducation,
-  onEnterGuardMode,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  onCreateSupportTicket,
+  onAcceptJob,
+  onUpdateJobAudit,
+  onUpdateStripeAccount,
+  onRecordAuditViolation,
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>('overview');
+  const staffGuard = findGuardProfileForUser(currentUser, guards) ?? null;
 
   const showFinance = canAccessFinancialControls(currentUser);
   const showStaffOnboard = canManageStaffAccounts(currentUser);
@@ -124,7 +146,48 @@ export function StaffDashboard({
     [stats, requests, incidents, disputes, supportTickets]
   );
 
+  const renderShiftFallback = () => (
+    <div className="h-full flex flex-col items-center justify-center p-8 text-center gap-4">
+      <h2 className="font-bold text-lg">Guard profile not linked</h2>
+      <p className="text-sm text-brand-text-muted max-w-sm">
+        Link your staff account to a guard profile to browse the map and accept shifts. Complete your profile under Account, or sign in with the email on your guard record.
+      </p>
+      <button type="button" onClick={() => setSection('profile')} className="uber-button-sage h-11 px-6 text-sm">
+        Open profile
+      </button>
+    </div>
+  );
+
   const renderSection = () => {
+    if (isStaffShiftSection(section)) {
+      if (!staffGuard) return renderShiftFallback();
+      return (
+        <GuardDashboard
+          variant="embedded"
+          shiftTab={staffSectionToShiftTab(section)}
+          guard={staffGuard}
+          requests={requests}
+          payments={payments}
+          currentUser={currentUser}
+          onAddCertification={(cert) => onAddCertification?.(staffGuard.id, cert)}
+          onAddExperience={(exp) => onAddExperience?.(staffGuard.id, exp)}
+          onAddEducation={(edu) => onAddEducation?.(staffGuard.id, edu)}
+          onAcceptJob={onAcceptJob}
+          onUpdateJobAudit={onUpdateJobAudit}
+          onRecordAuditViolation={onRecordAuditViolation}
+          onUpdateStripeAccount={onUpdateStripeAccount}
+          onSignOut={onSignOut}
+          themeMode={themeMode}
+          onChangeTheme={onChangeTheme}
+          onUpdateProfile={(payload) => onUpdateGuardProfile(staffGuard.id, payload)}
+          supportTickets={supportTickets}
+          relatedRequests={requests.filter((r) => r.assignedGuardId === staffGuard.id)}
+          onCreateSupportTicket={onCreateSupportTicket}
+          onSendSupportMessage={onSendSupportMessage}
+        />
+      );
+    }
+
     switch (section) {
       case 'overview':
         return <StaffOverview stats={stats} initialFeed={activityFeed} />;
@@ -214,8 +277,7 @@ export function StaffDashboard({
             onAddStaffProfile={onAddStaffProfile}
           />
         ) : null;
-      case 'profile': {
-        const staffGuard = findGuardProfileForUser(currentUser, guards) ?? null;
+      case 'profile':
         return (
           <UserProfileScreen
             currentUser={currentUser}
@@ -229,7 +291,6 @@ export function StaffDashboard({
             onAddEducation={onAddEducation ? (edu) => onAddEducation(currentUser.id, edu) : undefined}
           />
         );
-      }
       default:
         return null;
     }
@@ -245,7 +306,8 @@ export function StaffDashboard({
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
       badges={badges}
-      onEnterGuardMode={onEnterGuardMode}
+      showShiftNav={!!staffGuard}
+      fullBleed={isStaffShiftSection(section)}
     >
       {renderSection()}
     </StaffOpsLayout>

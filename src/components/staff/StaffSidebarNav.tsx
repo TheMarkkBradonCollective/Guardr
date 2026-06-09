@@ -8,6 +8,7 @@ export interface StaffNavItem {
   icon: typeof LayoutDashboard;
   badge?: number;
   adminOnly?: boolean;
+  shiftOnly?: boolean;
 }
 
 interface StaffSidebarNavProps {
@@ -15,9 +16,11 @@ interface StaffSidebarNavProps {
   activeSection: StaffSection;
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
+  showShiftNav?: boolean;
 }
 
 const PRIMARY_IDS: StaffSection[] = ['overview', 'live-jobs', 'approvals'];
+const SHIFT_IDS: StaffSection[] = ['map', 'my-jobs', 'my-pay', 'my-help'];
 const MORE_IDS: StaffSection[] = ['guards', 'clients', 'reports', 'incidents', 'support', 'disputes', 'analytics'];
 const ADMIN_IDS: StaffSection[] = ['payments', 'settings'];
 const ACCOUNT_IDS: StaffSection[] = ['profile'];
@@ -78,7 +81,13 @@ function NavGroup({
   );
 }
 
-export function StaffSidebarNav({ items, activeSection, onNavigate, showFinance }: StaffSidebarNavProps) {
+export function StaffSidebarNav({
+  items,
+  activeSection,
+  onNavigate,
+  showFinance,
+  showShiftNav = true,
+}: StaffSidebarNavProps) {
   const visibleItems = items.filter((item) => !item.adminOnly || showFinance);
   const adminItems = showFinance ? ADMIN_IDS : [];
 
@@ -91,6 +100,15 @@ export function StaffSidebarNav({ items, activeSection, onNavigate, showFinance 
         activeSection={activeSection}
         onNavigate={onNavigate}
       />
+      {showShiftNav && (
+        <NavGroup
+          title="On shift"
+          itemIds={SHIFT_IDS}
+          items={visibleItems}
+          activeSection={activeSection}
+          onNavigate={onNavigate}
+        />
+      )}
       <NavGroup
         title="Operations"
         itemIds={MORE_IDS}

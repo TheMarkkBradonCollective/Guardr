@@ -791,6 +791,10 @@ body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.guard-staff-embedded {
+  min-height: 0;
+}
+
 .sidebar-drawer-panel {
   animation: sidebar-slide-in 0.22s ease-out;
 }

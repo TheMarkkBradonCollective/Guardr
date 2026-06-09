@@ -18,7 +18,7 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { isStaffRole, ROLE_LABELS } from './lib/permissions';
+import { isStaffRole } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
@@ -26,14 +26,13 @@ import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
-import { AppScreenHeader } from './components/layouts/AppScreenHeader';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { checkJobRequirements } from './lib/guardJobs';
-import { findGuardProfileForUser, loadStaffGuardMode, saveStaffGuardMode } from './lib/guardDirectory';
+import { findGuardProfileForUser } from './lib/guardDirectory';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -90,13 +89,6 @@ export default function App() {
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
-  const [staffGuardMode, setStaffGuardMode] = useState(loadStaffGuardMode);
-
-  const setStaffGuardModePersisted = (enabled: boolean) => {
-    setStaffGuardMode(enabled);
-    saveStaffGuardMode(enabled);
-  };
-
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -107,11 +99,11 @@ export default function App() {
       setActiveGuardId(currentUser.id);
       return;
     }
-    if (isStaffRole(currentUser.role) && staffGuardMode) {
+    if (isStaffRole(currentUser.role)) {
       const profile = findGuardProfileForUser(currentUser, guards);
-      setActiveGuardId(profile?.id ?? currentUser.id);
+      if (profile) setActiveGuardId(profile.id);
     }
-  }, [currentUser, staffGuardMode, guards]);
+  }, [currentUser, guards]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -1257,70 +1249,6 @@ export default function App() {
 
   // ── Staff Operations Command Center ─────────────────────────
   if (isStaffRole(currentUser.role)) {
-    const staffGuardProfile = findGuardProfileForUser(currentUser, guards);
-
-    if (staffGuardMode && !staffGuardProfile) {
-      return (
-        <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden">
-          <AppScreenHeader
-            title="Guard profile"
-            subtitle={`${ROLE_LABELS[currentUser.role]} · Ops Center`}
-            onMenuClick={() => setStaffGuardModePersisted(false)}
-            menuLabel="Open staff menu"
-          />
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
-          <Logo className="text-brand-primary" size={48} />
-          <h2 className="font-bold text-lg">Guard profile not linked</h2>
-          <p className="text-sm text-brand-text-muted max-w-sm">
-            Your staff account needs a guard profile to browse the map and accept shifts. Open Staff Ops to complete your profile, or sign in with the email on your guard record.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
-              onClick={() => setStaffGuardModePersisted(false)}
-              className="uber-button-sage h-11 px-6 text-sm"
-            >
-              Open Staff Ops
-            </button>
-            <button type="button" onClick={handleSignOut} className="uber-button-outline h-11 px-6 text-sm">
-              Sign out
-            </button>
-          </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (staffGuardMode && staffGuardProfile) {
-      return (
-        <>
-          <GuardDashboard
-            guard={staffGuardProfile}
-            requests={requests}
-            payments={payments}
-            onAddCertification={(cert) => handleAddCertification(staffGuardProfile.id, cert)}
-            onAddExperience={(exp) => handleAddExperience(staffGuardProfile.id, exp)}
-            onAddEducation={(edu) => handleAddEducation(staffGuardProfile.id, edu)}
-            onAcceptJob={handleAcceptJob}
-            onUpdateJobAudit={handleUpdateJobAudit}
-            onRecordAuditViolation={handleRecordAuditViolation}
-            onUpdateStripeAccount={handleUpdateGuardStripeAccount}
-            onSignOut={handleSignOut}
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            onUpdateProfile={(payload) => handleUpdateGuardProfile(staffGuardProfile.id, payload)}
-            currentUser={currentUser}
-            supportTickets={supportTickets}
-            relatedRequests={requests.filter((r) => r.assignedGuardId === staffGuardProfile.id)}
-            onCreateSupportTicket={handleCreateSupportTicket}
-            onSendSupportMessage={handleSendSupportMessage}
-            onExitGuardMode={() => setStaffGuardModePersisted(false)}
-          />
-          <InstallPrompt />
-        </>
-      );
-    }
-
     return (
       <>
         <StaffDashboard
@@ -1353,9 +1281,12 @@ export default function App() {
           onAddCertification={handleAddCertification}
           onAddExperience={handleAddExperience}
           onAddEducation={handleAddEducation}
-          onEnterGuardMode={() => setStaffGuardModePersisted(true)}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
+          onCreateSupportTicket={handleCreateSupportTicket}
+          onAcceptJob={handleAcceptJob}
+          onUpdateJobAudit={handleUpdateJobAudit}
+          onUpdateStripeAccount={handleUpdateGuardStripeAccount}
         />
         <InstallPrompt />
       </>

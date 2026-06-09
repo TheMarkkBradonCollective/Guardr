@@ -20,9 +20,7 @@ import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { AppScreenHeader } from './layouts/AppScreenHeader';
-import { SidebarDrawer } from './layouts/SidebarDrawer';
-import { ROLE_LABELS } from '../lib/permissions';
-import { AlertTriangle, Map, DollarSign, Compass, User, LogOut, LayoutDashboard, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
@@ -56,11 +54,12 @@ interface GuardDashboardProps {
   relatedRequests?: SecurityRequest[];
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
-  /** When staff toggles into guard shift mode */
-  onExitGuardMode?: () => void;
+  /** Render inside staff dashboard — no outer shell */
+  variant?: 'standalone' | 'embedded';
+  shiftTab?: GuardTab;
 }
 
-type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
+export type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -90,9 +89,12 @@ export function GuardDashboard({
   relatedRequests = [],
   onCreateSupportTicket,
   onSendSupportMessage,
-  onExitGuardMode,
+  variant = 'standalone',
+  shiftTab = 'map',
 }: GuardDashboardProps) {
-  const [activeTab, setActiveTab] = useState<GuardTab>('map');
+  const isEmbedded = variant === 'embedded';
+  const [standaloneTab, setStandaloneTab] = useState<GuardTab>('map');
+  const activeTab = isEmbedded ? shiftTab : standaloneTab;
   const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
@@ -104,8 +106,6 @@ export function GuardDashboard({
   const [connectReady, setConnectReady] = useState(false);
   const [dutySeconds, setDutySeconds] = useState(0);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
-  const [staffSidebarOpen, setStaffSidebarOpen] = useState(false);
-
   const availableJobs = useMemo(
     () => requests.filter((r) => guardCanViewJob(guard, r)),
     [requests, guard]
@@ -236,7 +236,7 @@ export function GuardDashboard({
     onAcceptJob(jobId);
     updatePhase(jobId, 'upcoming');
     setSelectedJobId(null);
-    setActiveTab('map');
+    if (!isEmbedded) setStandaloneTab('map');
   };
 
   const handleArrived = () => {
@@ -361,8 +361,7 @@ export function GuardDashboard({
   }
 
   const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
-  const isStaffGuardView = !!onExitGuardMode;
-  const panelBottomPad = isStaffGuardView ? '' : 'pb-24';
+  const panelBottomPad = isEmbedded ? '' : 'pb-24';
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
@@ -508,74 +507,11 @@ export function GuardDashboard({
     </>
   );
 
-  if (isStaffGuardView) {
+  if (isEmbedded) {
     return (
-      <div className="page-shell guard-staff-layout fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden">
-        <AppScreenHeader
-          title={GUARD_TAB_TITLES[activeTab]}
-          subtitle={`${ROLE_LABELS[currentUser.role]} · On shift`}
-          onMenuClick={() => setStaffSidebarOpen(true)}
-          menuLabel="Open guard menu"
-        />
-
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 relative overflow-hidden">{guardMainPanel}</div>
-          {guardModals}
-        </div>
-
-        <SidebarDrawer
-          open={staffSidebarOpen}
-          onClose={() => setStaffSidebarOpen(false)}
-          title="On shift"
-          subtitle={guard.name}
-          footer={
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setStaffSidebarOpen(false);
-                  onExitGuardMode?.();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
-                Staff ops
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStaffSidebarOpen(false);
-                  onSignOut();
-                }}
-                className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
-              >
-                <LogOut className="w-3 h-3" />
-                Sign out
-              </button>
-            </>
-          }
-        >
-          <nav className="space-y-0.5" aria-label="Guard navigation">
-            {NAV_TABS.map(({ id, icon: Icon, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setActiveTab(id);
-                  setStaffSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  activeTab === id
-                    ? 'bg-brand-primary text-brand-accent-text'
-                    : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
-                }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span className="flex-1 truncate text-left">{label}</span>
-              </button>
-            ))}
-          </nav>
-        </SidebarDrawer>
+      <div className="h-full min-h-0 flex flex-col overflow-hidden guard-staff-embedded">
+        {guardMainPanel}
+        {guardModals}
       </div>
     );
   }
@@ -588,7 +524,7 @@ export function GuardDashboard({
         right={
           <button
             type="button"
-            onClick={() => setActiveTab('profile')}
+            onClick={() => setStandaloneTab('profile')}
             className="p-2 rounded-xl border border-brand-border text-brand-text-muted hover:text-brand-text hover:bg-brand-surface"
             aria-label="Profile"
           >
@@ -607,7 +543,7 @@ export function GuardDashboard({
             <button
               key={id}
               type="button"
-              onClick={() => setActiveTab(id)}
+              onClick={() => setStandaloneTab(id)}
               className={`app-bottom-nav-item flex-1 flex flex-col items-center gap-1 py-2 min-h-[52px] ${
                 activeTab === id ? 'app-bottom-nav-item--active' : 'text-brand-text-muted hover:text-brand-text'
               }`}
