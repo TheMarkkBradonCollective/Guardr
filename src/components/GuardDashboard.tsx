@@ -99,7 +99,6 @@ export function GuardDashboard({
   const isEmbedded = variant === 'embedded';
   const [standaloneTab, setStandaloneTab] = useState<GuardTab>(initialTab);
   const activeTab = isEmbedded ? shiftTab : standaloneTab;
-  const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
@@ -189,15 +188,6 @@ export function GuardDashboard({
   useEffect(() => {
     localStorage.setItem(`guard_wallet_bal_${guard.id}`, walletBalance.toString());
   }, [walletBalance, guard.id]);
-
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setGuardPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setGuardPosition(null),
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  }, []);
 
   useEffect(() => {
     if (activePhase !== 'on-duty') return;
@@ -381,7 +371,6 @@ export function GuardDashboard({
           jobs={mapJobs}
           selectedJobId={selectedJobId}
           onSelectJob={setSelectedJobId}
-          guardPosition={guardPosition}
         />
       )}
 
@@ -439,7 +428,6 @@ export function GuardDashboard({
           <GuardOpportunitiesPanel
             jobs={availableJobs}
             guard={guard}
-            guardPosition={guardPosition}
             selectedJobId={selectedJobId}
             onSelectJob={setSelectedJobId}
             onAcceptJob={handleAcceptJob}

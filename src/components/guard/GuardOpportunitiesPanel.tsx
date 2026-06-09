@@ -13,7 +13,6 @@ import { Filter, List, Map as MapIcon } from 'lucide-react';
 interface GuardOpportunitiesPanelProps {
   jobs: SecurityRequest[];
   guard: SecurityGuard;
-  guardPosition: { lat: number; lng: number } | null;
   selectedJobId: string | null;
   onSelectJob: (id: string | null) => void;
   onAcceptJob: (id: string) => void;
@@ -22,7 +21,6 @@ interface GuardOpportunitiesPanelProps {
 export function GuardOpportunitiesPanel({
   jobs,
   guard,
-  guardPosition,
   selectedJobId,
   onSelectJob,
   onAcceptJob,
@@ -86,7 +84,6 @@ export function GuardOpportunitiesPanel({
             jobs={filtered}
             selectedJobId={selectedJobId}
             onSelectJob={onSelectJob}
-            guardPosition={guardPosition}
             className="relative h-full"
           />
           {selectedJob && (

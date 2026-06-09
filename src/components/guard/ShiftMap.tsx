@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { locationToCoords, METRO_CENTER } from '../../lib/geo';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
+import { useUserLocation } from '../../lib/useUserLocation';
 
 function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
   return L.divIcon({
@@ -17,7 +18,7 @@ function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
 function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom, { animate: true });
+    map.flyTo(center, zoom, { animate: true, duration: 0.75 });
   }, [center, zoom, map]);
   return null;
 }
@@ -26,7 +27,6 @@ interface ShiftMapProps {
   jobs: SecurityRequest[];
   selectedJobId: string | null;
   onSelectJob: (jobId: string | null) => void;
-  guardPosition?: { lat: number; lng: number } | null;
   className?: string;
 }
 
@@ -34,9 +34,9 @@ export function ShiftMap({
   jobs,
   selectedJobId,
   onSelectJob,
-  guardPosition,
   className = '',
 }: ShiftMapProps) {
+  const userLocation = useUserLocation();
   const jobPins = useMemo(
     () =>
       jobs.map((job) => ({
@@ -51,10 +51,9 @@ export function ShiftMap({
       const pin = jobPins.find((p) => p.job.id === selectedJobId);
       if (pin) return [pin.coords.lat, pin.coords.lng];
     }
-    if (guardPosition) return [guardPosition.lat, guardPosition.lng];
-    if (jobPins.length > 0) return [jobPins[0].coords.lat, jobPins[0].coords.lng];
+    if (userLocation) return [userLocation.lat, userLocation.lng];
     return [METRO_CENTER.lat, METRO_CENTER.lng];
-  }, [selectedJobId, jobPins, guardPosition]);
+  }, [selectedJobId, jobPins, userLocation]);
 
   const guardIcon = L.divIcon({
     className: 'guardr-guard-pin',
@@ -75,14 +74,14 @@ export function ShiftMap({
         <MapRecenter center={mapCenter} zoom={selectedJobId ? 14 : 13} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
-        {guardPosition && (
+        {userLocation && (
           <>
             <Circle
-              center={[guardPosition.lat, guardPosition.lng]}
+              center={[userLocation.lat, userLocation.lng]}
               radius={800}
               pathOptions={{ color: '#84a279', fillColor: '#84a279', fillOpacity: 0.08, weight: 1 }}
             />
-            <Marker position={[guardPosition.lat, guardPosition.lng]} icon={guardIcon} />
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={guardIcon} />
           </>
         )}
 
