@@ -52,9 +52,14 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
     {
       label: '32-hour BSIS course block',
       met: progress.thirtyTwoHourBlockComplete,
-      detail: progress.thirtyTwoHourRollup
-        ? '32-hour completion certificate on file'
-        : `${progress.uploaded32HourCount} / ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses on file`,
+      verified: progress.thirtyTwoHourBlockVerified,
+      detail: progress.thirtyTwoHourBlockVerified
+        ? progress.thirtyTwoHourRollup
+          ? '32-hour completion certificate verified'
+          : `All ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses verified`
+        : progress.thirtyTwoHourRollup
+          ? '32-hour completion certificate on file'
+          : `${progress.uploaded32HourCount} / ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses on file`,
     },
   ];
 

@@ -138,9 +138,13 @@ export function GuardThirtyTwoHourPanel({
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-brand-text">
             {progress.thirtyTwoHourBlockComplete
-              ? progress.thirtyTwoHourRollup
-                ? '32-hour block complete (rollup cert on file)'
-                : '32-hour block complete (all 9 courses on file)'
+              ? progress.thirtyTwoHourBlockVerified
+                ? progress.thirtyTwoHourRollup
+                  ? '32-hour block complete (rollup cert verified)'
+                  : '32-hour block complete (all 9 courses verified)'
+                : progress.thirtyTwoHourRollup
+                  ? '32-hour block complete (rollup cert on file)'
+                  : '32-hour block complete (all 9 courses on file)'
               : `${progress.uploaded32HourCount} of ${progress.total32HourCourses} courses on file`}
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>

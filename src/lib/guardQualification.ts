@@ -232,6 +232,14 @@ export function guardMeets32HourBlock(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id));
 }
 
+/** All 32-hour courses verified, or a verified rollup completion cert. */
+export function guardMeets32HourBlockVerified(guard: SecurityGuard): boolean {
+  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasGuardrVerifiedCredential(guard, id))) {
+    return true;
+  }
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasGuardrVerifiedCredential(guard, id));
+}
+
 /** @deprecated Use guardMeets32HourBlock */
 export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
   return guardMeets32HourBlock(guard);
@@ -295,6 +303,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     legacyWmd,
     thirtyTwoHourRollup,
     thirtyTwoHourBlockComplete: guardMeets32HourBlock(guard),
+    thirtyTwoHourBlockVerified: guardMeets32HourBlockVerified(guard),
     uploaded32HourCount,
     total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     trainingPathwayComplete: guardMeetsLevel2Training(guard),
