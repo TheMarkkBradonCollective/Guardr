@@ -1,12 +1,12 @@
 import React from 'react';
 import { EarningsSummary } from '../../lib/guardJobs';
-import { Payment, SecurityRequest } from '../../types';
+import { GuardJobView, GuardPayoutView, guardPayoutStatusLabel } from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { TrendingUp, Wallet, Link2, Loader2, Clock } from 'lucide-react';
 
 interface GuardEarningsPanelProps {
   summary: EarningsSummary;
-  completedJobs: SecurityRequest[];
+  completedJobs: GuardJobView[];
   balance: number;
   pendingPayout?: number;
   stripeConnected?: boolean;
@@ -15,7 +15,7 @@ interface GuardEarningsPanelProps {
   onConnectStripe?: () => void;
   onCashOut: () => void;
   cashoutPending?: boolean;
-  payments?: Payment[];
+  payments?: GuardPayoutView[];
 }
 
 export function GuardEarningsPanel({
@@ -144,8 +144,10 @@ export function GuardEarningsPanel({
                   <div className="min-w-0">
                     <p className="font-bold text-sm truncate">{job.title}</p>
                     <p className="text-[10px] font-mono text-brand-text-muted">{job.clientName}</p>
-                    {job.paymentStatus && (
-                      <p className="text-[9px] font-mono text-brand-primary capitalize mt-0.5">{job.paymentStatus}</p>
+                    {job.payoutStatus && (
+                      <p className="text-[9px] font-mono text-brand-primary mt-0.5">
+                        {guardPayoutStatusLabel(job.payoutStatus)}
+                      </p>
                     )}
                   </div>
                   <p className="text-lg font-black font-mono text-brand-primary shrink-0">

@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
+import { clientPaymentDisplay, guardPayoutAmount } from '../../lib/cashPayments';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
+import { getPaymentPipelineStage } from '../../lib/paymentPipeline';
+import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
 import { Briefcase, Search, X } from 'lucide-react';
 import { JobPaymentRow } from './JobPaymentRow';
@@ -61,6 +64,10 @@ function JobDetailPanel({
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
+  const platformFee =
+    Math.round((req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * req.durationHours * 100) / 100;
+  const guardEarns = guardPayoutAmount(req);
+  const paymentStage = getPaymentPipelineStage(req);
 
   return (
     <div className="staff-ops-card h-full space-y-4">
@@ -71,6 +78,9 @@ function JobDetailPanel({
         <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-brand-border text-brand-text-muted">
           {JOB_STATUS_LABELS[req.status]}
         </span>
+        <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-sky-500/30 text-sky-300 bg-sky-500/10">
+          {clientPaymentDisplay(req)}
+        </span>
         <span className="text-[10px] font-mono text-brand-text-muted">{req.id}</span>
       </div>
       <h3 className="font-black text-lg">{req.title}</h3>
@@ -78,11 +88,30 @@ function JobDetailPanel({
       {req.siteName && <p className="text-xs text-brand-text-muted">Site: {req.siteName}</p>}
       {req.address && <p className="text-xs text-brand-text-muted">{req.address}</p>}
       <p className="text-xs text-brand-text-muted">
-        {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)} · ${req.hourlyRate}/hr
+        {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)}
       </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="rounded-lg border border-brand-border bg-white/5 px-3 py-2">
+          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Client rate</p>
+          <p className="text-sm font-black font-mono mt-0.5">${req.hourlyRate}/hr</p>
+        </div>
+        <div className="rounded-lg border border-brand-border bg-white/5 px-3 py-2">
+          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Client bill</p>
+          <p className="text-sm font-black font-mono mt-0.5">${req.estimatedPayout}</p>
+        </div>
+        <div className="rounded-lg border border-brand-border bg-white/5 px-3 py-2">
+          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Platform fee</p>
+          <p className="text-sm font-black font-mono mt-0.5">${platformFee}</p>
+        </div>
+        <div className="rounded-lg border border-brand-primary/30 bg-brand-primary/8 px-3 py-2">
+          <p className="text-[9px] font-mono uppercase text-brand-text-muted">Guard earns</p>
+          <p className="text-sm font-black font-mono text-brand-primary mt-0.5">${guardEarns}</p>
+        </div>
+      </div>
       <p className="text-sm">
         Assigned: <strong>{assigned ? assigned.name : 'Unassigned'}</strong>
         {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
+        <span className="text-[10px] font-mono text-brand-text-muted ml-2 uppercase">· {paymentStage.replace(/-/g, ' ')}</span>
       </p>
       {req.description && (
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
@@ -161,7 +190,7 @@ export function StaffJobsPanel({
           Jobs
         </h1>
         <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
-          All client requests — open, active, and completed
+          Operations view — client billing, assignments, and payment status
         </p>
       </div>
 
@@ -200,6 +229,7 @@ export function StaffJobsPanel({
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.map((req) => {
               const isActive = selected?.id === req.id;
+              const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
               return (
                 <button
                   key={req.id}
@@ -209,11 +239,19 @@ export function StaffJobsPanel({
                     isActive ? 'ring-2 ring-brand-primary' : 'hover:bg-white/5'
                   }`}
                 >
-                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border border-brand-border text-brand-text-muted">
-                    {JOB_STATUS_LABELS[req.status]}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border border-brand-border text-brand-text-muted">
+                      {JOB_STATUS_LABELS[req.status]}
+                    </span>
+                    <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-sky-500/30 text-sky-300">
+                      ${req.estimatedPayout}
+                    </span>
+                  </div>
                   <p className="font-black text-sm mt-2 truncate">{req.title}</p>
                   <p className="text-[10px] font-mono text-brand-text-muted truncate">{req.clientName}</p>
+                  <p className="text-[10px] font-mono text-brand-text-muted truncate mt-0.5">
+                    {assignedGuard ? `Guard: ${assignedGuard.name}` : 'Unassigned'}
+                  </p>
                 </button>
               );
             })}

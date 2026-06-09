@@ -49,6 +49,7 @@ import {
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
+import { getGuardPayoutHistory, getGuardVisibleJobs } from './lib/guardJobView';
 import { checkJobRequirements } from './lib/guardJobs';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
@@ -1572,13 +1573,16 @@ export default function App() {
         </div>
       );
     }
+    const guardJobs = getGuardVisibleJobs(activeGuard, requests);
+    const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
+
     return (
       <>
         <GuardDashboard
           guard={activeGuard}
           initialTab={(pushDeepLink?.guardTab as GuardTab | undefined) ?? 'map'}
-          requests={requests}
-          payments={payments}
+          requests={guardJobs}
+          payments={guardPayouts}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
@@ -1593,7 +1597,7 @@ export default function App() {
           onUpdateProfile={(payload) => handleUpdateGuardProfile(activeGuard.id, payload)}
           currentUser={currentUser}
           supportTickets={supportTickets}
-          relatedRequests={requests.filter((r) => r.assignedGuardId === activeGuard.id)}
+          relatedRequests={guardJobs.filter((r) => r.assignedGuardId === activeGuard.id)}
           onCreateSupportTicket={handleCreateSupportTicket}
           onSendSupportMessage={handleSendSupportMessage}
         />

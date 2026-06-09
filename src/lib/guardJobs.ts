@@ -1,5 +1,5 @@
 import { SecurityGuard, SecurityRequest, JobType } from '../types';
-import { computeGuardEarnings, computeGuardPay } from './payments';
+import { GuardJobView } from './guardJobView';
 import { estimateJobDistanceMiles } from './geo';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
@@ -30,7 +30,12 @@ export interface RequirementCheck {
   met: boolean;
 }
 
-export function jobMatchesCategory(job: SecurityRequest, categoryId: JobCategoryId): boolean {
+type GuardJobLike = Pick<
+  GuardJobView,
+  'type' | 'title' | 'status' | 'requestType' | 'targetGuardId' | 'location' | 'id' | 'guardPay' | 'durationHours' | 'startDate' | 'clientRating' | 'endDate'
+>;
+
+export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId): boolean {
   switch (categoryId) {
     case 'event':
       return job.type === 'event';
@@ -51,19 +56,19 @@ export function jobMatchesCategory(job: SecurityRequest, categoryId: JobCategory
   }
 }
 
-export function getJobDistance(job: SecurityRequest): number {
+export function getJobDistance(job: Pick<GuardJobLike, 'location' | 'id'>): number {
   return estimateJobDistanceMiles(job.location, job.id);
 }
 
-export function getGuardHourlyPay(job: SecurityRequest): number {
-  return job.guardPay ?? computeGuardPay(job.hourlyRate);
+export function getGuardHourlyPay(job: Pick<GuardJobView, 'guardPay'>): number {
+  return job.guardPay;
 }
 
-export function getEstimatedGuardEarnings(job: SecurityRequest): number {
-  return computeGuardEarnings(job.durationHours, job.hourlyRate);
+export function getEstimatedGuardEarnings(job: Pick<GuardJobView, 'guardPay' | 'durationHours'>): number {
+  return Math.round(job.durationHours * job.guardPay * 100) / 100;
 }
 
-export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest): { checks: RequirementCheck[]; canAccept: boolean } {
+export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): { checks: RequirementCheck[]; canAccept: boolean } {
   const jobState = job.state ?? 'CA';
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
@@ -113,14 +118,17 @@ export function minQualificationLabel(level: SecurityRequest['minGuardQualificat
 }
 
 /** Open jobs visible on a guard's map/list */
-export function guardCanViewJob(guard: SecurityGuard, job: SecurityRequest): boolean {
+export function guardCanViewJob(
+  guard: SecurityGuard,
+  job: Pick<GuardJobView, 'status' | 'requestType' | 'targetGuardId'>
+): boolean {
   if (guard.isStaff) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
   return true;
 }
 
-export function sortJobs(jobs: SecurityRequest[], sortBy: JobSortKey): SecurityRequest[] {
+export function sortJobs<T extends GuardJobLike>(jobs: T[], sortBy: JobSortKey): T[] {
   return [...jobs].sort((a, b) => {
     switch (sortBy) {
       case 'distance':
@@ -137,19 +145,19 @@ export function sortJobs(jobs: SecurityRequest[], sortBy: JobSortKey): SecurityR
   });
 }
 
-export function filterJobsByCategory(jobs: SecurityRequest[], categoryId: JobCategoryId | null): SecurityRequest[] {
+export function filterJobsByCategory<T extends GuardJobLike>(jobs: T[], categoryId: JobCategoryId | null): T[] {
   if (!categoryId) return jobs;
   return jobs.filter((j) => jobMatchesCategory(j, categoryId));
 }
 
-export function formatJobTimeRange(job: SecurityRequest): string {
+export function formatJobTimeRange(job: Pick<GuardJobLike, 'startDate' | 'endDate'>): string {
   const start = new Date(job.startDate);
   const end = new Date(job.endDate);
   const timeOpts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit' };
   return `${start.toLocaleTimeString('en-US', timeOpts)} - ${end.toLocaleTimeString('en-US', timeOpts)}`;
 }
 
-export function formatJobDate(job: SecurityRequest): string {
+export function formatJobDate(job: Pick<GuardJobLike, 'startDate'>): string {
   return new Date(job.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
@@ -160,7 +168,7 @@ export interface EarningsSummary {
   lifetime: number;
 }
 
-export function computeEarningsSummary(completedJobs: SecurityRequest[]): EarningsSummary {
+export function computeEarningsSummary(completedJobs: GuardJobView[]): EarningsSummary {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfDay);

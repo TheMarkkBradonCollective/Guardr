@@ -24,6 +24,7 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
         jobs={mapJobs}
         selectedJobId={selectedJobId}
         onSelectJob={setSelectedJobId}
+        pinMode="staff"
       />
     </div>
   );

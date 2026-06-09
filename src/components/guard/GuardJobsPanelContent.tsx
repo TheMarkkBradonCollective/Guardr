@@ -1,18 +1,19 @@
 import React from 'react';
-import { SecurityRequest, SecurityGuard } from '../../types';
-import { JOB_CATEGORIES, JobCategoryId } from '../../lib/guardJobs';
+import { SecurityGuard } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
+import { JOB_CATEGORIES, JobCategoryId, getGuardHourlyPay } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
 import { GuardJobCard } from './GuardJobCard';
 import { Calendar, ChevronRight } from 'lucide-react';
 
 interface GuardJobsPanelContentProps {
-  jobs: SecurityRequest[];
-  upcomingShifts: SecurityRequest[];
+  jobs: GuardJobView[];
+  upcomingShifts: GuardJobView[];
   guard: SecurityGuard;
-  selectedJob: SecurityRequest | null;
+  selectedJob: GuardJobView | null;
   selectedCategory: JobCategoryId | null;
   onSelectCategory: (id: JobCategoryId | null) => void;
-  onSelectJob: (job: SecurityRequest | null) => void;
+  onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
 }
 
@@ -66,7 +67,7 @@ export function GuardJobsPanelContent({
                     {formatShiftRange(shift.startDate, shift.endDate)}
                   </p>
                   <p className="text-sm font-medium text-brand-primary mt-1">
-                    ${shift.guardPay ?? shift.hourlyRate - 5}/hr
+                    ${getGuardHourlyPay(shift)}/hr
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-primary shrink-0" />

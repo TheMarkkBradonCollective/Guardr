@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, PanInfo } from 'motion/react';
-import { SecurityRequest, SecurityGuard } from '../../types';
+import { SecurityGuard } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
 import { JobCategoryId } from '../../lib/guardJobs';
 import { GuardJobsPanelContent } from './GuardJobsPanelContent';
 import { useDevice } from '../../lib/platform';
@@ -14,13 +15,13 @@ const SNAP_HEIGHTS: Record<SheetSnap, number> = {
 };
 
 interface GuardBottomSheetProps {
-  jobs: SecurityRequest[];
-  upcomingShifts?: SecurityRequest[];
+  jobs: GuardJobView[];
+  upcomingShifts?: GuardJobView[];
   guard: SecurityGuard;
-  selectedJob: SecurityRequest | null;
+  selectedJob: GuardJobView | null;
   selectedCategory: JobCategoryId | null;
   onSelectCategory: (id: JobCategoryId | null) => void;
-  onSelectJob: (job: SecurityRequest | null) => void;
+  onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
 }
 

@@ -2,8 +2,8 @@ import React, { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
 import { locationToCoords, METRO_CENTER } from '../../lib/geo';
-import { getGuardHourlyPay } from '../../lib/guardJobs';
 import { useUserLocation } from '../../lib/useUserLocation';
 
 function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
@@ -23,11 +23,22 @@ function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number 
   return null;
 }
 
+type ShiftMapJob = GuardJobView | SecurityRequest;
+
 interface ShiftMapProps {
-  jobs: SecurityRequest[];
+  jobs: ShiftMapJob[];
   selectedJobId: string | null;
   onSelectJob: (jobId: string | null) => void;
   className?: string;
+  /** Guards see their pay rate; staff ops map shows client billing rate */
+  pinMode?: 'guard' | 'staff';
+}
+
+function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff'): number {
+  if (pinMode === 'staff' && 'hourlyRate' in job) {
+    return (job as SecurityRequest).hourlyRate;
+  }
+  return 'guardPay' in job ? job.guardPay : 0;
 }
 
 export function ShiftMap({
@@ -35,6 +46,7 @@ export function ShiftMap({
   selectedJobId,
   onSelectJob,
   className = '',
+  pinMode = 'guard',
 }: ShiftMapProps) {
   const userLocation = useUserLocation();
   const jobPins = useMemo(
@@ -89,7 +101,7 @@ export function ShiftMap({
           <Marker
             key={job.id}
             position={[coords.lat, coords.lng]}
-            icon={createShiftIcon(getGuardHourlyPay(job), selectedJobId === job.id, job.armedRequired)}
+            icon={createShiftIcon(pinHourlyRate(job, pinMode), selectedJobId === job.id, job.armedRequired)}
             eventHandlers={{
               click: () => onSelectJob(selectedJobId === job.id ? null : job.id),
             }}
@@ -98,7 +110,14 @@ export function ShiftMap({
               <div className="text-xs font-mono space-y-1 min-w-[180px]">
                 <p className="font-bold text-black uppercase text-[10px]">{job.title}</p>
                 <p className="text-neutral-600">{job.location}</p>
-                <p className="text-brand-primary font-black">${getGuardHourlyPay(job)}/hr</p>
+                <p className="text-brand-primary font-black">
+                  ${pinHourlyRate(job, pinMode)}/hr
+                  {pinMode === 'staff' && 'estimatedPayout' in job ? (
+                    <span className="block text-[9px] text-neutral-500 font-mono">
+                      Client bill ${(job as SecurityRequest).estimatedPayout}
+                    </span>
+                  ) : null}
+                </p>
               </div>
             </Popup>
           </Marker>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SecurityRequest } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
 import { ShiftPhase } from '../../lib/guardJobs';
 import { formatDuration } from '../../lib/dates';
 import {
@@ -12,7 +12,7 @@ import {
 import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
-  job: SecurityRequest;
+  job: GuardJobView;
   phase: ShiftPhase;
   dutySeconds: number;
   onArrived: () => void;

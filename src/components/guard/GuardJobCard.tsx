@@ -1,5 +1,6 @@
 import React from 'react';
-import { SecurityRequest, SecurityGuard } from '../../types';
+import { SecurityGuard } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
 import {
   checkJobRequirements,
   formatJobDate,
@@ -13,7 +14,7 @@ import { formatStateName } from '../../lib/states';
 import { MapPin, Star, Clock, Check, X } from 'lucide-react';
 
 interface GuardJobCardProps {
-  job: SecurityRequest;
+  job: GuardJobView;
   guard: SecurityGuard;
   onAccept?: () => void;
   onSelect?: () => void;

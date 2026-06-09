@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  SecurityRequest,
   SecurityGuard,
   Certification,
-  Payment,
   SessionUser,
   Experience,
   GuardEducation,
@@ -31,7 +29,7 @@ import {
   ShiftPhase,
   sortJobs,
 } from '../lib/guardJobs';
-import { computeGuardEarnings } from '../lib/payments';
+import { GuardJobView, GuardPayoutView, getGuardShiftEarnings } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -44,9 +42,9 @@ import {
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
-  requests: SecurityRequest[];
+  requests: GuardJobView[];
   currentUser: SessionUser;
-  payments?: Payment[];
+  payments?: GuardPayoutView[];
   onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
@@ -60,7 +58,7 @@ interface GuardDashboardProps {
   onChangeTheme: (mode: string) => void;
   onUpdateProfile: (payload: ProfileSavePayload) => void | Promise<void>;
   supportTickets?: SupportTicket[];
-  relatedRequests?: SecurityRequest[];
+  relatedRequests?: GuardJobView[];
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   /** Render inside staff dashboard — no outer shell */
@@ -111,7 +109,7 @@ export function GuardDashboard({
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [ratingJob, setRatingJob] = useState<SecurityRequest | null>(null);
+  const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashoutPending, setCashoutPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
   const [connectReady, setConnectReady] = useState(false);
@@ -166,15 +164,15 @@ export function GuardDashboard({
 
   const releasedEarnings = useMemo(
     () => requests
-      .filter(r => r.assignedGuardId === guard.id && r.paymentStatus === 'released')
-      .reduce((s, j) => s + computeGuardEarnings(j.durationHours, j.hourlyRate), 0),
+      .filter((r) => r.assignedGuardId === guard.id && r.payoutStatus === 'paid')
+      .reduce((s, j) => s + getGuardShiftEarnings(j), 0),
     [requests, guard.id]
   );
 
   const pendingPayout = useMemo(
     () => requests
-      .filter(r => r.assignedGuardId === guard.id && r.paymentStatus === 'held')
-      .reduce((s, j) => s + computeGuardEarnings(j.durationHours, j.hourlyRate), 0),
+      .filter((r) => r.assignedGuardId === guard.id && r.payoutStatus === 'processing')
+      .reduce((s, j) => s + getGuardShiftEarnings(j), 0),
     [requests, guard.id]
   );
 
@@ -190,7 +188,7 @@ export function GuardDashboard({
       const saved = localStorage.getItem(`guard_wallet_bal_${guard.id}`);
       if (saved) return parseFloat(saved);
     } catch { /* ignore */ }
-    return completedJobs.reduce((s, j) => s + computeGuardEarnings(j.durationHours, j.hourlyRate), 0);
+    return completedJobs.reduce((s, j) => s + getGuardShiftEarnings(j), 0);
   });
 
   useEffect(() => {
@@ -315,7 +313,7 @@ export function GuardDashboard({
       setShowCheckout(false);
       return;
     }
-    const payout = computeGuardEarnings(activeShiftJob.durationHours, activeShiftJob.hourlyRate);
+    const payout = getGuardShiftEarnings(activeShiftJob);
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
@@ -451,10 +449,7 @@ export function GuardDashboard({
               onConnectStripe={handleConnectStripe}
               onCashOut={handleCashOut}
               cashoutPending={cashoutPending}
-              payments={payments.filter(p => {
-                const job = requests.find(r => r.id === p.jobId);
-                return job?.assignedGuardId === guard.id;
-              })}
+              payments={payments}
             />
           </div>
         </div>

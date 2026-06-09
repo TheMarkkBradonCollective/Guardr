@@ -31,7 +31,7 @@ type SupportView = 'home' | 'chat' | 'report' | 'thread';
 interface SupportScreenProps {
   currentUser: SessionUser;
   tickets: SupportTicket[];
-  relatedRequests?: SecurityRequest[];
+  relatedRequests?: Pick<SecurityRequest, 'id' | 'title' | 'location'>[];
   onCreateTicket: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendMessage: (ticketId: string, body: string) => void | Promise<void>;
   onBack?: () => void;

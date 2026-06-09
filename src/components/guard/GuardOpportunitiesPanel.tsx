@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityRequest, SecurityGuard } from '../../types';
+import { SecurityGuard } from '../../types';
+import { GuardJobView } from '../../lib/guardJobView';
 import {
   filterJobsByCategory,
   JobCategoryId,
@@ -11,7 +12,7 @@ import { ShiftMap } from './ShiftMap';
 import { Filter, List, Map as MapIcon } from 'lucide-react';
 
 interface GuardOpportunitiesPanelProps {
-  jobs: SecurityRequest[];
+  jobs: GuardJobView[];
   guard: SecurityGuard;
   selectedJobId: string | null;
   onSelectJob: (id: string | null) => void;
