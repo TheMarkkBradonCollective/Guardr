@@ -3,6 +3,20 @@
   "buildCommand": "vite build",
   "outputDirectory": "dist",
   "framework": null,
+  "functions": {
+    "api/push/unsubscribe.ts": {
+      "includeFiles": "lib/pushApi/**"
+    },
+    "api/push/test.ts": {
+      "includeFiles": "lib/pushApi/**"
+    },
+    "api/push/send.ts": {
+      "includeFiles": "lib/pushApi/**"
+    },
+    "api/push/events.ts": {
+      "includeFiles": "lib/pushApi/**"
+    }
+  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
