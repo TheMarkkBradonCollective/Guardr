@@ -29,7 +29,6 @@ interface ClientRequestsListProps {
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onRequestNew: () => void;
-  isClientApproved?: boolean;
 }
 
 function canClientModifyRequest(status: JobStatus): boolean {
@@ -75,7 +74,6 @@ export function ClientRequestsList({
   onUpdateStatus,
   onAddReview,
   onRequestNew,
-  isClientApproved = true,
 }: ClientRequestsListProps) {
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
@@ -111,8 +109,7 @@ export function ClientRequestsList({
         <button
           type="button"
           onClick={onRequestNew}
-          disabled={!isClientApproved}
-          className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0 disabled:opacity-40"
+          className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0"
         >
           + New
         </button>
@@ -194,7 +191,7 @@ export function ClientRequestsList({
                       </p>
                     )}
                     <p className="uber-label">Hire a guard</p>
-                    {guards.filter((g) => g.verified).map((guard) => (
+                    {guards.map((guard) => (
                       <div key={guard.id} className="flex items-center gap-3 p-3 border border-brand-border rounded-lg">
                         <img src={guard.avatar} alt={guard.name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">

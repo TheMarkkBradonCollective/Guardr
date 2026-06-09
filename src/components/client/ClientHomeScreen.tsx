@@ -26,7 +26,6 @@ interface ClientHomeScreenProps {
   coverage: CoverageSummary;
   requests: SecurityRequest[];
   recentReports: ClientReportCard[];
-  isClientApproved: boolean;
   onAction: (action: ClientHomeAction) => void;
 }
 
@@ -49,7 +48,6 @@ export function ClientHomeScreen({
   coverage,
   requests,
   recentReports,
-  isClientApproved,
   onAction,
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
@@ -62,12 +60,6 @@ export function ClientHomeScreen({
           <p className="text-sm text-brand-text-muted">Welcome back</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
         </div>
-
-        {!isClientApproved && (
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4 text-sm text-brand-text-muted">
-            Your account is pending approval. You can explore the dashboard, but posting requests is disabled until approved.
-          </div>
-        )}
 
         {/* Coverage hero card */}
         <section className="app-card overflow-hidden p-0">
@@ -117,8 +109,7 @@ export function ClientHomeScreen({
             <button
               type="button"
               onClick={() => onAction('schedule')}
-              disabled={!isClientApproved}
-              className="app-card text-left p-5 hover:border-brand-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="app-card text-left p-5 hover:border-brand-primary/30"
             >
               <Calendar className="w-5 h-5 text-brand-primary mb-3" />
               <p className="font-semibold">Upcoming</p>
@@ -150,9 +141,8 @@ export function ClientHomeScreen({
                 <button
                   key={action.id}
                   type="button"
-                  disabled={!isClientApproved && action.id !== 'reports'}
                   onClick={() => onAction(action.id)}
-                  className={`client-action-card text-left disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`client-action-card text-left ${
                     action.accent ? 'border-brand-primary/30' : ''
                   }`}
                 >

@@ -31,7 +31,7 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
       sub: stats.platformHealthy ? 'All systems nominal' : 'Review pending items',
       className: stats.platformHealthy ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5',
     },
-    { emoji: '🟡', label: `Pending Reviews: ${stats.pendingReviews}`, sub: 'Approvals & job queue', className: 'border-amber-500/30 bg-amber-500/5' },
+    { emoji: '🟡', label: `Pending Reviews: ${stats.pendingReviews}`, sub: 'Credential verification & legacy job queue', className: 'border-amber-500/30 bg-amber-500/5' },
     { emoji: '📋', label: `Client incidents: ${stats.activeIncidents}`, sub: 'Filed to clients — view only', className: 'border-slate-500/30 bg-slate-500/5' },
     { emoji: '⚠️', label: `Payment Holds: ${stats.paymentHolds}`, sub: 'Pending release', className: 'border-orange-500/30 bg-orange-500/5' },
   ];
@@ -40,7 +40,7 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
     { label: 'Active Jobs', value: stats.activeJobs },
     { label: 'On-Duty Guards', value: stats.onDutyGuards },
     { label: 'Clients Active', value: stats.activeClients },
-    { label: 'Pending Approvals', value: stats.pendingApprovals },
+    { label: 'Credentials to verify', value: stats.pendingApprovals },
     { label: 'Completed Shifts', value: stats.completedShiftsToday },
   ];
 

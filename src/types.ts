@@ -56,6 +56,8 @@ export interface Certification {
   /** Links to certCatalog entry */
   catalogId?: string;
   category?: CertCategory;
+  /** Optional scan/photo of the credential document */
+  imageUrl?: string;
 }
 
 export interface Experience {

@@ -1,4 +1,5 @@
 import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { guardMeetsQualificationLevel } from './guardQualification';
 
 /** Match a session user to their guard row (staff often share one email across roles). */
 export function findGuardProfileForUser(
@@ -20,10 +21,16 @@ export interface GuardWorkHistoryItem {
   reviewText?: string;
 }
 
-/** Verified guards available for clients to browse and hire (includes staff who work shifts) */
+/** Guards with at least Level 1 credentials on file — available for clients to browse and hire */
 export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
   return guards
-    .filter((g) => g.verified && g.userStatus !== 'suspended' && g.userStatus !== 'blocked')
+    .filter(
+      (g) =>
+        !g.isStaff &&
+        g.userStatus !== 'suspended' &&
+        g.userStatus !== 'blocked' &&
+        guardMeetsQualificationLevel(g, 'pending')
+    )
     .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
 }
 

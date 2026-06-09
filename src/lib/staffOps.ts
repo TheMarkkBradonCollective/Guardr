@@ -118,25 +118,23 @@ export function computePlatformStats(
   clients: Client[],
   requests: SecurityRequest[]
 ): PlatformStats {
-  const pendingGuardApprovals = guards.filter((g) => !g.verified && !g.isStaff).length;
-  const pendingClientApprovals = clients.filter((c) => c.approved === false).length;
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
   const pendingCerts = guards.reduce(
     (n, g) => n + g.certifications.filter((c) => c.status === 'pending').length,
     0
   );
-  const pendingApprovals = pendingGuardApprovals + pendingClientApprovals + pendingCerts;
-  const pendingReviews = pendingJobReviews + pendingApprovals;
+  const pendingApprovals = pendingCerts;
+  const pendingReviews = pendingJobReviews + pendingCerts;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const paymentHolds = requests.filter(
     (r) => r.status === 'completed' && !r.ratingGiven
-  ).length + clients.filter((c) => !c.approved).length;
+  ).length;
 
   const activeJobs = requests.filter((r) =>
     ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
   ).length;
   const onDutyGuards = requests.filter((r) => r.status === 'in-progress').length;
-  const activeClients = clients.filter((c) => c.approved !== false).length;
+  const activeClients = clients.length;
   const today = new Date().toDateString();
   const completedShiftsToday = requests.filter(
     (r) => r.status === 'completed' && r.checkOutAudit?.checkedAt &&
@@ -293,7 +291,7 @@ export function computeAnalytics(
 
   return {
     totalRevenue: Math.round(platformRevenue * 100) / 100,
-    activeGuards: guards.filter((g) => g.verified && !g.isStaff).length,
+    activeGuards: guards.filter((g) => !g.isStaff && g.certifications.some((c) => c.status !== 'rejected')).length,
     clientGrowth: clients.length,
     repeatClients,
     jobCompletionRate: requests.length

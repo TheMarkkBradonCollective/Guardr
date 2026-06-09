@@ -32,7 +32,7 @@ export function JobCertRequirementsPicker({
       <div>
         <h2 className="text-xl font-bold">Guard requirements</h2>
         <p className="text-sm text-brand-text-muted mt-1">
-          Select certifications guards must have verified on their profile. Guard Card is always required for{' '}
+          Select certifications guards must have on file. Guard Card is always required for{' '}
           {jobState ? `${jobState} ` : ''}jobs.
         </p>
       </div>

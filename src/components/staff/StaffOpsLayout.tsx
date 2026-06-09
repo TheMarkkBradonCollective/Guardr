@@ -43,7 +43,7 @@ interface StaffOpsLayoutProps {
 
 const SECTION_TITLES: Record<StaffSection, string> = {
   overview: 'Overview',
-  approvals: 'Approvals',
+  approvals: 'Verification',
   'live-jobs': 'Live Jobs',
   map: 'Shift map',
   'my-jobs': 'My jobs',
@@ -82,7 +82,7 @@ export function StaffOpsLayout({
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'map', label: 'Map', icon: Map },
     { id: 'live-jobs', label: 'Live Jobs', icon: Radio, badge: badges['live-jobs'] },
-    { id: 'approvals', label: 'Approvals', icon: ClipboardCheck, badge: badges.approvals },
+    { id: 'approvals', label: 'Verification', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'my-jobs', label: 'My Jobs', icon: Compass },
     { id: 'my-pay', label: 'My Pay', icon: DollarSign },
     { id: 'my-help', label: 'Get Help', icon: MessageCircle },

@@ -4,11 +4,10 @@ import { Client, SecurityRequest } from '../../types';
 interface StaffClientsPanelProps {
   clients: Client[];
   requests: SecurityRequest[];
-  onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
 }
 
-export function StaffClientsPanel({ clients, requests, onApproveClient, onRejectClient }: StaffClientsPanelProps) {
+export function StaffClientsPanel({ clients, requests, onRejectClient }: StaffClientsPanelProps) {
   return (
     <div className="space-y-6 max-w-5xl animate-fade-in">
       <div>
@@ -22,6 +21,7 @@ export function StaffClientsPanel({ clients, requests, onApproveClient, onReject
             (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status)
           ).length;
           const completedJobs = requests.filter((r) => r.clientId === client.id && r.status === 'completed').length;
+          const isSuspended = client.approved === false;
 
           return (
             <div key={client.id} className="staff-ops-card">
@@ -40,16 +40,13 @@ export function StaffClientsPanel({ clients, requests, onApproveClient, onReject
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
                   <span className={`text-[10px] font-mono font-bold uppercase px-2 py-1 rounded border ${
-                    client.approved ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400 border-amber-500/30'
+                    isSuspended ? 'text-red-400 border-red-500/30' : 'text-emerald-400 border-emerald-500/30'
                   }`}>
-                    {client.approved ? 'Verified' : 'Pending'}
+                    {isSuspended ? 'Suspended' : 'Active'}
                   </span>
-                  {!client.approved && (
-                    <button type="button" onClick={() => onApproveClient(client.id)} className="staff-ops-btn-primary text-[10px]">Approve</button>
+                  {!isSuspended && (
+                    <button type="button" onClick={() => onRejectClient(client.id)} className="staff-ops-btn-danger text-[10px]">Suspend</button>
                   )}
-                  <button type="button" onClick={() => alert('Client postings require staff review.')} className="staff-ops-btn-outline text-[10px]">Require Review</button>
-                  <button type="button" onClick={() => alert('Account frozen — no new postings.')} className="staff-ops-btn-outline text-[10px]">Freeze</button>
-                  <button type="button" onClick={() => onRejectClient(client.id)} className="staff-ops-btn-danger text-[10px]">Suspend</button>
                 </div>
               </div>
             </div>

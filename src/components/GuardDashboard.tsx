@@ -40,6 +40,7 @@ interface GuardDashboardProps {
   currentUser: SessionUser;
   payments?: Payment[];
   onAddCertification: (cert: Partial<Certification>) => void;
+  onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
   onAcceptJob: (requestId: string) => void;
@@ -75,6 +76,7 @@ export function GuardDashboard({
   currentUser,
   payments = [],
   onAddCertification,
+  onDeleteCertification,
   onAddExperience,
   onAddEducation,
   onAcceptJob,
@@ -465,6 +467,7 @@ export function GuardDashboard({
             guard={guard}
             onSave={onUpdateProfile}
             onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
             onAddExperience={onAddExperience}
             onAddEducation={onAddEducation}
           />

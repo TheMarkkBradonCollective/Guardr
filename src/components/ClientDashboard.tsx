@@ -22,7 +22,6 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
-  isClientApproved?: boolean;
   activeView?: ClientView;
   onViewChange?: (view: ClientView) => void;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
@@ -39,7 +38,6 @@ export function ClientDashboard({
   requests,
   guards,
   clientEmail,
-  isClientApproved = true,
   activeView,
   onViewChange,
   onPostRequest,
@@ -65,16 +63,7 @@ export function ClientDashboard({
   const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
   const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
 
-  const blockIfNotApproved = (): boolean => {
-    if (isClientApproved) return false;
-    alert('Your account is pending approval. You cannot post jobs yet.');
-    return true;
-  };
-
   const handleHomeAction = (action: ClientHomeAction) => {
-    if ((action === 'request' || action === 'schedule' || action === 'recurring') && blockIfNotApproved()) {
-      return;
-    }
     switch (action) {
       case 'request':
         setFlowPreset('default');
@@ -105,7 +94,6 @@ export function ClientDashboard({
   };
 
   const startDirectGuardRequest = (guard: SecurityGuard) => {
-    if (blockIfNotApproved()) return;
     setRequestTargetGuard(guard);
     navigate('direct-request');
   };
@@ -119,21 +107,8 @@ export function ClientDashboard({
   }
 
   if (view === 'request') {
-    if (!isClientApproved) {
-      return wrap(
-        <div className="max-w-md mx-auto p-8 text-center space-y-4">
-          <p className="text-sm text-brand-text-muted">
-            Your account is pending approval. You cannot submit assignment requests until staff approves your company.
-          </p>
-          <button type="button" onClick={() => navigate('home')} className="uber-button-outline h-11 px-6 text-sm">
-            Back to home
-          </button>
-        </div>
-      );
-    }
     return wrap(
       <RequestSecurityFlow
-        isClientApproved={isClientApproved}
         preset={flowPreset}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
@@ -145,22 +120,9 @@ export function ClientDashboard({
   }
 
   if (view === 'direct-request' && requestTargetGuard) {
-    if (!isClientApproved) {
-      return wrap(
-        <div className="max-w-md mx-auto p-8 text-center space-y-4">
-          <p className="text-sm text-brand-text-muted">
-            Your account is pending approval. You cannot send direct assignment requests until staff approves your company.
-          </p>
-          <button type="button" onClick={() => navigate('guards')} className="uber-button-outline h-11 px-6 text-sm">
-            Back to guards
-          </button>
-        </div>
-      );
-    }
     return (
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
-        isClientApproved={isClientApproved}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');
@@ -183,7 +145,6 @@ export function ClientDashboard({
           requests={requests}
           onBack={() => setSelectedGuard(null)}
           onRequestGuard={startDirectGuardRequest}
-          isClientApproved={isClientApproved}
         />
       );
     }
@@ -225,11 +186,9 @@ export function ClientDashboard({
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
         onRequestNew={() => {
-          if (blockIfNotApproved()) return;
           setFlowPreset('default');
           navigate('request');
         }}
-        isClientApproved={isClientApproved}
       />
     );
   }
@@ -240,7 +199,6 @@ export function ClientDashboard({
       coverage={coverage}
       requests={requests}
       recentReports={recentReports}
-      isClientApproved={isClientApproved}
       onAction={handleHomeAction}
     />
   );

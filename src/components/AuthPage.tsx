@@ -76,7 +76,7 @@ export function AuthPage({
           phone: phone || '',
           avatar: '',
           totalRequests: 0,
-          approved: false,
+          approved: true,
         };
         onSignUp(clientProfile, 'client');
         onSignIn({

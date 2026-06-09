@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
+import { getGuardQualificationLevel, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 import { Search, Shield } from 'lucide-react';
 
 type GuardFilter = 'field' | 'staff';
@@ -9,7 +10,6 @@ interface StaffGuardsPanelProps {
   requests: SecurityRequest[];
   canSuspend: boolean;
   canToggleStaff: boolean;
-  onApproveGuard: (id: string) => void;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onUpdateStaffStatus: (id: string, isStaff: boolean) => void | Promise<void>;
   onResetAuditFailures?: (id: string) => void;
@@ -20,7 +20,6 @@ export function StaffGuardsPanel({
   requests,
   canSuspend,
   canToggleStaff,
-  onApproveGuard,
   onUpdateUserStatus,
   onUpdateStaffStatus,
   onResetAuditFailures,
@@ -103,11 +102,14 @@ export function StaffGuardsPanel({
                         <span className="text-[9px] font-mono text-brand-primary flex items-center gap-1 border border-brand-primary/30 px-1.5 py-0.5 rounded">
                           <Shield className="w-2.5 h-2.5" /> {guard.staffRole || 'Staff'}
                         </span>
-                      ) : guard.verified ? (
-                        <span className="text-[9px] font-mono text-emerald-400">Verified</span>
-                      ) : (
-                        <span className="text-[9px] font-mono text-amber-400">Pending</span>
-                      )}
+                      ) : (() => {
+                        const level = getGuardQualificationLevel(guard);
+                        return (
+                          <span className={`text-[9px] font-mono ${level === 'active' ? 'text-emerald-400' : level === 'pending' ? 'text-brand-primary' : 'text-amber-400'}`}>
+                            {level === 'none' ? 'No credentials' : QUALIFICATION_LEVEL_LABELS[level]}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="text-[10px] font-mono text-brand-text-muted">{guard.badgeNumber} · ★ {guard.rating} · {guard.jobsCompleted} jobs</p>
                     <p className="text-xs text-brand-text-muted mt-1 truncate">
@@ -121,9 +123,6 @@ export function StaffGuardsPanel({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 pt-2 border-t border-brand-border">
-                  {!guard.isStaff && !guard.verified && (
-                    <button type="button" onClick={() => onApproveGuard(guard.id)} className="staff-ops-btn-primary text-[9px] py-1.5">Approve</button>
-                  )}
                   {!guard.isStaff && canSuspend && status !== 'suspended' && (
                     <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="staff-ops-btn-outline text-[9px] py-1.5">Suspend</button>
                   )}

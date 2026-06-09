@@ -75,6 +75,7 @@ interface StaffDashboardProps {
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (guardId: string, cert: Partial<Certification>) => void | Promise<void>;
+  onDeleteCertification?: (guardId: string, certId: string) => void | Promise<void>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
@@ -112,6 +113,7 @@ export function StaffDashboard({
   onSignOut,
   onUpdateGuardProfile,
   onAddCertification,
+  onDeleteCertification,
   onAddExperience,
   onAddEducation,
   onSendSupportMessage,
@@ -170,6 +172,7 @@ export function StaffDashboard({
           payments={payments}
           currentUser={currentUser}
           onAddCertification={(cert) => onAddCertification?.(staffGuard.id, cert)}
+          onDeleteCertification={(certId) => onDeleteCertification?.(staffGuard.id, certId)}
           onAddExperience={(exp) => onAddExperience?.(staffGuard.id, exp)}
           onAddEducation={(edu) => onAddEducation?.(staffGuard.id, edu)}
           onAcceptJob={onAcceptJob}
@@ -195,11 +198,6 @@ export function StaffDashboard({
         return (
           <StaffApprovals
             guards={guards}
-            clients={clients}
-            onApproveGuard={onApproveGuard}
-            onRejectGuard={onRejectGuard}
-            onApproveClient={onApproveClient}
-            onRejectClient={onRejectClient}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
           />
@@ -220,7 +218,6 @@ export function StaffDashboard({
             requests={requests}
             canSuspend={canSuspend}
             canToggleStaff={canToggleStaff}
-            onApproveGuard={onApproveGuard}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onUpdateStaffStatus={onUpdateGuardStaffStatus}
             onResetAuditFailures={onResetAuditFailures}
@@ -231,7 +228,6 @@ export function StaffDashboard({
           <StaffClientsPanel
             clients={clients}
             requests={requests}
-            onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
           />
         );
@@ -287,6 +283,7 @@ export function StaffDashboard({
             guard={staffGuard}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
             onAddCertification={staffGuard && onAddCertification ? (cert) => onAddCertification(currentUser.id, cert) : undefined}
+            onDeleteCertification={staffGuard && onDeleteCertification ? (certId) => onDeleteCertification(currentUser.id, certId) : undefined}
             onAddExperience={onAddExperience ? (exp) => onAddExperience(currentUser.id, exp) : undefined}
             onAddEducation={onAddEducation ? (edu) => onAddEducation(currentUser.id, edu) : undefined}
           />
