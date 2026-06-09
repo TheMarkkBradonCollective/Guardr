@@ -9,6 +9,7 @@ import {
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
+import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { Award, BookOpen, ImagePlus, Shield, Trash2 } from 'lucide-react';
 
 const CREDENTIAL_SECTIONS: {
@@ -27,7 +28,7 @@ const CREDENTIAL_SECTIONS: {
     category: 'bsis-training',
     title: 'BSIS Training',
     subtitle:
-      'Required for Level 2: 8-hour PTA/UOF (2-part) and the 32-hour block. You can also add any other BSIS or training certs you hold — more is better for clients.',
+      '8-hour PTA/UOF (2-part) and other BSIS training. Use the 32-hour block section above for mandatory Level 2 courses.',
     icon: BookOpen,
   },
   {
@@ -147,6 +148,13 @@ export function GuardCredentialsPanel({
           and more. Guardr verification is a trust badge for clients, not required to accept work. Delete and re-upload to change details.
         </p>
       </div>
+
+      <GuardThirtyTwoHourPanel
+        guard={guard}
+        editing={editing}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+      />
 
       {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
         const items = grouped[category] ?? [];

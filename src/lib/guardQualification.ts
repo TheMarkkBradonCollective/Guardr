@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { resolveCertCatalogId } from './certCatalog';
+import { getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
 
@@ -50,6 +50,18 @@ export function getRequiredPathwayCatalogIds(): readonly string[] {
     ...THIRTY_TWO_HOUR_ROLLUP_IDS,
     ...THIRTY_TWO_HOUR_COURSE_IDS,
   ];
+}
+
+export function getThirtyTwoHourCourseCatalogEntries() {
+  return THIRTY_TWO_HOUR_COURSE_IDS.map((id) => getCertCatalogEntry(id)).filter(
+    (entry): entry is NonNullable<typeof entry> => !!entry
+  );
+}
+
+export function getThirtyTwoHourRollupCatalogEntries() {
+  return THIRTY_TWO_HOUR_ROLLUP_IDS.map((id) => getCertCatalogEntry(id)).filter(
+    (entry): entry is NonNullable<typeof entry> => !!entry
+  );
 }
 
 export function isRequiredPathwayCredential(catalogId: string | undefined): boolean {
