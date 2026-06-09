@@ -4,7 +4,7 @@ import { guardPayoutAmount } from '../../lib/cashPayments';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
-import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
@@ -53,16 +53,27 @@ function statusBadgeTone(status: SecurityRequest['status']): 'default' | 'primar
 }
 
 function JobBillingSummary({ req }: { req: SecurityRequest }) {
-  const platformFee =
-    Math.round((req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * req.durationHours * 100) / 100;
+  const platformRate = req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR;
+  const platformFee = Math.round(platformRate * req.durationHours * 100) / 100;
+  const guardRate = req.guardPay ?? computeGuardPay(req.hourlyRate);
   const guardEarns = guardPayoutAmount(req);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-      <WfMetricTile label="Client rate" value={`$${req.hourlyRate}/hr`} />
-      <WfMetricTile label="Client bill" value={`$${req.estimatedPayout}`} />
-      <WfMetricTile label="Platform fee" value={`$${platformFee}`} />
-      <WfMetricTile label="Guard earns" value={`$${guardEarns}`} accent />
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <WfMetricTile label="Client rate" value={`$${req.hourlyRate}/hr`} />
+        <WfMetricTile label="Client bill" value={`$${req.estimatedPayout}`} />
+        <WfMetricTile label="Guard rate" value={`$${guardRate}/hr`} />
+        <WfMetricTile label="Guard earns" value={`$${guardEarns}`} accent />
+      </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
+        <span>
+          Platform rate: <strong className="text-brand-text">${platformRate}/hr</strong>
+        </span>
+        <span>
+          Platform fee: <strong className="text-brand-text">${platformFee}</strong>
+        </span>
+      </div>
     </div>
   );
 }
