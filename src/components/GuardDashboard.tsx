@@ -373,7 +373,7 @@ export function GuardDashboard({
   ];
 
   const guardMainPanel = (
-    <div className={`flex-1 min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
+    <div className={`h-full min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
@@ -518,8 +518,8 @@ export function GuardDashboard({
           menuLabel="Open guard menu"
         />
 
-        <div className="flex-1 min-w-0 min-h-0 relative">
-          {guardMainPanel}
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 relative overflow-hidden">{guardMainPanel}</div>
           {guardModals}
         </div>
 
@@ -597,7 +597,9 @@ export function GuardDashboard({
         }
       />
 
-      <div className="flex-1 min-h-0 relative">{guardMainPanel}</div>
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 relative overflow-hidden">{guardMainPanel}</div>
+      </div>
 
       <nav className="app-bottom-nav shrink-0 z-[1002] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="app-bottom-nav-pill max-w-md mx-auto flex p-1.5">

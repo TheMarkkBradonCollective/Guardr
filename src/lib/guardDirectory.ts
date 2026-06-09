@@ -18,7 +18,7 @@ export function loadStaffGuardMode(): boolean {
   } catch {
     /* ignore */
   }
-  return true;
+  return false;
 }
 
 export function saveStaffGuardMode(enabled: boolean): void {

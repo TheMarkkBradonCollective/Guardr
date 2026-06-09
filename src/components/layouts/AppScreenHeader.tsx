@@ -7,6 +7,7 @@ interface AppScreenHeaderProps {
   subtitle?: string;
   onMenuClick?: () => void;
   menuLabel?: string;
+  menuClassName?: string;
   right?: React.ReactNode;
   className?: string;
 }
@@ -16,6 +17,7 @@ export function AppScreenHeader({
   subtitle,
   onMenuClick,
   menuLabel = 'Open menu',
+  menuClassName = '',
   right,
   className = '',
 }: AppScreenHeaderProps) {
@@ -27,7 +29,7 @@ export function AppScreenHeader({
         <button
           type="button"
           onClick={onMenuClick}
-          className="p-2 -ml-1 rounded-xl border border-brand-border text-brand-text hover:bg-brand-surface transition-colors shrink-0"
+          className={`p-2 -ml-1 rounded-xl border border-brand-border text-brand-text hover:bg-brand-surface transition-colors shrink-0 ${menuClassName}`}
           aria-label={menuLabel}
         >
           <Menu className="w-5 h-5" />

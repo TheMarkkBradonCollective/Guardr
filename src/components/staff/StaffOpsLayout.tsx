@@ -4,6 +4,7 @@ import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { StaffSection } from '../../lib/staffOps';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { SidebarDrawer } from '../layouts/SidebarDrawer';
+import { StaffNavItem, StaffSidebarNav } from './StaffSidebarNav';
 import {
   AlertTriangle,
   BarChart3,
@@ -23,14 +24,6 @@ import {
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
-
-interface NavItem {
-  id: StaffSection;
-  label: string;
-  icon: typeof LayoutDashboard;
-  badge?: number;
-  adminOnly?: boolean;
-}
 
 interface StaffOpsLayoutProps {
   children: React.ReactNode;
@@ -73,10 +66,10 @@ export function StaffOpsLayout({
   badges = {},
   onEnterGuardMode,
 }: StaffOpsLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
 
-  const NAV: NavItem[] = [
+  const NAV: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'approvals', label: 'Approvals', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'live-jobs', label: 'Live Jobs', icon: Radio, badge: badges['live-jobs'] },
@@ -92,11 +85,9 @@ export function StaffOpsLayout({
     { id: 'profile', label: 'Profile', icon: User },
   ];
 
-  const visibleNav = NAV.filter((item) => !item.adminOnly || showFinance);
-
   const navigate = (section: StaffSection) => {
     onNavigate(section);
-    setSidebarOpen(false);
+    setMobileSidebarOpen(false);
   };
 
   const themeToggle = (
@@ -114,13 +105,13 @@ export function StaffOpsLayout({
     </div>
   );
 
-  const drawerFooter = (
+  const sidebarFooter = (
     <>
       {onEnterGuardMode && (
         <button
           type="button"
           onClick={() => {
-            setSidebarOpen(false);
+            setMobileSidebarOpen(false);
             onEnterGuardMode();
           }}
           className="w-full flex items-center justify-center gap-2 bg-brand-primary/15 border border-brand-primary/30 py-2.5 text-[10px] font-mono font-bold uppercase rounded-lg text-brand-primary hover:bg-brand-primary/25 transition-colors"
@@ -138,7 +129,7 @@ export function StaffOpsLayout({
       <button
         type="button"
         onClick={() => {
-          setSidebarOpen(false);
+          setMobileSidebarOpen(false);
           onSignOut();
         }}
         className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
@@ -149,55 +140,49 @@ export function StaffOpsLayout({
     </>
   );
 
+  const sidebarNav = (
+    <StaffSidebarNav
+      items={NAV}
+      activeSection={activeSection}
+      onNavigate={navigate}
+      showFinance={showFinance}
+    />
+  );
+
   return (
     <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden staff-ops-root">
       <AppScreenHeader
         title={SECTION_TITLES[activeSection]}
         subtitle={`${ROLE_LABELS[currentUser.role]} · Ops Center`}
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={() => setMobileSidebarOpen(true)}
         menuLabel="Open staff menu"
+        menuClassName="md:hidden"
         right={themeToggle}
       />
 
-      <main className="flex-1 min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
-        <div className="h-full overflow-y-auto overscroll-contain">{children}</div>
-      </main>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-brand-border bg-brand-bg-sec">
+          <div className="p-4 border-b border-brand-border">
+            <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr Staff</p>
+            <p className="font-black text-xs uppercase tracking-tight mt-0.5">Ops Center</p>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2">{sidebarNav}</div>
+          <div className="shrink-0 p-3 border-t border-brand-border space-y-2">{sidebarFooter}</div>
+        </aside>
+
+        <main className="flex-1 min-w-0 min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="h-full overflow-y-auto overscroll-contain">{children}</div>
+        </main>
+      </div>
 
       <SidebarDrawer
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        open={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
         title="Ops Center"
         subtitle="Guardr Staff"
-        footer={drawerFooter}
+        footer={sidebarFooter}
       >
-        <nav className="space-y-0.5" aria-label="Staff navigation">
-          {visibleNav.map(({ id, label, icon: Icon, badge }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => navigate(id)}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
-                activeSection === id
-                  ? 'bg-brand-primary text-brand-accent-text'
-                  : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="flex-1 truncate">{label}</span>
-              {badge != null && badge > 0 && (
-                <span
-                  className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
-                    activeSection === id
-                      ? 'bg-brand-accent-text/20 text-brand-accent-text'
-                      : 'bg-brand-primary/15 text-brand-primary'
-                  }`}
-                >
-                  {badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
+        {sidebarNav}
       </SidebarDrawer>
     </div>
   );
