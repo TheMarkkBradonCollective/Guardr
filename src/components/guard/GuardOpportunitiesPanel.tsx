@@ -101,7 +101,7 @@ export function GuardOpportunitiesPanel({
           )}
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {filtered.length === 0 ? (
             <p className="text-center text-brand-text-muted font-mono text-sm py-16">No opportunities match your filters.</p>
           ) : (

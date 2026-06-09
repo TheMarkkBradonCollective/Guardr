@@ -442,32 +442,6 @@ html.theme-grey {
 .badge-active   { background: color-mix(in srgb, #f59e0b 15%, transparent); color: #f59e0b; border: none; padding: 0.3rem 0.65rem; font-size: 0.6875rem; font-weight: 600; border-radius: var(--radius-pill); }
 .badge-done     { background: color-mix(in srgb, var(--brand-primary) 10%, transparent); color: var(--brand-text-muted); border: none; padding: 0.3rem 0.65rem; font-size: 0.6875rem; font-weight: 600; border-radius: var(--radius-pill); }
 
-/* Bottom navigation — Uber driver style */
-.app-bottom-nav {
-  background: var(--brand-bg);
-  border-top: 1px solid var(--brand-border);
-  box-shadow: var(--shadow-nav);
-}
-
-.app-bottom-nav-pill {
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-xl);
-  box-shadow: var(--shadow-card);
-}
-
-.app-bottom-nav-item {
-  border-radius: 0.875rem;
-  font-weight: 600;
-  font-size: 0.6875rem;
-  transition: all 0.2s ease;
-}
-
-.app-bottom-nav-item--active {
-  background: var(--brand-primary);
-  color: var(--brand-accent-text);
-}
-
 /* Theme-aware surfaces (use instead of bg-black / text-white) */
 .surface-muted {
   background: color-mix(in srgb, var(--brand-text) 6%, var(--brand-surface));
@@ -626,15 +600,17 @@ html.theme-grey {
 }
 
 .guardr-bottom-sheet-uber {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   z-index: 1001;
   background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .guardr-active-shift {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .guardr-side-panel {
@@ -774,16 +750,6 @@ body[data-form-factor="mobile"] .guard-touch-target {
 }
 
 body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-}
-
-/* Staff guard view — sidebar nav, no bottom bar */
-.guard-staff-layout .guard-map-layout .guardr-map-root {
-  bottom: 0;
-}
-
-.guard-staff-layout .guardr-bottom-sheet-uber,
-.guard-staff-layout .guardr-active-shift {
   bottom: 0;
 }
 
