@@ -73,6 +73,7 @@ interface StaffDashboardProps {
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
+  initialSection?: StaffSection;
 }
 
 export function StaffDashboard({
@@ -99,8 +100,9 @@ export function StaffDashboard({
   onUpdateGuardProfile,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  initialSection = 'overview',
 }: StaffDashboardProps) {
-  const [section, setSection] = useState<StaffSection>('overview');
+  const [section, setSection] = useState<StaffSection>(initialSection);
 
   const showFinance = canAccessFinancialControls(currentUser);
   const showStaffOnboard = canManageStaffAccounts(currentUser);
