@@ -513,6 +513,59 @@ html.theme-grey {
   color: #f59e0b;
 }
 
+.staff-payment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--brand-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .staff-payment-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.staff-payment-summary-cell {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  border-right: 1px solid var(--brand-border);
+}
+
+.staff-payment-summary-cell:nth-child(2n) {
+  border-right: none;
+}
+
+@media (min-width: 1024px) {
+  .staff-payment-summary-cell {
+    border-bottom: none;
+  }
+
+  .staff-payment-summary-cell:nth-child(2n) {
+    border-right: 1px solid var(--brand-border);
+  }
+
+  .staff-payment-summary-cell:last-child {
+    border-right: none;
+  }
+}
+
+.staff-payment-summary-cell:nth-last-child(-n+2) {
+  border-bottom: none;
+}
+
+@media (min-width: 1024px) {
+  .staff-payment-summary-cell:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+}
+
+.staff-payment-summary-cell-accent {
+  background: color-mix(in srgb, #f59e0b 6%, transparent);
+}
+
 .staff-overview-chart-card,
 .staff-overview-feed-card {
   border: 1px solid var(--brand-border);

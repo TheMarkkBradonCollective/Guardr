@@ -1,11 +1,80 @@
 import { SecurityRequest } from '../types';
 import {
+  clientPaymentDisplay,
+  getPlatformFeeAmount,
   getRemainingStripeDeposit,
   guardPayoutAmount,
+  guardPayoutDisplay,
   isCashClientPayment,
   isCashGuardPayout,
+  isCashAwaitingStripeDeposit,
+  isStripeDepositSatisfied,
 } from './cashPayments';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
+
+export type PaymentLedgerStatus = 'paid' | 'owed' | 'waiting' | 'na';
+
+export interface JobPaymentLedgerLine {
+  party: 'client' | 'guard' | 'platform';
+  label: string;
+  amount: number;
+  status: PaymentLedgerStatus;
+  statusLabel: string;
+}
+
+/** Who has paid what on a single job — staff-facing ledger rows */
+export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
+  const guardPay = guardPayoutAmount(req);
+  const platformFee = getPlatformFeeAmount(req);
+  const stage = getPaymentPipelineStage(req);
+  const clientUnpaid = !req.paymentStatus || req.paymentStatus === 'unpaid';
+
+  let clientStatus: PaymentLedgerStatus = 'paid';
+  if (clientUnpaid) clientStatus = 'owed';
+  else if (isCashAwaitingStripeDeposit(req)) clientStatus = 'owed';
+
+  let guardStatus: PaymentLedgerStatus = 'waiting';
+  if (req.paymentStatus === 'released') guardStatus = 'paid';
+  else if (stage === 'awaiting-guard-payout') guardStatus = 'owed';
+  else if (clientUnpaid || stage === 'awaiting-client') guardStatus = 'na';
+
+  let platformStatus: PaymentLedgerStatus = 'na';
+  if (isCashClientPayment(req)) {
+    platformStatus = isStripeDepositSatisfied(req) ? 'paid' : 'owed';
+  } else if (!clientUnpaid) {
+    platformStatus = 'paid';
+  }
+
+  return [
+    {
+      party: 'client',
+      label: 'Client bill',
+      amount: req.estimatedPayout,
+      status: clientStatus,
+      statusLabel: clientPaymentDisplay(req),
+    },
+    {
+      party: 'guard',
+      label: 'Guard pay',
+      amount: guardPay,
+      status: guardStatus,
+      statusLabel: guardPayoutDisplay(req),
+    },
+    {
+      party: 'platform',
+      label: 'Platform fee',
+      amount: platformFee,
+      status: platformStatus,
+      statusLabel: isCashClientPayment(req)
+        ? isStripeDepositSatisfied(req)
+          ? 'Recorded in Stripe'
+          : `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`
+        : clientUnpaid
+          ? '—'
+          : 'Included in client payment',
+    },
+  ];
+}
 
 /** Client-facing payment status — no internal ledger jargon */
 export function clientPaymentStatusLabel(status?: SecurityRequest['paymentStatus']): string {

@@ -112,13 +112,50 @@ export function paymentPipelineSummary(requests: SecurityRequest[]) {
     0
   );
 
+  const paymentsNeedingAction =
+    groups.awaitingClient.length + groups.cashDepositPending.length + groups.awaitingGuardPayout.length;
+
   return {
     ...groups,
     awaitingClientTotal: Math.round(awaitingClientTotal * 100) / 100,
     cashDepositTotal: Math.round(cashDepositTotal * 100) / 100,
     guardPayoutDue: Math.round(guardPayoutDue * 100) / 100,
     settledGuardTotal: Math.round(settledGuardTotal * 100) / 100,
+    settledCount: groups.settled.length,
+    paymentsNeedingAction,
   };
+}
+
+/** Plain-language lines for overview / alerts — what is paid vs still owed */
+export function paymentAttentionSummary(requests: SecurityRequest[]): {
+  count: number;
+  lines: string[];
+} {
+  const s = paymentPipelineSummary(requests);
+  const lines: string[] = [];
+
+  if (s.awaitingClient.length > 0) {
+    lines.push(
+      `${s.awaitingClient.length} job${s.awaitingClient.length === 1 ? '' : 's'}: client still owes $${s.awaitingClientTotal.toFixed(2)}`
+    );
+  }
+  if (s.awaitingGuardPayout.length > 0) {
+    lines.push(
+      `${s.awaitingGuardPayout.length} job${s.awaitingGuardPayout.length === 1 ? '' : 's'}: $${s.guardPayoutDue.toFixed(2)} guard pay still due`
+    );
+  }
+  if (s.cashDepositPending.length > 0) {
+    lines.push(
+      `${s.cashDepositPending.length} job${s.cashDepositPending.length === 1 ? '' : 's'}: $${s.cashDepositTotal.toFixed(2)} Stripe card deposit still due`
+    );
+  }
+  if (s.settled.length > 0) {
+    lines.push(
+      `${s.settled.length} job${s.settled.length === 1 ? '' : 's'} settled — $${s.settledGuardTotal.toFixed(2)} already paid to guards`
+    );
+  }
+
+  return { count: s.paymentsNeedingAction, lines };
 }
 
 export function clientPaymentBadgeClass(req: SecurityRequest): string {

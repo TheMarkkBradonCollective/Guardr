@@ -10,11 +10,40 @@ import {
   stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import { staffJobMoneySummary } from '../../lib/paymentDisplay';
+import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../../lib/paymentDisplay';
 import { getPaymentPipelineStage } from '../../lib/paymentPipeline';
-import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import { WfBadge } from '../ui/wireframe';
+
+const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {
+  paid: 'text-emerald-400',
+  owed: 'text-amber-400',
+  waiting: 'text-brand-text-muted',
+  na: 'text-brand-text-muted/70',
+};
+
+function LedgerRow({
+  label,
+  amount,
+  status,
+  statusLabel,
+}: {
+  label: string;
+  amount: number;
+  status: PaymentLedgerStatus;
+  statusLabel: string;
+}) {
+  const amountLabel = status === 'na' ? '—' : `$${amount.toFixed(2)}`;
+  return (
+    <li className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="font-medium leading-tight">{label}</p>
+        <p className={`text-xs mt-0.5 leading-snug ${LEDGER_STATUS_TONE[status]}`}>{statusLabel}</p>
+      </div>
+      <p className={`font-semibold shrink-0 ${LEDGER_STATUS_TONE[status]}`}>{amountLabel}</p>
+    </li>
+  );
+}
 
 interface JobPaymentRowProps {
   req: SecurityRequest;
@@ -45,9 +74,8 @@ export function JobPaymentRow({
 
   const stage = getPaymentPipelineStage(req);
   const summary = staffJobMoneySummary(req);
+  const ledger = jobPaymentLedger(req);
   const guardAmount = guardPayoutAmount(req);
-  const platformRevenue =
-    Math.round((req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * req.durationHours * 100) / 100;
   const canMarkClientCash = isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
   const canPayGuard = stage === 'awaiting-guard-payout' && !!guard;
@@ -94,16 +122,15 @@ export function JobPaymentRow({
           )}
         </div>
 
-        <div className="shrink-0 text-sm space-y-1 lg:text-right">
-          <p>
-            <span className="text-brand-text-muted">Guard pay </span>
-            <span className="font-bold">${guardAmount.toFixed(2)}</span>
+        <div className="shrink-0 w-full lg:w-auto lg:min-w-[15rem]">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+            Who paid what
           </p>
-          <p>
-            <span className="text-brand-text-muted">Client bill </span>
-            <span className="font-medium">${req.estimatedPayout.toFixed(2)}</span>
-          </p>
-          <p className="text-xs text-brand-text-muted">Platform fee ${platformRevenue.toFixed(2)}</p>
+          <ul className="space-y-1.5 text-sm">
+            {ledger.map((line) => (
+              <LedgerRow key={line.party} {...line} />
+            ))}
+          </ul>
         </div>
       </div>
 

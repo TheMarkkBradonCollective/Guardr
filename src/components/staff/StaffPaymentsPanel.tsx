@@ -8,6 +8,7 @@ import {
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
+import { StaffPaymentSummary } from './StaffPaymentSummary';
 
 interface StaffPaymentsPanelProps {
   requests: SecurityRequest[];
@@ -135,6 +136,9 @@ export function StaffPaymentsPanel({
             {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
           </p>
         )}
+        <div className="mt-5">
+          <StaffPaymentSummary summary={summary} />
+        </div>
       </div>
 
       <div className="px-4 sm:px-5 space-y-8 pt-6">

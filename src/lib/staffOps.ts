@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { paymentAttentionSummary } from './paymentPipeline';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
 
 export type StaffSection =
@@ -45,7 +46,8 @@ export interface PlatformStats {
   platformHealthy: boolean;
   pendingReviews: number;
   activeIncidents: number;
-  paymentHolds: number;
+  /** Jobs where client, guard, or Stripe deposit still needs money action */
+  paymentsNeedingAction: number;
   activeJobs: number;
   onDutyGuards: number;
   activeClients: number;
@@ -136,9 +138,7 @@ export function computePlatformStats(
   const pendingApprovals = pendingCerts;
   const pendingReviews = pendingJobReviews + pendingCerts;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
-  const paymentHolds = requests.filter(
-    (r) => r.status === 'completed' && !r.ratingGiven
-  ).length;
+  const paymentsNeedingAction = paymentAttentionSummary(requests).count;
 
   const activeJobs = requests.filter((r) =>
     ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
@@ -153,7 +153,7 @@ export function computePlatformStats(
     platformHealthy: pendingReviews < 20,
     pendingReviews,
     activeIncidents,
-    paymentHolds,
+    paymentsNeedingAction,
     activeJobs,
     onDutyGuards,
     activeClients,
@@ -234,12 +234,13 @@ export function buildOverviewActionQueue(
     });
   }
 
-  if (stats.paymentHolds > 0) {
+  const paymentAttention = paymentAttentionSummary(requests);
+  if (paymentAttention.count > 0) {
     items.push({
       id: 'payments',
-      title: 'Pay guards for finished jobs',
-      description: 'Completed jobs where payout or rating is still outstanding',
-      count: stats.paymentHolds,
+      title: 'Money still owed on jobs',
+      description: paymentAttention.lines.filter((l) => !l.includes('settled')).join(' · '),
+      count: paymentAttention.count,
       section: 'payments',
       tone: 'urgent',
     });
