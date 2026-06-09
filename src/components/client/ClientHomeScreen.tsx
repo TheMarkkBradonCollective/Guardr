@@ -131,10 +131,10 @@ export function ClientHomeScreen({
           </div>
         </section>
 
-        {/* Quick actions */}
+        {/* Quick actions — horizontal scroll */}
         <section>
-          <h2 className="text-sm font-semibold text-brand-text-muted mb-3">Quick actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <h2 className="app-section-title">Quick actions</h2>
+          <div className="app-scroll-row scrollbar-hide pb-1">
             {QUICK_ACTIONS.map((action) => {
               const Icon = action.icon;
               return (
@@ -142,18 +142,21 @@ export function ClientHomeScreen({
                   key={action.id}
                   type="button"
                   onClick={() => onAction(action.id)}
-                  className={`client-action-card text-left ${
-                    action.accent ? 'border-brand-primary/30' : ''
+                  className={`w-[11.5rem] text-left rounded-2xl border p-4 min-h-[7.5rem] flex flex-col justify-between transition-all ${
+                    action.accent
+                      ? 'border-brand-primary bg-brand-primary/10 shadow-sm'
+                      : 'border-brand-border bg-brand-surface hover:border-brand-primary/30'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
-                    action.accent ? 'bg-brand-primary text-brand-accent-text' : 'bg-brand-primary/10 text-brand-primary'
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    action.accent ? 'bg-brand-primary text-brand-accent-text' : 'bg-brand-bg-sec text-brand-primary'
                   }`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <p className="font-semibold">{action.label}</p>
-                  <p className="text-sm text-brand-text-muted mt-0.5">{action.sub}</p>
-                  <ChevronRight className="absolute top-5 right-4 w-5 h-5 text-brand-text-muted" />
+                  <div>
+                    <p className="font-semibold text-sm">{action.label}</p>
+                    <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{action.sub}</p>
+                  </div>
                 </button>
               );
             })}
@@ -168,7 +171,7 @@ export function ClientHomeScreen({
               No upcoming coverage. Tap Request security to get started.
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+            <div className="app-scroll-row scrollbar-hide pb-1">
               {upcoming.map((req) => (
                 <div key={req.id} className="client-coverage-card snap-start shrink-0 w-[min(100%,260px)]">
                   <div className="flex items-start gap-2 mb-3">

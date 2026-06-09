@@ -406,7 +406,7 @@ html.theme-grey {
   font-size: 0.9375rem;
   color: var(--brand-text);
   font-family: var(--font-sans);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -494,6 +494,161 @@ html.theme-grey {
   min-height: 100%;
   background: var(--brand-bg);
   color: var(--brand-text);
+}
+
+/* ─── BOTTOM NAVIGATION (wireframe task bar) ──────────────── */
+.bottom-nav-bar {
+  box-shadow: var(--shadow-nav);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav-inner {
+  min-height: 3.5rem;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.96);
+}
+
+.more-menu-panel {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── SEGMENTED CONTROL (auth / theme toggles) ───────────── */
+.segmented-control {
+  display: inline-flex;
+  width: 100%;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  gap: 2px;
+}
+
+.segmented-control-btn {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border-radius: var(--radius-pill);
+  color: var(--brand-text-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.segmented-control-btn-active {
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--brand-text) 8%, transparent);
+}
+
+/* ─── APP BUTTONS (wireframe pill CTAs) ──────────────────── */
+.app-button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.25rem;
+  padding: 0 1.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary);
+  color: var(--brand-accent-text);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-primary) 30%, transparent);
+}
+
+.app-button-primary:hover {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+}
+
+.app-button-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.25rem;
+  padding: 0 1.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-text);
+  border: 1.5px solid var(--brand-border);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.app-button-outline:hover {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+}
+
+/* ─── SEARCH BAR (wireframe list screens) ─────────────────── */
+.app-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--brand-bg-sec);
+  border: 1.5px solid var(--brand-border);
+  border-radius: var(--radius-pill);
+  color: var(--brand-text-muted);
+  font-size: 0.9375rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-search-bar:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}
+
+.app-search-bar input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--brand-text);
+  font-size: inherit;
+  font-family: var(--font-sans);
+}
+
+.app-search-bar input::placeholder {
+  color: var(--brand-text-muted);
+  opacity: 0.8;
+}
+
+/* ─── HORIZONTAL SCROLL SECTIONS ─────────────────────────── */
+.app-scroll-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 0.25rem;
+  margin: 0 -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.app-scroll-row > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.app-section-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
 }
 
 /* Subtle hero background animation */
