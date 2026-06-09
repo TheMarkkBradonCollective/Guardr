@@ -20,8 +20,11 @@ import {
 import {
   buildDisputes,
   buildIncidents,
+  buildOverviewActionQueue,
+  buildOverviewLiveShifts,
   buildPlatformActivityFeed,
   computePlatformStats,
+  computeWeeklyCompletedJobs,
   isStaffOpsMapSection,
   StaffSection,
 } from '../lib/staffOps';
@@ -148,6 +151,12 @@ export function StaffDashboard({
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
+  const overviewActions = useMemo(
+    () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets)),
+    [stats, requests, incidents, supportTickets]
+  );
+  const overviewLiveShifts = useMemo(() => buildOverviewLiveShifts(guards, requests), [guards, requests]);
+  const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
 
   const badges = useMemo(
     () => ({
@@ -163,7 +172,17 @@ export function StaffDashboard({
   const renderSection = () => {
     switch (section) {
       case 'overview':
-        return <StaffOverview stats={stats} initialFeed={activityFeed} />;
+        return (
+          <StaffOverview
+            stats={stats}
+            activityFeed={activityFeed}
+            actionItems={overviewActions}
+            liveShifts={overviewLiveShifts}
+            weeklyTrend={overviewWeeklyTrend}
+            onNavigate={navigateSection}
+            staffName={currentUser.name}
+          />
+        );
       case 'map':
         return <StaffOpsMapScreen requests={requests} />;
       case 'approvals':

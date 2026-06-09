@@ -74,8 +74,7 @@ export function StaffOpsLayout({
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
-    activeSection === 'support' ||
-    activeSection === 'overview';
+    activeSection === 'support';
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },

@@ -60,6 +60,27 @@ export interface OpsActivityItem {
   sortKey: number;
 }
 
+export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
+
+export interface OverviewActionItem {
+  id: string;
+  title: string;
+  description: string;
+  count: number;
+  section: StaffSection;
+  tone: OverviewActionTone;
+}
+
+export interface OverviewLiveShift {
+  id: string;
+  title: string;
+  site: string;
+  guardName: string;
+  clientName: string;
+  status: LiveJobStatus;
+  startedAt?: string;
+}
+
 export interface OpsIncident {
   id: string;
   requestId: string;
@@ -141,6 +162,143 @@ export function computePlatformStats(
     pendingApprovals,
     completedShiftsToday: completedShiftsToday || requests.filter((r) => r.status === 'completed').length,
   };
+}
+
+export function buildOverviewSummaryLine(
+  actionCount: number,
+  liveShiftCount: number
+): string {
+  if (actionCount === 0 && liveShiftCount === 0) {
+    return 'Nothing urgent right now — check live shifts or browse jobs.';
+  }
+  const parts: string[] = [];
+  if (actionCount > 0) {
+    parts.push(`${actionCount} item${actionCount === 1 ? '' : 's'} need your attention`);
+  }
+  if (liveShiftCount > 0) {
+    parts.push(`${liveShiftCount} guard${liveShiftCount === 1 ? '' : 's'} on site`);
+  }
+  return parts.join(' · ');
+}
+
+export function buildOverviewActionQueue(
+  stats: PlatformStats,
+  requests: SecurityRequest[],
+  incidents: OpsIncident[],
+  supportCount: number
+): OverviewActionItem[] {
+  const items: OverviewActionItem[] = [];
+
+  const pendingJobs = requests.filter((r) => r.status === 'pending-review').length;
+  if (pendingJobs > 0) {
+    items.push({
+      id: 'pending-jobs',
+      title: 'Approve new job requests',
+      description: `${pendingJobs} client request${pendingJobs === 1 ? '' : 's'} waiting for go / no-go`,
+      count: pendingJobs,
+      section: 'jobs',
+      tone: 'urgent',
+    });
+  }
+
+  if (stats.pendingApprovals > 0) {
+    items.push({
+      id: 'pending-certs',
+      title: 'Verify guard credentials',
+      description: 'Licenses and certs uploaded — review before guards can work',
+      count: stats.pendingApprovals,
+      section: 'approvals',
+      tone: 'urgent',
+    });
+  }
+
+  const openJobs = requests.filter((r) => r.status === 'open').length;
+  if (openJobs > 0) {
+    items.push({
+      id: 'open-marketplace',
+      title: 'Unassigned shifts on the board',
+      description: 'Open jobs waiting for a guard to accept',
+      count: openJobs,
+      section: 'jobs',
+      tone: 'normal',
+    });
+  }
+
+  const openIncidents = incidents.filter((i) => i.status !== 'resolved').length;
+  if (openIncidents > 0) {
+    items.push({
+      id: 'incidents',
+      title: 'Review client incident reports',
+      description: 'Filed during shift checkout — see what happened on site',
+      count: openIncidents,
+      section: 'incidents',
+      tone: 'urgent',
+    });
+  }
+
+  if (stats.paymentHolds > 0) {
+    items.push({
+      id: 'payments',
+      title: 'Pay guards for finished shifts',
+      description: 'Completed jobs where payout or rating is still outstanding',
+      count: stats.paymentHolds,
+      section: 'payments',
+      tone: 'urgent',
+    });
+  }
+
+  if (supportCount > 0) {
+    items.push({
+      id: 'support',
+      title: 'Reply to support tickets',
+      description: 'Clients or guards are waiting on staff',
+      count: supportCount,
+      section: 'support',
+      tone: 'normal',
+    });
+  }
+
+  const inProgress = requests.filter((r) => r.status === 'in-progress').length;
+  if (inProgress > 0) {
+    items.push({
+      id: 'live-shifts',
+      title: 'Watch live operations',
+      description: 'Guards checked in — view them on the ops map',
+      count: inProgress,
+      section: 'map',
+      tone: 'normal',
+    });
+  }
+
+  return items;
+}
+
+export function buildOverviewLiveShifts(
+  guards: SecurityGuard[],
+  requests: SecurityRequest[]
+): OverviewLiveShift[] {
+  return requests
+    .filter((r) => ['accepted', 'in-progress'].includes(r.status))
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      site: r.siteName || r.location,
+      guardName: guards.find((g) => g.id === r.assignedGuardId)?.name ?? 'Unassigned',
+      clientName: r.clientName,
+      status: getLiveJobStatus(r),
+      startedAt: r.checkInAudit?.checkedAt ?? r.startDate,
+    }))
+    .sort((a, b) => {
+      const priority: Record<LiveJobStatus, number> = {
+        'incident-flagged': 0,
+        'in-progress': 1,
+        active: 2,
+        'pending-assignment': 3,
+        completed: 4,
+      };
+      return priority[a.status] - priority[b.status];
+    })
+    .slice(0, 8);
 }
 
 export function buildPlatformActivityFeed(
