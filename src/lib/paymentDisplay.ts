@@ -97,13 +97,6 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
   }
 }
 
-export const PIPELINE_SUMMARY_LABELS = {
-  awaitingClient: 'Clients who haven\'t paid',
-  cashDepositPending: 'Cash received — deposit to Stripe',
-  awaitingGuardPayout: 'Shifts done — pay guards',
-  settled: 'Fully paid out',
-} as const;
-
 export const PIPELINE_FLOW_STEPS = [
   { step: 1, label: 'Client pays', description: 'Card checkout or staff records cash on site' },
   { step: 2, label: 'Shift runs', description: 'Funds stay secured until the job is complete' },
