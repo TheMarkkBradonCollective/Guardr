@@ -4,7 +4,8 @@ import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQuali
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { Search, Shield } from 'lucide-react';
+import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { Shield } from 'lucide-react';
 
 type GuardFilter = 'field' | 'staff';
 
@@ -68,13 +69,52 @@ export function StaffGuardsPanel({
       }
     : null;
 
+  function renderGuardCard(guard: SecurityGuard, isActive: boolean) {
+    const activeShift = requests.find(
+      (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
+    );
+    const accountStatus = guard.userStatus || 'active';
+    const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
+
+    return (
+      <WfListCard
+        key={guard.id}
+        avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+        title={guard.name}
+        subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
+        meta={
+          <div className="flex flex-wrap items-center gap-1.5">
+            {pendingCerts > 0 && (
+              <WfBadge tone="warning">{pendingCerts} pending</WfBadge>
+            )}
+            {!guard.isStaff && (
+              <span>
+                {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_STATUS_LABELS[accountStatus]}
+              </span>
+            )}
+            {guard.isStaff && (
+              <span className="text-brand-primary flex items-center gap-1">
+                <Shield className="w-2.5 h-2.5" /> {guard.staffRole || 'Staff'}
+              </span>
+            )}
+            {!guard.isStaff && activeShift && (
+              <span>On: {activeShift.title}</span>
+            )}
+          </div>
+        }
+        onClick={() => setSelectedId(guard.id)}
+        className={isActive ? 'ring-2 ring-brand-primary' : ''}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-6xl animate-fade-in">
       {!showDetailOnly && (
         <>
           <div>
-            <h1 className="text-2xl font-black">Guards</h1>
-            <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
+            <h1 className="text-2xl font-bold">Guards</h1>
+            <p className="text-sm text-brand-text-muted mt-1">
               {filter === 'staff'
                 ? 'Guardr staff accounts — platform operations only, not field shifts'
                 : 'Click a guard to open their profile and verify credentials'}
@@ -90,9 +130,9 @@ export function StaffGuardsPanel({
                   setFilter(tab);
                   setSelectedId(null);
                 }}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase border transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                   filter === tab
-                    ? 'bg-brand-primary text-black border-brand-primary'
+                    ? 'bg-brand-primary text-brand-accent-text border-brand-primary'
                     : 'border-brand-border text-brand-text-muted hover:text-brand-text'
                 }`}
               >
@@ -101,21 +141,17 @@ export function StaffGuardsPanel({
             ))}
           </div>
 
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-            <input
-              type="text"
-              placeholder="Search guards..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="uber-input pl-10 w-full"
-            />
-          </div>
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search guards..."
+            className="max-w-md"
+          />
         </>
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-brand-text-muted font-mono py-12 text-center border border-dashed border-brand-border rounded-xl">
+        <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {filter === 'staff' ? 'No staff accounts on file.' : 'No field guards match your search.'}
         </p>
       ) : showDetailOnly && detailProps ? (
@@ -123,84 +159,13 @@ export function StaffGuardsPanel({
       ) : splitView ? (
         <div className="tablet-split-panel">
           <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1">
-            {filtered.map((guard) => {
-              const activeShift = requests.find(
-                (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
-              );
-              const accountStatus = guard.userStatus || 'active';
-              const isActive = selected?.id === guard.id;
-              const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
-
-              return (
-                <button
-                  key={guard.id}
-                  type="button"
-                  onClick={() => setSelectedId(guard.id)}
-                  className={`w-full text-left staff-ops-card p-3 transition-colors ${
-                    isActive ? 'ring-2 ring-brand-primary' : 'hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-black text-sm truncate">{guard.name}</p>
-                        {pendingCerts > 0 && (
-                          <span className="text-[9px] font-mono bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">
-                            {pendingCerts} pending
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] font-mono text-brand-text-muted truncate">
-                        {guard.badgeNumber} · ★ {guard.rating}
-                      </p>
-                      {!guard.isStaff && (
-                        <p className="text-[10px] font-mono text-brand-text-muted mt-0.5">
-                          {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_STATUS_LABELS[accountStatus]}
-                        </p>
-                      )}
-                      {guard.isStaff && (
-                        <span className="text-[9px] font-mono text-brand-primary flex items-center gap-1 mt-0.5">
-                          <Shield className="w-2.5 h-2.5" /> {guard.staffRole || 'Staff'}
-                        </span>
-                      )}
-                      {!guard.isStaff && activeShift && (
-                        <p className="text-[10px] text-brand-text-muted truncate mt-0.5">On: {activeShift.title}</p>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+            {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
           </div>
           {detailProps && <StaffGuardDetailPanel {...detailProps} />}
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((guard) => {
-            const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
-            return (
-              <button
-                key={guard.id}
-                type="button"
-                onClick={() => setSelectedId(guard.id)}
-                className="w-full text-left staff-ops-card p-3 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
-                    <div className="min-w-0">
-                      <p className="font-black text-sm truncate">{guard.name}</p>
-                      <p className="text-[10px] font-mono text-brand-text-muted">{guard.badgeNumber}</p>
-                    </div>
-                  </div>
-                  {pendingCerts > 0 && (
-                    <span className="text-[9px] font-mono text-amber-400 shrink-0">{pendingCerts} to verify</span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {filtered.map((guard) => renderGuardCard(guard, false))}
         </div>
       )}
     </div>

@@ -8,8 +8,8 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
   grey: 'Shade',
 };
 
-/** Default — deep charcoal dark mode with sage accent */
-export const DEFAULT_THEME: ThemeMode = 'dark';
+/** Default — light wireframe-style UI */
+export const DEFAULT_THEME: ThemeMode = 'light';
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 

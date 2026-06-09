@@ -7,6 +7,7 @@ import {
   SUPPORT_STATUS_LABEL,
 } from '../../lib/support';
 import { ROLE_LABELS } from '../../lib/permissions';
+import { WfBadge } from '../ui/wireframe';
 import { MessageCircle, Send } from 'lucide-react';
 
 interface StaffSupportPanelProps {
@@ -49,7 +50,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-4 min-h-0">
-      <div className="lg:w-80 shrink-0 flex flex-col min-h-0 border border-brand-border rounded-2xl bg-brand-surface overflow-hidden">
+      <div className="lg:w-80 shrink-0 flex flex-col min-h-0 wf-list-card flex-col items-stretch !flex !flex-col !p-0 overflow-hidden">
         <div className="p-4 border-b border-brand-border">
           <h2 className="font-bold text-sm">Support inbox</h2>
           <p className="text-xs text-brand-text-muted mt-1">
@@ -61,13 +62,13 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                 key={id}
                 type="button"
                 onClick={() => setFilter(id)}
-                className={`flex-1 py-1.5 text-[10px] font-mono font-bold uppercase rounded-lg border transition-colors ${
+                className={`flex-1 py-1.5 text-sm font-medium rounded-full border transition-colors ${
                   filter === id
                     ? 'bg-brand-primary text-brand-accent-text border-brand-primary'
                     : 'border-brand-border text-brand-text-muted'
                 }`}
               >
-                {id}
+                {id === 'open' ? 'Open' : 'All'}
               </button>
             ))}
           </div>
@@ -92,9 +93,12 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                   <p className="text-xs text-brand-text-muted mt-1 truncate">
                     {ticket.userName} · {ROLE_LABELS[ticket.userRole]}
                   </p>
-                  <p className="text-[10px] text-brand-text-muted mt-1">
-                    {SUPPORT_STATUS_LABEL[ticket.status]} · {categoryLabel(ticket.category)}
-                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
+                      {SUPPORT_STATUS_LABEL[ticket.status]}
+                    </WfBadge>
+                    <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
+                  </div>
                 </button>
               </li>
             ))
@@ -102,7 +106,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
         </ul>
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col min-h-[320px] border border-brand-border rounded-2xl bg-brand-surface overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col min-h-[320px] wf-list-card flex-col items-stretch !flex !flex-col !p-0 overflow-hidden">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center text-brand-text-muted text-sm p-8 text-center">
             <div>
@@ -119,11 +123,15 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                   <p className="text-sm text-brand-text-muted mt-1">
                     {selected.userName} · {selected.userEmail} · {ROLE_LABELS[selected.userRole]}
                   </p>
-                  <p className="text-xs text-brand-text-muted mt-1">
-                    {categoryLabel(selected.category)}
-                    {selected.priority !== 'normal' ? ` · ${priorityLabel(selected.priority)} priority` : ''}
-                    {selected.kind === 'report' ? ' · Report' : ' · Chat'}
-                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    <WfBadge tone="default">{categoryLabel(selected.category)}</WfBadge>
+                    {selected.priority !== 'normal' && (
+                      <WfBadge tone="warning">{priorityLabel(selected.priority)} priority</WfBadge>
+                    )}
+                    <WfBadge tone={selected.kind === 'report' ? 'warning' : 'primary'}>
+                      {selected.kind === 'report' ? 'Report' : 'Chat'}
+                    </WfBadge>
+                  </div>
                 </div>
                 <select
                   value={selected.status}
@@ -149,9 +157,9 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                           : 'bg-brand-bg-sec border border-brand-border'
                       }`}
                     >
-                      <p className="text-[10px] font-mono uppercase opacity-70 mb-1">{msg.senderName}</p>
+                      <p className="text-xs opacity-70 mb-1">{msg.senderName}</p>
                       <p className="whitespace-pre-wrap">{msg.body}</p>
-                      <p className="text-[10px] opacity-60 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
+                      <p className="text-xs opacity-60 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
                     </div>
                   </div>
                 );
@@ -170,7 +178,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                 type="button"
                 onClick={() => void handleSend()}
                 disabled={submitting || !draft.trim()}
-                className="uber-button-sage h-11 px-4 shrink-0 disabled:opacity-50"
+                className="app-button-primary !w-auto !h-11 !px-4 shrink-0 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </button>

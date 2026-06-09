@@ -4,6 +4,7 @@ import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
+import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
 
 interface StaffPaymentsPanelProps {
@@ -52,14 +53,7 @@ function PipelineSection({
 
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="text-sm font-black flex items-center gap-2">
-          {meta.title}
-          <span className="text-[10px] font-mono font-bold text-brand-text-muted border border-brand-border rounded px-1.5 py-0.5">
-            {items.length}
-          </span>
-        </h2>
-      </div>
+      <WfSectionHeader title={meta.title} count={items.length} />
       <div className="space-y-2">
         {visible.map((req) => (
           <JobPaymentRow
@@ -78,7 +72,7 @@ function PipelineSection({
         ))}
       </div>
       {limit && items.length > limit && (
-        <p className="text-[10px] font-mono text-brand-text-muted">
+        <p className="text-xs text-brand-text-muted">
           Showing {limit} of {items.length} settled jobs.
         </p>
       )}
@@ -113,30 +107,48 @@ export function StaffPaymentsPanel({
   return (
     <div className="space-y-8 max-w-5xl animate-fade-in">
       <div>
-        <h1 className="text-2xl font-black">Payments</h1>
+        <h1 className="text-2xl font-bold">Payments</h1>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="staff-ops-card p-4">
-          <p className="text-[10px] font-mono uppercase text-brand-text-muted">Awaiting client</p>
-          <p className="text-2xl font-black font-mono mt-1">{summary.awaitingClient.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.awaitingClientTotal}</p>
-        </div>
-        <div className="staff-ops-card p-4 ring-1 ring-orange-500/30">
-          <p className="text-[10px] font-mono uppercase text-orange-300">Card pay due</p>
-          <p className="text-2xl font-black font-mono mt-1 text-orange-300">{summary.cashDepositPending.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.cashDepositTotal}</p>
-        </div>
-        <div className="staff-ops-card p-4 ring-1 ring-brand-primary/30">
-          <p className="text-[10px] font-mono uppercase text-brand-primary">Pay guard</p>
-          <p className="text-2xl font-black font-mono mt-1 text-brand-primary">{summary.awaitingGuardPayout.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.guardPayoutDue} due</p>
-        </div>
-        <div className="staff-ops-card p-4">
-          <p className="text-[10px] font-mono uppercase text-brand-text-muted">Settled</p>
-          <p className="text-2xl font-black font-mono mt-1">{summary.settled.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.settledGuardTotal}</p>
-        </div>
+        <WfMetricTile
+          label="Awaiting client"
+          value={
+            <>
+              {summary.awaitingClient.length}
+              <span className="block text-xs font-normal text-brand-text-muted mt-0.5">${summary.awaitingClientTotal}</span>
+            </>
+          }
+        />
+        <WfMetricTile
+          label="Card pay due"
+          value={
+            <>
+              {summary.cashDepositPending.length}
+              <span className="block text-xs font-normal text-brand-text-muted mt-0.5">${summary.cashDepositTotal}</span>
+            </>
+          }
+          accent
+        />
+        <WfMetricTile
+          label="Pay guard"
+          value={
+            <>
+              {summary.awaitingGuardPayout.length}
+              <span className="block text-xs font-normal text-brand-text-muted mt-0.5">${summary.guardPayoutDue} due</span>
+            </>
+          }
+          accent
+        />
+        <WfMetricTile
+          label="Settled"
+          value={
+            <>
+              {summary.settled.length}
+              <span className="block text-xs font-normal text-brand-text-muted mt-0.5">${summary.settledGuardTotal}</span>
+            </>
+          }
+        />
       </div>
 
       <PipelineSection stage="cash-deposit-pending" items={summary.cashDepositPending} {...sectionProps} />
@@ -156,7 +168,7 @@ export function StaffPaymentsPanel({
         summary.awaitingGuardPayout.length === 0 &&
         summary.clientPaidActive.length === 0 &&
         summary.settled.length === 0 && (
-          <p className="text-center text-sm text-brand-text-muted font-mono py-12 staff-ops-card">
+          <p className="text-center text-sm text-brand-text-muted py-12 wf-list-card justify-center">
             No payment activity yet. Jobs appear here when clients post requests.
           </p>
         )}

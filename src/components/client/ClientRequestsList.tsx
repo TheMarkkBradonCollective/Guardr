@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
   Award,
@@ -36,24 +37,24 @@ interface ClientRequestsListProps {
   onRequestNew: () => void;
 }
 
-function statusBadgeClass(status: JobStatus): string {
+function statusBadgeTone(status: JobStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   switch (status) {
-    case 'open': return 'badge-open';
-    case 'pending-review': return 'badge-assigned';
-    case 'accepted': return 'badge-assigned';
-    case 'in-progress': return 'badge-active';
-    case 'completed': return 'badge-done';
-    case 'closed': return 'badge-done';
-    default: return 'badge-assigned';
+    case 'open': return 'primary';
+    case 'pending-review': return 'warning';
+    case 'accepted': return 'primary';
+    case 'in-progress': return 'success';
+    case 'completed': return 'success';
+    case 'closed': return 'default';
+    default: return 'default';
   }
 }
 
-function paymentBadgeClass(status?: SecurityRequest['paymentStatus']): string {
+function paymentBadgeTone(status?: SecurityRequest['paymentStatus']): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   switch (status) {
-    case 'paid': return 'badge-open';
-    case 'held': return 'badge-assigned';
-    case 'released': return 'badge-done';
-    default: return 'badge-assigned';
+    case 'paid': return 'success';
+    case 'held': return 'warning';
+    case 'released': return 'success';
+    default: return 'warning';
   }
 }
 
@@ -77,10 +78,21 @@ export function ClientRequestsList({
   onAddReview,
   onRequestNew,
 }: ClientRequestsListProps) {
+  const [search, setSearch] = useState('');
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return requests.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.location.toLowerCase().includes(q) ||
+        r.type.toLowerCase().includes(q)
+    );
+  }, [requests, search]);
 
   const handlePayNow = async (req: SecurityRequest) => {
     setPayingJobId(req.id);
@@ -106,45 +118,51 @@ export function ClientRequestsList({
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in pb-8">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black">All Requests</h1>
-          <p className="text-xs font-mono text-brand-text-muted mt-1">Manage postings, hires, and reviews</p>
+          <h1 className="text-xl font-bold">All Requests</h1>
+          <p className="text-sm text-brand-text-muted mt-1">Manage postings, hires, and reviews</p>
         </div>
         <button
           type="button"
           onClick={onRequestNew}
-          className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0"
+          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0"
         >
           + New
         </button>
       </div>
 
+      {requests.length > 0 && (
+        <WfSearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search requests..."
+        />
+      )}
+
       {requests.length === 0 ? (
-        <div className="uber-card-flat rounded-2xl py-16 text-center">
+        <div className="wf-list-card justify-center py-16">
           <Shield className="w-10 h-10 text-brand-primary/30 mx-auto mb-3" />
-          <p className="text-brand-text-muted text-sm font-mono">No requests yet.</p>
+          <p className="text-brand-text-muted text-sm text-center">No requests yet.</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-center text-sm text-brand-text-muted py-12">No requests match your search.</p>
       ) : (
         <div className="space-y-4">
-          {requests.map((req) => {
+          {filtered.map((req) => {
             const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
             return (
-              <div key={req.id} className="uber-card-flat rounded-xl p-5 space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
+              <div key={req.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 w-full">
                   <div className="min-w-0">
-                    <h3 className="font-black text-sm">{req.title}</h3>
-                    <p className="text-[10px] font-mono text-brand-text-muted capitalize mt-0.5">{req.type.replace('-', ' ')}</p>
+                    <h3 className="font-semibold text-sm">{req.title}</h3>
+                    <p className="text-sm text-brand-text-muted capitalize mt-0.5">{req.type.replace('-', ' ')}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className={`px-2.5 py-1 text-[10px] font-mono font-black uppercase ${statusBadgeClass(req.status)}`}>
-                      {JOB_STATUS_LABELS[req.status]}
-                    </span>
-                    <span className={`px-2 py-1 text-[9px] font-mono font-bold uppercase ${paymentBadgeClass(req.paymentStatus)}`}>
-                      {paymentLabel(req.paymentStatus)}
-                    </span>
+                    <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                    <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-brand-text-muted">
+                <div className="grid grid-cols-2 gap-2 text-sm text-brand-text-muted w-full">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-brand-primary" />{formatShiftRange(req.startDate, req.endDate)}</span>
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-brand-primary" />{formatDuration(req.durationHours)}</span>
                   <span className="flex items-center gap-1 col-span-2 truncate"><MapPin className="w-3 h-3 text-brand-primary shrink-0" />{req.location}</span>
@@ -152,7 +170,7 @@ export function ClientRequestsList({
                 </div>
 
                 {isJobPaid(req) && (
-                  <p className="text-[10px] font-mono text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5">
+                  <p className="text-xs text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5 w-full">
                     Job locked — paid shifts cannot be edited.
                   </p>
                 )}
@@ -166,11 +184,11 @@ export function ClientRequestsList({
                 )}
 
                 {canClientEditRequest(req) && editingId !== req.id && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 w-full">
                     <button
                       type="button"
                       onClick={() => setEditingId(req.id)}
-                      className="text-[10px] font-black uppercase px-3 py-2 border border-brand-primary/40 text-brand-primary rounded-lg"
+                      className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                     >
                       <Pencil className="w-3 h-3 inline" /> Edit
                     </button>
@@ -178,7 +196,7 @@ export function ClientRequestsList({
                       <button
                         type="button"
                         onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
-                        className="text-[10px] font-black uppercase px-3 py-2 border border-red-500/40 text-red-400 rounded-lg"
+                        className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
                       >
                         <X className="w-3 h-3 inline" /> Cancel
                       </button>
@@ -187,11 +205,11 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'open' && (
-                  <div className="border-t border-brand-border pt-3 space-y-3">
+                  <div className="border-t border-brand-border pt-3 space-y-3 w-full">
                     {(!req.paymentStatus || req.paymentStatus === 'unpaid') && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3 rounded-lg">
                         <div>
-                          <p className="text-[10px] font-mono uppercase text-brand-primary font-black">Payment Required</p>
+                          <p className="text-sm text-brand-primary font-semibold">Payment required</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
                             Pay ${req.estimatedPayout} to secure this approved job.
                           </p>
@@ -200,7 +218,7 @@ export function ClientRequestsList({
                           type="button"
                           onClick={() => handlePayNow(req)}
                           disabled={payingJobId === req.id}
-                          className="uber-button-sage h-9 px-5 text-xs font-black uppercase gap-1.5 shrink-0 disabled:opacity-50"
+                          className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 shrink-0 disabled:opacity-50"
                         >
                           {payingJobId === req.id ? (
                             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
@@ -211,46 +229,47 @@ export function ClientRequestsList({
                       </div>
                     )}
                     {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
-                      <p className="text-[10px] font-mono text-emerald-400/90 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1.5 flex items-center gap-1.5 rounded-lg">
+                      <p className="text-xs text-emerald-400/90 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1.5 flex items-center gap-1.5 rounded-lg">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Payment {paymentLabel(req.paymentStatus)} — you may hire a guard.
                       </p>
                     )}
                     <p className="uber-label">Hire a guard</p>
                     {guards.map((guard) => (
-                      <div key={guard.id} className="flex items-center gap-3 p-3 border border-brand-border rounded-lg">
-                        <ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-xs">{guard.name}</p>
-                          <p className="text-[10px] font-mono text-brand-text-muted">★ {guard.rating}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => onHireGuard(req.id, guard.id)}
-                          disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
-                          className="uber-button-sage h-8 px-3 text-[10px] font-black uppercase disabled:opacity-40"
-                        >
-                          Hire <ChevronRight className="w-3 h-3 inline" />
-                        </button>
-                      </div>
+                      <WfListCard
+                        key={guard.id}
+                        avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
+                        title={guard.name}
+                        subtitle={`★ ${guard.rating}`}
+                        action={
+                          <button
+                            type="button"
+                            onClick={() => onHireGuard(req.id, guard.id)}
+                            disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
+                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
+                          >
+                            Hire <ChevronRight className="w-3 h-3 inline" />
+                          </button>
+                        }
+                      />
                     ))}
                   </div>
                 )}
 
                 {req.status === 'accepted' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="uber-button-sage h-9 px-4 text-xs font-black uppercase w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary !h-9 !text-xs w-full">
                     <Activity className="w-3.5 h-3.5 inline" /> Start Deployment
                   </button>
                 )}
 
                 {req.status === 'in-progress' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="uber-button-sage h-9 px-4 text-xs font-black uppercase w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary !h-9 !text-xs w-full">
                     <Check className="w-3.5 h-3.5 inline" /> End Shift
                   </button>
                 )}
 
                 {req.status === 'completed' && hiredGuard && !req.ratingGiven && (
-                  <div className="border-t border-brand-border pt-3 space-y-2">
+                  <div className="border-t border-brand-border pt-3 space-y-2 w-full">
                     <p className="uber-label flex items-center gap-1"><Award className="w-3.5 h-3.5" /> Rate guard</p>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((s) => (
@@ -270,7 +289,7 @@ export function ClientRequestsList({
                       <button
                         type="button"
                         onClick={() => onAddReview(req.id, reviewRating[req.id] || 5, reviewNote[req.id] || 'Good work.')}
-                        className="uber-button-sage h-9 px-4 text-xs font-black uppercase"
+                        className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
                       >
                         Submit
                       </button>

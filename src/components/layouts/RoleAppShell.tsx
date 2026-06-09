@@ -6,6 +6,10 @@ import { MoreMenuSheet } from './MoreMenuSheet';
 interface RoleAppShellProps {
   title: string;
   subtitle?: string;
+  locationLabel?: string;
+  avatarUrl?: string;
+  avatarName?: string;
+  onAvatarClick?: () => void;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
   activeNavId: string;
@@ -21,6 +25,10 @@ interface RoleAppShellProps {
 export function RoleAppShell({
   title,
   subtitle,
+  locationLabel,
+  avatarUrl,
+  avatarName,
+  onAvatarClick,
   navItems,
   overflowNavItems = [],
   activeNavId,
@@ -48,8 +56,12 @@ export function RoleAppShell({
       <AppScreenHeader
         title={title}
         subtitle={subtitle}
+        locationLabel={locationLabel}
+        avatarUrl={avatarUrl}
+        avatarName={avatarName}
+        onAvatarClick={onAvatarClick}
         right={headerRight}
-        className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : 'bg-brand-surface/95 backdrop-blur-xl'}
+        className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
       />
 
       <main

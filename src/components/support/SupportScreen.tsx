@@ -17,11 +17,10 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
+import { WfBadge, WfListCard, WfSectionHeader } from '../ui/wireframe';
 import {
   ArrowLeft,
-  ChevronRight,
   FileText,
-  LifeBuoy,
   MessageCircle,
   Send,
 } from 'lucide-react';
@@ -141,7 +140,7 @@ export function SupportScreen({
         </button>
       )}
       <div>
-        <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">Support</p>
+        <p className="text-sm text-brand-text-muted">Support</p>
         <h1 className="text-lg font-bold">{title}</h1>
         {subtitle && <p className="text-sm text-brand-text-muted mt-0.5">{subtitle}</p>}
       </div>
@@ -152,7 +151,7 @@ export function SupportScreen({
     return (
       <div className="h-full flex flex-col max-w-2xl mx-auto p-4 sm:p-6">
         {header(activeTicket.subject, `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`)}
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 mb-4 rounded-2xl border border-brand-border bg-brand-surface p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 mb-4 wf-list-card flex-col items-stretch !flex !flex-col !p-4">
           {activeTicket.messages.map((msg) => {
             const mine = msg.senderId === currentUser.id;
             const staff = isStaffRole(msg.senderRole);
@@ -167,11 +166,11 @@ export function SupportScreen({
                         : 'bg-brand-bg-sec border border-brand-border'
                   }`}
                 >
-                  <p className="text-[10px] font-mono uppercase opacity-70 mb-1">
+                  <p className="text-xs opacity-70 mb-1">
                     {staff ? 'Guardr staff' : msg.senderName}
                   </p>
                   <p className="whitespace-pre-wrap">{msg.body}</p>
-                  <p className="text-[10px] opacity-60 mt-1">
+                  <p className="text-xs opacity-60 mt-1">
                     {new Date(msg.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -192,7 +191,7 @@ export function SupportScreen({
               type="button"
               onClick={() => void handleSend()}
               disabled={submitting || !draft.trim()}
-              className="uber-button-sage h-11 px-4 shrink-0 disabled:opacity-50"
+              className="app-button-primary !w-auto !h-11 !px-4 shrink-0 disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -210,7 +209,7 @@ export function SupportScreen({
         {header('File a report', 'Describe the issue — staff will review and follow up.')}
         <form onSubmit={(e) => void handleSubmitReport(e)} className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-brand-text-muted block mb-1">Category</label>
+            <label className="uber-label block mb-1">Category</label>
             <select
               value={reportCategory}
               onChange={(e) => setReportCategory(e.target.value as SupportTicketCategory)}
@@ -222,7 +221,7 @@ export function SupportScreen({
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-brand-text-muted block mb-1">Priority</label>
+            <label className="uber-label block mb-1">Priority</label>
             <select
               value={reportPriority}
               onChange={(e) => setReportPriority(e.target.value as SupportPriority)}
@@ -235,7 +234,7 @@ export function SupportScreen({
           </div>
           {relatedRequests.length > 0 && (
             <div>
-              <label className="text-xs font-medium text-brand-text-muted block mb-1">Related job (optional)</label>
+              <label className="uber-label block mb-1">Related job (optional)</label>
               <select
                 value={relatedRequestId}
                 onChange={(e) => setRelatedRequestId(e.target.value)}
@@ -249,7 +248,7 @@ export function SupportScreen({
             </div>
           )}
           <div>
-            <label className="text-xs font-medium text-brand-text-muted block mb-1">Subject</label>
+            <label className="uber-label block mb-1">Subject</label>
             <input
               value={reportSubject}
               onChange={(e) => setReportSubject(e.target.value)}
@@ -259,7 +258,7 @@ export function SupportScreen({
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-brand-text-muted block mb-1">Details</label>
+            <label className="uber-label block mb-1">Details</label>
             <textarea
               value={reportBody}
               onChange={(e) => setReportBody(e.target.value)}
@@ -268,7 +267,7 @@ export function SupportScreen({
               required
             />
           </div>
-          <button type="submit" disabled={submitting} className="w-full uber-button-sage h-11 text-sm disabled:opacity-50">
+          <button type="submit" disabled={submitting} className="w-full app-button-primary disabled:opacity-50">
             Submit report to staff
           </button>
         </form>
@@ -285,7 +284,7 @@ export function SupportScreen({
           type="button"
           onClick={() => void startKind('chat')}
           disabled={submitting}
-          className="uber-card p-5 text-left hover:border-brand-primary/40 transition-colors disabled:opacity-50"
+          className="wf-list-card flex-col items-start !flex !flex-col hover:border-brand-primary/40 transition-colors disabled:opacity-50"
         >
           <MessageCircle className="w-8 h-8 text-brand-primary mb-3" />
           <p className="font-semibold">Message staff</p>
@@ -294,7 +293,7 @@ export function SupportScreen({
         <button
           type="button"
           onClick={() => void startKind('report')}
-          className="uber-card p-5 text-left hover:border-brand-primary/40 transition-colors"
+          className="wf-list-card flex-col items-start !flex !flex-col hover:border-brand-primary/40 transition-colors"
         >
           <FileText className="w-8 h-8 text-brand-primary mb-3" />
           <p className="font-semibold">File a report</p>
@@ -302,47 +301,36 @@ export function SupportScreen({
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <LifeBuoy className="w-4 h-4 text-brand-primary" />
-        <h2 className="font-semibold text-sm">Your conversations</h2>
-      </div>
+      <WfSectionHeader title="Your conversations" />
 
       {myTickets.length === 0 ? (
-        <p className="text-sm text-brand-text-muted text-center py-8 rounded-2xl border border-dashed border-brand-border">
+        <p className="text-sm text-brand-text-muted text-center py-8 wf-list-card justify-center">
           No support threads yet. Message staff or file a report to get started.
         </p>
       ) : (
         <ul className="space-y-2">
           {myTickets.map((ticket) => (
             <li key={ticket.id}>
-              <button
-                type="button"
-                onClick={() => openThread(ticket.id)}
-                className="w-full uber-card p-4 flex items-center gap-3 text-left hover:border-brand-primary/30 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-sm truncate">{ticket.subject}</p>
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-brand-bg-sec border border-brand-border">
-                      {ticket.kind === 'report' ? 'Report' : 'Chat'}
-                    </span>
-                    <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${
-                      ticket.status === 'resolved'
-                        ? 'bg-slate-500/10 text-slate-400'
-                        : 'bg-brand-primary/10 text-brand-primary'
-                    }`}>
-                      {SUPPORT_STATUS_LABEL[ticket.status]}
-                    </span>
-                  </div>
-                  <p className="text-xs text-brand-text-muted mt-1 truncate">
+              <WfListCard
+                title={ticket.subject}
+                subtitle={
+                  <>
                     {categoryLabel(ticket.category)}
                     {ticket.priority !== 'normal' ? ` · ${priorityLabel(ticket.priority)}` : ''}
                     {' · '}
                     {new Date(ticket.updatedAt).toLocaleString()}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0" />
-              </button>
+                  </>
+                }
+                meta={
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <WfBadge tone="default">{ticket.kind === 'report' ? 'Report' : 'Chat'}</WfBadge>
+                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
+                      {SUPPORT_STATUS_LABEL[ticket.status]}
+                    </WfBadge>
+                  </div>
+                }
+                onClick={() => openThread(ticket.id)}
+              />
             </li>
           ))}
         </ul>
