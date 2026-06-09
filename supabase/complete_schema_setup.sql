@@ -155,8 +155,11 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS target_guard_id TEXT REFE
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS min_guard_qualification TEXT DEFAULT 'pending';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_payment_method TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_to_stripe BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_at TIMESTAMPTZ;
 
 -- Backfill nulls so NOT NULL constraints can apply
+UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
 UPDATE security_requests SET site_name = '' WHERE site_name IS NULL;
 UPDATE security_requests SET address = '' WHERE address IS NULL;
 UPDATE security_requests SET state = '' WHERE state IS NULL;

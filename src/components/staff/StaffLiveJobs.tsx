@@ -4,16 +4,19 @@ import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { useDevice } from '../../lib/platform';
 import { Search, X } from 'lucide-react';
-import { DirectorCashPaymentControls } from './DirectorCashPaymentControls';
+import { Payment } from '../../types';
+import { JobPaymentRow } from './JobPaymentRow';
 
 interface StaffLiveJobsProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  payments?: Payment[];
   isDirector?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string) => Promise<void>;
 }
 
@@ -23,17 +26,21 @@ function JobDetailPanel({
   isDirector,
   onApproveRequest,
   onDenyRequest,
+  payments,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onDepositCashToStripe,
   onReleasePayout,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
+  payments?: Payment[];
   isDirector?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string) => Promise<void>;
 }) {
   const jobStatus = getLiveJobStatus(req);
@@ -62,11 +69,14 @@ function JobDetailPanel({
       {req.description && (
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
       )}
-      <DirectorCashPaymentControls
+      <JobPaymentRow
         req={req}
+        guard={assigned}
+        payment={payments?.find((p) => p.jobId === req.id)}
         isDirector={!!isDirector}
         onMarkClientPaidCash={onMarkClientPaidCash}
         onMarkGuardPaidCash={onMarkGuardPaidCash}
+        onDepositCashToStripe={onDepositCashToStripe}
         onReleasePayout={onReleasePayout}
       />
       <div className="flex flex-wrap gap-2 pt-2">
@@ -99,8 +109,10 @@ export function StaffLiveJobs({
   isDirector,
   onApproveRequest,
   onDenyRequest,
+  payments = [],
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onDepositCashToStripe,
   onReleasePayout,
 }: StaffLiveJobsProps) {
   const [search, setSearch] = useState('');
@@ -167,11 +179,13 @@ export function StaffLiveJobs({
             <JobDetailPanel
               req={selected}
               guards={guards}
+              payments={payments}
               isDirector={isDirector}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
               onMarkClientPaidCash={onMarkClientPaidCash}
               onMarkGuardPaidCash={onMarkGuardPaidCash}
+              onDepositCashToStripe={onDepositCashToStripe}
               onReleasePayout={onReleasePayout}
             />
           )}
@@ -183,11 +197,13 @@ export function StaffLiveJobs({
               <JobDetailPanel
                 req={req}
                 guards={guards}
+                payments={payments}
                 isDirector={isDirector}
                 onApproveRequest={onApproveRequest}
                 onDenyRequest={onDenyRequest}
                 onMarkClientPaidCash={onMarkClientPaidCash}
                 onMarkGuardPaidCash={onMarkGuardPaidCash}
+                onDepositCashToStripe={onDepositCashToStripe}
                 onReleasePayout={onReleasePayout}
               />
             </div>

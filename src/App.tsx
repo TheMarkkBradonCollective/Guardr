@@ -20,6 +20,7 @@ import {
 } from './types';
 import { canRecordCashPayments, isStaffRole } from './lib/permissions';
 import {
+  canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
   guardPayoutAmount,
@@ -279,6 +280,8 @@ export default function App() {
         paymentStatus: r.payment_status || 'unpaid',
         clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
         guardPayoutMethod: parsePaymentMethod(r.guard_payout_method),
+        cashDepositedToStripe: !!r.cash_deposited_to_stripe,
+        cashDepositedAt: r.cash_deposited_at || undefined,
       })));
 
       setPayments((dbPayments ?? []).map((p: any) => ({
@@ -897,7 +900,9 @@ export default function App() {
 
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === requestId ? { ...r, paymentStatus: 'paid', clientPaymentMethod: 'cash' } : r
+        r.id === requestId
+          ? { ...r, paymentStatus: 'paid', clientPaymentMethod: 'cash', cashDepositedToStripe: false }
+          : r
       )
     );
     setPayments((prev) => {
@@ -921,7 +926,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase
         .from('security_requests')
-        .update({ payment_status: 'paid', client_payment_method: 'cash' })
+        .update({
+          payment_status: 'paid',
+          client_payment_method: 'cash',
+          cash_deposited_to_stripe: false,
+          cash_deposited_at: null,
+        })
         .eq('id', requestId);
       if (existingPayment) {
         await supabase
@@ -1000,6 +1010,40 @@ export default function App() {
       }
     }
     alert(`Recorded $${amount} cash payout to guard.`);
+  };
+
+  const handleDepositCashToStripe = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      alert('Only the Director can record cash deposits to Stripe.');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorDepositCashToStripe(req)) {
+      alert('This job does not have client cash waiting to be deposited.');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Record that $${req.estimatedPayout} from "${req.title}" was deposited to the platform Stripe balance?`
+      )
+    ) {
+      return;
+    }
+
+    const depositedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, cashDepositedToStripe: true, cashDepositedAt: depositedAt } : r
+      )
+    );
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ cash_deposited_to_stripe: true, cash_deposited_at: depositedAt })
+        .eq('id', requestId);
+    }
+    alert(`Recorded $${req.estimatedPayout} deposited to Stripe for this job.`);
   };
 
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
@@ -1560,6 +1604,7 @@ export default function App() {
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
+          onDepositCashToStripe={handleDepositCashToStripe}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}

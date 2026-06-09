@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Banknote, CreditCard, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowRight, Banknote, CreditCard, DollarSign, TrendingUp, Wallet } from 'lucide-react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import {
   PIPELINE_SECTION_META,
@@ -17,6 +17,7 @@ interface StaffPaymentsPanelProps {
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onDepositCashToStripe?: (requestId: string) => Promise<void>;
 }
 
 function PipelineSection({
@@ -29,6 +30,7 @@ function PipelineSection({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onDepositCashToStripe,
   readOnly = false,
   limit,
 }: {
@@ -41,6 +43,7 @@ function PipelineSection({
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
 }) {
@@ -73,6 +76,7 @@ function PipelineSection({
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
+            onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
       </div>
@@ -94,6 +98,7 @@ export function StaffPaymentsPanel({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onDepositCashToStripe,
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
   const completed = requests.filter((r) => r.status === 'completed');
@@ -102,103 +107,85 @@ export function StaffPaymentsPanel({
     0
   );
 
+  const sectionProps = {
+    guards,
+    payments,
+    isDirector,
+    onReleasePayout,
+    onRefundPayment,
+    onMarkClientPaidCash,
+    onMarkGuardPaidCash,
+    onDepositCashToStripe,
+  };
+
   return (
     <div className="space-y-8 max-w-5xl animate-fade-in">
       <div>
         <h1 className="text-2xl font-black">Payments</h1>
         <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
-          Client payment → shift runs → guard payout
+          Client → platform funds → guard
         </p>
       </div>
 
       <div className="staff-ops-card p-4 space-y-3">
         <p className="text-xs text-brand-text-muted leading-relaxed">
-          Every job moves through three money steps. The client pays (Stripe checkout or Director records cash),
-          the shift runs, then staff pays the guard (Stripe Connect or Director records cash).
+          Card jobs land in Stripe automatically. Cash jobs need two Director steps: record what the client
+          handed you, then record when that cash is deposited to the platform Stripe balance. After that,
+          guards can be paid via Stripe Connect or cash.
         </p>
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono font-bold uppercase">
-          <span className="px-2 py-1 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10">1 · Client pays</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-mono font-bold uppercase">
+          <span className="px-2 py-1 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10">Client pays</span>
           <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-brand-border text-brand-text-muted">2 · Shift runs</span>
+          <span className="px-2 py-1 rounded border border-orange-500/40 text-orange-300 bg-orange-500/10">Deposit cash</span>
           <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-brand-primary/40 text-brand-primary bg-brand-primary/10">3 · Guard paid</span>
+          <span className="px-2 py-1 rounded border border-brand-border text-brand-text-muted">Shift runs</span>
+          <ArrowRight className="w-3 h-3 text-brand-text-muted" />
+          <span className="px-2 py-1 rounded border border-brand-primary/40 text-brand-primary bg-brand-primary/10">Guard paid</span>
         </div>
         <div className="flex flex-wrap gap-4 text-[10px] font-mono text-brand-text-muted pt-1">
-          <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Stripe = card / Connect</span>
-          <span className="flex items-center gap-1"><Banknote className="w-3 h-3" /> Cash = Director records only</span>
+          <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Card = auto in Stripe</span>
+          <span className="flex items-center gap-1"><Banknote className="w-3 h-3" /> Cash = Director records</span>
+          <span className="flex items-center gap-1"><Wallet className="w-3 h-3" /> Deposit = cash → Stripe ledger</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="staff-ops-card p-4">
           <p className="text-[10px] font-mono uppercase text-brand-text-muted">Awaiting client</p>
           <p className="text-2xl font-black font-mono mt-1">{summary.awaitingClient.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.awaitingClientTotal} outstanding</p>
+          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.awaitingClientTotal}</p>
+        </div>
+        <div className="staff-ops-card p-4 ring-1 ring-orange-500/30">
+          <p className="text-[10px] font-mono uppercase text-orange-300">Cash to deposit</p>
+          <p className="text-2xl font-black font-mono mt-1 text-orange-300">{summary.cashDepositPending.length}</p>
+          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.cashDepositTotal}</p>
         </div>
         <div className="staff-ops-card p-4 ring-1 ring-brand-primary/30">
-          <p className="text-[10px] font-mono uppercase text-brand-primary">Ready to pay guard</p>
+          <p className="text-[10px] font-mono uppercase text-brand-primary">Pay guard</p>
           <p className="text-2xl font-black font-mono mt-1 text-brand-primary">{summary.awaitingGuardPayout.length}</p>
           <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.guardPayoutDue} due</p>
         </div>
         <div className="staff-ops-card p-4">
           <p className="text-[10px] font-mono uppercase text-brand-text-muted">Settled</p>
           <p className="text-2xl font-black font-mono mt-1">{summary.settled.length}</p>
-          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.settledGuardTotal} to guards</p>
+          <p className="text-[10px] font-mono text-brand-text-muted mt-1">${summary.settledGuardTotal}</p>
         </div>
       </div>
 
-      <PipelineSection
-        stage="awaiting-guard-payout"
-        items={summary.awaitingGuardPayout}
-        guards={guards}
-        payments={payments}
-        isDirector={isDirector}
-        onReleasePayout={onReleasePayout}
-        onRefundPayment={onRefundPayment}
-        onMarkClientPaidCash={onMarkClientPaidCash}
-        onMarkGuardPaidCash={onMarkGuardPaidCash}
-      />
-
-      <PipelineSection
-        stage="awaiting-client"
-        items={summary.awaitingClient}
-        guards={guards}
-        payments={payments}
-        isDirector={isDirector}
-        onReleasePayout={onReleasePayout}
-        onRefundPayment={onRefundPayment}
-        onMarkClientPaidCash={onMarkClientPaidCash}
-        onMarkGuardPaidCash={onMarkGuardPaidCash}
-      />
-
-      <PipelineSection
-        stage="client-paid-active"
-        items={summary.clientPaidActive}
-        guards={guards}
-        payments={payments}
-        isDirector={isDirector}
-        readOnly
-        onReleasePayout={onReleasePayout}
-        onRefundPayment={onRefundPayment}
-        onMarkClientPaidCash={onMarkClientPaidCash}
-        onMarkGuardPaidCash={onMarkGuardPaidCash}
-      />
-
+      <PipelineSection stage="cash-deposit-pending" items={summary.cashDepositPending} {...sectionProps} />
+      <PipelineSection stage="awaiting-guard-payout" items={summary.awaitingGuardPayout} {...sectionProps} />
+      <PipelineSection stage="awaiting-client" items={summary.awaitingClient} {...sectionProps} />
+      <PipelineSection stage="client-paid-active" items={summary.clientPaidActive} {...sectionProps} readOnly />
       <PipelineSection
         stage="settled"
         items={summary.settled}
-        guards={guards}
-        payments={payments}
-        isDirector={isDirector}
+        {...sectionProps}
         readOnly
         limit={8}
-        onReleasePayout={onReleasePayout}
-        onRefundPayment={onRefundPayment}
-        onMarkClientPaidCash={onMarkClientPaidCash}
-        onMarkGuardPaidCash={onMarkGuardPaidCash}
       />
 
       {summary.awaitingClient.length === 0 &&
+        summary.cashDepositPending.length === 0 &&
         summary.awaitingGuardPayout.length === 0 &&
         summary.clientPaidActive.length === 0 &&
         summary.settled.length === 0 && (
@@ -233,8 +220,8 @@ export function StaffPaymentsPanel({
         </div>
         {isDirector && (
           <p className="text-[10px] font-mono text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-2">
-            Director: cash client payments and cash guard payouts are your override when money changes hands offline.
-            Administrators can release Stripe payouts only.
+            Director only: record client cash, deposit that cash to Stripe, and record cash guard payouts.
+            This keeps physical cash and the platform ledger aligned.
           </p>
         )}
       </div>

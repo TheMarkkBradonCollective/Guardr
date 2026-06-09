@@ -1,10 +1,17 @@
 import { SecurityRequest } from '../types';
-import { clientPaymentDisplay, guardPayoutDisplay, isCashClientPayment, isCashGuardPayout } from './cashPayments';
+import {
+  clientPaymentDisplay,
+  guardPayoutDisplay,
+  isCashAwaitingStripeDeposit,
+  isCashClientPayment,
+  isCashGuardPayout,
+} from './cashPayments';
 import { computeGuardEarnings } from './payments';
 
 /** Where a job sits in the client → guard money flow */
 export type PaymentPipelineStage =
   | 'awaiting-client'
+  | 'cash-deposit-pending'
   | 'client-paid-active'
   | 'awaiting-guard-payout'
   | 'settled'
@@ -13,6 +20,7 @@ export type PaymentPipelineStage =
 export function getPaymentPipelineStage(req: SecurityRequest): PaymentPipelineStage {
   if (req.status === 'closed') return 'closed';
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'awaiting-client';
+  if (isCashAwaitingStripeDeposit(req)) return 'cash-deposit-pending';
   if (req.paymentStatus === 'released') return 'settled';
   if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus)) {
     return 'awaiting-guard-payout';
@@ -26,15 +34,20 @@ export const PIPELINE_SECTION_META: Record<
 > = {
   'awaiting-client': {
     title: 'Awaiting client payment',
-    description: 'Job is posted but the client has not paid yet. Director can record cash.',
+    description: 'Client has not paid. Director can record cash received on site.',
+  },
+  'cash-deposit-pending': {
+    title: 'Deposit client cash to Stripe',
+    description:
+      'Client paid cash. Director must record when that money is deposited to the platform Stripe balance before paying guards via Stripe.',
   },
   'client-paid-active': {
     title: 'Paid — shift in progress',
-    description: 'Client payment is on file. Guard payout happens after the shift is completed.',
+    description: 'Funds are on file (card or cash already in Stripe). Guard is paid after shift completion.',
   },
   'awaiting-guard-payout': {
     title: 'Ready to pay guard',
-    description: 'Shift completed. Release via Stripe or record cash paid to the guard (Director).',
+    description: 'Shift done. Pay guard through Stripe Connect or record cash handed to them (Director).',
   },
   settled: {
     title: 'Settled',
@@ -44,6 +57,7 @@ export const PIPELINE_SECTION_META: Record<
 
 export function groupRequestsByPipeline(requests: SecurityRequest[]) {
   const awaitingClient: SecurityRequest[] = [];
+  const cashDepositPending: SecurityRequest[] = [];
   const clientPaidActive: SecurityRequest[] = [];
   const awaitingGuardPayout: SecurityRequest[] = [];
   const settled: SecurityRequest[] = [];
@@ -52,6 +66,9 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
     switch (getPaymentPipelineStage(req)) {
       case 'awaiting-client':
         awaitingClient.push(req);
+        break;
+      case 'cash-deposit-pending':
+        cashDepositPending.push(req);
         break;
       case 'client-paid-active':
         clientPaidActive.push(req);
@@ -71,16 +88,18 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
     new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
 
   awaitingClient.sort(byNewest);
+  cashDepositPending.sort(byNewest);
   clientPaidActive.sort(byNewest);
   awaitingGuardPayout.sort(byNewest);
   settled.sort(byNewest);
 
-  return { awaitingClient, clientPaidActive, awaitingGuardPayout, settled };
+  return { awaitingClient, cashDepositPending, clientPaidActive, awaitingGuardPayout, settled };
 }
 
 export function paymentPipelineSummary(requests: SecurityRequest[]) {
   const groups = groupRequestsByPipeline(requests);
   const awaitingClientTotal = groups.awaitingClient.reduce((s, r) => s + r.estimatedPayout, 0);
+  const cashDepositTotal = groups.cashDepositPending.reduce((s, r) => s + r.estimatedPayout, 0);
   const guardPayoutDue = groups.awaitingGuardPayout.reduce(
     (s, r) => s + computeGuardEarnings(r.durationHours, r.hourlyRate),
     0
@@ -93,15 +112,34 @@ export function paymentPipelineSummary(requests: SecurityRequest[]) {
   return {
     ...groups,
     awaitingClientTotal: Math.round(awaitingClientTotal * 100) / 100,
+    cashDepositTotal: Math.round(cashDepositTotal * 100) / 100,
     guardPayoutDue: Math.round(guardPayoutDue * 100) / 100,
     settledGuardTotal: Math.round(settledGuardTotal * 100) / 100,
   };
 }
 
 export function clientPaymentBadgeClass(req: SecurityRequest): string {
-  if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+  if (!req.paymentStatus || req.paymentStatus === 'unpaid') {
+    return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+  }
+  if (isCashAwaitingStripeDeposit(req)) {
+    return 'text-orange-300 border-orange-500/40 bg-orange-500/10';
+  }
   if (isCashClientPayment(req)) return 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10';
   return 'text-sky-300 border-sky-500/40 bg-sky-500/10';
+}
+
+export function platformFundsBadgeClass(req: SecurityRequest): string {
+  if (isCashAwaitingStripeDeposit(req)) {
+    return 'text-orange-300 border-orange-500/40 bg-orange-500/10';
+  }
+  if (isCashClientPayment(req) && req.cashDepositedToStripe) {
+    return 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10';
+  }
+  if (!isCashClientPayment(req) && req.paymentStatus && req.paymentStatus !== 'unpaid') {
+    return 'text-sky-300 border-sky-500/40 bg-sky-500/10';
+  }
+  return 'text-brand-text-muted border-brand-border bg-white/5';
 }
 
 export function guardPayoutBadgeClass(req: SecurityRequest): string {

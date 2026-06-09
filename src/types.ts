@@ -203,6 +203,9 @@ export interface SecurityRequest {
   clientPaymentMethod?: PaymentMethod;
   /** How the guard was paid out — cash is recorded by Director only */
   guardPayoutMethod?: PaymentMethod;
+  /** Director recorded that client cash was deposited to the Stripe platform balance */
+  cashDepositedToStripe?: boolean;
+  cashDepositedAt?: string;
   assignedGuardId: string | null;
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;
