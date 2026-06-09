@@ -7,6 +7,7 @@ import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { PushNotificationsPanel } from './PushNotificationsPanel';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -181,6 +182,8 @@ export function UserProfileScreen({
           onAddEducation={onAddEducation}
         />
       )}
+
+      <PushNotificationsPanel currentUser={currentUser} />
 
       <div className="app-card space-y-3">
         <p className="uber-label">Appearance</p>

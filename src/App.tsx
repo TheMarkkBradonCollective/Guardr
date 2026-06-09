@@ -43,6 +43,11 @@ import {
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
 } from './lib/support';
+import { listenForPushNavigation } from './lib/push';
+import { reportPushEvent } from './lib/pushApi';
+import { parsePushDeepLink, type PushDeepLink } from './lib/pushNavigation';
+import type { GuardTab } from './components/GuardDashboard';
+import type { StaffSection } from './lib/staffOps';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -74,6 +79,16 @@ export default function App() {
   }, [themeMode]);
 
   useEffect(() => {
+    const applyDeepLink = (url: string) => {
+      const link = parsePushDeepLink(url);
+      if (link) setPushDeepLink(link);
+    };
+
+    applyDeepLink(window.location.pathname + window.location.search);
+    return listenForPushNavigation(applyDeepLink);
+  }, []);
+
+  useEffect(() => {
     if (!currentUser) return;
     const local = loadTheme(currentUser.id);
     setThemeMode(local);
@@ -89,6 +104,9 @@ export default function App() {
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('map');
+  const [pushDeepLink, setPushDeepLink] = useState<PushDeepLink | null>(() =>
+    parsePushDeepLink(window.location.pathname + window.location.search)
+  );
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -694,6 +712,16 @@ export default function App() {
       }
     }
 
+    if (freshJob.requestType === 'direct' && freshJob.targetGuardId && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId: freshJob.targetGuardId,
+        requestId: freshJob.id,
+        location: freshJob.location,
+        body: `New direct assignment: ${freshJob.title}`,
+      });
+    }
+
     if (isDbConnected) {
       try {
         await supabase.from('security_requests').insert({
@@ -722,8 +750,18 @@ export default function App() {
   };
 
   const handleHireGuard = async (requestId: string, guardId: string) => {
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...r.applicants, guardId] } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] }).eq('id', requestId);
+    if (currentUser && job) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId,
+        requestId,
+        location: job.location,
+        body: `You were assigned to ${job.title}`,
+      });
+    }
   };
 
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
@@ -906,6 +944,19 @@ export default function App() {
           console.error('Hold payment error:', e);
         }
       }
+    }
+
+    if (payload.checkInAudit && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+      void reportPushEvent(currentUser, {
+        type: 'guard_checkin',
+        guardId: guard?.id ?? req?.assignedGuardId,
+        guardName: guard?.name ?? currentUser.name,
+        requestId,
+        siteId: req?.siteName || undefined,
+        location: req?.location,
+      });
     }
   };
 
@@ -1161,6 +1212,7 @@ export default function App() {
       <>
         <GuardDashboard
           guard={activeGuard}
+          initialTab={(pushDeepLink?.guardTab as GuardTab | undefined) ?? 'map'}
           requests={requests}
           payments={payments}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
@@ -1252,6 +1304,7 @@ export default function App() {
     return (
       <>
         <StaffDashboard
+          initialSection={(pushDeepLink?.staffSection as StaffSection | undefined) ?? 'overview'}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}

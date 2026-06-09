@@ -58,6 +58,7 @@ interface GuardDashboardProps {
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
+  initialTab?: GuardTab;
 }
 
 export type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
@@ -93,9 +94,10 @@ export function GuardDashboard({
   onSendSupportMessage,
   variant = 'standalone',
   shiftTab = 'map',
+  initialTab = 'map',
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
-  const [standaloneTab, setStandaloneTab] = useState<GuardTab>('map');
+  const [standaloneTab, setStandaloneTab] = useState<GuardTab>(initialTab);
   const activeTab = isEmbedded ? shiftTab : standaloneTab;
   const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
