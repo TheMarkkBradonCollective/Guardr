@@ -1,30 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../types';
 import {
-  PatientHomeScreen,
-  DoctorSearchScreen,
-  MessageScreen,
-  AppointmentScreen,
-  MedicationScreen,
-  TrackerScreen,
-} from './patient';
+  buildRecentReports,
+  computeCoverageSummary,
+} from '../lib/clientCoverage';
+import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
+import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
+import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
+import { LiveCoverageScreen } from './client/LiveCoverageScreen';
+import { ClientReportsScreen } from './client/ClientReportsScreen';
+import { ClientRequestsList } from './client/ClientRequestsList';
+import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
+import { GuardProfileScreen } from './client/GuardProfileScreen';
+import { ClientMapScreen } from './client/ClientMapScreen';
 
 export type ClientView =
-  | 'home'
-  | 'message'
-  | 'appointment'
-  | 'medication'
-  | 'tracker'
-  | 'search'
-  | 'profile'
-  | 'support'
   | 'map'
+  | 'home'
   | 'request'
   | 'direct-request'
   | 'coverage'
   | 'reports'
   | 'requests'
-  | 'guards';
+  | 'guards'
+  | 'profile'
+  | 'support';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -45,12 +45,23 @@ interface ClientDashboardProps {
 
 export function ClientDashboard({
   companyName,
-  avatarUrl,
+  clientId,
+  requests,
+  guards,
+  clientEmail,
   activeView,
   onViewChange,
+  onPostRequest,
+  onEditRequest,
+  onCancelRequest,
+  onHireGuard,
+  onUpdateStatus,
+  onAddReview,
 }: ClientDashboardProps) {
-  const [view, setView] = useState<ClientView>(activeView ?? 'home');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [view, setView] = useState<ClientView>(activeView ?? 'map');
+  const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
+  const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
+  const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -61,52 +72,147 @@ export function ClientDashboard({
     onViewChange?.(next);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) navigate('search');
+  const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
+  const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
+
+  const handleHomeAction = (action: ClientHomeAction) => {
+    switch (action) {
+      case 'request':
+        setFlowPreset('default');
+        navigate('request');
+        break;
+      case 'schedule':
+        setFlowPreset('schedule');
+        navigate('request');
+        break;
+      case 'recurring':
+        setFlowPreset('recurring');
+        navigate('request');
+        break;
+      case 'reports':
+        navigate('reports');
+        break;
+      case 'coverage':
+        navigate('coverage');
+        break;
+      case 'requests':
+        navigate('requests');
+        break;
+      case 'guards':
+        setSelectedGuard(null);
+        navigate('guards');
+        break;
+    }
   };
 
-  if (view === 'search') {
-    return (
-      <DoctorSearchScreen
-        initialQuery={searchQuery}
-        avatarUrl={avatarUrl}
-        onProfileClick={() => navigate('profile')}
-        onMakeAppointment={() => navigate('appointment')}
+  const startDirectGuardRequest = (guard: SecurityGuard) => {
+    setRequestTargetGuard(guard);
+    navigate('direct-request');
+  };
+
+  const wrap = (node: React.ReactNode) => (
+    <div className="h-full overflow-y-auto overscroll-contain">{node}</div>
+  );
+
+  if (view === 'map') {
+    return <ClientMapScreen requests={requests} />;
+  }
+
+  if (view === 'request') {
+    return wrap(
+      <RequestSecurityFlow
+        preset={flowPreset}
+        onBack={() => navigate('home')}
+        onSubmit={(req) => {
+          onPostRequest(req);
+          navigate('home');
+        }}
       />
     );
   }
 
-  if (view === 'message') {
-    return <MessageScreen />;
-  }
-
-  if (view === 'appointment') {
-    return <AppointmentScreen />;
-  }
-
-  if (view === 'medication') {
+  if (view === 'direct-request' && requestTargetGuard) {
     return (
-      <MedicationScreen
-        avatarUrl={avatarUrl}
-        onProfileClick={() => navigate('profile')}
+      <DirectGuardRequestFlow
+        guard={requestTargetGuard}
+        onBack={() => {
+          setRequestTargetGuard(null);
+          navigate('guards');
+        }}
+        onSubmit={(req) => {
+          onPostRequest(req);
+          setRequestTargetGuard(null);
+          navigate('requests');
+        }}
       />
     );
   }
 
-  if (view === 'tracker') {
-    return <TrackerScreen />;
+  if (view === 'guards') {
+    if (selectedGuard) {
+      return (
+        <GuardProfileScreen
+          guard={selectedGuard}
+          clientId={clientId}
+          requests={requests}
+          onBack={() => setSelectedGuard(null)}
+          onRequestGuard={startDirectGuardRequest}
+        />
+      );
+    }
+    return (
+      <GuardDirectoryScreen
+        guards={guards}
+        onSelectGuard={setSelectedGuard}
+      />
+    );
   }
 
-  return (
-    <PatientHomeScreen
-      userName={companyName}
-      avatarUrl={avatarUrl}
-      onSearch={handleSearch}
-      onSeeAllAppointments={() => navigate('appointment')}
-      onSeeAllTracker={() => navigate('tracker')}
-      onSeeAllCategories={() => navigate('search')}
-      onProfileClick={() => navigate('profile')}
+  if (view === 'coverage') {
+    return wrap(
+      <LiveCoverageScreen
+        requests={requests}
+        guards={guards}
+        onBack={() => navigate('home')}
+      />
+    );
+  }
+
+  if (view === 'reports') {
+    return wrap(
+      <ClientReportsScreen
+        reports={recentReports}
+        onBack={() => navigate('home')}
+      />
+    );
+  }
+
+  if (view === 'requests') {
+    return wrap(
+      <ClientRequestsList
+        requests={requests}
+        guards={guards}
+        clientEmail={clientEmail}
+        onCancelRequest={onCancelRequest}
+        onEditRequest={onEditRequest}
+        onHireGuard={onHireGuard}
+        onUpdateStatus={onUpdateStatus}
+        onAddReview={onAddReview}
+        onRequestNew={() => {
+          setFlowPreset('default');
+          navigate('request');
+        }}
+      />
+    );
+  }
+
+  return wrap(
+    <ClientHomeScreen
+      companyName={companyName}
+      coverage={coverage}
+      requests={requests}
+      recentReports={recentReports}
+      onAction={handleHomeAction}
     />
   );
 }
