@@ -1129,7 +1129,7 @@ export default function App() {
       <>
         <HomePage
           onNavigateToAuth={(role, mode) => {
-            if (role) setInitialAuthRole(role);
+            setInitialAuthRole(role ?? 'client');
             setInitialAuthMode(mode ?? 'sign-in');
             setIsAuthView(true);
           }}

@@ -61,7 +61,13 @@ export function HomePage({
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
               className="text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors hidden sm:block"
             >
-              Sign in
+              Log in
+            </button>
+            <button
+              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
+              className="uber-button-sage text-sm h-9 px-4 hidden sm:inline-flex"
+            >
+              Sign up
             </button>
           </div>
         </div>
@@ -104,17 +110,17 @@ export function HomePage({
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <button
-              onClick={() => onNavigateToAuth('client', 'sign-up')}
+              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
               className="uber-button-sage w-full sm:w-auto min-w-[200px]"
             >
-              Request security
+              Sign up
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onNavigateToAuth('guard', 'sign-in')}
+              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
               className="uber-button-outline w-full sm:w-auto min-w-[200px]"
             >
-              Become a guard
+              Log in
             </button>
           </motion.div>
         </div>
@@ -173,11 +179,11 @@ export function HomePage({
             Whether you need coverage tonight or want to pick up your next shift.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => onNavigateToAuth('client', 'sign-up')} className="uber-button-sage">
-              Request security
+            <button onClick={() => onNavigateToAuth(undefined, 'sign-up')} className="uber-button-sage">
+              Sign up
             </button>
-            <button onClick={() => onNavigateToAuth('guard', 'sign-in')} className="uber-button-outline">
-              Become a guard
+            <button onClick={() => onNavigateToAuth(undefined, 'sign-in')} className="uber-button-outline">
+              Log in
             </button>
           </div>
         </div>
