@@ -28,7 +28,7 @@ import {
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
-import { StaffLiveJobs } from './staff/StaffLiveJobs';
+import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffReportsPanel } from './staff/StaffReportsPanel';
@@ -135,7 +135,7 @@ export function StaffDashboard({
   const badges = useMemo(
     () => ({
       approvals: stats.pendingApprovals,
-      'live-jobs': requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
+      jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
@@ -161,9 +161,9 @@ export function StaffDashboard({
             }}
           />
         );
-      case 'live-jobs':
+      case 'jobs':
         return (
-          <StaffLiveJobs
+          <StaffJobsPanel
             requests={requests}
             guards={guards}
             payments={payments}

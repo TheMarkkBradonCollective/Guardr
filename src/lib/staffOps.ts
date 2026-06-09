@@ -4,7 +4,7 @@ import { PLATFORM_FEE_PER_HOUR } from './payments';
 export type StaffSection =
   | 'overview'
   | 'approvals'
-  | 'live-jobs'
+  | 'jobs'
   | 'map'
   | 'guards'
   | 'clients'
@@ -19,6 +19,17 @@ export type StaffSection =
 
 export function isStaffOpsMapSection(section: StaffSection): boolean {
   return section === 'map';
+}
+
+/** Accept legacy deep links that still use live-jobs */
+export function normalizeStaffSection(section?: string): StaffSection | undefined {
+  if (!section) return undefined;
+  if (section === 'live-jobs') return 'jobs';
+  const valid: StaffSection[] = [
+    'overview', 'approvals', 'jobs', 'map', 'guards', 'clients', 'reports',
+    'incidents', 'support', 'payments', 'disputes', 'analytics', 'settings', 'profile',
+  ];
+  return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }
 
 export type LiveJobStatus =

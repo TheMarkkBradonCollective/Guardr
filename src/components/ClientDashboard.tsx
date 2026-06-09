@@ -41,6 +41,7 @@ export function ClientDashboard({
   activeView,
   onViewChange,
   onPostRequest,
+  onEditRequest,
   onCancelRequest,
   onHireGuard,
   onUpdateStatus,
@@ -182,6 +183,7 @@ export function ClientDashboard({
         guards={guards}
         clientEmail={clientEmail}
         onCancelRequest={onCancelRequest}
+        onEditRequest={onEditRequest}
         onHireGuard={onHireGuard}
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}

@@ -16,24 +16,24 @@ import {
   DollarSign,
   Loader2,
   MapPin,
+  Pencil,
   Shield,
   Star,
   X,
 } from 'lucide-react';
+import { canClientCancelRequest, canClientEditRequest, isJobPaid } from '../../lib/jobEditRules';
+import { EditRequestForm } from './EditRequestForm';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
   onCancelRequest: (requestId: string) => void;
+  onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onRequestNew: () => void;
-}
-
-function canClientModifyRequest(status: JobStatus): boolean {
-  return status === 'pending-review' || status === 'open';
 }
 
 function statusBadgeClass(status: JobStatus): string {
@@ -71,6 +71,7 @@ export function ClientRequestsList({
   guards,
   clientEmail,
   onCancelRequest,
+  onEditRequest,
   onHireGuard,
   onUpdateStatus,
   onAddReview,
@@ -79,6 +80,7 @@ export function ClientRequestsList({
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const handlePayNow = async (req: SecurityRequest) => {
     setPayingJobId(req.id);
@@ -149,15 +151,38 @@ export function ClientRequestsList({
                   <span className="flex items-center gap-1"><DollarSign className="w-3 h-3 text-brand-primary" />${req.hourlyRate}/hr · ${req.estimatedPayout} est.</span>
                 </div>
 
-                {canClientModifyRequest(req.status) && (
-                  <div className="flex gap-2">
+                {isJobPaid(req) && (
+                  <p className="text-[10px] font-mono text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5">
+                    Job locked — paid shifts cannot be edited.
+                  </p>
+                )}
+
+                {editingId === req.id && canClientEditRequest(req) && (
+                  <EditRequestForm
+                    request={req}
+                    onSave={onEditRequest}
+                    onCancel={() => setEditingId(null)}
+                  />
+                )}
+
+                {canClientEditRequest(req) && editingId !== req.id && (
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
-                      className="text-[10px] font-black uppercase px-3 py-2 border border-red-500/40 text-red-400 rounded-lg"
+                      onClick={() => setEditingId(req.id)}
+                      className="text-[10px] font-black uppercase px-3 py-2 border border-brand-primary/40 text-brand-primary rounded-lg"
                     >
-                      <X className="w-3 h-3 inline" /> Cancel
+                      <Pencil className="w-3 h-3 inline" /> Edit
                     </button>
+                    {canClientCancelRequest(req) && (
+                      <button
+                        type="button"
+                        onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
+                        className="text-[10px] font-black uppercase px-3 py-2 border border-red-500/40 text-red-400 rounded-lg"
+                      >
+                        <X className="w-3 h-3 inline" /> Cancel
+                      </button>
+                    )}
                   </div>
                 )}
 

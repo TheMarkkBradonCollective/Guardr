@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import React, { useMemo, useState } from 'react';
+import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
+import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { useDevice } from '../../lib/platform';
-import { Search, X } from 'lucide-react';
-import { Payment } from '../../types';
+import { Briefcase, Search, X } from 'lucide-react';
 import { JobPaymentRow } from './JobPaymentRow';
 
-interface StaffLiveJobsProps {
+type JobsFilter = 'all' | 'open' | 'active' | 'done';
+
+interface StaffJobsPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   payments?: Payment[];
@@ -18,6 +20,19 @@ interface StaffLiveJobsProps {
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string) => Promise<void>;
+}
+
+function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
+  switch (filter) {
+    case 'open':
+      return req.status === 'open' || req.status === 'pending-review';
+    case 'active':
+      return req.status === 'accepted' || req.status === 'in-progress';
+    case 'done':
+      return req.status === 'completed' || req.status === 'closed';
+    default:
+      return true;
+  }
 }
 
 function JobDetailPanel({
@@ -52,6 +67,9 @@ function JobDetailPanel({
       <div className="flex flex-wrap items-center gap-2">
         <span className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border ${statusCfg.className}`}>
           {statusCfg.emoji} {statusCfg.label}
+        </span>
+        <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-brand-border text-brand-text-muted">
+          {JOB_STATUS_LABELS[req.status]}
         </span>
         <span className="text-[10px] font-mono text-brand-text-muted">{req.id}</span>
       </div>
@@ -90,10 +108,7 @@ function JobDetailPanel({
             Reassign
           </button>
         )}
-        <button type="button" onClick={() => alert('Backup guard added to job.')} className="staff-ops-btn-outline text-[10px]">
-          Add Backup
-        </button>
-        {req.status !== 'completed' && (
+        {req.status !== 'completed' && req.status !== 'closed' && (
           <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
             <X className="w-3 h-3" /> Cancel
           </button>
@@ -103,7 +118,7 @@ function JobDetailPanel({
   );
 }
 
-export function StaffLiveJobs({
+export function StaffJobsPanel({
   requests,
   guards,
   isDirector,
@@ -114,27 +129,62 @@ export function StaffLiveJobs({
   onMarkGuardPaidCash,
   onDepositCashToStripe,
   onReleasePayout,
-}: StaffLiveJobsProps) {
+}: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<JobsFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
-  const live = requests.filter((r) => r.status !== 'closed');
-  const filtered = live.filter(
-    (r) =>
-      r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.clientName.toLowerCase().includes(search.toLowerCase()) ||
-      r.location.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return [...requests]
+      .filter((r) => matchesFilter(r, filter))
+      .filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.clientName.toLowerCase().includes(q) ||
+          r.location.toLowerCase().includes(q)
+      )
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  }, [requests, filter, search]);
 
   const selected = filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null;
+
+  const filters: { id: JobsFilter; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'open', label: 'Open' },
+    { id: 'active', label: 'Active' },
+    { id: 'done', label: 'Done' },
+  ];
 
   return (
     <div className="space-y-6 max-w-6xl animate-fade-in">
       <div>
-        <h1 className="text-2xl font-black">Live Jobs</h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">Monitor and manage active job flow</p>
+        <h1 className="text-2xl font-black flex items-center gap-2">
+          <Briefcase className="w-6 h-6 text-brand-primary" />
+          Jobs
+        </h1>
+        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
+          All client requests — open, active, and completed
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {filters.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-black uppercase border transition-colors ${
+              filter === f.id
+                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
+                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       <div className="relative max-w-md">
@@ -149,13 +199,11 @@ export function StaffLiveJobs({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center text-sm text-brand-text-muted font-mono py-12">No jobs match your search.</p>
+        <p className="text-center text-sm text-brand-text-muted font-mono py-12">No jobs match your filters.</p>
       ) : splitView ? (
         <div className="tablet-split-panel">
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.map((req) => {
-              const jobStatus = getLiveJobStatus(req);
-              const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
               const isActive = selected?.id === req.id;
               return (
                 <button
@@ -166,8 +214,8 @@ export function StaffLiveJobs({
                     isActive ? 'ring-2 ring-brand-primary' : 'hover:bg-white/5'
                   }`}
                 >
-                  <span className={`text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border ${statusCfg.className}`}>
-                    {statusCfg.label}
+                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded border border-brand-border text-brand-text-muted">
+                    {JOB_STATUS_LABELS[req.status]}
                   </span>
                   <p className="font-black text-sm mt-2 truncate">{req.title}</p>
                   <p className="text-[10px] font-mono text-brand-text-muted truncate">{req.clientName}</p>
@@ -193,20 +241,19 @@ export function StaffLiveJobs({
       ) : (
         <div className="space-y-3">
           {filtered.map((req) => (
-            <div key={req.id}>
-              <JobDetailPanel
-                req={req}
-                guards={guards}
-                payments={payments}
-                isDirector={isDirector}
-                onApproveRequest={onApproveRequest}
-                onDenyRequest={onDenyRequest}
-                onMarkClientPaidCash={onMarkClientPaidCash}
-                onMarkGuardPaidCash={onMarkGuardPaidCash}
-                onDepositCashToStripe={onDepositCashToStripe}
-                onReleasePayout={onReleasePayout}
-              />
-            </div>
+            <JobDetailPanel
+              key={req.id}
+              req={req}
+              guards={guards}
+              payments={payments}
+              isDirector={isDirector}
+              onApproveRequest={onApproveRequest}
+              onDenyRequest={onDenyRequest}
+              onMarkClientPaidCash={onMarkClientPaidCash}
+              onMarkGuardPaidCash={onMarkGuardPaidCash}
+              onDepositCashToStripe={onDepositCashToStripe}
+              onReleasePayout={onReleasePayout}
+            />
           ))}
         </div>
       )}

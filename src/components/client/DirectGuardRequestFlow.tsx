@@ -8,6 +8,7 @@ import {
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
+import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { US_STATES, formatStateName } from '../../lib/states';
@@ -63,7 +64,7 @@ export function DirectGuardRequestFlow({
     switch (step) {
       case 1: return !!serviceId;
       case 2: return address.trim().length > 3 && jobState.length === 2;
-      case 3: return durationHours > 0;
+      case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveRate >= 20;
       case 5: return true;
       default: return true;
@@ -81,6 +82,11 @@ export function DirectGuardRequestFlow({
   };
 
   const handleSubmit = () => {
+    const scheduleError = validateShiftSchedule(startDate, endDate);
+    if (scheduleError) {
+      alert(scheduleError);
+      return;
+    }
     onSubmit({
       requestType: 'direct',
       targetGuardId: guard.id,
@@ -191,13 +197,18 @@ export function DirectGuardRequestFlow({
           <div className="space-y-4">
             <h2 className="text-xl font-bold">When?</h2>
             <div className="grid grid-cols-2 gap-3">
-              <input type="date" value={startDate.slice(0, 10)} onChange={(e) => setStartDate(`${e.target.value}T${startDate.slice(11) || '18:00'}`)} className="uber-input" />
+              <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => setStartDate(`${e.target.value}T${startDate.slice(11) || '18:00'}`)} className="uber-input" />
               <input type="time" value={startDate.slice(11, 16)} onChange={(e) => setStartDate(`${startDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
               <input type="date" value={endDate.slice(0, 10)} onChange={(e) => setEndDate(`${e.target.value}T${endDate.slice(11) || '06:00'}`)} className="uber-input" />
               <input type="time" value={endDate.slice(11, 16)} onChange={(e) => setEndDate(`${endDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
             </div>
-            <p className={`text-sm rounded-xl p-3 border ${durationHours > 0 ? 'border-brand-primary/30 text-brand-primary' : 'border-red-500/30 text-red-400'}`}>
-              {durationHours > 0 ? formatDuration(durationHours) : 'End must be after start'}
+            <p className={`text-sm rounded-xl p-3 border ${
+              !validateShiftSchedule(startDate, endDate) && durationHours > 0
+                ? 'border-brand-primary/30 text-brand-primary'
+                : 'border-red-500/30 text-red-400'
+            }`}>
+              {validateShiftSchedule(startDate, endDate) ??
+                (durationHours <= 0 ? 'End must be after start' : formatDuration(durationHours))}
             </p>
             <div>
               <label className="uber-label">Assignment notes for {guard.name.split(' ')[0]}</label>

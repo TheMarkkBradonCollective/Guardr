@@ -61,7 +61,8 @@ import { listenForPushNavigation } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import { parsePushDeepLink, type PushDeepLink } from './lib/pushNavigation';
 import type { GuardTab } from './components/GuardDashboard';
-import type { StaffSection } from './lib/staffOps';
+import { normalizeStaffSection, type StaffSection } from './lib/staffOps';
+import { canClientEditRequest, validateShiftSchedule } from './lib/jobEditRules';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -739,13 +740,19 @@ export default function App() {
 
   // ── Request CRUD ───────────────────────────────────────────
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
+    const startDate = newRequest.startDate || new Date().toISOString();
+    const endDate = newRequest.endDate || new Date(Date.now() + 8 * 3600000).toISOString();
+    const scheduleError = validateShiftSchedule(startDate, endDate);
+    if (scheduleError) {
+      alert(scheduleError);
+      return;
+    }
+
     const clientRecord = clients.find(c => c.id === currentUser?.id);
     const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Client';
     const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
     const siteName = newRequest.siteName || '';
     const address = newRequest.address || newRequest.location || 'To Be Confirmed';
-    const startDate = newRequest.startDate || new Date().toISOString();
-    const endDate = newRequest.endDate || new Date(Date.now() + 8 * 3600000).toISOString();
     const durationHours = newRequest.durationHours ?? computeDurationHours(startDate, endDate);
     const hourlyRate = newRequest.hourlyRate || 35;
     const guardPay = newRequest.guardPay ?? computeGuardPay(hourlyRate);
@@ -1073,18 +1080,28 @@ export default function App() {
   };
 
   const handleCancelRequest = async (requestId: string) => {
+    const existing = requests.find((r) => r.id === requestId);
+    if (existing && !canClientEditRequest(existing)) {
+      alert('Paid or in-progress jobs cannot be cancelled from here. Contact staff for help.');
+      return;
+    }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
   };
 
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
     const existing = requests.find(r => r.id === requestId);
-    if (!existing || (existing.status !== 'pending-review' && existing.status !== 'open')) {
-      alert('Only open or pending requests can be edited.');
+    if (!existing || !canClientEditRequest(existing)) {
+      alert(existing ? 'This job is locked after payment.' : 'Job not found.');
       return;
     }
     const startDate = updates.startDate || existing.startDate;
     const endDate = updates.endDate || existing.endDate;
+    const scheduleError = validateShiftSchedule(startDate, endDate);
+    if (scheduleError) {
+      alert(scheduleError);
+      return;
+    }
     const durationHours = updates.durationHours ?? computeDurationHours(startDate, endDate);
     const hourlyRate = updates.hourlyRate ?? existing.hourlyRate;
     const siteName = updates.siteName ?? existing.siteName ?? '';
@@ -1583,7 +1600,7 @@ export default function App() {
     return (
       <>
         <StaffDashboard
-          initialSection={(pushDeepLink?.staffSection as StaffSection | undefined) ?? 'overview'}
+          initialSection={normalizeStaffSection(pushDeepLink?.staffSection) ?? 'overview'}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}

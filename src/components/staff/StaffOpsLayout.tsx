@@ -16,7 +16,7 @@ import {
   LifeBuoy,
   LogOut,
   Map,
-  Radio,
+  Briefcase,
   Scale,
   Settings,
   Shield,
@@ -41,7 +41,7 @@ interface StaffOpsLayoutProps {
 const SECTION_TITLES: Record<StaffSection, string> = {
   overview: 'Overview',
   approvals: 'Verification',
-  'live-jobs': 'Live Jobs',
+  jobs: 'Jobs',
   map: 'Operations map',
   guards: 'Guards',
   clients: 'Clients',
@@ -74,7 +74,7 @@ export function StaffOpsLayout({
   const NAV: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'map', label: 'Map', icon: Map },
-    { id: 'live-jobs', label: 'Live Jobs', icon: Radio, badge: badges['live-jobs'] },
+    { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
     { id: 'approvals', label: 'Verification', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'clients', label: 'Clients', icon: Building2 },

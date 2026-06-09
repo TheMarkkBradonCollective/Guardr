@@ -9,6 +9,7 @@ import {
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
+import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
@@ -78,7 +79,7 @@ export function RequestSecurityFlow({
     switch (step) {
       case 1: return !!serviceId;
       case 2: return address.trim().length > 3 && jobState.length === 2;
-      case 3: return durationHours > 0;
+      case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveGuards >= 1;
       case 5: return effectiveRate >= 20;
       case 6: return true;
@@ -97,6 +98,11 @@ export function RequestSecurityFlow({
   };
 
   const handleSubmit = () => {
+    const scheduleError = validateShiftSchedule(startDate, endDate);
+    if (scheduleError) {
+      alert(scheduleError);
+      return;
+    }
     onSubmit({
       requestType: 'marketplace',
       title,
@@ -233,7 +239,7 @@ export function RequestSecurityFlow({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="uber-label block mb-1.5">Start Date</label>
-                <input type="date" value={startDate.slice(0, 10)} onChange={(e) => {
+                <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => {
                   const time = startDate.slice(11) || '18:00';
                   setStartDate(`${e.target.value}T${time}`);
                 }} className="uber-input rounded-xl" />
@@ -258,10 +264,15 @@ export function RequestSecurityFlow({
                 }} className="uber-input rounded-xl" />
               </div>
             </div>
-            <div className={`rounded-xl p-4 border text-sm font-mono ${durationHours > 0 ? 'border-brand-primary/30 bg-brand-primary/5 text-brand-primary' : 'border-red-500/30 text-red-400'}`}>
-              {durationHours > 0
-                ? `Guardr calculated ${formatDuration(durationHours)} total coverage`
-                : 'End must be after start'}
+            <div className={`rounded-xl p-4 border text-sm font-mono ${
+              !validateShiftSchedule(startDate, endDate) && durationHours > 0
+                ? 'border-brand-primary/30 bg-brand-primary/5 text-brand-primary'
+                : 'border-red-500/30 text-red-400'
+            }`}>
+              {validateShiftSchedule(startDate, endDate) ??
+                (durationHours <= 0
+                  ? 'End must be after start'
+                  : `Guardr calculated ${formatDuration(durationHours)} total coverage`)}
             </div>
           </div>
         )}

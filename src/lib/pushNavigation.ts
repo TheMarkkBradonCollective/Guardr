@@ -13,7 +13,7 @@ export function parsePushDeepLink(url: string): PushDeepLink | null {
     const path = parsed.pathname.replace(/\/$/, '') || '/';
 
     if (path === '/dispatch') {
-      return { staffSection: 'live-jobs' };
+      return { staffSection: 'jobs' };
     }
 
     if (path === '/guard') {
