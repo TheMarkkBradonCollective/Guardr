@@ -7,7 +7,7 @@ import {
   getCourseUploadStatusLabel,
   isCertExpired,
 } from '../../lib/certStatus';
-import { CredentialStatusBadge } from './CredentialStatusBadge';
+import { CredentialStatusBadges } from './CredentialStatusBadge';
 import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
@@ -208,6 +208,7 @@ export function GuardThirtyTwoHourPanel({
                     cert={cert}
                     editing={editing}
                     compact
+                    showUploadBadge={false}
                     onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                   />
                 ))}
@@ -277,11 +278,13 @@ function ThirtyTwoHourCertRow({
   cert,
   editing,
   compact = false,
+  showUploadBadge = true,
   onDelete,
 }: {
   cert: Certification;
   editing: boolean;
   compact?: boolean;
+  showUploadBadge?: boolean;
   onDelete?: () => void;
 }) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
@@ -309,7 +312,7 @@ function ThirtyTwoHourCertRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <CredentialStatusBadge cert={cert} />
+        <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
         {editing && onDelete && (
           <button type="button" onClick={onDelete} className="text-xs text-red-400 flex items-center gap-1 hover:underline">
             <Trash2 className="w-3 h-3" />

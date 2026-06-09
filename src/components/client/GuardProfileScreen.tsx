@@ -10,7 +10,7 @@ import {
 } from '../../lib/guardResume';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
-import { getCredentialStatusBadgeClass, getCredentialStatusLabel } from '../../lib/certStatus';
+import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
@@ -175,9 +175,7 @@ export function GuardProfileScreen({
                           {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
                         </p>
                       </div>
-                      <span className={`text-[10px] font-semibold uppercase shrink-0 px-2 py-0.5 rounded border ${getCredentialStatusBadgeClass(cert)}`}>
-                        {getCredentialStatusLabel(cert)}
-                      </span>
+                      <CredentialStatusBadges cert={cert} />
                     </div>
                   ))}
                 </div>

@@ -18,7 +18,7 @@ import {
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { formatStateName, US_STATES } from '../../lib/states';
-import { CredentialStatusBadge } from '../guard/CredentialStatusBadge';
+import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { isCertExpired } from '../../lib/certStatus';
@@ -625,7 +625,7 @@ function CredentialRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <CredentialStatusBadge cert={cert} />
+        <CredentialStatusBadges cert={cert} />
         {editing && onDelete && (
           <button
             type="button"

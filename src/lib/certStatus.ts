@@ -1,28 +1,42 @@
 import { Certification, SecurityGuard } from '../types';
 import { resolveCertCatalogId } from './certCatalog';
-import {
-  guardHasCredentialUploaded,
-  guardHasGuardrVerifiedCredential,
-  isCertExpired,
-} from './guardQualification';
+import { guardHasCredentialUploaded, isCertExpired } from './guardQualification';
 
 export { isCertExpired };
 
-export function getCredentialStatusLabel(cert: Certification): string {
+export function getCredentialUploadLabel(cert: Certification): string {
+  return isCertExpired(cert) ? 'On file · Expired' : 'On file';
+}
+
+export function getCredentialUploadBadgeClass(cert: Certification): string {
+  return isCertExpired(cert)
+    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+    : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+}
+
+export function getCredentialVerificationLabel(cert: Certification): string {
   if (cert.status === 'rejected') return 'Rejected';
-  const expired = isCertExpired(cert);
-  if (cert.status === 'verified') return expired ? 'Guardr verified · Expired' : 'Guardr verified';
-  return expired ? 'On file · Expired' : 'On file';
+  if (cert.status === 'verified') return 'Guardr verified';
+  return 'Unverified';
 }
 
-export function getCredentialStatusBadgeClass(cert: Certification): string {
+export function getCredentialVerificationBadgeClass(cert: Certification): string {
   if (cert.status === 'rejected') return 'text-red-400 border-red-500/30 bg-red-500/10';
-  if (isCertExpired(cert)) return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
   if (cert.status === 'verified') return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
-  return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+  return 'text-brand-text-muted border-brand-border bg-brand-border/20';
 }
 
-export type CourseUploadStatus = 'missing' | 'on-file' | 'verified' | 'expired';
+/** @deprecated Use getCredentialUploadLabel + getCredentialVerificationLabel */
+export function getCredentialStatusLabel(cert: Certification): string {
+  return `${getCredentialUploadLabel(cert)} · ${getCredentialVerificationLabel(cert)}`;
+}
+
+/** @deprecated Use upload + verification badge classes separately */
+export function getCredentialStatusBadgeClass(cert: Certification): string {
+  return getCredentialUploadBadgeClass(cert);
+}
+
+export type CourseUploadStatus = 'missing' | 'on-file' | 'expired';
 
 function matchingUploadedCerts(
   guard: SecurityGuard,
@@ -41,6 +55,7 @@ function matchingUploadedCerts(
   });
 }
 
+/** Course-level upload state only — verification is shown on the cert row. */
 export function getCourseUploadStatus(
   guard: SecurityGuard,
   catalogId: string,
@@ -51,20 +66,12 @@ export function getCourseUploadStatus(
   const certs = matchingUploadedCerts(guard, catalogId, jobState);
   const allExpired = certs.length > 0 && certs.every(isCertExpired);
 
-  if (catalogId === 'bsis-guard-card' && allExpired) return 'expired';
-
-  if (guardHasGuardrVerifiedCredential(guard, catalogId, jobState)) {
-    return allExpired ? 'expired' : 'verified';
-  }
-
   if (allExpired) return 'expired';
   return 'on-file';
 }
 
 export function getCourseUploadStatusLabel(status: CourseUploadStatus): string {
   switch (status) {
-    case 'verified':
-      return 'Verified';
     case 'on-file':
       return 'On file';
     case 'expired':
@@ -76,8 +83,6 @@ export function getCourseUploadStatusLabel(status: CourseUploadStatus): string {
 
 export function getCourseUploadStatusBadgeClass(status: CourseUploadStatus): string {
   switch (status) {
-    case 'verified':
-      return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
     case 'on-file':
       return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
     case 'expired':
