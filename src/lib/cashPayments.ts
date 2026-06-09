@@ -15,8 +15,8 @@ export function getPlatformFeeAmount(req: SecurityRequest): number {
 }
 
 /**
- * Client paid cash → how much must be recorded in Stripe:
- * - Guard paid via Stripe Connect: full client payment (cash must be put back before payout)
+ * Client paid cash → how much must eventually be recorded in Stripe:
+ * - Guard paid via Stripe Connect: full client payment (can be deposited after guard payout)
  * - Guard paid in cash: platform fee only
  */
 export function getRequiredStripeDeposit(req: SecurityRequest): number {
@@ -73,11 +73,10 @@ export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
   );
 }
 
-/** Stripe Connect guard payout requires the full client cash amount in Stripe */
+/** Stripe Connect payout is blocked only when the guard was already paid in cash */
 export function canStripePayGuard(req: SecurityRequest): boolean {
   if (!isCashClientPayment(req)) return true;
-  if (isCashGuardPayout(req)) return false;
-  return isStripeDepositSatisfied(req) && getRequiredStripeDeposit(req) >= req.estimatedPayout - 0.01;
+  return !isCashGuardPayout(req);
 }
 
 export function stripeDepositLabel(req: SecurityRequest): string {
@@ -93,7 +92,7 @@ export function stripeDepositDescription(req: SecurityRequest): string {
   if (isCashGuardPayout(req)) {
     return 'Guard was paid cash — deposit only the platform fee to Stripe.';
   }
-  return 'Client paid cash and guard will be paid through Stripe — deposit the full job amount back to Stripe first.';
+  return 'Client paid cash — record the full job amount in Stripe when it is deposited (can be after guard payout).';
 }
 
 export function clientPaymentDisplay(req: SecurityRequest): string {
@@ -130,9 +129,6 @@ export function platformFundsDisplay(req: SecurityRequest): string {
 export function guardPayoutDisplay(req: SecurityRequest): string {
   if (req.paymentStatus !== 'released') {
     if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus || '')) {
-      if (isCashClientPayment(req) && !canStripePayGuard(req) && !isCashGuardPayout(req)) {
-        return 'Awaiting full Stripe deposit';
-      }
       return 'Payout pending';
     }
     return '—';

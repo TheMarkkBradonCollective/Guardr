@@ -149,10 +149,9 @@ export function JobPaymentRow({
             </>
           )}
 
-          {canPayGuard && onReleasePayout && !readOnly && !stripePayAllowed && !isCashGuardPayout(req) && (
-            <p className="text-[10px] font-mono text-orange-400 w-full">
-              Client paid cash — deposit the full ${req.estimatedPayout} to Stripe before paying this guard via
-              Connect.
+          {canPayGuard && onReleasePayout && !readOnly && !stripePayAllowed && isCashGuardPayout(req) && (
+            <p className="text-[10px] font-mono text-brand-text-muted w-full">
+              Guard was paid in cash — Stripe Connect payout is not available for this job.
             </p>
           )}
 

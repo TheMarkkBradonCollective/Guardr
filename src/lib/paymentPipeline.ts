@@ -42,7 +42,7 @@ export const PIPELINE_SECTION_META: Record<
   'cash-deposit-pending': {
     title: 'Deposit client cash to Stripe',
     description:
-      'Client paid cash. Deposit the full job amount before a Stripe guard payout, or only the platform fee if the guard was paid in cash.',
+      'Client paid cash. Record deposits to Stripe for the ledger — full job amount if guard is paid via Connect (can be after payout), or platform fee only if guard was paid cash.',
   },
   'client-paid-active': {
     title: 'Paid — shift in progress',
@@ -51,7 +51,7 @@ export const PIPELINE_SECTION_META: Record<
   'awaiting-guard-payout': {
     title: 'Ready to pay guard',
     description:
-      'Shift done. Pay via Stripe Connect (full client cash must already be in Stripe) or record cash handed to the guard (Director).',
+      'Shift done. Pay via Stripe Connect or record cash handed to the guard (Director). Client cash can be deposited to Stripe later.',
   },
   settled: {
     title: 'Settled',

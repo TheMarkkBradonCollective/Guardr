@@ -23,7 +23,6 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
-  canStripePayGuard,
   getCashDepositedAmount,
   getRemainingStripeDeposit,
   getRequiredStripeDeposit,
@@ -1289,12 +1288,6 @@ export default function App() {
     const req = requests.find(r => r.id === requestId);
     if (!req?.assignedGuardId) {
       alert('No guard assigned to this job.');
-      return;
-    }
-    if (isCashClientPayment(req) && !canStripePayGuard(req)) {
-      alert(
-        'Client paid cash — deposit the full job amount to Stripe before paying this guard through Connect.'
-      );
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);
