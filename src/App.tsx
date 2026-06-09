@@ -19,6 +19,7 @@ import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { checkJobRequirements } from './lib/guardJobs';
+import { findGuardProfileForUser, loadStaffGuardMode, saveStaffGuardMode } from './lib/guardDirectory';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -67,7 +68,12 @@ export default function App() {
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
-  const [staffGuardMode, setStaffGuardMode] = useState(false);
+  const [staffGuardMode, setStaffGuardMode] = useState(loadStaffGuardMode);
+
+  const setStaffGuardModePersisted = (enabled: boolean) => {
+    setStaffGuardMode(enabled);
+    saveStaffGuardMode(enabled);
+  };
 
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
@@ -75,9 +81,15 @@ export default function App() {
   );
   useEffect(() => {
     if (!currentUser) return;
-    if (currentUser.role === 'guard') setActiveGuardId(currentUser.id);
-    else if (isStaffRole(currentUser.role) && staffGuardMode) setActiveGuardId(currentUser.id);
-  }, [currentUser, staffGuardMode]);
+    if (currentUser.role === 'guard') {
+      setActiveGuardId(currentUser.id);
+      return;
+    }
+    if (isStaffRole(currentUser.role) && staffGuardMode) {
+      const profile = findGuardProfileForUser(currentUser, guards);
+      setActiveGuardId(profile?.id ?? currentUser.id);
+    }
+  }, [currentUser, staffGuardMode, guards]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -1093,7 +1105,31 @@ export default function App() {
 
   // ── Staff Operations Command Center ─────────────────────────
   if (isStaffRole(currentUser.role)) {
-    const staffGuardProfile = guards.find((g) => g.id === currentUser.id);
+    const staffGuardProfile = findGuardProfileForUser(currentUser, guards);
+
+    if (staffGuardMode && !staffGuardProfile) {
+      return (
+        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
+          <Logo className="text-brand-primary" size={48} />
+          <h2 className="font-bold text-lg">Guard profile not linked</h2>
+          <p className="text-sm text-brand-text-muted max-w-sm">
+            Your staff account needs a guard profile to browse the map and accept shifts. Open Staff Ops to complete your profile, or sign in with the email on your guard record.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={() => setStaffGuardModePersisted(false)}
+              className="uber-button-sage h-11 px-6 text-sm"
+            >
+              Open Staff Ops
+            </button>
+            <button type="button" onClick={handleSignOut} className="uber-button-outline h-11 px-6 text-sm">
+              Sign out
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     if (staffGuardMode && staffGuardProfile) {
       return (
@@ -1114,7 +1150,7 @@ export default function App() {
             onChangeTheme={changeThemeMode}
             onUpdateProfile={(payload) => handleUpdateGuardProfile(staffGuardProfile.id, payload)}
             currentUser={currentUser}
-            onExitGuardMode={() => setStaffGuardMode(false)}
+            onExitGuardMode={() => setStaffGuardModePersisted(false)}
           />
           <InstallPrompt />
         </>
@@ -1152,7 +1188,7 @@ export default function App() {
           onAddCertification={handleAddCertification}
           onAddExperience={handleAddExperience}
           onAddEducation={handleAddEducation}
-          onEnterGuardMode={() => setStaffGuardMode(true)}
+          onEnterGuardMode={() => setStaffGuardModePersisted(true)}
         />
         <InstallPrompt />
       </>

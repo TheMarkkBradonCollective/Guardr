@@ -25,6 +25,7 @@ import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { findGuardProfileForUser } from '../lib/guardDirectory';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -196,7 +197,7 @@ export function StaffDashboard({
           />
         ) : null;
       case 'profile': {
-        const staffGuard = guards.find((g) => g.id === currentUser.id) ?? null;
+        const staffGuard = findGuardProfileForUser(currentUser, guards) ?? null;
         return (
           <UserProfileScreen
             currentUser={currentUser}

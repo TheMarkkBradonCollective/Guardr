@@ -1,4 +1,33 @@
-import { SecurityGuard, SecurityRequest } from '../types';
+import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
+
+const STAFF_GUARD_MODE_KEY = 'guardr_staff_guard_mode';
+
+/** Match a session user to their guard row (staff often share one email across roles). */
+export function findGuardProfileForUser(
+  user: Pick<SessionUser, 'id' | 'email'>,
+  guards: SecurityGuard[]
+): SecurityGuard | undefined {
+  const emailLower = user.email.toLowerCase();
+  return guards.find((g) => g.id === user.id || g.email.toLowerCase() === emailLower);
+}
+
+export function loadStaffGuardMode(): boolean {
+  try {
+    const saved = localStorage.getItem(STAFF_GUARD_MODE_KEY);
+    if (saved !== null) return saved === 'true';
+  } catch {
+    /* ignore */
+  }
+  return true;
+}
+
+export function saveStaffGuardMode(enabled: boolean): void {
+  try {
+    localStorage.setItem(STAFF_GUARD_MODE_KEY, String(enabled));
+  } catch {
+    /* ignore */
+  }
+}
 
 export interface GuardWorkHistoryItem {
   requestId: string;

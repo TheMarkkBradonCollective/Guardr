@@ -14,6 +14,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Map,
   MoreHorizontal,
   Radio,
   Scale,
@@ -87,6 +88,9 @@ export function StaffOpsLayout({
   const isMoreSectionActive = moreSections.some((item) => item.id === activeSection);
 
   const mobileNavItems = [
+    ...(onEnterGuardMode
+      ? [{ id: 'map', label: 'Map', icon: Map }]
+      : []),
     ...MOBILE_PRIMARY.map((id) => {
       const item = NAV.find((n) => n.id === id)!;
       return {
@@ -105,6 +109,11 @@ export function StaffOpsLayout({
   ];
 
   const handleMobileNavigate = (id: string) => {
+    if (id === 'map') {
+      setMoreOpen(false);
+      onEnterGuardMode?.();
+      return;
+    }
     if (id === 'more') {
       setMoreOpen(true);
       return;
@@ -131,6 +140,16 @@ export function StaffOpsLayout({
         </div>
 
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          {onEnterGuardMode && (
+            <button
+              type="button"
+              onClick={onEnterGuardMode}
+              className="w-full flex items-center gap-2 px-3 py-2.5 mb-1 rounded-xl text-left text-sm font-semibold transition-colors bg-brand-primary/15 text-brand-primary hover:bg-brand-primary/25 border border-brand-primary/30"
+            >
+              <Map className="w-3.5 h-3.5 shrink-0" />
+              <span className="flex-1 truncate">Guard map &amp; shifts</span>
+            </button>
+          )}
           {visibleNav.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
@@ -162,8 +181,8 @@ export function StaffOpsLayout({
               onClick={onEnterGuardMode}
               className="w-full flex items-center justify-center gap-2 bg-brand-primary/15 border border-brand-primary/30 py-2.5 text-[10px] font-mono font-bold uppercase rounded-lg text-brand-primary hover:bg-brand-primary/25 transition-colors"
             >
-              <Shield className="w-3.5 h-3.5" />
-              Guard shift mode
+              <Map className="w-3.5 h-3.5" />
+              Guard map &amp; shifts
             </button>
           )}
           {isDbConnected && (
@@ -198,8 +217,8 @@ export function StaffOpsLayout({
               onClick={onEnterGuardMode}
               className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-primary/30 bg-brand-primary/10 text-[10px] font-mono font-bold uppercase text-brand-primary"
             >
-              <Shield className="w-3.5 h-3.5" />
-              Shifts
+              <Map className="w-3.5 h-3.5" />
+              Map
             </button>
           )}
           <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
