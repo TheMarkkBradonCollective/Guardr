@@ -35,7 +35,8 @@ export async function runPushHandler(
     return res.status(result.status).json(result.body);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Push handler failed';
-    console.error('Push API error:', message);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error('Push API error:', message, stack);
     return res.status(500).json({ error: message });
   }
 }
