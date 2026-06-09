@@ -72,6 +72,17 @@ export function isThirtyTwoHourCatalogId(catalogId: string | undefined): boolean
   );
 }
 
+export function isPtaUofCatalogId(catalogId: string | undefined): boolean {
+  if (!catalogId) return false;
+  return catalogId === BSIS_PTA_UOF_COMBINED_ID || catalogId === LEGACY_PTA_ID || catalogId === LEGACY_UOF_ID;
+}
+
+export function getPtaUofCatalogEntries() {
+  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID]
+    .map((id) => getCertCatalogEntry(id))
+    .filter((entry): entry is NonNullable<typeof entry> => !!entry);
+}
+
 export function isRequiredPathwayCredential(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
   return getRequiredPathwayCatalogIds().includes(catalogId);

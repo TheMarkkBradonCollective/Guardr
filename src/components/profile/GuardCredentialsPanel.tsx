@@ -8,7 +8,13 @@ import {
   getCertsByCategory,
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
-import { isThirtyTwoHourCatalogId } from '../../lib/guardQualification';
+import {
+  getPtaUofCatalogEntries,
+  getQualificationProgress,
+  isPtaUofCatalogId,
+  isThirtyTwoHourCatalogId,
+  BSIS_PTA_UOF_COMBINED_ID,
+} from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
@@ -59,7 +65,7 @@ const CREDENTIAL_SECTIONS: {
   },
 ];
 
-type CredentialOpenSection = CertCategory | 'bsis-refresher';
+type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-pta-uof';
 
 interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
@@ -135,6 +141,15 @@ export function GuardCredentialsPanel({
     await onDeleteCertification(certId);
   };
 
+  const ptaUofProgress = getQualificationProgress(guard);
+  const ptaUofCatalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
+  const ptaUofItems = useMemo(
+    () =>
+      (grouped['bsis-training'] ?? []).filter((cert) =>
+        isPtaUofCatalogId(resolveCertCatalogId(cert))
+      ),
+    [grouped]
+  );
   const refresherEntry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
   const refresherItems = useMemo(
     () =>
@@ -147,17 +162,21 @@ export function GuardCredentialsPanel({
     () =>
       (grouped['bsis-training'] ?? []).filter((cert) => {
         const id = resolveCertCatalogId(cert);
-        return !isThirtyTwoHourCatalogId(id) && id !== BSIS_REFRESHER_CATALOG_ID;
+        return !isThirtyTwoHourCatalogId(id) && !isPtaUofCatalogId(id) && id !== BSIS_REFRESHER_CATALOG_ID;
       }),
     [grouped]
   );
   const otherBsisCatalogOptions = useMemo(
     () =>
       getCertsByCategory('bsis-training').filter(
-        (opt) => !isThirtyTwoHourCatalogId(opt.id) && opt.id !== BSIS_REFRESHER_CATALOG_ID
+        (opt) =>
+          !isThirtyTwoHourCatalogId(opt.id) &&
+          !isPtaUofCatalogId(opt.id) &&
+          opt.id !== BSIS_REFRESHER_CATALOG_ID
       ),
     []
   );
+  const isPtaUofOpen = openSection === 'bsis-pta-uof';
   const isRefresherOpen = openSection === 'bsis-refresher';
   const isOtherBsisOpen = openSection === 'bsis-training';
 
@@ -288,6 +307,110 @@ export function GuardCredentialsPanel({
         return (
           <React.Fragment key="guard-and-bsis-training">
             {sectionCard}
+            <section className="app-card space-y-3 border-brand-primary/20">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="uber-label flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-brand-primary" />
+                    Power to Arrest &amp; Appropriate Use of Force
+                  </p>
+                  <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                    Required for Level 2 (Active). As of 2024, upload the combined 8-hour, 2-part course
+                    certificate — or both legacy separate PTA and UOF certs if you have those.
+                  </p>
+                  <p className="text-xs font-semibold mt-2 text-brand-primary">
+                    {ptaUofProgress.ptaUofTraining
+                      ? ptaUofProgress.ptaUofCombined
+                        ? 'Combined 8-hr certificate on file'
+                        : 'Legacy separate PTA & UOF certs on file'
+                      : 'Not yet on file'}
+                  </p>
+                </div>
+                {editing && onAddCertification && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isPtaUofOpen) {
+                        resetForm();
+                      } else {
+                        setOpenSection('bsis-pta-uof');
+                        setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
+                      }
+                    }}
+                    className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                  >
+                    {isPtaUofOpen ? 'Cancel' : 'Add'}
+                  </button>
+                )}
+              </div>
+
+              {isPtaUofOpen && editing && (
+                <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+                  <select
+                    value={selectedCatalogId}
+                    onChange={(e) => setSelectedCatalogId(e.target.value)}
+                    className="uber-select w-full text-sm"
+                    required
+                  >
+                    {ptaUofCatalogOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="uber-input w-full"
+                    placeholder="Issuing organization (e.g. BSIS, training provider)"
+                    value={issuer}
+                    onChange={(e) => setIssuer(e.target.value)}
+                    required
+                  />
+                  <input
+                    className="uber-input w-full"
+                    placeholder="Certificate number"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    required
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
+                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+                    <ImagePlus className="w-4 h-4 shrink-0" />
+                    <span>Optional: attach scan or photo</span>
+                    <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+                  </label>
+                  {imageUrl && (
+                    <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+                  )}
+                  <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                    Upload credential
+                  </button>
+                </form>
+              )}
+
+              <div className="space-y-2">
+                {ptaUofItems.length === 0 ? (
+                  <p className="text-xs text-brand-text-muted text-center py-3">No PTA/UOF training on file.</p>
+                ) : (
+                  ptaUofItems.map((cert) => (
+                    <CredentialRow
+                      key={cert.id}
+                      cert={cert}
+                      editing={editing}
+                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+            <GuardThirtyTwoHourPanel
+              guard={guard}
+              editing={editing}
+              onAddCertification={onAddCertification}
+              onDeleteCertification={onDeleteCertification}
+            />
             <section className="app-card space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -366,12 +489,6 @@ export function GuardCredentialsPanel({
                 )}
               </div>
             </section>
-            <GuardThirtyTwoHourPanel
-              guard={guard}
-              editing={editing}
-              onAddCertification={onAddCertification}
-              onDeleteCertification={onDeleteCertification}
-            />
             <section className="app-card space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -380,7 +497,7 @@ export function GuardCredentialsPanel({
                     Other BSIS Training
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1">
-                    8-hour PTA/UOF (2-part) and supplemental BSIS courses — not part of the 32-hour block.
+                    Supplemental BSIS courses — not part of the Level 2 pathway or 32-hour block.
                   </p>
                 </div>
                 {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (
