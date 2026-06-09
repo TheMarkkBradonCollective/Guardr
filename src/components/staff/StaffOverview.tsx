@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { OpsActivityItem, PlatformStats } from '../../lib/staffOps';
-import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfMetricTile } from '../ui/wireframe';
 
 interface StaffOverviewProps {
   stats: PlatformStats;
@@ -25,16 +25,15 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
     return () => clearInterval(interval);
   }, [initialFeed]);
 
-  const statusCards = [
+  const statusItems = [
     {
       emoji: stats.platformHealthy ? '🟢' : '🟡',
       label: stats.platformHealthy ? 'Platform Healthy' : 'Attention Needed',
       sub: stats.platformHealthy ? 'All systems nominal' : 'Review pending items',
-      className: stats.platformHealthy ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5',
     },
-    { emoji: '🟡', label: `Pending Reviews: ${stats.pendingReviews}`, sub: 'Credential verification & legacy job queue', className: 'border-amber-500/30 bg-amber-500/5' },
-    { emoji: '📋', label: `Client incidents: ${stats.activeIncidents}`, sub: 'Filed to clients — view only', className: 'border-slate-500/30 bg-slate-500/5' },
-    { emoji: '⚠️', label: `Payment Holds: ${stats.paymentHolds}`, sub: 'Pending release', className: 'border-orange-500/30 bg-orange-500/5' },
+    { emoji: '🟡', label: `Pending Reviews: ${stats.pendingReviews}`, sub: 'Credential verification & legacy job queue' },
+    { emoji: '📋', label: `Client incidents: ${stats.activeIncidents}`, sub: 'Filed to clients — view only' },
+    { emoji: '⚠️', label: `Payment Holds: ${stats.paymentHolds}`, sub: 'Pending release' },
   ];
 
   const snapshot = [
@@ -46,36 +45,28 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
   ];
 
   return (
-    <div className="space-y-8 max-w-6xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-sm text-brand-text-muted mt-1">Real-time platform pulse</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        {statusCards.map((card) => (
-          <div key={card.label} className={`rounded-xl border p-4 ${card.className}`}>
-            <p className="text-2xl">{card.emoji}</p>
-            <p className="font-semibold text-sm mt-2">{card.label}</p>
-            <p className="text-xs text-brand-text-muted mt-1">{card.sub}</p>
+    <div className="animate-fade-in -mx-4 sm:-mx-5">
+      <div className="staff-status-strip">
+        {statusItems.map((item) => (
+          <div key={item.label} className="staff-status-item">
+            <p className="text-xl leading-none">{item.emoji}</p>
+            <p className="font-semibold text-sm mt-2">{item.label}</p>
+            <p className="text-xs text-brand-text-muted mt-1">{item.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 rounded-xl border border-brand-border bg-brand-bg-sec">
-          <div className="px-4 py-3 border-b border-brand-border">
-            <WfSectionHeader
-              title="Live Activity Feed"
-              className="mb-0"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
+        <div className="lg:col-span-3 staff-feed-panel">
+          <div className="staff-feed-header">
+            <h2 className="text-sm font-semibold">Live Activity Feed</h2>
             <span className="text-xs text-brand-primary animate-pulse">● Live</span>
           </div>
-          <div className="divide-y divide-brand-border max-h-80 overflow-y-auto">
+          <div className="staff-feed-list">
             {feed.map((item) => (
-              <div key={item.id} className="px-4 py-3 flex gap-3 text-sm">
+              <div key={item.id} className="staff-feed-row">
                 <span className="text-brand-primary shrink-0">•</span>
-                <div>
+                <div className="min-w-0">
                   <p>{item.message}</p>
                   <p className="text-xs text-brand-text-muted mt-0.5">
                     {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
@@ -86,11 +77,15 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 rounded-xl border border-brand-border bg-brand-bg-sec p-4">
-          <WfSectionHeader title="Today Snapshot" className="mb-4" />
-          <div className="grid grid-cols-2 gap-2">
+        <div className="lg:col-span-2 border-t lg:border-t-0 lg:border-l border-brand-border">
+          <div className="staff-feed-header">
+            <h2 className="text-sm font-semibold">Today Snapshot</h2>
+          </div>
+          <div className="staff-snapshot-grid">
             {snapshot.map(({ label, value }) => (
-              <WfMetricTile key={label} label={label} value={value} accent />
+              <div key={label} className="staff-snapshot-cell">
+                <WfMetricTile label={label} value={value} accent />
+              </div>
             ))}
           </div>
         </div>

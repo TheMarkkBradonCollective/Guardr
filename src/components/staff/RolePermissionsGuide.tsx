@@ -43,27 +43,27 @@ interface RolePermissionsGuideProps {
 
 export function RolePermissionsGuide({ currentRole }: RolePermissionsGuideProps) {
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-      <p className="text-[10px] font-mono uppercase text-slate-500 mb-2">Your Role</p>
-      <p className="font-black text-lg text-slate-900">{ROLE_LABELS[currentRole]}</p>
-      <p className="text-xs text-slate-600 mt-1">{ROLE_DESCRIPTIONS[currentRole]}</p>
+    <div className="px-4 py-4 border-b border-brand-border bg-brand-bg-sec/50">
+      <p className="text-[10px] font-mono uppercase text-brand-text-muted mb-2">Your Role</p>
+      <p className="font-bold text-lg">{ROLE_LABELS[currentRole]}</p>
+      <p className="text-xs text-brand-text-muted mt-1">{ROLE_DESCRIPTIONS[currentRole]}</p>
     </div>
   );
 }
 
 export function StaffRolesReference() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="app-list !border-t-0">
       {STAFF_ROLE_INFO.map(({ role, icon: Icon, permissions }) => (
-        <div key={role} className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Icon className="w-4 h-4 text-indigo-600" />
+        <div key={role} className="app-list-row app-list-row-align-top flex-col !items-stretch gap-3">
+          <div className="flex items-center gap-2">
+            <Icon className="w-4 h-4 text-brand-primary" />
             <h4 className="font-bold text-sm">{ROLE_LABELS[role]}</h4>
           </div>
-          <ul className="space-y-1.5">
+          <ul className="space-y-1.5 w-full">
             {permissions.map((p) => (
-              <li key={p} className="text-[11px] text-slate-600 flex items-start gap-1.5">
-                <span className="text-emerald-500 shrink-0">✓</span>
+              <li key={p} className="text-[11px] text-brand-text-muted flex items-start gap-1.5">
+                <span className="text-brand-primary shrink-0">✓</span>
                 {p}
               </li>
             ))}
@@ -76,22 +76,22 @@ export function StaffRolesReference() {
 
 export function ClientGuardRolesSummary() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-      <div className="bg-white border border-slate-200 rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-2">
+    <div className="app-list !border-t-0 sm:grid sm:grid-cols-2 sm:!border-t sm:border-brand-border">
+      <div className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 sm:border-r sm:border-brand-border">
+        <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-brand-primary" />
           <h4 className="font-bold text-sm">Client</h4>
         </div>
-        <p className="text-[11px] text-slate-600 leading-relaxed">
+        <p className="text-[11px] text-brand-text-muted leading-relaxed">
           Post security requests, hire guards, manage payments, review reports, and rate guards.
         </p>
       </div>
-      <div className="bg-white border border-slate-200 rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2">
+        <div className="flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-brand-primary" />
           <h4 className="font-bold text-sm">Guard</h4>
         </div>
-        <p className="text-[11px] text-slate-600 leading-relaxed">
+        <p className="text-[11px] text-brand-text-muted leading-relaxed">
           Map-first job browsing, accept assignments, self-audits, submit reports, view earnings, rate clients.
         </p>
       </div>

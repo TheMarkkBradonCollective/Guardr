@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
-import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
   getGuardDisplayStatus,
@@ -8,12 +7,12 @@ import {
   GUARD_STATUS_LABELS,
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
-import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatShiftRange } from '../../lib/dates';
-import { formatStateName } from '../../lib/states';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { CertItemCard } from '../credentials/CertItemCard';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Check, X } from 'lucide-react';
 
 interface StaffGuardDetailPanelProps {
@@ -73,15 +72,17 @@ export function StaffGuardDetailPanel({
   const pendingCount = allCerts.filter((c) => c.status === 'pending').length;
 
   return (
-    <div className={`staff-ops-card space-y-5 ${compact ? '' : 'h-full'}`}>
+    <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
       {onBack && (
-        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
-          <ArrowLeft className="w-4 h-4" />
-          Back to list
-        </button>
+        <div className="px-1 pb-4">
+          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+            <ArrowLeft className="w-4 h-4" />
+            Back to list
+          </button>
+        </div>
       )}
 
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
         <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -113,7 +114,7 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          <section className="space-y-2 border-t border-brand-border pt-4">
+          <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Qualification" className="mb-0" />
             <p className="text-sm">
               Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
@@ -121,7 +122,7 @@ export function StaffGuardDetailPanel({
             <CertBadgeRow guard={guard} showCaBaseline />
           </section>
 
-          <section className="space-y-2 border-t border-brand-border pt-4">
+          <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Account controls" className="mb-0" />
             <div className="flex flex-wrap gap-2">
               {canSuspend && accountStatus !== 'suspended' && (
@@ -166,7 +167,7 @@ export function StaffGuardDetailPanel({
             </div>
           </section>
 
-          <section className="space-y-3 border-t border-brand-border pt-4">
+          <section className="py-4 border-b border-brand-border space-y-3">
             <WfSectionHeader
               title="Credentials"
               count={pendingCount > 0 ? pendingCount : undefined}
@@ -175,78 +176,57 @@ export function StaffGuardDetailPanel({
             {allCerts.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No credentials on file.</p>
             ) : (
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div className="app-cert-item-stack max-h-72 overflow-y-auto pr-1">
                 {allCerts.map((cert) => (
-                  <div key={cert.id} className="wf-list-card flex-col items-stretch !flex !flex-col sm:!flex-row gap-3">
-                    <div className="flex gap-3 min-w-0 flex-1">
-                      {cert.imageUrl && (
-                        <img
-                          src={cert.imageUrl}
-                          alt=""
-                          className="w-14 h-14 rounded-lg object-cover border border-brand-border shrink-0"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm">{certDisplayName(cert)}</p>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
-                          {cert.state ? `${formatStateName(cert.state)} · ` : ''}
-                          {cert.issuer} · #{cert.number}
-                        </p>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
-                          Expires {cert.expiryDate || '—'}
-                        </p>
+                  <div key={cert.id} className="space-y-2">
+                    <CertItemCard cert={cert} />
+                    {cert.status === 'pending' && (
+                      <div className="flex gap-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => onRejectCert(guard.id, cert.id)}
+                          className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+                        >
+                          <X className="w-3 h-3" /> Reject
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onApproveCert(guard.id, cert.id)}
+                          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                        >
+                          <Check className="w-3 h-3" /> Verify
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <CredentialStatusBadges cert={cert} />
-                      {cert.status === 'pending' && (
-                        <div className="flex gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => onRejectCert(guard.id, cert.id)}
-                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                          >
-                            <X className="w-3 h-3" /> Reject
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onApproveCert(guard.id, cert.id)}
-                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                          >
-                            <Check className="w-3 h-3" /> Verify
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </section>
 
-          <section className="space-y-2 border-t border-brand-border pt-4">
+          <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Recent assignments" className="mb-0" />
             {guardJobs.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No assignments on record.</p>
             ) : (
-              <div className="space-y-2">
+              <AppList>
                 {guardJobs.map((job) => (
-                  <div key={job.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
+                  <AppListRow key={job.id} className="flex-col !items-stretch gap-1">
                     <p className="text-sm font-semibold truncate">{job.title}</p>
                     <p className="text-xs text-brand-text-muted">
                       {job.clientName} · {job.status.replace('-', ' ')}
                     </p>
                     <p className="text-xs text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
-                  </div>
+                  </AppListRow>
                 ))}
-              </div>
+              </AppList>
             )}
           </section>
         </>
       )}
 
       {guard.isStaff && (
-        <section className="border-t border-brand-border pt-4">
+        <section className="py-4 border-b border-brand-border">
           <p className="text-sm text-brand-text-muted">
             Staff platform account — field credential verification does not apply.
           </p>
@@ -255,7 +235,7 @@ export function StaffGuardDetailPanel({
       )}
 
       {guard.bio && !guard.isStaff && (
-        <section className="border-t border-brand-border pt-4">
+        <section className="py-4">
           <WfSectionHeader title="Bio" className="mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>

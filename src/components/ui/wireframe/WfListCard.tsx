@@ -12,6 +12,7 @@ interface WfListCardProps {
   className?: string;
 }
 
+/** Flat list row — use inside `<AppList>` or `.app-list` container. */
 export function WfListCard({
   avatar,
   title,
@@ -27,7 +28,7 @@ export function WfListCard({
     <Wrapper
       type={onClick ? 'button' : undefined}
       onClick={onClick}
-      className={`wf-list-card ${onClick ? 'wf-list-card-interactive' : ''} ${className}`}
+      className={`app-list-row app-list-row-align-top ${className}`}
     >
       {avatar && <div className="shrink-0">{avatar}</div>}
       <div className="min-w-0 flex-1 text-left">
@@ -39,7 +40,7 @@ export function WfListCard({
       </div>
       {action ?? (
         actionLabel ? (
-          <span className="app-button-primary !w-auto !h-9 !px-4 !text-xs shrink-0">{actionLabel}</span>
+          <span className="app-pill-btn shrink-0">{actionLabel}</span>
         ) : onClick ? (
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
         ) : null

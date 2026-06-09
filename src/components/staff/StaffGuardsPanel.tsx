@@ -4,6 +4,7 @@ import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQuali
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { AppList } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { Shield } from 'lucide-react';
 
@@ -109,17 +110,14 @@ export function StaffGuardsPanel({
   }
 
   return (
-    <div className="space-y-6 max-w-6xl animate-fade-in">
+    <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
-          <div>
-            <h1 className="text-2xl font-bold">Guards</h1>
-            <p className="text-sm text-brand-text-muted mt-1">
-              {filter === 'staff'
-                ? 'Guardr staff accounts — platform operations only, not field shifts'
-                : 'Click a guard to open their profile and verify credentials'}
-            </p>
-          </div>
+          <p className="text-sm text-brand-text-muted">
+            {filter === 'staff'
+              ? 'Guardr staff accounts — platform operations only, not field shifts'
+              : 'Click a guard to open their profile and verify credentials'}
+          </p>
 
           <div className="flex flex-wrap gap-2">
             {(['field', 'staff'] as GuardFilter[]).map((tab) => (
@@ -158,15 +156,17 @@ export function StaffGuardsPanel({
         <StaffGuardDetailPanel {...detailProps} onBack={() => setSelectedId(null)} />
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1">
-            {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
+          <div className="max-h-[75vh] overflow-y-auto">
+            <AppList>
+              {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
+            </AppList>
           </div>
           {detailProps && <StaffGuardDetailPanel {...detailProps} />}
         </div>
       ) : (
-        <div className="space-y-2">
+        <AppList>
           {filtered.map((guard) => renderGuardCard(guard, false))}
-        </div>
+        </AppList>
       )}
     </div>
   );

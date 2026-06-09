@@ -3,6 +3,7 @@ import { Client, SecurityRequest } from '../../types';
 import { useDevice } from '../../lib/platform';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { AppList } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 
 interface StaffClientsPanelProps {
@@ -69,15 +70,12 @@ export function StaffClientsPanel({
   }
 
   return (
-    <div className="space-y-6 max-w-6xl animate-fade-in">
+    <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
-          <div>
-            <h1 className="text-2xl font-bold">Clients</h1>
-            <p className="text-sm text-brand-text-muted mt-1">
-              Click a client to open their profile and manage their account
-            </p>
-          </div>
+          <p className="text-sm text-brand-text-muted">
+            Click a client to open their profile and manage their account
+          </p>
 
           <WfSearchBar
             value={search}
@@ -102,8 +100,10 @@ export function StaffClientsPanel({
         />
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1">
-            {filtered.map((client) => renderClientCard(client, selected?.id === client.id))}
+          <div className="max-h-[75vh] overflow-y-auto">
+            <AppList>
+              {filtered.map((client) => renderClientCard(client, selected?.id === client.id))}
+            </AppList>
           </div>
           {selected && (
             <StaffClientDetailPanel
@@ -115,9 +115,9 @@ export function StaffClientsPanel({
           )}
         </div>
       ) : (
-        <div className="space-y-2">
+        <AppList>
           {filtered.map((client) => renderClientCard(client, false))}
-        </div>
+        </AppList>
       )}
     </div>
   );

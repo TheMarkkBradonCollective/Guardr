@@ -5,10 +5,10 @@ export const THEME_MODES: ThemeMode[] = ['dark', 'light', 'grey'];
 export const THEME_LABELS: Record<ThemeMode, string> = {
   dark: 'Dark',
   light: 'Light',
-  grey: 'Shade',
+  grey: 'Sage',
 };
 
-/** Default — light wireframe-style UI */
+/** Default — light with sage accent */
 export const DEFAULT_THEME: ThemeMode = 'light';
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';

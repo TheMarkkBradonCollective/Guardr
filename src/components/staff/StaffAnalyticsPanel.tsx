@@ -1,7 +1,7 @@
 import React from 'react';
 import { computeAnalytics, computeWeeklyCompletedJobs } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
-import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfMetricTile } from '../ui/wireframe';
 
 interface StaffAnalyticsPanelProps {
   guards: SecurityGuard[];
@@ -26,15 +26,10 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
   ];
 
   return (
-    <div className="space-y-8 max-w-5xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-sm text-brand-text-muted mt-1">Platform insights and trends</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="animate-fade-in -mx-4 sm:-mx-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-brand-border">
         {metrics.map(({ label, value, pct }) => (
-          <div key={label}>
+          <div key={label} className="p-4 border-b border-r border-brand-border">
             <WfMetricTile label={label} value={value} accent={pct != null} />
             {pct != null && (
               <div className="mt-2 h-1.5 rounded-full bg-brand-border overflow-hidden">
@@ -45,8 +40,8 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
         ))}
       </div>
 
-      <div className="wf-list-card flex-col items-stretch !flex !flex-col">
-        <WfSectionHeader title="Completed Jobs Trend" className="mb-4" />
+      <div className="staff-analytics-chart">
+        <h2 className="text-sm font-semibold mb-4">Completed Jobs Trend</h2>
         {hasWeeklyData ? (
           <div className="flex items-end gap-2 h-32">
             {weeklyTrend.map((h, i) => (

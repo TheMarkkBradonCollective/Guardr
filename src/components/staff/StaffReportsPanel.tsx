@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
 interface StaffReportsPanelProps {
   requests: SecurityRequest[];
@@ -11,22 +12,17 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
   const withAudits = requests.filter((r) => r.checkInAudit || r.checkOutAudit);
 
   return (
-    <div className="space-y-6 max-w-5xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Reports</h1>
-        <p className="text-sm text-brand-text-muted mt-1">Shift audits, activity logs, and compliance</p>
-      </div>
+    <div className="animate-fade-in -mx-4 sm:-mx-5">
+      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">Shift audits, activity logs, and compliance</p>
 
       {withAudits.length === 0 ? (
-        <div className="wf-list-card justify-center py-12 text-sm text-brand-text-muted">
-          No shift reports recorded yet.
-        </div>
+        <p className="staff-empty-state border-t border-brand-border">No shift reports recorded yet.</p>
       ) : (
-        <div className="space-y-4">
+        <AppList>
           {withAudits.map((req) => {
             const guard = guards.find((g) => g.id === req.assignedGuardId);
             return (
-              <div key={req.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+              <AppListRow key={req.id} className="flex-col !items-stretch gap-3">
                 <div className="flex flex-wrap items-start justify-between gap-2 w-full">
                   <div>
                     <h3 className="font-semibold text-sm">{req.title}</h3>
@@ -35,7 +31,7 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                   <WfBadge tone="primary">{req.status}</WfBadge>
                 </div>
                 {req.checkInAudit && (
-                  <div className="text-sm surface-muted rounded-xl p-3 space-y-1 w-full">
+                  <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-1 w-full">
                     <p className="text-brand-primary text-xs font-semibold">Check-in · {req.checkInAudit.checkedAt}</p>
                     <p>Uniform ✓ · Equipment ✓ · GPS {req.checkInAudit.gpsVerified ? '✓' : '×'}</p>
                   </div>
@@ -52,10 +48,10 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                     <p className="mt-1">{req.checkOutAudit.incidentReport.description}</p>
                   </div>
                 )}
-              </div>
+              </AppListRow>
             );
           })}
-        </div>
+        </AppList>
       )}
     </div>
   );

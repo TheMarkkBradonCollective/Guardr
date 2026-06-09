@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getPendingCertifications } from '../../lib/staffOps';
+import { AppList } from '../ui/app/AppPrimitives';
 import { WfListCard, WfSectionHeader } from '../ui/wireframe';
 import { Check, X } from 'lucide-react';
 
@@ -20,22 +21,21 @@ export function StaffApprovals({
   const pendingCerts = getPendingCertifications(guards);
 
   return (
-    <div className="space-y-8 max-w-5xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Credential verification</h1>
-        <p className="text-sm text-brand-text-muted mt-1">
-          Review uploaded licenses and certificates — verification is a trust badge only
-        </p>
-      </div>
+    <div className="animate-fade-in -mx-4 sm:-mx-5">
+      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">
+        Review uploaded licenses and certificates — verification is a trust badge only
+      </p>
 
       {pendingCerts.length === 0 ? (
-        <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
+        <p className="staff-empty-state border-t border-brand-border">
           No credentials awaiting verification.
         </p>
       ) : (
         <section>
-          <WfSectionHeader title="Pending review" count={pendingCerts.length} />
-          <div className="space-y-3">
+          <div className="px-4 sm:px-5 pb-3">
+            <WfSectionHeader title="Pending review" count={pendingCerts.length} />
+          </div>
+          <AppList>
             {pendingCerts.map(({ guard, cert }) => (
               <WfListCard
                 key={cert.id}
@@ -68,7 +68,7 @@ export function StaffApprovals({
                 }
               />
             ))}
-          </div>
+          </AppList>
         </section>
       )}
     </div>

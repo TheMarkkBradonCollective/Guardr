@@ -6,6 +6,7 @@ import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
+import { AppList } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfMetricTile, WfSearchBar } from '../ui/wireframe';
 import { Briefcase, X } from 'lucide-react';
 
@@ -80,7 +81,7 @@ function JobDetailPanel({
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
 
   return (
-    <div className="staff-ops-card h-full space-y-4">
+    <div className="staff-detail-pane h-full space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
         <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
@@ -152,14 +153,7 @@ export function StaffJobsPanel({
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Briefcase className="w-6 h-6 text-brand-primary" />
-          Jobs
-        </h1>
-      </div>
-
+    <div className="animate-fade-in space-y-4">
       <div className="flex flex-wrap gap-2">
         {filters.map((f) => (
           <button
@@ -188,7 +182,8 @@ export function StaffJobsPanel({
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="max-h-[70vh] overflow-y-auto">
+          <AppList>
             {filtered.map((req) => {
               const isActive = selected?.id === req.id;
               const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
@@ -213,6 +208,7 @@ export function StaffJobsPanel({
                 />
               );
             })}
+          </AppList>
           </div>
           {selected && (
             <JobDetailPanel

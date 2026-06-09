@@ -49,9 +49,9 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
   };
 
   return (
-    <div className="h-full flex flex-col lg:flex-row gap-4 min-h-0">
-      <div className="lg:w-80 shrink-0 flex flex-col min-h-0 wf-list-card flex-col items-stretch !flex !flex-col !p-0 overflow-hidden">
-        <div className="p-4 border-b border-brand-border">
+    <div className="staff-split-pane h-full">
+      <div className="staff-split-pane-list">
+        <div className="staff-pane-header">
           <h2 className="font-bold text-sm">Support inbox</h2>
           <p className="text-xs text-brand-text-muted mt-1">
             {openTicketCount(tickets)} open · {tickets.length} total
@@ -73,9 +73,9 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
             ))}
           </div>
         </div>
-        <ul className="flex-1 overflow-y-auto divide-y divide-brand-border">
+        <ul className="staff-pane-body app-list !border-t-0">
           {filtered.length === 0 ? (
-            <li className="p-6 text-sm text-brand-text-muted text-center">No tickets in this view.</li>
+            <li className="staff-empty-state">No tickets in this view.</li>
           ) : (
             filtered.map((ticket) => (
               <li key={ticket.id}>
@@ -85,19 +85,21 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
                     setSelectedId(ticket.id);
                     setDraft('');
                   }}
-                  className={`w-full p-4 text-left transition-colors ${
-                    selected?.id === ticket.id ? 'bg-brand-primary/10' : 'hover:bg-brand-bg-sec'
+                  className={`app-list-row app-list-row-align-top w-full ${
+                    selected?.id === ticket.id ? 'bg-brand-primary/10' : ''
                   }`}
                 >
-                  <p className="font-semibold text-sm truncate">{ticket.subject}</p>
-                  <p className="text-xs text-brand-text-muted mt-1 truncate">
-                    {ticket.userName} · {ROLE_LABELS[ticket.userRole]}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
-                      {SUPPORT_STATUS_LABEL[ticket.status]}
-                    </WfBadge>
-                    <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="font-semibold text-sm truncate">{ticket.subject}</p>
+                    <p className="text-xs text-brand-text-muted mt-1 truncate">
+                      {ticket.userName} · {ROLE_LABELS[ticket.userRole]}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
+                        {SUPPORT_STATUS_LABEL[ticket.status]}
+                      </WfBadge>
+                      <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
+                    </div>
                   </div>
                 </button>
               </li>
@@ -106,9 +108,9 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
         </ul>
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col min-h-[320px] wf-list-card flex-col items-stretch !flex !flex-col !p-0 overflow-hidden">
+      <div className="staff-split-pane-detail flex flex-col min-h-[320px]">
         {!selected ? (
-          <div className="flex-1 flex items-center justify-center text-brand-text-muted text-sm p-8 text-center">
+          <div className="staff-empty-state flex-1 flex items-center justify-center">
             <div>
               <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
               Select a support ticket to view messages and reply.
@@ -116,7 +118,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
           </div>
         ) : (
           <>
-            <div className="p-4 border-b border-brand-border shrink-0">
+            <div className="staff-pane-header">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="font-bold">{selected.subject}</h3>
@@ -145,7 +147,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="staff-pane-body p-4 space-y-3">
               {selected.messages.map((msg) => {
                 const staff = msg.senderRole === 'moderator' || msg.senderRole === 'administrator' || msg.senderRole === 'director';
                 return (
@@ -166,7 +168,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
               })}
             </div>
 
-            <div className="p-4 border-t border-brand-border shrink-0 flex gap-2">
+            <div className="staff-pane-footer flex gap-2">
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
