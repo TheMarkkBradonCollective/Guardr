@@ -2,7 +2,7 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { Home, Radio, ClipboardList, User, Users, LifeBuoy, LogOut } from 'lucide-react';
+import { Home, Map, Radio, ClipboardList, User, Users, LifeBuoy, LogOut } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -17,6 +17,7 @@ interface ClientAppLayoutProps {
 }
 
 const NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
   { id: 'guards', label: 'Guards', icon: Users },
   { id: 'coverage', label: 'Coverage', icon: Radio },
@@ -26,6 +27,7 @@ const NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
+  map: 'Map',
   home: 'Home',
   guards: 'Guards',
   coverage: 'Live coverage',
@@ -43,12 +45,12 @@ export function ClientAppLayout({
   themeMode,
   onSignOut,
   onChangeTheme,
-  activeView = 'home',
+  activeView = 'map',
   onNavigate,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
-  const fullBleed = activeView === 'coverage';
+  const fullBleed = activeView === 'map' || activeView === 'coverage';
 
   const themeToggle = (
     <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
@@ -88,6 +90,7 @@ export function ClientAppLayout({
       headerRight={themeToggle}
       sidebarFooter={sidebarFooter}
       fullBleed={fullBleed}
+      variant={activeView === 'map' ? 'dark' : 'default'}
     >
       {children}
     </RoleAppShell>

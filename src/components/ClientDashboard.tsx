@@ -12,8 +12,9 @@ import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
+import { ClientMapScreen } from './client/ClientMapScreen';
 
-export type ClientView = 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile' | 'support';
+export type ClientView = 'map' | 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile' | 'support';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -47,7 +48,7 @@ export function ClientDashboard({
   onUpdateStatus,
   onAddReview,
 }: ClientDashboardProps) {
-  const [view, setView] = useState<ClientView>(activeView ?? 'home');
+  const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
   const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
@@ -102,6 +103,10 @@ export function ClientDashboard({
   const wrap = (node: React.ReactNode) => (
     <div className="h-full overflow-y-auto overscroll-contain">{node}</div>
   );
+
+  if (view === 'map') {
+    return <ClientMapScreen requests={requests} />;
+  }
 
   if (view === 'request') {
     return wrap(
