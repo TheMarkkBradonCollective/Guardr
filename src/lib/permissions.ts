@@ -167,6 +167,11 @@ export function canToggleStaffRole(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_moderators');
 }
 
+/** Cash client payments and cash guard payouts are Director-only overrides */
+export function canRecordCashPayments(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'director';
+}
+
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;

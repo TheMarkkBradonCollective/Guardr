@@ -64,6 +64,8 @@ interface StaffDashboardProps {
   onResetAuditFailures?: (guardId: string) => void;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
+  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
@@ -96,6 +98,8 @@ export function StaffDashboard({
   onResetAuditFailures,
   onReleasePayout,
   onRefundPayment,
+  onMarkClientPaidCash,
+  onMarkGuardPaidCash,
   isDbConnected,
   currentUser,
   onAddStaffProfile,
@@ -160,8 +164,12 @@ export function StaffDashboard({
           <StaffLiveJobs
             requests={requests}
             guards={guards}
+            isDirector={currentUser.role === 'director'}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
+            onMarkClientPaidCash={onMarkClientPaidCash}
+            onMarkGuardPaidCash={onMarkGuardPaidCash}
+            onReleasePayout={onReleasePayout}
           />
         );
       case 'guards':
@@ -211,6 +219,8 @@ export function StaffDashboard({
             isDirector={currentUser.role === 'director'}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
+            onMarkClientPaidCash={onMarkClientPaidCash}
+            onMarkGuardPaidCash={onMarkGuardPaidCash}
           />
         ) : null;
       case 'disputes':

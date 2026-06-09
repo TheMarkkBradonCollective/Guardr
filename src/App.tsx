@@ -18,7 +18,14 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { isStaffRole } from './lib/permissions';
+import { canRecordCashPayments, isStaffRole } from './lib/permissions';
+import {
+  canDirectorMarkClientPaidCash,
+  canDirectorMarkGuardPaidCash,
+  guardPayoutAmount,
+  isCashClientPayment,
+  parsePaymentMethod,
+} from './lib/cashPayments';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
@@ -270,6 +277,8 @@ export default function App() {
         reviewText: r.review_text ?? undefined,
         stripePaymentIntentId: r.stripe_payment_intent_id || undefined,
         paymentStatus: r.payment_status || 'unpaid',
+        clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
+        guardPayoutMethod: parsePaymentMethod(r.guard_payout_method),
       })));
 
       setPayments((dbPayments ?? []).map((p: any) => ({
@@ -279,6 +288,7 @@ export default function App() {
         stripeSessionId: p.stripe_session_id || undefined,
         stripePaymentIntentId: p.stripe_payment_intent_id || undefined,
         stripeTransferId: p.stripe_transfer_id || undefined,
+        paymentMethod: parsePaymentMethod(p.payment_method),
         status: p.status,
         createdAt: p.created_at,
         updatedAt: p.updated_at,
@@ -858,7 +868,7 @@ export default function App() {
       }
       await supabase.from('security_requests').update(updates).eq('id', requestId);
     }
-    if (status === 'completed' && req?.paymentStatus === 'paid') {
+    if (status === 'completed' && req?.paymentStatus === 'paid' && !isCashClientPayment(req)) {
       try {
         await holdJobPayment(requestId);
         setPayments(prev => prev.map(p =>
@@ -868,6 +878,128 @@ export default function App() {
         console.error('Hold payment error:', e);
       }
     }
+  };
+
+  const handleMarkClientPaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      alert('Only the Director can record cash client payments.');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkClientPaidCash(req)) {
+      alert('This job cannot be marked as paid in cash.');
+      return;
+    }
+    if (!window.confirm(`Record client cash payment of $${req.estimatedPayout} for "${req.title}"?`)) return;
+
+    const paymentId = `pay-cash-client-${Date.now()}`;
+    const existingPayment = payments.find((p) => p.jobId === requestId);
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, paymentStatus: 'paid', clientPaymentMethod: 'cash' } : r
+      )
+    );
+    setPayments((prev) => {
+      if (existingPayment) {
+        return prev.map((p) =>
+          p.jobId === requestId ? { ...p, status: 'paid', paymentMethod: 'cash' } : p
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: paymentId,
+          jobId: requestId,
+          amount: req.estimatedPayout,
+          status: 'paid' as const,
+          paymentMethod: 'cash' as const,
+        },
+      ];
+    });
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ payment_status: 'paid', client_payment_method: 'cash' })
+        .eq('id', requestId);
+      if (existingPayment) {
+        await supabase
+          .from('payments')
+          .update({ status: 'paid', payment_method: 'cash' })
+          .eq('id', existingPayment.id);
+      } else {
+        await supabase.from('payments').insert({
+          id: paymentId,
+          job_id: requestId,
+          amount: req.estimatedPayout,
+          status: 'paid',
+          payment_method: 'cash',
+        });
+      }
+    }
+  };
+
+  const handleMarkGuardPaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      alert('Only the Director can record cash guard payouts.');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkGuardPaidCash(req)) {
+      alert('This shift is not ready for a cash guard payout.');
+      return;
+    }
+    const amount = guardPayoutAmount(req);
+    if (!window.confirm(`Record $${amount} paid in cash to the guard for "${req.title}"?`)) return;
+
+    const paymentId = `pay-cash-guard-${Date.now()}`;
+    const existingPayment = payments.find((p) => p.jobId === requestId);
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, paymentStatus: 'released', guardPayoutMethod: 'cash' } : r
+      )
+    );
+    setPayments((prev) => {
+      if (existingPayment) {
+        return prev.map((p) =>
+          p.jobId === requestId ? { ...p, status: 'released', paymentMethod: 'cash' } : p
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: paymentId,
+          jobId: requestId,
+          amount: req.estimatedPayout,
+          status: 'released' as const,
+          paymentMethod: 'cash' as const,
+        },
+      ];
+    });
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ payment_status: 'released', guard_payout_method: 'cash' })
+        .eq('id', requestId);
+      if (existingPayment) {
+        await supabase
+          .from('payments')
+          .update({ status: 'released', payment_method: 'cash' })
+          .eq('id', existingPayment.id);
+      } else {
+        await supabase.from('payments').insert({
+          id: paymentId,
+          job_id: requestId,
+          amount: req.estimatedPayout,
+          status: 'released',
+          payment_method: 'cash',
+        });
+      }
+    }
+    alert(`Recorded $${amount} cash payout to guard.`);
   };
 
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
@@ -1006,7 +1138,7 @@ export default function App() {
     }
     if (payload.status === 'completed') {
       const req = requests.find(r => r.id === requestId);
-      if (req?.paymentStatus === 'paid') {
+      if (req?.paymentStatus === 'paid' && !isCashClientPayment(req)) {
         try {
           await holdJobPayment(requestId);
         } catch (e) {
@@ -1049,9 +1181,31 @@ export default function App() {
         force,
       });
       await handleJobPaymentStatus(requestId, 'released');
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId ? { ...r, paymentStatus: 'released', guardPayoutMethod: 'stripe' } : r
+        )
+      );
+      if (isDbConnected) {
+        await supabase
+          .from('security_requests')
+          .update({ guard_payout_method: 'stripe' })
+          .eq('id', requestId);
+      }
       setPayments(prev => prev.map(p =>
-        p.jobId === requestId ? { ...p, status: 'released', stripeTransferId: result.transferId } : p
+        p.jobId === requestId
+          ? { ...p, status: 'released', stripeTransferId: result.transferId, paymentMethod: 'stripe' }
+          : p
       ));
+      if (isDbConnected) {
+        const payment = payments.find((p) => p.jobId === requestId);
+        if (payment) {
+          await supabase
+            .from('payments')
+            .update({ status: 'released', payment_method: 'stripe', stripe_transfer_id: result.transferId })
+            .eq('id', payment.id);
+        }
+      }
       alert(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`);
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Payout failed');
@@ -1091,10 +1245,21 @@ export default function App() {
     const jobId = params.get('job_id');
     if (paymentResult === 'success' && jobId) {
       handleJobPaymentStatus(jobId, 'paid');
+      setRequests((prev) =>
+        prev.map((r) => (r.id === jobId ? { ...r, clientPaymentMethod: 'stripe' } : r))
+      );
+      if (isDbConnected) {
+        void supabase
+          .from('security_requests')
+          .update({ client_payment_method: 'stripe' })
+          .eq('id', jobId);
+      }
       setPayments(prev => {
         const exists = prev.some(p => p.jobId === jobId);
         if (exists) {
-          return prev.map(p => p.jobId === jobId ? { ...p, status: 'paid' } : p);
+          return prev.map(p =>
+            p.jobId === jobId ? { ...p, status: 'paid', paymentMethod: 'stripe' } : p
+          );
         }
         const req = requests.find(r => r.id === jobId);
         return [...prev, {
@@ -1102,6 +1267,7 @@ export default function App() {
           jobId,
           amount: req?.estimatedPayout ?? 0,
           status: 'paid' as const,
+          paymentMethod: 'stripe' as const,
         }];
       });
       window.history.replaceState({}, '', window.location.pathname);
@@ -1392,6 +1558,8 @@ export default function App() {
           onResetAuditFailures={handleResetAuditFailures}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
+          onMarkClientPaidCash={handleMarkClientPaidCash}
+          onMarkGuardPaidCash={handleMarkGuardPaidCash}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}

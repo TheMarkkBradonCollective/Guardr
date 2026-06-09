@@ -115,12 +115,15 @@ export interface Client {
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
 
+export type PaymentMethod = 'stripe' | 'cash';
+
 export type PaymentRecordStatus = 'pending' | 'paid' | 'held' | 'released' | 'failed' | 'refunded';
 
 export interface Payment {
   id: string;
   jobId: string;
   amount: number;
+  paymentMethod?: PaymentMethod;
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
   stripeTransferId?: string;
@@ -196,6 +199,10 @@ export interface SecurityRequest {
   status: JobStatus;
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;
+  /** How the client paid — cash is recorded by Director only */
+  clientPaymentMethod?: PaymentMethod;
+  /** How the guard was paid out — cash is recorded by Director only */
+  guardPayoutMethod?: PaymentMethod;
   assignedGuardId: string | null;
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;

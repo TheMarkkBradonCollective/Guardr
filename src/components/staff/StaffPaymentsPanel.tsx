@@ -10,6 +10,8 @@ interface StaffPaymentsPanelProps {
   isDirector: boolean;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
+  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
 }
 
 export function StaffPaymentsPanel({
@@ -19,6 +21,8 @@ export function StaffPaymentsPanel({
   isDirector,
   onReleasePayout,
   onRefundPayment,
+  onMarkClientPaidCash,
+  onMarkGuardPaidCash,
 }: StaffPaymentsPanelProps) {
   const pending = requests.filter((r) => r.status === 'completed' && !r.ratingGiven);
   const completed = requests.filter((r) => r.status === 'completed');
@@ -38,6 +42,8 @@ export function StaffPaymentsPanel({
         isDirector={isDirector}
         onReleasePayout={onReleasePayout}
         onRefundPayment={onRefundPayment}
+        onMarkClientPaidCash={onMarkClientPaidCash}
+        onMarkGuardPaidCash={onMarkGuardPaidCash}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

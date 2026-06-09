@@ -4,24 +4,37 @@ import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { useDevice } from '../../lib/platform';
 import { Search, X } from 'lucide-react';
+import { DirectorCashPaymentControls } from './DirectorCashPaymentControls';
 
 interface StaffLiveJobsProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  isDirector?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onReleasePayout?: (requestId: string) => Promise<void>;
 }
 
 function JobDetailPanel({
   req,
   guards,
+  isDirector,
   onApproveRequest,
   onDenyRequest,
+  onMarkClientPaidCash,
+  onMarkGuardPaidCash,
+  onReleasePayout,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
+  isDirector?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onReleasePayout?: (requestId: string) => Promise<void>;
 }) {
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
@@ -49,6 +62,13 @@ function JobDetailPanel({
       {req.description && (
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
       )}
+      <DirectorCashPaymentControls
+        req={req}
+        isDirector={!!isDirector}
+        onMarkClientPaidCash={onMarkClientPaidCash}
+        onMarkGuardPaidCash={onMarkGuardPaidCash}
+        onReleasePayout={onReleasePayout}
+      />
       <div className="flex flex-wrap gap-2 pt-2">
         {req.status === 'pending-review' && (
           <button type="button" onClick={() => onApproveRequest(req.id)} className="staff-ops-btn-primary text-[10px]">
@@ -73,7 +93,16 @@ function JobDetailPanel({
   );
 }
 
-export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyRequest }: StaffLiveJobsProps) {
+export function StaffLiveJobs({
+  requests,
+  guards,
+  isDirector,
+  onApproveRequest,
+  onDenyRequest,
+  onMarkClientPaidCash,
+  onMarkGuardPaidCash,
+  onReleasePayout,
+}: StaffLiveJobsProps) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { formFactor } = useDevice();
@@ -138,8 +167,12 @@ export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyReques
             <JobDetailPanel
               req={selected}
               guards={guards}
+              isDirector={isDirector}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
+              onMarkClientPaidCash={onMarkClientPaidCash}
+              onMarkGuardPaidCash={onMarkGuardPaidCash}
+              onReleasePayout={onReleasePayout}
             />
           )}
         </div>
@@ -150,8 +183,12 @@ export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyReques
               <JobDetailPanel
                 req={req}
                 guards={guards}
+                isDirector={isDirector}
                 onApproveRequest={onApproveRequest}
                 onDenyRequest={onDenyRequest}
+                onMarkClientPaidCash={onMarkClientPaidCash}
+                onMarkGuardPaidCash={onMarkGuardPaidCash}
+                onReleasePayout={onReleasePayout}
               />
             </div>
           ))}

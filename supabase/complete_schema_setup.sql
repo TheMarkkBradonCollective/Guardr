@@ -153,6 +153,8 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAU
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS request_type TEXT DEFAULT 'marketplace';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS target_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS min_guard_qualification TEXT DEFAULT 'pending';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_payment_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
 
 -- Backfill nulls so NOT NULL constraints can apply
 UPDATE security_requests SET site_name = '' WHERE site_name IS NULL;
@@ -197,6 +199,18 @@ ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_min_gu
 ALTER TABLE security_requests ADD CONSTRAINT security_requests_min_guard_qualification_check
   CHECK (min_guard_qualification IN ('pending', 'active'));
 
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_client_payment_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_client_payment_method_check
+  CHECK (client_payment_method IS NULL OR client_payment_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_guard_payout_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_guard_payout_method_check
+  CHECK (guard_payout_method IS NULL OR guard_payout_method IN ('stripe', 'cash'));
+
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_payment_method_check;
+ALTER TABLE payments ADD CONSTRAINT payments_payment_method_check
+  CHECK (payment_method IS NULL OR payment_method IN ('stripe', 'cash'));
+
 -- Rename legacy column if present
 DO $$
 BEGIN
@@ -216,6 +230,7 @@ CREATE TABLE IF NOT EXISTS payments (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL REFERENCES security_requests(id) ON DELETE CASCADE,
   amount NUMERIC(12, 2) NOT NULL,
+  payment_method TEXT CHECK (payment_method IS NULL OR payment_method IN ('stripe', 'cash')),
   stripe_session_id TEXT,
   stripe_payment_intent_id TEXT,
   stripe_transfer_id TEXT,
@@ -224,6 +239,8 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;
 
 -- ── SUPPORT ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (

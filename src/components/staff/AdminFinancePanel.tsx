@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, Settings, BarChart3, CreditCard, Loader2, RotateCcw } from 'lucide-react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
+import { clientPaymentDisplay, guardPayoutDisplay } from '../../lib/cashPayments';
 import { computeGuardEarnings, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { DirectorCashPaymentControls } from './DirectorCashPaymentControls';
 
 interface AdminFinancePanelProps {
   requests: SecurityRequest[];
@@ -10,6 +12,8 @@ interface AdminFinancePanelProps {
   isDirector: boolean;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
+  onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
 }
 
 function paymentStatusLabel(status?: string): string {
@@ -29,6 +33,8 @@ export function AdminFinancePanel({
   isDirector,
   onReleasePayout,
   onRefundPayment,
+  onMarkClientPaidCash,
+  onMarkGuardPaidCash,
 }: AdminFinancePanelProps) {
   const [releasingId, setReleasingId] = useState<string | null>(null);
   const [refundingId, setRefundingId] = useState<string | null>(null);
@@ -113,7 +119,8 @@ export function AdminFinancePanel({
                   <div className="min-w-0">
                     <p className="font-bold truncate">{req.title}</p>
                     <p className="text-[10px] font-mono text-slate-500">
-                      {req.clientName} · Guard: {guard?.name || 'Unassigned'} · {paymentStatusLabel(req.paymentStatus)}
+                      {req.clientName} · Guard: {guard?.name || 'Unassigned'} · {clientPaymentDisplay(req)}
+                      {req.status === 'completed' ? ` · ${guardPayoutDisplay(req)}` : ''}
                     </p>
                     {payment && (
                       <p className="text-[10px] font-mono text-slate-400 mt-0.5">
@@ -157,6 +164,15 @@ export function AdminFinancePanel({
                       </button>
                     )}
                   </div>
+                  {isDirector && (
+                    <DirectorCashPaymentControls
+                      req={req}
+                      isDirector={isDirector}
+                      compact
+                      onMarkClientPaidCash={onMarkClientPaidCash}
+                      onMarkGuardPaidCash={onMarkGuardPaidCash}
+                    />
+                  )}
                 </div>
               );
             })}
