@@ -30,6 +30,7 @@ import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
+import { StaffTeamPanel } from './staff/StaffTeamPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
@@ -114,6 +115,7 @@ export function StaffDashboard({
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>(initialSection);
   const [selectedGuardId, setSelectedGuardId] = useState<string | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
@@ -125,6 +127,7 @@ export function StaffDashboard({
   const navigateSection = (next: StaffSection) => {
     setSection(next);
     if (next !== 'guards') setSelectedGuardId(null);
+    if (next !== 'team') setSelectedTeamId(null);
     if (next !== 'clients') setSelectedClientId(null);
     if (next !== 'jobs') setSelectedJobId(null);
   };
@@ -192,6 +195,16 @@ export function StaffDashboard({
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
+          />
+        );
+      case 'team':
+        return (
+          <StaffTeamPanel
+            guards={guards}
+            requests={requests}
+            canSuspend={canSuspend}
+            onUpdateUserStatus={onUpdateGuardUserStatus}
+            initialSelectedId={selectedTeamId}
           />
         );
       case 'clients':
