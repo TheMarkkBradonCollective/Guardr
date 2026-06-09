@@ -381,42 +381,42 @@ html.theme-grey {
   color: var(--brand-text-muted);
 }
 
-.staff-status-strip {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-  border-top: 1px solid var(--brand-border);
-  border-bottom: 1px solid var(--brand-border);
+.staff-overview {
+  background: var(--brand-bg);
 }
 
-@media (min-width: 640px) {
-  .staff-status-strip {
-    grid-template-columns: repeat(4, 1fr);
+.staff-overview-body {
+  border-top: 1px solid var(--brand-border);
+}
+
+@media (max-width: 1023px) {
+  .staff-overview-body {
+    grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr);
   }
+}
+
+.staff-status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--brand-border);
 }
 
 .staff-status-item {
-  padding: 1rem 1.125rem;
-  border-bottom: 1px solid var(--brand-border);
-}
-
-.staff-status-item:nth-child(odd) {
+  padding: 0.75rem 0.875rem;
   border-right: 1px solid var(--brand-border);
 }
 
-@media (min-width: 640px) {
-  .staff-status-item {
-    border-bottom: none;
-    border-right: 1px solid var(--brand-border);
-  }
-
-  .staff-status-item:last-child {
-    border-right: none;
-  }
+.staff-status-item:last-child {
+  border-right: none;
 }
 
 .staff-feed-panel {
-  border-top: 1px solid var(--brand-border);
+  min-height: 0;
+}
+
+.staff-snapshot-panel {
+  min-height: 0;
 }
 
 .staff-feed-header {
@@ -428,32 +428,54 @@ html.theme-grey {
 }
 
 .staff-feed-list {
-  max-height: 20rem;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .staff-feed-row {
   display: flex;
   gap: 0.75rem;
-  padding: 0.875rem 1.25rem;
+  padding: 0.625rem 1.25rem;
   border-bottom: 1px solid var(--brand-border);
   font-size: 0.875rem;
+  flex: 1 1 0;
+  min-height: 0;
+  align-items: center;
+}
+
+.staff-feed-row:last-child {
+  border-bottom: none;
 }
 
 .staff-snapshot-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 0;
-  border-top: 1px solid var(--brand-border);
+  height: 100%;
 }
 
 .staff-snapshot-cell {
-  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--brand-border);
   border-right: 1px solid var(--brand-border);
+  min-height: 0;
 }
 
 .staff-snapshot-cell:nth-child(2n) {
+  border-right: none;
+}
+
+.staff-snapshot-cell:nth-last-child(-n+2) {
+  border-bottom: none;
+}
+
+/* Last odd snapshot cell spans full width when count is odd */
+.staff-snapshot-cell:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
   border-right: none;
 }
 

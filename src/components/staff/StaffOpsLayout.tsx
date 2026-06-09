@@ -68,7 +68,11 @@ export function StaffOpsLayout({
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
-  const bleed = fullBleed || isStaffOpsMapSection(activeSection) || activeSection === 'support';
+  const bleed =
+    fullBleed ||
+    isStaffOpsMapSection(activeSection) ||
+    activeSection === 'support' ||
+    activeSection === 'overview';
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
