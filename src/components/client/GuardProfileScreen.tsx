@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardHistoryWithClient } from '../../lib/guardDirectory';
 import {
-  certDisplayName,
   formatServiceAreas,
   formatSkillList,
   getGuardDisplayHeadline,
