@@ -29,9 +29,13 @@ const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
-const SHELL_HEADER_VIEWS: ClientView[] = [];
-
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
+  home: 'Home',
+  message: 'Messages',
+  appointment: 'Appointments',
+  medication: 'Medication',
+  tracker: 'Tracker',
+  search: 'Search',
   profile: 'Profile',
   support: 'Support',
 };
@@ -43,8 +47,7 @@ export function ClientAppLayout({
   activeView = 'home',
   onNavigate,
 }: ClientAppLayoutProps) {
-  const showShellHeader = SHELL_HEADER_VIEWS.includes(activeView);
-  const screenTitle = VIEW_TITLES[activeView] ?? 'Health';
+  const screenTitle = VIEW_TITLES[activeView] ?? 'Guardr';
 
   const moreFooter = (
     <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
@@ -59,6 +62,7 @@ export function ClientAppLayout({
       avatarUrl={currentUser.avatar}
       avatarName={currentUser.name}
       onAvatarClick={() => onNavigate?.('profile')}
+      onSignOut={onSignOut}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
       activeNavId={activeView === 'search' ? 'home' : activeView}
@@ -66,7 +70,7 @@ export function ClientAppLayout({
       moreMenuFooter={moreFooter}
       moreMenuTitle="Menu"
       fullBleed
-      hideHeader={!showShellHeader}
+      hideHeader={false}
       flatNav
     >
       {children}

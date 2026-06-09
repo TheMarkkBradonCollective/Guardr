@@ -4,6 +4,7 @@ import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
   AlertTriangle,
   BarChart3,
@@ -165,13 +166,25 @@ export function StaffOpsLayout({
             <h1 className="text-lg font-semibold truncate">{SECTION_TITLES[activeSection]}</h1>
             <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate('profile')}
-            className="shrink-0 text-sm font-medium text-brand-primary"
-          >
-            Profile
-          </button>
+          <div className="shrink-0 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-lg text-xs font-medium text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20 transition-colors"
+              aria-label="Log out"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Log out</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('profile')}
+              className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              aria-label="Open profile"
+            >
+              <ProfileAvatar src={currentUser.avatar} name={currentUser.name} size="sm" />
+            </button>
+          </div>
         </header>
 
         <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
