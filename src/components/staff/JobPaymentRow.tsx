@@ -105,6 +105,11 @@ export function JobPaymentRow({
               Ledger ${payment.amount} · {payment.paymentMethod || 'stripe'} · {payment.status}
             </p>
           )}
+          {req.guardCashPayoutRequested && req.paymentStatus !== 'released' && (
+            <p className="text-[10px] font-mono text-amber-400/90 mt-1.5">
+              Guard requested cash payout — pay in cash, not Stripe
+            </p>
+          )}
           {getCashDepositedAmount(req) > 0 && (
             <p className="text-[10px] font-mono text-emerald-400/80 mt-1">
               ${getCashDepositedAmount(req)} paid into Stripe (card)

@@ -292,6 +292,8 @@ export default function App() {
         cashDepositedToStripe: !!r.cash_deposited_to_stripe,
         cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
         cashDepositedAt: r.cash_deposited_at || undefined,
+        guardCashPayoutRequested: !!r.guard_cash_payout_requested,
+        guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
       })));
 
       setPayments((dbPayments ?? []).map((p: any) => ({
@@ -1006,7 +1008,15 @@ export default function App() {
 
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === requestId ? { ...r, paymentStatus: 'released', guardPayoutMethod: 'cash' } : r
+        r.id === requestId
+          ? {
+              ...r,
+              paymentStatus: 'released',
+              guardPayoutMethod: 'cash',
+              guardCashPayoutRequested: false,
+              guardCashPayoutRequestedAt: undefined,
+            }
+          : r
       )
     );
     setPayments((prev) => {
@@ -1030,7 +1040,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase
         .from('security_requests')
-        .update({ payment_status: 'released', guard_payout_method: 'cash' })
+        .update({
+          payment_status: 'released',
+          guard_payout_method: 'cash',
+          guard_cash_payout_requested: false,
+          guard_cash_payout_requested_at: null,
+        })
         .eq('id', requestId);
       if (existingPayment) {
         await supabase
@@ -1264,10 +1279,85 @@ export default function App() {
     }
   };
 
+  const handleGuardRequestCashPayout = async (guardId: string) => {
+    const eligible = requests.filter(
+      (r) =>
+        r.assignedGuardId === guardId &&
+        r.status === 'completed' &&
+        r.paymentStatus !== 'released' &&
+        r.guardPayoutMethod !== 'cash' &&
+        !r.guardCashPayoutRequested
+    );
+    if (eligible.length === 0) {
+      alert('No completed shifts are available for a cash payout request.');
+      return;
+    }
+    const total = Math.round(eligible.reduce((s, r) => s + guardPayoutAmount(r), 0) * 100) / 100;
+    if (
+      !window.confirm(
+        `Request $${total} in cash from the director for ${eligible.length} completed shift(s)?`
+      )
+    ) {
+      return;
+    }
+    const requestedAt = new Date().toISOString();
+    const eligibleIds = new Set(eligible.map((r) => r.id));
+    setRequests((prev) =>
+      prev.map((r) =>
+        eligibleIds.has(r.id)
+          ? { ...r, guardCashPayoutRequested: true, guardCashPayoutRequestedAt: requestedAt }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          guard_cash_payout_requested: true,
+          guard_cash_payout_requested_at: requestedAt,
+        })
+        .in('id', [...eligibleIds]);
+    }
+    alert('Cash payout request sent to the director.');
+  };
+
+  const handleGuardRequestStripePayout = async (guardId: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    const eligible = requests.filter(
+      (r) =>
+        r.assignedGuardId === guardId &&
+        r.status === 'completed' &&
+        r.paymentStatus !== 'released' &&
+        r.guardPayoutMethod !== 'cash' &&
+        !r.guardCashPayoutRequested
+    );
+    if (eligible.length === 0) {
+      alert('No earnings are available for Stripe payout right now.');
+      return;
+    }
+    const total = Math.round(eligible.reduce((s, r) => s + guardPayoutAmount(r), 0) * 100) / 100;
+    await handleCreateSupportTicket({
+      kind: 'report',
+      subject: `Stripe payout request — $${total}`,
+      category: 'payment',
+      priority: 'normal',
+      body: `${guard?.name || 'Guard'} requests Stripe Connect payout for ${eligible.length} completed shift(s), totaling $${total}.`,
+    });
+    alert('Stripe payout request sent to the director.');
+  };
+
   const handleReleasePayout = async (requestId: string, force = false) => {
     const req = requests.find(r => r.id === requestId);
     if (!req?.assignedGuardId) {
       alert('No guard assigned to this job.');
+      return;
+    }
+    if (req.guardPayoutMethod === 'cash') {
+      alert('This guard was already paid in cash for this shift.');
+      return;
+    }
+    if (req.guardCashPayoutRequested) {
+      alert('Guard requested cash for this shift — use Guard paid cash, not Stripe.');
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);
@@ -1583,6 +1673,8 @@ export default function App() {
           relatedRequests={guardJobs.filter((r) => r.assignedGuardId === activeGuard.id)}
           onCreateSupportTicket={handleCreateSupportTicket}
           onSendSupportMessage={handleSendSupportMessage}
+          onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
+          onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
         />
         <InstallPrompt />
       </>

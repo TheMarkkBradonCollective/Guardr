@@ -73,10 +73,11 @@ export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
   );
 }
 
-/** Stripe Connect payout is blocked only when the guard was already paid in cash */
+/** Stripe Connect payout — never pay online for cash-paid or cash-requested shifts */
 export function canStripePayGuard(req: SecurityRequest): boolean {
-  if (!isCashClientPayment(req)) return true;
-  return !isCashGuardPayout(req);
+  if (isCashGuardPayout(req)) return false;
+  if (req.guardCashPayoutRequested) return false;
+  return true;
 }
 
 export function stripeDepositLabel(req: SecurityRequest): string {
@@ -129,6 +130,7 @@ export function platformFundsDisplay(req: SecurityRequest): string {
 export function guardPayoutDisplay(req: SecurityRequest): string {
   if (req.paymentStatus !== 'released') {
     if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus || '')) {
+      if (req.guardCashPayoutRequested) return 'Cash requested';
       return 'Payout pending';
     }
     return '—';

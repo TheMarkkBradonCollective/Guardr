@@ -1,4 +1,4 @@
-import { Payment, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
+import { Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
 import { computeGuardPay, computeGuardEarnings } from './payments';
 import { guardCanViewJob } from './guardJobs';
 
@@ -42,6 +42,8 @@ export interface GuardJobView {
   checkOutAudit?: SecurityRequest['checkOutAudit'];
   reports?: SecurityRequest['reports'];
   payoutStatus?: GuardPayoutStatus;
+  payoutMethod?: PaymentMethod;
+  cashPayoutRequested?: boolean;
 }
 
 export interface GuardPayoutView {
@@ -110,6 +112,9 @@ export function toGuardJobView(req: SecurityRequest): GuardJobView {
     checkOutAudit: req.checkOutAudit,
     reports: req.reports,
     payoutStatus: mapPayoutStatus(req.paymentStatus),
+    payoutMethod:
+      req.paymentStatus === 'released' && req.guardPayoutMethod ? req.guardPayoutMethod : undefined,
+    cashPayoutRequested: !!req.guardCashPayoutRequested,
   };
 }
 

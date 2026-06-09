@@ -20,7 +20,6 @@ import { SupportScreen } from './support/SupportScreen';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy, LogOut } from 'lucide-react';
 import {
-  computeEarningsSummary,
   filterJobsByCategory,
   guardCanViewJob,
   JobCategoryId,
@@ -29,7 +28,8 @@ import {
   ShiftPhase,
   sortJobs,
 } from '../lib/guardJobs';
-import { GuardJobView, GuardPayoutView, getGuardShiftEarnings } from '../lib/guardJobView';
+import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
+import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -61,6 +61,8 @@ interface GuardDashboardProps {
   relatedRequests?: GuardJobView[];
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
+  onRequestCashPayout?: () => Promise<void>;
+  onRequestStripePayout?: () => Promise<void>;
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
@@ -98,6 +100,8 @@ export function GuardDashboard({
   relatedRequests = [],
   onCreateSupportTicket,
   onSendSupportMessage,
+  onRequestCashPayout,
+  onRequestStripePayout,
   variant = 'standalone',
   shiftTab = 'map',
   initialTab = 'map',
@@ -110,7 +114,8 @@ export function GuardDashboard({
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
-  const [cashoutPending, setCashoutPending] = useState(false);
+  const [cashRequestPending, setCashRequestPending] = useState(false);
+  const [stripeRequestPending, setStripeRequestPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
   const [connectReady, setConnectReady] = useState(false);
   const [dutySeconds, setDutySeconds] = useState(0);
@@ -160,20 +165,9 @@ export function GuardDashboard({
     [availableJobs, assignedJobs]
   );
 
-  const earningsSummary = useMemo(() => computeEarningsSummary(completedJobs), [completedJobs]);
-
-  const releasedEarnings = useMemo(
-    () => requests
-      .filter((r) => r.assignedGuardId === guard.id && r.payoutStatus === 'paid')
-      .reduce((s, j) => s + getGuardShiftEarnings(j), 0),
-    [requests, guard.id]
-  );
-
-  const pendingPayout = useMemo(
-    () => requests
-      .filter((r) => r.assignedGuardId === guard.id && r.payoutStatus === 'processing')
-      .reduce((s, j) => s + getGuardShiftEarnings(j), 0),
-    [requests, guard.id]
+  const earningsBreakdown = useMemo(
+    () => computeGuardEarningsBreakdown(completedJobs),
+    [completedJobs]
   );
 
   useEffect(() => {
@@ -182,18 +176,6 @@ export function GuardDashboard({
       .then((s) => setConnectReady(s.payoutsEnabled && s.detailsSubmitted))
       .catch(() => setConnectReady(false));
   }, [guard.stripeConnectAccountId]);
-
-  const [walletBalance, setWalletBalance] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`guard_wallet_bal_${guard.id}`);
-      if (saved) return parseFloat(saved);
-    } catch { /* ignore */ }
-    return completedJobs.reduce((s, j) => s + getGuardShiftEarnings(j), 0);
-  });
-
-  useEffect(() => {
-    localStorage.setItem(`guard_wallet_bal_${guard.id}`, walletBalance.toString());
-  }, [walletBalance, guard.id]);
 
   useEffect(() => {
     if (activePhase !== 'on-duty') return;
@@ -313,7 +295,6 @@ export function GuardDashboard({
       setShowCheckout(false);
       return;
     }
-    const payout = getGuardShiftEarnings(activeShiftJob);
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
@@ -326,7 +307,6 @@ export function GuardDashboard({
         clientNotes: '',
       },
     });
-    setWalletBalance((b) => b + payout);
     updatePhase(activeShiftJob.id, 'complete');
     setShowCheckout(false);
     setRatingJob(activeShiftJob);
@@ -363,17 +343,24 @@ export function GuardDashboard({
     }
   };
 
-  const handleCashOut = () => {
-    if (!connectReady) {
-      alert('Connect your Stripe account to receive payouts.');
-      return;
+  const handleRequestCashPayout = async () => {
+    if (!onRequestCashPayout) return;
+    setCashRequestPending(true);
+    try {
+      await onRequestCashPayout();
+    } finally {
+      setCashRequestPending(false);
     }
-    if (walletBalance <= 0) return;
-    setCashoutPending(true);
-    setTimeout(() => {
-      setWalletBalance(0);
-      setCashoutPending(false);
-    }, 1500);
+  };
+
+  const handleRequestStripePayout = async () => {
+    if (!onRequestStripePayout) return;
+    setStripeRequestPending(true);
+    try {
+      await onRequestStripePayout();
+    } finally {
+      setStripeRequestPending(false);
+    }
   };
 
   const userStatus = guard.userStatus || 'active';
@@ -439,16 +426,16 @@ export function GuardDashboard({
         <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <div className="guard-scroll-panel flex-1">
             <GuardEarningsPanel
-              summary={earningsSummary}
+              breakdown={earningsBreakdown}
               completedJobs={completedJobs}
-              balance={releasedEarnings}
-              pendingPayout={pendingPayout}
               stripeConnected={!!guard.stripeConnectAccountId}
               stripeReady={connectReady}
               connectPending={connectPending}
               onConnectStripe={handleConnectStripe}
-              onCashOut={handleCashOut}
-              cashoutPending={cashoutPending}
+              onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
+              onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
+              cashRequestPending={cashRequestPending}
+              stripeRequestPending={stripeRequestPending}
               payments={payments}
             />
           </div>

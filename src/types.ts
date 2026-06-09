@@ -203,6 +203,9 @@ export interface SecurityRequest {
   clientPaymentMethod?: PaymentMethod;
   /** How the guard was paid out — cash is recorded by Director only */
   guardPayoutMethod?: PaymentMethod;
+  /** Guard requested physical cash from director for this shift */
+  guardCashPayoutRequested?: boolean;
+  guardCashPayoutRequestedAt?: string;
   /** Director paid client cash into Stripe via card checkout */
   cashDepositedToStripe?: boolean;
   /** Dollars paid into Stripe (card) for cash-client jobs */
