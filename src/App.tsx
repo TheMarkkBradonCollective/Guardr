@@ -900,26 +900,84 @@ export default function App() {
     return newClient.id;
   };
 
-  const handleAddStaffProfile = async (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => {
+  const handleAddStaffProfile = async (
+    name: string,
+    email: string,
+    badgeNumber: string,
+    staffRole: 'Director' | 'Administrator' | 'Moderator'
+  ): Promise<string> => {
+    const emailLower = assertEmailAvailable(email);
     const newStaff: SecurityGuard = {
-      id: `staff-${Date.now()}`, name, email, badgeNumber,
+      id: `staff-${Date.now()}`,
+      name: name.trim(),
+      email: email.trim(),
+      badgeNumber: badgeNumber.trim(),
       avatar: '',
-      phone: '', bio: `${staffRole} — Platform operations.`,
-      isArmed: false, backgroundChecked: true, verified: true,
-      rating: 5.0, jobsCompleted: 0, certifications: [], experience: [],
-      hourlyRateRequirement: 0, isStaff: true, staffRole, userStatus: 'active',
+      phone: '',
+      bio: `${staffRole} — Platform operations.`,
+      isArmed: false,
+      backgroundChecked: true,
+      verified: true,
+      rating: 5.0,
+      jobsCompleted: 0,
+      certifications: [],
+      experience: [],
+      hourlyRateRequirement: 0,
+      isStaff: true,
+      staffRole,
+      userStatus: 'active',
     };
-    setGuards(prev => [...prev, newStaff]);
+    setGuards((prev) => [...prev, newStaff]);
     if (isDbConnected) {
       try {
         await supabase.from('guards').insert({
-          id: newStaff.id, name: newStaff.name, email: newStaff.email,
-          badge_number: newStaff.badgeNumber, avatar: newStaff.avatar,
-          phone: newStaff.phone, bio: newStaff.bio, is_armed: false,
-          background_checked: true, verified: true, rating: 5.0,
-          jobs_completed: 0, is_staff: true, staff_role: staffRole, user_status: 'active',
+          id: newStaff.id,
+          name: newStaff.name,
+          email: emailLower,
+          badge_number: newStaff.badgeNumber,
+          avatar: newStaff.avatar,
+          phone: newStaff.phone,
+          bio: newStaff.bio,
+          is_armed: false,
+          background_checked: true,
+          verified: true,
+          rating: 5.0,
+          jobs_completed: 0,
+          is_staff: true,
+          staff_role: staffRole,
+          user_status: 'active',
         });
-      } catch (e) { console.error('Staff insert error:', e); }
+      } catch (e) {
+        setGuards((prev) => prev.filter((g) => g.id !== newStaff.id));
+        console.error('Staff insert error:', e);
+        throw new Error('Could not save staff account to the database.');
+      }
+    }
+    return newStaff.id;
+  };
+
+  const handleUpdateStaffRole = async (
+    staffId: string,
+    staffRole: 'Director' | 'Administrator' | 'Moderator'
+  ) => {
+    if (staffId === currentUser?.id) {
+      throw new Error('You cannot change your own role.');
+    }
+    const member = guards.find((g) => g.id === staffId);
+    if (!member?.isStaff) {
+      throw new Error('This account is not a staff profile.');
+    }
+    const bio = `${staffRole} — Platform operations.`;
+    setGuards((prev) =>
+      prev.map((g) => (g.id === staffId ? { ...g, staffRole, bio } : g))
+    );
+    if (isDbConnected) {
+      try {
+        await supabase.from('guards').update({ staff_role: staffRole, bio }).eq('id', staffId);
+      } catch (e) {
+        console.error('Staff role update error:', e);
+        throw new Error('Could not update staff role in the database.');
+      }
     }
   };
 
@@ -1985,6 +2043,7 @@ export default function App() {
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}
+          onUpdateStaffRole={handleUpdateStaffRole}
           onAddGuardProfile={handleAddGuardProfile}
           onAddClientProfile={handleAddClientProfile}
           themeMode={themeMode}

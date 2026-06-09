@@ -1,34 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SessionUser } from '../../types';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { StaffRolesReference } from './RolePermissionsGuide';
 import { AppFormSection } from '../ui/app/AppPrimitives';
+import { StaffAddStaffForm } from './StaffAddStaffForm';
 
 interface StaffSettingsPanelProps {
   currentUser: SessionUser;
   showStaffOnboard: boolean;
-  onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
+  onAddStaffProfile: (
+    name: string,
+    email: string,
+    badgeNumber: string,
+    staffRole: 'Director' | 'Administrator' | 'Moderator'
+  ) => Promise<string>;
 }
 
 export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffProfile }: StaffSettingsPanelProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [badge, setBadge] = useState('');
-  const [role, setRole] = useState<'Director' | 'Administrator' | 'Moderator'>('Moderator');
-  const [msg, setMsg] = useState('');
-
-  const handleOnboard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !badge) { setMsg('All fields required.'); return; }
-    try {
-      await onAddStaffProfile(name, email, badge, role);
-      setMsg('Staff profile created.');
-      setName(''); setEmail(''); setBadge('');
-    } catch {
-      setMsg('Failed to onboard staff.');
-    }
-  };
-
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <AppFormSection title="Platform Fees">
@@ -55,35 +43,16 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
 
       {showStaffOnboard && (
         <AppFormSection title="Onboard staff (Director)">
-          <form onSubmit={handleOnboard} className="space-y-4 pb-6">
-            <p className="text-sm text-brand-text-muted">
-              Staff accounts manage the platform only — they cannot accept field shifts. Field guards are separate sign-ups and cannot be promoted to staff.
+          <div className="pb-6">
+            <p className="text-sm text-brand-text-muted mb-4">
+              You can also manage staff from the Staff section in the sidebar — add accounts and change roles there.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="uber-label block mb-1">Full name</label>
-                <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="uber-input w-full" />
-              </div>
-              <div>
-                <label className="uber-label block mb-1">Email</label>
-                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="uber-input w-full" />
-              </div>
-              <div>
-                <label className="uber-label block mb-1">Badge number</label>
-                <input type="text" placeholder="Badge number" value={badge} onChange={(e) => setBadge(e.target.value)} className="uber-input w-full" />
-              </div>
-              <div>
-                <label className="uber-label block mb-1">Role</label>
-                <select value={role} onChange={(e) => setRole(e.target.value as typeof role)} className="uber-select w-full">
-                  <option value="Moderator">Moderator</option>
-                  <option value="Administrator">Administrator</option>
-                  <option value="Director">Director</option>
-                </select>
-              </div>
-            </div>
-            {msg && <p className="text-sm text-brand-primary">{msg}</p>}
-            <button type="submit" className="app-button-primary !w-auto !h-10 !px-6">Create Staff Account</button>
-          </form>
+            <StaffAddStaffForm
+              onAdd={(input) =>
+                onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+              }
+            />
+          </div>
         </AppFormSection>
       )}
     </div>

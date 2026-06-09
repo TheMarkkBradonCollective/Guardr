@@ -1,23 +1,36 @@
 import React, { useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import { SecurityGuard, StaffRole } from '../../types';
 import { useDevice } from '../../lib/platform';
-import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
+import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
+import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
-  requests: SecurityRequest[];
+  currentUserId: string;
+  canManageStaff: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
+  onAddStaff?: (input: {
+    name: string;
+    email: string;
+    badgeNumber: string;
+    staffRole: StaffRole;
+  }) => Promise<string>;
+  onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
   initialSelectedId?: string | null;
 }
 
 export function StaffTeamPanel({
   guards,
-  requests,
+  currentUserId,
+  canManageStaff,
   canSuspend,
   onUpdateUserStatus,
+  onAddStaff,
+  onUpdateStaffRole,
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
@@ -36,17 +49,6 @@ export function StaffTeamPanel({
 
   const selected = filtered.find((g) => g.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
   const showDetailOnly = Boolean(selected && !splitView);
-
-  const detailProps = selected
-    ? {
-        guard: selected,
-        requests,
-        canSuspend,
-        onUpdateUserStatus,
-        onApproveCert: () => {},
-        onRejectCert: () => {},
-      }
-    : null;
 
   function renderTeamCard(member: SecurityGuard, isActive: boolean) {
     const accountStatus = member.userStatus || 'active';
@@ -70,13 +72,36 @@ export function StaffTeamPanel({
     );
   }
 
+  const detailPanel = selected ? (
+    <StaffTeamDetailPanel
+      member={selected}
+      currentUserId={currentUserId}
+      canManageStaff={canManageStaff}
+      canSuspend={canSuspend}
+      onUpdateUserStatus={onUpdateUserStatus}
+      onUpdateStaffRole={onUpdateStaffRole}
+      onBack={showDetailOnly ? () => setSelectedId(null) : undefined}
+    />
+  ) : null;
+
   return (
     <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
-          <p className="text-sm text-brand-text-muted">
-            Guardr platform staff — operations and administration only, not field security shifts.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <p className="text-sm text-brand-text-muted flex-1">
+              Guardr platform staff — operations and administration only, not field security shifts.
+            </p>
+            {canManageStaff && onAddStaff && (
+              <StaffAddStaffForm
+                onAdd={onAddStaff}
+                onCreated={(staffId) => {
+                  setSearch('');
+                  setSelectedId(staffId);
+                }}
+              />
+            )}
+          </div>
           <WfSearchBar
             value={search}
             onChange={setSearch}
@@ -88,10 +113,12 @@ export function StaffTeamPanel({
 
       {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
-          No staff accounts on file.
+          {roster.length === 0
+            ? 'No staff accounts yet. Directors can use Add staff above.'
+            : 'No staff match your search.'}
         </p>
-      ) : showDetailOnly && detailProps ? (
-        <StaffGuardDetailPanel {...detailProps} onBack={() => setSelectedId(null)} />
+      ) : showDetailOnly && detailPanel ? (
+        detailPanel
       ) : splitView ? (
         <div className="tablet-split-panel">
           <div className="max-h-[75vh] overflow-y-auto pr-1">
@@ -99,7 +126,7 @@ export function StaffTeamPanel({
               {filtered.map((member) => renderTeamCard(member, selected?.id === member.id))}
             </AppItemCardStack>
           </div>
-          {detailProps && <StaffGuardDetailPanel {...detailProps} />}
+          {detailPanel}
         </div>
       ) : (
         <AppItemCardStack>

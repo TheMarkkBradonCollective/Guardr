@@ -72,7 +72,16 @@ interface StaffDashboardProps {
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
-  onAddStaffProfile: (name: string, email: string, badgeNumber: string, staffRole: 'Director' | 'Administrator' | 'Moderator') => Promise<void>;
+  onAddStaffProfile: (
+    name: string,
+    email: string,
+    badgeNumber: string,
+    staffRole: 'Director' | 'Administrator' | 'Moderator'
+  ) => Promise<string>;
+  onUpdateStaffRole: (
+    staffId: string,
+    staffRole: 'Director' | 'Administrator' | 'Moderator'
+  ) => Promise<void>;
   onAddGuardProfile: (input: {
     name: string;
     email: string;
@@ -124,6 +133,7 @@ export function StaffDashboard({
   isDbConnected,
   currentUser,
   onAddStaffProfile,
+  onUpdateStaffRole,
   onAddGuardProfile,
   onAddClientProfile,
   themeMode,
@@ -244,9 +254,14 @@ export function StaffDashboard({
         return (
           <StaffTeamPanel
             guards={guards}
-            requests={requests}
+            currentUserId={currentUser.id}
+            canManageStaff={showStaffOnboard}
             canSuspend={canSuspend}
             onUpdateUserStatus={onUpdateGuardUserStatus}
+            onAddStaff={(input) =>
+              onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+            }
+            onUpdateStaffRole={onUpdateStaffRole}
             initialSelectedId={selectedTeamId}
           />
         );
