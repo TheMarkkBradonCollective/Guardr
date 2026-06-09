@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { GuardEarningsBreakdown } from '../../lib/guardEarnings';
-import { GuardJobView, GuardPayoutView, guardPayoutStatusLabel } from '../../lib/guardJobView';
+import {
+  GuardJobView,
+  GuardPayoutView,
+  getShiftPayDisplay,
+} from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
+import { formatShiftRange } from '../../lib/dates';
 import { AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { Banknote, CreditCard, Link2, Loader2, Receipt } from 'lucide-react';
 
@@ -32,6 +37,19 @@ export function GuardEarningsPanel({
   cashRequestPending = false,
   payments = [],
 }: GuardEarningsPanelProps) {
+  const paymentByJobId = useMemo(
+    () => new Map(payments.map((p) => [p.jobId, p])),
+    [payments]
+  );
+
+  const sortedShifts = useMemo(
+    () =>
+      [...completedJobs].sort(
+        (a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+      ),
+    [completedJobs]
+  );
+
   return (
     <AppScreen className="pb-8">
       <AppScreenTitle>Your pay</AppScreenTitle>
@@ -125,54 +143,42 @@ export function GuardEarningsPanel({
         <p className="text-sm text-brand-text-muted px-5 py-3 border-b border-brand-border">Stripe Connect active</p>
       )}
 
-      {payments.length > 0 && (
-        <>
-          <div className="app-section-head mt-6">
-            <h2>Payout history</h2>
-            <span className="text-sm text-brand-text-muted">{payments.length}</span>
-          </div>
-          <AppList>
-            {payments.slice(0, 6).map((p) => (
-              <AppListRow key={p.id}>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="font-semibold text-sm">Job {p.jobId}</p>
-                  <p className="text-xs text-brand-text-muted mt-0.5">{p.status}</p>
-                </div>
-                <p className="font-bold text-sm shrink-0">${p.amount.toFixed(2)}</p>
-              </AppListRow>
-            ))}
-          </AppList>
-        </>
-      )}
-
-      <div className="app-section-head mt-6">
-        <h2>Recent shifts</h2>
-        <span className="text-sm text-brand-text-muted">{completedJobs.length}</span>
+      <div className="px-5 mt-6 mb-3">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-[1.0625rem] font-bold tracking-tight">Completed shifts</h2>
+          <span className="text-sm text-brand-text-muted">{sortedShifts.length}</span>
+        </div>
+        <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">
+          Each row is a finished job: what you earned and whether that pay has been sent to you yet.
+        </p>
       </div>
-      {completedJobs.length === 0 ? (
+
+      {sortedShifts.length === 0 ? (
         <p className="text-sm text-brand-text-muted text-center py-10 px-5">
-          Complete shifts to see earnings here.
+          Complete shifts to see earnings and payout status here.
         </p>
       ) : (
         <AppList>
-          {completedJobs.slice(0, 8).map((job) => (
-            <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
-              <div className="flex-1 min-w-0 text-left">
-                <p className="font-semibold text-sm">{job.title}</p>
-                <p className="text-xs text-brand-text-muted mt-0.5">{job.clientName}</p>
-                <p className="text-xs text-brand-text-muted mt-1">
-                  {job.cashPayoutRequested && job.payoutStatus !== 'paid' && 'Cash requested · '}
-                  {job.payoutStatus &&
-                    (job.payoutMethod === 'cash'
-                      ? 'Paid cash'
-                      : job.payoutMethod === 'stripe'
-                        ? 'Paid online'
-                        : guardPayoutStatusLabel(job.payoutStatus))}
-                </p>
-              </div>
-              <p className="font-bold text-sm shrink-0">+${getEstimatedGuardEarnings(job)}</p>
-            </AppListRow>
-          ))}
+          {sortedShifts.map((job) => {
+            const pay = getShiftPayDisplay(job, paymentByJobId.get(job.id));
+            const earned = getEstimatedGuardEarnings(job);
+            return (
+              <AppListRow key={job.id} className="app-list-row-align-top !items-start !py-4">
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="font-semibold text-sm">{job.title}</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">{job.clientName}</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">
+                    {formatShiftRange(job.startDate, job.endDate)}
+                  </p>
+                  <p className="text-xs font-medium text-brand-text mt-2">{pay.headline}</p>
+                  {pay.subtext && (
+                    <p className="text-xs text-brand-text-muted mt-0.5">{pay.subtext}</p>
+                  )}
+                </div>
+                <p className="font-bold text-sm shrink-0">${earned.toFixed(2)}</p>
+              </AppListRow>
+            );
+          })}
         </AppList>
       )}
     </AppScreen>

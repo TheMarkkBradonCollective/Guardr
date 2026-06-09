@@ -73,6 +73,58 @@ export function guardPayoutStatusLabel(status?: GuardPayoutStatus): string {
   }
 }
 
+function formatPayDate(iso?: string): string | undefined {
+  if (!iso) return undefined;
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/** Guard-facing pay line for a completed shift — one place for shift vs payout wording */
+export function getShiftPayDisplay(
+  job: GuardJobView,
+  payment?: GuardPayoutView
+): { headline: string; subtext?: string } {
+  const paidDate = formatPayDate(payment?.createdAt);
+
+  if (job.payoutStatus === 'paid') {
+    if (job.payoutMethod === 'cash') {
+      return {
+        headline: 'Paid in cash',
+        subtext: paidDate ? `Marked paid ${paidDate}` : 'Confirmed by platform staff',
+      };
+    }
+    if (job.payoutMethod === 'stripe') {
+      return {
+        headline: 'Paid on Stripe',
+        subtext: paidDate ? `Deposited ${paidDate}` : 'Sent to your connected account',
+      };
+    }
+    return { headline: 'Paid', subtext: paidDate };
+  }
+
+  if (job.cashPayoutRequested) {
+    return {
+      headline: 'Cash payout requested',
+      subtext: 'Waiting for platform staff to pay you in cash',
+    };
+  }
+
+  if (job.payoutStatus === 'processing') {
+    return {
+      headline: 'Payout processing',
+      subtext: 'Stripe transfer is on the way',
+    };
+  }
+
+  return {
+    headline: 'Awaiting payout',
+    subtext: 'Use Payout (Stripe) or Cash out above when you are ready',
+  };
+}
+
 /** Strip client billing and platform payment fields before data reaches guard UI */
 export function toGuardJobView(req: SecurityRequest): GuardJobView {
   const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate);
