@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -28,6 +28,7 @@ import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
+import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import {
   AddCertificationResult,
   normalizeCertNumber,
@@ -341,12 +342,20 @@ export default function App() {
     }
   }, [currentUser, guards, clients, loading]);
 
-  // Refresh from DB when tab regains focus
+  // Live sync — any DB change propagates to all open sessions without a manual refresh
+  const loadRef = useRef(loadFromSupabase);
+  loadRef.current = loadFromSupabase;
+  useSupabaseRealtimeSync(() => loadRef.current(), isDbConnected);
+
+  // Fallback when realtime reconnects after sleep / background tab
   useEffect(() => {
-    const onFocus = () => { void loadFromSupabase(); };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, []);
+    if (!isDbConnected) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void loadRef.current();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isDbConnected]);
 
   // ── Derived ────────────────────────────────────────────────
   // Only real guards (not clients/auditors/staff-only accounts)
