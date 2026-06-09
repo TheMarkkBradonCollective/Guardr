@@ -26,7 +26,7 @@ export function CertItemCard({
 
   return (
     <div className={`app-cert-item ${compact ? 'app-cert-item-compact' : ''}`}>
-      <div className="min-w-0 flex gap-3 flex-1">
+      <div className="app-cert-item-body min-w-0 flex gap-3 flex-1">
         {cert.imageUrl && !compact && (
           <img
             src={cert.imageUrl}
@@ -34,7 +34,7 @@ export function CertItemCard({
             className="w-14 h-14 rounded-xl object-cover shrink-0"
           />
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm leading-snug">{entry?.name ?? cert.name}</p>
           <p className="text-xs text-brand-text-muted mt-1">
             {cert.state ? `${formatStateName(cert.state)} · ` : ''}
@@ -47,7 +47,7 @@ export function CertItemCard({
           )}
         </div>
       </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
+      <div className="app-cert-item-meta">
         <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
         {editing && onDelete && (
           <button

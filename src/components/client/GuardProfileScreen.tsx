@@ -12,7 +12,6 @@ import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {

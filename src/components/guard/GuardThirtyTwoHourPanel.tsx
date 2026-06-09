@@ -12,7 +12,7 @@ import {
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
-import { BookOpen, Check, ImagePlus, Plus } from 'lucide-react';
+import { BookOpen, ImagePlus, Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
@@ -195,10 +195,11 @@ export function GuardThirtyTwoHourPanel({
                 <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
                   {course.name}
                 </p>
-                <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase text-brand-text-muted">
-                  {onFile ? <Check className="w-3 h-3" /> : null}
-                  {getCourseUploadStatusLabel(uploadStatus)}
-                </span>
+                {uploaded.length === 0 && (
+                  <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">
+                    {getCourseUploadStatusLabel(uploadStatus)}
+                  </span>
+                )}
               </div>
 
               {uploaded.length > 0 && (
@@ -209,7 +210,6 @@ export function GuardThirtyTwoHourPanel({
                       cert={cert}
                       editing={editing}
                       compact
-                      showUploadBadge={false}
                       onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
                     />
                   ))}
