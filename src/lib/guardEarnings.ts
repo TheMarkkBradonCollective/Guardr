@@ -4,6 +4,7 @@ import { getGuardShiftEarnings } from './guardJobView';
 export interface GuardEarningsBreakdown {
   totalEarnings: number;
   cashPaid: number;
+  stripePaid: number;
   onlineAvailable: number;
   cashPendingRequest: number;
 }
@@ -20,6 +21,7 @@ function shiftEarnings(job: GuardJobView): number {
 export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarningsBreakdown {
   let totalEarnings = 0;
   let cashPaid = 0;
+  let stripePaid = 0;
   let onlineAvailable = 0;
   let cashPendingRequest = 0;
 
@@ -35,6 +37,7 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
     }
 
     if (job.payoutStatus === 'paid' && job.payoutMethod === 'stripe') {
+      stripePaid += amount;
       continue;
     }
 
@@ -51,6 +54,7 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
   return {
     totalEarnings: roundMoney(totalEarnings),
     cashPaid: roundMoney(cashPaid),
+    stripePaid: roundMoney(stripePaid),
     onlineAvailable: roundMoney(onlineAvailable),
     cashPendingRequest: roundMoney(cashPendingRequest),
   };

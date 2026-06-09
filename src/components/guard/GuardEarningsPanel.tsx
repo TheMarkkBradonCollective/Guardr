@@ -78,6 +78,10 @@ export function GuardEarningsPanel({
             <p className="app-metric-value">${breakdown.cashPaid.toFixed(2)}</p>
           </div>
           <div className="app-metric-item">
+            <p className="app-metric-label">Paid on Stripe</p>
+            <p className="app-metric-value">${breakdown.stripePaid.toFixed(2)}</p>
+          </div>
+          <div className="app-metric-item">
             <p className="app-metric-label">Online available</p>
             <p className="app-metric-value">${breakdown.onlineAvailable.toFixed(2)}</p>
           </div>
