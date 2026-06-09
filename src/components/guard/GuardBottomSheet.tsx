@@ -9,8 +9,8 @@ export type SheetSnap = 'peek' | 'half' | 'full';
 
 const SNAP_HEIGHTS: Record<SheetSnap, number> = {
   peek: 0.22,
-  half: 0.48,
-  full: 0.88,
+  half: 0.45,
+  full: 0.62,
 };
 
 interface GuardBottomSheetProps {
@@ -22,24 +22,6 @@ interface GuardBottomSheetProps {
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: SecurityRequest | null) => void;
   onAcceptJob: (jobId: string) => void;
-}
-
-function useViewportHeight(): number {
-  const [vh, setVh] = useState(() =>
-    typeof window !== 'undefined' ? window.innerHeight : 800
-  );
-
-  useEffect(() => {
-    const update = () => setVh(window.innerHeight);
-    window.addEventListener('resize', update);
-    window.visualViewport?.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('resize', update);
-      window.visualViewport?.removeEventListener('resize', update);
-    };
-  }, []);
-
-  return vh;
 }
 
 export function GuardBottomSheet({
@@ -54,12 +36,11 @@ export function GuardBottomSheet({
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
-  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'full' : 'peek');
+  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'half' : 'peek');
   const startSnap = useRef<SheetSnap>('peek');
-  const vh = useViewportHeight();
 
   useEffect(() => {
-    setSnap(selectedJob ? 'full' : 'peek');
+    setSnap(selectedJob ? 'half' : 'peek');
   }, [selectedJob?.id]);
 
   const cycleSnap = (direction: 'up' | 'down') => {
@@ -107,13 +88,13 @@ export function GuardBottomSheet({
     );
   }
 
-  const heightPx = vh * SNAP_HEIGHTS[snap];
+  const heightPercent = SNAP_HEIGHTS[snap] * 100;
 
   return (
     <motion.div
       className="guardr-bottom-sheet guardr-bottom-sheet-uber rounded-t-2xl"
-      style={{ height: heightPx }}
-      animate={{ height: heightPx }}
+      style={{ height: `${heightPercent}%` }}
+      animate={{ height: `${heightPercent}%` }}
       transition={{ type: 'spring', stiffness: 400, damping: 35 }}
     >
       <div className="flex flex-col h-full">
