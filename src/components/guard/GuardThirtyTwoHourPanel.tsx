@@ -309,8 +309,8 @@ function ThirtyTwoHourCertRow({
           />
         )}
         <div className="min-w-0">
-          <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>
-          <p className="text-xs text-brand-text-muted mt-0.5">
+          {!compact && <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>}
+          <p className={`text-xs text-brand-text-muted ${compact ? '' : 'mt-0.5'}`}>
             {cert.state ? `${formatStateName(cert.state)} · ` : ''}
             {cert.issuer} · #{cert.number}
           </p>

@@ -12,7 +12,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
-import { ArrowLeft, Check, Shield, Star, X } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
