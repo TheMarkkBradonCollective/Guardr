@@ -35,6 +35,12 @@ import { computeGuardEarnings } from '../lib/payments';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
+import {
+  canGuardClockIn,
+  canGuardClockOut,
+  guardClockInBlockedMessage,
+  guardClockOutBlockedMessage,
+} from '../lib/shiftWindow';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
@@ -237,7 +243,22 @@ export function GuardDashboard({
 
   const handleArrived = () => {
     if (!activeShiftJob) return;
+    const blocked = guardClockInBlockedMessage(activeShiftJob);
+    if (blocked) {
+      alert(blocked);
+      return;
+    }
     updatePhase(activeShiftJob.id, 'arrived');
+  };
+
+  const handleBeginAudit = () => {
+    if (!activeShiftJob) return;
+    const blocked = guardClockInBlockedMessage(activeShiftJob);
+    if (blocked) {
+      alert(blocked);
+      return;
+    }
+    setShowSelfAudit(true);
   };
 
   const handleSelfAuditSubmit = (payload: {
@@ -245,6 +266,10 @@ export function GuardDashboard({
     selfieUpload: string;
   }) => {
     if (!activeShiftJob) return;
+    if (!canGuardClockIn(activeShiftJob)) {
+      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      return;
+    }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
     if (failed) onRecordAuditViolation(guard.id, 'Pre-shift audit incomplete');
     onUpdateJobAudit(activeShiftJob.id, {
@@ -275,11 +300,21 @@ export function GuardDashboard({
 
   const handleEndShift = () => {
     if (!activeShiftJob) return;
+    const blocked = guardClockOutBlockedMessage(activeShiftJob);
+    if (blocked) {
+      alert(blocked);
+      return;
+    }
     setShowCheckout(true);
   };
 
   const handleCheckoutConfirm = () => {
     if (!activeShiftJob) return;
+    if (!canGuardClockOut(activeShiftJob)) {
+      alert(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.');
+      setShowCheckout(false);
+      return;
+    }
     const payout = computeGuardEarnings(activeShiftJob.durationHours, activeShiftJob.hourlyRate);
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
@@ -382,7 +417,7 @@ export function GuardDashboard({
           phase={activePhase}
           dutySeconds={dutySeconds}
           onArrived={handleArrived}
-          onBeginAudit={() => setShowSelfAudit(true)}
+          onBeginAudit={handleBeginAudit}
           onIncidentReport={() => alert('Incident report filed. Client and staff notified.')}
           onActivityReport={() => alert('Activity report saved to shift log.')}
           onEndShift={handleEndShift}

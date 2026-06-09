@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SecurityRequest } from '../../types';
 import { ShiftPhase } from '../../lib/guardJobs';
 import { formatDuration } from '../../lib/dates';
-import { MapPin, Phone, FileText, AlertTriangle, Activity } from 'lucide-react';
+import {
+  canGuardClockIn,
+  canGuardClockOut,
+  guardClockInBlockedMessage,
+  guardClockOutBlockedMessage,
+  shiftClockOutOpensAt,
+} from '../../lib/shiftWindow';
+import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
   job: SecurityRequest;
@@ -39,9 +46,19 @@ export function GuardActiveShift({
   onActivityReport,
   onEndShift,
 }: GuardActiveShiftProps) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   const address = job.address || job.location;
   const statusSteps: ShiftPhase[] = ['upcoming', 'arrived', 'on-duty', 'complete'];
   const currentIdx = statusSteps.indexOf(phase);
+  const clockInOpen = canGuardClockIn(job, now);
+  const clockOutOpen = canGuardClockOut(job, now);
+  const clockInMsg = guardClockInBlockedMessage(job, now);
+  const clockOutMsg = guardClockOutBlockedMessage(job, now);
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] max-h-[88%] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
@@ -100,16 +117,39 @@ export function GuardActiveShift({
           </div>
         )}
 
+        {(phase === 'upcoming' || phase === 'arrived') && !clockInOpen && clockInMsg && (
+          <p className="text-xs text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-xl p-3 flex gap-2">
+            <Clock className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{clockInMsg}</span>
+          </p>
+        )}
+
         {phase === 'upcoming' && (
-          <button type="button" onClick={onArrived} className="w-full uber-button-sage">
+          <button
+            type="button"
+            onClick={onArrived}
+            disabled={!clockInOpen}
+            className="w-full uber-button-sage disabled:opacity-40"
+          >
             I've arrived
           </button>
         )}
 
         {phase === 'arrived' && (
-          <button type="button" onClick={onBeginAudit} className="w-full uber-button-sage">
-            Begin self audit
+          <button
+            type="button"
+            onClick={onBeginAudit}
+            disabled={!clockInOpen}
+            className="w-full uber-button-sage disabled:opacity-40"
+          >
+            Begin self audit · clock in
           </button>
+        )}
+
+        {phase === 'upcoming' && clockInOpen && (
+          <p className="text-[10px] font-mono text-brand-text-muted text-center">
+            Clock-in open until shift ends
+          </p>
         )}
 
         {phase === 'on-duty' && (
@@ -125,8 +165,26 @@ export function GuardActiveShift({
                 <Phone className="w-4 h-4" /> Contact client
               </button>
             </div>
-            <button type="button" onClick={onEndShift} className="w-full uber-button-sage">
-              End shift
+            {!clockOutOpen && clockOutMsg && (
+              <p className="text-xs text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-xl p-3 flex gap-2">
+                <Clock className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{clockOutMsg}</span>
+              </p>
+            )}
+            {clockOutOpen && (
+              <p className="text-[10px] font-mono text-brand-text-muted text-center">
+                Clock-out window: {shiftClockOutOpensAt(job.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                {' – '}
+                {new Date(shiftClockOutOpensAt(job.endDate).getTime() + 15 * 60_000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={onEndShift}
+              disabled={!clockOutOpen}
+              className="w-full uber-button-sage disabled:opacity-40"
+            >
+              End shift · clock out
             </button>
           </div>
         )}

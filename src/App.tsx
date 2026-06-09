@@ -63,6 +63,12 @@ import { parsePushDeepLink, type PushDeepLink } from './lib/pushNavigation';
 import type { GuardTab } from './components/GuardDashboard';
 import { normalizeStaffSection, type StaffSection } from './lib/staffOps';
 import { canClientEditRequest, validateShiftSchedule } from './lib/jobEditRules';
+import {
+  canGuardClockIn,
+  canGuardClockOut,
+  guardClockInBlockedMessage,
+  guardClockOutBlockedMessage,
+} from './lib/shiftWindow';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -862,6 +868,20 @@ export default function App() {
 
   const handleUpdateStatus = async (requestId: string, status: SecurityRequest['status']) => {
     const req = requests.find(r => r.id === requestId);
+    if (req && status === 'in-progress') {
+      const blocked = guardClockInBlockedMessage(req);
+      if (blocked) {
+        alert(blocked);
+        return;
+      }
+    }
+    if (req && status === 'completed') {
+      const blocked = guardClockOutBlockedMessage(req);
+      if (blocked) {
+        alert(blocked);
+        return;
+      }
+    }
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       if (status === 'completed' && r.assignedGuardId) {
@@ -1172,6 +1192,19 @@ export default function App() {
 
   // ── Audit lifecycle ────────────────────────────────────────
   const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; status?: SecurityRequest['status']; }) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (req && payload.status === 'in-progress' && payload.checkInAudit) {
+      if (!canGuardClockIn(req)) {
+        alert(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.');
+        return;
+      }
+    }
+    if (req && payload.status === 'completed') {
+      if (!canGuardClockOut(req)) {
+        alert(guardClockOutBlockedMessage(req) ?? 'Clock-out is not available right now.');
+        return;
+      }
+    }
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
