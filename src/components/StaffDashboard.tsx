@@ -165,14 +165,8 @@ export function StaffDashboard({
           <StaffJobsPanel
             requests={requests}
             guards={guards}
-            payments={payments}
-            isDirector={currentUser.role === 'director'}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
-            onMarkClientPaidCash={onMarkClientPaidCash}
-            onMarkGuardPaidCash={onMarkGuardPaidCash}
-            onDepositCashToStripe={onDepositCashToStripe}
-            onReleasePayout={onReleasePayout}
           />
         );
       case 'guards':
