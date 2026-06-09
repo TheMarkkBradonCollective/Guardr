@@ -309,10 +309,16 @@ function ThirtyTwoHourCertRow({
           className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${
             cert.status === 'verified'
               ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-              : 'text-brand-text-muted border-brand-border'
+              : cert.status === 'rejected'
+                ? 'text-red-400 border-red-500/30'
+                : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
           }`}
         >
-          {cert.status === 'verified' ? 'Guardr verified' : cert.status}
+          {cert.status === 'verified'
+            ? 'Guardr verified'
+            : cert.status === 'rejected'
+              ? 'Rejected'
+              : 'On file'}
         </span>
         {editing && onDelete && (
           <button type="button" onClick={onDelete} className="text-xs text-red-400 flex items-center gap-1 hover:underline">

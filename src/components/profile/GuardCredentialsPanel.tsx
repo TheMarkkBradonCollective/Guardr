@@ -622,10 +622,14 @@ function CredentialRow({
               ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
               : cert.status === 'rejected'
                 ? 'text-red-400 border-red-500/30'
-                : 'text-brand-text-muted border-brand-border'
+                : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
           }`}
         >
-          {cert.status === 'verified' ? 'Guardr verified' : cert.status}
+          {cert.status === 'verified'
+            ? 'Guardr verified'
+            : cert.status === 'rejected'
+              ? 'Rejected'
+              : 'On file'}
         </span>
         {editing && onDelete && (
           <button
