@@ -51,7 +51,7 @@
 }
 
 /* ─── THEME TOKENS (applied on <html>) ─────────────────────── */
-/* Guardr — sage accent across Dark / Light / Sage themes */
+/* Guardr — sage accent across Dark / Light / Shade themes */
 :root,
 html.theme-light {
   --brand-primary:       #5E7B61;
@@ -92,19 +92,19 @@ html.theme-dark {
 html.theme-grey {
   --brand-primary:       #5E7B61;
   --brand-primary-hover: #4D6A50;
-  --brand-bg:            #E8EBE8;
-  --brand-bg-sec:        #DDE2DD;
-  --brand-surface:       #F2F4F2;
-  --brand-elevated:      #FAFBFA;
-  --brand-border:        #C9D0C9;
-  --brand-text:          #1F2937;
-  --brand-text-muted:    #6B7280;
+  --brand-bg:            #8B9199;
+  --brand-bg-sec:        #7A8088;
+  --brand-surface:       #969CA4;
+  --brand-elevated:      #A3A9B1;
+  --brand-border:        #5F6670;
+  --brand-text:          #0F1419;
+  --brand-text-muted:    #2D3748;
   --brand-accent:        #5E7B61;
   --brand-accent-text:   #FFFFFF;
-  --brand-overlay:       rgba(232, 235, 232, 0.94);
-  --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-float:        0 6px 20px rgba(0, 0, 0, 0.08);
-  --shadow-nav:          0 -2px 12px rgba(0, 0, 0, 0.04);
+  --brand-overlay:       rgba(139, 145, 153, 0.94);
+  --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.12);
+  --shadow-float:        0 6px 20px rgba(0, 0, 0, 0.16);
+  --shadow-nav:          0 -2px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Legacy nested wrappers still work */

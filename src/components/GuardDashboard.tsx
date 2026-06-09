@@ -18,6 +18,7 @@ import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { RoleAppShell } from './layouts/RoleAppShell';
+import { THEME_LABELS } from '../lib/platform/theme';
 import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
@@ -536,7 +537,7 @@ export function GuardDashboard({
           onClick={() => onChangeTheme(m)}
           className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
         >
-          {m === 'grey' ? 'Shade' : m}
+          {THEME_LABELS[m]}
         </button>
       ))}
     </div>

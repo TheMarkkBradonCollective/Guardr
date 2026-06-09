@@ -5,7 +5,7 @@ export const THEME_MODES: ThemeMode[] = ['dark', 'light', 'grey'];
 export const THEME_LABELS: Record<ThemeMode, string> = {
   dark: 'Dark',
   light: 'Light',
-  grey: 'Sage',
+  grey: 'Shade',
 };
 
 /** Default — light with sage accent */
