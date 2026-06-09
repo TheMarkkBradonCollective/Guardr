@@ -18,7 +18,7 @@ interface StaffSidebarNavProps {
 }
 
 const PRIMARY_IDS: StaffSection[] = ['overview', 'map', 'jobs', 'approvals'];
-const MORE_IDS: StaffSection[] = ['guards', 'clients', 'reports', 'incidents', 'support', 'disputes', 'analytics'];
+const MORE_IDS: StaffSection[] = ['guards', 'clients', 'incidents', 'support', 'disputes', 'analytics'];
 const ADMIN_IDS: StaffSection[] = ['payments', 'settings'];
 const ACCOUNT_IDS: StaffSection[] = ['profile'];
 

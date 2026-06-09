@@ -31,7 +31,6 @@ import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
-import { StaffReportsPanel } from './staff/StaffReportsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
@@ -202,8 +201,6 @@ export function StaffDashboard({
             initialSelectedId={selectedClientId}
           />
         );
-      case 'reports':
-        return <StaffReportsPanel requests={requests} guards={guards} />;
       case 'incidents':
         return <StaffIncidentsPanel incidents={incidents} />;
       case 'support':

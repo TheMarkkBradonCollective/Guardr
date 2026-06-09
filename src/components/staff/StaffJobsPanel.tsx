@@ -103,11 +103,6 @@ function JobDetailPanel({
             Approve Job
           </button>
         )}
-        {assigned && (
-          <button type="button" onClick={() => alert('Reassign guard — select from roster.')} className="staff-ops-btn-outline text-[10px]">
-            Reassign
-          </button>
-        )}
         {req.status !== 'completed' && req.status !== 'closed' && (
           <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
             <X className="w-3 h-3" /> Cancel
