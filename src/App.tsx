@@ -599,11 +599,6 @@ export default function App() {
   };
 
   // ── Staff controls ─────────────────────────────────────────
-  const handleUpdateGuardStaffStatus = async (guardId: string, isStaff: boolean) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, isStaff } : g));
-    if (isDbConnected) await supabase.from('guards').update({ is_staff: isStaff }).eq('id', guardId);
-  };
-
   const handleUpdateGuardUserStatus = async (guardId: string, status: 'active' | 'suspended' | 'blocked') => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
