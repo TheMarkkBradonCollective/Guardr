@@ -4,7 +4,6 @@ import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog
 import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
-  getThirtyTwoHourRollupCatalogEntries,
   guardHasCredentialOnFile,
   guardHasGuardrVerifiedCredential,
   THIRTY_TWO_HOUR_COURSE_IDS,
@@ -13,10 +12,11 @@ import {
 import { formatStateName } from '../../lib/states';
 import { BookOpen, Check, ImagePlus, Plus, Trash2 } from 'lucide-react';
 
+const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
+
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
-  nested?: boolean;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
 }
@@ -31,13 +31,11 @@ function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certificati
 export function GuardThirtyTwoHourPanel({
   guard,
   editing,
-  nested = false,
   onAddCertification,
   onDeleteCertification,
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
-  const rollupOptions = getThirtyTwoHourRollupCatalogEntries();
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
@@ -113,10 +111,10 @@ export function GuardThirtyTwoHourPanel({
   };
 
   return (
-    <section className={nested ? 'space-y-4 border-t border-brand-border pt-4' : 'app-card space-y-4 border-brand-primary/20'}>
+    <section className="app-card space-y-4 border-brand-primary/20">
       <div>
-        <p className={`${nested ? 'text-sm font-semibold' : 'uber-label'} flex items-center gap-2`}>
-          {!nested && <BookOpen className="w-4 h-4 text-brand-primary" />}
+        <p className="uber-label flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-brand-primary" />
           32-Hour BSIS Course Block
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -160,20 +158,15 @@ export function GuardThirtyTwoHourPanel({
         ) : (
           <p className="text-xs text-brand-text-muted">No 32-hour completion certificate on file.</p>
         )}
-        {editing && onAddCertification && !progress.thirtyTwoHourRollup && (
-          <div className="flex flex-wrap gap-2">
-            {rollupOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => startAdd(opt.id)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-brand-primary/40 text-brand-primary text-xs font-semibold hover:bg-brand-primary/10"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add completion cert
-              </button>
-            ))}
-          </div>
+        {editing && onAddCertification && rollupCerts.length === 0 && (
+          <button
+            type="button"
+            onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-brand-primary/40 text-brand-primary text-xs font-semibold hover:bg-brand-primary/10"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add completion cert
+          </button>
         )}
       </div>
 
