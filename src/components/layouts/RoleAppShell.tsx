@@ -10,6 +10,7 @@ interface RoleAppShellProps {
   avatarUrl?: string;
   avatarName?: string;
   onAvatarClick?: () => void;
+  onSignOut?: () => void;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
   activeNavId: string;
@@ -31,6 +32,7 @@ export function RoleAppShell({
   avatarUrl,
   avatarName,
   onAvatarClick,
+  onSignOut,
   navItems,
   overflowNavItems = [],
   activeNavId,
@@ -65,6 +67,7 @@ export function RoleAppShell({
           avatarUrl={avatarUrl}
           avatarName={avatarName}
           onAvatarClick={onAvatarClick}
+          onSignOut={onSignOut}
           right={headerRight}
           className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
         />

@@ -85,6 +85,7 @@ export function ClientAppLayout({
       avatarUrl={currentUser.avatar}
       avatarName={currentUser.name}
       onAvatarClick={() => onNavigate?.('profile')}
+      onSignOut={onSignOut}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
       activeNavId={activeView}

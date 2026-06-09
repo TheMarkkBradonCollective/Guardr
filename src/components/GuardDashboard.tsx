@@ -611,6 +611,7 @@ export function GuardDashboard({
       avatarUrl={guard.avatar}
       avatarName={guard.name}
       onAvatarClick={() => setTab('profile')}
+      onSignOut={onSignOut}
       navItems={NAV_TABS}
       activeNavId={activeTab}
       onNavigate={(id) => setTab(id as GuardTab)}
