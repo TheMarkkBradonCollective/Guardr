@@ -545,7 +545,10 @@ export function GuardDashboard({
   return (
     <RoleAppShell
       title={GUARD_TAB_TITLES[activeTab]}
-      subtitle={guard.name}
+      locationLabel={guard.name}
+      avatarUrl={guard.avatar}
+      avatarName={guard.name}
+      onAvatarClick={() => setStandaloneTab('profile')}
       navItems={NAV_TABS}
       activeNavId={activeTab}
       onNavigate={(id) => setStandaloneTab(id as GuardTab)}

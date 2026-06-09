@@ -37,13 +37,13 @@ export function GuardRatingModal({ clientName, onSubmit, onSkip }: GuardRatingMo
         />
 
         <div className="flex gap-2">
-          <button type="button" onClick={onSkip} className="flex-1 uber-button-outline h-11 text-sm">
+          <button type="button" onClick={onSkip} className="flex-1 app-button-outline !h-11 !text-sm">
             Skip
           </button>
           <button
             type="button"
             onClick={() => onSubmit(rating, note || 'Good assignment.')}
-            className="flex-1 uber-button-sage h-11 text-sm"
+            className="flex-1 app-button-primary !h-11 !text-sm"
           >
             Submit
           </button>

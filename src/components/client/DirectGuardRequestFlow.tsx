@@ -18,6 +18,7 @@ import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
 import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
+import { WfMetricTile } from '../ui/wireframe';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -114,16 +115,16 @@ export function DirectGuardRequestFlow({
   return (
     <div className="h-full flex flex-col client-content-shell max-w-lg mx-auto animate-fade-in">
       <div className="shrink-0 px-4 pt-4 space-y-4">
-        <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/10 p-4">
-          <p className="text-xs font-semibold text-brand-primary uppercase tracking-wide">Direct assignment request</p>
-          <div className="flex items-center gap-3 mt-2">
+        <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
+          <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
+          <div className="flex items-center gap-3">
             <ProfileAvatar src={guard.avatar} name={guard.name} size="md" rounded="xl" />
             <div className="min-w-0">
-              <p className="font-bold">{guard.name}</p>
+              <p className="font-semibold">{guard.name}</p>
               <p className="text-sm text-brand-text-muted">{getGuardDisplayHeadline(guard)}</p>
             </div>
           </div>
-          <p className="text-xs text-brand-text-muted mt-3 leading-relaxed">
+          <p className="text-xs text-brand-text-muted leading-relaxed">
             This is separate from a general marketplace post. Only {guard.name.split(' ')[0]} will see this request.
           </p>
         </div>
@@ -133,7 +134,7 @@ export function DirectGuardRequestFlow({
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest">
+            <p className="text-sm text-brand-text-muted">
               Step {step} of 6 · {STEP_LABELS[step - 1]}
             </p>
             <div className="flex gap-1 mt-2">
@@ -155,12 +156,12 @@ export function DirectGuardRequestFlow({
                   key={opt.id}
                   type="button"
                   onClick={() => setServiceId(opt.id)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border text-left ${
-                    serviceId === opt.id ? 'border-brand-primary bg-brand-primary/10' : 'border-brand-border'
+                  className={`wf-list-card transition-all ${
+                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
                 >
                   <span className="text-2xl">{opt.emoji}</span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm">{opt.label}</p>
                     <p className="text-xs text-brand-text-muted">{opt.description}</p>
                   </div>
@@ -177,15 +178,21 @@ export function DirectGuardRequestFlow({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
               <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="uber-input pl-10 w-full" autoFocus />
             </div>
-            <select value={jobState} onChange={(e) => setJobState(e.target.value)} className="uber-select w-full" required>
-              <option value="">State…</option>
-              {US_STATES.map(({ code, name }) => (
-                <option key={code} value={code}>{name}</option>
-              ))}
-            </select>
-            <input type="text" placeholder="Site name (optional)" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
+            <div>
+              <label className="uber-label block mb-1">State</label>
+              <select value={jobState} onChange={(e) => setJobState(e.target.value)} className="uber-select w-full" required>
+                <option value="">State…</option>
+                {US_STATES.map(({ code, name }) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Site name (optional)</label>
+              <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
+            </div>
             {address && (
-              <div className="flex items-start gap-2 p-3 rounded-xl surface-muted text-sm">
+              <div className="wf-list-card items-start gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                 <span>{address}</span>
               </div>
@@ -197,12 +204,24 @@ export function DirectGuardRequestFlow({
           <div className="space-y-4">
             <h2 className="text-xl font-bold">When?</h2>
             <div className="grid grid-cols-2 gap-3">
-              <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => setStartDate(`${e.target.value}T${startDate.slice(11) || '18:00'}`)} className="uber-input" />
-              <input type="time" value={startDate.slice(11, 16)} onChange={(e) => setStartDate(`${startDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
-              <input type="date" value={endDate.slice(0, 10)} onChange={(e) => setEndDate(`${e.target.value}T${endDate.slice(11) || '06:00'}`)} className="uber-input" />
-              <input type="time" value={endDate.slice(11, 16)} onChange={(e) => setEndDate(`${endDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
+              <div>
+                <label className="uber-label block mb-1">Start date</label>
+                <input type="date" min={minScheduleDatetimeLocal().slice(0, 10)} value={startDate.slice(0, 10)} onChange={(e) => setStartDate(`${e.target.value}T${startDate.slice(11) || '18:00'}`)} className="uber-input" />
+              </div>
+              <div>
+                <label className="uber-label block mb-1">Start time</label>
+                <input type="time" value={startDate.slice(11, 16)} onChange={(e) => setStartDate(`${startDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
+              </div>
+              <div>
+                <label className="uber-label block mb-1">End date</label>
+                <input type="date" value={endDate.slice(0, 10)} onChange={(e) => setEndDate(`${e.target.value}T${endDate.slice(11) || '06:00'}`)} className="uber-input" />
+              </div>
+              <div>
+                <label className="uber-label block mb-1">End time</label>
+                <input type="time" value={endDate.slice(11, 16)} onChange={(e) => setEndDate(`${endDate.slice(0, 10)}T${e.target.value}`)} className="uber-input" />
+              </div>
             </div>
-            <p className={`text-sm rounded-xl p-3 border ${
+            <p className={`text-sm rounded-2xl p-3 border ${
               !validateShiftSchedule(startDate, endDate) && durationHours > 0
                 ? 'border-brand-primary/30 text-brand-primary'
                 : 'border-red-500/30 text-red-400'
@@ -220,14 +239,24 @@ export function DirectGuardRequestFlow({
         {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Pay rate</h2>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="segmented-control">
               {PAY_RATE_PRESETS.map((rate) => (
-                <button key={rate} type="button" onClick={() => { setHourlyRate(rate); setCustomRate(''); }} className={`h-14 rounded-xl font-bold border ${hourlyRate === rate && !customRate ? 'bg-brand-primary border-brand-primary' : 'border-brand-border'}`}>
+                <button
+                  key={rate}
+                  type="button"
+                  onClick={() => { setHourlyRate(rate); setCustomRate(''); }}
+                  className={`segmented-control-btn flex-1 py-3 ${
+                    hourlyRate === rate && !customRate ? 'segmented-control-btn-active' : ''
+                  }`}
+                >
                   ${rate}/hr
                 </button>
               ))}
             </div>
-            <input type="number" min={20} placeholder="Custom $/hr" value={customRate} onChange={(e) => setCustomRate(e.target.value)} className="uber-input w-full" />
+            <div>
+              <label className="uber-label block mb-1">Custom</label>
+              <input type="number" min={20} placeholder="Custom $/hr" value={customRate} onChange={(e) => setCustomRate(e.target.value)} className="uber-input w-full" />
+            </div>
             <p className="text-xs text-brand-text-muted">Guard receives ${guardPay}/hr · Platform fee ${PLATFORM_FEE_PER_HOUR}/hr</p>
           </div>
         )}
@@ -245,7 +274,7 @@ export function DirectGuardRequestFlow({
         {step === 6 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Review & send</h2>
-            <div className="app-card space-y-3 text-sm">
+            <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 text-sm">
               <Row label="Guard" value={guard.name} />
               <Row label="Service" value={selectedService.label} />
               <Row label="State" value={formatStateName(jobState)} />
@@ -253,7 +282,7 @@ export function DirectGuardRequestFlow({
               <Row label="Schedule" value={formatDuration(durationHours)} />
               <Row label="Rate" value={`$${effectiveRate}/hr`} />
               <Row label="Min guard status" value={GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]} />
-              <div>
+              <div className="w-full">
                 <p className="text-brand-text-muted mb-1">Additional credentials</p>
                 <div className="flex flex-wrap gap-1">
                   {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
@@ -261,11 +290,10 @@ export function DirectGuardRequestFlow({
                   ))}
                 </div>
               </div>
-              <div className="border-t border-brand-border pt-3 flex justify-between font-bold">
-                <span>Estimated total</span>
-                <span className="text-brand-primary">${estimatedTotal}</span>
+              <div className="border-t border-brand-border pt-3 w-full grid grid-cols-2 gap-2">
+                <WfMetricTile label="Estimated total" value={`$${estimatedTotal}`} accent />
+                <WfMetricTile label="Platform fee" value={`$${platformFeeTotal}`} />
               </div>
-              <p className="text-xs text-brand-text-muted">Platform fee: ${platformFeeTotal}</p>
             </div>
           </div>
         )}
@@ -273,11 +301,11 @@ export function DirectGuardRequestFlow({
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95">
         {step < 6 ? (
-          <button type="button" onClick={goNext} disabled={!canNext()} className="uber-button-sage w-full h-12 disabled:opacity-40 gap-2">
+          <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">
             Continue <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button type="button" onClick={handleSubmit} className="uber-button-sage w-full h-12">
+          <button type="button" onClick={handleSubmit} className="app-button-primary">
             Send to {guard.name.split(' ')[0]}
           </button>
         )}
@@ -288,7 +316,7 @@ export function DirectGuardRequestFlow({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4">
+    <div className="flex justify-between gap-4 w-full">
       <span className="text-brand-text-muted">{label}</span>
       <span className="font-medium text-right">{value}</span>
     </div>

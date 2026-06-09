@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 
 interface StaffClientDetailPanelProps {
@@ -37,8 +38,8 @@ export function StaffClientDetailPanel({
   return (
     <div className={`staff-ops-card space-y-5 ${compact ? '' : 'h-full'}`}>
       {onBack && (
-        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-xs font-mono text-brand-primary">
-          <ArrowLeft className="w-3.5 h-3.5" />
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+          <ArrowLeft className="w-4 h-4" />
           Back to list
         </button>
       )}
@@ -51,55 +52,51 @@ export function StaffClientDetailPanel({
           rounded="xl"
         />
         <div className="min-w-0 flex-1">
-          <h2 className="font-black text-lg">{client.companyName || client.name}</h2>
+          <h2 className="font-bold text-lg">{client.companyName || client.name}</h2>
           {client.companyName && client.name !== client.companyName && (
             <p className="text-sm text-brand-text-muted">{client.name}</p>
           )}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-mono text-brand-text-muted">
+          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-muted">
             <span className="inline-flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5" />
+              <Mail className="w-4 h-4" />
               {client.email}
             </span>
             {client.phone && (
               <span className="inline-flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5" />
+                <Phone className="w-4 h-4" />
                 {client.phone}
               </span>
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            <span
-              className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
-                isSuspended ? 'text-red-400 border-red-500/30' : 'text-emerald-400 border-emerald-500/30'
-              }`}
-            >
+            <WfBadge tone={isSuspended ? 'danger' : 'success'}>
               {isSuspended ? 'Suspended' : 'Active'}
-            </span>
+            </WfBadge>
             {client.rating != null && (
-              <span className="text-[10px] font-mono text-brand-text-muted inline-flex items-center gap-1">
+              <WfBadge className="inline-flex items-center gap-1">
                 <Star className="w-3 h-3" />
                 {client.rating}
-              </span>
+              </WfBadge>
             )}
           </div>
         </div>
       </div>
 
       <section className="grid grid-cols-3 gap-2 border-t border-brand-border pt-4">
-        <Stat label="Active jobs" value={activeJobs.length} />
-        <Stat label="Completed" value={completedJobs.length} />
-        <Stat label="Total requests" value={client.totalRequests ?? clientRequests.length} />
+        <WfMetricTile label="Active jobs" value={activeJobs.length} accent />
+        <WfMetricTile label="Completed" value={completedJobs.length} />
+        <WfMetricTile label="Total requests" value={client.totalRequests ?? clientRequests.length} />
       </section>
 
       <section className="space-y-2 border-t border-brand-border pt-4">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">Account controls</p>
+        <WfSectionHeader title="Account controls" className="mb-0" />
         <div className="flex flex-wrap gap-2">
           {isSuspended ? (
-            <button type="button" onClick={() => onApproveClient(client.id)} className="staff-ops-btn-primary text-[10px]">
+            <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
               Restore client account
             </button>
           ) : (
-            <button type="button" onClick={() => onRejectClient(client.id)} className="staff-ops-btn-danger text-[10px]">
+            <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
               Suspend client account
             </button>
           )}
@@ -107,38 +104,27 @@ export function StaffClientDetailPanel({
       </section>
 
       <section className="space-y-2 border-t border-brand-border pt-4">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted flex items-center gap-1.5">
-          <Building2 className="w-3.5 h-3.5" />
-          Job history
-        </p>
+        <div className="flex items-center gap-1.5 mb-2">
+          <Building2 className="w-4 h-4 text-brand-text-muted" />
+          <h3 className="app-section-title mb-0">Job history</h3>
+        </div>
         {clientRequests.length === 0 ? (
-          <p className="text-xs text-brand-text-muted font-mono">No jobs posted yet.</p>
+          <p className="text-sm text-brand-text-muted">No jobs posted yet.</p>
         ) : (
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {clientRequests.slice(0, 12).map((job) => (
-              <div key={job.id} className="rounded-lg border border-brand-border/60 px-3 py-2">
-                <div className="flex items-start justify-between gap-2">
+              <div key={job.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
+                <div className="flex items-start justify-between gap-2 w-full">
                   <p className="text-sm font-semibold truncate">{job.title}</p>
-                  <span className="text-[9px] font-mono uppercase text-brand-text-muted shrink-0">
-                    {job.status.replace('-', ' ')}
-                  </span>
+                  <WfBadge className="shrink-0">{job.status.replace('-', ' ')}</WfBadge>
                 </div>
-                <p className="text-[10px] font-mono text-brand-text-muted mt-0.5">{job.location}</p>
-                <p className="text-[10px] text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
+                <p className="text-xs text-brand-text-muted">{job.location}</p>
+                <p className="text-xs text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
               </div>
             ))}
           </div>
         )}
       </section>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-brand-border/60 px-3 py-2 text-center">
-      <p className="text-lg font-black">{value}</p>
-      <p className="text-[9px] font-mono uppercase text-brand-text-muted">{label}</p>
     </div>
   );
 }

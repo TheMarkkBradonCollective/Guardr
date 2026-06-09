@@ -132,7 +132,10 @@ export function StaffOpsLayout({
     <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden staff-ops-root bg-brand-bg text-brand-text">
       <AppScreenHeader
         title={SECTION_TITLES[activeSection]}
-        subtitle={`${ROLE_LABELS[currentUser.role]} · Guardr`}
+        locationLabel={`${ROLE_LABELS[currentUser.role]} · Guardr`}
+        avatarUrl={currentUser.avatar}
+        avatarName={currentUser.name}
+        onAvatarClick={() => navigate('profile')}
         right={themeToggle}
       />
 

@@ -9,6 +9,7 @@ import {
   guardClockOutBlockedMessage,
   shiftClockOutOpensAt,
 } from '../../lib/shiftWindow';
+import { WfMetricTile } from '../ui/wireframe';
 import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
@@ -70,28 +71,28 @@ export function GuardActiveShift({
           <h2 className="text-xl font-bold">{job.title}</h2>
         </div>
 
-        <div className="flex items-center gap-1">
-          {statusSteps.slice(0, 3).map((step, i) => (
-            <React.Fragment key={step}>
-              <div className={`flex-1 text-center py-2 rounded-xl text-xs font-semibold ${
-                i <= currentIdx ? 'bg-brand-primary/15 text-brand-primary' : 'surface-muted text-brand-text-muted'
-              }`}>
-                {PHASE_LABELS[step]}
-              </div>
-              {i < 2 && <div className={`w-3 h-0.5 ${i < currentIdx ? 'bg-brand-primary' : 'bg-brand-border'}`} />}
-            </React.Fragment>
+        <div className="segmented-control">
+          {statusSteps.slice(0, 3).map((step) => (
+            <span
+              key={step}
+              className={`segmented-control-btn flex-1 text-center py-2 ${
+                statusSteps.indexOf(step) <= currentIdx ? 'segmented-control-btn-active' : ''
+              }`}
+            >
+              {PHASE_LABELS[step]}
+            </span>
           ))}
         </div>
 
-        <div className="surface-muted rounded-2xl p-4 space-y-3">
-          <div className="flex items-start gap-3">
+        <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+          <div className="flex items-start gap-3 w-full">
             <MapPin className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-brand-text-muted">Location</p>
               <p className="font-medium mt-0.5">{address}</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 w-full">
             <Phone className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-brand-text-muted">Client</p>
@@ -101,16 +102,15 @@ export function GuardActiveShift({
         </div>
 
         {phase === 'on-duty' && (
-          <div className="text-center py-8 rounded-2xl bg-brand-primary/10 border border-brand-primary/20">
-            <p className="text-sm text-brand-text-muted mb-2">Time on site</p>
-            <p className="text-5xl font-bold tracking-tight">{formatTimer(dutySeconds)}</p>
+          <div className="text-center py-6 rounded-2xl bg-brand-primary/10 border border-brand-primary/20">
+            <WfMetricTile label="Time on site" value={formatTimer(dutySeconds)} accent className="!border-0 !bg-transparent text-center" />
             <p className="text-sm text-brand-text-muted mt-2">{formatDuration(job.durationHours)} scheduled</p>
           </div>
         )}
 
         {job.siteInstructions && (
-          <div className="surface-muted rounded-2xl p-4">
-            <p className="text-sm text-brand-text-muted flex items-center gap-1.5 mb-2">
+          <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2">
+            <p className="text-sm text-brand-text-muted flex items-center gap-1.5">
               <FileText className="w-4 h-4" /> Site instructions
             </p>
             <p className="text-sm leading-relaxed">{job.siteInstructions}</p>
@@ -129,7 +129,7 @@ export function GuardActiveShift({
             type="button"
             onClick={onArrived}
             disabled={!clockInOpen}
-            className="w-full uber-button-sage disabled:opacity-40"
+            className="app-button-primary disabled:opacity-40"
           >
             I've arrived
           </button>
@@ -140,14 +140,14 @@ export function GuardActiveShift({
             type="button"
             onClick={onBeginAudit}
             disabled={!clockInOpen}
-            className="w-full uber-button-sage disabled:opacity-40"
+            className="app-button-primary disabled:opacity-40"
           >
             Begin self audit · clock in
           </button>
         )}
 
         {phase === 'upcoming' && clockInOpen && (
-          <p className="text-[10px] font-mono text-brand-text-muted text-center">
+          <p className="text-xs text-brand-text-muted text-center">
             Clock-in open until shift ends
           </p>
         )}
@@ -155,13 +155,13 @@ export function GuardActiveShift({
         {phase === 'on-duty' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={onIncidentReport} className="uber-button-outline h-12 text-sm gap-2">
+              <button type="button" onClick={onIncidentReport} className="app-button-outline !h-12 !text-sm gap-2">
                 <AlertTriangle className="w-4 h-4" /> Report incident
               </button>
-              <button type="button" onClick={onActivityReport} className="uber-button-outline h-12 text-sm gap-2">
+              <button type="button" onClick={onActivityReport} className="app-button-outline !h-12 !text-sm gap-2">
                 <Activity className="w-4 h-4" /> Activity report
               </button>
-              <button type="button" className="uber-button-outline h-12 text-sm gap-2 col-span-2">
+              <button type="button" className="app-button-outline !h-12 !text-sm gap-2 col-span-2">
                 <Phone className="w-4 h-4" /> Contact client
               </button>
             </div>
@@ -172,7 +172,7 @@ export function GuardActiveShift({
               </p>
             )}
             {clockOutOpen && (
-              <p className="text-[10px] font-mono text-brand-text-muted text-center">
+              <p className="text-xs text-brand-text-muted text-center">
                 Clock-out window: {shiftClockOutOpensAt(job.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                 {' – '}
                 {new Date(shiftClockOutOpensAt(job.endDate).getTime() + 15 * 60_000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
@@ -182,7 +182,7 @@ export function GuardActiveShift({
               type="button"
               onClick={onEndShift}
               disabled={!clockOutOpen}
-              className="w-full uber-button-sage disabled:opacity-40"
+              className="app-button-primary disabled:opacity-40"
             >
               End shift · clock out
             </button>

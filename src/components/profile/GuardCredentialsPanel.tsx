@@ -195,7 +195,7 @@ export function GuardCredentialsPanel({
     <div className="space-y-4">
       <GuardQualificationPanel guard={guard} />
 
-      <div className="app-card bg-brand-primary/5 border-brand-primary/20">
+      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1 bg-brand-primary/5 border-brand-primary/20">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Upload credentials for the Inactive→Active pathway, then add any others you hold — permits, medical, extra training,
@@ -209,7 +209,7 @@ export function GuardCredentialsPanel({
         const isOpen = openSection === category;
 
         const sectionCard = (
-          <section key={category} className="app-card space-y-3">
+          <section key={category} className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="uber-label flex items-center gap-2">
@@ -225,7 +225,7 @@ export function GuardCredentialsPanel({
                     setOpenSection(isOpen ? null : category);
                     setSelectedCatalogId(catalogOptions[0]?.id ?? '');
                   }}
-                  className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
                 >
                   {isOpen ? 'Cancel' : 'Add'}
                 </button>
@@ -289,7 +289,7 @@ export function GuardCredentialsPanel({
                   <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                 )}
                 {formError && <p className="text-xs text-red-400">{formError}</p>}
-                <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
                   Upload credential
                 </button>
               </form>
@@ -319,7 +319,7 @@ export function GuardCredentialsPanel({
         return (
           <React.Fragment key="guard-and-bsis-training">
             {sectionCard}
-            <section className="app-card space-y-3 border-brand-primary/20">
+            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 border-brand-primary/20">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -355,7 +355,7 @@ export function GuardCredentialsPanel({
                         setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
                       }
                     }}
-                    className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
                   >
                     {isPtaUofOpen ? 'Cancel' : 'Add'}
                   </button>
@@ -403,7 +403,7 @@ export function GuardCredentialsPanel({
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
                   {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
                     Upload credential
                   </button>
                 </form>
@@ -430,7 +430,7 @@ export function GuardCredentialsPanel({
               onAddCertification={onAddCertification}
               onDeleteCertification={onDeleteCertification}
             />
-            <section className="app-card space-y-3">
+            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -452,7 +452,7 @@ export function GuardCredentialsPanel({
                         setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
                       }
                     }}
-                    className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
                   >
                     {isRefresherOpen ? 'Cancel' : 'Add'}
                   </button>
@@ -488,7 +488,7 @@ export function GuardCredentialsPanel({
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
                   {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
                     Upload credential
                   </button>
                 </form>
@@ -509,7 +509,7 @@ export function GuardCredentialsPanel({
                 )}
               </div>
             </section>
-            <section className="app-card space-y-3">
+            <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -527,7 +527,7 @@ export function GuardCredentialsPanel({
                       setOpenSection(isOtherBsisOpen ? null : 'bsis-training');
                       setSelectedCatalogId(otherBsisCatalogOptions[0]?.id ?? '');
                     }}
-                    className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
                   >
                     {isOtherBsisOpen ? 'Cancel' : 'Add'}
                   </button>
@@ -575,7 +575,7 @@ export function GuardCredentialsPanel({
                     <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                   )}
                   {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
                     Upload credential
                   </button>
                 </form>
@@ -616,7 +616,7 @@ function CredentialRow({
 }) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
   return (
-    <div className="p-3 rounded-xl surface-muted flex justify-between gap-3">
+    <div className="wf-list-card gap-3">
       <div className="min-w-0 flex gap-3">
         {cert.imageUrl && (
           <img

@@ -13,6 +13,7 @@ import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ArrowLeft, Check, X } from 'lucide-react';
 
 interface StaffGuardDetailPanelProps {
@@ -74,8 +75,8 @@ export function StaffGuardDetailPanel({
   return (
     <div className={`staff-ops-card space-y-5 ${compact ? '' : 'h-full'}`}>
       {onBack && (
-        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-xs font-mono text-brand-primary">
-          <ArrowLeft className="w-3.5 h-3.5" />
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+          <ArrowLeft className="w-4 h-4" />
           Back to list
         </button>
       )}
@@ -84,30 +85,26 @@ export function StaffGuardDetailPanel({
         <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-black text-lg">{guard.name}</h2>
+            <h2 className="font-bold text-lg">{guard.name}</h2>
             {guard.isStaff && (
-              <span className="text-[9px] font-mono text-brand-primary border border-brand-primary/30 px-1.5 py-0.5 rounded">
-                {guard.staffRole || 'Staff'}
-              </span>
+              <WfBadge tone="primary">{guard.staffRole || 'Staff'}</WfBadge>
             )}
           </div>
-          <p className="text-xs font-mono text-brand-text-muted mt-1">{guard.email}</p>
-          <p className="text-xs font-mono text-brand-text-muted">
-            {guard.badgeNumber} · ★ {guard.rating} · {guard.jobsCompleted} jobs
-          </p>
+          <p className="text-sm text-brand-text-muted mt-1">{guard.email}</p>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <WfMetricTile label="Badge" value={guard.badgeNumber} />
+            <WfMetricTile label="Rating" value={`★ ${guard.rating}`} accent />
+            <WfMetricTile label="Jobs" value={guard.jobsCompleted} />
+          </div>
           {!guard.isStaff && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border border-brand-primary/30 text-brand-primary">
-                {GUARD_STATUS_LABELS[pathwayStatus]}
-              </span>
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border border-brand-border text-brand-text-muted">
-                Account: {GUARD_STATUS_LABELS[accountStatus]}
-              </span>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <WfBadge tone="primary">{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
+              <WfBadge>Account: {GUARD_STATUS_LABELS[accountStatus]}</WfBadge>
               {guard.verified && (
-                <span className="text-[10px] font-mono text-emerald-400">Guardr verified</span>
+                <WfBadge tone="success">Guardr verified</WfBadge>
               )}
               {guard.backgroundChecked && (
-                <span className="text-[10px] font-mono text-brand-primary">Background checked</span>
+                <WfBadge tone="primary">Background checked</WfBadge>
               )}
             </div>
           )}
@@ -117,7 +114,7 @@ export function StaffGuardDetailPanel({
       {!guard.isStaff && (
         <>
           <section className="space-y-2 border-t border-brand-border pt-4">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">Qualification</p>
+            <WfSectionHeader title="Qualification" className="mb-0" />
             <p className="text-sm">
               Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
             </p>
@@ -125,25 +122,25 @@ export function StaffGuardDetailPanel({
           </section>
 
           <section className="space-y-2 border-t border-brand-border pt-4">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">Account controls</p>
+            <WfSectionHeader title="Account controls" className="mb-0" />
             <div className="flex flex-wrap gap-2">
               {canSuspend && accountStatus !== 'suspended' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="staff-ops-btn-outline text-[10px]">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Suspend
                 </button>
               )}
               {canSuspend && accountStatus !== 'blocked' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="staff-ops-btn-danger text-[10px]">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
                   Flag / Block
                 </button>
               )}
               {canSuspend && accountStatus !== 'active' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="staff-ops-btn-primary text-[10px]">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>
               )}
               {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="staff-ops-btn-outline text-[10px]">
+                <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Clear violations ({guard.failedAudits}/3)
                 </button>
               )}
@@ -151,18 +148,18 @@ export function StaffGuardDetailPanel({
                 <button
                   type="button"
                   onClick={() => onUpdateBackgroundChecked(guard.id, !guard.backgroundChecked)}
-                  className="staff-ops-btn-outline text-[10px]"
+                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                 >
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
               )}
               {onApproveGuard && !guard.verified && (
-                <button type="button" onClick={() => onApproveGuard(guard.id)} className="staff-ops-btn-primary text-[10px]">
+                <button type="button" onClick={() => onApproveGuard(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Verify guard profile
                 </button>
               )}
               {onRejectGuard && guard.verified && (
-                <button type="button" onClick={() => onRejectGuard(guard.id)} className="staff-ops-btn-outline text-[10px]">
+                <button type="button" onClick={() => onRejectGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Remove profile verification
                 </button>
               )}
@@ -170,18 +167,18 @@ export function StaffGuardDetailPanel({
           </section>
 
           <section className="space-y-3 border-t border-brand-border pt-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">
-                Credentials {pendingCount > 0 ? `· ${pendingCount} pending` : ''}
-              </p>
-            </div>
+            <WfSectionHeader
+              title="Credentials"
+              count={pendingCount > 0 ? pendingCount : undefined}
+              className="mb-0"
+            />
             {allCerts.length === 0 ? (
-              <p className="text-xs text-brand-text-muted font-mono">No credentials on file.</p>
+              <p className="text-sm text-brand-text-muted">No credentials on file.</p>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {allCerts.map((cert) => (
-                  <div key={cert.id} className="rounded-lg border border-brand-border p-3 flex flex-col sm:flex-row gap-3 justify-between">
-                    <div className="flex gap-3 min-w-0">
+                  <div key={cert.id} className="wf-list-card flex-col items-stretch !flex !flex-col sm:!flex-row gap-3">
+                    <div className="flex gap-3 min-w-0 flex-1">
                       {cert.imageUrl && (
                         <img
                           src={cert.imageUrl}
@@ -191,11 +188,11 @@ export function StaffGuardDetailPanel({
                       )}
                       <div className="min-w-0">
                         <p className="font-semibold text-sm">{certDisplayName(cert)}</p>
-                        <p className="text-[10px] font-mono text-brand-text-muted mt-0.5">
+                        <p className="text-xs text-brand-text-muted mt-0.5">
                           {cert.state ? `${formatStateName(cert.state)} · ` : ''}
                           {cert.issuer} · #{cert.number}
                         </p>
-                        <p className="text-[10px] text-brand-text-muted mt-0.5">
+                        <p className="text-xs text-brand-text-muted mt-0.5">
                           Expires {cert.expiryDate || '—'}
                         </p>
                       </div>
@@ -207,14 +204,14 @@ export function StaffGuardDetailPanel({
                           <button
                             type="button"
                             onClick={() => onRejectCert(guard.id, cert.id)}
-                            className="staff-ops-btn-danger text-[9px] py-1"
+                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
                           >
                             <X className="w-3 h-3" /> Reject
                           </button>
                           <button
                             type="button"
                             onClick={() => onApproveCert(guard.id, cert.id)}
-                            className="staff-ops-btn-primary text-[9px] py-1"
+                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
                           >
                             <Check className="w-3 h-3" /> Verify
                           </button>
@@ -228,18 +225,18 @@ export function StaffGuardDetailPanel({
           </section>
 
           <section className="space-y-2 border-t border-brand-border pt-4">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted">Recent assignments</p>
+            <WfSectionHeader title="Recent assignments" className="mb-0" />
             {guardJobs.length === 0 ? (
-              <p className="text-xs text-brand-text-muted font-mono">No assignments on record.</p>
+              <p className="text-sm text-brand-text-muted">No assignments on record.</p>
             ) : (
               <div className="space-y-2">
                 {guardJobs.map((job) => (
-                  <div key={job.id} className="rounded-lg border border-brand-border/60 px-3 py-2">
+                  <div key={job.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
                     <p className="text-sm font-semibold truncate">{job.title}</p>
-                    <p className="text-[10px] font-mono text-brand-text-muted">
+                    <p className="text-xs text-brand-text-muted">
                       {job.clientName} · {job.status.replace('-', ' ')}
                     </p>
-                    <p className="text-[10px] text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
+                    <p className="text-xs text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
                   </div>
                 ))}
               </div>
@@ -250,7 +247,7 @@ export function StaffGuardDetailPanel({
 
       {guard.isStaff && (
         <section className="border-t border-brand-border pt-4">
-          <p className="text-xs text-brand-text-muted font-mono">
+          <p className="text-sm text-brand-text-muted">
             Staff platform account — field credential verification does not apply.
           </p>
           {guard.phone && <p className="text-sm mt-2">{guard.phone}</p>}
@@ -259,7 +256,7 @@ export function StaffGuardDetailPanel({
 
       {guard.bio && !guard.isStaff && (
         <section className="border-t border-brand-border pt-4">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-brand-text-muted mb-2">Bio</p>
+          <WfSectionHeader title="Bio" className="mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>
       )}

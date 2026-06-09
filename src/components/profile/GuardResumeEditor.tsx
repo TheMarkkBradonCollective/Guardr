@@ -109,7 +109,7 @@ export function GuardResumeEditor({
 
   return (
     <div className="space-y-5">
-      <section className="app-card space-y-4">
+      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
           Professional resume
@@ -171,7 +171,7 @@ export function GuardResumeEditor({
         />
       </section>
 
-      <section className="app-card space-y-3">
+      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
         <p className="uber-label">Specialties</p>
         <div className="flex flex-wrap gap-2">
           {GUARD_SPECIALTY_OPTIONS.map((opt) => {
@@ -191,7 +191,7 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      <section className="app-card space-y-3">
+      <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
         <p className="uber-label">Service areas (states)</p>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
           {US_STATES.map(({ code, name }) => {
@@ -231,7 +231,7 @@ export function GuardResumeEditor({
             <input className="uber-input w-full" placeholder="Company / site" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
             <input className="uber-input w-full" placeholder="Period (e.g. 2020 – 2024)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
             <textarea className="uber-input w-full resize-none" rows={3} placeholder="What you did, sites, responsibilities…" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} />
-            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Add experience</button>
+            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add experience</button>
           </form>
         }
       />
@@ -256,7 +256,7 @@ export function GuardResumeEditor({
             <input className="uber-input w-full" placeholder="Field of study" value={eduField} onChange={(e) => setEduField(e.target.value)} />
             <input className="uber-input w-full" placeholder="Years" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
             <textarea className="uber-input w-full resize-none" rows={2} placeholder="Notes (optional)" value={eduDescription} onChange={(e) => setEduDescription(e.target.value)} />
-            <button type="submit" className="w-full uber-button-sage h-11 text-sm">Add education</button>
+            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add education</button>
           </form>
         }
       />
@@ -333,14 +333,14 @@ function ExperienceSection({
   form: React.ReactNode;
 }) {
   return (
-    <section className="app-card space-y-3">
-      <div className="flex items-center justify-between gap-2">
+    <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
+      <div className="flex items-center justify-between gap-2 w-full">
         <p className="uber-label flex items-center gap-2">
           <Icon className="w-4 h-4 text-brand-primary" />
           {title}
         </p>
         {canAdd && (
-          <button type="button" onClick={onAdd} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold">
+          <button type="button" onClick={onAdd} className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1">
             <Plus className="w-3 h-3" />
             Add
           </button>
@@ -352,7 +352,7 @@ function ExperienceSection({
           <p className="text-xs text-brand-text-muted text-center py-4">None listed yet — add to build your resume.</p>
         ) : (
           items.map((exp) => (
-            <div key={exp.id} className="p-3 rounded-xl surface-muted">
+            <div key={exp.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
               <p className="font-semibold text-sm">{exp.title}</p>
               <p className="text-sm text-brand-primary mt-0.5">{exp.company}</p>
               <p className="text-xs text-brand-text-muted mt-1">{exp.period}</p>

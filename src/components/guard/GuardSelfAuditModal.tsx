@@ -45,9 +45,9 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
         <div className="p-5 space-y-5">
           <p className="text-sm text-brand-text-muted">Confirm your appearance and equipment before starting your shift.</p>
 
-          <div className="space-y-2">
+          <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
             {(Object.keys(uniform) as (keyof typeof uniform)[]).map((key) => (
-              <label key={key} className="flex items-center gap-3 py-2 cursor-pointer">
+              <label key={key} className="flex items-center gap-3 py-2 cursor-pointer w-full">
                 <div
                   onClick={() => setUniform((p) => ({ ...p, [key]: !p[key] }))}
                   className={`w-5 h-5 rounded-md border flex items-center justify-center ${
@@ -70,7 +70,7 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
                 type="button"
                 onClick={handleCapture}
                 disabled={loading}
-                className="w-full h-40 rounded-xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2 hover:border-brand-primary transition-colors surface-inset"
+                className="w-full h-40 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2 hover:border-brand-primary transition-colors surface-inset"
               >
                 <Camera className="w-8 h-8 text-brand-text-muted" />
                 <span className="text-sm text-brand-text-muted">{loading ? 'Capturing…' : 'Tap to capture'}</span>
@@ -82,7 +82,7 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
             type="button"
             onClick={handleSubmit}
             disabled={!selfie}
-            className="w-full uber-button-sage disabled:opacity-40"
+            className="app-button-primary disabled:opacity-40"
           >
             Submit and begin shift
           </button>

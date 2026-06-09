@@ -80,7 +80,10 @@ export function ClientAppLayout({
   return (
     <RoleAppShell
       title={screenTitle}
-      subtitle={clientLabel}
+      locationLabel={clientLabel}
+      avatarUrl={currentUser.avatar}
+      avatarName={currentUser.name}
+      onAvatarClick={() => onNavigate?.('profile')}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
       activeNavId={activeView}
