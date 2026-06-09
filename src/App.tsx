@@ -640,10 +640,6 @@ export default function App() {
   // ── Request CRUD ───────────────────────────────────────────
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
     const clientRecord = clients.find(c => c.id === currentUser?.id);
-    if (clientRecord && clientRecord.approved === false) {
-      alert('Your company account is pending staff approval. You cannot post jobs yet.');
-      return;
-    }
     const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Client';
     const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
     const siteName = newRequest.siteName || '';

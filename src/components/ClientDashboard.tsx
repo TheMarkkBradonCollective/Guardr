@@ -111,7 +111,6 @@ export function ClientDashboard({
   if (view === 'request') {
     return wrap(
       <RequestSecurityFlow
-        isClientApproved={isClientApproved}
         preset={flowPreset}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
@@ -126,7 +125,6 @@ export function ClientDashboard({
     return (
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
-        isClientApproved={isClientApproved}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');

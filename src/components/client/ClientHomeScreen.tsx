@@ -65,7 +65,7 @@ export function ClientHomeScreen({
 
         {!isClientApproved && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4 text-sm text-brand-text-muted">
-            Your account is pending approval. You can explore the dashboard, but posting requests is disabled until approved.
+            Your account is pending approval. You can submit assignment requests — staff will review them before they go live.
           </div>
         )}
 
@@ -145,9 +145,8 @@ export function ClientHomeScreen({
                 <button
                   key={action.id}
                   type="button"
-                  disabled={!isClientApproved && action.id !== 'reports'}
                   onClick={() => onAction(action.id)}
-                  className={`client-action-card text-left disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`client-action-card text-left ${
                     action.accent ? 'border-brand-primary/30' : ''
                   }`}
                 >
