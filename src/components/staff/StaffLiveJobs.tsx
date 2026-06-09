@@ -3,7 +3,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { DISPATCH_STATUS_LABEL, getDispatchStatus } from '../../lib/staffOps';
 import { useDevice } from '../../lib/platform';
-import { AlertTriangle, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface StaffLiveJobsProps {
   requests: SecurityRequest[];
@@ -63,11 +63,6 @@ function JobDetailPanel({
         <button type="button" onClick={() => alert('Backup guard added to job.')} className="staff-ops-btn-outline text-[10px]">
           Add Backup
         </button>
-        {dispatch === 'incident-flagged' && (
-          <button type="button" onClick={() => alert('Incident escalated to supervisor.')} className="staff-ops-btn-danger text-[10px]">
-            <AlertTriangle className="w-3 h-3" /> Escalate
-          </button>
-        )}
         {req.status !== 'completed' && (
           <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
             <X className="w-3 h-3" /> Cancel

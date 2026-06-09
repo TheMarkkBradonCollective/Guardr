@@ -51,24 +51,6 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
           </div>
         </div>
 
-        <div className="staff-ops-card space-y-4">
-          <h3 className="font-black text-sm">Incident Thresholds</h3>
-          <div>
-            <label className="text-[10px] font-mono uppercase text-brand-text-muted">Auto-escalate at severity</label>
-            <select className="uber-input mt-1 w-full" defaultValue="high">
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical only</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-[10px] font-mono uppercase text-brand-text-muted">Notifications</label>
-            <select className="uber-input mt-1 w-full" defaultValue="all">
-              <option value="all">All incidents & disputes</option>
-              <option value="critical">Critical only</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <div className="staff-ops-card">

@@ -110,7 +110,7 @@ export const DISPATCH_STATUS_LABEL: Record<DispatchJobStatus, { emoji: string; l
   active: { emoji: '🟢', label: 'Active', className: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
   'in-progress': { emoji: '🔵', label: 'In Progress', className: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
   completed: { emoji: '⚫', label: 'Completed', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
-  'incident-flagged': { emoji: '🔴', label: 'Incident Flagged', className: 'text-red-400 bg-red-500/10 border-red-500/30' },
+  'incident-flagged': { emoji: '📋', label: 'Client incident reported', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
 };
 
 export function computePlatformStats(
@@ -144,7 +144,7 @@ export function computePlatformStats(
   ).length;
 
   return {
-    platformHealthy: activeIncidents === 0 && pendingReviews < 20,
+    platformHealthy: pendingReviews < 20,
     pendingReviews,
     activeIncidents,
     paymentHolds,
@@ -187,7 +187,7 @@ export function buildPlatformActivityFeed(
       items.push({
         id: `${req.id}-incident`,
         timestamp: req.checkOutAudit.checkedAt,
-        message: `Incident report submitted — ${site}`,
+        message: `Client incident report filed — ${site}`,
         sortKey: new Date(req.checkOutAudit.checkedAt).getTime(),
       });
     }
