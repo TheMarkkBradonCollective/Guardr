@@ -54,12 +54,12 @@ export function GuardBottomSheet({
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
-  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'full' : 'half');
-  const startSnap = useRef<SheetSnap>('half');
+  const [snap, setSnap] = useState<SheetSnap>(selectedJob ? 'full' : 'peek');
+  const startSnap = useRef<SheetSnap>('peek');
   const vh = useViewportHeight();
 
   useEffect(() => {
-    if (selectedJob) setSnap('full');
+    setSnap(selectedJob ? 'full' : 'peek');
   }, [selectedJob?.id]);
 
   const cycleSnap = (direction: 'up' | 'down') => {
