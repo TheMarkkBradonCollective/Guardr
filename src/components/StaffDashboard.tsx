@@ -78,6 +78,9 @@ interface StaffDashboardProps {
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   initialSection?: StaffSection;
+  /** Controlled section — when set, parent owns navigation state (URL sync). */
+  section?: StaffSection;
+  onSectionChange?: (section: StaffSection) => void;
 }
 
 export function StaffDashboard({
@@ -112,8 +115,12 @@ export function StaffDashboard({
   onSendSupportMessage,
   onUpdateSupportStatus,
   initialSection = 'overview',
+  section: controlledSection,
+  onSectionChange,
 }: StaffDashboardProps) {
-  const [section, setSection] = useState<StaffSection>(initialSection);
+  const isControlled = controlledSection !== undefined;
+  const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
+  const section = isControlled ? controlledSection : internalSection;
   const [selectedGuardId, setSelectedGuardId] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -121,11 +128,12 @@ export function StaffDashboard({
 
   const openJob = (jobId: string) => {
     setSelectedJobId(jobId);
-    setSection('jobs');
+    navigateSection('jobs');
   };
 
   const navigateSection = (next: StaffSection) => {
-    setSection(next);
+    if (!isControlled) setInternalSection(next);
+    onSectionChange?.(next);
     if (next !== 'guards') setSelectedGuardId(null);
     if (next !== 'team') setSelectedTeamId(null);
     if (next !== 'clients') setSelectedClientId(null);
@@ -166,7 +174,7 @@ export function StaffDashboard({
             onRejectCert={onRejectCert}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
-              setSection('guards');
+              navigateSection('guards');
             }}
           />
         );

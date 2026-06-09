@@ -28,7 +28,7 @@ import {
   isCashClientPayment,
   parsePaymentMethod,
 } from './lib/cashPayments';
-import { ClientDashboard, ClientView } from './components/ClientDashboard';
+import { ClientDashboard, type ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
@@ -62,9 +62,16 @@ import {
 } from './lib/support';
 import { listenForPushNavigation } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
-import { parsePushDeepLink, type PushDeepLink } from './lib/pushNavigation';
+import {
+  defaultRouteForRole,
+  parseAppRoute,
+  readAppRouteFromWindow,
+  syncAppRoute,
+  type AppRole,
+  type AppRoute,
+} from './lib/appNavigation';
 import type { GuardTab } from './components/GuardDashboard';
-import { normalizeStaffSection, type StaffSection } from './lib/staffOps';
+import { type StaffSection } from './lib/staffOps';
 import { canClientEditRequest, validateShiftSchedule } from './lib/jobEditRules';
 import {
   canGuardClockIn,
@@ -72,6 +79,18 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
+
+function appRoleForUser(user: SessionUser): AppRole | null {
+  if (user.role === 'client') return 'client';
+  if (user.role === 'guard') return 'guard';
+  if (isStaffRole(user.role)) return 'staff';
+  return null;
+}
+
+function routeMatchesUser(route: AppRoute, user: SessionUser): boolean {
+  const role = appRoleForUser(user);
+  return !!role && route.role === role;
+}
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -104,13 +123,43 @@ export default function App() {
 
   useEffect(() => {
     const applyDeepLink = (url: string) => {
-      const link = parsePushDeepLink(url);
-      if (link) setPushDeepLink(link);
+      const route = parseAppRoute(url);
+      if (!route) return;
+      applyAppRoute(route);
+      syncAppRoute(route, true);
     };
 
     applyDeepLink(window.location.pathname + window.location.search);
-    return listenForPushNavigation(applyDeepLink);
+
+    const onPopState = () => {
+      const route = readAppRouteFromWindow();
+      if (route) applyAppRoute(route);
+    };
+    window.addEventListener('popstate', onPopState);
+
+    const unsubscribe = listenForPushNavigation(applyDeepLink);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const role = appRoleForUser(currentUser);
+    if (!role) return;
+
+    const route = readAppRouteFromWindow();
+    if (route && routeMatchesUser(route, currentUser)) {
+      applyAppRoute(route);
+      syncAppRoute(route, true);
+      return;
+    }
+
+    const fallback = defaultRouteForRole(role);
+    applyAppRoute(fallback);
+    syncAppRoute(fallback, true);
+  }, [currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -127,10 +176,38 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
-  const [clientView, setClientView] = useState<ClientView>('home');
-  const [pushDeepLink, setPushDeepLink] = useState<PushDeepLink | null>(() =>
-    parsePushDeepLink(window.location.pathname + window.location.search)
+
+  const initialRoute = readAppRouteFromWindow();
+  const [clientView, setClientViewState] = useState<ClientView>(
+    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
+  const [guardTab, setGuardTabState] = useState<GuardTab>(
+    () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
+  );
+  const [staffSection, setStaffSectionState] = useState<StaffSection>(
+    () => (initialRoute?.role === 'staff' ? initialRoute.staffSection : undefined) ?? 'overview'
+  );
+
+  const setClientView = (view: ClientView) => {
+    setClientViewState(view);
+    syncAppRoute({ role: 'client', clientView: view });
+  };
+
+  const setGuardTab = (tab: GuardTab) => {
+    setGuardTabState(tab);
+    syncAppRoute({ role: 'guard', guardTab: tab });
+  };
+
+  const setStaffSection = (section: StaffSection) => {
+    setStaffSectionState(section);
+    syncAppRoute({ role: 'staff', staffSection: section });
+  };
+
+  const applyAppRoute = (route: AppRoute) => {
+    if (route.clientView) setClientViewState(route.clientView);
+    if (route.guardTab) setGuardTabState(route.guardTab);
+    if (route.staffSection) setStaffSectionState(route.staffSection);
+  };
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -1678,7 +1755,8 @@ export default function App() {
       <>
         <GuardDashboard
           guard={activeGuard}
-          initialTab={(pushDeepLink?.guardTab as GuardTab | undefined) ?? 'map'}
+          tab={guardTab}
+          onTabChange={setGuardTab}
           requests={guardJobs}
           payments={guardPayouts}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
@@ -1773,7 +1851,8 @@ export default function App() {
     return (
       <>
         <StaffDashboard
-          initialSection={normalizeStaffSection(pushDeepLink?.staffSection) ?? 'overview'}
+          section={staffSection}
+          onSectionChange={setStaffSection}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}
