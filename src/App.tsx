@@ -126,7 +126,7 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
-  const [clientView, setClientView] = useState<ClientView>('map');
+  const [clientView, setClientView] = useState<ClientView>('home');
   const [pushDeepLink, setPushDeepLink] = useState<PushDeepLink | null>(() =>
     parsePushDeepLink(window.location.pathname + window.location.search)
   );
@@ -1624,12 +1624,6 @@ export default function App() {
             setInitialAuthMode(mode ?? 'sign-in');
             setIsAuthView(true);
           }}
-          guardsCount={getBrowsableGuards(verifiedGuards).length}
-          requestsCount={requests.length}
-          availableRequests={requests.filter(r => r.status === 'open')}
-          sampleGuards={getBrowsableGuards(verifiedGuards).slice(0, 3)}
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
         />
         <InstallPrompt />
       </>
@@ -1726,6 +1720,7 @@ export default function App() {
               requests={myRequests}
               guards={hireableGuards}
               clientEmail={currentUser.email}
+              avatarUrl={currentUser.avatar}
               activeView={clientView}
               onViewChange={setClientView}
               onPostRequest={handlePostRequest}

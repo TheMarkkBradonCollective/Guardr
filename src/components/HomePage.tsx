@@ -1,107 +1,33 @@
 import React from 'react';
-import { Logo } from './Logo';
-import { ThemeToggle } from './ui/ThemeToggle';
-import { ArrowRight, Zap, Users, Bell, Shield, Clock, BadgeCheck, DollarSign, Radio } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { ThemeMode } from '../lib/platform/theme';
-import { SecurityRequest, SecurityGuard } from '../types';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
-  guardsCount: number;
-  requestsCount: number;
-  availableRequests: SecurityRequest[];
-  sampleGuards: SecurityGuard[];
-  themeMode: ThemeMode;
-  onChangeTheme: (mode: ThemeMode) => void;
 }
 
-const HOW_IT_WORKS = [
-  {
-    icon: Shield,
-    title: 'Request coverage',
-    body: 'Post your security needs in minutes.',
-  },
-  {
-    icon: Users,
-    title: 'Match with guards',
-    body: 'Qualified professionals accept assignments.',
-  },
-  {
-    icon: Bell,
-    title: 'Stay informed',
-    body: 'Track coverage, reports, and activity from one platform.',
-  },
-];
-
-const WHY_GUARDR = [
-  { icon: Zap, title: 'Fast staffing', body: 'Fill shifts quickly with on-demand professionals.' },
-  { icon: BadgeCheck, title: 'Verified professionals', body: 'Licensed guards with credentials on every profile.' },
-  { icon: DollarSign, title: 'Transparent pricing', body: 'Clear rates and estimated totals before you commit.' },
-  { icon: Radio, title: 'Real-time operations', body: 'Live coverage status, reports, and shift activity.' },
-];
-
-export function HomePage({
-  onNavigateToAuth,
-  themeMode,
-  onChangeTheme,
-}: HomePageProps) {
+export function HomePage({ onNavigateToAuth }: HomePageProps) {
   return (
-    <div className="page-shell min-h-screen">
-      {/* Nav */}
-      <header className="sticky top-0 z-50 border-b border-brand-border bg-brand-bg/90 backdrop-blur-xl">
-        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logo size={30} className="text-brand-primary" />
-            <span className="font-bold text-lg">Guardr</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="hidden sm:flex" />
-            <button
-              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors hidden sm:block"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
-              className="uber-button-sage text-sm h-9 px-4 hidden sm:inline-flex"
-            >
-              Sign up
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="page-shell min-h-screen flex flex-col">
+      <div className="flex-1 flex flex-col">
+        <div className="onboarding-image-placeholder" aria-hidden />
 
-      {/* Hero — wireframe splash with curved image area */}
-      <section className="relative">
-        <div className="onboarding-hero relative h-[min(52vh,22rem)] bg-gradient-to-br from-brand-primary/30 via-brand-primary/12 to-brand-bg flex items-end justify-center overflow-hidden">
-          <div
-            className="hero-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(100%,480px)] h-56 rounded-full pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 22%, transparent) 0%, transparent 70%)',
-            }}
-          />
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-brand-bg rounded-t-[2.5rem]" />
-        </div>
-
-        <div className="relative px-5 pt-8 pb-6 max-w-3xl mx-auto text-center">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center max-w-md mx-auto w-full">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl sm:text-5xl font-bold tracking-tight leading-[1.12] mb-4"
+            className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight mb-4"
           >
-            Security staffing, on demand
+            Take control of your health
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-base sm:text-lg text-brand-text-muted leading-relaxed max-w-xl mx-auto mb-8"
+            className="text-base text-brand-text-muted leading-relaxed mb-10"
           >
-            Connect with licensed guards for events, sites, and long-term coverage — all in one app.
+            Access clinical records, manage appointments, medications, trackers, and a whole lot more
           </motion.p>
 
           <motion.button
@@ -109,95 +35,19 @@ export function HomePage({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.14 }}
             onClick={() => onNavigateToAuth(undefined, 'sign-up')}
-            className="app-button-primary max-w-sm mx-auto"
+            className="app-button-primary w-full max-w-sm"
           >
             Get started
-            <ArrowRight className="w-4 h-4" />
           </motion.button>
 
           <button
             onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="mt-4 text-sm font-semibold text-brand-primary hover:underline"
+            className="mt-5 text-sm text-brand-text-muted"
           >
             I already have an account
           </button>
         </div>
-      </section>
-
-      {/* How it works */}
-      <section className="px-5 py-20 border-t border-brand-border">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {HOW_IT_WORKS.map(({ icon: Icon, title, body }, i) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="app-card p-8 text-center"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-brand-primary/12 flex items-center justify-center mx-auto mb-5">
-                  <Icon className="w-6 h-6 text-brand-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{title}</h3>
-                <p className="text-brand-text-muted leading-relaxed">{body}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Guardr */}
-      <section className="px-5 py-20 bg-brand-bg-sec">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Why Guardr</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {WHY_GUARDR.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="app-card flex gap-4 p-6">
-                <div className="shrink-0 w-11 h-11 rounded-xl bg-brand-primary/12 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-brand-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-base mb-1">{title}</h3>
-                  <p className="text-sm text-brand-text-muted leading-relaxed">{body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-5 py-24">
-        <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
-          <p className="text-brand-text-muted mb-8">
-            Whether you need coverage tonight or want to pick up your next shift.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => onNavigateToAuth(undefined, 'sign-up')} className="uber-button-sage">
-              Sign up
-            </button>
-            <button onClick={() => onNavigateToAuth(undefined, 'sign-in')} className="uber-button-outline">
-              Sign in
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-brand-border px-5 py-10">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Logo size={24} className="text-brand-primary" />
-            <span className="font-semibold">Guardr</span>
-          </div>
-          <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-          <p className="text-xs text-brand-text-muted">© {new Date().getFullYear()} Guardr</p>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ export function BottomNavBar({
               type="button"
               onClick={() => onNavigate(id)}
               className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors ${
-                active ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'
+                active ? 'text-brand-text' : 'text-brand-text-muted hover:text-brand-text'
               }`}
               aria-current={active ? 'page' : undefined}
             >
@@ -66,7 +66,7 @@ export function BottomNavBar({
             type="button"
             onClick={onMoreClick}
             className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors ${
-              moreActive ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'
+              moreActive ? 'text-brand-text' : 'text-brand-text-muted hover:text-brand-text'
             }`}
             aria-current={moreActive ? 'page' : undefined}
           >

@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Logo } from './Logo';
 import {
-  Shield,
-  Mail,
   ArrowLeft,
   ChevronRight,
   Eye,
   EyeOff,
-  User,
-  Building2,
 } from 'lucide-react';
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
-import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
+import { resolvePlatformRole } from '../lib/permissions';
 
 interface AuthPageProps {
   onSignIn: (user: SessionUser) => void;
@@ -24,105 +19,78 @@ interface AuthPageProps {
   themeMode?: string;
 }
 
+type AuthMethod = 'email' | 'phone';
+
 export function AuthPage({
   onSignIn,
   onSignUp,
   guardsList,
   clientsList,
   onBackToHome,
-  initialRole = 'client',
   initialMode = 'sign-in',
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
-  const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-
   const [phone, setPhone] = useState('');
-  const [bio, setBio] = useState('');
-  const [hourlyRate, setHourlyRate] = useState('35');
-
-  const [clientCompanyName, setClientCompanyName] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   useEffect(() => {
-    setRole(initialRole === 'guard' ? 'guard' : 'client');
     setIsSignUp(initialMode === 'sign-up');
     setErrorMsg('');
-  }, [initialRole, initialMode]);
+  }, [initialMode]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email) { setErrorMsg('Email address is required.'); return; }
-    if (!password || password.length < 4) { setErrorMsg('Password must be at least 4 characters.'); return; }
+    const identifier = authMethod === 'email' ? email : phone;
+    if (!identifier) {
+      setErrorMsg(authMethod === 'email' ? 'Email address is required.' : 'Phone number is required.');
+      return;
+    }
+    if (!password || password.length < 4) {
+      setErrorMsg('Password must be at least 4 characters.');
+      return;
+    }
 
     if (isSignUp) {
-      if (!fullName) { setErrorMsg('Please enter your full name.'); return; }
-
-      const randomId = `${role}-${Date.now()}`;
-
-      if (role === 'client') {
-        const company = clientCompanyName.trim();
-        const clientProfile: Client = {
-          id: randomId,
-          name: fullName,
-          email,
-          companyName: company,
-          phone: phone || '',
-          avatar: '',
-          totalRequests: 0,
-          approved: true,
-        };
-        onSignUp(clientProfile, 'client');
-        onSignIn({
-          id: randomId,
-          name: fullName,
-          email,
-          role: 'client',
-          clientName: company || fullName,
-          avatar: '',
-        });
+      if (!firstName || !lastName) {
+        setErrorMsg('Please enter your first and last name.');
         return;
       }
 
-      const newGuardProfile: SecurityGuard = {
+      const randomId = `client-${Date.now()}`;
+      const fullName = `${firstName} ${lastName}`;
+      const clientProfile: Client = {
         id: randomId,
         name: fullName,
-        email,
-        badgeNumber: `GR-${Math.floor(10000 + Math.random() * 90000)}`,
+        email: authMethod === 'email' ? email : `${phone}@health.app`,
+        companyName: '',
+        phone: authMethod === 'phone' ? phone : '',
         avatar: '',
-        phone: phone || '',
-        bio: bio || 'Licensed security professional.',
-        isArmed: false,
-        backgroundChecked: false,
-        verified: false,
-        rating: 0,
-        jobsCompleted: 0,
-        certifications: [],
-        experience: [],
-        hourlyRateRequirement: parseInt(hourlyRate) || 35,
-        userStatus: 'active',
+        totalRequests: 0,
+        approved: true,
       };
-
-      onSignUp(newGuardProfile, 'guard');
+      await onSignUp(clientProfile, 'client');
       onSignIn({
         id: randomId,
         name: fullName,
-        email,
-        role: 'guard',
-        badgeNumber: newGuardProfile.badgeNumber,
-        avatar: newGuardProfile.avatar,
-        hourlyRate: newGuardProfile.hourlyRateRequirement,
+        email: clientProfile.email,
+        role: 'client',
+        clientName: fullName,
+        avatar: '',
       });
       return;
     }
 
-    const emailLower = email.toLowerCase();
+    const emailLower = (authMethod === 'email' ? email : `${phone}@health.app`).toLowerCase();
 
     if (emailLower === 'm.white@signaturesecurityspecialist.com') {
       if (password !== '#FuckinDstorm11') {
@@ -165,7 +133,7 @@ export function AuthPage({
       return;
     }
 
-    const matchedClient = clientsList.find(c => c.email.toLowerCase() === emailLower);
+    const matchedClient = clientsList.find((c) => c.email.toLowerCase() === emailLower);
     if (matchedClient) {
       onSignIn({
         id: matchedClient.id,
@@ -178,9 +146,12 @@ export function AuthPage({
       return;
     }
 
-    const matchedGuard = guardsList.find(g => g.email.toLowerCase() === emailLower);
+    const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
     if (matchedGuard) {
-      if (matchedGuard.userStatus === 'blocked') { setErrorMsg('Account blocked. Contact administration.'); return; }
+      if (matchedGuard.userStatus === 'blocked') {
+        setErrorMsg('Account blocked. Contact administration.');
+        return;
+      }
       const platformRole: PlatformRole = resolvePlatformRole({
         isStaff: matchedGuard.isStaff,
         staffRole: matchedGuard.staffRole,
@@ -196,208 +167,225 @@ export function AuthPage({
         staffRole: matchedGuard.staffRole,
       });
     } else {
-      setErrorMsg('Account not found. Please sign up or check your email address.');
+      setErrorMsg('Account not found. Please register or check your credentials.');
     }
   };
 
-  const ROLES = [
-    { id: 'guard' as const, label: 'Guard', desc: 'Licensed security professional', icon: Shield },
-    { id: 'client' as const, label: 'Client', desc: 'Business seeking security', icon: Building2 },
+  const passwordHints = [
+    { label: 'min 8 letters', met: password.length >= 8 },
+    { label: '1 capital letter', met: /[A-Z]/.test(password) },
+    { label: '1 number', met: /\d/.test(password) },
   ];
 
   return (
-    <div className="page-shell min-h-screen flex flex-col" id="guardr-auth-root">
-      <div className="auth-hero relative h-36 sm:h-44 shrink-0 bg-gradient-to-br from-brand-primary/25 via-brand-primary/10 to-brand-bg overflow-hidden">
-        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-8 bg-brand-bg rounded-t-[2rem]" />
-        <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
-          <button
-            onClick={onBackToHome}
-            className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-sm font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-          <div className="flex items-center gap-2">
-            <Logo size={26} className="text-brand-primary" />
-            <span className="font-semibold text-base">Guardr</span>
-          </div>
-          <div className="w-14" />
-        </header>
-      </div>
+    <div className="page-shell min-h-screen flex flex-col">
+      <header className="shrink-0 px-4 h-14 flex items-center">
+        <button
+          onClick={onBackToHome}
+          className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-sm font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      </header>
 
-      <div className="flex flex-1 items-start justify-center px-5 py-6 sm:py-10">
+      <div className="flex flex-1 items-start justify-center px-5 py-4 sm:py-8">
         <div className="w-full max-w-md animate-fade-in">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">
-              {isSignUp ? 'Create account' : 'Sign in'}
-            </h1>
-            <p className="text-brand-text-muted text-sm mt-1.5">
-              {isSignUp ? 'Join the Guardr marketplace' : 'Welcome back to your dashboard'}
-            </p>
-          </div>
+          <h1 className="auth-screen-title mb-8">
+            {isSignUp ? 'Registration' : 'Sign in'}
+          </h1>
 
-          <div className="segmented-control w-full mb-6">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(false); setErrorMsg(''); }}
-              className={`segmented-control-btn flex-1 text-center ${!isSignUp ? 'segmented-control-btn-active' : ''}`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(true); setErrorMsg(''); }}
-              className={`segmented-control-btn flex-1 text-center ${isSignUp ? 'segmented-control-btn-active' : ''}`}
-            >
-              Sign up
-            </button>
-          </div>
+          {errorMsg && (
+            <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/8 text-red-500 text-sm px-4 py-3">
+              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+              {errorMsg}
+            </div>
+          )}
 
-          <div className="space-y-5">
+          {isSignUp && (
+            <div className="segmented-control w-full mb-6">
+              <button
+                type="button"
+                onClick={() => { setAuthMethod('phone'); setErrorMsg(''); }}
+                className={`segmented-control-btn flex-1 text-center ${authMethod === 'phone' ? 'segmented-control-btn-active' : ''}`}
+              >
+                Phone number
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMethod('email'); setErrorMsg(''); }}
+                className={`segmented-control-btn flex-1 text-center ${authMethod === 'email' ? 'segmented-control-btn-active' : ''}`}
+              >
+                Email
+              </button>
+            </div>
+          )}
 
-            {errorMsg && (
-              <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/8 text-red-400 text-sm px-4 py-3">
-                <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                {errorMsg}
-              </div>
-            )}
-
-            {isSignUp && (
-              <div className="mb-6">
-                <p className="uber-label mb-3">Account type</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {ROLES.map(({ id, label, desc, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => { setRole(id); setErrorMsg(''); }}
-                      className={`text-left rounded-xl border p-4 transition-all ${
-                        role === id
-                          ? 'border-brand-primary bg-brand-primary/10 ring-2 ring-brand-primary/20'
-                          : 'border-brand-border hover:border-brand-primary/40 bg-brand-bg-sec'
-                      }`}
-                    >
-                      <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
-                      <p className={`text-sm font-semibold ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
-                      <p className="text-xs text-brand-text-muted mt-0.5">{desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              {isSignUp && (
-                <div>
-                  <label className="uber-label block mb-2">Full name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-                    <input
-                      type="text"
-                      required
-                      placeholder={role === 'client' ? 'Your name' : 'Officer full name'}
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="uber-input pl-10"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="uber-label block mb-2">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="uber-input pl-10"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="uber-label block mb-2">Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="uber-input pr-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text p-1"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {isSignUp && role === 'guard' && (
-                <div className="space-y-4 pt-4 border-t border-brand-border">
-                  <p className="uber-label">Guard details</p>
-                  <p className="text-xs text-brand-text-muted">
-                    Add your guard card and credentials from your profile after signing up.
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="uber-label block mb-2">Phone</label>
-                      <input type="text" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="uber-input" />
-                    </div>
-                    <div>
-                      <label className="uber-label block mb-2">Hourly rate ($)</label>
-                      <input type="number" min="15" max="300" placeholder="35" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className="uber-input" />
-                    </div>
-                  </div>
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {isSignUp ? (
+              <>
+                {authMethod === 'email' ? (
                   <div>
-                    <label className="uber-label block mb-2">Bio</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Experience, specialties, previous roles..."
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="uber-input resize-none"
+                    <label className="uber-label block mb-2">Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="uber-input"
                     />
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div>
+                    <label className="uber-label block mb-2">Phone number</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+1 (555) 000-0000"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="uber-input"
+                    />
+                  </div>
+                )}
 
-              {isSignUp && role === 'client' && (
-                <div className="pt-4 border-t border-brand-border">
-                  <label className="uber-label block mb-2">Company name <span className="font-normal">(optional)</span></label>
+                <div>
+                  <label className="uber-label block mb-2">First name</label>
                   <input
                     type="text"
-                    placeholder="Acme Corp"
-                    value={clientCompanyName}
-                    onChange={(e) => setClientCompanyName(e.target.value)}
+                    required
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     className="uber-input"
                   />
                 </div>
+
+                <div>
+                  <label className="uber-label block mb-2">Last name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="uber-input"
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <label className="uber-label block mb-2">Email / Phone number</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Email or phone"
+                  value={email || phone}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.includes('@')) {
+                      setEmail(val);
+                      setPhone('');
+                    } else {
+                      setPhone(val);
+                      setEmail('');
+                    }
+                  }}
+                  className="uber-input"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="uber-label block mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="uber-input pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {isSignUp && (
+                <div className="password-hint mt-2 space-y-0.5">
+                  {passwordHints.map((hint) => (
+                    <p key={hint.label} className={hint.met ? 'text-brand-text' : ''}>
+                      {hint.label}
+                    </p>
+                  ))}
+                </div>
               )}
+            </div>
 
-              {!isSignUp && (
-                <p className="text-xs text-brand-text-muted text-center leading-relaxed">
-                  Platform staff ({ROLE_LABELS.moderator}, {ROLE_LABELS.administrator}, {ROLE_LABELS.director}) sign in with credentials provisioned by your Director.
-                </p>
-              )}
+            {!isSignUp && (
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-brand-border accent-brand-primary"
+                  />
+                  <span className="text-brand-text-muted">Remember me</span>
+                </label>
+                <button type="button" className="text-brand-text-muted hover:text-brand-text font-medium">
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
-              <button type="submit" className="app-button-primary mt-2">
-                {isSignUp ? 'Create account' : 'Sign in'}
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+            <button type="submit" className="app-button-primary mt-2">
+              {isSignUp ? 'Next' : 'Sign in'}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </form>
 
-          <p className="mt-8 text-center text-xs text-brand-text-muted leading-relaxed">
-            Guardr is an independent contractor marketplace. We do not employ or vet security professionals.
+          <p className="mt-6 text-center text-sm text-brand-text-muted">
+            {isSignUp ? (
+              <>
+                Do you have already account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsSignUp(false); setErrorMsg(''); }}
+                  className="font-semibold text-brand-text hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Are you new?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsSignUp(true); setErrorMsg(''); }}
+                  className="font-semibold text-brand-text hover:underline"
+                >
+                  Register
+                </button>
+              </>
+            )}
           </p>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-brand-text-muted mb-4">Sign in with</p>
+            <div className="flex items-center justify-center gap-4">
+              <button type="button" className="social-auth-btn" aria-label="Sign in with Google">G</button>
+              <button type="button" className="social-auth-btn" aria-label="Sign in with Facebook">f</button>
+              <button type="button" className="social-auth-btn" aria-label="Sign in with Apple">
+                <span className="text-base">&#63743;</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

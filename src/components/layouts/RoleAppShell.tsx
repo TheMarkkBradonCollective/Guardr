@@ -19,6 +19,7 @@ interface RoleAppShellProps {
   moreMenuFooter?: React.ReactNode;
   moreMenuTitle?: string;
   fullBleed?: boolean;
+  hideHeader?: boolean;
   variant?: 'default' | 'dark';
 }
 
@@ -38,6 +39,7 @@ export function RoleAppShell({
   moreMenuFooter,
   moreMenuTitle = 'More',
   fullBleed = false,
+  hideHeader = false,
   variant = 'default',
 }: RoleAppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -53,16 +55,18 @@ export function RoleAppShell({
 
   return (
     <div className="role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
-      <AppScreenHeader
-        title={title}
-        subtitle={subtitle}
-        locationLabel={locationLabel}
-        avatarUrl={avatarUrl}
-        avatarName={avatarName}
-        onAvatarClick={onAvatarClick}
-        right={headerRight}
-        className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
-      />
+      {!hideHeader && (
+        <AppScreenHeader
+          title={title}
+          subtitle={subtitle}
+          locationLabel={locationLabel}
+          avatarUrl={avatarUrl}
+          avatarName={avatarName}
+          onAvatarClick={onAvatarClick}
+          right={headerRight}
+          className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
+        />
+      )}
 
       <main
         className={`flex-1 min-h-0 min-w-0 overflow-hidden ${fullBleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}

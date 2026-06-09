@@ -36,7 +36,7 @@ export function AppScreenHeader({
             className="flex items-center gap-1.5 text-sm font-medium text-brand-text max-w-full"
             aria-label={`Location: ${locationLabel}`}
           >
-            <MapPin className="w-4 h-4 text-brand-primary shrink-0" />
+            <MapPin className="w-4 h-4 text-brand-text shrink-0" />
             <span className="truncate">{locationLabel}</span>
           </button>
         ) : subtitle ? (
