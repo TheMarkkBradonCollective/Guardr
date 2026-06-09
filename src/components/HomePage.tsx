@@ -61,7 +61,7 @@ export function HomePage({
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
               className="text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors hidden sm:block"
             >
-              Log in
+              Sign in
             </button>
             <button
               onClick={() => onNavigateToAuth(undefined, 'sign-up')}
@@ -120,7 +120,7 @@ export function HomePage({
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
               className="uber-button-outline w-full sm:w-auto min-w-[200px]"
             >
-              Log in
+              Sign in
             </button>
           </motion.div>
         </div>
@@ -183,7 +183,7 @@ export function HomePage({
               Sign up
             </button>
             <button onClick={() => onNavigateToAuth(undefined, 'sign-in')} className="uber-button-outline">
-              Log in
+              Sign in
             </button>
           </div>
         </div>
