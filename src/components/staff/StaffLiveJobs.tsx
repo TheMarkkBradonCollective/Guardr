@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { DISPATCH_STATUS_LABEL, getDispatchStatus } from '../../lib/staffOps';
+import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { useDevice } from '../../lib/platform';
-import { AlertTriangle, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface StaffLiveJobsProps {
   requests: SecurityRequest[];
@@ -23,8 +23,8 @@ function JobDetailPanel({
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
 }) {
-  const dispatch = getDispatchStatus(req);
-  const statusCfg = DISPATCH_STATUS_LABEL[dispatch];
+  const jobStatus = getLiveJobStatus(req);
+  const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
 
   return (
@@ -63,11 +63,6 @@ function JobDetailPanel({
         <button type="button" onClick={() => alert('Backup guard added to job.')} className="staff-ops-btn-outline text-[10px]">
           Add Backup
         </button>
-        {dispatch === 'incident-flagged' && (
-          <button type="button" onClick={() => alert('Incident escalated to supervisor.')} className="staff-ops-btn-danger text-[10px]">
-            <AlertTriangle className="w-3 h-3" /> Escalate
-          </button>
-        )}
         {req.status !== 'completed' && (
           <button type="button" onClick={() => onDenyRequest(req.id)} className="staff-ops-btn-danger text-[10px]">
             <X className="w-3 h-3" /> Cancel
@@ -98,7 +93,7 @@ export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyReques
     <div className="space-y-6 max-w-6xl animate-fade-in">
       <div>
         <h1 className="text-2xl font-black">Live Jobs</h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">Dispatch view — monitor and control job flow</p>
+        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">Monitor and manage active job flow</p>
       </div>
 
       <div className="relative max-w-md">
@@ -118,8 +113,8 @@ export function StaffLiveJobs({ requests, guards, onApproveRequest, onDenyReques
         <div className="tablet-split-panel">
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.map((req) => {
-              const dispatch = getDispatchStatus(req);
-              const statusCfg = DISPATCH_STATUS_LABEL[dispatch];
+              const jobStatus = getLiveJobStatus(req);
+              const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
               const isActive = selected?.id === req.id;
               return (
                 <button
