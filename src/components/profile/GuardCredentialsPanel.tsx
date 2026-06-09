@@ -7,6 +7,8 @@ import {
   getCertsByCategory,
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
+import { isThirtyTwoHourCatalogId } from '../../lib/guardQualification';
+import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
@@ -28,7 +30,7 @@ const CREDENTIAL_SECTIONS: {
     category: 'bsis-training',
     title: 'BSIS Training',
     subtitle:
-      '8-hour PTA/UOF (2-part) and other BSIS training. Use the 32-hour block section above for mandatory Level 2 courses.',
+      'Required for Level 2: 8-hour PTA/UOF (2-part) and the 32-hour course block below. Add any other BSIS training you hold.',
     icon: BookOpen,
   },
   {
@@ -149,16 +151,14 @@ export function GuardCredentialsPanel({
         </p>
       </div>
 
-      <GuardThirtyTwoHourPanel
-        guard={guard}
-        editing={editing}
-        onAddCertification={onAddCertification}
-        onDeleteCertification={onDeleteCertification}
-      />
-
       {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
-        const items = grouped[category] ?? [];
-        const catalogOptions = getCertsByCategory(category);
+        const items = (grouped[category] ?? []).filter((cert) => {
+          if (category !== 'bsis-training') return true;
+          return !isThirtyTwoHourCatalogId(resolveCertCatalogId(cert));
+        });
+        const catalogOptions = getCertsByCategory(category).filter(
+          (opt) => category !== 'bsis-training' || !isThirtyTwoHourCatalogId(opt.id)
+        );
         const isOpen = openSection === category;
 
         return (
@@ -184,6 +184,16 @@ export function GuardCredentialsPanel({
                 </button>
               )}
             </div>
+
+            {category === 'bsis-training' && (
+              <GuardThirtyTwoHourPanel
+                guard={guard}
+                editing={editing}
+                nested
+                onAddCertification={onAddCertification}
+                onDeleteCertification={onDeleteCertification}
+              />
+            )}
 
             {isOpen && editing && (
               <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
@@ -248,10 +258,17 @@ export function GuardCredentialsPanel({
             )}
 
             <div className="space-y-2">
-              {items.length === 0 ? (
-                <p className="text-xs text-brand-text-muted text-center py-3">
-                  No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
+              {category === 'bsis-training' && items.length > 0 && (
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted pt-2 border-t border-brand-border">
+                  Other BSIS training
                 </p>
+              )}
+              {items.length === 0 ? (
+                category !== 'bsis-training' ? (
+                  <p className="text-xs text-brand-text-muted text-center py-3">
+                    No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
+                  </p>
+                ) : null
               ) : (
                 items.map((cert) => (
                   <CredentialRow

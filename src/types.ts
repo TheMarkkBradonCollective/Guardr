@@ -36,7 +36,6 @@ export type StaffRole = 'Director' | 'Administrator' | 'Moderator';
 export type CertCategory =
   | 'guard-card'
   | 'bsis-required'
-  | 'bsis-32-hour'
   | 'bsis-training'
   | 'bsis-permit'
   | 'medical'

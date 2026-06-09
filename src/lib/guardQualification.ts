@@ -64,6 +64,14 @@ export function getThirtyTwoHourRollupCatalogEntries() {
   );
 }
 
+export function isThirtyTwoHourCatalogId(catalogId: string | undefined): boolean {
+  if (!catalogId) return false;
+  return (
+    (THIRTY_TWO_HOUR_COURSE_IDS as readonly string[]).includes(catalogId) ||
+    (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(catalogId)
+  );
+}
+
 export function isRequiredPathwayCredential(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
   return getRequiredPathwayCatalogIds().includes(catalogId);

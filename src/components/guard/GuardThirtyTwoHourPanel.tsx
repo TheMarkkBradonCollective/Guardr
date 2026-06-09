@@ -16,6 +16,7 @@ import { BookOpen, Check, ImagePlus, Plus, Trash2 } from 'lucide-react';
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
+  nested?: boolean;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
   onDeleteCertification?: (certId: string) => void | Promise<void>;
 }
@@ -30,6 +31,7 @@ function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certificati
 export function GuardThirtyTwoHourPanel({
   guard,
   editing,
+  nested = false,
   onAddCertification,
   onDeleteCertification,
 }: GuardThirtyTwoHourPanelProps) {
@@ -111,10 +113,10 @@ export function GuardThirtyTwoHourPanel({
   };
 
   return (
-    <section className="app-card space-y-4 border-brand-primary/20">
+    <section className={nested ? 'space-y-4 border-t border-brand-border pt-4' : 'app-card space-y-4 border-brand-primary/20'}>
       <div>
-        <p className="uber-label flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-brand-primary" />
+        <p className={`${nested ? 'text-sm font-semibold' : 'uber-label'} flex items-center gap-2`}>
+          {!nested && <BookOpen className="w-4 h-4 text-brand-primary" />}
           32-Hour BSIS Course Block
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
