@@ -43,7 +43,7 @@ export function staffSectionToShiftTab(section: StaffShiftSection): GuardShiftTa
   }
 }
 
-export type DispatchJobStatus =
+export type LiveJobStatus =
   | 'pending-assignment'
   | 'active'
   | 'in-progress'
@@ -95,7 +95,7 @@ export interface OpsDispute {
   openedAt: string;
 }
 
-export function getDispatchStatus(req: SecurityRequest): DispatchJobStatus {
+export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
   if (req.checkOutAudit?.incidentReport?.hasIncident && req.status === 'in-progress') {
     return 'incident-flagged';
   }
@@ -105,7 +105,7 @@ export function getDispatchStatus(req: SecurityRequest): DispatchJobStatus {
   return 'pending-assignment';
 }
 
-export const DISPATCH_STATUS_LABEL: Record<DispatchJobStatus, { emoji: string; label: string; className: string }> = {
+export const LIVE_JOB_STATUS_LABEL: Record<LiveJobStatus, { emoji: string; label: string; className: string }> = {
   'pending-assignment': { emoji: '🟡', label: 'Pending Assignment', className: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
   active: { emoji: '🟢', label: 'Active', className: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
   'in-progress': { emoji: '🔵', label: 'In Progress', className: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },

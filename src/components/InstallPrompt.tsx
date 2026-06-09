@@ -126,7 +126,7 @@ export function InstallPrompt() {
                   Install Guardr App
                 </h4>
                 <p className="text-xs text-neutral-400 leading-snug">
-                  Get faster dispatch updates, active field-tracking tools &amp; instant local notification coverage from your home screen.
+                  Get faster job updates, active field-tracking tools &amp; instant local notification coverage from your home screen.
                 </p>
               </div>
             </div>
