@@ -13,6 +13,16 @@ import {
   GUARD_STATUS_LABELS,
 } from './guardQualification';
 
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  event: 'Event security',
+  patrol: 'Patrol',
+  'armed-escort': 'Armed escort',
+  bodyguard: 'Bodyguard / close protection',
+  'asset-protection': 'Asset protection',
+  'long-term': 'Long-term post',
+  other: 'Other',
+};
+
 export const JOB_CATEGORIES = [
   { id: 'event', label: 'Event Security' },
   { id: 'construction', label: 'Construction Security' },
