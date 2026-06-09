@@ -176,6 +176,13 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
   { id: 'loss-prevention', name: 'Loss Prevention Certification', shortLabel: 'Loss Prev.', category: 'security-advanced' },
 
   // ── Industry ──
+  {
+    id: 'other-credential',
+    name: 'Other license, certificate, or training',
+    shortLabel: 'Other',
+    category: 'industry',
+    description: 'Any credential not listed — you will enter the certificate name when uploading.',
+  },
   { id: 'osha-10', name: 'OSHA 10-Hour General Industry', shortLabel: 'OSHA-10', category: 'industry' },
   { id: 'osha-30', name: 'OSHA 30-Hour General Industry', shortLabel: 'OSHA-30', category: 'industry' },
   { id: 'cit', name: 'Crisis Intervention Training (CIT)', shortLabel: 'CIT', category: 'industry' },

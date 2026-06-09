@@ -40,6 +40,23 @@ export const CORE_BIS_TRAINING_COURSE_IDS = THIRTY_TWO_HOUR_COURSE_IDS;
 const LEGACY_PTA_ID = 'bsis-power-to-arrest';
 const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
 
+/** Catalog IDs that count toward Level 1/2 only — not shown as supplemental badges. */
+export function getRequiredPathwayCatalogIds(): readonly string[] {
+  return [
+    'bsis-guard-card',
+    BSIS_PTA_UOF_COMBINED_ID,
+    LEGACY_PTA_ID,
+    LEGACY_UOF_ID,
+    ...THIRTY_TWO_HOUR_ROLLUP_IDS,
+    ...THIRTY_TWO_HOUR_COURSE_IDS,
+  ];
+}
+
+export function isRequiredPathwayCredential(catalogId: string | undefined): boolean {
+  if (!catalogId) return false;
+  return getRequiredPathwayCatalogIds().includes(catalogId);
+}
+
 function isCertNotExpired(cert: Certification): boolean {
   if (!cert.expiryDate) return true;
   const expiry = new Date(cert.expiryDate);

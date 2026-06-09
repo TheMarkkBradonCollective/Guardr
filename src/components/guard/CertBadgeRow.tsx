@@ -1,6 +1,6 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
-import { getVerifiedProfileBadges } from '../../lib/certMatching';
+import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 import { getQualificationProgress, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 import { getVerifiedLicensedStates } from '../../lib/guardLicenses';
 import { formatStateName } from '../../lib/states';
@@ -13,7 +13,7 @@ interface CertBadgeRowProps {
 }
 
 export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: CertBadgeRowProps) {
-  const badges = getVerifiedProfileBadges(guard);
+  const supplemental = getSupplementalCredentialsOnFile(guard);
   const licensedStates = getVerifiedLicensedStates(guard);
   const progress = getQualificationProgress(guard, jobState);
 
@@ -33,7 +33,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
     },
   ];
 
-  if (progress.level === 'none' && licensedStates.length === 0 && badges.length === 0 && !showCaBaseline) {
+  if (progress.level === 'none' && licensedStates.length === 0 && supplemental.length === 0 && !showCaBaseline) {
     return null;
   }
 
@@ -84,17 +84,26 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
         </div>
       )}
 
-      {badges.length > 0 && (
+      {supplemental.length > 0 && (
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Additional qualifications</p>
           <div className="flex flex-wrap gap-1.5">
-            {badges.map(({ catalogId, shortLabel }) => (
+            {supplemental.map(({ id, label, verified }) => (
               <span
-                key={catalogId}
-                className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                key={id}
+                className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
+                  verified
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : 'bg-brand-primary/15 text-brand-primary border-brand-primary/30'
+                }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                {shortLabel} · Guardr verified
+                {verified ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                ) : (
+                  <Check className="w-3 h-3" />
+                )}
+                {label}
+                {verified ? ' · Guardr verified' : ' (on file)'}
               </span>
             ))}
           </div>

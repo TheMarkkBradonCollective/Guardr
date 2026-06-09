@@ -27,7 +27,7 @@ const CREDENTIAL_SECTIONS: {
     category: 'bsis-training',
     title: 'BSIS Training',
     subtitle:
-      'Level 2 (Active): 8-hour PTA/UOF (2-part) plus the 32-hour course block — or upload each course individually. Guard card is separate.',
+      'Required for Level 2: 8-hour PTA/UOF (2-part) and the 32-hour block. You can also add any other BSIS or training certs you hold — more is better for clients.',
     icon: BookOpen,
   },
   {
@@ -57,7 +57,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'industry',
     title: 'Industry & Professional',
-    subtitle: 'OSHA, CIT, mental health first aid, and other professional development.',
+    subtitle: 'OSHA, CIT, mental health first aid, other licenses — or use Other to add anything not listed.',
     icon: Award,
   },
 ];
@@ -84,9 +84,11 @@ export function GuardCredentialsPanel({
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [customCertName, setCustomCertName] = useState('');
 
   const resetForm = () => {
     setSelectedCatalogId('');
+    setCustomCertName('');
     setIssuer('');
     setNumber('');
     setState('CA');
@@ -110,11 +112,13 @@ export function GuardCredentialsPanel({
     const entry = getCertCatalogEntry(selectedCatalogId);
     if (!entry) return;
     if (entry.requiresState && !state) return;
+    const isOther = selectedCatalogId === 'other-credential';
+    if (isOther && !customCertName.trim()) return;
 
     await onAddCertification({
       catalogId: entry.id,
       category: entry.category,
-      name: entry.name,
+      name: isOther ? customCertName.trim() : entry.name,
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
@@ -139,8 +143,8 @@ export function GuardCredentialsPanel({
       <div className="app-card bg-brand-primary/5 border-brand-primary/20">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Upload required BSIS documents to qualify for jobs. Guardr staff may verify uploads — that badge helps clients
-          trust your profile but is not required to accept work. Credentials cannot be edited; delete and re-upload to change details.
+          Upload credentials for the Level 1/2 pathway, then add any others you hold — permits, medical, extra training,
+          and more. Guardr verification is a trust badge for clients, not required to accept work. Delete and re-upload to change details.
         </p>
       </div>
 
@@ -187,6 +191,15 @@ export function GuardCredentialsPanel({
                     </option>
                   ))}
                 </select>
+                {selectedCatalogId === 'other-credential' && (
+                  <input
+                    className="uber-input w-full"
+                    placeholder="Certificate or license name"
+                    value={customCertName}
+                    onChange={(e) => setCustomCertName(e.target.value)}
+                    required
+                  />
+                )}
                 {getCertCatalogEntry(selectedCatalogId)?.requiresState && (
                   <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
                     {US_STATES.map(({ code, name }) => (

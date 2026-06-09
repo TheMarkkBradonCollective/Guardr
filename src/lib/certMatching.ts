@@ -5,7 +5,11 @@ import {
   resolveCertCatalogId,
 } from './certCatalog';
 import { guardCanWorkInState } from './guardLicenses';
-import { guardHasCredentialOnFile, guardMeetsLevel2Training } from './guardQualification';
+import {
+  guardHasCredentialOnFile,
+  guardMeetsLevel2Training,
+  isRequiredPathwayCredential,
+} from './guardQualification';
 
 export function guardHasVerifiedCert(
   guard: SecurityGuard,
@@ -86,6 +90,47 @@ export function groupGuardCertsByCategory(guard: SecurityGuard): Record<string, 
     groups[category].push(cert);
   }
   return groups;
+}
+
+export interface SupplementalCredentialBadge {
+  id: string;
+  catalogId?: string;
+  label: string;
+  verified: boolean;
+}
+
+/** Optional credentials beyond the Level 1/2 pathway — permits, medical, extra training, custom uploads. */
+export function getSupplementalCredentialsOnFile(guard: SecurityGuard): SupplementalCredentialBadge[] {
+  const seenCatalog = new Set<string>();
+  const badges: SupplementalCredentialBadge[] = [];
+
+  for (const cert of guard.certifications) {
+    if (cert.status === 'rejected') continue;
+    const catalogId = resolveCertCatalogId(cert);
+    if (isRequiredPathwayCredential(catalogId)) continue;
+
+    if (!catalogId || catalogId === 'other-credential') {
+      badges.push({
+        id: cert.id,
+        catalogId,
+        label: cert.name,
+        verified: cert.status === 'verified',
+      });
+      continue;
+    }
+
+    if (seenCatalog.has(catalogId)) continue;
+    seenCatalog.add(catalogId);
+    const entry = getCertCatalogEntry(catalogId);
+    badges.push({
+      id: cert.id,
+      catalogId,
+      label: entry?.shortLabel ?? cert.name,
+      verified: cert.status === 'verified',
+    });
+  }
+
+  return badges;
 }
 
 export function getVerifiedProfileBadges(guard: SecurityGuard): { catalogId: string; shortLabel: string }[] {

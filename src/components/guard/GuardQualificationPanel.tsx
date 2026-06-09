@@ -2,13 +2,11 @@ import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
   getQualificationProgress,
-  guardHasCredentialOnFile,
-  guardHasGuardrVerifiedCredential,
   QUALIFICATION_LEVEL_DESCRIPTIONS,
   QUALIFICATION_LEVEL_LABELS,
   THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
-import { getCertCatalogEntry } from '../../lib/certCatalog';
+import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 import { Check, Shield } from 'lucide-react';
 
 interface GuardQualificationPanelProps {
@@ -103,7 +101,7 @@ export function QualificationBadgeList({ guard, state = 'CA' }: GuardQualificati
       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary">
         {QUALIFICATION_LEVEL_LABELS[progress.level]}
       </span>
-      {OPTIONAL_BADGES(guard).map((badge) => (
+      {getSupplementalCredentialsOnFile(guard).map((badge) => (
         <span
           key={badge.id}
           className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
@@ -119,16 +117,4 @@ export function QualificationBadgeList({ guard, state = 'CA' }: GuardQualificati
       ))}
     </div>
   );
-}
-
-function OPTIONAL_BADGES(guard: SecurityGuard) {
-  const ids = ['bsis-exposed-firearm', 'bsis-baton', 'bsis-chemical-agent', 'cpr', 'first-aid'] as const;
-
-  return ids
-    .filter((id) => guardHasCredentialOnFile(guard, id))
-    .map((id) => ({
-      id,
-      label: getCertCatalogEntry(id)?.shortLabel ?? id,
-      verified: guardHasGuardrVerifiedCredential(guard, id),
-    }));
 }
