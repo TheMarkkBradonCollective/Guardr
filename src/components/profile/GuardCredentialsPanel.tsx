@@ -33,7 +33,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'guard-card',
     title: 'BSIS Guard Card',
-    subtitle: 'State license — upload a valid card to reach Level 1. Guardr verification is a trust badge for clients.',
+    subtitle: 'State license — upload a valid card to move from Inactive toward Active. Guardr verification is a trust badge for clients.',
     icon: Shield,
   },
   {
@@ -190,7 +190,7 @@ export function GuardCredentialsPanel({
       <div className="app-card bg-brand-primary/5 border-brand-primary/20">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Upload credentials for the Level 1/2 pathway, then add any others you hold — permits, medical, extra training,
+          Upload credentials for the Inactive→Active pathway, then add any others you hold — permits, medical, extra training,
           and more. Guardr verification is a trust badge for clients, not required to accept work. Delete and re-upload to change details.
         </p>
       </div>
@@ -318,7 +318,7 @@ export function GuardCredentialsPanel({
                     Power to Arrest &amp; Appropriate Use of Force
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                    Required for Level 2 (Active). As of 2024, upload the combined 8-hour, 2-part course
+                    Required for Active status. As of 2024, upload the combined 8-hour, 2-part course
                     certificate — or both legacy separate PTA and UOF certs if you have those.
                   </p>
                   <p
@@ -504,7 +504,7 @@ export function GuardCredentialsPanel({
                     Other BSIS Training
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1">
-                    Supplemental BSIS courses — not part of the Level 2 pathway or 32-hour block.
+                    Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
                   </p>
                 </div>
                 {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (

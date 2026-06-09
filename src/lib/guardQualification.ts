@@ -3,15 +3,44 @@ import { getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
 
-export const QUALIFICATION_LEVEL_LABELS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: 'Level 1 – Pending',
-  active: 'Level 2 – Active',
+/** Credential pathway + account state shown in the UI */
+export type GuardDisplayStatus = 'inactive' | 'active' | 'suspended' | 'blocked';
+
+export const GUARD_STATUS_LABELS: Record<GuardDisplayStatus, string> = {
+  inactive: 'Inactive',
+  active: 'Active',
+  suspended: 'Suspended',
+  blocked: 'Blocked',
 };
 
-export const QUALIFICATION_LEVEL_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
+/** Credential pathway tiers — maps to Inactive / Active (replaces Level 1 / Level 2). */
+export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
+  pending: GUARD_STATUS_LABELS.inactive,
+  active: GUARD_STATUS_LABELS.active,
+};
+
+export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Valid BSIS Guard Card on file',
   active: 'Guard Card + 8-hr PTA/UOF (2-part) + 32-hour BSIS course block',
 };
+
+/** @deprecated Use GUARD_PATHWAY_STATUS_LABELS */
+export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
+
+/** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
+export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
+
+export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
+  const userStatus = guard.userStatus || 'active';
+  if (userStatus === 'suspended') return 'suspended';
+  if (userStatus === 'blocked') return 'blocked';
+  return getGuardQualificationLevel(guard, state) === 'active' ? 'active' : 'inactive';
+}
+
+export function guardPathwayStatusLabel(level: GuardQualificationLevel): string {
+  if (level === 'none') return GUARD_STATUS_LABELS.inactive;
+  return GUARD_PATHWAY_STATUS_LABELS[level];
+}
 
 /**
  * As of 2024, BSIS requires one combined 8-hour, 2-part course covering
@@ -40,7 +69,7 @@ export const CORE_BIS_TRAINING_COURSE_IDS = THIRTY_TWO_HOUR_COURSE_IDS;
 const LEGACY_PTA_ID = 'bsis-power-to-arrest';
 const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
 
-/** Catalog IDs that count toward Level 1/2 only — not shown as supplemental badges. */
+/** Catalog IDs on the Inactive→Active pathway — not shown as supplemental badges. */
 export function getRequiredPathwayCatalogIds(): readonly string[] {
   return [
     'bsis-guard-card',
@@ -167,7 +196,7 @@ export function guardHasGuardrVerifiedCredential(
   });
 }
 
-/** Guard card uploaded but past expiry — blocks Level 1. */
+/** Guard card uploaded but past expiry — keeps guard Inactive. */
 export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'): boolean {
   const state = jobState || 'CA';
   return (
@@ -197,7 +226,7 @@ export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
   return guardMeets32HourBlock(guard);
 }
 
-/** Full Level 2 training — guard card is separate (Level 1). */
+/** Full Active training — guard card is separate (Inactive pathway). */
 export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
   return guardMeetsPtaUofTraining(guard) && guardMeets32HourBlock(guard);
 }

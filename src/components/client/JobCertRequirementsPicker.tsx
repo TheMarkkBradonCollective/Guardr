@@ -1,6 +1,10 @@
 import React from 'react';
 import { JOB_CERT_FILTER_OPTIONS } from '../../lib/certCatalog';
-import { QUALIFICATION_LEVEL_DESCRIPTIONS, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import {
+  GUARD_PATHWAY_STATUS_DESCRIPTIONS,
+  GUARD_PATHWAY_STATUS_LABELS,
+  GUARD_STATUS_LABELS,
+} from '../../lib/guardQualification';
 import { MinGuardQualification } from '../../types';
 import { Check } from 'lucide-react';
 
@@ -39,13 +43,15 @@ export function JobCertRequirementsPicker({
 
       <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 p-3 text-sm">
         <span className="font-semibold text-brand-primary">Always required:</span> Valid BSIS Guard Card uploaded for{' '}
-        {jobState ? `${jobState} ` : ''}jobs (Level 1). Guardr verification is shown to clients as a trust badge.
+        {jobState ? `${jobState} ` : ''}jobs ({GUARD_STATUS_LABELS.inactive} minimum). Guardr verification is shown to
+        clients as a trust badge.
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold">Minimum guard qualification</p>
+        <p className="text-sm font-semibold">Minimum guard status</p>
         <p className="text-xs text-brand-text-muted">
-          Choose whether guards with only a guard card (Level 1) can accept, or require full BSIS training including the 32-hour block (Level 2).
+          Choose whether guards with only a guard card ({GUARD_STATUS_LABELS.inactive}) can accept, or require full BSIS
+          training including the 32-hour block ({GUARD_STATUS_LABELS.active}).
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {
@@ -61,8 +67,8 @@ export function JobCertRequirementsPicker({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-sm">{QUALIFICATION_LEVEL_LABELS[level]}</p>
-                    <p className="text-xs text-brand-text-muted mt-1">{QUALIFICATION_LEVEL_DESCRIPTIONS[level]}</p>
+                    <p className="font-semibold text-sm">{GUARD_PATHWAY_STATUS_LABELS[level]}</p>
+                    <p className="text-xs text-brand-text-muted mt-1">{GUARD_PATHWAY_STATUS_DESCRIPTIONS[level]}</p>
                   </div>
                   {active && <Check className="w-5 h-5 text-brand-primary shrink-0" />}
                 </div>

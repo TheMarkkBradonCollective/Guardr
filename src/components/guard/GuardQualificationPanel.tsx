@@ -2,8 +2,9 @@ import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
   getQualificationProgress,
-  QUALIFICATION_LEVEL_DESCRIPTIONS,
-  QUALIFICATION_LEVEL_LABELS,
+  GUARD_PATHWAY_STATUS_DESCRIPTIONS,
+  GUARD_STATUS_LABELS,
+  guardPathwayStatusLabel,
   THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
@@ -61,17 +62,15 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
         <div>
           <p className="uber-label flex items-center gap-2">
             <Shield className="w-4 h-4 text-brand-primary" />
-            Work qualification
+            Guard status
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
             Upload required credentials to accept jobs. Guardr verification is a trust badge for clients — not required
-            to reach each level.
+            to become Active.
           </p>
         </div>
         <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${levelBadge}`}>
-          {progress.level === 'none'
-            ? 'Not qualified'
-            : QUALIFICATION_LEVEL_LABELS[progress.level]}
+          {guardPathwayStatusLabel(progress.level)}
         </span>
       </div>
 
@@ -101,8 +100,8 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
       </div>
 
       <p className="text-[11px] text-brand-text-muted border-t border-brand-border pt-3">
-        <strong>Level 1:</strong> {QUALIFICATION_LEVEL_DESCRIPTIONS.pending}.{' '}
-        <strong>Level 2:</strong> {QUALIFICATION_LEVEL_DESCRIPTIONS.active}.
+        <strong>{GUARD_STATUS_LABELS.inactive}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}.{' '}
+        <strong>{GUARD_STATUS_LABELS.active}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}.
       </p>
     </div>
   );
@@ -115,7 +114,7 @@ export function QualificationBadgeList({ guard, state = 'CA' }: GuardQualificati
   return (
     <div className="flex flex-wrap gap-1.5">
       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary">
-        {QUALIFICATION_LEVEL_LABELS[progress.level]}
+        {guardPathwayStatusLabel(progress.level)}
       </span>
       {getSupplementalCredentialsOnFile(guard).map((badge) => (
         <span

@@ -21,7 +21,7 @@ export interface GuardWorkHistoryItem {
   reviewText?: string;
 }
 
-/** Guards with at least Level 1 credentials on file — available for clients to browse and hire */
+/** Guards with at least Inactive-pathway credentials on file — available for clients to browse and hire */
 export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
   return guards
     .filter(

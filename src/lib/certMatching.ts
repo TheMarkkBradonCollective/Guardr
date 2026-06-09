@@ -99,7 +99,7 @@ export interface SupplementalCredentialBadge {
   verified: boolean;
 }
 
-/** Optional credentials beyond the Level 1/2 pathway — permits, medical, extra training, custom uploads. */
+/** Optional credentials beyond the Inactive→Active pathway — permits, medical, extra training, custom uploads. */
 export function getSupplementalCredentialsOnFile(guard: SecurityGuard): SupplementalCredentialBadge[] {
   const seenCatalog = new Set<string>();
   const badges: SupplementalCredentialBadge[] = [];

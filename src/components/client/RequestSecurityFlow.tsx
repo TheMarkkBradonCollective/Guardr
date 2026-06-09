@@ -15,7 +15,7 @@ import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
-import { QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -375,8 +375,8 @@ export function RequestSecurityFlow({
                 <span className="font-bold">${effectiveRate}/hr</span>
               </div>
               <div className="flex justify-between text-sm border-t border-brand-border pt-3">
-                <span className="text-brand-text-muted">Min qualification</span>
-                <span className="font-bold text-right max-w-[60%]">{QUALIFICATION_LEVEL_LABELS[minGuardQualification]}</span>
+                <span className="text-brand-text-muted">Min guard status</span>
+                <span className="font-bold text-right max-w-[60%]">{GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]}</span>
               </div>
               <div className="text-sm">
                 <span className="text-brand-text-muted">Additional credentials</span>

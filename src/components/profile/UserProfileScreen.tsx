@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
-import { getGuardQualificationLevel, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { LogOut, Save, User } from 'lucide-react';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
@@ -158,13 +158,9 @@ export function UserProfileScreen({
         )}
         {guard && (
           <div className="flex justify-between text-sm py-2 border-t border-brand-border">
-            <span className="text-brand-text-muted">Qualification</span>
+            <span className="text-brand-text-muted">Guard status</span>
             <span className="font-medium text-brand-primary">
-              {(() => {
-                const level = getGuardQualificationLevel(guard);
-                if (level === 'none') return 'Upload credentials to qualify';
-                return QUALIFICATION_LEVEL_LABELS[level];
-              })()}
+              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}
             </span>
           </div>
         )}

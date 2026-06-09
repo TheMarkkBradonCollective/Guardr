@@ -1,7 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
-import { getQualificationProgress, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import { getQualificationProgress, guardPathwayStatusLabel } from '../../lib/guardQualification';
 import { getVerifiedLicensedStates } from '../../lib/guardLicenses';
 import { formatStateName } from '../../lib/states';
 import { Check, Shield } from 'lucide-react';
@@ -48,7 +48,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       {progress.level !== 'none' && (
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary bg-brand-primary/15 border border-brand-primary/30 px-2.5 py-1 rounded-full">
           <Shield className="w-3.5 h-3.5" />
-          {QUALIFICATION_LEVEL_LABELS[progress.level]}
+          {guardPathwayStatusLabel(progress.level)}
         </span>
       )}
 

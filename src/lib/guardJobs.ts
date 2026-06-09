@@ -7,8 +7,8 @@ import { requirementLabel } from './certCatalog';
 import {
   guardHasCredentialOnFile,
   guardMeetsQualificationLevel,
-  QUALIFICATION_LEVEL_DESCRIPTIONS,
-  QUALIFICATION_LEVEL_LABELS,
+  GUARD_PATHWAY_STATUS_DESCRIPTIONS,
+  GUARD_PATHWAY_STATUS_LABELS,
 } from './guardQualification';
 
 export const JOB_CATEGORIES = [
@@ -74,14 +74,14 @@ export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest)
       met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     },
     {
-      label: QUALIFICATION_LEVEL_LABELS.pending,
+      label: GUARD_PATHWAY_STATUS_LABELS.pending,
       met: guardMeetsQualificationLevel(guard, 'pending', jobState),
     },
   ];
 
   if (minLevel === 'active') {
     checks.push({
-      label: QUALIFICATION_LEVEL_LABELS.active,
+      label: GUARD_PATHWAY_STATUS_LABELS.active,
       met: guardMeetsQualificationLevel(guard, 'active', jobState),
     });
   }
@@ -109,7 +109,7 @@ export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest)
 
 export function minQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
   const key = level ?? 'pending';
-  return `${QUALIFICATION_LEVEL_LABELS[key]} — ${QUALIFICATION_LEVEL_DESCRIPTIONS[key]}`;
+  return `${GUARD_PATHWAY_STATUS_LABELS[key]} — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS[key]}`;
 }
 
 /** Open jobs visible on a guard's map/list */

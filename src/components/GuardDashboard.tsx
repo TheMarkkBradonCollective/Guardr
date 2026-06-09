@@ -33,6 +33,7 @@ import {
 } from '../lib/guardJobs';
 import { computeGuardEarnings } from '../lib/payments';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
+import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
-import { getGuardQualificationLevel, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { Search, Shield } from 'lucide-react';
 
 type GuardFilter = 'field' | 'staff';
@@ -89,10 +89,20 @@ export function StaffGuardsPanel({
                           <Shield className="w-2.5 h-2.5" /> {guard.staffRole || 'Staff'}
                         </span>
                       ) : (() => {
-                        const level = getGuardQualificationLevel(guard);
+                        const status = getGuardDisplayStatus(guard);
                         return (
-                          <span className={`text-[9px] font-mono ${level === 'active' ? 'text-emerald-400' : level === 'pending' ? 'text-brand-primary' : 'text-amber-400'}`}>
-                            {level === 'none' ? 'No credentials' : QUALIFICATION_LEVEL_LABELS[level]}
+                          <span
+                            className={`text-[9px] font-mono ${
+                              status === 'active'
+                                ? 'text-emerald-400'
+                                : status === 'blocked'
+                                  ? 'text-red-400'
+                                  : status === 'suspended'
+                                    ? 'text-amber-400'
+                                    : 'text-brand-text-muted'
+                            }`}
+                          >
+                            {GUARD_STATUS_LABELS[status]}
                           </span>
                         );
                       })()}
@@ -107,7 +117,7 @@ export function StaffGuardsPanel({
                     </p>
                     {!guard.isStaff && (
                       <p className="text-[10px] font-mono text-brand-text-muted mt-1">
-                        Violations: {guard.failedAudits ?? 0}/3 · Status: {status}
+                        Violations: {guard.failedAudits ?? 0}/3 · Account: {GUARD_STATUS_LABELS[status]}
                       </p>
                     )}
                   </div>

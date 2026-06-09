@@ -15,7 +15,7 @@ import { ArrowLeft, ArrowRight, MapPin, Search, Shield } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
-import { QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
+import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -246,7 +246,7 @@ export function DirectGuardRequestFlow({
               <Row label="Location" value={address} />
               <Row label="Schedule" value={formatDuration(durationHours)} />
               <Row label="Rate" value={`$${effectiveRate}/hr`} />
-              <Row label="Min qualification" value={QUALIFICATION_LEVEL_LABELS[minGuardQualification]} />
+              <Row label="Min guard status" value={GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]} />
               <div>
                 <p className="text-brand-text-muted mb-1">Additional credentials</p>
                 <div className="flex flex-wrap gap-1">
