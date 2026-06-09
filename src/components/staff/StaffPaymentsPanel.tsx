@@ -1,12 +1,10 @@
 import React from 'react';
-import { ArrowRight, Banknote, CreditCard, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowRight, Banknote, CreditCard } from 'lucide-react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
-import { guardPayoutAmount } from '../../lib/cashPayments';
-import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { JobPaymentRow } from './JobPaymentRow';
 
 interface StaffPaymentsPanelProps {
@@ -102,13 +100,6 @@ export function StaffPaymentsPanel({
   onDepositCashToStripe,
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
-  const completed = requests.filter((r) => r.status === 'completed');
-  const completedClientBill = completed.reduce((sum, r) => sum + r.estimatedPayout, 0);
-  const completedGuardPay = completed.reduce((sum, r) => sum + guardPayoutAmount(r), 0);
-  const platformFees = completed.reduce(
-    (sum, r) => sum + (r.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * r.durationHours,
-    0
-  );
 
   const sectionProps = {
     guards,
@@ -197,31 +188,6 @@ export function StaffPaymentsPanel({
             No payment activity yet. Jobs appear here when clients post requests.
           </p>
         )}
-
-      <div className="staff-ops-card p-5 space-y-4">
-        <h2 className="text-sm font-black flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-brand-primary" />
-          Completed shift revenue
-        </h2>
-        <div className="border border-brand-primary/30 bg-brand-primary/8 rounded-xl p-5">
-          <p className="text-[10px] font-mono uppercase text-brand-text-muted flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Platform revenue
-          </p>
-          <p className="text-3xl font-black font-mono text-brand-primary mt-1">
-            ${Math.round(platformFees * 100) / 100}
-          </p>
-          <p className="text-sm font-mono text-brand-text-muted mt-2">
-            Client bill ${Math.round(completedClientBill * 100) / 100} · Guard pay $
-            {Math.round(completedGuardPay * 100) / 100}
-          </p>
-          <p className="text-[9px] font-mono text-brand-text-muted mt-1">${PLATFORM_FEE_PER_HOUR}/hr per shift</p>
-        </div>
-        {isDirector && (
-          <p className="text-[10px] font-mono text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-2">
-            Director only: record client cash, pay into Stripe with your card when ready, and record cash guard payouts.
-          </p>
-        )}
-      </div>
     </div>
   );
 }
