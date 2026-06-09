@@ -20,6 +20,7 @@ interface RoleAppShellProps {
   moreMenuTitle?: string;
   fullBleed?: boolean;
   hideHeader?: boolean;
+  flatNav?: boolean;
   variant?: 'default' | 'dark';
 }
 
@@ -40,6 +41,7 @@ export function RoleAppShell({
   moreMenuTitle = 'More',
   fullBleed = false,
   hideHeader = false,
+  flatNav = false,
   variant = 'default',
 }: RoleAppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -84,6 +86,7 @@ export function RoleAppShell({
         moreActive={moreActive}
         moreBadge={moreBadge}
         onMoreClick={() => setMoreOpen(true)}
+        flat={flatNav}
       />
 
       {hasOverflow && (

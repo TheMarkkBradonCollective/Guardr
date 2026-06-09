@@ -1,19 +1,8 @@
 import React from 'react';
-import {
-  Heart,
-  Smile,
-  Eye,
-  Stethoscope,
-  Baby,
-  Video,
-} from 'lucide-react';
-import { WfSearchBar, WfSectionHeader } from '../ui/wireframe';
+import { Heart, Smile, Eye, Stethoscope, Baby, Video } from 'lucide-react';
 import { HealthTopBar } from './HealthTopBar';
-import {
-  HEALTH_CATEGORIES,
-  MOCK_APPOINTMENTS,
-  MOCK_TRACKER_METRICS,
-} from './mockData';
+import { AppSection, InlineSearch } from './AppPrimitives';
+import { HEALTH_CATEGORIES, MOCK_APPOINTMENTS, MOCK_TRACKER_METRICS } from './mockData';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   cardiology: Heart,
@@ -49,75 +38,62 @@ export function PatientHomeScreen({
   };
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain pb-4">
+    <div className="app-screen pb-6">
       <HealthTopBar avatarUrl={avatarUrl} onAvatarClick={onProfileClick} />
 
-      <div className="px-4 space-y-6">
-        <WfSearchBar
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Find a doctor"
-          onFilterClick={() => {}}
-        />
+      <InlineSearch
+        value={searchQuery}
+        onChange={handleSearchChange}
+        placeholder="Find a doctor"
+        onFilterClick={() => {}}
+      />
 
-        <section>
-          <WfSectionHeader title="My Appointments" actionLabel="See all" onAction={onSeeAllAppointments} />
-          <div className="app-scroll-row mt-3">
-            {MOCK_APPOINTMENTS.map((appt) => (
-              <div key={appt.id} className="appointment-card">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <p className="font-semibold text-[0.9375rem]">{appt.doctorName}</p>
-                    <p className="text-sm text-brand-text-muted">{appt.specialty}</p>
-                  </div>
-                  {appt.videoEnabled && (
-                    <Video className="w-4 h-4 text-brand-text-muted shrink-0" strokeWidth={1.5} />
-                  )}
-                </div>
-                <p className="text-sm text-brand-text-muted">
-                  {appt.date} · {appt.time}
-                </p>
+      <AppSection title="My Appointments" actionLabel="See all" onAction={onSeeAllAppointments} bleed>
+        <div className="app-h-scroll">
+          {MOCK_APPOINTMENTS.map((appt) => (
+            <div key={appt.id} className="app-h-tile">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-semibold text-[0.9375rem] leading-snug">{appt.doctorName}</p>
+                {appt.videoEnabled && (
+                  <Video className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" strokeWidth={1.5} />
+                )}
               </div>
-            ))}
-          </div>
-        </section>
+              <p className="text-sm text-brand-text-muted">{appt.specialty}</p>
+              <p className="text-sm text-brand-text-muted mt-2">
+                {appt.date} · {appt.time}
+              </p>
+            </div>
+          ))}
+        </div>
+      </AppSection>
 
-        <section>
-          <WfSectionHeader title="Tracker" actionLabel="See all" onAction={onSeeAllTracker} />
-          <div className="app-scroll-row mt-3">
-            {MOCK_TRACKER_METRICS.map((metric) => (
-              <div key={metric.id} className="tracker-metric-card">
-                <p className="text-xs text-brand-text-muted mb-1">{metric.label}</p>
-                <p className="text-lg font-bold tracking-tight">
-                  {metric.value}
-                  {metric.unit && (
-                    <span className="text-xs font-medium text-brand-text-muted ml-0.5">
-                      {metric.unit}
-                    </span>
-                  )}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <AppSection title="Tracker" actionLabel="See all" onAction={onSeeAllTracker} bleed>
+        <div className="app-metric-strip">
+          {MOCK_TRACKER_METRICS.map((metric) => (
+            <div key={metric.id} className="app-metric-item">
+              <p className="app-metric-label">{metric.label}</p>
+              <p className="app-metric-value">{metric.value}</p>
+              {metric.unit && <span className="app-metric-unit">{metric.unit}</span>}
+            </div>
+          ))}
+        </div>
+      </AppSection>
 
-        <section>
-          <WfSectionHeader title="Categories" actionLabel="See all" onAction={onSeeAllCategories} />
-          <div className="app-scroll-row mt-3">
-            {HEALTH_CATEGORIES.map((cat) => {
-              const Icon = CATEGORY_ICONS[cat.id] ?? Stethoscope;
-              return (
-                <button key={cat.id} type="button" className="category-circle">
-                  <span className="category-circle-icon">
-                    <Icon className="w-5 h-5" strokeWidth={1.5} />
-                  </span>
-                  <span className="text-xs font-medium text-brand-text">{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      </div>
+      <AppSection title="Categories" actionLabel="See all" onAction={onSeeAllCategories} bleed>
+        <div className="app-category-row">
+          {HEALTH_CATEGORIES.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat.id] ?? Stethoscope;
+            return (
+              <button key={cat.id} type="button" className="app-category-item">
+                <span className="app-category-icon">
+                  <Icon className="w-5 h-5" strokeWidth={1.5} />
+                </span>
+                <span className="app-category-label">{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </AppSection>
     </div>
   );
 }

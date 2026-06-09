@@ -27,7 +27,7 @@ export function AppScreenHeader({
 
   return (
     <header
-      className={`app-screen-header shrink-0 z-[1002] px-4 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3 border-b border-brand-border bg-brand-surface/95 backdrop-blur-xl ${className}`}
+      className={`app-screen-header shrink-0 z-[1002] px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3 border-b border-brand-border bg-brand-bg ${className}`}
     >
       <div className="min-w-0 flex-1">
         {showLocation ? (

@@ -29,18 +29,12 @@ const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
+const SHELL_HEADER_VIEWS: ClientView[] = ['profile', 'support'];
+
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
-  home: 'Home',
-  message: 'Messages',
-  appointment: 'Appointments',
-  medication: 'Medication',
-  tracker: 'Tracker',
-  search: 'Find a doctor',
   profile: 'Profile',
   support: 'Support',
 };
-
-const CUSTOM_HEADER_VIEWS: ClientView[] = ['home', 'search', 'medication'];
 
 export function ClientAppLayout({
   children,
@@ -49,9 +43,8 @@ export function ClientAppLayout({
   activeView = 'home',
   onNavigate,
 }: ClientAppLayoutProps) {
-  const screenTitle = VIEW_TITLES[activeView] ?? 'Health';
-  const hideHeader = CUSTOM_HEADER_VIEWS.includes(activeView);
-  const fullBleed = hideHeader;
+  const showShellHeader = SHELL_HEADER_VIEWS.includes(activeView);
+  const screenTitle = VIEW_TITLES[activeView] ?? '';
 
   const moreFooter = (
     <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
@@ -72,8 +65,9 @@ export function ClientAppLayout({
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       moreMenuFooter={moreFooter}
       moreMenuTitle="Menu"
-      fullBleed={fullBleed}
-      hideHeader={hideHeader}
+      fullBleed
+      hideHeader={!showShellHeader}
+      flatNav
     >
       {children}
     </RoleAppShell>

@@ -1,23 +1,18 @@
 import React from 'react';
+import { AppList, AppListRow, AppScreen, AppScreenTitle, AvatarPlaceholder } from './AppPrimitives';
 import { MOCK_MESSAGES } from './mockData';
 
 export function MessageScreen() {
   return (
-    <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 pb-8">
-      <h1 className="text-2xl font-bold tracking-tight mb-4">Messages</h1>
-      <div className="space-y-2">
+    <AppScreen className="pb-8">
+      <AppScreenTitle>Messages</AppScreenTitle>
+      <AppList>
         {MOCK_MESSAGES.map((msg) => (
-          <button
-            key={msg.id}
-            type="button"
-            className="wf-list-card wf-list-card-interactive w-full !items-start"
-          >
-            <div className="w-11 h-11 rounded-full bg-brand-bg-sec shrink-0 flex items-center justify-center text-sm font-semibold text-brand-text-muted">
-              {msg.sender.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0 text-left">
+          <AppListRow key={msg.id} onClick={() => {}} className="app-list-row-align-top">
+            <AvatarPlaceholder name={msg.sender} />
+            <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p className={`font-semibold text-sm truncate ${msg.unread ? 'text-brand-text' : ''}`}>
+                <p className={`font-semibold text-sm truncate ${msg.unread ? '' : 'text-brand-text-muted'}`}>
                   {msg.sender}
                 </p>
                 <span className="text-xs text-brand-text-muted shrink-0">{msg.time}</span>
@@ -26,12 +21,10 @@ export function MessageScreen() {
                 {msg.preview}
               </p>
             </div>
-            {msg.unread && (
-              <span className="w-2 h-2 rounded-full bg-brand-primary shrink-0 mt-2" />
-            )}
-          </button>
+            {msg.unread && <span className="w-2 h-2 rounded-full bg-brand-text shrink-0 mt-2" />}
+          </AppListRow>
         ))}
-      </div>
-    </div>
+      </AppList>
+    </AppScreen>
   );
 }

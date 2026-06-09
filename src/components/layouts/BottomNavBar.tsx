@@ -16,6 +16,7 @@ interface BottomNavBarProps {
   moreActive?: boolean;
   moreBadge?: number;
   onMoreClick?: () => void;
+  flat?: boolean;
 }
 
 export function BottomNavBar({
@@ -26,12 +27,15 @@ export function BottomNavBar({
   moreActive = false,
   moreBadge = 0,
   onMoreClick,
+  flat = false,
 }: BottomNavBarProps) {
   const slots = showMore ? items.slice(0, 4) : items.slice(0, 5);
 
   return (
     <nav
-      className="bottom-nav-bar shrink-0 z-[1001] border-t border-brand-border bg-brand-surface/95 backdrop-blur-xl"
+      className={`bottom-nav-bar shrink-0 z-[1001] border-t border-brand-border ${
+        flat ? 'bg-brand-bg' : 'bg-brand-surface/95 backdrop-blur-xl'
+      }`}
       aria-label="Main navigation"
     >
       <div className="bottom-nav-inner flex items-stretch justify-around max-w-lg mx-auto">
