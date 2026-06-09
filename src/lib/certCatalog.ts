@@ -225,31 +225,57 @@ export function getCertsByCategory(category: CertCategory): CertCatalogEntry[] {
   return CERT_CATALOG.filter((e) => e.category === category);
 }
 
+/** Match certs to catalog IDs by stored catalog_id, exact name, or training-provider aliases. */
 export function resolveCertCatalogId(cert: { catalogId?: string; name: string }): string | undefined {
-  if (cert.catalogId && CATALOG_BY_ID.has(cert.catalogId)) return cert.catalogId;
-  const byName = CERT_CATALOG.find(
-    (e) => e.name.toLowerCase() === cert.name.toLowerCase() || cert.name.toLowerCase().includes(e.id.replace(/-/g, ' '))
-  );
-  if (byName) return byName.id;
-  // Legacy name patterns
-  if (/guard card/i.test(cert.name)) return 'bsis-guard-card';
-  if (/firearm|armed/i.test(cert.name) && /permit|bsis/i.test(cert.name)) return 'bsis-exposed-firearm';
-  if (/baton/i.test(cert.name)) return 'bsis-baton';
-  if (/pepper|chemical|oc spray/i.test(cert.name)) return 'bsis-chemical-agent';
-  if (/cpr/i.test(cert.name)) return 'cpr';
-  if (/first aid/i.test(cert.name)) return 'first-aid';
-  if (/aed/i.test(cert.name)) return 'aed';
-  if (/32.?hour|32.?hr/i.test(cert.name) && /bsis|training/i.test(cert.name)) return 'bsis-32-hour-completed';
-  if (/40.?hour|40.?hr/i.test(cert.name) && /bsis|training/i.test(cert.name)) return 'bsis-40-hour-completed';
-  if (/power to arrest/i.test(cert.name) && /use of force|appropriate use/i.test(cert.name)) {
-    return 'bsis-pta-uof-8hr';
+  const storedId = cert.catalogId?.trim();
+  if (storedId && CATALOG_BY_ID.has(storedId)) return storedId;
+
+  const name = cert.name.trim();
+  const normalized = name.toLowerCase();
+
+  const exactName = CERT_CATALOG.find((e) => e.name.toLowerCase() === normalized);
+  if (exactName) return exactName.id;
+
+  const aliases: [RegExp, string][] = [
+    [/power to arrest.*(wmd|weapons of mass destruction|mass destruction)/i, 'bsis-pta-uof-8hr'],
+    [/power to arrest.*(use of force|appropriate use of force)/i, 'bsis-pta-uof-8hr'],
+    [/communication/i, 'bsis-communication'],
+    [/public relations/i, 'bsis-public-relations'],
+    [/observation.*documentation|documentation.*observation/i, 'bsis-observation-documentation'],
+    [/liability|legal aspects/i, 'bsis-liability-legal'],
+    [/officer safety/i, 'bsis-officer-safety'],
+    [/trespass/i, 'bsis-trespass'],
+    [/evacuation/i, 'bsis-evacuation-procedures'],
+    [/crowd control|monitoring crowd/i, 'bsis-monitoring-crowd-control'],
+    [/arrest.*search|search.*seizure/i, 'bsis-arrest-search-seizure'],
+    [/parking.*traffic|traffic control/i, 'bsis-traffic-control'],
+    [/chemical agents/i, 'bsis-chemical-agent'],
+    [/annual refresher|bsis refresher|8[- ]?hr.*refresher/i, 'bsis-8-hour-refresher'],
+    [/guard card/i, 'bsis-guard-card'],
+  ];
+
+  for (const [pattern, id] of aliases) {
+    if (pattern.test(name)) return id;
   }
-  if (/power to arrest/i.test(cert.name)) return 'bsis-power-to-arrest';
-  if (/use of force|appropriate use of force/i.test(cert.name)) return 'bsis-appropriate-use-of-force';
-  if (/monitoring crowd/i.test(cert.name)) return 'bsis-monitoring-crowd-control';
-  if (/trespass/i.test(cert.name) && /bsis|security/i.test(cert.name)) return 'bsis-trespass';
-  if (/evacuation/i.test(cert.name)) return 'bsis-evacuation-procedures';
-  if (/refresher/i.test(cert.name) && /bsis|8/i.test(cert.name)) return 'bsis-8-hour-refresher';
+
+  const byShortLabel = CERT_CATALOG.find(
+    (e) => normalized.includes(e.shortLabel.toLowerCase()) && e.shortLabel.length >= 5
+  );
+  if (byShortLabel) return byShortLabel.id;
+
+  if (storedId) return storedId;
+
+  if (/firearm|armed/i.test(name) && /permit|bsis/i.test(name)) return 'bsis-exposed-firearm';
+  if (/baton/i.test(name)) return 'bsis-baton';
+  if (/pepper|chemical|oc spray/i.test(name)) return 'bsis-chemical-agent';
+  if (/cpr/i.test(name)) return 'cpr';
+  if (/first aid/i.test(name)) return 'first-aid';
+  if (/aed/i.test(name)) return 'aed';
+  if (/32.?hour|32.?hr/i.test(name) && /bsis|training/i.test(name)) return 'bsis-32-hour-completed';
+  if (/40.?hour|40.?hr/i.test(name) && /bsis|training/i.test(name)) return 'bsis-40-hour-completed';
+  if (/power to arrest/i.test(name)) return 'bsis-power-to-arrest';
+  if (/use of force|appropriate use of force/i.test(name)) return 'bsis-appropriate-use-of-force';
+
   return undefined;
 }
 

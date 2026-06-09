@@ -210,9 +210,10 @@ export default function App() {
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
-          status: c.status, issueDate: c.issue_date, expiryDate: c.expiry_date,
+          status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
+          issueDate: c.issue_date, expiryDate: c.expiry_date,
           state: c.state ?? undefined,
-          catalogId: c.catalog_id ?? undefined,
+          catalogId: c.catalog_id?.trim() || undefined,
           category: c.category ?? undefined,
           imageUrl: c.image_url ?? undefined,
         })),

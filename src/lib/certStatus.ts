@@ -31,7 +31,9 @@ function matchingUploadedCerts(
 ): Certification[] {
   return guard.certifications.filter((cert) => {
     if (cert.status === 'rejected') return false;
-    if (resolveCertCatalogId(cert) !== catalogId) return false;
+    const storedId = cert.catalogId?.trim();
+    const idMatches = storedId === catalogId || resolveCertCatalogId(cert) === catalogId;
+    if (!idMatches) return false;
     if (catalogId === 'bsis-guard-card' && jobState) {
       return cert.state?.toUpperCase() === jobState.toUpperCase();
     }

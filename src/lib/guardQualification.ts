@@ -104,6 +104,8 @@ function expiryBlocksQualification(catalogId: string): boolean {
 }
 
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
+  const storedId = cert.catalogId?.trim();
+  if (storedId && storedId === catalogId) return true;
   return resolveCertCatalogId(cert) === catalogId;
 }
 
