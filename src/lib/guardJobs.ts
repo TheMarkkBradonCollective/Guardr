@@ -7,10 +7,11 @@ import { requirementLabel } from './certCatalog';
 import {
   guardCanWorkFieldShifts,
   guardHasCredentialOnFile,
+  guardMeets32HourBlock,
+  guardMeetsPtaUofTraining,
   guardMeetsQualificationLevel,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_PATHWAY_STATUS_LABELS,
-  GUARD_STATUS_LABELS,
 } from './guardQualification';
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -101,8 +102,12 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
 
   if (minLevel === 'active') {
     checks.push({
-      label: `Active pathway — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}`,
-      met: guardMeetsQualificationLevel(guard, 'active', jobState),
+      label: requirementLabel('bsis-pta-uof-8hr'),
+      met: guardMeetsPtaUofTraining(guard),
+    });
+    checks.push({
+      label: requirementLabel('bsis-32-hour-completed'),
+      met: guardMeets32HourBlock(guard),
     });
   }
 
@@ -132,13 +137,43 @@ export function minQualificationLabel(level: SecurityRequest['minGuardQualificat
   return `${GUARD_PATHWAY_STATUS_LABELS[key]} — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS[key]}`;
 }
 
-/** Guard job detail — avoids ambiguous Inactive/Active account wording */
+/** Guard job detail — pathway tier only (Active / Inactive) */
 export function guardJobMinQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
   const key = level ?? 'pending';
-  if (key === 'active') {
-    return `Active pathway required — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}`;
+  return GUARD_PATHWAY_STATUS_LABELS[key];
+}
+
+/** Credential names listed on guard job detail — separate from pathway tier label */
+export function getJobRequiredCredentialLabels(
+  job: Pick<GuardJobView, 'minGuardQualification' | 'requiredCertifications' | 'armedRequired'>
+): string[] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+
+  const add = (catalogId: string) => {
+    const label = requirementLabel(catalogId);
+    if (seen.has(label)) return;
+    seen.add(label);
+    labels.push(label);
+  };
+
+  add('bsis-guard-card');
+
+  if ((job.minGuardQualification ?? 'pending') === 'active') {
+    add('bsis-pta-uof-8hr');
+    add('bsis-32-hour-completed');
   }
-  return `Guard card on file — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}`;
+
+  for (const certId of job.requiredCertifications) {
+    if (certId === 'bsis-guard-card') continue;
+    add(certId);
+  }
+
+  if (job.armedRequired) {
+    add('bsis-exposed-firearm');
+  }
+
+  return labels;
 }
 
 /** Open jobs visible on a guard's map/list */

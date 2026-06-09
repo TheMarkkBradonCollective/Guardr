@@ -7,9 +7,9 @@ import {
   formatJobTimeRange,
   getJobDistance,
   JOB_TYPE_LABELS,
+  getJobRequiredCredentialLabels,
   guardJobMinQualificationLabel,
 } from '../../lib/guardJobs';
-import { requirementLabel } from '../../lib/certCatalog';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
@@ -50,7 +50,7 @@ export function GuardJobDetailContent({
   const { checks, canAccept } = checkJobRequirements(guard, job);
   const isUpcoming = job.status === 'accepted';
   const isDirectRequest = job.requestType === 'direct';
-  const certLabels = job.requiredCertifications.map((id) => requirementLabel(id));
+  const requiredCredentialLabels = getJobRequiredCredentialLabels(job);
 
   return (
     <div className="space-y-4">
@@ -111,7 +111,7 @@ export function GuardJobDetailContent({
             : null}
         </DetailBlock>
 
-        <DetailBlock label="Minimum for this job">
+        <DetailBlock label="Minimum guard status">
           {guardJobMinQualificationLabel(job.minGuardQualification)}
         </DetailBlock>
 
@@ -129,17 +129,15 @@ export function GuardJobDetailContent({
           <DetailBlock label="Equipment">{job.equipmentRequirements}</DetailBlock>
         )}
 
-        {certLabels.length > 0 && (
-          <DetailBlock label="Required credentials">
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {certLabels.map((label) => (
-                <span key={label} className="chip chip-inactive text-xs">
-                  {label}
-                </span>
-              ))}
-            </div>
-          </DetailBlock>
-        )}
+        <DetailBlock label="Required credentials">
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {requiredCredentialLabels.map((label) => (
+              <span key={label} className="chip chip-inactive text-xs">
+                {label}
+              </span>
+            ))}
+          </div>
+        </DetailBlock>
       </div>
 
       <div className="border-t border-brand-border pt-3">
