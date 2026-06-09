@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   buildOverviewMetricCells,
-  buildOverviewSummaryLine,
   LIVE_JOB_STATUS_LABEL,
   OpsActivityItem,
   OverviewActionItem,
@@ -74,8 +73,6 @@ export function StaffOverview({
   onNavigate,
   staffName,
 }: StaffOverviewProps) {
-  const urgentCount = actionItems.filter((item) => item.tone === 'urgent').length;
-  const summary = buildOverviewSummaryLine(urgentCount, liveJobs.filter((j) => j.status === 'in-progress').length);
   const hasWeeklyData = weeklyTrend.some((h) => h > 0);
   const metrics = buildOverviewMetricCells(stats, requests);
 
@@ -85,7 +82,6 @@ export function StaffOverview({
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted">{formatOverviewDate()}</p>
           <h2 className="text-xl sm:text-2xl font-semibold mt-1 truncate">Hello, {staffName.split(' ')[0]}</h2>
-          <p className="text-sm text-brand-text-muted mt-1.5 leading-relaxed">{summary}</p>
         </div>
         <div
           className={`staff-overview-health shrink-0 ${
@@ -94,10 +90,10 @@ export function StaffOverview({
         >
           <span className="staff-overview-health-dot" aria-hidden />
           <div>
-            <p className="text-sm font-semibold leading-tight">
+            <p className="text-sm font-medium leading-tight text-brand-text-muted">
               {stats.platformHealthy ? 'All clear' : 'Needs review'}
             </p>
-            <p className="text-[11px] text-brand-text-muted mt-0.5">
+            <p className="text-xs text-brand-text-muted/80 mt-0.5">
               {stats.pendingReviews} in queue
             </p>
           </div>
