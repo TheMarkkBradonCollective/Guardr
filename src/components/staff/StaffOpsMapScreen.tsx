@@ -19,7 +19,7 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
   );
 
   return (
-    <div className="h-full min-h-0 relative overflow-hidden guard-map-layout">
+    <div className="h-full min-h-0 staff-map-layout">
       <ShiftMap
         jobs={mapJobs}
         selectedJobId={selectedJobId}
