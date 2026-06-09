@@ -9,7 +9,8 @@ async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
     process.env.SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!url || !serviceKey) return null;
   const { createClient } = await import('@supabase/supabase-js');
   return createClient(url, serviceKey, {
