@@ -65,7 +65,7 @@ export function ClientHomeScreen({
 
         {!isClientApproved && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 p-4 text-sm text-brand-text-muted">
-            Your account is pending approval. You can submit assignment requests — staff will review them before they go live.
+            Your account is pending approval. You can explore the dashboard, but posting requests is disabled until approved.
           </div>
         )}
 
@@ -114,7 +114,12 @@ export function ClientHomeScreen({
               <p className="text-2xl font-bold mt-1">{coverage.guardsOnDuty}</p>
               <p className="text-xs text-brand-text-muted">guards on duty</p>
             </button>
-            <button type="button" onClick={() => onAction('schedule')} className="app-card text-left p-5 hover:border-brand-primary/30">
+            <button
+              type="button"
+              onClick={() => onAction('schedule')}
+              disabled={!isClientApproved}
+              className="app-card text-left p-5 hover:border-brand-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <Calendar className="w-5 h-5 text-brand-primary mb-3" />
               <p className="font-semibold">Upcoming</p>
               <p className="text-2xl font-bold mt-1">{upcoming.length}</p>
@@ -145,8 +150,9 @@ export function ClientHomeScreen({
                 <button
                   key={action.id}
                   type="button"
+                  disabled={!isClientApproved && action.id !== 'reports'}
                   onClick={() => onAction(action.id)}
-                  className={`client-action-card text-left ${
+                  className={`client-action-card text-left disabled:opacity-40 disabled:cursor-not-allowed ${
                     action.accent ? 'border-brand-primary/30' : ''
                   }`}
                 >

@@ -32,6 +32,7 @@ interface GuardProfileScreenProps {
   requests: SecurityRequest[];
   onBack: () => void;
   onRequestGuard: (guard: SecurityGuard) => void;
+  isClientApproved?: boolean;
 }
 
 const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
@@ -50,6 +51,7 @@ export function GuardProfileScreen({
   requests,
   onBack,
   onRequestGuard,
+  isClientApproved = true,
 }: GuardProfileScreenProps) {
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
@@ -261,7 +263,12 @@ export function GuardProfileScreen({
       </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full">
-        <button type="button" onClick={() => onRequestGuard(guard)} className="w-full uber-button-sage">
+        <button
+          type="button"
+          onClick={() => onRequestGuard(guard)}
+          disabled={!isClientApproved}
+          className="w-full uber-button-sage disabled:opacity-40"
+        >
           Send assignment request to {guard.name.split(' ')[0]}
         </button>
         <p className="text-center text-xs text-brand-text-muted mt-2">

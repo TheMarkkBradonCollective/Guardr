@@ -21,6 +21,7 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
+  isClientApproved: boolean;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -31,6 +32,7 @@ interface DirectGuardRequestFlowProps {
  */
 export function DirectGuardRequestFlow({
   guard,
+  isClientApproved,
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
@@ -77,6 +79,10 @@ export function DirectGuardRequestFlow({
   };
 
   const handleSubmit = () => {
+    if (!isClientApproved) {
+      alert('Your account is pending approval.');
+      return;
+    }
     onSubmit({
       requestType: 'direct',
       targetGuardId: guard.id,
@@ -264,7 +270,7 @@ export function DirectGuardRequestFlow({
             Continue <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button type="button" onClick={handleSubmit} className="uber-button-sage w-full h-12">
+          <button type="button" onClick={handleSubmit} disabled={!isClientApproved} className="uber-button-sage w-full h-12 disabled:opacity-40">
             Send to {guard.name.split(' ')[0]}
           </button>
         )}

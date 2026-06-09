@@ -29,6 +29,7 @@ interface ClientRequestsListProps {
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onRequestNew: () => void;
+  isClientApproved?: boolean;
 }
 
 function canClientModifyRequest(status: JobStatus): boolean {
@@ -74,6 +75,7 @@ export function ClientRequestsList({
   onUpdateStatus,
   onAddReview,
   onRequestNew,
+  isClientApproved = true,
 }: ClientRequestsListProps) {
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
@@ -106,7 +108,12 @@ export function ClientRequestsList({
           <h1 className="text-xl font-black">All Requests</h1>
           <p className="text-xs font-mono text-brand-text-muted mt-1">Manage postings, hires, and reviews</p>
         </div>
-        <button type="button" onClick={onRequestNew} className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0">
+        <button
+          type="button"
+          onClick={onRequestNew}
+          disabled={!isClientApproved}
+          className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0 disabled:opacity-40"
+        >
           + New
         </button>
       </div>

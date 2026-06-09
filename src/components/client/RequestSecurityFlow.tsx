@@ -20,6 +20,7 @@ type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
 interface RequestSecurityFlowProps {
+  isClientApproved: boolean;
   preset?: RequestFlowPreset;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
@@ -28,6 +29,7 @@ interface RequestSecurityFlowProps {
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Review'];
 
 export function RequestSecurityFlow({
+  isClientApproved,
   preset = 'default',
   onBack,
   onSubmit,
@@ -94,6 +96,10 @@ export function RequestSecurityFlow({
   };
 
   const handleSubmit = () => {
+    if (!isClientApproved) {
+      alert('Your account is pending approval.');
+      return;
+    }
     onSubmit({
       requestType: 'marketplace',
       title,
@@ -408,7 +414,8 @@ export function RequestSecurityFlow({
             <button
               type="button"
               onClick={handleSubmit}
-              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide"
+              disabled={!isClientApproved}
+              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide disabled:opacity-40"
             >
               Submit Request
             </button>
