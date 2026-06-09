@@ -1,9 +1,10 @@
-import React from 'react';
-import { SecurityGuard } from '../../types';
+import React, { useState } from 'react';
+import { Certification, SecurityGuard } from '../../types';
 import { getPendingCertifications } from '../../lib/staffOps';
+import { CertDetailModal } from '../credentials/CertDetailModal';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfListCard, WfSectionHeader } from '../ui/wireframe';
-import { Check, X } from 'lucide-react';
+import { Check, Eye, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   guards: SecurityGuard[];
@@ -19,6 +20,7 @@ export function StaffApprovals({
   onViewGuard,
 }: StaffApprovalsProps) {
   const pendingCerts = getPendingCertifications(guards);
+  const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -43,7 +45,7 @@ export function StaffApprovals({
                   cert.imageUrl ? (
                     <img
                       src={cert.imageUrl}
-                      alt={`${cert.name} document`}
+                      alt=""
                       className="w-14 h-14 rounded-xl object-cover border border-brand-border"
                     />
                   ) : undefined
@@ -53,9 +55,16 @@ export function StaffApprovals({
                 meta={<span>Expires {cert.expiryDate || '—'}</span>}
                 action={
                   <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setViewCert({ guard, cert })}
+                      className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> View
+                    </button>
                     {onViewGuard && (
                       <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                        View profile
+                        Profile
                       </button>
                     )}
                     <button type="button" onClick={() => onRejectCert(guard.id, cert.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
@@ -70,6 +79,14 @@ export function StaffApprovals({
             ))}
           </AppItemCardStack>
         </section>
+      )}
+
+      {viewCert && (
+        <CertDetailModal
+          cert={viewCert.cert}
+          guardName={viewCert.guard.name}
+          onClose={() => setViewCert(null)}
+        />
       )}
     </div>
   );
