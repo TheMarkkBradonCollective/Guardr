@@ -3,7 +3,8 @@ import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
-import { AppList, AppListRow } from '../ui/app/AppPrimitives';
+import { JobListCard } from '../jobs/JobListCard';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 
 interface StaffClientDetailPanelProps {
@@ -12,6 +13,7 @@ interface StaffClientDetailPanelProps {
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onBack?: () => void;
+  onOpenJob?: (jobId: string) => void;
   compact?: boolean;
 }
 
@@ -21,6 +23,7 @@ export function StaffClientDetailPanel({
   onApproveClient,
   onRejectClient,
   onBack,
+  onOpenJob,
   compact = false,
 }: StaffClientDetailPanelProps) {
   const isSuspended = client.approved === false;
@@ -114,18 +117,23 @@ export function StaffClientDetailPanel({
         {clientRequests.length === 0 ? (
           <p className="text-sm text-brand-text-muted">No jobs posted yet.</p>
         ) : (
-          <AppList>
+          <AppItemCardStack>
             {clientRequests.slice(0, 12).map((job) => (
-              <AppListRow key={job.id} className="flex-col !items-stretch gap-1">
-                <div className="flex items-start justify-between gap-2 w-full">
-                  <p className="text-sm font-semibold truncate">{job.title}</p>
-                  <WfBadge className="shrink-0">{job.status.replace('-', ' ')}</WfBadge>
-                </div>
-                <p className="text-xs text-brand-text-muted">{job.location}</p>
-                <p className="text-xs text-brand-text-muted">{formatShiftRange(job.startDate, job.endDate)}</p>
-              </AppListRow>
+              <JobListCard
+                key={job.id}
+                job={job}
+                subtitle={job.location}
+                meta={
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <WfBadge>{job.status.replace('-', ' ')}</WfBadge>
+                    <span>{formatShiftRange(job.startDate, job.endDate)}</span>
+                  </div>
+                }
+                onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
+                showStatus={false}
+              />
             ))}
-          </AppList>
+          </AppItemCardStack>
         )}
       </section>
     </div>

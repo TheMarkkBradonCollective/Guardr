@@ -115,11 +115,18 @@ export function StaffDashboard({
   const [section, setSection] = useState<StaffSection>(initialSection);
   const [selectedGuardId, setSelectedGuardId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  const openJob = (jobId: string) => {
+    setSelectedJobId(jobId);
+    setSection('jobs');
+  };
 
   const navigateSection = (next: StaffSection) => {
     setSection(next);
     if (next !== 'guards') setSelectedGuardId(null);
     if (next !== 'clients') setSelectedClientId(null);
+    if (next !== 'jobs') setSelectedJobId(null);
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
@@ -167,6 +174,7 @@ export function StaffDashboard({
             guards={guards}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
+            initialSelectedId={selectedJobId}
           />
         );
       case 'guards':
@@ -183,6 +191,7 @@ export function StaffDashboard({
             onRejectGuard={onRejectGuard}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             initialSelectedId={selectedGuardId}
+            onOpenJob={openJob}
           />
         );
       case 'clients':
@@ -193,6 +202,7 @@ export function StaffDashboard({
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             initialSelectedId={selectedClientId}
+            onOpenJob={openJob}
           />
         );
       case 'incidents':

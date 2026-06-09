@@ -4,6 +4,8 @@ import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { JobListCard } from '../jobs/JobListCard';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
@@ -83,6 +85,7 @@ export function ClientRequestsList({
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -146,21 +149,44 @@ export function ClientRequestsList({
       ) : filtered.length === 0 ? (
         <p className="text-center text-sm text-brand-text-muted py-12">No requests match your search.</p>
       ) : (
-        <div className="space-y-4">
+        <AppItemCardStack>
           {filtered.map((req) => {
             const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
+            const isExpanded = expandedId === req.id;
+
+            if (!isExpanded) {
+              return (
+                <JobListCard
+                  key={req.id}
+                  job={req}
+                  subtitle={req.type.replace('-', ' ')}
+                  meta={
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
+                    </div>
+                  }
+                  onClick={() => setExpandedId(req.id)}
+                  showStatus={false}
+                />
+              );
+            }
+
             return (
-              <div key={req.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4">
-                <div className="flex flex-wrap items-start justify-between gap-3 w-full">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-sm">{req.title}</h3>
-                    <p className="text-sm text-brand-text-muted capitalize mt-0.5">{req.type.replace('-', ' ')}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                    <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
-                  </div>
-                </div>
+              <div key={req.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4 app-item-card-selected">
+                <JobListCard
+                  job={req}
+                  subtitle={req.type.replace('-', ' ')}
+                  meta={
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
+                    </div>
+                  }
+                  onClick={() => setExpandedId(null)}
+                  showStatus={false}
+                  selected
+                />
 
                 <div className="grid grid-cols-2 gap-2 text-sm text-brand-text-muted w-full">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-brand-primary" />{formatShiftRange(req.startDate, req.endDate)}</span>
@@ -299,7 +325,7 @@ export function ClientRequestsList({
               </div>
             );
           })}
-        </div>
+        </AppItemCardStack>
       )}
     </div>
   );

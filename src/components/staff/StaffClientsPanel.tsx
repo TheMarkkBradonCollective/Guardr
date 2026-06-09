@@ -12,6 +12,7 @@ interface StaffClientsPanelProps {
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   initialSelectedId?: string | null;
+  onOpenJob?: (jobId: string) => void;
 }
 
 export function StaffClientsPanel({
@@ -20,6 +21,7 @@ export function StaffClientsPanel({
   onApproveClient,
   onRejectClient,
   initialSelectedId = null,
+  onOpenJob,
 }: StaffClientsPanelProps) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
@@ -96,6 +98,7 @@ export function StaffClientsPanel({
           requests={requests}
           onApproveClient={onApproveClient}
           onRejectClient={onRejectClient}
+          onOpenJob={onOpenJob}
           onBack={() => setSelectedId(null)}
         />
       ) : splitView ? (
@@ -111,6 +114,7 @@ export function StaffClientsPanel({
               requests={requests}
               onApproveClient={onApproveClient}
               onRejectClient={onRejectClient}
+              onOpenJob={onOpenJob}
             />
           )}
         </div>

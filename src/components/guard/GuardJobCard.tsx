@@ -33,7 +33,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
       <button
         type="button"
         onClick={onSelect}
-        className="w-full text-left rounded-2xl surface-muted p-4 hover:border-brand-primary/40 transition-colors"
+        className="app-item-card app-item-card-align-top w-full flex-col !items-stretch gap-2 text-left"
       >
         <div className="flex justify-between items-start gap-3">
           <div className="min-w-0">
