@@ -35,27 +35,26 @@ export const PIPELINE_SECTION_META: Record<
   Exclude<PaymentPipelineStage, 'closed'>,
   { title: string; description: string }
 > = {
-  'awaiting-client': {
-    title: 'Awaiting client payment',
-    description: 'Client has not paid. Director can record cash received on site.',
+  'awaiting-guard-payout': {
+    title: 'Pay the guard',
+    description: 'These shifts are finished. Send pay through Stripe or hand cash to the guard on site.',
   },
   'cash-deposit-pending': {
-    title: 'Pay client cash into Stripe',
+    title: 'Deposit client cash to Stripe',
     description:
-      'Client paid cash. Director pays with their own card (Stripe Checkout) — full job amount if guard is paid via Connect, or platform fee only if guard was paid cash. Can be done after guard payout.',
+      'The client paid in cash. Use your card in Stripe Checkout to record it — full job amount, or just the platform fee if the guard was paid cash.',
+  },
+  'awaiting-client': {
+    title: 'Waiting on the client',
+    description: 'The client has not paid yet. You can mark cash received if they paid on site.',
   },
   'client-paid-active': {
     title: 'Paid — shift in progress',
-    description: 'Funds are on file (card or cash already in Stripe). Guard is paid after shift completion.',
-  },
-  'awaiting-guard-payout': {
-    title: 'Ready to pay guard',
-    description:
-      'Shift done. Pay via Stripe Connect or record cash handed to the guard (Director). Client cash can be deposited to Stripe later.',
+    description: 'Money is secured. Pay the guard after the shift is marked complete.',
   },
   settled: {
-    title: 'Settled',
-    description: 'Client paid and guard payout is recorded.',
+    title: 'Done',
+    description: 'Client paid and the guard has been paid. No action needed.',
   },
 };
 

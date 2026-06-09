@@ -120,8 +120,8 @@ export function getShiftPayDisplay(
   }
 
   return {
-    headline: 'Awaiting payout',
-    subtext: 'Use Payout (Stripe) or Cash out above when you are ready',
+    headline: 'Not paid yet',
+    subtext: 'Tap Send to my bank or Request cash pickup above',
   };
 }
 

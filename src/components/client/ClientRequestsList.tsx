@@ -27,6 +27,7 @@ import {
 import { canClientCancelRequest, canClientEditRequest, isJobPaid } from '../../lib/jobEditRules';
 import { checkJobRequirements } from '../../lib/guardJobs';
 import { toGuardJobView } from '../../lib/guardJobView';
+import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { EditRequestForm } from './EditRequestForm';
 
 interface ClientRequestsListProps {
@@ -59,15 +60,6 @@ function paymentBadgeTone(status?: SecurityRequest['paymentStatus']): 'default' 
     case 'held': return 'warning';
     case 'released': return 'success';
     default: return 'warning';
-  }
-}
-
-function paymentLabel(status?: SecurityRequest['paymentStatus']): string {
-  switch (status) {
-    case 'paid': return 'Paid';
-    case 'held': return 'Held';
-    case 'released': return 'Released';
-    default: return 'Unpaid';
   }
 }
 
@@ -165,7 +157,7 @@ export function ClientRequestsList({
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
                     </div>
                   }
                   onClick={() => setExpandedId(req.id)}
@@ -182,7 +174,7 @@ export function ClientRequestsList({
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{paymentLabel(req.paymentStatus)}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
                     </div>
                   }
                   onClick={() => setExpandedId(null)}
@@ -238,9 +230,9 @@ export function ClientRequestsList({
                     {(!req.paymentStatus || req.paymentStatus === 'unpaid') && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3 rounded-lg">
                         <div>
-                          <p className="text-sm text-brand-primary font-semibold">Payment required</p>
+                          <p className="text-sm text-brand-primary font-semibold">Pay to hire a guard</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
-                            Pay ${req.estimatedPayout} to secure this approved job.
+                            {clientPaymentStatusHint(req.paymentStatus, req.status)} Total: ${req.estimatedPayout.toFixed(2)}.
                           </p>
                         </div>
                         <button
@@ -260,7 +252,8 @@ export function ClientRequestsList({
                     {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
                       <p className="text-xs text-emerald-400/90 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1.5 flex items-center gap-1.5 rounded-lg">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        Payment {paymentLabel(req.paymentStatus)} — you may hire a guard.
+                        {clientPaymentStatusLabel(req.paymentStatus)}
+                        {clientPaymentStatusHint(req.paymentStatus, req.status) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status)}` : ''}
                       </p>
                     )}
                     <p className="uber-label">Hire a guard</p>

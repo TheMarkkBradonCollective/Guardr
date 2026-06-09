@@ -5,23 +5,16 @@ import {
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
   canStripePayGuard,
-  clientPaymentDisplay,
   getCashDepositedAmount,
   guardPayoutAmount,
-  guardPayoutDisplay,
-  platformFundsDisplay,
   stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import {
-  clientPaymentBadgeClass,
-  getPaymentPipelineStage,
-  guardPayoutBadgeClass,
-  platformFundsBadgeClass,
-} from '../../lib/paymentPipeline';
+import { staffJobMoneySummary } from '../../lib/paymentDisplay';
+import { getPaymentPipelineStage } from '../../lib/paymentPipeline';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
-import { WfBadge, WfMetricTile } from '../ui/wireframe';
+import { WfBadge } from '../ui/wireframe';
 
 interface JobPaymentRowProps {
   req: SecurityRequest;
@@ -36,17 +29,10 @@ interface JobPaymentRowProps {
   readOnly?: boolean;
 }
 
-function badgeToneFromClass(className: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  if (className.includes('emerald')) return 'success';
-  if (className.includes('amber') || className.includes('orange')) return 'warning';
-  if (className.includes('sky') || className.includes('brand-primary')) return 'primary';
-  return 'default';
-}
-
 export function JobPaymentRow({
   req,
   guard,
-  payment,
+  payment: _payment,
   isDirector,
   onReleasePayout,
   onRefundPayment,
@@ -58,6 +44,7 @@ export function JobPaymentRow({
   const [busy, setBusy] = useState<'client' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | null>(null);
 
   const stage = getPaymentPipelineStage(req);
+  const summary = staffJobMoneySummary(req);
   const guardAmount = guardPayoutAmount(req);
   const platformRevenue =
     Math.round((req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR) * req.durationHours * 100) / 100;
@@ -95,39 +82,28 @@ export function JobPaymentRow({
           <p className="text-sm text-brand-text-muted">
             {req.clientName} · Guard: {guard?.name || 'Unassigned'}
           </p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <WfBadge tone={badgeToneFromClass(clientPaymentBadgeClass(req))}>
-              Client — {clientPaymentDisplay(req)}
-            </WfBadge>
-            <WfBadge tone={badgeToneFromClass(platformFundsBadgeClass(req))}>
-              Platform — {platformFundsDisplay(req)}
-            </WfBadge>
-            <WfBadge tone={badgeToneFromClass(guardPayoutBadgeClass(req))}>
-              Guard — {guardPayoutDisplay(req)}
-            </WfBadge>
-          </div>
-          {payment && (
-            <p className="text-xs text-brand-text-muted mt-1.5">
-              Ledger ${payment.amount} · {payment.paymentMethod || 'stripe'} · {payment.status}
-            </p>
-          )}
-          {req.guardCashPayoutRequested && req.paymentStatus !== 'released' && (
-            <p className="text-xs text-amber-400/90 mt-1.5">
-              Guard requested cash payout — pay in cash, not Stripe
-            </p>
+          <p className="text-sm font-medium mt-2">{summary.headline}</p>
+          {summary.detail && (
+            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{summary.detail}</p>
           )}
           {getCashDepositedAmount(req) > 0 && (
-            <p className="text-xs text-emerald-400/80 mt-1">
-              ${getCashDepositedAmount(req)} paid into Stripe (card)
+            <p className="text-xs text-emerald-400/80 mt-1.5">
+              ${getCashDepositedAmount(req).toFixed(2)} already deposited to Stripe
               {req.cashDepositedAt ? ` · ${new Date(req.cashDepositedAt).toLocaleString()}` : ''}
             </p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 shrink-0 lg:w-64">
-          <WfMetricTile label="Platform revenue" value={`$${platformRevenue}`} accent className="col-span-2 sm:col-span-1" />
-          <WfMetricTile label="Client bill" value={`$${req.estimatedPayout}`} />
-          <WfMetricTile label="Guard pay" value={`$${guardAmount}`} />
+        <div className="shrink-0 text-sm space-y-1 lg:text-right">
+          <p>
+            <span className="text-brand-text-muted">Guard pay </span>
+            <span className="font-bold">${guardAmount.toFixed(2)}</span>
+          </p>
+          <p>
+            <span className="text-brand-text-muted">Client bill </span>
+            <span className="font-medium">${req.estimatedPayout.toFixed(2)}</span>
+          </p>
+          <p className="text-xs text-brand-text-muted">Platform fee ${platformRevenue.toFixed(2)}</p>
         </div>
       </div>
 
@@ -167,7 +143,7 @@ export function JobPaymentRow({
               title={guard?.stripeConnectAccountId ? 'Send payout via Stripe Connect' : 'Guard has no Stripe account connected'}
             >
               {busy === 'stripe' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-              Pay guard (Stripe)
+              Send ${guardAmount.toFixed(0)} to guard (Stripe)
             </button>
           )}
 
@@ -179,7 +155,7 @@ export function JobPaymentRow({
               className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5"
             >
               {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Guard paid cash
+              Mark guard paid in cash
             </button>
           )}
 
@@ -192,7 +168,7 @@ export function JobPaymentRow({
               title="Director force payout without Connect check"
             >
               {busy === 'force' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-              Force Stripe
+              Force Stripe payout
             </button>
           )}
 
