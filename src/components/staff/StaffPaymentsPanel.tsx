@@ -1,5 +1,4 @@
 import React from 'react';
-import { ArrowRight, Banknote, CreditCard } from 'lucide-react';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import {
   PIPELINE_SECTION_META,
@@ -60,7 +59,6 @@ function PipelineSection({
             {items.length}
           </span>
         </h2>
-        <p className="text-xs text-brand-text-muted mt-0.5">{meta.description}</p>
       </div>
       <div className="space-y-2">
         {visible.map((req) => (
@@ -116,32 +114,6 @@ export function StaffPaymentsPanel({
     <div className="space-y-8 max-w-5xl animate-fade-in">
       <div>
         <h1 className="text-2xl font-black">Payments</h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
-          Client → platform funds → guard
-        </p>
-      </div>
-
-      <div className="staff-ops-card p-4 space-y-3">
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Card jobs land in Stripe automatically. Cash jobs need Director steps: record what the client handed
-          you, then <span className="text-brand-text">pay that amount into Stripe with your own card</span> — the
-          same card checkout a client would use. Full job amount if the guard is paid via Connect (can be after
-          payout), or platform fee only if the guard was paid cash.
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-mono font-bold uppercase">
-          <span className="px-2 py-1 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10">Client pays</span>
-          <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-orange-500/40 text-orange-300 bg-orange-500/10">Pay card → Stripe</span>
-          <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-brand-border text-brand-text-muted">Shift runs</span>
-          <ArrowRight className="w-3 h-3 text-brand-text-muted" />
-          <span className="px-2 py-1 rounded border border-brand-primary/40 text-brand-primary bg-brand-primary/10">Guard paid</span>
-        </div>
-        <div className="flex flex-wrap gap-4 text-[10px] font-mono text-brand-text-muted pt-1">
-          <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Card = auto in Stripe</span>
-          <span className="flex items-center gap-1"><Banknote className="w-3 h-3" /> Cash = Director records</span>
-          <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> Card pay = fund Stripe balance</span>
-        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

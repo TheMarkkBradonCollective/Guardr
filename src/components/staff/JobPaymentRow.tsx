@@ -9,9 +9,7 @@ import {
   getCashDepositedAmount,
   guardPayoutAmount,
   guardPayoutDisplay,
-  isCashGuardPayout,
   platformFundsDisplay,
-  stripeDepositDescription,
   stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
@@ -140,24 +138,15 @@ export function JobPaymentRow({
           )}
 
           {canDeposit && (
-            <>
-              <button
-                type="button"
-                onClick={() => run('deposit', onDepositCashToStripe)}
-                disabled={busy !== null}
-                className="staff-ops-btn-primary text-[10px] gap-1.5"
-              >
-                {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-                {stripeDepositLabel(req)}
-              </button>
-              <p className="text-[10px] font-mono text-brand-text-muted w-full">{stripeDepositDescription(req)}</p>
-            </>
-          )}
-
-          {canPayGuard && onReleasePayout && !readOnly && !stripePayAllowed && isCashGuardPayout(req) && (
-            <p className="text-[10px] font-mono text-brand-text-muted w-full">
-              Guard was paid in cash — Stripe Connect payout is not available for this job.
-            </p>
+            <button
+              type="button"
+              onClick={() => run('deposit', onDepositCashToStripe)}
+              disabled={busy !== null}
+              className="staff-ops-btn-primary text-[10px] gap-1.5"
+            >
+              {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
+              {stripeDepositLabel(req)}
+            </button>
           )}
 
           {canStripeRelease && (

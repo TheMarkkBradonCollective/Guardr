@@ -155,9 +155,6 @@ export function StaffJobsPanel({
           <Briefcase className="w-6 h-6 text-brand-primary" />
           Jobs
         </h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
-          Job details and billing summary — use Payments for cash, card, and payouts
-        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
