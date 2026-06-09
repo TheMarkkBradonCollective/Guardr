@@ -14,7 +14,11 @@ export function getPlatformFeeAmount(req: SecurityRequest): number {
   return Math.round(req.durationHours * feePerHour * 100) / 100;
 }
 
-/** Guard paid cash → only platform fee goes to Stripe; otherwise deposit full client payment */
+/**
+ * Client paid cash → how much must be recorded in Stripe:
+ * - Guard paid via Stripe Connect: full client payment (cash must be put back before payout)
+ * - Guard paid in cash: platform fee only
+ */
 export function getRequiredStripeDeposit(req: SecurityRequest): number {
   if (!isCashClientPayment(req)) return 0;
   if (isCashGuardPayout(req)) {
@@ -89,7 +93,7 @@ export function stripeDepositDescription(req: SecurityRequest): string {
   if (isCashGuardPayout(req)) {
     return 'Guard was paid cash — deposit only the platform fee to Stripe.';
   }
-  return 'Deposit the full client payment before paying the guard via Stripe Connect.';
+  return 'Client paid cash and guard will be paid through Stripe — deposit the full job amount back to Stripe first.';
 }
 
 export function clientPaymentDisplay(req: SecurityRequest): string {

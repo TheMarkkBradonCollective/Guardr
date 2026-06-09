@@ -50,7 +50,8 @@ export const PIPELINE_SECTION_META: Record<
   },
   'awaiting-guard-payout': {
     title: 'Ready to pay guard',
-    description: 'Shift done. Pay guard through Stripe Connect or record cash handed to them (Director).',
+    description:
+      'Shift done. Pay via Stripe Connect (full client cash must already be in Stripe) or record cash handed to the guard (Director).',
   },
   settled: {
     title: 'Settled',

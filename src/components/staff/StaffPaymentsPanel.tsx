@@ -129,9 +129,10 @@ export function StaffPaymentsPanel({
 
       <div className="staff-ops-card p-4 space-y-3">
         <p className="text-xs text-brand-text-muted leading-relaxed">
-          Card jobs land in Stripe automatically. Cash jobs need two Director steps: record what the client
-          handed you, then record when that cash is deposited to the platform Stripe balance. After that,
-          guards can be paid via Stripe Connect or cash.
+          Card jobs land in Stripe automatically. Cash jobs need Director steps: record what the client handed
+          you, then record what goes back to Stripe. If the guard will be paid through Stripe Connect, the{' '}
+          <span className="text-brand-text">full job amount</span> must be deposited first — even though the
+          client paid cash. If the guard was paid in cash, only the platform fee needs to go to Stripe.
         </p>
         <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-mono font-bold uppercase">
           <span className="px-2 py-1 rounded border border-amber-500/40 text-amber-400 bg-amber-500/10">Client pays</span>
