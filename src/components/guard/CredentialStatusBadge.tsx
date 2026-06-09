@@ -36,9 +36,11 @@ export function CredentialStatusBadges({
   showUpload?: boolean;
   showVerification?: boolean;
 }) {
+  const verified = cert.status === 'verified';
+
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
-      {showUpload && <CredentialUploadBadge cert={cert} />}
+      {showUpload && !verified && <CredentialUploadBadge cert={cert} />}
       {showVerification && <CredentialVerificationBadge cert={cert} />}
     </div>
   );

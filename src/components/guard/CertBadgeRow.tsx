@@ -35,7 +35,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       id: 'bsis-32-hour',
       label: '32-Hr BSIS',
       onFile: progress.thirtyTwoHourBlockComplete,
-      verified: false,
+      verified: progress.thirtyTwoHourBlockVerified,
     },
   ];
 
