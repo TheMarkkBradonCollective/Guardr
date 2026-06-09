@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import {
+  BSIS_REFRESHER_CATALOG_ID,
   CERT_CATEGORY_LABELS,
   CertCategory,
   getCertCatalogEntry,
@@ -58,6 +59,8 @@ const CREDENTIAL_SECTIONS: {
   },
 ];
 
+type CredentialOpenSection = CertCategory | 'bsis-refresher';
+
 interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
   editing: boolean;
@@ -72,7 +75,7 @@ export function GuardCredentialsPanel({
   onDeleteCertification,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
-  const [openSection, setOpenSection] = useState<CertCategory | null>(null);
+  const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
@@ -132,17 +135,30 @@ export function GuardCredentialsPanel({
     await onDeleteCertification(certId);
   };
 
-  const otherBsisItems = useMemo(
+  const refresherEntry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
+  const refresherItems = useMemo(
     () =>
       (grouped['bsis-training'] ?? []).filter(
-        (cert) => !isThirtyTwoHourCatalogId(resolveCertCatalogId(cert))
+        (cert) => resolveCertCatalogId(cert) === BSIS_REFRESHER_CATALOG_ID
       ),
     [grouped]
   );
+  const otherBsisItems = useMemo(
+    () =>
+      (grouped['bsis-training'] ?? []).filter((cert) => {
+        const id = resolveCertCatalogId(cert);
+        return !isThirtyTwoHourCatalogId(id) && id !== BSIS_REFRESHER_CATALOG_ID;
+      }),
+    [grouped]
+  );
   const otherBsisCatalogOptions = useMemo(
-    () => getCertsByCategory('bsis-training').filter((opt) => !isThirtyTwoHourCatalogId(opt.id)),
+    () =>
+      getCertsByCategory('bsis-training').filter(
+        (opt) => !isThirtyTwoHourCatalogId(opt.id) && opt.id !== BSIS_REFRESHER_CATALOG_ID
+      ),
     []
   );
+  const isRefresherOpen = openSection === 'bsis-refresher';
   const isOtherBsisOpen = openSection === 'bsis-training';
 
   return (
@@ -272,6 +288,84 @@ export function GuardCredentialsPanel({
         return (
           <React.Fragment key="guard-and-bsis-training">
             {sectionCard}
+            <section className="app-card space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="uber-label flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-brand-primary" />
+                    {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
+                  </p>
+                  <p className="text-xs text-brand-text-muted mt-1">
+                    {refresherEntry?.description ?? 'Upload when applicable for guard card renewals.'}
+                  </p>
+                </div>
+                {editing && onAddCertification && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isRefresherOpen) {
+                        resetForm();
+                      } else {
+                        setOpenSection('bsis-refresher');
+                        setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
+                      }
+                    }}
+                    className="shrink-0 px-3 py-1.5 rounded-full bg-brand-primary text-brand-accent-text text-xs font-semibold"
+                  >
+                    {isRefresherOpen ? 'Cancel' : 'Add'}
+                  </button>
+                )}
+              </div>
+
+              {isRefresherOpen && editing && (
+                <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+                  <input
+                    className="uber-input w-full"
+                    placeholder="Issuing organization (e.g. BSIS, training provider)"
+                    value={issuer}
+                    onChange={(e) => setIssuer(e.target.value)}
+                    required
+                  />
+                  <input
+                    className="uber-input w-full"
+                    placeholder="Certificate number"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    required
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
+                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+                    <ImagePlus className="w-4 h-4 shrink-0" />
+                    <span>Optional: attach scan or photo</span>
+                    <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+                  </label>
+                  {imageUrl && (
+                    <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+                  )}
+                  <button type="submit" className="w-full uber-button-sage h-11 text-sm">
+                    Upload credential
+                  </button>
+                </form>
+              )}
+
+              <div className="space-y-2">
+                {refresherItems.length === 0 ? (
+                  <p className="text-xs text-brand-text-muted text-center py-3">No refresher course on file.</p>
+                ) : (
+                  refresherItems.map((cert) => (
+                    <CredentialRow
+                      key={cert.id}
+                      cert={cert}
+                      editing={editing}
+                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
             <GuardThirtyTwoHourPanel
               guard={guard}
               editing={editing}
@@ -286,7 +380,7 @@ export function GuardCredentialsPanel({
                     Other BSIS Training
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1">
-                    8-hour PTA/UOF (2-part), refresher, and supplemental BSIS courses — not part of the 32-hour block.
+                    8-hour PTA/UOF (2-part) and supplemental BSIS courses — not part of the 32-hour block.
                   </p>
                 </div>
                 {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (

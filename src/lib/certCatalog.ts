@@ -69,7 +69,7 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '8-Hour BSIS Refresher Course',
     shortLabel: '8-Hr Refresher',
     category: 'bsis-training',
-    description: '8-hour refresher — upload when applicable for renewals.',
+    description: '8-hour refresher — upload when applicable for guard card renewals.',
   },
 
   // ── Legacy / supplemental BSIS training (optional uploads) ──
@@ -192,6 +192,8 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
 ];
 
 const CATALOG_BY_ID = new Map(CERT_CATALOG.map((e) => [e.id, e]));
+
+export const BSIS_REFRESHER_CATALOG_ID = 'bsis-8-hour-refresher';
 
 /** Client job-posting quick filters */
 export const JOB_CERT_FILTER_OPTIONS: { id: string; label: string; description: string }[] = [
