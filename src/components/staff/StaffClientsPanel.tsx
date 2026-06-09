@@ -3,7 +3,7 @@ import { Client, SecurityRequest } from '../../types';
 import { useDevice } from '../../lib/platform';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppList } from '../ui/app/AppPrimitives';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 
 interface StaffClientsPanelProps {
@@ -64,7 +64,7 @@ export function StaffClientsPanel({
           </div>
         }
         onClick={() => setSelectedId(client.id)}
-        className={isActive ? 'ring-2 ring-brand-primary' : ''}
+        className={isActive ? 'app-item-card-selected' : ''}
       />
     );
   }
@@ -100,10 +100,10 @@ export function StaffClientsPanel({
         />
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="max-h-[75vh] overflow-y-auto">
-            <AppList>
+          <div className="max-h-[75vh] overflow-y-auto pr-1">
+            <AppItemCardStack>
               {filtered.map((client) => renderClientCard(client, selected?.id === client.id))}
-            </AppList>
+            </AppItemCardStack>
           </div>
           {selected && (
             <StaffClientDetailPanel
@@ -115,9 +115,9 @@ export function StaffClientsPanel({
           )}
         </div>
       ) : (
-        <AppList>
+        <AppItemCardStack>
           {filtered.map((client) => renderClientCard(client, false))}
-        </AppList>
+        </AppItemCardStack>
       )}
     </div>
   );

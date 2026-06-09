@@ -1,7 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getPendingCertifications } from '../../lib/staffOps';
-import { AppList } from '../ui/app/AppPrimitives';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfListCard, WfSectionHeader } from '../ui/wireframe';
 import { Check, X } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export function StaffApprovals({
           <div className="px-4 sm:px-5 pb-3">
             <WfSectionHeader title="Pending review" count={pendingCerts.length} />
           </div>
-          <AppList>
+          <AppItemCardStack className="px-4 sm:px-5">
             {pendingCerts.map(({ guard, cert }) => (
               <WfListCard
                 key={cert.id}
@@ -68,7 +68,7 @@ export function StaffApprovals({
                 }
               />
             ))}
-          </AppList>
+          </AppItemCardStack>
         </section>
       )}
     </div>

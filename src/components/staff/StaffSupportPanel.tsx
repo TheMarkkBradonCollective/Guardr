@@ -7,6 +7,7 @@ import {
   SUPPORT_STATUS_LABEL,
 } from '../../lib/support';
 import { ROLE_LABELS } from '../../lib/permissions';
+import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { MessageCircle, Send } from 'lucide-react';
 
@@ -73,39 +74,36 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
             ))}
           </div>
         </div>
-        <ul className="staff-pane-body app-list !border-t-0">
+        <div className="staff-pane-body p-3">
           {filtered.length === 0 ? (
-            <li className="staff-empty-state">No tickets in this view.</li>
+            <p className="staff-empty-state">No tickets in this view.</p>
           ) : (
-            filtered.map((ticket) => (
-              <li key={ticket.id}>
-                <button
-                  type="button"
+            <AppItemCardStack>
+              {filtered.map((ticket) => (
+                <AppItemCard
+                  key={ticket.id}
+                  selected={selected?.id === ticket.id}
                   onClick={() => {
                     setSelectedId(ticket.id);
                     setDraft('');
                   }}
-                  className={`app-list-row app-list-row-align-top w-full ${
-                    selected?.id === ticket.id ? 'bg-brand-primary/10' : ''
-                  }`}
+                  className="flex-col !items-stretch gap-1"
                 >
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="font-semibold text-sm truncate">{ticket.subject}</p>
-                    <p className="text-xs text-brand-text-muted mt-1 truncate">
-                      {ticket.userName} · {ROLE_LABELS[ticket.userRole]}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
-                        {SUPPORT_STATUS_LABEL[ticket.status]}
-                      </WfBadge>
-                      <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
-                    </div>
+                  <p className="font-semibold text-sm truncate">{ticket.subject}</p>
+                  <p className="text-xs text-brand-text-muted mt-1 truncate">
+                    {ticket.userName} · {ROLE_LABELS[ticket.userRole]}
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
+                      {SUPPORT_STATUS_LABEL[ticket.status]}
+                    </WfBadge>
+                    <WfBadge tone="default">{categoryLabel(ticket.category)}</WfBadge>
                   </div>
-                </button>
-              </li>
-            ))
+                </AppItemCard>
+              ))}
+            </AppItemCardStack>
           )}
-        </ul>
+        </div>
       </div>
 
       <div className="staff-split-pane-detail flex flex-col min-h-[320px]">

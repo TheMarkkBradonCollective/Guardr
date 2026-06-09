@@ -17,7 +17,7 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
-import { AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { ArrowLeft, ChevronRight, FileText, MessageCircle, Send } from 'lucide-react';
 
 type SupportView = 'home' | 'chat' | 'report' | 'thread';
@@ -274,24 +274,24 @@ export function SupportScreen({
       <AppScreenTitle>Support</AppScreenTitle>
       <p className="text-sm text-brand-text-muted px-5 -mt-3 mb-6">Message Guardr staff or submit a report.</p>
 
-      <AppList>
-        <AppListRow onClick={() => !submitting && void startKind('chat')} className="!py-4">
+      <AppItemCardStack className="px-5">
+        <AppItemCard onClick={() => !submitting && void startKind('chat')}>
           <MessageCircle className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <div className="flex-1 min-w-0 text-left">
             <p className="font-semibold text-sm">Message staff</p>
             <p className="text-sm text-brand-text-muted mt-0.5">Chat with the Guardr operations team.</p>
           </div>
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-        </AppListRow>
-        <AppListRow onClick={() => void startKind('report')} className="!py-4">
+        </AppItemCard>
+        <AppItemCard onClick={() => void startKind('report')}>
           <FileText className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <div className="flex-1 min-w-0 text-left">
             <p className="font-semibold text-sm">File a report</p>
             <p className="text-sm text-brand-text-muted mt-0.5">Submit an issue, safety concern, or complaint.</p>
           </div>
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-        </AppListRow>
-      </AppList>
+        </AppItemCard>
+      </AppItemCardStack>
 
       <div className="app-section-head mt-8">
         <h2>Your conversations</h2>
@@ -302,9 +302,9 @@ export function SupportScreen({
           No support threads yet. Message staff or file a report to get started.
         </p>
       ) : (
-        <AppList>
+        <AppItemCardStack className="px-5">
           {myTickets.map((ticket) => (
-            <AppListRow key={ticket.id} onClick={() => openThread(ticket.id)} className="app-list-row-align-top !items-start !py-4">
+            <AppItemCard key={ticket.id} onClick={() => openThread(ticket.id)} className="!items-start">
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-semibold text-sm">{ticket.subject}</p>
                 <p className="text-xs text-brand-text-muted mt-1">
@@ -318,9 +318,9 @@ export function SupportScreen({
                 </p>
               </div>
               <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0 mt-0.5" />
-            </AppListRow>
+            </AppItemCard>
           ))}
-        </AppList>
+        </AppItemCardStack>
       )}
     </AppScreen>
   );

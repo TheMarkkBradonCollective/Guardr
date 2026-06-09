@@ -139,7 +139,7 @@ export function ClientRequestsList({
       )}
 
       {requests.length === 0 ? (
-        <div className="wf-list-card justify-center py-16">
+        <div className="app-empty-state">
           <Shield className="w-10 h-10 text-brand-primary/30 mx-auto mb-3" />
           <p className="text-brand-text-muted text-sm text-center">No requests yet.</p>
         </div>
@@ -150,7 +150,7 @@ export function ClientRequestsList({
           {filtered.map((req) => {
             const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
             return (
-              <div key={req.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
+              <div key={req.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4">
                 <div className="flex flex-wrap items-start justify-between gap-3 w-full">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm">{req.title}</h3>

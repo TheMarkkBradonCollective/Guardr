@@ -4,6 +4,7 @@ import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirector
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { Star } from 'lucide-react';
 
@@ -43,11 +44,11 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
 
       <div className="guard-scroll-panel flex-1 px-4 pb-8">
         {filtered.length === 0 ? (
-          <div className="wf-list-card justify-center py-12 text-sm text-brand-text-muted">
+          <p className="app-empty-state text-sm">
             No guards match your search. Try a general security request instead.
-          </div>
+          </p>
         ) : (
-          <div className="space-y-3">
+          <AppItemCardStack>
             {filtered.map((guard) => (
               <WfListCard
                 key={guard.id}
@@ -80,7 +81,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                 onClick={() => onSelectGuard(guard)}
               />
             ))}
-          </div>
+          </AppItemCardStack>
         )}
       </div>
     </div>

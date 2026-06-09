@@ -1,14 +1,14 @@
 import React from 'react';
-import { AppList, AppListRow, AppScreen, AppScreenTitle, AvatarPlaceholder } from './AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppScreen, AppScreenTitle, AvatarPlaceholder } from './AppPrimitives';
 import { MOCK_MESSAGES } from './mockData';
 
 export function MessageScreen() {
   return (
     <AppScreen className="pb-8">
       <AppScreenTitle>Messages</AppScreenTitle>
-      <AppList>
+      <AppItemCardStack className="px-5 pt-2">
         {MOCK_MESSAGES.map((msg) => (
-          <AppListRow key={msg.id} onClick={() => {}} className="app-list-row-align-top">
+          <AppItemCard key={msg.id} onClick={() => {}} className="!items-start">
             <AvatarPlaceholder name={msg.sender} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
@@ -22,9 +22,9 @@ export function MessageScreen() {
               </p>
             </div>
             {msg.unread && <span className="w-2 h-2 rounded-full bg-brand-text shrink-0 mt-2" />}
-          </AppListRow>
+          </AppItemCard>
         ))}
-      </AppList>
+      </AppItemCardStack>
     </AppScreen>
   );
 }

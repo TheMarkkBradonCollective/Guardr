@@ -17,7 +17,7 @@ export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
         {disputes.map((d) => {
           const status = statusMap[d.id] ?? d.status;
           return (
-            <div key={d.id} className="staff-dispute-block">
+            <div key={d.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4 staff-dispute-block !shadow-none">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <WfBadge tone="primary">{d.type.replace('-', ' ')}</WfBadge>

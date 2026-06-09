@@ -12,7 +12,7 @@ interface WfListCardProps {
   className?: string;
 }
 
-/** Flat list row — use inside `<AppList>` or `.app-list` container. */
+/** Clickable entity card — guards, clients, jobs, posts, etc. */
 export function WfListCard({
   avatar,
   title,
@@ -28,7 +28,7 @@ export function WfListCard({
     <Wrapper
       type={onClick ? 'button' : undefined}
       onClick={onClick}
-      className={`app-list-row app-list-row-align-top ${className}`}
+      className={`app-item-card app-item-card-align-top ${onClick ? '' : ''} ${className}`}
     >
       {avatar && <div className="shrink-0">{avatar}</div>}
       <div className="min-w-0 flex-1 text-left">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ClientReportCard } from '../../lib/clientCoverage';
-import { WfBadge, WfListCard } from '../ui/wireframe';
+import { AppList, AppListRow } from '../ui/app/AppPrimitives';
+import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
 
 interface ClientReportsScreenProps {
@@ -25,36 +26,31 @@ export function ClientReportsScreen({ reports, onBack }: ClientReportsScreenProp
       </div>
 
       {reports.length === 0 ? (
-        <div className="wf-list-card justify-center py-10 text-sm text-brand-text-muted">
+        <p className="app-empty-state text-sm">
           No reports yet. Completed shifts with activity logs and incident reports appear here.
-        </div>
+        </p>
       ) : (
-        <div className="space-y-3">
+        <AppList>
           {reports.map((report) => {
             const meta = REPORT_META[report.type];
             return (
-              <WfListCard
-                key={report.id}
-                title={report.title}
-                subtitle={report.siteName}
-                meta={
-                  <div className="space-y-2">
-                    <WfBadge tone={meta.tone}>{meta.emoji} {meta.label}</WfBadge>
-                    <p className="text-sm text-brand-text-muted leading-relaxed">{report.summary}</p>
-                    <p className="text-xs text-brand-text-muted">
-                      {new Date(report.submittedAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                }
-              />
+              <AppListRow key={report.id} className="app-list-row-align-top flex-col !items-stretch gap-2">
+                <p className="font-semibold text-sm">{report.title}</p>
+                <p className="text-sm text-brand-text-muted">{report.siteName}</p>
+                <WfBadge tone={meta.tone}>{meta.emoji} {meta.label}</WfBadge>
+                <p className="text-sm text-brand-text-muted leading-relaxed">{report.summary}</p>
+                <p className="text-xs text-brand-text-muted">
+                  {new Date(report.submittedAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </AppListRow>
             );
           })}
-        </div>
+        </AppList>
       )}
     </div>
   );

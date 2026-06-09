@@ -4,7 +4,7 @@ import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQuali
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppList } from '../ui/app/AppPrimitives';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { Shield } from 'lucide-react';
 
@@ -104,7 +104,7 @@ export function StaffGuardsPanel({
           </div>
         }
         onClick={() => setSelectedId(guard.id)}
-        className={isActive ? 'ring-2 ring-brand-primary' : ''}
+        className={isActive ? 'app-item-card-selected' : ''}
       />
     );
   }
@@ -156,17 +156,17 @@ export function StaffGuardsPanel({
         <StaffGuardDetailPanel {...detailProps} onBack={() => setSelectedId(null)} />
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="max-h-[75vh] overflow-y-auto">
-            <AppList>
+          <div className="max-h-[75vh] overflow-y-auto pr-1">
+            <AppItemCardStack>
               {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
-            </AppList>
+            </AppItemCardStack>
           </div>
           {detailProps && <StaffGuardDetailPanel {...detailProps} />}
         </div>
       ) : (
-        <AppList>
+        <AppItemCardStack>
           {filtered.map((guard) => renderGuardCard(guard, false))}
-        </AppList>
+        </AppItemCardStack>
       )}
     </div>
   );

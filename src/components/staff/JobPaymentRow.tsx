@@ -85,7 +85,7 @@ export function JobPaymentRow({
   };
 
   return (
-    <div className="staff-payment-row">
+    <div className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 w-full">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-1">

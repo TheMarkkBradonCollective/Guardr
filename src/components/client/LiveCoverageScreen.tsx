@@ -8,7 +8,8 @@ import {
   SiteStatusLevel,
 } from '../../lib/clientCoverage';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfBadge, WfListCard, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { AppList, AppListRow } from '../ui/app/AppPrimitives';
+import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
@@ -66,19 +67,18 @@ export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScr
       <section>
         <WfSectionHeader title="Active Guards" count={guardRows.length} />
         {guardRows.length === 0 ? (
-          <div className="wf-list-card justify-center py-8 text-sm text-brand-text-muted">
+          <p className="app-empty-state text-sm">
             No guards currently assigned to active coverage.
-          </div>
+          </p>
         ) : (
-          <div className="space-y-3">
+          <AppList>
             {guardRows.map(({ guard, request, startedAt, hoursWorkedLabel, status }) => (
-              <WfListCard
-                key={`${request.id}-${guard.id}`}
-                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" className="border border-brand-border" />}
-                title={guard.name}
-                subtitle={request.title}
-                meta={
-                  <div className="space-y-1">
+              <AppListRow key={`${request.id}-${guard.id}`} className="app-list-row-align-top !items-start">
+                <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" className="border border-brand-border" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm">{guard.name}</p>
+                  <p className="text-sm text-brand-text-muted mt-0.5">{request.title}</p>
+                  <div className="space-y-1 mt-2">
                     <WfBadge tone={status === 'on-duty' ? 'success' : 'warning'}>
                       {status === 'on-duty' ? 'On duty' : 'Arriving'}
                     </WfBadge>
@@ -91,29 +91,28 @@ export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScr
                       <p className="text-xs text-brand-text-muted">Scheduled {formatStartedTime(request.startDate)}</p>
                     )}
                   </div>
-                }
-              />
+                </div>
+              </AppListRow>
             ))}
-          </div>
+          </AppList>
         )}
       </section>
 
       <section>
         <WfSectionHeader title="Activity Feed" count={feed.length} />
         {feed.length === 0 ? (
-          <div className="wf-list-card py-6 text-sm text-brand-text-muted">
+          <p className="app-empty-state text-sm">
             Activity from guard check-ins, audits, and reports will stream here in real time.
-          </div>
+          </p>
         ) : (
-          <div className="space-y-2">
+          <AppList>
             {feed.map((item: ActivityFeedItem) => (
-              <WfListCard
-                key={item.id}
-                title={item.label}
-                subtitle={formatFeedTime(item.timestamp)}
-              />
+              <AppListRow key={item.id} className="flex-col !items-stretch gap-0.5">
+                <p className="font-semibold text-sm">{item.label}</p>
+                <p className="text-sm text-brand-text-muted">{formatFeedTime(item.timestamp)}</p>
+              </AppListRow>
             ))}
-          </div>
+          </AppList>
         )}
       </section>
     </div>

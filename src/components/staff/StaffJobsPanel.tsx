@@ -6,7 +6,7 @@ import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
-import { AppList } from '../ui/app/AppPrimitives';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfMetricTile, WfSearchBar } from '../ui/wireframe';
 import { Briefcase, X } from 'lucide-react';
 
@@ -182,8 +182,8 @@ export function StaffJobsPanel({
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
       ) : splitView ? (
         <div className="tablet-split-panel">
-          <div className="max-h-[70vh] overflow-y-auto">
-          <AppList>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <AppItemCardStack>
             {filtered.map((req) => {
               const isActive = selected?.id === req.id;
               const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
@@ -204,11 +204,11 @@ export function StaffJobsPanel({
                     </div>
                   }
                   onClick={() => setSelectedId(req.id)}
-                  className={isActive ? 'ring-2 ring-brand-primary' : ''}
+                  className={isActive ? 'app-item-card-selected' : ''}
                 />
               );
             })}
-          </AppList>
+          </AppItemCardStack>
           </div>
           {selected && (
             <JobDetailPanel

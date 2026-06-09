@@ -58,6 +58,41 @@ export function AppList({ children }: { children: React.ReactNode }) {
   return <div className="app-list">{children}</div>;
 }
 
+/** Stacked clickable entity cards (guards, clients, tickets, etc.) */
+export function AppItemCardStack({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`app-item-card-stack ${className}`}>{children}</div>;
+}
+
+export function AppItemCard({
+  children,
+  onClick,
+  className = '',
+  selected = false,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  selected?: boolean;
+}) {
+  const Tag = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={`app-item-card app-item-card-align-top ${selected ? 'app-item-card-selected' : ''} ${className}`}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/** Flat row for read-only lists. Use AppItemCard for clickable entities. */
 export function AppListRow({
   children,
   onClick,
@@ -67,12 +102,14 @@ export function AppListRow({
   onClick?: () => void;
   className?: string;
 }) {
-  const Tag = onClick ? 'button' : 'div';
-  return (
-    <Tag type={onClick ? 'button' : undefined} onClick={onClick} className={`app-list-row ${className}`}>
-      {children}
-    </Tag>
-  );
+  if (onClick) {
+    return (
+      <AppItemCard onClick={onClick} className={className}>
+        {children}
+      </AppItemCard>
+    );
+  }
+  return <div className={`app-list-row ${className}`}>{children}</div>;
 }
 
 export function InlineSearch({

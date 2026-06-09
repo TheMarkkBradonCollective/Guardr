@@ -1274,29 +1274,7 @@ body[data-form-factor="desktop"] .staff-ops-root main {
   color: var(--brand-primary);
 }
 
-.wf-list-card {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  width: 100%;
-  padding: 1rem 1.125rem;
-  background: var(--brand-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-app-xl);
-  box-shadow: var(--shadow-card);
-  text-align: left;
-}
-
-.wf-list-card-interactive {
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.wf-list-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-  box-shadow: var(--shadow-float);
-  transform: translateY(-1px);
-}
+/* wf-list-card aliases app-item-card — see flat list section above */
 
 .wf-badge {
   display: inline-flex;
@@ -1528,7 +1506,7 @@ body[data-form-factor="desktop"] .staff-ops-root main {
   /* horizontal scroll bleeds to edges */
 }
 
-/* Flat list rows */
+/* Flat list rows — read-only / non-clickable content only */
 .app-list {
   border-top: 1px solid var(--brand-border);
 }
@@ -1549,16 +1527,68 @@ body[data-form-factor="desktop"] .staff-ops-root main {
   transition: background 0.12s ease;
 }
 
-button.app-list-row {
-  cursor: pointer;
-}
-
-button.app-list-row:active {
-  background: var(--brand-bg-sec);
-}
-
 .app-list-row-align-top {
   align-items: flex-start;
+}
+
+/* Clickable entity cards — guards, clients, jobs, tickets, certs, posts */
+.app-item-card,
+.wf-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 1rem 1.125rem;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+
+.app-item-card-align-top {
+  align-items: flex-start;
+}
+
+button.app-item-card,
+a.app-item-card,
+.wf-list-card-interactive {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+button.app-item-card:hover,
+a.app-item-card:hover,
+.wf-list-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  box-shadow: var(--shadow-float);
+}
+
+button.app-item-card:active,
+a.app-item-card:active,
+.wf-list-card-interactive:active {
+  transform: translateY(1px);
+}
+
+.app-item-card-selected,
+.app-item-card.ring-2 {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-primary);
+}
+
+.app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.app-empty-state {
+  padding: 3rem 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
 }
 
 /* Inline search */

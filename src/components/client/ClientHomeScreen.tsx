@@ -61,7 +61,7 @@ export function ClientHomeScreen({
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
         </div>
 
-        <section className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 overflow-hidden p-0">
+        <section className="app-surface-band overflow-hidden !p-0">
           <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
             <div className="flex items-center gap-2 mb-5">
               <Radio className="w-5 h-5 text-brand-primary" />
@@ -88,7 +88,7 @@ export function ClientHomeScreen({
         <section>
           <WfSectionHeader title="Your coverage" className="mb-3" />
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => onAction('coverage')} className="wf-list-card wf-list-card-interactive flex-col items-stretch !flex !flex-col gap-2 text-left">
+            <button type="button" onClick={() => onAction('coverage')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
               <Radio className="w-5 h-5 text-brand-primary" />
               <p className="font-semibold text-sm">Active coverage</p>
               <WfMetricTile label="Guards on duty" value={coverage.guardsOnDuty} accent className="!p-3" />
@@ -96,18 +96,18 @@ export function ClientHomeScreen({
             <button
               type="button"
               onClick={() => onAction('schedule')}
-              className="wf-list-card wf-list-card-interactive flex-col items-stretch !flex !flex-col gap-2 text-left"
+              className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left"
             >
               <Calendar className="w-5 h-5 text-brand-primary" />
               <p className="font-semibold text-sm">Upcoming</p>
               <WfMetricTile label="Scheduled shifts" value={upcoming.length} className="!p-3" />
             </button>
-            <button type="button" onClick={() => onAction('reports')} className="wf-list-card wf-list-card-interactive flex-col items-stretch !flex !flex-col gap-2 text-left">
+            <button type="button" onClick={() => onAction('reports')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
               <FileText className="w-5 h-5 text-brand-primary" />
               <p className="font-semibold text-sm">Recent reports</p>
               <WfMetricTile label="This month" value={recentReports.length} className="!p-3" />
             </button>
-            <button type="button" onClick={() => onAction('requests')} className="wf-list-card wf-list-card-interactive flex-col items-stretch !flex !flex-col gap-2 text-left">
+            <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
               <ClipboardList className="w-5 h-5 text-brand-primary" />
               <p className="font-semibold text-sm">Open requests</p>
               <WfMetricTile label="Pending" value={openRequestCount} className="!p-3" />
@@ -149,13 +149,13 @@ export function ClientHomeScreen({
         <section>
           <WfSectionHeader title="Upcoming coverage" className="mb-3" />
           {upcoming.length === 0 ? (
-            <div className="wf-list-card justify-center py-10 text-sm text-brand-text-muted">
+            <p className="app-empty-state">
               No upcoming coverage. Tap Request security to get started.
-            </div>
+            </p>
           ) : (
             <div className="app-scroll-row scrollbar-hide pb-1">
               {upcoming.map((req) => (
-                <div key={req.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 snap-start shrink-0 w-[min(100%,260px)]">
+                <div key={req.id} className="app-h-tile app-surface-band flex flex-col gap-2 snap-start shrink-0 w-[min(100%,260px)] !m-0">
                   <div className="flex items-start gap-2">
                     <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                     <p className="font-semibold text-sm leading-snug">{req.title}</p>
@@ -183,9 +183,9 @@ export function ClientHomeScreen({
             className="mb-3"
           />
           {recentReports.length === 0 ? (
-            <div className="wf-list-card justify-center py-8 text-sm text-brand-text-muted">
+            <p className="app-empty-state">
               Reports from completed shifts will appear here.
-            </div>
+            </p>
           ) : (
             <div className="space-y-3">
               {recentReports.slice(0, 4).map((report) => (
@@ -193,7 +193,7 @@ export function ClientHomeScreen({
                   key={report.id}
                   type="button"
                   onClick={() => onAction('reports')}
-                  className="w-full wf-list-card wf-list-card-interactive flex-col items-stretch !flex !flex-col gap-1 text-left"
+                  className="w-full app-item-card flex-col items-stretch !flex !flex-col gap-1 text-left"
                 >
                   <p className="text-xs font-medium text-brand-primary">
                     {REPORT_TYPE_LABEL[report.type]}

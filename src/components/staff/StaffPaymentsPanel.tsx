@@ -4,6 +4,7 @@ import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
+import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
 
@@ -54,7 +55,7 @@ function PipelineSection({
   return (
     <section className="space-y-3">
       <WfSectionHeader title={meta.title} count={items.length} />
-      <div className="app-list !border-t-0 -mx-4 sm:-mx-5">
+      <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
         {visible.map((req) => (
           <JobPaymentRow
             key={req.id}
@@ -70,7 +71,7 @@ function PipelineSection({
             onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
-      </div>
+      </AppItemCardStack>
       {limit && items.length > limit && (
         <p className="text-xs text-brand-text-muted">
           Showing {limit} of {items.length} settled jobs.
