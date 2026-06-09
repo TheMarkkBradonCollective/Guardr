@@ -99,10 +99,6 @@ export default function App() {
       setActiveGuardId(currentUser.id);
       return;
     }
-    if (isStaffRole(currentUser.role)) {
-      const profile = findGuardProfileForUser(currentUser, guards);
-      if (profile) setActiveGuardId(profile.id);
-    }
   }, [currentUser, guards]);
 
   useEffect(() => {
@@ -856,6 +852,10 @@ export default function App() {
 
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
+    if (activeGuard.isStaff) {
+      alert('Staff accounts cannot accept field shifts. Sign in with a guard account to work assignments.');
+      return;
+    }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
       if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
@@ -1262,17 +1262,12 @@ export default function App() {
           requests={requests}
           supportTickets={supportTickets}
           payments={payments}
-          onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
           onDenyRequest={handleDenyRequest}
-          onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
-          onApproveGuard={handleApproveGuard}
-          onRejectGuard={handleRejectGuard}
-          onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
@@ -1283,16 +1278,8 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={handleAddCertification}
-          onDeleteCertification={handleDeleteCertification}
-          onAddExperience={handleAddExperience}
-          onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
-          onCreateSupportTicket={handleCreateSupportTicket}
-          onAcceptJob={handleAcceptJob}
-          onUpdateJobAudit={handleUpdateJobAudit}
-          onUpdateStripeAccount={handleUpdateGuardStripeAccount}
         />
         <InstallPrompt />
       </>

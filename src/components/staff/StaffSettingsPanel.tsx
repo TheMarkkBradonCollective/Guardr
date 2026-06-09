@@ -60,7 +60,10 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
 
       {showStaffOnboard && (
         <form onSubmit={handleOnboard} className="staff-ops-card space-y-4">
-          <h3 className="font-black text-sm">Onboard Staff (Director)</h3>
+          <h3 className="font-black text-sm">Onboard staff (Director)</h3>
+          <p className="text-xs text-brand-text-muted">
+            Staff accounts manage the platform only — they cannot accept field shifts. Field guards are separate sign-ups and cannot be promoted to staff.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="uber-input" />
             <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="uber-input" />

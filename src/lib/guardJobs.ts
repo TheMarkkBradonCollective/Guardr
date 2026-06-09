@@ -114,6 +114,7 @@ export function minQualificationLabel(level: SecurityRequest['minGuardQualificat
 
 /** Open jobs visible on a guard's map/list */
 export function guardCanViewJob(guard: SecurityGuard, job: SecurityRequest): boolean {
+  if (guard.isStaff) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
   return true;
