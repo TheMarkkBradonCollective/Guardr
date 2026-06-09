@@ -153,7 +153,7 @@ export function GuardProfileScreen({
                 </div>
                 <div className="app-cert-item-stack !pt-0">
                   {items.map((cert) => (
-                    <CertItemCard key={cert.id} cert={cert} />
+                    <CertItemCard key={cert.id} cert={cert} guardName={guard.name} />
                   ))}
                 </div>
               </section>

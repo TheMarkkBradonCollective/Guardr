@@ -190,7 +190,7 @@ export function StaffGuardDetailPanel({
               <div className="app-cert-item-stack max-h-72 overflow-y-auto pr-1">
                 {allCerts.map((cert) => (
                   <div key={cert.id} className="space-y-2">
-                    <CertItemCard cert={cert} />
+                    <CertItemCard cert={cert} guardName={guard.name} />
                     {cert.status === 'pending' && (
                       <div className="flex gap-1.5 justify-end">
                         <button
