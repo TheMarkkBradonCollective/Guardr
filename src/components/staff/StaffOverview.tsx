@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  buildOverviewMetricCells,
   buildOverviewSummaryLine,
   LIVE_JOB_STATUS_LABEL,
   OpsActivityItem,
@@ -8,8 +9,10 @@ import {
   PlatformStats,
   StaffSection,
 } from '../../lib/staffOps';
+import { SecurityRequest } from '../../types';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import { StaffSummaryCell } from './StaffSummaryCell';
 import {
   AlertTriangle,
   ArrowRight,
@@ -23,6 +26,7 @@ import {
 
 interface StaffOverviewProps {
   stats: PlatformStats;
+  requests: SecurityRequest[];
   activityFeed: OpsActivityItem[];
   actionItems: OverviewActionItem[];
   liveJobs: OverviewLiveJob[];
@@ -62,6 +66,7 @@ function formatActivityTime(timestamp: string): string {
 
 export function StaffOverview({
   stats,
+  requests,
   activityFeed,
   actionItems,
   liveJobs,
@@ -72,15 +77,7 @@ export function StaffOverview({
   const urgentCount = actionItems.filter((item) => item.tone === 'urgent').length;
   const summary = buildOverviewSummaryLine(urgentCount, liveJobs.filter((j) => j.status === 'in-progress').length);
   const hasWeeklyData = weeklyTrend.some((h) => h > 0);
-
-  const metrics = [
-    { label: 'Active jobs', value: stats.activeJobs, accent: stats.activeJobs > 0 },
-    { label: 'On site now', value: stats.onDutyGuards, accent: stats.onDutyGuards > 0 },
-    { label: 'To verify', value: stats.pendingApprovals, accent: stats.pendingApprovals > 0 },
-    { label: 'Completed jobs', value: stats.completedJobs, accent: false },
-    { label: 'Active clients', value: stats.activeClients, accent: false },
-    { label: 'Open incidents', value: stats.activeIncidents, accent: stats.activeIncidents > 0 },
-  ];
+  const metrics = buildOverviewMetricCells(stats, requests);
 
   return (
     <div className="staff-overview animate-fade-in space-y-6 pb-6">
@@ -109,10 +106,8 @@ export function StaffOverview({
 
       <section>
         <div className="staff-overview-metrics">
-          {metrics.map(({ label, value, accent }) => (
-            <div key={label} className="staff-overview-metric-cell">
-              <WfMetricTile label={label} value={value} accent={accent} />
-            </div>
+          {metrics.map(({ label, value, sub, accent }) => (
+            <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
           ))}
         </div>
       </section>

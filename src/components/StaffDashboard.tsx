@@ -211,6 +211,7 @@ export function StaffDashboard({
         return (
           <StaffOverview
             stats={stats}
+            requests={requests}
             activityFeed={activityFeed}
             actionItems={overviewActions}
             liveJobs={overviewLiveJobs}

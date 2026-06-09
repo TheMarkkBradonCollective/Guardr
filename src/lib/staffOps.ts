@@ -162,6 +162,87 @@ export function computePlatformStats(
   };
 }
 
+export interface OverviewMetricCell {
+  label: string;
+  value: string;
+  sub: string;
+  accent?: boolean;
+}
+
+export function buildOverviewMetricCells(
+  stats: PlatformStats,
+  requests: SecurityRequest[]
+): OverviewMetricCell[] {
+  const pendingJobs = requests.filter((r) => r.status === 'pending-review').length;
+  const openJobs = requests.filter((r) => r.status === 'open').length;
+  const acceptedJobs = requests.filter((r) => r.status === 'accepted').length;
+  const inProgress = requests.filter((r) => r.status === 'in-progress').length;
+
+  return [
+    {
+      label: 'Active jobs',
+      value: String(stats.activeJobs),
+      sub:
+        stats.activeJobs === 0
+          ? 'No jobs in the pipeline right now'
+          : [
+              pendingJobs > 0 ? `${pendingJobs} awaiting approval` : null,
+              openJobs > 0 ? `${openJobs} open offer${openJobs === 1 ? '' : 's'}` : null,
+              acceptedJobs > 0 ? `${acceptedJobs} accepted` : null,
+              inProgress > 0 ? `${inProgress} in progress` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ') || `${stats.activeJobs} job${stats.activeJobs === 1 ? '' : 's'} in the pipeline`,
+      accent: stats.activeJobs > 0,
+    },
+    {
+      label: 'On site now',
+      value: String(stats.onDutyGuards),
+      sub:
+        stats.onDutyGuards === 0
+          ? 'No guards clocked in on site'
+          : `${stats.onDutyGuards} job${stats.onDutyGuards === 1 ? '' : 's'} in progress with a guard on site`,
+      accent: stats.onDutyGuards > 0,
+    },
+    {
+      label: 'To verify',
+      value: String(stats.pendingApprovals),
+      sub:
+        stats.pendingApprovals === 0
+          ? 'All guard credentials reviewed'
+          : `${stats.pendingApprovals} license or cert upload${stats.pendingApprovals === 1 ? '' : 's'} waiting for staff review`,
+      accent: stats.pendingApprovals > 0,
+    },
+    {
+      label: 'Completed jobs',
+      value: String(stats.completedJobs),
+      sub:
+        stats.completedJobs === 0
+          ? 'No finished jobs yet'
+          : `${stats.completedJobs} total finished or closed job${stats.completedJobs === 1 ? '' : 's'}`,
+      accent: false,
+    },
+    {
+      label: 'Active clients',
+      value: String(stats.activeClients),
+      sub:
+        stats.activeClients === 0
+          ? 'No client accounts on the platform'
+          : `${stats.activeClients} client account${stats.activeClients === 1 ? '' : 's'} posting and managing jobs`,
+      accent: false,
+    },
+    {
+      label: 'Open incidents',
+      value: String(stats.activeIncidents),
+      sub:
+        stats.activeIncidents === 0
+          ? 'No open incident reports from job checkout'
+          : `${stats.activeIncidents} checkout report${stats.activeIncidents === 1 ? '' : 's'} need follow-up`,
+      accent: stats.activeIncidents > 0,
+    },
+  ];
+}
+
 export function buildOverviewSummaryLine(
   actionCount: number,
   liveJobCount: number

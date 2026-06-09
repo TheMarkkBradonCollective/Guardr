@@ -456,32 +456,36 @@ html.theme-grey {
   }
 }
 
-.staff-overview-metric-cell {
+.staff-summary-cell {
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--brand-border);
   border-right: 1px solid var(--brand-border);
 }
 
-.staff-overview-metric-cell:nth-child(2n) {
+.staff-summary-cell-accent {
+  background: color-mix(in srgb, #f59e0b 6%, transparent);
+}
+
+.staff-overview-metrics .staff-summary-cell:nth-child(2n) {
   border-right: none;
 }
 
 @media (min-width: 640px) {
-  .staff-overview-metric-cell:nth-child(2n) {
+  .staff-overview-metrics .staff-summary-cell:nth-child(2n) {
     border-right: 1px solid var(--brand-border);
   }
 
-  .staff-overview-metric-cell:nth-child(3n) {
+  .staff-overview-metrics .staff-summary-cell:nth-child(3n) {
     border-right: none;
   }
 }
 
-.staff-overview-metric-cell:nth-last-child(-n+2) {
+.staff-overview-metrics .staff-summary-cell:nth-last-child(-n+2) {
   border-bottom: none;
 }
 
 @media (min-width: 640px) {
-  .staff-overview-metric-cell:nth-last-child(-n+3) {
+  .staff-overview-metrics .staff-summary-cell:nth-last-child(-n+3) {
     border-bottom: none;
   }
 }
@@ -528,42 +532,32 @@ html.theme-grey {
   }
 }
 
-.staff-payment-summary-cell {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--brand-border);
-  border-right: 1px solid var(--brand-border);
-}
-
-.staff-payment-summary-cell:nth-child(2n) {
+.staff-payment-summary-grid .staff-summary-cell:nth-child(2n) {
   border-right: none;
 }
 
 @media (min-width: 1024px) {
-  .staff-payment-summary-cell {
+  .staff-payment-summary-grid .staff-summary-cell {
     border-bottom: none;
   }
 
-  .staff-payment-summary-cell:nth-child(2n) {
+  .staff-payment-summary-grid .staff-summary-cell:nth-child(2n) {
     border-right: 1px solid var(--brand-border);
   }
 
-  .staff-payment-summary-cell:last-child {
+  .staff-payment-summary-grid .staff-summary-cell:last-child {
     border-right: none;
   }
 }
 
-.staff-payment-summary-cell:nth-last-child(-n+2) {
+.staff-payment-summary-grid .staff-summary-cell:nth-last-child(-n+2) {
   border-bottom: none;
 }
 
 @media (min-width: 1024px) {
-  .staff-payment-summary-cell:nth-last-child(-n+2) {
+  .staff-payment-summary-grid .staff-summary-cell:nth-last-child(-n+2) {
     border-bottom: none;
   }
-}
-
-.staff-payment-summary-cell-accent {
-  background: color-mix(in srgb, #f59e0b 6%, transparent);
 }
 
 .staff-overview-chart-card,
