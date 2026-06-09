@@ -25,6 +25,12 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       onFile: progress.ptaUofTraining,
       verified: progress.ptaUofCombinedVerified,
     },
+    {
+      id: 'bsis-32-hour',
+      label: '32-Hr BSIS',
+      onFile: progress.thirtyTwoHourBlockComplete,
+      verified: false,
+    },
   ];
 
   if (progress.level === 'none' && licensedStates.length === 0 && badges.length === 0 && !showCaBaseline) {
@@ -70,6 +76,11 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
               </span>
             ))}
           </div>
+          {progress.level === 'pending' && progress.ptaUofTraining && !progress.thirtyTwoHourBlockComplete && (
+            <p className="text-[10px] text-brand-text-muted mt-2">
+              {progress.uploaded32HourCount} of {progress.total32HourCourses} courses in the 32-hour block on file
+            </p>
+          )}
         </div>
       )}
 

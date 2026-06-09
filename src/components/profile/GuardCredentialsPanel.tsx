@@ -27,7 +27,7 @@ const CREDENTIAL_SECTIONS: {
     category: 'bsis-training',
     title: 'BSIS Training',
     subtitle:
-      'As of 2024: one 8-hour, 2-part Power to Arrest & Appropriate Use of Force course for Level 2. Guard card is uploaded separately.',
+      'Level 2 (Active): 8-hour PTA/UOF (2-part) plus the 32-hour course block — or upload each course individually. Guard card is separate.',
     icon: BookOpen,
   },
   {

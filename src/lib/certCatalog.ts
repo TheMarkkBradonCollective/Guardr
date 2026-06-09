@@ -48,7 +48,21 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '8-Hour Power to Arrest & Appropriate Use of Force (2-Part)',
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
-    description: 'As of 2024, BSIS requires this single 8-hour, 2-part course for Level 2 (Active).',
+    description: 'As of 2024, BSIS requires this single 8-hour, 2-part course — required for Level 2 (Active).',
+  },
+  {
+    id: 'bsis-32-hour-completed',
+    name: '32-Hour BSIS Training Completed',
+    shortLabel: '32-Hr BSIS',
+    category: 'bsis-training',
+    description: 'Completion certificate for the mandatory 32-hour course block — required for Level 2 (Active).',
+  },
+  {
+    id: 'bsis-40-hour-completed',
+    name: '32-Hour BSIS Training Completed (legacy ID)',
+    shortLabel: '32-Hr BSIS',
+    category: 'bsis-training',
+    description: 'Legacy rollup ID — counts toward the 32-hour block.',
   },
   {
     id: 'bsis-8-hour-refresher',
@@ -73,15 +87,16 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     category: 'bsis-training',
     description: 'Pre-2024 separate certificate. Upload the combined 8-hr course cert when possible.',
   },
-  { id: 'bsis-communication', name: 'Communication and Its Significance', shortLabel: 'Communication', category: 'bsis-training' },
-  { id: 'bsis-public-relations', name: 'Public Relations', shortLabel: 'Public Relations', category: 'bsis-training' },
-  { id: 'bsis-observation-documentation', name: 'Observation and Documentation', shortLabel: 'Observation', category: 'bsis-training' },
-  { id: 'bsis-liability-legal', name: 'Liability / Legal Aspects', shortLabel: 'Legal Aspects', category: 'bsis-training' },
-  { id: 'bsis-officer-safety', name: 'Officer Safety', shortLabel: 'Officer Safety', category: 'bsis-training' },
-  { id: 'bsis-trespass', name: 'Trespass', shortLabel: 'Trespass', category: 'bsis-training' },
-  { id: 'bsis-evacuation-procedures', name: 'Evacuation Procedures', shortLabel: 'Evacuation', category: 'bsis-training' },
-  { id: 'bsis-monitoring-crowd-control', name: 'Monitoring Crowd Control', shortLabel: 'Crowd Control', category: 'bsis-training' },
-  { id: 'bsis-arrest-search-seizure', name: 'Arrests, Search and Seizure', shortLabel: 'Search & Seizure', category: 'bsis-training' },
+  // ── 32-hour mandatory course block (9 courses) ──
+  { id: 'bsis-communication', name: 'Communication and Its Significance (4 hr)', shortLabel: 'Communication', category: 'bsis-training' },
+  { id: 'bsis-public-relations', name: 'Public Relations (4 hr)', shortLabel: 'Public Relations', category: 'bsis-training' },
+  { id: 'bsis-observation-documentation', name: 'Observation and Documentation (4 hr)', shortLabel: 'Observation', category: 'bsis-training' },
+  { id: 'bsis-liability-legal', name: 'Liability / Legal Aspects (4 hr)', shortLabel: 'Legal Aspects', category: 'bsis-training' },
+  { id: 'bsis-officer-safety', name: 'Officer Safety (4 hr)', shortLabel: 'Officer Safety', category: 'bsis-training' },
+  { id: 'bsis-trespass', name: 'Trespass (4 hr)', shortLabel: 'Trespass', category: 'bsis-training' },
+  { id: 'bsis-evacuation-procedures', name: 'Evacuation Procedures (2 hr)', shortLabel: 'Evacuation', category: 'bsis-training' },
+  { id: 'bsis-monitoring-crowd-control', name: 'Monitoring Crowd Control (2 hr)', shortLabel: 'Crowd Control', category: 'bsis-training' },
+  { id: 'bsis-arrest-search-seizure', name: 'Arrests, Search and Seizure (4 hr)', shortLabel: 'Search & Seizure', category: 'bsis-training' },
 
   // ── Additional BSIS / security training (optional) ──
   { id: 'bsis-patrol-techniques', name: 'Patrol Techniques', shortLabel: 'Patrol', category: 'bsis-training' },
@@ -215,6 +230,8 @@ export function resolveCertCatalogId(cert: { catalogId?: string; name: string })
   if (/cpr/i.test(cert.name)) return 'cpr';
   if (/first aid/i.test(cert.name)) return 'first-aid';
   if (/aed/i.test(cert.name)) return 'aed';
+  if (/32.?hour|32.?hr/i.test(cert.name) && /bsis|training/i.test(cert.name)) return 'bsis-32-hour-completed';
+  if (/40.?hour|40.?hr/i.test(cert.name) && /bsis|training/i.test(cert.name)) return 'bsis-40-hour-completed';
   if (/power to arrest/i.test(cert.name) && /use of force|appropriate use/i.test(cert.name)) {
     return 'bsis-pta-uof-8hr';
   }

@@ -10,16 +10,33 @@ export const QUALIFICATION_LEVEL_LABELS: Record<Exclude<GuardQualificationLevel,
 
 export const QUALIFICATION_LEVEL_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Valid BSIS Guard Card on file',
-  active: 'Guard Card + 8-hour Power to Arrest & Appropriate Use of Force (2-part) training',
+  active: 'Guard Card + 8-hr PTA/UOF (2-part) + 32-hour BSIS course block',
 };
 
 /**
  * As of 2024, BSIS requires one combined 8-hour, 2-part course covering
- * Power to Arrest and Appropriate Use of Force — not separate certificates.
+ * Power to Arrest and Appropriate Use of Force.
  */
 export const BSIS_PTA_UOF_COMBINED_ID = 'bsis-pta-uof-8hr';
 
-/** Legacy separate cert IDs — both on file still counts for guards who uploaded before 2024. */
+/** Mandatory 32-hour BSIS course block (9 courses). */
+export const THIRTY_TWO_HOUR_COURSE_IDS = [
+  'bsis-communication',
+  'bsis-public-relations',
+  'bsis-observation-documentation',
+  'bsis-liability-legal',
+  'bsis-officer-safety',
+  'bsis-trespass',
+  'bsis-evacuation-procedures',
+  'bsis-monitoring-crowd-control',
+  'bsis-arrest-search-seizure',
+] as const;
+
+export const THIRTY_TWO_HOUR_ROLLUP_IDS = ['bsis-32-hour-completed', 'bsis-40-hour-completed'] as const;
+
+/** @deprecated Use THIRTY_TWO_HOUR_COURSE_IDS */
+export const CORE_BIS_TRAINING_COURSE_IDS = THIRTY_TWO_HOUR_COURSE_IDS;
+
 const LEGACY_PTA_ID = 'bsis-power-to-arrest';
 const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
 
@@ -73,9 +90,21 @@ export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   );
 }
 
-/** Level 2 training only — guard card is separate (Level 1). */
+export function guardMeets32HourBlock(guard: SecurityGuard): boolean {
+  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialOnFile(guard, id))) {
+    return true;
+  }
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id));
+}
+
+/** @deprecated Use guardMeets32HourBlock */
+export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
+  return guardMeets32HourBlock(guard);
+}
+
+/** Full Level 2 training — guard card is separate (Level 1). */
 export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
-  return guardMeetsPtaUofTraining(guard);
+  return guardMeetsPtaUofTraining(guard) && guardMeets32HourBlock(guard);
 }
 
 export function guardMeetsLevel1(guard: SecurityGuard, state = 'CA'): boolean {
@@ -110,6 +139,12 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const ptaUofCombined = guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
   const legacyPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
   const legacyUof = guardHasCredentialOnFile(guard, LEGACY_UOF_ID);
+  const uploaded32HourCount = THIRTY_TWO_HOUR_COURSE_IDS.filter((id) =>
+    guardHasCredentialOnFile(guard, id)
+  ).length;
+  const thirtyTwoHourRollup = THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) =>
+    guardHasCredentialOnFile(guard, id)
+  );
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
@@ -120,6 +155,18 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
     legacyPta,
     legacyUof,
+    thirtyTwoHourRollup,
+    thirtyTwoHourBlockComplete: guardMeets32HourBlock(guard),
+    uploaded32HourCount,
+    total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     trainingPathwayComplete: guardMeetsLevel2Training(guard),
+    /** @deprecated */
+    fortyHourRollup: thirtyTwoHourRollup,
+    /** @deprecated */
+    coreTrainingComplete: guardMeets32HourBlock(guard),
+    /** @deprecated */
+    uploadedTrainingCount: uploaded32HourCount,
+    /** @deprecated */
+    totalTrainingCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
   };
 }

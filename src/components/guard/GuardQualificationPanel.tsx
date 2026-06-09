@@ -6,6 +6,7 @@ import {
   guardHasGuardrVerifiedCredential,
   QUALIFICATION_LEVEL_DESCRIPTIONS,
   QUALIFICATION_LEVEL_LABELS,
+  THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
 import { getCertCatalogEntry } from '../../lib/certCatalog';
 import { Check, Shield } from 'lucide-react';
@@ -40,6 +41,13 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
       met: progress.ptaUofTraining,
       verified: progress.ptaUofCombinedVerified,
       detail: ptaUofDetail,
+    },
+    {
+      label: '32-hour BSIS course block',
+      met: progress.thirtyTwoHourBlockComplete,
+      detail: progress.thirtyTwoHourRollup
+        ? '32-hour completion certificate on file'
+        : `${progress.uploaded32HourCount} / ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses on file`,
     },
   ];
 
