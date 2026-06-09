@@ -17,7 +17,7 @@ import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
 import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
-import { WfMetricTile } from '../ui/wireframe';
+import { JobBillingSummary } from '../jobs/JobBillingSummary';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -391,9 +391,15 @@ export function RequestSecurityFlow({
                   ))}
                 </div>
               </div>
-              <div className="border-t border-brand-border pt-4 w-full grid grid-cols-2 gap-2">
-                <WfMetricTile label="Estimated cost" value={`$${estimatedTotal}`} accent />
-                <WfMetricTile label="Platform fee" value={`$${platformFeeTotal}`} />
+              <div className="border-t border-brand-border pt-4 w-full">
+                <JobBillingSummary
+                  variant="client"
+                  hourlyRate={effectiveRate}
+                  durationHours={durationHours}
+                  estimatedPayout={estimatedTotal}
+                  guardPay={guardPay}
+                  platformFeeTotal={platformFeeTotal}
+                />
               </div>
             </div>
           </div>

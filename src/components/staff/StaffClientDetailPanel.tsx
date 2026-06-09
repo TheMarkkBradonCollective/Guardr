@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
@@ -88,10 +88,19 @@ export function StaffClientDetailPanel({
         </div>
       </div>
 
-      <section className="grid grid-cols-3 gap-2 py-4 border-b border-brand-border">
-        <WfMetricTile label="Active jobs" value={activeJobs.length} accent />
-        <WfMetricTile label="Completed" value={completedJobs.length} />
-        <WfMetricTile label="Total requests" value={client.totalRequests ?? clientRequests.length} />
+      <section className="grid grid-cols-3 gap-x-4 gap-y-3 py-4 border-b border-brand-border">
+        <div>
+          <p className="wf-metric-label">Active jobs</p>
+          <p className="wf-metric-value text-brand-primary">{activeJobs.length}</p>
+        </div>
+        <div>
+          <p className="wf-metric-label">Completed</p>
+          <p className="wf-metric-value">{completedJobs.length}</p>
+        </div>
+        <div>
+          <p className="wf-metric-label">Total requests</p>
+          <p className="wf-metric-value">{client.totalRequests ?? clientRequests.length}</p>
+        </div>
       </section>
 
       <section className="py-4 border-b border-brand-border space-y-2">

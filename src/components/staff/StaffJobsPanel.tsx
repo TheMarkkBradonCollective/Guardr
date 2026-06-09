@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
-import { guardPayoutAmount } from '../../lib/cashPayments';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
-import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { useDevice } from '../../lib/platform';
+import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfMetricTile, WfSearchBar } from '../ui/wireframe';
+import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, X } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
@@ -50,32 +49,6 @@ function statusBadgeTone(status: SecurityRequest['status']): 'default' | 'primar
     default:
       return 'default';
   }
-}
-
-function JobBillingSummary({ req }: { req: SecurityRequest }) {
-  const platformRate = req.platformFeePerHour ?? PLATFORM_FEE_PER_HOUR;
-  const platformFee = Math.round(platformRate * req.durationHours * 100) / 100;
-  const guardRate = req.guardPay ?? computeGuardPay(req.hourlyRate);
-  const guardEarns = guardPayoutAmount(req);
-
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <WfMetricTile label="Client rate" value={`$${req.hourlyRate}/hr`} />
-        <WfMetricTile label="Client bill" value={`$${req.estimatedPayout}`} />
-        <WfMetricTile label="Guard rate" value={`$${guardRate}/hr`} />
-        <WfMetricTile label="Guard earns" value={`$${guardEarns}`} accent />
-      </div>
-      <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
-        <span>
-          Platform rate: <strong className="text-brand-text">${platformRate}/hr</strong>
-        </span>
-        <span>
-          Platform fee: <strong className="text-brand-text">${platformFee}</strong>
-        </span>
-      </div>
-    </div>
-  );
 }
 
 function JobDetailPanel({
@@ -122,7 +95,7 @@ function JobDetailPanel({
       {req.description && (
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
       )}
-      <JobBillingSummary req={req} />
+      <JobBillingSummaryFromRequest req={req} variant="staff" />
       <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
         {req.status === 'pending-review' && (
           <button type="button" onClick={() => onApproveRequest(req.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">

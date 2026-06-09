@@ -10,7 +10,7 @@ import {
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertItemCard } from '../credentials/CertItemCard';
-import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Check, X } from 'lucide-react';
@@ -94,10 +94,19 @@ export function StaffGuardDetailPanel({
             )}
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{guard.email}</p>
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            <WfMetricTile label="Badge" value={guard.badgeNumber} />
-            <WfMetricTile label="Rating" value={`★ ${guard.rating}`} accent />
-            <WfMetricTile label="Jobs" value={guard.jobsCompleted} />
+          <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
+            <div>
+              <p className="wf-metric-label">Badge</p>
+              <p className="wf-metric-value">{guard.badgeNumber}</p>
+            </div>
+            <div>
+              <p className="wf-metric-label">Rating</p>
+              <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
+            </div>
+            <div>
+              <p className="wf-metric-label">Jobs</p>
+              <p className="wf-metric-value">{guard.jobsCompleted}</p>
+            </div>
           </div>
           {!guard.isStaff && (
             <div className="flex flex-wrap gap-2 mt-3">

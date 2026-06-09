@@ -9,6 +9,7 @@ import {
   getGuardHourlyPay,
   getJobDistance,
 } from '../../lib/guardJobs';
+import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { formatDuration } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
 import { MapPin, Star, Clock, Check, X } from 'lucide-react';
@@ -81,23 +82,16 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
         )}
       </div>
 
-      <div className="surface-muted rounded-2xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-brand-text-muted">{formatJobDate(job)}</span>
+      <div className="space-y-3 border-t border-brand-border pt-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-brand-text-muted">{formatJobDate(job)}</span>
           <span className="font-semibold">{formatJobTimeRange(job)}</span>
         </div>
-        <div className="flex items-center justify-between text-sm border-t border-brand-border pt-3">
-          <span className="flex items-center gap-1.5 text-brand-text-muted">
-            <Clock className="w-4 h-4" />
-            {formatDuration(job.durationHours)}
-          </span>
-          <span className="text-xl font-bold text-brand-primary">${hourlyPay}<span className="text-sm font-medium text-brand-text-muted">/hr</span></span>
+        <div className="flex items-center gap-1.5 text-sm text-brand-text-muted">
+          <Clock className="w-4 h-4" />
+          {formatDuration(job.durationHours)}
         </div>
-      </div>
-
-      <div className="rounded-2xl bg-brand-primary/10 border border-brand-primary/25 p-4">
-        <p className="text-sm text-brand-text-muted mb-1">Estimated earnings</p>
-        <p className="text-3xl font-bold text-brand-primary">${estimated}</p>
+        <JobBillingSummaryFromGuardJob job={job} />
       </div>
 
       {job.clientRating != null && (

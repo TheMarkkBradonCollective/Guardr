@@ -4,6 +4,7 @@ import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -16,7 +17,6 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  DollarSign,
   Loader2,
   MapPin,
   Pencil,
@@ -192,8 +192,9 @@ export function ClientRequestsList({
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-brand-primary" />{formatShiftRange(req.startDate, req.endDate)}</span>
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-brand-primary" />{formatDuration(req.durationHours)}</span>
                   <span className="flex items-center gap-1 col-span-2 truncate"><MapPin className="w-3 h-3 text-brand-primary shrink-0" />{req.location}</span>
-                  <span className="flex items-center gap-1"><DollarSign className="w-3 h-3 text-brand-primary" />${req.hourlyRate}/hr · ${req.estimatedPayout} est.</span>
                 </div>
+
+                <JobBillingSummaryFromRequest req={req} variant="client" />
 
                 {isJobPaid(req) && (
                   <p className="text-xs text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5 w-full">
