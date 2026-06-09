@@ -320,6 +320,7 @@ BEGIN
 END $$;
 
 -- ── REALTIME (live sync without refresh) ────────────────────────────────────
+-- Skips tables that are not deployed yet (safe on partial / older databases).
 DO $$
 DECLARE
   tbl text;
@@ -329,15 +330,17 @@ BEGIN
     'security_requests', 'payments', 'support_tickets', 'support_messages'
   ]
   LOOP
-    BEGIN
-      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', tbl);
-    EXCEPTION
-      WHEN duplicate_object THEN NULL;
-      WHEN OTHERS THEN
-        IF SQLERRM NOT LIKE '%already member of publication%' THEN
-          RAISE;
-        END IF;
-    END;
+    IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
+      BEGIN
+        EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', tbl);
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+        WHEN OTHERS THEN
+          IF SQLERRM NOT LIKE '%already member of publication%' THEN
+            RAISE;
+          END IF;
+      END;
+    END IF;
   END LOOP;
 END $$;
 
