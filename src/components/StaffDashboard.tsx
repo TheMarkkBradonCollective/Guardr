@@ -16,15 +16,13 @@ import {
   canAccessFinancialControls,
   canManageStaffAccounts,
   canSuspendUsers,
-  canToggleStaffRole,
 } from '../lib/permissions';
 import {
   buildDisputes,
   buildIncidents,
   buildPlatformActivityFeed,
   computePlatformStats,
-  isStaffShiftSection,
-  staffSectionToShiftTab,
+  isStaffOpsMapSection,
   StaffSection,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
@@ -41,9 +39,8 @@ import { openTicketCount } from '../lib/support';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
-import { findGuardProfileForUser } from '../lib/guardDirectory';
+import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
-import { GuardDashboard } from './GuardDashboard';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -53,7 +50,6 @@ interface StaffDashboardProps {
   requests: SecurityRequest[];
   supportTickets?: SupportTicket[];
   payments?: Payment[];
-  onUpdateGuardStaffStatus: (guardId: string, isStaff: boolean) => Promise<void>;
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
   onApproveRequest: (requestId: string) => Promise<void>;
   onDenyRequest: (requestId: string) => Promise<void>;
@@ -74,15 +70,10 @@ interface StaffDashboardProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
-  onAddCertification?: (guardId: string, cert: Partial<Certification>) => void | Promise<void>;
-  onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
-  onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
-  onAcceptJob: (requestId: string) => void;
-  onUpdateJobAudit: (requestId: string, auditPayload: unknown) => void;
-  onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
+  initialSection?: StaffSection;
 }
 
 export function StaffDashboard({
@@ -91,16 +82,12 @@ export function StaffDashboard({
   requests,
   supportTickets = [],
   payments = [],
-  onUpdateGuardStaffStatus,
   onUpdateGuardUserStatus,
   onApproveRequest,
   onDenyRequest,
-  onApproveClient,
   onRejectClient,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onResetAuditFailures,
   onReleasePayout,
   onRefundPayment,
@@ -111,24 +98,15 @@ export function StaffDashboard({
   onChangeTheme,
   onSignOut,
   onUpdateGuardProfile,
-  onAddCertification,
-  onAddExperience,
-  onAddEducation,
   onSendSupportMessage,
   onUpdateSupportStatus,
-  onCreateSupportTicket,
-  onAcceptJob,
-  onUpdateJobAudit,
-  onUpdateStripeAccount,
-  onRecordAuditViolation,
+  initialSection = 'overview',
 }: StaffDashboardProps) {
-  const [section, setSection] = useState<StaffSection>('overview');
-  const staffGuard = findGuardProfileForUser(currentUser, guards) ?? null;
+  const [section, setSection] = useState<StaffSection>(initialSection);
 
   const showFinance = canAccessFinancialControls(currentUser);
   const showStaffOnboard = canManageStaffAccounts(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
-  const canToggleStaff = canToggleStaffRole(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
@@ -146,60 +124,16 @@ export function StaffDashboard({
     [stats, requests, incidents, disputes, supportTickets]
   );
 
-  const renderShiftFallback = () => (
-    <div className="h-full flex flex-col items-center justify-center p-8 text-center gap-4">
-      <h2 className="font-bold text-lg">Guard profile not linked</h2>
-      <p className="text-sm text-brand-text-muted max-w-sm">
-        Link your staff account to a guard profile to browse the map and accept shifts. Complete your profile under Account, or sign in with the email on your guard record.
-      </p>
-      <button type="button" onClick={() => setSection('profile')} className="uber-button-sage h-11 px-6 text-sm">
-        Open profile
-      </button>
-    </div>
-  );
-
   const renderSection = () => {
-    if (isStaffShiftSection(section)) {
-      if (!staffGuard) return renderShiftFallback();
-      return (
-        <GuardDashboard
-          variant="embedded"
-          shiftTab={staffSectionToShiftTab(section)}
-          guard={staffGuard}
-          requests={requests}
-          payments={payments}
-          currentUser={currentUser}
-          onAddCertification={(cert) => onAddCertification?.(staffGuard.id, cert)}
-          onAddExperience={(exp) => onAddExperience?.(staffGuard.id, exp)}
-          onAddEducation={(edu) => onAddEducation?.(staffGuard.id, edu)}
-          onAcceptJob={onAcceptJob}
-          onUpdateJobAudit={onUpdateJobAudit}
-          onRecordAuditViolation={onRecordAuditViolation}
-          onUpdateStripeAccount={onUpdateStripeAccount}
-          onSignOut={onSignOut}
-          themeMode={themeMode}
-          onChangeTheme={onChangeTheme}
-          onUpdateProfile={(payload) => onUpdateGuardProfile(staffGuard.id, payload)}
-          supportTickets={supportTickets}
-          relatedRequests={requests.filter((r) => r.assignedGuardId === staffGuard.id)}
-          onCreateSupportTicket={onCreateSupportTicket}
-          onSendSupportMessage={onSendSupportMessage}
-        />
-      );
-    }
-
     switch (section) {
       case 'overview':
         return <StaffOverview stats={stats} initialFeed={activityFeed} />;
+      case 'map':
+        return <StaffOpsMapScreen requests={requests} />;
       case 'approvals':
         return (
           <StaffApprovals
             guards={guards}
-            clients={clients}
-            onApproveGuard={onApproveGuard}
-            onRejectGuard={onRejectGuard}
-            onApproveClient={onApproveClient}
-            onRejectClient={onRejectClient}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
           />
@@ -219,10 +153,7 @@ export function StaffDashboard({
             guards={guards}
             requests={requests}
             canSuspend={canSuspend}
-            canToggleStaff={canToggleStaff}
-            onApproveGuard={onApproveGuard}
             onUpdateUserStatus={onUpdateGuardUserStatus}
-            onUpdateStaffStatus={onUpdateGuardStaffStatus}
             onResetAuditFailures={onResetAuditFailures}
           />
         );
@@ -231,7 +162,6 @@ export function StaffDashboard({
           <StaffClientsPanel
             clients={clients}
             requests={requests}
-            onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
           />
         );
@@ -284,11 +214,7 @@ export function StaffDashboard({
             themeMode={themeMode}
             onChangeTheme={onChangeTheme}
             onSignOut={onSignOut}
-            guard={staffGuard}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
-            onAddCertification={staffGuard && onAddCertification ? (cert) => onAddCertification(currentUser.id, cert) : undefined}
-            onAddExperience={onAddExperience ? (exp) => onAddExperience(currentUser.id, exp) : undefined}
-            onAddEducation={onAddEducation ? (edu) => onAddEducation(currentUser.id, edu) : undefined}
           />
         );
       default:
@@ -306,8 +232,7 @@ export function StaffDashboard({
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
       badges={badges}
-      showShiftNav={!!staffGuard}
-      fullBleed={isStaffShiftSection(section)}
+      fullBleed={isStaffOpsMapSection(section)}
     >
       {renderSection()}
     </StaffOpsLayout>

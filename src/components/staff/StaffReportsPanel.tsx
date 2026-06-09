@@ -47,7 +47,7 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                 )}
                 {req.checkOutAudit?.incidentReport?.hasIncident && (
                   <div className="text-xs bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                    <p className="text-red-400 font-bold text-[10px] uppercase">Incident</p>
+                    <p className="text-brand-text-muted font-bold text-[10px] uppercase">Client incident</p>
                     <p className="mt-1">{req.checkOutAudit.incidentReport.description}</p>
                   </div>
                 )}

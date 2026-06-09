@@ -19,8 +19,8 @@ import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
-import { AppScreenHeader } from './layouts/AppScreenHeader';
-import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy } from 'lucide-react';
+import { RoleAppShell } from './layouts/RoleAppShell';
+import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy, LogOut } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
@@ -40,6 +40,7 @@ interface GuardDashboardProps {
   currentUser: SessionUser;
   payments?: Payment[];
   onAddCertification: (cert: Partial<Certification>) => void;
+  onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
   onAcceptJob: (requestId: string) => void;
@@ -57,6 +58,7 @@ interface GuardDashboardProps {
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
+  initialTab?: GuardTab;
 }
 
 export type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
@@ -75,6 +77,7 @@ export function GuardDashboard({
   currentUser,
   payments = [],
   onAddCertification,
+  onDeleteCertification,
   onAddExperience,
   onAddEducation,
   onAcceptJob,
@@ -91,9 +94,10 @@ export function GuardDashboard({
   onSendSupportMessage,
   variant = 'standalone',
   shiftTab = 'map',
+  initialTab = 'map',
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
-  const [standaloneTab, setStandaloneTab] = useState<GuardTab>('map');
+  const [standaloneTab, setStandaloneTab] = useState<GuardTab>(initialTab);
   const activeTab = isEmbedded ? shiftTab : standaloneTab;
   const [guardPosition, setGuardPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -361,7 +365,6 @@ export function GuardDashboard({
   }
 
   const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
-  const panelBottomPad = isEmbedded ? '' : 'pb-24';
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
@@ -409,7 +412,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'earnings' && (
-        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <div className="guard-scroll-panel flex-1">
             <GuardEarningsPanel
               summary={earningsSummary}
@@ -432,7 +435,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'opportunities' && (
-        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <GuardOpportunitiesPanel
             jobs={availableJobs}
             guard={guard}
@@ -445,7 +448,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
-        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <SupportScreen
             currentUser={currentUser}
             tickets={supportTickets}
@@ -457,7 +460,7 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'profile' && (
-        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <UserProfileScreen
             currentUser={currentUser}
             themeMode={themeMode as 'dark' | 'light' | 'grey'}
@@ -466,6 +469,7 @@ export function GuardDashboard({
             guard={guard}
             onSave={onUpdateProfile}
             onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
             onAddExperience={onAddExperience}
             onAddEducation={onAddEducation}
           />
@@ -516,46 +520,50 @@ export function GuardDashboard({
     );
   }
 
-  return (
-    <div className="page-shell fixed inset-0 overflow-hidden flex flex-col h-dvh max-h-dvh">
-      <AppScreenHeader
-        title={GUARD_TAB_TITLES[activeTab]}
-        subtitle={guard.name}
-        right={
-          <button
-            type="button"
-            onClick={() => setStandaloneTab('profile')}
-            className="p-2 rounded-xl border border-brand-border text-brand-text-muted hover:text-brand-text hover:bg-brand-surface"
-            aria-label="Profile"
-          >
-            <User className="w-4 h-4" />
-          </button>
-        }
-      />
-
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="flex-1 min-h-0 relative overflow-hidden">{guardMainPanel}</div>
-      </div>
-
-      <nav className="app-bottom-nav shrink-0 z-[1002] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="app-bottom-nav-pill max-w-md mx-auto flex p-1.5">
-          {NAV_TABS.map(({ id, icon: Icon, label }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setStandaloneTab(id)}
-              className={`app-bottom-nav-item flex-1 flex flex-col items-center gap-1 py-2 min-h-[52px] ${
-                activeTab === id ? 'app-bottom-nav-item--active' : 'text-brand-text-muted hover:text-brand-text'
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {guardModals}
+  const themeToggle = (
+    <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
+      {(['dark', 'light', 'grey'] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onChangeTheme(m)}
+          className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
+        >
+          {m}
+        </button>
+      ))}
     </div>
+  );
+
+  const sidebarFooter = (
+    <button
+      type="button"
+      onClick={onSignOut}
+      className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
+    >
+      <LogOut className="w-3 h-3" />
+      Sign Out
+    </button>
+  );
+
+  return (
+    <RoleAppShell
+      title={GUARD_TAB_TITLES[activeTab]}
+      subtitle={guard.name}
+      sidebarTitle="Guardr"
+      sidebarSubtitle="Guard shift"
+      navItems={NAV_TABS}
+      activeNavId={activeTab}
+      onNavigate={(id) => setStandaloneTab(id as GuardTab)}
+      headerRight={themeToggle}
+      sidebarFooter={sidebarFooter}
+      fullBleed={activeTab === 'map'}
+      variant={activeTab === 'map' ? 'dark' : 'default'}
+    >
+      <div className="relative h-full min-h-0">
+        {guardMainPanel}
+        {guardModals}
+      </div>
+    </RoleAppShell>
   );
 }

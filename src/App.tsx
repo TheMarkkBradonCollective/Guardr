@@ -32,7 +32,7 @@ import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { checkJobRequirements } from './lib/guardJobs';
-import { findGuardProfileForUser } from './lib/guardDirectory';
+import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -43,6 +43,11 @@ import {
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
 } from './lib/support';
+import { listenForPushNavigation } from './lib/push';
+import { reportPushEvent } from './lib/pushApi';
+import { parsePushDeepLink, type PushDeepLink } from './lib/pushNavigation';
+import type { GuardTab } from './components/GuardDashboard';
+import type { StaffSection } from './lib/staffOps';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -74,6 +79,16 @@ export default function App() {
   }, [themeMode]);
 
   useEffect(() => {
+    const applyDeepLink = (url: string) => {
+      const link = parsePushDeepLink(url);
+      if (link) setPushDeepLink(link);
+    };
+
+    applyDeepLink(window.location.pathname + window.location.search);
+    return listenForPushNavigation(applyDeepLink);
+  }, []);
+
+  useEffect(() => {
     if (!currentUser) return;
     const local = loadTheme(currentUser.id);
     setThemeMode(local);
@@ -88,7 +103,10 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
-  const [clientView, setClientView] = useState<ClientView>('home');
+  const [clientView, setClientView] = useState<ClientView>('map');
+  const [pushDeepLink, setPushDeepLink] = useState<PushDeepLink | null>(() =>
+    parsePushDeepLink(window.location.pathname + window.location.search)
+  );
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -98,10 +116,6 @@ export default function App() {
     if (currentUser.role === 'guard') {
       setActiveGuardId(currentUser.id);
       return;
-    }
-    if (isStaffRole(currentUser.role)) {
-      const profile = findGuardProfileForUser(currentUser, guards);
-      if (profile) setActiveGuardId(profile.id);
     }
   }, [currentUser, guards]);
 
@@ -200,6 +214,7 @@ export default function App() {
           state: c.state ?? undefined,
           catalogId: c.catalog_id ?? undefined,
           category: c.category ?? undefined,
+          imageUrl: c.image_url ?? undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -214,7 +229,7 @@ export default function App() {
         id: c.id, name: c.name, email: c.email,
         companyName: c.company_name, phone: c.phone, avatar: c.avatar,
         totalRequests: c.total_requests || 0,
-        approved: c.approved ?? false,
+        approved: c.approved ?? true,
         rating: c.rating != null ? Number(c.rating) : undefined,
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
       })));
@@ -242,6 +257,7 @@ export default function App() {
         requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
         targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
         requiredCertifications: r.required_certifications || [],
+        minGuardQualification: r.min_guard_qualification === 'active' ? 'active' : 'pending',
         applicants: r.applicants || [],
         ratingGiven: r.rating_given ?? undefined,
         reviewText: r.review_text ?? undefined,
@@ -363,7 +379,7 @@ export default function App() {
           await supabase.from('clients').insert({
             id: client.id, name: client.name, email: client.email,
             company_name: client.companyName, phone: client.phone,
-            avatar: client.avatar, total_requests: 0, approved: false,
+            avatar: client.avatar, total_requests: 0, approved: true,
           });
           await loadFromSupabase();
         } catch (e) { console.error('Client DB insert error:', e); }
@@ -460,6 +476,7 @@ export default function App() {
       state: newCert.state?.toUpperCase(),
       catalogId: newCert.catalogId,
       category: newCert.category,
+      imageUrl: newCert.imageUrl,
     };
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
@@ -471,9 +488,15 @@ export default function App() {
           state: certWithId.state ?? null,
           catalog_id: certWithId.catalogId ?? null,
           category: certWithId.category ?? null,
+          image_url: certWithId.imageUrl ?? null,
         });
       } catch (e) { console.error('Cert insert error:', e); }
     }
+  };
+
+  const handleDeleteCertification = async (guardId: string, certId: string) => {
+    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.filter(c => c.id !== certId) } : g));
+    if (isDbConnected) await supabase.from('certifications').delete().eq('id', certId);
   };
 
   const handleApproveCert = async (guardId: string, certId: string) => {
@@ -594,11 +617,6 @@ export default function App() {
   };
 
   // ── Staff controls ─────────────────────────────────────────
-  const handleUpdateGuardStaffStatus = async (guardId: string, isStaff: boolean) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, isStaff } : g));
-    if (isDbConnected) await supabase.from('guards').update({ is_staff: isStaff }).eq('id', guardId);
-  };
-
   const handleUpdateGuardUserStatus = async (guardId: string, status: 'active' | 'suspended' | 'blocked') => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
@@ -640,10 +658,6 @@ export default function App() {
   // ── Request CRUD ───────────────────────────────────────────
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
     const clientRecord = clients.find(c => c.id === currentUser?.id);
-    if (clientRecord && clientRecord.approved === false) {
-      alert('Your company account is pending staff approval. You cannot post jobs yet.');
-      return;
-    }
     const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Client';
     const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
     const siteName = newRequest.siteName || '';
@@ -677,12 +691,13 @@ export default function App() {
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
-      status: 'pending-review',
+      status: 'open',
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
       targetGuardId: newRequest.requestType === 'direct' ? (newRequest.targetGuardId ?? null) : null,
       requiredCertifications: newRequest.requiredCertifications || [],
+      minGuardQualification: newRequest.minGuardQualification ?? 'pending',
       applicants: [],
     };
 
@@ -695,6 +710,16 @@ export default function App() {
         const cl = clients.find(c => c.id === currentUser.id);
         if (cl) await supabase.from('clients').update({ total_requests: cl.totalRequests + 1 }).eq('id', currentUser.id);
       }
+    }
+
+    if (freshJob.requestType === 'direct' && freshJob.targetGuardId && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId: freshJob.targetGuardId,
+        requestId: freshJob.id,
+        location: freshJob.location,
+        body: `New direct assignment: ${freshJob.title}`,
+      });
     }
 
     if (isDbConnected) {
@@ -717,6 +742,7 @@ export default function App() {
           request_type: freshJob.requestType ?? 'marketplace',
           target_guard_id: freshJob.targetGuardId ?? null,
           required_certifications: freshJob.requiredCertifications,
+          min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
         });
       } catch (e) { console.error('Request insert error:', e); }
@@ -724,8 +750,18 @@ export default function App() {
   };
 
   const handleHireGuard = async (requestId: string, guardId: string) => {
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...r.applicants, guardId] } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] }).eq('id', requestId);
+    if (currentUser && job) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId,
+        requestId,
+        location: job.location,
+        body: `You were assigned to ${job.title}`,
+      });
+    }
   };
 
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
@@ -849,16 +885,20 @@ export default function App() {
 
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
-    if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
+    if (activeGuard.isStaff) {
+      alert('Staff accounts cannot accept field shifts. Sign in with a guard account to work assignments.');
+      return;
+    }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
       if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
         alert('This assignment was sent to another guard from their profile.');
         return;
       }
-      const { canAccept } = checkJobRequirements(activeGuard, job);
+      const { checks, canAccept } = checkJobRequirements(activeGuard, job);
       if (!canAccept) {
-        alert('You do not meet the requirements for this shift. Add a verified guard card for the job state in your profile.');
+        const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
+        alert(`You do not meet the requirements for this shift: ${missing}. Upload the required credentials in your profile.`);
         return;
       }
     }
@@ -904,6 +944,19 @@ export default function App() {
           console.error('Hold payment error:', e);
         }
       }
+    }
+
+    if (payload.checkInAudit && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+      void reportPushEvent(currentUser, {
+        type: 'guard_checkin',
+        guardId: guard?.id ?? req?.assignedGuardId,
+        guardName: guard?.name ?? currentUser.name,
+        requestId,
+        siteId: req?.siteName || undefined,
+        location: req?.location,
+      });
     }
   };
 
@@ -1129,14 +1182,14 @@ export default function App() {
       <>
         <HomePage
           onNavigateToAuth={(role, mode) => {
-            if (role) setInitialAuthRole(role);
+            setInitialAuthRole(role ?? 'client');
             setInitialAuthMode(mode ?? 'sign-in');
             setIsAuthView(true);
           }}
-          guardsCount={verifiedGuards.filter(g => g.verified).length}
+          guardsCount={getBrowsableGuards(verifiedGuards).length}
           requestsCount={requests.length}
           availableRequests={requests.filter(r => r.status === 'open')}
-          sampleGuards={verifiedGuards.filter(g => g.verified).slice(0, 3)}
+          sampleGuards={getBrowsableGuards(verifiedGuards).slice(0, 3)}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
         />
@@ -1159,9 +1212,11 @@ export default function App() {
       <>
         <GuardDashboard
           guard={activeGuard}
+          initialTab={(pushDeepLink?.guardTab as GuardTab | undefined) ?? 'map'}
           requests={requests}
           payments={payments}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
+          onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
           onAcceptJob={handleAcceptJob}
@@ -1186,15 +1241,13 @@ export default function App() {
   // ── Client view ────────────────────────────────────────────
   if (currentUser.role === 'client') {
     const clientRecord = clients.find(c => c.id === currentUser.id);
-    const isClientApproved = clientRecord?.approved !== false;
     // Show only THIS client's requests
     const myRequests = requests.filter(r =>
       r.clientId === currentUser.id ||
       r.clientName === currentUser.clientName ||
       r.clientName === currentUser.name
     );
-    // Verified guards available to browse/hire (includes staff who work shifts)
-    const hireableGuards = verifiedGuards.filter((g) => g.verified);
+    const hireableGuards = getBrowsableGuards(verifiedGuards);
 
     return (
       <>
@@ -1230,7 +1283,6 @@ export default function App() {
               requests={myRequests}
               guards={hireableGuards}
               clientEmail={currentUser.email}
-              isClientApproved={isClientApproved}
               activeView={clientView}
               onViewChange={setClientView}
               onPostRequest={handlePostRequest}
@@ -1252,22 +1304,18 @@ export default function App() {
     return (
       <>
         <StaffDashboard
+          initialSection={(pushDeepLink?.staffSection as StaffSection | undefined) ?? 'overview'}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}
           supportTickets={supportTickets}
           payments={payments}
-          onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
           onDenyRequest={handleDenyRequest}
-          onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
-          onApproveGuard={handleApproveGuard}
-          onRejectGuard={handleRejectGuard}
-          onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
@@ -1278,15 +1326,8 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={handleAddCertification}
-          onAddExperience={handleAddExperience}
-          onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
-          onCreateSupportTicket={handleCreateSupportTicket}
-          onAcceptJob={handleAcceptJob}
-          onUpdateJobAudit={handleUpdateJobAudit}
-          onUpdateStripeAccount={handleUpdateGuardStripeAccount}
         />
         <InstallPrompt />
       </>

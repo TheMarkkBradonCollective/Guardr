@@ -14,13 +14,14 @@ import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
+import { MinGuardQualification } from '../../types';
+import { QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
 interface RequestSecurityFlowProps {
-  isClientApproved: boolean;
   preset?: RequestFlowPreset;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
@@ -29,7 +30,6 @@ interface RequestSecurityFlowProps {
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Review'];
 
 export function RequestSecurityFlow({
-  isClientApproved,
   preset = 'default',
   onBack,
   onSubmit,
@@ -59,6 +59,7 @@ export function RequestSecurityFlow({
   const [customRate, setCustomRate] = useState('');
   const [customTitle, setCustomTitle] = useState('');
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
+  const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
 
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
@@ -96,10 +97,6 @@ export function RequestSecurityFlow({
   };
 
   const handleSubmit = () => {
-    if (!isClientApproved) {
-      alert('Your account is pending approval.');
-      return;
-    }
     onSubmit({
       requestType: 'marketplace',
       title,
@@ -119,6 +116,7 @@ export function RequestSecurityFlow({
       siteInstructions: `${selectedService.label} post orders for ${siteName || address}.`,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
+      minGuardQualification,
     });
     onBack();
   };
@@ -343,6 +341,8 @@ export function RequestSecurityFlow({
             selected={requiredCerts}
             onChange={setRequiredCerts}
             jobState={jobState}
+            minGuardQualification={minGuardQualification}
+            onMinQualificationChange={setMinGuardQualification}
           />
         )}
 
@@ -374,8 +374,12 @@ export function RequestSecurityFlow({
                 <span className="text-brand-text-muted">Rate</span>
                 <span className="font-bold">${effectiveRate}/hr</span>
               </div>
-              <div className="text-sm border-t border-brand-border pt-3">
-                <span className="text-brand-text-muted">Required credentials</span>
+              <div className="flex justify-between text-sm border-t border-brand-border pt-3">
+                <span className="text-brand-text-muted">Min qualification</span>
+                <span className="font-bold text-right max-w-[60%]">{QUALIFICATION_LEVEL_LABELS[minGuardQualification]}</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-brand-text-muted">Additional credentials</span>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
                     <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
@@ -414,8 +418,7 @@ export function RequestSecurityFlow({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!isClientApproved}
-              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide disabled:opacity-40"
+              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide"
             >
               Submit Request
             </button>

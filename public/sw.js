@@ -34,6 +34,55 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('push', (event) => {
+  let payload = {
+    title: 'Guardr alert',
+    body: 'You have a new operational update.',
+    data: { url: '/', type: 'test' },
+    tag: 'guardr-alert',
+    priority: 'normal',
+  };
+
+  if (event.data) {
+    try {
+      payload = { ...payload, ...event.data.json() };
+    } catch {
+      payload.body = event.data.text() || payload.body;
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: payload.tag || payload.data?.type || 'guardr-alert',
+    data: payload.data || { url: '/', type: 'test' },
+    vibrate: payload.priority === 'high' || payload.data?.priority === 'high' ? [200, 100, 200, 100, 200] : undefined,
+    requireInteraction: payload.data?.priority === 'high',
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          client.postMessage({ type: 'guardr-push-navigate', url: targetUrl });
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   // Simple network-first falling back to cache strategy
   if (event.request.method === 'GET') {

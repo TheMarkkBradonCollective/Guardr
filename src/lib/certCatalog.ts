@@ -164,10 +164,10 @@ const CATALOG_BY_ID = new Map(CERT_CATALOG.map((e) => [e.id, e]));
 
 /** Client job-posting quick filters */
 export const JOB_CERT_FILTER_OPTIONS: { id: string; label: string; description: string }[] = [
-  { id: 'bsis-guard-card', label: 'Guard Card', description: 'BSIS-registered guard for job state' },
-  { id: 'bsis-baton', label: 'Baton Required', description: 'BSIS baton permit' },
-  { id: 'bsis-chemical-agent', label: 'OC / Pepper Spray', description: 'BSIS chemical agent permit' },
-  { id: 'bsis-exposed-firearm', label: 'Firearm Required', description: 'BSIS exposed firearm permit' },
+  { id: 'bsis-guard-card', label: 'Guard Card', description: 'Always required — valid BSIS guard card for job state' },
+  { id: 'bsis-baton', label: 'Baton Required', description: 'BSIS baton permit on file (if applicable)' },
+  { id: 'bsis-chemical-agent', label: 'OC / Pepper Spray', description: 'BSIS chemical agent permit on file (if applicable)' },
+  { id: 'bsis-exposed-firearm', label: 'Firearm Required', description: 'BSIS exposed firearm permit on file (armed jobs)' },
   { id: 'bsis-taser', label: 'Taser', description: 'BSIS taser certification' },
   { id: 'cpr', label: 'CPR Required', description: 'Current CPR certification' },
   { id: 'first-aid', label: 'First Aid', description: 'First aid certification' },

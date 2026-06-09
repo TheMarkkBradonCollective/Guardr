@@ -5,23 +5,29 @@ import {
   resolveCertCatalogId,
 } from './certCatalog';
 import { guardCanWorkInState } from './guardLicenses';
+import { guardHasCredentialOnFile } from './guardQualification';
 
 export function guardHasVerifiedCert(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): boolean {
+  return guardHasCredentialOnFile(guard, catalogId, jobState);
+}
+
+/** Guardr staff confirmed this credential document is authentic */
+export function guardHasStaffVerifiedCert(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): boolean {
   if (catalogId === 'bsis-guard-card') {
-    return guardCanWorkInState(guard, jobState ?? 'CA', false);
-  }
-  if (catalogId === 'bsis-exposed-firearm') {
     return guard.certifications.some((c) => {
-      if (c.status !== 'verified') return false;
-      const id = resolveCertCatalogId(c);
-      return id === 'bsis-exposed-firearm' || (/firearm|armed/i.test(c.name) && /permit|bsis/i.test(c.name));
+      if (c.status !== 'verified' || !isGuardCardOnFile(c)) return false;
+      if (jobState) return c.state?.toUpperCase() === jobState.toUpperCase();
+      return true;
     });
   }
-
   return guard.certifications.some((c) => {
     if (c.status !== 'verified') return false;
     const id = resolveCertCatalogId(c);
@@ -30,6 +36,11 @@ export function guardHasVerifiedCert(
     if (!entry) return false;
     return c.name.toLowerCase().includes(entry.name.toLowerCase().slice(0, 12));
   });
+}
+
+function isGuardCardOnFile(cert: Certification): boolean {
+  const id = resolveCertCatalogId(cert);
+  return id === 'bsis-guard-card' || /guard card|bsis guard/i.test(cert.name);
 }
 
 export function guardMeetsCaListingBaseline(guard: SecurityGuard, state = 'CA'): boolean {

@@ -12,8 +12,9 @@ import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
+import { ClientMapScreen } from './client/ClientMapScreen';
 
-export type ClientView = 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile' | 'support';
+export type ClientView = 'map' | 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile' | 'support';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -21,7 +22,6 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
-  isClientApproved?: boolean;
   activeView?: ClientView;
   onViewChange?: (view: ClientView) => void;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
@@ -38,7 +38,6 @@ export function ClientDashboard({
   requests,
   guards,
   clientEmail,
-  isClientApproved = true,
   activeView,
   onViewChange,
   onPostRequest,
@@ -47,7 +46,7 @@ export function ClientDashboard({
   onUpdateStatus,
   onAddReview,
 }: ClientDashboardProps) {
-  const [view, setView] = useState<ClientView>(activeView ?? 'home');
+  const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
   const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
@@ -103,10 +102,13 @@ export function ClientDashboard({
     <div className="h-full overflow-y-auto overscroll-contain">{node}</div>
   );
 
+  if (view === 'map') {
+    return <ClientMapScreen requests={requests} />;
+  }
+
   if (view === 'request') {
     return wrap(
       <RequestSecurityFlow
-        isClientApproved={isClientApproved}
         preset={flowPreset}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
@@ -121,7 +123,6 @@ export function ClientDashboard({
     return (
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
-        isClientApproved={isClientApproved}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');
@@ -198,7 +199,6 @@ export function ClientDashboard({
       coverage={coverage}
       requests={requests}
       recentReports={recentReports}
-      isClientApproved={isClientApproved}
       onAction={handleHomeAction}
     />
   );

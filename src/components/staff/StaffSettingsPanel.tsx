@@ -51,24 +51,6 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
           </div>
         </div>
 
-        <div className="staff-ops-card space-y-4">
-          <h3 className="font-black text-sm">Incident Thresholds</h3>
-          <div>
-            <label className="text-[10px] font-mono uppercase text-brand-text-muted">Auto-escalate at severity</label>
-            <select className="uber-input mt-1 w-full" defaultValue="high">
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical only</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-[10px] font-mono uppercase text-brand-text-muted">Notifications</label>
-            <select className="uber-input mt-1 w-full" defaultValue="all">
-              <option value="all">All incidents & disputes</option>
-              <option value="critical">Critical only</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <div className="staff-ops-card">
@@ -78,7 +60,10 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
 
       {showStaffOnboard && (
         <form onSubmit={handleOnboard} className="staff-ops-card space-y-4">
-          <h3 className="font-black text-sm">Onboard Staff (Director)</h3>
+          <h3 className="font-black text-sm">Onboard staff (Director)</h3>
+          <p className="text-xs text-brand-text-muted">
+            Staff accounts manage the platform only — they cannot accept field shifts. Field guards are separate sign-ups and cannot be promoted to staff.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="uber-input" />
             <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="uber-input" />

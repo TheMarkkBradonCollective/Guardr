@@ -30,6 +30,7 @@ interface GuardResumeEditorProps {
   payload: GuardResumeSavePayload;
   onChange: (patch: Partial<GuardResumeSavePayload>) => void;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
 }
@@ -40,6 +41,7 @@ export function GuardResumeEditor({
   payload,
   onChange,
   onAddCertification,
+  onDeleteCertification,
   onAddExperience,
   onAddEducation,
 }: GuardResumeEditorProps) {
@@ -213,6 +215,7 @@ export function GuardResumeEditor({
         guard={guard}
         editing={editing}
         onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
       />
 
       <ExperienceSection

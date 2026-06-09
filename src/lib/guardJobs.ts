@@ -2,13 +2,14 @@ import { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { computeGuardEarnings, computeGuardPay } from './payments';
 import { estimateJobDistanceMiles } from './geo';
 import { formatDuration } from './dates';
-import {
-  guardCanWorkInState,
-  guardHasFirearmPermit,
-  stateLicenseRequirementLabel,
-} from './guardLicenses';
-import { guardHasVerifiedCert } from './certMatching';
+import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
+import {
+  guardHasCredentialOnFile,
+  guardMeetsQualificationLevel,
+  QUALIFICATION_LEVEL_DESCRIPTIONS,
+  QUALIFICATION_LEVEL_LABELS,
+} from './guardQualification';
 
 export const JOB_CATEGORIES = [
   { id: 'event', label: 'Event Security' },
@@ -63,21 +64,32 @@ export function getEstimatedGuardEarnings(job: SecurityRequest): number {
 }
 
 export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest): { checks: RequirementCheck[]; canAccept: boolean } {
+  const jobState = job.state ?? 'CA';
+  const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
-  const hasStateLicense = guardCanWorkInState(guard, job.state ?? '', job.armedRequired);
 
   const checks: RequirementCheck[] = [
     {
       label: stateLabel,
-      met: hasStateLicense,
+      met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     },
-    { label: 'Profile Approval', met: guard.verified },
+    {
+      label: QUALIFICATION_LEVEL_LABELS.pending,
+      met: guardMeetsQualificationLevel(guard, 'pending', jobState),
+    },
   ];
+
+  if (minLevel === 'active') {
+    checks.push({
+      label: QUALIFICATION_LEVEL_LABELS.active,
+      met: guardMeetsQualificationLevel(guard, 'active', jobState),
+    });
+  }
 
   if (job.armedRequired) {
     checks.push({
-      label: 'BSIS Exposed Firearm Permit',
-      met: guardHasFirearmPermit(guard),
+      label: 'BSIS Exposed Firearm Permit (on file)',
+      met: guardHasCredentialOnFile(guard, 'bsis-exposed-firearm', jobState),
     });
   }
 
@@ -85,17 +97,24 @@ export function checkJobRequirements(guard: SecurityGuard, job: SecurityRequest)
   for (const certId of job.requiredCertifications) {
     if (certId === 'bsis-guard-card' || seen.has(certId)) continue;
     seen.add(certId);
+    if (job.armedRequired && certId === 'bsis-exposed-firearm') continue;
     checks.push({
       label: requirementLabel(certId),
-      met: guardHasVerifiedCert(guard, certId, job.state),
+      met: guardHasCredentialOnFile(guard, certId, jobState),
     });
   }
 
   return { checks, canAccept: checks.every((c) => c.met) };
 }
 
+export function minQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
+  const key = level ?? 'pending';
+  return `${QUALIFICATION_LEVEL_LABELS[key]} — ${QUALIFICATION_LEVEL_DESCRIPTIONS[key]}`;
+}
+
 /** Open jobs visible on a guard's map/list */
 export function guardCanViewJob(guard: SecurityGuard, job: SecurityRequest): boolean {
+  if (guard.isStaff) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
   return true;

@@ -8,7 +8,8 @@ import {
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { formatStateName, US_STATES } from '../../lib/states';
-import { Award, BookOpen, Shield } from 'lucide-react';
+import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
+import { Award, BookOpen, ImagePlus, Shield, Trash2 } from 'lucide-react';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -19,13 +20,13 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'guard-card',
     title: 'BSIS Guard Card',
-    subtitle: 'State registration — separate from training certificates. Staff verifies before you can accept jobs.',
+    subtitle: 'State license — upload a valid card to reach Level 1. Guardr verification is a trust badge for clients.',
     icon: Shield,
   },
   {
     category: 'bsis-required',
     title: 'Required to Work (California)',
-    subtitle: 'Power to Arrest, Use of Force, and 40-hour BSIS completion — required to be listed on Guardr.',
+    subtitle: 'Power to Arrest, Use of Force, and 40-hour BSIS completion — required for Level 2 (Active).',
     icon: BookOpen,
   },
   {
@@ -37,7 +38,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'bsis-permit',
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Baton, OC spray, firearm, and taser permits — required when jobs specify armed posts.',
+    subtitle: 'Required only when applicable — firearm (armed jobs), baton, pepper spray.',
     icon: Shield,
   },
   {
@@ -70,12 +71,14 @@ interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
   editing: boolean;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => void | Promise<void>;
 }
 
 export function GuardCredentialsPanel({
   guard,
   editing,
   onAddCertification,
+  onDeleteCertification,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CertCategory | null>(null);
@@ -85,6 +88,7 @@ export function GuardCredentialsPanel({
   const [state, setState] = useState('CA');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
 
   const resetForm = () => {
     setSelectedCatalogId('');
@@ -93,10 +97,19 @@ export function GuardCredentialsPanel({
     setState('CA');
     setIssueDate('');
     setExpiryDate('');
+    setImageUrl(undefined);
     setOpenSection(null);
   };
 
-  const submitCert = async (e: React.FormEvent, category: CertCategory) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const submitCert = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onAddCertification || !selectedCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(selectedCatalogId);
@@ -113,17 +126,26 @@ export function GuardCredentialsPanel({
       issueDate: issueDate || new Date().toISOString().split('T')[0],
       expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
+      imageUrl,
     });
     resetForm();
   };
 
+  const handleDelete = async (certId: string) => {
+    if (!onDeleteCertification) return;
+    if (!window.confirm('Remove this credential from your profile?')) return;
+    await onDeleteCertification(certId);
+  };
+
   return (
     <div className="space-y-4">
+      <GuardQualificationPanel guard={guard} />
+
       <div className="app-card bg-brand-primary/5 border-brand-primary/20">
-        <p className="text-sm font-semibold text-brand-primary">Credentials & verification</p>
+        <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Your <strong>BSIS Guard Card</strong> is your state license. Training certificates and permits are uploaded
-          separately and verified by Signature Security staff. Clients filter jobs by these credentials.
+          Upload required BSIS documents to qualify for jobs. Guardr staff may verify uploads — that badge helps clients
+          trust your profile but is not required to accept work. Credentials cannot be edited; delete and re-upload to change details.
         </p>
       </div>
 
@@ -157,7 +179,7 @@ export function GuardCredentialsPanel({
             </div>
 
             {isOpen && editing && (
-              <form onSubmit={(e) => submitCert(e, category)} className="space-y-3 border-t border-brand-border pt-3">
+              <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
                 <select
                   value={selectedCatalogId}
                   onChange={(e) => setSelectedCatalogId(e.target.value)}
@@ -195,8 +217,16 @@ export function GuardCredentialsPanel({
                   <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
                   <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
                 </div>
+                <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+                  <ImagePlus className="w-4 h-4 shrink-0" />
+                  <span>Optional: attach scan or photo</span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+                </label>
+                {imageUrl && (
+                  <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+                )}
                 <button type="submit" className="w-full uber-button-sage h-11 text-sm">
-                  Submit for verification
+                  Upload credential
                 </button>
               </form>
             )}
@@ -208,9 +238,12 @@ export function GuardCredentialsPanel({
                 </p>
               ) : (
                 items.map((cert) => (
-                  <div key={cert.id}>
-                    <CredentialRow cert={cert} />
-                  </div>
+                  <CredentialRow
+                    key={cert.id}
+                    cert={cert}
+                    editing={editing}
+                    onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                  />
                 ))
               )}
             </div>
@@ -221,31 +254,60 @@ export function GuardCredentialsPanel({
   );
 }
 
-function CredentialRow({ cert }: { cert: Certification }) {
+function CredentialRow({
+  cert,
+  editing,
+  onDelete,
+}: {
+  cert: Certification;
+  editing: boolean;
+  onDelete?: () => void;
+}) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
   return (
     <div className="p-3 rounded-xl surface-muted flex justify-between gap-3">
-      <div className="min-w-0">
-        <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>
-        <p className="text-xs text-brand-text-muted mt-1">
-          {cert.state ? `${formatStateName(cert.state)} · ` : ''}
-          {cert.issuer} · #{cert.number}
-        </p>
-        {cert.expiryDate && (
-          <p className="text-xs text-brand-text-muted">Expires {cert.expiryDate}</p>
+      <div className="min-w-0 flex gap-3">
+        {cert.imageUrl && (
+          <img
+            src={cert.imageUrl}
+            alt={`${cert.name} document`}
+            className="w-14 h-14 rounded-lg object-cover border border-brand-border shrink-0"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="font-semibold text-sm">{entry?.name ?? cert.name}</p>
+          <p className="text-xs text-brand-text-muted mt-1">
+            {cert.state ? `${formatStateName(cert.state)} · ` : ''}
+            {cert.issuer} · #{cert.number}
+          </p>
+          {cert.expiryDate && (
+            <p className="text-xs text-brand-text-muted">Expires {cert.expiryDate}</p>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        <span
+          className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border h-fit ${
+            cert.status === 'verified'
+              ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+              : cert.status === 'rejected'
+                ? 'text-red-400 border-red-500/30'
+                : 'text-brand-text-muted border-brand-border'
+          }`}
+        >
+          {cert.status === 'verified' ? 'Guardr verified' : cert.status}
+        </span>
+        {editing && onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="text-xs text-red-400 flex items-center gap-1 hover:underline"
+          >
+            <Trash2 className="w-3 h-3" />
+            Delete
+          </button>
         )}
       </div>
-      <span
-        className={`shrink-0 text-[10px] font-semibold uppercase px-2 py-0.5 rounded border h-fit ${
-          cert.status === 'verified'
-            ? 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
-            : cert.status === 'rejected'
-              ? 'text-red-400 border-red-500/30'
-              : 'text-brand-text-muted border-brand-border'
-        }`}
-      >
-        {cert.status}
-      </span>
     </div>
   );
 }

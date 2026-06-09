@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
+import { getGuardQualificationLevel, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 import { Search, Shield } from 'lucide-react';
 
 type GuardFilter = 'field' | 'staff';
@@ -8,10 +9,7 @@ interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
   canSuspend: boolean;
-  canToggleStaff: boolean;
-  onApproveGuard: (id: string) => void;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
-  onUpdateStaffStatus: (id: string, isStaff: boolean) => void | Promise<void>;
   onResetAuditFailures?: (id: string) => void;
 }
 
@@ -19,15 +17,11 @@ export function StaffGuardsPanel({
   guards,
   requests,
   canSuspend,
-  canToggleStaff,
-  onApproveGuard,
   onUpdateUserStatus,
-  onUpdateStaffStatus,
   onResetAuditFailures,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<GuardFilter>('field');
-  const [actioningId, setActioningId] = useState<string | null>(null);
 
   const roster = guards.filter((g) => (filter === 'staff' ? g.isStaff : !g.isStaff));
 
@@ -38,22 +32,14 @@ export function StaffGuardsPanel({
       g.badgeNumber.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleToggleStaff = async (guard: SecurityGuard) => {
-    if (!canToggleStaff) return;
-    setActioningId(guard.id);
-    try {
-      await onUpdateStaffStatus(guard.id, !guard.isStaff);
-    } finally {
-      setActioningId(null);
-    }
-  };
-
   return (
     <div className="space-y-6 max-w-6xl animate-fade-in">
       <div>
         <h1 className="text-2xl font-black">Guards</h1>
         <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">
-          {filter === 'staff' ? 'Staff team roster and roles' : 'Monitor guard performance and account status'}
+          {filter === 'staff'
+            ? 'Guardr staff accounts — platform operations only, not field shifts'
+            : 'Independent guards on the platform'}
         </p>
       </div>
 
@@ -90,7 +76,6 @@ export function StaffGuardsPanel({
               (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
             );
             const status = guard.userStatus || 'active';
-            const isBusy = actioningId === guard.id;
 
             return (
               <div key={guard.id} className="staff-ops-card space-y-3">
@@ -103,15 +88,22 @@ export function StaffGuardsPanel({
                         <span className="text-[9px] font-mono text-brand-primary flex items-center gap-1 border border-brand-primary/30 px-1.5 py-0.5 rounded">
                           <Shield className="w-2.5 h-2.5" /> {guard.staffRole || 'Staff'}
                         </span>
-                      ) : guard.verified ? (
-                        <span className="text-[9px] font-mono text-emerald-400">Verified</span>
-                      ) : (
-                        <span className="text-[9px] font-mono text-amber-400">Pending</span>
-                      )}
+                      ) : (() => {
+                        const level = getGuardQualificationLevel(guard);
+                        return (
+                          <span className={`text-[9px] font-mono ${level === 'active' ? 'text-emerald-400' : level === 'pending' ? 'text-brand-primary' : 'text-amber-400'}`}>
+                            {level === 'none' ? 'No credentials' : QUALIFICATION_LEVEL_LABELS[level]}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="text-[10px] font-mono text-brand-text-muted">{guard.badgeNumber} · ★ {guard.rating} · {guard.jobsCompleted} jobs</p>
                     <p className="text-xs text-brand-text-muted mt-1 truncate">
-                      {activeShift ? `On assignment: ${activeShift.title}` : guard.isStaff ? guard.email : 'No active shift'}
+                      {guard.isStaff
+                        ? guard.email
+                        : activeShift
+                          ? `On assignment: ${activeShift.title}`
+                          : 'No active shift'}
                     </p>
                     {!guard.isStaff && (
                       <p className="text-[10px] font-mono text-brand-text-muted mt-1">
@@ -120,43 +112,22 @@ export function StaffGuardsPanel({
                     )}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-brand-border">
-                  {!guard.isStaff && !guard.verified && (
-                    <button type="button" onClick={() => onApproveGuard(guard.id)} className="staff-ops-btn-primary text-[9px] py-1.5">Approve</button>
-                  )}
-                  {!guard.isStaff && canSuspend && status !== 'suspended' && (
-                    <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="staff-ops-btn-outline text-[9px] py-1.5">Suspend</button>
-                  )}
-                  {!guard.isStaff && canSuspend && status !== 'blocked' && (
-                    <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="staff-ops-btn-danger text-[9px] py-1.5">Flag</button>
-                  )}
-                  {!guard.isStaff && canSuspend && status !== 'active' && (
-                    <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="staff-ops-btn-outline text-[9px] py-1.5">Restore</button>
-                  )}
-                  {!guard.isStaff && (guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                    <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="staff-ops-btn-outline text-[9px] py-1.5">Clear Violations</button>
-                  )}
-                  {canToggleStaff && !guard.isStaff && (
-                    <button
-                      type="button"
-                      disabled={isBusy}
-                      onClick={() => handleToggleStaff(guard)}
-                      className="staff-ops-btn-outline text-[9px] py-1.5"
-                    >
-                      {isBusy ? 'Updating…' : 'Promote to Staff'}
-                    </button>
-                  )}
-                  {canToggleStaff && guard.isStaff && (
-                    <button
-                      type="button"
-                      disabled={isBusy}
-                      onClick={() => handleToggleStaff(guard)}
-                      className="staff-ops-btn-danger text-[9px] py-1.5"
-                    >
-                      {isBusy ? 'Updating…' : 'Remove Staff Access'}
-                    </button>
-                  )}
-                </div>
+                {!guard.isStaff && (
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-brand-border">
+                    {canSuspend && status !== 'suspended' && (
+                      <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="staff-ops-btn-outline text-[9px] py-1.5">Suspend</button>
+                    )}
+                    {canSuspend && status !== 'blocked' && (
+                      <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="staff-ops-btn-danger text-[9px] py-1.5">Flag</button>
+                    )}
+                    {canSuspend && status !== 'active' && (
+                      <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="staff-ops-btn-outline text-[9px] py-1.5">Restore</button>
+                    )}
+                    {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
+                      <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="staff-ops-btn-outline text-[9px] py-1.5">Clear Violations</button>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}

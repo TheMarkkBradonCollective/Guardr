@@ -14,6 +14,8 @@ import { US_STATES, formatStateName } from '../../lib/states';
 import { ArrowLeft, ArrowRight, MapPin, Search, Shield } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
+import { MinGuardQualification } from '../../types';
+import { QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -21,7 +23,6 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
-  isClientApproved: boolean;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -32,7 +33,6 @@ interface DirectGuardRequestFlowProps {
  */
 export function DirectGuardRequestFlow({
   guard,
-  isClientApproved,
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
@@ -48,6 +48,7 @@ export function DirectGuardRequestFlow({
   const [customRate, setCustomRate] = useState('');
   const [notes, setNotes] = useState('');
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
+  const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
 
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
@@ -79,10 +80,6 @@ export function DirectGuardRequestFlow({
   };
 
   const handleSubmit = () => {
-    if (!isClientApproved) {
-      alert('Your account is pending approval.');
-      return;
-    }
     onSubmit({
       requestType: 'direct',
       targetGuardId: guard.id,
@@ -103,6 +100,7 @@ export function DirectGuardRequestFlow({
       siteInstructions: notes.trim() || `${selectedService.label} post orders for ${siteName || address}.`,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
+      minGuardQualification,
     });
   };
 
@@ -233,6 +231,8 @@ export function DirectGuardRequestFlow({
             selected={requiredCerts}
             onChange={setRequiredCerts}
             jobState={jobState}
+            minGuardQualification={minGuardQualification}
+            onMinQualificationChange={setMinGuardQualification}
           />
         )}
 
@@ -246,8 +246,9 @@ export function DirectGuardRequestFlow({
               <Row label="Location" value={address} />
               <Row label="Schedule" value={formatDuration(durationHours)} />
               <Row label="Rate" value={`$${effectiveRate}/hr`} />
+              <Row label="Min qualification" value={QUALIFICATION_LEVEL_LABELS[minGuardQualification]} />
               <div>
-                <p className="text-brand-text-muted mb-1">Required credentials</p>
+                <p className="text-brand-text-muted mb-1">Additional credentials</p>
                 <div className="flex flex-wrap gap-1">
                   {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
                     <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
@@ -270,7 +271,7 @@ export function DirectGuardRequestFlow({
             Continue <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button type="button" onClick={handleSubmit} disabled={!isClientApproved} className="uber-button-sage w-full h-12 disabled:opacity-40">
+          <button type="button" onClick={handleSubmit} className="uber-button-sage w-full h-12">
             Send to {guard.name.split(' ')[0]}
           </button>
         )}

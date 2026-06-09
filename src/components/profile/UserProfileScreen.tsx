@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
+import { getGuardQualificationLevel, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 import { LogOut, Save, User } from 'lucide-react';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { PushNotificationsPanel } from './PushNotificationsPanel';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -24,6 +26,7 @@ interface UserProfileScreenProps {
   guard?: SecurityGuard | null;
   client?: Client | null;
   onAddCertification?: (cert: Partial<Certification>) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => void | Promise<void>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
 }
@@ -37,6 +40,7 @@ export function UserProfileScreen({
   guard,
   client,
   onAddCertification,
+  onDeleteCertification,
   onAddExperience,
   onAddEducation,
 }: UserProfileScreenProps) {
@@ -152,19 +156,15 @@ export function UserProfileScreen({
             type="number"
           />
         )}
-        {guard?.verified != null && (
+        {guard && (
           <div className="flex justify-between text-sm py-2 border-t border-brand-border">
-            <span className="text-brand-text-muted">Verification</span>
-            <span className={`font-medium ${guard.verified ? 'text-brand-primary' : 'text-amber-400'}`}>
-              {guard.verified ? 'Verified' : 'Pending'}
-            </span>
-          </div>
-        )}
-        {client?.approved != null && (
-          <div className="flex justify-between text-sm py-2 border-t border-brand-border">
-            <span className="text-brand-text-muted">Account status</span>
-            <span className={`font-medium ${client.approved ? 'text-brand-primary' : 'text-amber-400'}`}>
-              {client.approved ? 'Approved' : 'Pending approval'}
+            <span className="text-brand-text-muted">Qualification</span>
+            <span className="font-medium text-brand-primary">
+              {(() => {
+                const level = getGuardQualificationLevel(guard);
+                if (level === 'none') return 'Upload credentials to qualify';
+                return QUALIFICATION_LEVEL_LABELS[level];
+              })()}
             </span>
           </div>
         )}
@@ -177,10 +177,13 @@ export function UserProfileScreen({
           payload={resume}
           onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement }))}
           onAddCertification={onAddCertification}
+          onDeleteCertification={onDeleteCertification}
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}
         />
       )}
+
+      <PushNotificationsPanel currentUser={currentUser} />
 
       <div className="app-card space-y-3">
         <p className="uber-label">Appearance</p>

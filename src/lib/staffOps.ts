@@ -6,9 +6,6 @@ export type StaffSection =
   | 'approvals'
   | 'live-jobs'
   | 'map'
-  | 'my-jobs'
-  | 'my-pay'
-  | 'my-help'
   | 'guards'
   | 'clients'
   | 'reports'
@@ -20,30 +17,11 @@ export type StaffSection =
   | 'settings'
   | 'profile';
 
-export type StaffShiftSection = 'map' | 'my-jobs' | 'my-pay' | 'my-help';
-
-const SHIFT_SECTIONS: StaffShiftSection[] = ['map', 'my-jobs', 'my-pay', 'my-help'];
-
-export function isStaffShiftSection(section: StaffSection): section is StaffShiftSection {
-  return SHIFT_SECTIONS.includes(section as StaffShiftSection);
+export function isStaffOpsMapSection(section: StaffSection): boolean {
+  return section === 'map';
 }
 
-export type GuardShiftTab = 'map' | 'opportunities' | 'earnings' | 'support'; // subset of GuardDashboard tabs
-
-export function staffSectionToShiftTab(section: StaffShiftSection): GuardShiftTab {
-  switch (section) {
-    case 'map':
-      return 'map';
-    case 'my-jobs':
-      return 'opportunities';
-    case 'my-pay':
-      return 'earnings';
-    case 'my-help':
-      return 'support';
-  }
-}
-
-export type DispatchJobStatus =
+export type LiveJobStatus =
   | 'pending-assignment'
   | 'active'
   | 'in-progress'
@@ -95,7 +73,7 @@ export interface OpsDispute {
   openedAt: string;
 }
 
-export function getDispatchStatus(req: SecurityRequest): DispatchJobStatus {
+export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
   if (req.checkOutAudit?.incidentReport?.hasIncident && req.status === 'in-progress') {
     return 'incident-flagged';
   }
@@ -105,12 +83,12 @@ export function getDispatchStatus(req: SecurityRequest): DispatchJobStatus {
   return 'pending-assignment';
 }
 
-export const DISPATCH_STATUS_LABEL: Record<DispatchJobStatus, { emoji: string; label: string; className: string }> = {
+export const LIVE_JOB_STATUS_LABEL: Record<LiveJobStatus, { emoji: string; label: string; className: string }> = {
   'pending-assignment': { emoji: '🟡', label: 'Pending Assignment', className: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
   active: { emoji: '🟢', label: 'Active', className: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
   'in-progress': { emoji: '🔵', label: 'In Progress', className: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
   completed: { emoji: '⚫', label: 'Completed', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
-  'incident-flagged': { emoji: '🔴', label: 'Incident Flagged', className: 'text-red-400 bg-red-500/10 border-red-500/30' },
+  'incident-flagged': { emoji: '📋', label: 'Client incident reported', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
 };
 
 export function computePlatformStats(
@@ -118,25 +96,23 @@ export function computePlatformStats(
   clients: Client[],
   requests: SecurityRequest[]
 ): PlatformStats {
-  const pendingGuardApprovals = guards.filter((g) => !g.verified && !g.isStaff).length;
-  const pendingClientApprovals = clients.filter((c) => c.approved === false).length;
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
   const pendingCerts = guards.reduce(
     (n, g) => n + g.certifications.filter((c) => c.status === 'pending').length,
     0
   );
-  const pendingApprovals = pendingGuardApprovals + pendingClientApprovals + pendingCerts;
-  const pendingReviews = pendingJobReviews + pendingApprovals;
+  const pendingApprovals = pendingCerts;
+  const pendingReviews = pendingJobReviews + pendingCerts;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const paymentHolds = requests.filter(
     (r) => r.status === 'completed' && !r.ratingGiven
-  ).length + clients.filter((c) => !c.approved).length;
+  ).length;
 
   const activeJobs = requests.filter((r) =>
     ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
   ).length;
   const onDutyGuards = requests.filter((r) => r.status === 'in-progress').length;
-  const activeClients = clients.filter((c) => c.approved !== false).length;
+  const activeClients = clients.length;
   const today = new Date().toDateString();
   const completedShiftsToday = requests.filter(
     (r) => r.status === 'completed' && r.checkOutAudit?.checkedAt &&
@@ -144,7 +120,7 @@ export function computePlatformStats(
   ).length;
 
   return {
-    platformHealthy: activeIncidents === 0 && pendingReviews < 20,
+    platformHealthy: pendingReviews < 20,
     pendingReviews,
     activeIncidents,
     paymentHolds,
@@ -187,7 +163,7 @@ export function buildPlatformActivityFeed(
       items.push({
         id: `${req.id}-incident`,
         timestamp: req.checkOutAudit.checkedAt,
-        message: `Incident report submitted — ${site}`,
+        message: `Client incident report filed — ${site}`,
         sortKey: new Date(req.checkOutAudit.checkedAt).getTime(),
       });
     }
@@ -293,7 +269,7 @@ export function computeAnalytics(
 
   return {
     totalRevenue: Math.round(platformRevenue * 100) / 100,
-    activeGuards: guards.filter((g) => g.verified && !g.isStaff).length,
+    activeGuards: guards.filter((g) => !g.isStaff && g.certifications.some((c) => c.status !== 'rejected')).length,
     clientGrowth: clients.length,
     repeatClients,
     jobCompletionRate: requests.length

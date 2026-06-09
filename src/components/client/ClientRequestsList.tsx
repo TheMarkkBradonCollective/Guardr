@@ -106,7 +106,11 @@ export function ClientRequestsList({
           <h1 className="text-xl font-black">All Requests</h1>
           <p className="text-xs font-mono text-brand-text-muted mt-1">Manage postings, hires, and reviews</p>
         </div>
-        <button type="button" onClick={onRequestNew} className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0">
+        <button
+          type="button"
+          onClick={onRequestNew}
+          className="uber-button-sage h-10 px-4 text-xs font-black uppercase shrink-0"
+        >
           + New
         </button>
       </div>
@@ -187,7 +191,7 @@ export function ClientRequestsList({
                       </p>
                     )}
                     <p className="uber-label">Hire a guard</p>
-                    {guards.filter((g) => g.verified).map((guard) => (
+                    {guards.map((guard) => (
                       <div key={guard.id} className="flex items-center gap-3 p-3 border border-brand-border rounded-lg">
                         <img src={guard.avatar} alt={guard.name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
                         <div className="flex-1 min-w-0">

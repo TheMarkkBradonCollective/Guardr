@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
-import { isStaffShiftSection, StaffSection } from '../../lib/staffOps';
+import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
 import { SidebarDrawer } from '../layouts/SidebarDrawer';
 import { StaffNavItem, StaffSidebarNav } from './StaffSidebarNav';
@@ -10,14 +10,12 @@ import {
   BarChart3,
   Building2,
   ClipboardCheck,
-  Compass,
   DollarSign,
   FileText,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
   Map,
-  MessageCircle,
   Radio,
   Scale,
   Settings,
@@ -37,22 +35,18 @@ interface StaffOpsLayoutProps {
   onSignOut: () => void;
   isDbConnected: boolean;
   badges?: Partial<Record<StaffSection, number>>;
-  showShiftNav?: boolean;
   fullBleed?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
   overview: 'Overview',
-  approvals: 'Approvals',
+  approvals: 'Verification',
   'live-jobs': 'Live Jobs',
-  map: 'Shift map',
-  'my-jobs': 'My jobs',
-  'my-pay': 'My pay',
-  'my-help': 'Get help',
+  map: 'Operations map',
   guards: 'Guards',
   clients: 'Clients',
   reports: 'Reports',
-  incidents: 'Incidents',
+  incidents: 'Client incidents',
   support: 'Support inbox',
   payments: 'Payments',
   disputes: 'Disputes',
@@ -71,25 +65,21 @@ export function StaffOpsLayout({
   onSignOut,
   isDbConnected,
   badges = {},
-  showShiftNav = true,
   fullBleed = false,
 }: StaffOpsLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
-  const bleed = fullBleed || isStaffShiftSection(activeSection);
+  const bleed = fullBleed || isStaffOpsMapSection(activeSection);
 
   const NAV: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'approvals', label: 'Approvals', icon: ClipboardCheck, badge: badges.approvals },
-    { id: 'live-jobs', label: 'Live Jobs', icon: Radio, badge: badges['live-jobs'] },
     { id: 'map', label: 'Map', icon: Map },
-    { id: 'my-jobs', label: 'My Jobs', icon: Compass },
-    { id: 'my-pay', label: 'My Pay', icon: DollarSign },
-    { id: 'my-help', label: 'Get Help', icon: MessageCircle },
+    { id: 'live-jobs', label: 'Live Jobs', icon: Radio, badge: badges['live-jobs'] },
+    { id: 'approvals', label: 'Verification', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
+    { id: 'incidents', label: 'Client incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'support', label: 'Support inbox', icon: LifeBuoy, badge: badges.support },
     { id: 'payments', label: 'Payments', icon: DollarSign, adminOnly: true },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
@@ -146,7 +136,6 @@ export function StaffOpsLayout({
       activeSection={activeSection}
       onNavigate={navigate}
       showFinance={showFinance}
-      showShiftNav={showShiftNav}
     />
   );
 
@@ -165,7 +154,7 @@ export function StaffOpsLayout({
         <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-brand-border bg-brand-bg-sec">
           <div className="p-4 border-b border-brand-border">
             <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr Staff</p>
-            <p className="font-black text-xs uppercase tracking-tight mt-0.5">Ops &amp; shifts</p>
+            <p className="font-black text-xs uppercase tracking-tight mt-0.5">Operations</p>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2">{sidebarNav}</div>
           <div className="shrink-0 p-3 border-t border-brand-border space-y-2">{sidebarFooter}</div>
@@ -182,7 +171,7 @@ export function StaffOpsLayout({
         open={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
         title="Guardr Staff"
-        subtitle="Ops & shifts"
+        subtitle="Operations"
         footer={sidebarFooter}
       >
         {sidebarNav}

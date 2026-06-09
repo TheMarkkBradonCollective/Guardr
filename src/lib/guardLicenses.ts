@@ -1,6 +1,11 @@
 import { Certification, SecurityGuard, SecurityRequest } from '../types';
 import { resolveCertCatalogId } from './certCatalog';
+import { guardHasCredentialOnFile } from './guardQualification';
 import { formatStateName } from './states';
+
+function isCredentialOnFile(cert: Certification): boolean {
+  return cert.status !== 'rejected';
+}
 
 export function isGuardCardCert(cert: Pick<Certification, 'name' | 'catalogId'>): boolean {
   const id = resolveCertCatalogId(cert);
@@ -12,34 +17,50 @@ export function isArmedGuardCardCert(cert: Pick<Certification, 'name' | 'catalog
   return id === 'bsis-exposed-firearm' || /armed security officer|exposed firearm/i.test(cert.name);
 }
 
+/** @deprecated Use guardHasCredentialOnFile — kept for call sites that mean “on file” */
 export function hasVerifiedGuardCardForState(
   guard: SecurityGuard,
   stateCode: string,
   armedRequired = false
 ): boolean {
+  return hasGuardCardForState(guard, stateCode, armedRequired);
+}
+
+export function hasGuardCardForState(
+  guard: SecurityGuard,
+  stateCode: string,
+  armedRequired = false
+): boolean {
   const state = stateCode.toUpperCase();
-  return guard.certifications.some((cert) => {
-    if (cert.status !== 'verified' || !isGuardCardCert(cert)) return false;
-    if (cert.state?.toUpperCase() !== state) return false;
-    if (armedRequired) {
-      return guardHasFirearmPermit(guard) || isArmedGuardCardCert(cert);
-    }
-    return true;
-  });
+  if (!guardHasCredentialOnFile(guard, 'bsis-guard-card', state)) return false;
+  if (armedRequired) {
+    return guardHasFirearmPermitOnFile(guard);
+  }
+  return true;
 }
 
 export function guardHasFirearmPermit(guard: SecurityGuard): boolean {
-  return guard.certifications.some((c) => {
-    if (c.status !== 'verified') return false;
-    const id = resolveCertCatalogId(c);
-    return id === 'bsis-exposed-firearm';
-  });
+  return guardHasFirearmPermitOnFile(guard);
+}
+
+export function guardHasFirearmPermitOnFile(guard: SecurityGuard): boolean {
+  return guardHasCredentialOnFile(guard, 'bsis-exposed-firearm');
 }
 
 export function getVerifiedLicensedStates(guard: SecurityGuard): string[] {
   const states = new Set<string>();
   for (const cert of guard.certifications) {
     if (cert.status === 'verified' && isGuardCardCert(cert) && cert.state) {
+      states.add(cert.state.toUpperCase());
+    }
+  }
+  return [...states].sort();
+}
+
+export function getLicensedStatesOnFile(guard: SecurityGuard): string[] {
+  const states = new Set<string>();
+  for (const cert of guard.certifications) {
+    if (isCredentialOnFile(cert) && isGuardCardCert(cert) && cert.state) {
       states.add(cert.state.toUpperCase());
     }
   }
@@ -58,12 +79,12 @@ export function getPendingLicensedStates(guard: SecurityGuard): string[] {
 
 export function guardCanWorkInState(guard: SecurityGuard, stateCode: string, armedRequired = false): boolean {
   if (!stateCode) {
-    return guard.certifications.some((c) => c.status === 'verified' && isGuardCardCert(c));
+    return guardHasCredentialOnFile(guard, 'bsis-guard-card');
   }
   if (armedRequired) {
-    return hasVerifiedGuardCardForState(guard, stateCode, true) && guardHasFirearmPermit(guard);
+    return hasGuardCardForState(guard, stateCode, true);
   }
-  return hasVerifiedGuardCardForState(guard, stateCode, false);
+  return hasGuardCardForState(guard, stateCode, false);
 }
 
 export function stateLicenseRequirementLabel(job: SecurityRequest): string {

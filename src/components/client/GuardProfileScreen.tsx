@@ -158,9 +158,8 @@ export function GuardProfileScreen({
           )}
 
           {credentialSections.map((category) => {
-            const items = (groupedCerts[category] ?? []).filter((c) => c.status === 'verified');
-            const pending = (groupedCerts[category] ?? []).filter((c) => c.status === 'pending');
-            if (items.length === 0 && pending.length === 0) return null;
+            const items = (groupedCerts[category] ?? []).filter((c) => c.status !== 'rejected');
+            if (items.length === 0) return null;
             return (
               <section key={category} className="space-y-2">
                 <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
@@ -176,12 +175,9 @@ export function GuardProfileScreen({
                           {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-brand-primary shrink-0">Verified</span>
-                    </div>
-                  ))}
-                  {pending.map((cert) => (
-                    <div key={cert.id} className="app-card opacity-70 text-xs text-brand-text-muted">
-                      {certDisplayName(cert)} — pending verification
+                      <span className={`text-xs font-semibold shrink-0 ${cert.status === 'verified' ? 'text-brand-primary' : 'text-brand-text-muted'}`}>
+                        {cert.status === 'verified' ? 'Guardr verified' : 'On file'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -261,7 +257,11 @@ export function GuardProfileScreen({
       </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full">
-        <button type="button" onClick={() => onRequestGuard(guard)} className="w-full uber-button-sage">
+        <button
+          type="button"
+          onClick={() => onRequestGuard(guard)}
+          className="w-full uber-button-sage"
+        >
           Send assignment request to {guard.name.split(' ')[0]}
         </button>
         <p className="text-center text-xs text-brand-text-muted mt-2">
