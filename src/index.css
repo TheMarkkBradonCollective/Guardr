@@ -791,6 +791,15 @@ body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.sidebar-drawer-panel {
+  animation: sidebar-slide-in 0.22s ease-out;
+}
+
+@keyframes sidebar-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
 body[data-form-factor="tablet"] .guard-map-layout .guardr-map-root {
   right: min(380px, 40vw);
 }

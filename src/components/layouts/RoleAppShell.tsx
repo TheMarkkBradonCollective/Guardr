@@ -1,6 +1,6 @@
 import React from 'react';
-import { Logo } from '../Logo';
 import { AppBottomNav, BottomNavItem } from './AppBottomNav';
+import { AppScreenHeader } from './AppScreenHeader';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -34,22 +34,12 @@ export function RoleAppShell({
     <div
       className={`role-app-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text`}
     >
-      <header
-        className={`shrink-0 h-14 px-4 flex items-center justify-between gap-3 border-b border-brand-border ${
-          isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : 'bg-brand-bg-sec'
-        }`}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <Logo size={28} />
-          <div className="min-w-0">
-            {subtitle && (
-              <p className="text-[11px] font-medium text-brand-text-muted leading-none mb-0.5">{subtitle}</p>
-            )}
-            <p className="text-base font-semibold truncate leading-tight">{title}</p>
-          </div>
-        </div>
-        {headerRight && <div className="shrink-0">{headerRight}</div>}
-      </header>
+      <AppScreenHeader
+        title={title}
+        subtitle={subtitle}
+        right={headerRight}
+        className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
+      />
 
       <main className="flex-1 min-h-0 overflow-hidden relative">{children}</main>
 

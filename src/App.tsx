@@ -18,7 +18,7 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { isStaffRole } from './lib/permissions';
+import { isStaffRole, ROLE_LABELS } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
@@ -26,6 +26,7 @@ import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
+import { AppScreenHeader } from './components/layouts/AppScreenHeader';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { computeDurationHours } from './lib/dates';
@@ -1260,7 +1261,14 @@ export default function App() {
 
     if (staffGuardMode && !staffGuardProfile) {
       return (
-        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
+        <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden">
+          <AppScreenHeader
+            title="Guard profile"
+            subtitle={`${ROLE_LABELS[currentUser.role]} · Ops Center`}
+            onMenuClick={() => setStaffGuardModePersisted(false)}
+            menuLabel="Open staff menu"
+          />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
           <Logo className="text-brand-primary" size={48} />
           <h2 className="font-bold text-lg">Guard profile not linked</h2>
           <p className="text-sm text-brand-text-muted max-w-sm">
@@ -1277,6 +1285,7 @@ export default function App() {
             <button type="button" onClick={handleSignOut} className="uber-button-outline h-11 px-6 text-sm">
               Sign out
             </button>
+          </div>
           </div>
         </div>
       );
