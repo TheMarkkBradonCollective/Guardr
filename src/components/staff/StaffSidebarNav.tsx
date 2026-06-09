@@ -19,8 +19,8 @@ interface StaffSidebarNavProps {
   showShiftNav?: boolean;
 }
 
-const PRIMARY_IDS: StaffSection[] = ['overview', 'live-jobs', 'approvals'];
-const SHIFT_IDS: StaffSection[] = ['map', 'my-jobs', 'my-pay', 'my-help'];
+const PRIMARY_IDS: StaffSection[] = ['overview', 'map', 'live-jobs', 'approvals'];
+const SHIFT_IDS: StaffSection[] = ['my-jobs', 'my-pay', 'my-help'];
 const MORE_IDS: StaffSection[] = ['guards', 'clients', 'reports', 'incidents', 'support', 'disputes', 'analytics'];
 const ADMIN_IDS: StaffSection[] = ['payments', 'settings'];
 const ACCOUNT_IDS: StaffSection[] = ['profile'];

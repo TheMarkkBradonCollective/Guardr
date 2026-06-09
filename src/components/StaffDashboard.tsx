@@ -122,7 +122,7 @@ export function StaffDashboard({
   onUpdateStripeAccount,
   onRecordAuditViolation,
 }: StaffDashboardProps) {
-  const [section, setSection] = useState<StaffSection>('overview');
+  const [section, setSection] = useState<StaffSection>('map');
   const staffGuard = findGuardProfileForUser(currentUser, guards) ?? null;
 
   const showFinance = canAccessFinancialControls(currentUser);

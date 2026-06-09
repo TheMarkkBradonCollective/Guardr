@@ -39,7 +39,7 @@ export function GuardEarningsPanel({
   ];
 
   return (
-    <div className="absolute inset-0 z-[1002] bg-brand-bg overflow-y-auto pt-20 pb-24 px-4">
+    <div className="px-4 py-4">
       <div className="max-w-lg mx-auto space-y-6 animate-fade-in">
         <div>
           <p className="text-sm text-brand-text-muted mb-1">Earnings</p>
