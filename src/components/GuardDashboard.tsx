@@ -9,7 +9,8 @@ import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { Logo } from './Logo';
-import { AlertTriangle, Map, DollarSign, Compass, User } from 'lucide-react';
+import { ROLE_LABELS } from '../lib/permissions';
+import { AlertTriangle, Map, DollarSign, Compass, User, LogOut, LayoutDashboard } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
@@ -331,18 +332,18 @@ export function GuardDashboard({
   }
 
   const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
+  const isStaffGuardView = !!onExitGuardMode;
+  const panelBottomPad = isStaffGuardView ? '' : 'pb-24';
 
-  const BOTTOM_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
+  const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'opportunities', icon: Compass, label: 'Jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
     { id: 'profile', icon: User, label: 'Profile' },
   ];
 
-  return (
-    <div className="page-shell fixed inset-0 overflow-hidden flex flex-col h-dvh max-h-dvh">
-      <div className={`flex-1 min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
-      {/* Map — visible on map tab */}
+  const guardMainPanel = (
+    <div className={`flex-1 min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
@@ -352,39 +353,28 @@ export function GuardDashboard({
         />
       )}
 
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-[1001] p-3 flex items-center justify-between pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2 bg-brand-surface/95 backdrop-blur-xl rounded-2xl px-3.5 py-2.5 border border-brand-border shadow-lg">
-          <Logo className="text-brand-primary" size={24} />
-          <div>
-            <p className="text-[10px] font-medium text-brand-text-muted leading-none">Guardr</p>
-            <p className="text-sm font-semibold leading-tight">{guard.name.split(' ')[0]}</p>
+      {!isStaffGuardView && (
+        <div className="absolute top-0 left-0 right-0 z-[1001] p-3 flex items-center justify-between pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-2 bg-brand-surface/95 backdrop-blur-xl rounded-2xl px-3.5 py-2.5 border border-brand-border shadow-lg">
+            <Logo className="text-brand-primary" size={24} />
+            <div>
+              <p className="text-[10px] font-medium text-brand-text-muted leading-none">Guardr</p>
+              <p className="text-sm font-semibold leading-tight">{guard.name.split(' ')[0]}</p>
+            </div>
           </div>
-        </div>
-        <div className="pointer-events-auto flex items-center gap-2">
-          {onExitGuardMode && (
-            <button
-              type="button"
-              onClick={onExitGuardMode}
-              className="px-3 py-2 rounded-xl bg-brand-surface/95 border border-brand-border text-xs font-semibold text-brand-text-muted hover:text-brand-text backdrop-blur-xl shadow-lg"
-            >
-              Staff ops
-            </button>
-          )}
           {onSignOut && (
             <button
               type="button"
               onClick={() => setActiveTab('profile')}
-              className="p-2.5 rounded-xl bg-brand-surface/95 border border-brand-border text-brand-text-muted hover:text-brand-text backdrop-blur-xl shadow-lg"
+              className="pointer-events-auto p-2.5 rounded-xl bg-brand-surface/95 border border-brand-border text-brand-text-muted hover:text-brand-text backdrop-blur-xl shadow-lg"
               aria-label="Profile"
             >
               <User className="w-4 h-4" />
             </button>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Map tab: shift overlay OR job bottom sheet */}
       {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
         <GuardActiveShift
           job={activeShiftJob}
@@ -412,43 +402,43 @@ export function GuardDashboard({
       )}
 
       {activeTab === 'earnings' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
-        <div className="guard-scroll-panel flex-1">
-        <GuardEarningsPanel
-          summary={earningsSummary}
-          completedJobs={completedJobs}
-          balance={releasedEarnings}
-          pendingPayout={pendingPayout}
-          stripeConnected={!!guard.stripeConnectAccountId}
-          stripeReady={connectReady}
-          connectPending={connectPending}
-          onConnectStripe={handleConnectStripe}
-          onCashOut={handleCashOut}
-          cashoutPending={cashoutPending}
-          payments={payments.filter(p => {
-            const job = requests.find(r => r.id === p.jobId);
-            return job?.assignedGuardId === guard.id;
-          })}
-        />
-        </div>
+        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+          <div className="guard-scroll-panel flex-1">
+            <GuardEarningsPanel
+              summary={earningsSummary}
+              completedJobs={completedJobs}
+              balance={releasedEarnings}
+              pendingPayout={pendingPayout}
+              stripeConnected={!!guard.stripeConnectAccountId}
+              stripeReady={connectReady}
+              connectPending={connectPending}
+              onConnectStripe={handleConnectStripe}
+              onCashOut={handleCashOut}
+              cashoutPending={cashoutPending}
+              payments={payments.filter(p => {
+                const job = requests.find(r => r.id === p.jobId);
+                return job?.assignedGuardId === guard.id;
+              })}
+            />
+          </div>
         </div>
       )}
 
       {activeTab === 'opportunities' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
-        <GuardOpportunitiesPanel
-          jobs={availableJobs}
-          guard={guard}
-          guardPosition={guardPosition}
-          selectedJobId={selectedJobId}
-          onSelectJob={setSelectedJobId}
-          onAcceptJob={handleAcceptJob}
-        />
+        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+          <GuardOpportunitiesPanel
+            jobs={availableJobs}
+            guard={guard}
+            guardPosition={guardPosition}
+            selectedJobId={selectedJobId}
+            onSelectJob={setSelectedJobId}
+            onAcceptJob={handleAcceptJob}
+          />
         </div>
       )}
 
       {activeTab === 'profile' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden pb-24">
+        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
           <UserProfileScreen
             currentUser={currentUser}
             themeMode={themeMode as 'dark' | 'light' | 'grey'}
@@ -462,28 +452,11 @@ export function GuardDashboard({
           />
         </div>
       )}
+    </div>
+  );
 
-      </div>
-
-      {/* Bottom tab bar — Uber driver style */}
-      <nav className="app-bottom-nav shrink-0 z-[1002] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="app-bottom-nav-pill max-w-md mx-auto flex p-1.5">
-          {BOTTOM_TABS.map(({ id, icon: Icon, label }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setActiveTab(id)}
-              className={`app-bottom-nav-item flex-1 flex flex-col items-center gap-1 py-2 min-h-[52px] ${
-                activeTab === id ? 'app-bottom-nav-item--active' : 'text-brand-text-muted hover:text-brand-text'
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
+  const guardModals = (
+    <>
       {showSelfAudit && (
         <GuardSelfAuditModal
           onClose={() => setShowSelfAudit(false)}
@@ -512,6 +485,97 @@ export function GuardDashboard({
           onSubmit={() => setRatingJob(null)}
         />
       )}
+    </>
+  );
+
+  if (isStaffGuardView) {
+    return (
+      <div className="page-shell guard-staff-layout fixed inset-0 flex h-dvh max-h-dvh overflow-hidden">
+        <aside className="guard-staff-sidebar w-16 sm:w-56 shrink-0 flex flex-col border-r border-brand-border bg-brand-bg-sec">
+          <div className="p-3 sm:p-4 border-b border-brand-border">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <Logo size={24} />
+              <div className="hidden sm:block min-w-0">
+                <p className="text-[8px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr</p>
+                <p className="font-black text-xs uppercase tracking-tight">On Shift</p>
+              </div>
+            </div>
+            <p className="hidden sm:block text-sm font-semibold mt-2 truncate">{guard.name}</p>
+            <p className="hidden sm:block text-[9px] font-mono text-brand-text-muted mt-1">
+              {ROLE_LABELS[currentUser.role]} · Guard mode
+            </p>
+          </div>
+
+          <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto" aria-label="Guard navigation">
+            {NAV_TABS.map(({ id, icon: Icon, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                title={label}
+                className={`w-full flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  activeTab === id
+                    ? 'bg-brand-primary text-brand-accent-text'
+                    : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline truncate">{label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="p-2 border-t border-brand-border space-y-1">
+            <button
+              type="button"
+              onClick={onExitGuardMode}
+              className="w-full flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-3 py-2.5 rounded-xl text-sm font-medium text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 transition-colors"
+            >
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Staff ops</span>
+            </button>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="w-full flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-3 py-2 rounded-xl text-[10px] font-mono font-bold uppercase text-brand-text-muted hover:text-brand-text hover:bg-brand-surface transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
+        </aside>
+
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col relative">
+          {guardMainPanel}
+          {guardModals}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-shell fixed inset-0 overflow-hidden flex flex-col h-dvh max-h-dvh">
+      {guardMainPanel}
+
+      <nav className="app-bottom-nav shrink-0 z-[1002] px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="app-bottom-nav-pill max-w-md mx-auto flex p-1.5">
+          {NAV_TABS.map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveTab(id)}
+              className={`app-bottom-nav-item flex-1 flex flex-col items-center gap-1 py-2 min-h-[52px] ${
+                activeTab === id ? 'app-bottom-nav-item--active' : 'text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {guardModals}
     </div>
   );
 }

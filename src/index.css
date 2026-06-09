@@ -777,6 +777,20 @@ body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
   bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Staff guard view — sidebar nav, no bottom bar */
+.guard-staff-layout .guard-map-layout .guardr-map-root {
+  bottom: 0;
+}
+
+.guard-staff-layout .guardr-bottom-sheet-uber,
+.guard-staff-layout .guardr-active-shift {
+  bottom: 0;
+}
+
+.guard-staff-sidebar {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 body[data-form-factor="tablet"] .guard-map-layout .guardr-map-root {
   right: min(380px, 40vw);
 }
