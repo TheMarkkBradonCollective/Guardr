@@ -50,7 +50,7 @@ export interface PlatformStats {
   onDutyGuards: number;
   activeClients: number;
   pendingApprovals: number;
-  completedShiftsToday: number;
+  completedJobs: number;
 }
 
 export interface OpsActivityItem {
@@ -145,10 +145,8 @@ export function computePlatformStats(
   ).length;
   const onDutyGuards = requests.filter((r) => r.status === 'in-progress').length;
   const activeClients = clients.length;
-  const today = new Date().toDateString();
-  const completedShiftsToday = requests.filter(
-    (r) => r.status === 'completed' && r.checkOutAudit?.checkedAt &&
-      new Date(r.checkOutAudit.checkedAt).toDateString() === today
+  const completedJobs = requests.filter((r) =>
+    r.status === 'completed' || r.status === 'closed'
   ).length;
 
   return {
@@ -160,7 +158,7 @@ export function computePlatformStats(
     onDutyGuards,
     activeClients,
     pendingApprovals,
-    completedShiftsToday: completedShiftsToday || requests.filter((r) => r.status === 'completed').length,
+    completedJobs,
   };
 }
 

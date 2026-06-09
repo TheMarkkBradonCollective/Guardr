@@ -77,7 +77,7 @@ export function StaffOverview({
     { label: 'Active jobs', value: stats.activeJobs, accent: stats.activeJobs > 0 },
     { label: 'On site now', value: stats.onDutyGuards, accent: stats.onDutyGuards > 0 },
     { label: 'To verify', value: stats.pendingApprovals, accent: stats.pendingApprovals > 0 },
-    { label: 'Shifts done today', value: stats.completedShiftsToday, accent: false },
+    { label: 'Completed jobs', value: stats.completedJobs, accent: false },
     { label: 'Active clients', value: stats.activeClients, accent: false },
     { label: 'Open incidents', value: stats.activeIncidents, accent: stats.activeIncidents > 0 },
   ];
