@@ -48,6 +48,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const db = await getSupabaseAdmin();
+    if (db) {
+      const { data: job } = await db
+        .from('security_requests')
+        .select('payment_status')
+        .eq('id', jobId)
+        .maybeSingle();
+
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      if (job.payment_status && job.payment_status !== 'unpaid') {
+        return res.status(400).json({ error: 'This job already has a payment on file' });
+      }
+    }
+
     const base = getSiteUrl();
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -73,7 +90,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cancel_url: `${base}/?payment=cancelled&job_id=${jobId}`,
     });
 
-    const db = await getSupabaseAdmin();
     if (db) {
       await db.from('payments').insert({
         id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

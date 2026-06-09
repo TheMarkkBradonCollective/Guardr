@@ -158,7 +158,10 @@ async function markJobReleased(jobId: string, transferId: string) {
   const db = getSupabaseAdmin();
   if (!db) return;
 
-  await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
+  await db
+    .from('security_requests')
+    .update({ payment_status: 'released', guard_payout_method: 'stripe' })
+    .eq('id', jobId);
   await db
     .from('payments')
     .update({
@@ -496,6 +499,23 @@ export function registerStripeRoutes(app: Express) {
     }
 
     try {
+      const db = getSupabaseAdmin();
+      if (db) {
+        const { data: job } = await db
+          .from('security_requests')
+          .select('payment_status')
+          .eq('id', jobId)
+          .maybeSingle();
+
+        if (!job) {
+          return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (job.payment_status && job.payment_status !== 'unpaid') {
+          return res.status(400).json({ error: 'This job already has a payment on file' });
+        }
+      }
+
       const base = getSiteUrl();
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
@@ -521,7 +541,6 @@ export function registerStripeRoutes(app: Express) {
         cancel_url: `${base}/?payment=cancelled&job_id=${jobId}`,
       });
 
-      const db = getSupabaseAdmin();
       if (db) {
         await db.from('payments').insert({
           id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -564,7 +583,9 @@ export function registerStripeRoutes(app: Express) {
     if (db) {
       const { data: job } = await db
         .from('security_requests')
-        .select('status, payment_status, assigned_guard_id')
+        .select(
+          'status, payment_status, assigned_guard_id, guard_payout_method, guard_cash_payout_requested'
+        )
         .eq('id', jobId)
         .maybeSingle();
 
@@ -582,6 +603,14 @@ export function registerStripeRoutes(app: Express) {
 
       if (!['paid', 'held'].includes(job.payment_status ?? '') && !force) {
         return res.status(400).json({ error: 'Job payment must be paid or held before payout' });
+      }
+
+      if (job.guard_payout_method === 'cash') {
+        return res.status(400).json({ error: 'Guard was paid in cash for this shift' });
+      }
+
+      if (job.guard_cash_payout_requested) {
+        return res.status(400).json({ error: 'Guard requested cash payout for this shift' });
       }
     }
 

@@ -156,7 +156,10 @@ export async function markJobReleased(jobId: string, transferId: string) {
   const db = getSupabaseAdmin();
   if (!db) return;
 
-  await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
+  await db
+    .from('security_requests')
+    .update({ payment_status: 'released', guard_payout_method: 'stripe' })
+    .eq('id', jobId);
   await db
     .from('payments')
     .update({

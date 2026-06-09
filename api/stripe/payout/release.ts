@@ -55,7 +55,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (db) {
     const { data: job } = await db
       .from('security_requests')
-      .select('status, payment_status, assigned_guard_id')
+      .select(
+        'status, payment_status, assigned_guard_id, guard_payout_method, guard_cash_payout_requested'
+      )
       .eq('id', jobId)
       .maybeSingle();
 
@@ -74,6 +76,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!['paid', 'held'].includes(job.payment_status ?? '') && !force) {
       return res.status(400).json({ error: 'Job payment must be paid or held before payout' });
     }
+
+    if (job.guard_payout_method === 'cash') {
+      return res.status(400).json({ error: 'Guard was paid in cash for this shift' });
+    }
+
+    if (job.guard_cash_payout_requested) {
+      return res.status(400).json({ error: 'Guard requested cash payout for this shift' });
+    }
   }
 
   const amountCents = computeGuardPayoutCents(hourlyRate, durationHours);
@@ -90,7 +100,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (db) {
-      await db.from('security_requests').update({ payment_status: 'released' }).eq('id', jobId);
+      await db
+        .from('security_requests')
+        .update({ payment_status: 'released', guard_payout_method: 'stripe' })
+        .eq('id', jobId);
       await db
         .from('payments')
         .update({

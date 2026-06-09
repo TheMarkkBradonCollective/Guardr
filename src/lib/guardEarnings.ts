@@ -27,6 +27,8 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
 
   for (const job of jobs) {
     if (job.status !== 'completed' || job.assignedGuardId == null) continue;
+    // Only count shifts where the client payment is in the pipeline (paid, held, or released)
+    if (job.payoutStatus == null) continue;
 
     const amount = shiftEarnings(job);
     totalEarnings += amount;

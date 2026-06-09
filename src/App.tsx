@@ -307,6 +307,7 @@ export default function App() {
         isStaff: g.is_staff,
         staffRole: g.staff_role,
         userStatus: g.user_status || 'active',
+        failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
@@ -372,6 +373,9 @@ export default function App() {
         cashDepositedAt: r.cash_deposited_at || undefined,
         guardCashPayoutRequested: !!r.guard_cash_payout_requested,
         guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
+        checkInAudit: r.check_in_audit ?? undefined,
+        midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
+        checkOutAudit: r.check_out_audit ?? undefined,
       })));
 
       setPayments((dbPayments ?? []).map((p: any) => ({
@@ -1033,7 +1037,7 @@ export default function App() {
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
-      status: 'open',
+      status: 'pending-review',
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
@@ -1266,7 +1270,9 @@ export default function App() {
     if (!window.confirm(`Record $${amount} paid in cash to the guard for "${req.title}"?`)) return;
 
     const paymentId = `pay-cash-guard-${Date.now()}`;
-    const existingPayment = payments.find((p) => p.jobId === requestId);
+    const existingGuardPayment = payments.find(
+      (p) => p.jobId === requestId && p.status === 'released'
+    );
 
     setRequests((prev) =>
       prev.map((r) =>
@@ -1282,9 +1288,11 @@ export default function App() {
       )
     );
     setPayments((prev) => {
-      if (existingPayment) {
+      if (existingGuardPayment) {
         return prev.map((p) =>
-          p.jobId === requestId ? { ...p, status: 'released', paymentMethod: 'cash' } : p
+          p.id === existingGuardPayment.id
+            ? { ...p, status: 'released', paymentMethod: 'cash', amount }
+            : p
         );
       }
       return [
@@ -1292,7 +1300,7 @@ export default function App() {
         {
           id: paymentId,
           jobId: requestId,
-          amount: req.estimatedPayout,
+          amount,
           status: 'released' as const,
           paymentMethod: 'cash' as const,
         },
@@ -1309,16 +1317,16 @@ export default function App() {
           guard_cash_payout_requested_at: null,
         })
         .eq('id', requestId);
-      if (existingPayment) {
+      if (existingGuardPayment) {
         await supabase
           .from('payments')
-          .update({ status: 'released', payment_method: 'cash' })
-          .eq('id', existingPayment.id);
+          .update({ status: 'released', payment_method: 'cash', amount })
+          .eq('id', existingGuardPayment.id);
       } else {
         await supabase.from('payments').insert({
           id: paymentId,
           job_id: requestId,
-          amount: req.estimatedPayout,
+          amount,
           status: 'released',
           payment_method: 'cash',
         });
@@ -1447,6 +1455,7 @@ export default function App() {
         guard_pay: merged.guardPay,
         estimated_payout: merged.estimatedPayout,
         required_certifications: merged.requiredCertifications,
+        status: merged.status,
       }).eq('id', requestId);
     }
   };
@@ -1501,11 +1510,15 @@ export default function App() {
         return;
       }
     }
+    const nextMidShiftAudits = payload.midShiftAudit
+      ? [...(req?.midShiftAudits || []), payload.midShiftAudit]
+      : undefined;
+
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
       if (payload.checkInAudit) updated.checkInAudit = payload.checkInAudit;
-      if (payload.midShiftAudit) updated.midShiftAudits = [...(updated.midShiftAudits || []), payload.midShiftAudit];
+      if (nextMidShiftAudits) updated.midShiftAudits = nextMidShiftAudits;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
       if (payload.status) {
         updated.status = payload.status;
@@ -1518,13 +1531,21 @@ export default function App() {
       }
       return updated;
     }));
-    if (isDbConnected && payload.status) {
-      const updates: Record<string, unknown> = { status: payload.status };
-      const req = requests.find(r => r.id === requestId);
-      if (payload.status === 'completed' && req?.paymentStatus === 'paid') {
-        updates.payment_status = 'held';
+
+    if (isDbConnected) {
+      const updates: Record<string, unknown> = {};
+      if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
+      if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
+      if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
+      if (payload.status) {
+        updates.status = payload.status;
+        if (payload.status === 'completed' && req?.paymentStatus === 'paid') {
+          updates.payment_status = 'held';
+        }
       }
-      await supabase.from('security_requests').update(updates).eq('id', requestId);
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('security_requests').update(updates).eq('id', requestId);
+      }
     }
     if (payload.status === 'completed') {
       const req = requests.find(r => r.id === requestId);
@@ -1556,7 +1577,7 @@ export default function App() {
       (r) =>
         r.assignedGuardId === guardId &&
         r.status === 'completed' &&
-        r.paymentStatus !== 'released' &&
+        ['paid', 'held'].includes(r.paymentStatus || '') &&
         r.guardPayoutMethod !== 'cash' &&
         !r.guardCashPayoutRequested
     );
@@ -1599,7 +1620,7 @@ export default function App() {
       (r) =>
         r.assignedGuardId === guardId &&
         r.status === 'completed' &&
-        r.paymentStatus !== 'released' &&
+        ['paid', 'held'].includes(r.paymentStatus || '') &&
         r.guardPayoutMethod !== 'cash' &&
         !r.guardCashPayoutRequested
     );
@@ -1709,33 +1730,9 @@ export default function App() {
     const paymentResult = params.get('payment');
     const jobId = params.get('job_id');
     if (paymentResult === 'success' && jobId) {
-      handleJobPaymentStatus(jobId, 'paid');
-      setRequests((prev) =>
-        prev.map((r) => (r.id === jobId ? { ...r, clientPaymentMethod: 'stripe' } : r))
-      );
-      if (isDbConnected) {
-        void supabase
-          .from('security_requests')
-          .update({ client_payment_method: 'stripe' })
-          .eq('id', jobId);
-      }
-      setPayments(prev => {
-        const exists = prev.some(p => p.jobId === jobId);
-        if (exists) {
-          return prev.map(p =>
-            p.jobId === jobId ? { ...p, status: 'paid', paymentMethod: 'stripe' } : p
-          );
-        }
-        const req = requests.find(r => r.id === jobId);
-        return [...prev, {
-          id: `pay-${Date.now()}`,
-          jobId,
-          amount: req?.estimatedPayout ?? 0,
-          status: 'paid' as const,
-          paymentMethod: 'stripe' as const,
-        }];
-      });
+      void loadFromSupabase();
       window.history.replaceState({}, '', window.location.pathname);
+      alert('Payment received — your job will update shortly.');
     }
     if (paymentResult === 'cancelled') {
       window.history.replaceState({}, '', window.location.pathname);
@@ -1750,7 +1747,7 @@ export default function App() {
     if (depositResult === 'cancelled') {
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [requests]);
+  }, []);
 
   // ── Compliance violations ──────────────────────────────────
   const handleRecordAuditViolation = async (guardId: string, reason?: string) => {
@@ -1770,14 +1767,25 @@ export default function App() {
       const g = guards.find(x => x.id === guardId);
       if (g) {
         const fails = (g.failedAudits || 0) + 1;
-        await supabase.from('guards').update({ user_status: fails >= 3 ? 'suspended' : g.userStatus }).eq('id', guardId);
+        await supabase
+          .from('guards')
+          .update({
+            failed_audits: fails,
+            user_status: fails >= 3 ? 'suspended' : g.userStatus || 'active',
+          })
+          .eq('id', guardId);
       }
     }
   };
 
   const handleResetAuditFailures = async (guardId: string) => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, failedAudits: 0, userStatus: 'active' } : g));
-    if (isDbConnected) await supabase.from('guards').update({ user_status: 'active' }).eq('id', guardId);
+    if (isDbConnected) {
+      await supabase
+        .from('guards')
+        .update({ failed_audits: 0, user_status: 'active' })
+        .eq('id', guardId);
+    }
     alert('✓ Compliance record cleared. Account reinstated.');
   };
 

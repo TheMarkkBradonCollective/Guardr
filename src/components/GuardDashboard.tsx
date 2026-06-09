@@ -313,7 +313,7 @@ export function GuardDashboard({
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'in-progress',
       checkInAudit: {
-        checkedAt: new Date().toLocaleTimeString(),
+        checkedAt: new Date().toISOString(),
         gpsVerified: true,
         uniform: {
           uniformPresent: payload.uniform.uniformPresent,
@@ -356,7 +356,7 @@ export function GuardDashboard({
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
-        checkedAt: new Date().toLocaleTimeString(),
+        checkedAt: new Date().toISOString(),
         completed: true,
         noViolations: true,
         noEquipmentIssues: true,
