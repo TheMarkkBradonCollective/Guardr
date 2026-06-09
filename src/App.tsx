@@ -46,8 +46,9 @@ import {
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
-import { getGuardPayoutHistory, getGuardVisibleJobs } from './lib/guardJobView';
+import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
 import { checkJobRequirements } from './lib/guardJobs';
+import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
@@ -851,6 +852,18 @@ export default function App() {
 
   const handleHireGuard = async (requestId: string, guardId: string) => {
     const job = requests.find((r) => r.id === requestId);
+    const guard = guards.find((g) => g.id === guardId);
+    if (!job || !guard) return;
+    const workBlocked = guardWorkBlockedMessage(guard, job.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job));
+    if (!canAccept) {
+      alert(`${guard.name} does not meet the requirements for this job.`);
+      return;
+    }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...r.applicants, guardId] } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] }).eq('id', requestId);
     if (currentUser && job) {
@@ -873,6 +886,14 @@ export default function App() {
 
   const handleUpdateStatus = async (requestId: string, status: SecurityRequest['status']) => {
     const req = requests.find(r => r.id === requestId);
+    if (req && status === 'in-progress' && req.assignedGuardId) {
+      const assigned = guards.find((g) => g.id === req.assignedGuardId);
+      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Assigned guard not found.';
+      if (workBlocked) {
+        alert(workBlocked);
+        return;
+      }
+    }
     if (req && status === 'in-progress') {
       const blocked = guardClockInBlockedMessage(req);
       if (blocked) {
@@ -1195,6 +1216,11 @@ export default function App() {
       alert('Staff accounts cannot accept field shifts. Sign in with a guard account to work assignments.');
       return;
     }
+    const workBlocked = guardWorkBlockedMessage(activeGuard);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
       if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
@@ -1218,6 +1244,11 @@ export default function App() {
   const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; status?: SecurityRequest['status']; }) => {
     const req = requests.find((r) => r.id === requestId);
     if (req && payload.status === 'in-progress' && payload.checkInAudit) {
+      const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
+      if (workBlocked) {
+        alert(workBlocked);
+        return;
+      }
       if (!canGuardClockIn(req)) {
         alert(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.');
         return;

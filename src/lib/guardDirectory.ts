@@ -1,5 +1,5 @@
 import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
-import { guardMeetsQualificationLevel } from './guardQualification';
+import { guardCanWorkFieldShifts } from './guardQualification';
 
 /** Match a session user to their guard row (staff often share one email across roles). */
 export function findGuardProfileForUser(
@@ -21,16 +21,10 @@ export interface GuardWorkHistoryItem {
   reviewText?: string;
 }
 
-/** Guards with at least Inactive-pathway credentials on file — available for clients to browse and hire */
+/** Active guards only — clients may browse, hire, and send direct requests */
 export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
   return guards
-    .filter(
-      (g) =>
-        !g.isStaff &&
-        g.userStatus !== 'suspended' &&
-        g.userStatus !== 'blocked' &&
-        guardMeetsQualificationLevel(g, 'pending')
-    )
+    .filter((g) => guardCanWorkFieldShifts(g))
     .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
 }
 

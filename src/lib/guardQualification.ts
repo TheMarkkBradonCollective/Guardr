@@ -37,6 +37,31 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   return getGuardQualificationLevel(guard, state) === 'active' ? 'active' : 'inactive';
 }
 
+/** Active account + Active credential pathway — required to accept, be hired, or work shifts */
+export function guardCanWorkFieldShifts(guard: SecurityGuard, state = 'CA'): boolean {
+  if (guard.isStaff) return false;
+  const userStatus = guard.userStatus || 'active';
+  if (userStatus !== 'active') return false;
+  return getGuardQualificationLevel(guard, state) === 'active';
+}
+
+export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
+  if (guard.isStaff) {
+    return 'Staff accounts cannot work field shifts.';
+  }
+  const userStatus = guard.userStatus || 'active';
+  if (userStatus === 'suspended') {
+    return 'Your account is suspended. Contact Guardr support to restore access.';
+  }
+  if (userStatus === 'blocked') {
+    return 'Your account is blocked. Contact Guardr support.';
+  }
+  if (getGuardQualificationLevel(guard, state) !== 'active') {
+    return `${GUARD_STATUS_LABELS.inactive} guards cannot accept or work shifts. Complete the Active credential pathway in your profile first.`;
+  }
+  return null;
+}
+
 export function guardPathwayStatusLabel(level: GuardQualificationLevel): string {
   if (level === 'none') return GUARD_STATUS_LABELS.inactive;
   return GUARD_PATHWAY_STATUS_LABELS[level];

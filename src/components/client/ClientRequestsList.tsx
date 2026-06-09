@@ -25,6 +25,8 @@ import {
   X,
 } from 'lucide-react';
 import { canClientCancelRequest, canClientEditRequest, isJobPaid } from '../../lib/jobEditRules';
+import { checkJobRequirements } from '../../lib/guardJobs';
+import { toGuardJobView } from '../../lib/guardJobView';
 import { EditRequestForm } from './EditRequestForm';
 
 interface ClientRequestsListProps {
@@ -262,24 +264,32 @@ export function ClientRequestsList({
                       </p>
                     )}
                     <p className="uber-label">Hire a guard</p>
-                    {guards.map((guard) => (
-                      <WfListCard
-                        key={guard.id}
-                        avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
-                        title={guard.name}
-                        subtitle={`★ ${guard.rating}`}
-                        action={
-                          <button
-                            type="button"
-                            onClick={() => onHireGuard(req.id, guard.id)}
-                            disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
-                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
-                          >
-                            Hire <ChevronRight className="w-3 h-3 inline" />
-                          </button>
-                        }
-                      />
-                    ))}
+                    {guards.filter((guard) => checkJobRequirements(guard, toGuardJobView(req)).canAccept).length === 0 ? (
+                      <p className="text-sm text-brand-text-muted">
+                        No Active guards meet this job&apos;s requirements right now.
+                      </p>
+                    ) : (
+                      guards
+                        .filter((guard) => checkJobRequirements(guard, toGuardJobView(req)).canAccept)
+                        .map((guard) => (
+                          <WfListCard
+                            key={guard.id}
+                            avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
+                            title={guard.name}
+                            subtitle={`★ ${guard.rating}`}
+                            action={
+                              <button
+                                type="button"
+                                onClick={() => onHireGuard(req.id, guard.id)}
+                                disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
+                                className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
+                              >
+                                Hire <ChevronRight className="w-3 h-3 inline" />
+                              </button>
+                            }
+                          />
+                        ))
+                    )}
                   </div>
                 )}
 

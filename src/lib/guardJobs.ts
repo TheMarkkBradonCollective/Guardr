@@ -5,10 +5,12 @@ import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
 import {
+  guardCanWorkFieldShifts,
   guardHasCredentialOnFile,
   guardMeetsQualificationLevel,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_PATHWAY_STATUS_LABELS,
+  GUARD_STATUS_LABELS,
 } from './guardQualification';
 
 export const JOB_CATEGORIES = [
@@ -73,6 +75,13 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
 
+  if (!guardCanWorkFieldShifts(guard, jobState)) {
+    return {
+      checks: [{ label: `${GUARD_STATUS_LABELS.active} guard status`, met: false }],
+      canAccept: false,
+    };
+  }
+
   const checks: RequirementCheck[] = [
     {
       label: stateLabel,
@@ -120,9 +129,9 @@ export function minQualificationLabel(level: SecurityRequest['minGuardQualificat
 /** Open jobs visible on a guard's map/list */
 export function guardCanViewJob(
   guard: SecurityGuard,
-  job: Pick<GuardJobView, 'status' | 'requestType' | 'targetGuardId'>
+  job: Pick<GuardJobView, 'status' | 'requestType' | 'targetGuardId' | 'state'>
 ): boolean {
-  if (guard.isStaff) return false;
+  if (!guardCanWorkFieldShifts(guard, job.state ?? 'CA')) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
   return true;

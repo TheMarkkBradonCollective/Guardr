@@ -32,7 +32,7 @@ import {
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
-import { GUARD_STATUS_LABELS } from '../lib/guardQualification';
+import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import {
   canGuardClockIn,
@@ -235,6 +235,11 @@ export function GuardDashboard({
   }, []);
 
   const handleAcceptJob = (jobId: string) => {
+    const workBlocked = guardWorkBlockedMessage(guard);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
     onAcceptJob(jobId);
     updatePhase(jobId, 'upcoming');
     setSelectedJobId(null);
@@ -243,6 +248,11 @@ export function GuardDashboard({
 
   const handleArrived = () => {
     if (!activeShiftJob) return;
+    const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
       alert(blocked);
@@ -253,6 +263,11 @@ export function GuardDashboard({
 
   const handleBeginAudit = () => {
     if (!activeShiftJob) return;
+    const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
       alert(blocked);
@@ -266,6 +281,11 @@ export function GuardDashboard({
     selfieUpload: string;
   }) => {
     if (!activeShiftJob) return;
+    const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
     if (!canGuardClockIn(activeShiftJob)) {
       alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
       return;
@@ -397,6 +417,7 @@ export function GuardDashboard({
   }
 
   const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
+  const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
@@ -408,6 +429,12 @@ export function GuardDashboard({
 
   const guardMainPanel = (
     <div className={`h-full min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
+      {activeTab === 'map' && workBlockedMessage && (
+        <div className="absolute top-0 left-0 right-0 z-[1002] px-4 py-3 bg-amber-500/15 border-b border-amber-500/30 text-sm text-brand-text">
+          {workBlockedMessage}
+        </div>
+      )}
+
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
