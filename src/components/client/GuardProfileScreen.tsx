@@ -10,6 +10,7 @@ import {
 } from '../../lib/guardResume';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatStateName } from '../../lib/states';
@@ -83,13 +84,7 @@ export function GuardProfileScreen({
           <div className="app-card p-0 overflow-hidden">
             <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
               <div className="flex items-start gap-4">
-                <div className="w-24 h-24 rounded-2xl bg-brand-primary/15 flex items-center justify-center shrink-0 overflow-hidden">
-                  {guard.avatar ? (
-                    <img src={guard.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Shield className="w-10 h-10 text-brand-primary" />
-                  )}
-                </div>
+                <ProfileAvatar src={guard.avatar} name={guard.name} size="2xl" rounded="xl" />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-2xl font-bold">{guard.name}</h1>
                   <p className="text-base text-brand-primary font-medium mt-1">{getGuardDisplayHeadline(guard)}</p>

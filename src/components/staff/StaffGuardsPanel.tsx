@@ -3,6 +3,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { Search, Shield } from 'lucide-react';
 
 type GuardFilter = 'field' | 'staff';
@@ -140,12 +141,7 @@ export function StaffGuardsPanel({
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <img
-                      src={guard.avatar}
-                      alt=""
-                      className="w-10 h-10 rounded-lg object-cover shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
+                    <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-black text-sm truncate">{guard.name}</p>
@@ -192,7 +188,7 @@ export function StaffGuardsPanel({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <img src={guard.avatar} alt="" className="w-10 h-10 rounded-lg object-cover" referrerPolicy="no-referrer" />
+                    <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />
                     <div className="min-w-0">
                       <p className="font-black text-sm truncate">{guard.name}</p>
                       <p className="text-[10px] font-mono text-brand-text-muted">{guard.badgeNumber}</p>

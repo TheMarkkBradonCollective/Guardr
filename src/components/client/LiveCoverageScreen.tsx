@@ -7,6 +7,7 @@ import {
   computeSiteStatus,
   SiteStatusLevel,
 } from '../../lib/clientCoverage';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
@@ -69,7 +70,7 @@ export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScr
             {guardRows.map(({ guard, request, startedAt, hoursWorkedLabel, status }) => (
               <div key={`${request.id}-${guard.id}`} className="uber-card-flat rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <img src={guard.avatar} alt={guard.name} className="w-11 h-11 rounded-full object-cover border border-brand-border" referrerPolicy="no-referrer" />
+                  <ProfileAvatar src={guard.avatar} name={guard.name} size="sm" className="border border-brand-border" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-mono">{status === 'on-duty' ? '🟢 On Duty' : '🟡 Arriving'}</span>

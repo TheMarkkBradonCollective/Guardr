@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { useDevice } from '../../lib/platform';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { Search } from 'lucide-react';
 
 interface StaffClientsPanelProps {
@@ -90,11 +91,11 @@ export function StaffClientsPanel({
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <img
+                    <ProfileAvatar
                       src={client.avatar}
-                      alt=""
-                      className="w-10 h-10 rounded-lg object-cover shrink-0"
-                      referrerPolicy="no-referrer"
+                      name={client.companyName || client.name}
+                      size="sm"
+                      rounded="lg"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-black text-sm truncate">{client.companyName || client.name}</p>

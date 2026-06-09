@@ -3,6 +3,7 @@ import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
   Activity,
   Award,
@@ -193,7 +194,7 @@ export function ClientRequestsList({
                     <p className="uber-label">Hire a guard</p>
                     {guards.map((guard) => (
                       <div key={guard.id} className="flex items-center gap-3 p-3 border border-brand-border rounded-lg">
-                        <img src={guard.avatar} alt={guard.name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                        <ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-xs">{guard.name}</p>
                           <p className="text-[10px] font-mono text-brand-text-muted">★ {guard.rating}</p>

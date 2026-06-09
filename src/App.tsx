@@ -620,14 +620,13 @@ export default function App() {
               yearsExperience: payload.yearsExperience ?? g.yearsExperience,
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
+              avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
             }
           : g
       )
     );
     if (isDbConnected) {
-      await supabase
-        .from('guards')
-        .update({
+      const guardUpdate: Record<string, unknown> = {
           name: payload.name,
           phone: payload.phone,
           bio: payload.bio ?? payload.summary ?? '',
@@ -641,13 +640,15 @@ export default function App() {
           years_experience: payload.yearsExperience ?? null,
           availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
-        })
-        .eq('id', guardId);
+      };
+      if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
+      await supabase.from('guards').update(guardUpdate).eq('id', guardId);
     }
     if (currentUser?.id === guardId) {
       syncSessionUser({
         name: payload.name,
         hourlyRate: payload.hourlyRateRequirement ?? currentUser.hourlyRate,
+        avatar: payload.avatar !== undefined ? payload.avatar : currentUser.avatar,
       });
     }
   };
@@ -661,24 +662,25 @@ export default function App() {
               name: payload.name,
               phone: payload.phone,
               companyName: payload.companyName ?? c.companyName,
+              avatar: payload.avatar !== undefined ? payload.avatar : c.avatar,
             }
           : c
       )
     );
     if (isDbConnected) {
-      await supabase
-        .from('clients')
-        .update({
-          name: payload.name,
-          phone: payload.phone,
-          company_name: payload.companyName ?? '',
-        })
-        .eq('id', clientId);
+      const clientUpdate: Record<string, unknown> = {
+        name: payload.name,
+        phone: payload.phone,
+        company_name: payload.companyName ?? '',
+      };
+      if (payload.avatar !== undefined) clientUpdate.avatar = payload.avatar;
+      await supabase.from('clients').update(clientUpdate).eq('id', clientId);
     }
     if (currentUser?.id === clientId) {
       syncSessionUser({
         name: payload.name,
         clientName: payload.companyName ?? currentUser.clientName,
+        avatar: payload.avatar !== undefined ? payload.avatar : currentUser.avatar,
       });
     }
   };

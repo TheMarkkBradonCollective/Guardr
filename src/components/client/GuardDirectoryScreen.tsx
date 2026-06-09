@@ -3,7 +3,8 @@ import { SecurityGuard } from '../../types';
 import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirectory';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { Search, Shield, Star, ChevronRight } from 'lucide-react';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { Search, Star, ChevronRight } from 'lucide-react';
 
 interface GuardDirectoryScreenProps {
   guards: SecurityGuard[];
@@ -58,13 +59,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                 onClick={() => onSelectGuard(guard)}
                 className="w-full app-card text-left hover:border-brand-primary/35 transition-colors flex items-center gap-4"
               >
-                <div className="w-14 h-14 rounded-2xl bg-brand-primary/15 flex items-center justify-center shrink-0 overflow-hidden">
-                  {guard.avatar ? (
-                    <img src={guard.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Shield className="w-6 h-6 text-brand-primary" />
-                  )}
-                </div>
+                <ProfileAvatar src={guard.avatar} name={guard.name} size="md" rounded="xl" className="w-14 h-14 text-base" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold truncate">{guard.name}</p>

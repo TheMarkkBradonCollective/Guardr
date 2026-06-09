@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
-import { LogOut, Save, User } from 'lucide-react';
+import { Camera, LogOut, Save, User, X } from 'lucide-react';
+import { ProfileAvatar } from './ProfileAvatar';
+import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -15,6 +17,7 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   bio?: string;
   companyName?: string;
   hourlyRateRequirement?: number;
+  avatar?: string;
 }
 
 interface UserProfileScreenProps {
@@ -46,6 +49,9 @@ export function UserProfileScreen({
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoSaving, setPhotoSaving] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [avatar, setAvatar] = useState(guard?.avatar ?? client?.avatar ?? currentUser.avatar ?? '');
   const [name, setName] = useState(currentUser.name);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
@@ -64,6 +70,7 @@ export function UserProfileScreen({
   });
 
   useEffect(() => {
+    setAvatar(guard?.avatar ?? client?.avatar ?? currentUser.avatar ?? '');
     setName(currentUser.name);
     setPhone(guard?.phone ?? client?.phone ?? '');
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
@@ -83,25 +90,57 @@ export function UserProfileScreen({
   }, [currentUser, guard, client]);
 
   const roleLabel = ROLE_LABELS[currentUser.role as PlatformRole] ?? currentUser.role;
-  const initials = name.slice(0, 2).toUpperCase();
+
+  const buildPayload = (avatarOverride?: string): ProfileSavePayload => ({
+    name: name.trim(),
+    phone: phone.trim(),
+    companyName: companyName.trim(),
+    hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
+    avatar: avatarOverride ?? avatar,
+    ...resume,
+    summary: resume.summary.trim(),
+    about: resume.about.trim(),
+    headline: resume.headline.trim(),
+    bio: resume.summary.trim(),
+  });
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave({
-        name: name.trim(),
-        phone: phone.trim(),
-        companyName: companyName.trim(),
-        hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
-        ...resume,
-        summary: resume.summary.trim(),
-        about: resume.about.trim(),
-        headline: resume.headline.trim(),
-        bio: resume.summary.trim(),
-      });
+      await onSave(buildPayload());
       setEditing(false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoError('');
+    setPhotoSaving(true);
+    try {
+      const dataUrl = await processProfilePhotoFile(file);
+      setAvatar(dataUrl);
+      await onSave(buildPayload(dataUrl));
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Could not upload photo.');
+    } finally {
+      setPhotoSaving(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setPhotoError('');
+    setPhotoSaving(true);
+    try {
+      setAvatar('');
+      await onSave(buildPayload(''));
+    } catch {
+      setPhotoError('Could not remove photo.');
+    } finally {
+      setPhotoSaving(false);
     }
   };
 
@@ -112,9 +151,31 @@ export function UserProfileScreen({
   return (
     <div className="h-full overflow-y-auto overscroll-contain px-4 py-6 max-w-lg mx-auto space-y-5 animate-fade-in">
       <div className="flex flex-col items-center text-center pt-2">
-        <div className="w-20 h-20 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center font-bold text-2xl mb-3 ring-4 ring-brand-primary/20">
-          {initials}
+        <div className="relative mb-3">
+          <ProfileAvatar src={avatar} name={name} size="xl" className="ring-4 ring-brand-primary/20" />
+          <label
+            className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-md ${
+              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:scale-105 transition-transform'
+            }`}
+            title="Change profile photo"
+          >
+            <Camera className="w-4 h-4" />
+            <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
+          </label>
         </div>
+        {photoError && <p className="text-xs text-red-400 mb-2">{photoError}</p>}
+        {avatar && (
+          <button
+            type="button"
+            onClick={() => void handleRemovePhoto()}
+            disabled={photoSaving}
+            className="text-[10px] font-mono text-brand-text-muted hover:text-red-400 flex items-center gap-1 mb-2 disabled:opacity-50"
+          >
+            <X className="w-3 h-3" />
+            Remove photo
+          </button>
+        )}
+        {photoSaving && <p className="text-xs text-brand-text-muted mb-2">Saving photo…</p>}
         <h1 className="text-xl font-bold">{name}</h1>
         <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
         <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>

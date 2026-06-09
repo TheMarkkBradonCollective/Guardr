@@ -12,6 +12,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft, Check, X } from 'lucide-react';
 
 interface StaffGuardDetailPanelProps {
@@ -80,12 +81,7 @@ export function StaffGuardDetailPanel({
       )}
 
       <div className="flex items-start gap-4">
-        <img
-          src={guard.avatar}
-          alt={guard.name}
-          className="w-16 h-16 rounded-xl object-cover shrink-0"
-          referrerPolicy="no-referrer"
-        />
+        <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-black text-lg">{guard.name}</h2>

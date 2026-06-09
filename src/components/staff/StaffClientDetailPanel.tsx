@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 
 interface StaffClientDetailPanelProps {
@@ -43,11 +44,11 @@ export function StaffClientDetailPanel({
       )}
 
       <div className="flex items-start gap-4">
-        <img
+        <ProfileAvatar
           src={client.avatar}
-          alt={client.name}
-          className="w-16 h-16 rounded-xl object-cover shrink-0"
-          referrerPolicy="no-referrer"
+          name={client.companyName || client.name}
+          size="lg"
+          rounded="xl"
         />
         <div className="min-w-0 flex-1">
           <h2 className="font-black text-lg">{client.companyName || client.name}</h2>

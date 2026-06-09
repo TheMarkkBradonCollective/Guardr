@@ -11,7 +11,8 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { US_STATES, formatStateName } from '../../lib/states';
-import { ArrowLeft, ArrowRight, MapPin, Search, Shield } from 'lucide-react';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { ArrowLeft, ArrowRight, MapPin, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
@@ -110,13 +111,7 @@ export function DirectGuardRequestFlow({
         <div className="rounded-2xl border border-brand-primary/30 bg-brand-primary/10 p-4">
           <p className="text-xs font-semibold text-brand-primary uppercase tracking-wide">Direct assignment request</p>
           <div className="flex items-center gap-3 mt-2">
-            <div className="w-12 h-12 rounded-xl bg-brand-primary/20 flex items-center justify-center shrink-0">
-              {guard.avatar ? (
-                <img src={guard.avatar} alt="" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                <Shield className="w-6 h-6 text-brand-primary" />
-              )}
-            </div>
+            <ProfileAvatar src={guard.avatar} name={guard.name} size="md" rounded="xl" />
             <div className="min-w-0">
               <p className="font-bold">{guard.name}</p>
               <p className="text-sm text-brand-text-muted">{getGuardDisplayHeadline(guard)}</p>
