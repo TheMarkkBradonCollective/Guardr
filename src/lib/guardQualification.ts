@@ -88,17 +88,37 @@ export function isRequiredPathwayCredential(catalogId: string | undefined): bool
   return getRequiredPathwayCatalogIds().includes(catalogId);
 }
 
-function isCertNotExpired(cert: Certification): boolean {
-  if (!cert.expiryDate) return true;
+export function isCertExpired(cert: Pick<Certification, 'expiryDate'>): boolean {
+  if (!cert.expiryDate) return false;
   const expiry = new Date(cert.expiryDate);
-  return !Number.isNaN(expiry.getTime()) && expiry >= new Date();
+  return !Number.isNaN(expiry.getTime()) && expiry < new Date();
+}
+
+function isCertNotExpired(cert: Certification): boolean {
+  return !isCertExpired(cert);
 }
 
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
   return resolveCertCatalogId(cert) === catalogId;
 }
 
-/** Uploaded and not rejected — pending or Guardr-verified. Expired credentials do not count. */
+/** Uploaded and not rejected — includes expired (for display). */
+export function guardHasCredentialUploaded(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): boolean {
+  return guard.certifications.some((cert) => {
+    if (cert.status === 'rejected') return false;
+    if (!certMatchesCatalogId(cert, catalogId)) return false;
+    if (catalogId === 'bsis-guard-card' && jobState) {
+      return cert.state?.toUpperCase() === jobState.toUpperCase();
+    }
+    return true;
+  });
+}
+
+/** Uploaded, not rejected, and not expired — counts toward qualification. */
 export function guardHasCredentialOnFile(
   guard: SecurityGuard,
   catalogId: string,

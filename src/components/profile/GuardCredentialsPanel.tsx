@@ -11,14 +11,17 @@ import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
   getPtaUofCatalogEntries,
   getQualificationProgress,
+  guardHasCredentialUploaded,
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
   BSIS_PTA_UOF_COMBINED_ID,
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { formatStateName, US_STATES } from '../../lib/states';
+import { CredentialStatusBadge } from '../guard/CredentialStatusBadge';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
+import { isCertExpired } from '../../lib/certStatus';
 import { Award, BookOpen, ImagePlus, Shield, Trash2 } from 'lucide-react';
 
 const CREDENTIAL_SECTIONS: {
@@ -318,12 +321,24 @@ export function GuardCredentialsPanel({
                     Required for Level 2 (Active). As of 2024, upload the combined 8-hour, 2-part course
                     certificate — or both legacy separate PTA and UOF certs if you have those.
                   </p>
-                  <p className="text-xs font-semibold mt-2 text-brand-primary">
+                  <p
+                    className={`text-xs font-semibold mt-2 ${
+                      ptaUofProgress.ptaUofTraining
+                        ? 'text-brand-primary'
+                        : guardHasCredentialUploaded(guard, BSIS_PTA_UOF_COMBINED_ID) ||
+                            (guardHasCredentialUploaded(guard, 'bsis-power-to-arrest') &&
+                              guardHasCredentialUploaded(guard, 'bsis-appropriate-use-of-force'))
+                          ? 'text-amber-400'
+                          : 'text-brand-text-muted'
+                    }`}
+                  >
                     {ptaUofProgress.ptaUofTraining
                       ? ptaUofProgress.ptaUofCombined
                         ? 'Combined 8-hr certificate on file'
                         : 'Legacy separate PTA & UOF certs on file'
-                      : 'Not yet on file'}
+                      : ptaUofItems.length > 0
+                        ? 'On file · Expired — upload current 8-hr PTA/UOF'
+                        : 'Not yet on file'}
                   </p>
                 </div>
                 {editing && onAddCertification && (
@@ -611,26 +626,14 @@ function CredentialRow({
             {cert.issuer} · #{cert.number}
           </p>
           {cert.expiryDate && (
-            <p className="text-xs text-brand-text-muted">Expires {cert.expiryDate}</p>
+            <p className={`text-xs ${isCertExpired(cert) ? 'text-amber-400' : 'text-brand-text-muted'}`}>
+              {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
+            </p>
           )}
         </div>
       </div>
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <span
-          className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border h-fit ${
-            cert.status === 'verified'
-              ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-              : cert.status === 'rejected'
-                ? 'text-red-400 border-red-500/30'
-                : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
-          }`}
-        >
-          {cert.status === 'verified'
-            ? 'Guardr verified'
-            : cert.status === 'rejected'
-              ? 'Rejected'
-              : 'On file'}
-        </span>
+        <CredentialStatusBadge cert={cert} />
         {editing && onDelete && (
           <button
             type="button"

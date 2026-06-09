@@ -2,10 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
+  getCourseUploadStatus,
+  getCourseUploadStatusBadgeClass,
+  getCourseUploadStatusLabel,
+  isCertExpired,
+} from '../../lib/certStatus';
+import { CredentialStatusBadge } from './CredentialStatusBadge';
+import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
-  guardHasCredentialOnFile,
-  guardHasGuardrVerifiedCredential,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
@@ -176,8 +181,8 @@ export function GuardThirtyTwoHourPanel({
         </p>
         <div className="space-y-2">
           {courses.map((course) => {
-            const onFile = guardHasCredentialOnFile(guard, course.id);
-            const verified = guardHasGuardrVerifiedCredential(guard, course.id);
+            const uploadStatus = getCourseUploadStatus(guard, course.id);
+            const onFile = uploadStatus !== 'missing';
             const uploaded = certsForCatalogId(guard, course.id);
             const isAdding = addingCatalogId === course.id;
 
@@ -190,16 +195,10 @@ export function GuardThirtyTwoHourPanel({
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                      onFile
-                        ? verified
-                          ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                          : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
-                        : 'text-brand-text-muted border-brand-border'
-                    }`}
+                    className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getCourseUploadStatusBadgeClass(uploadStatus)}`}
                   >
                     {onFile ? <Check className="w-3 h-3" /> : null}
-                    {onFile ? (verified ? 'Verified' : 'On file') : 'Missing'}
+                    {getCourseUploadStatusLabel(uploadStatus)}
                   </span>
                 </div>
 
@@ -220,7 +219,7 @@ export function GuardThirtyTwoHourPanel({
                     className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    {onFile ? 'Add another' : 'Upload course cert'}
+                    {uploaded.length > 0 ? 'Add another' : 'Upload course cert'}
                   </button>
                 )}
               </div>
@@ -302,24 +301,15 @@ function ThirtyTwoHourCertRow({
             {cert.state ? `${formatStateName(cert.state)} · ` : ''}
             {cert.issuer} · #{cert.number}
           </p>
+          {cert.expiryDate && (
+            <p className={`text-xs mt-0.5 ${isCertExpired(cert) ? 'text-amber-400' : 'text-brand-text-muted'}`}>
+              {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
+            </p>
+          )}
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span
-          className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${
-            cert.status === 'verified'
-              ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-              : cert.status === 'rejected'
-                ? 'text-red-400 border-red-500/30'
-                : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
-          }`}
-        >
-          {cert.status === 'verified'
-            ? 'Guardr verified'
-            : cert.status === 'rejected'
-              ? 'Rejected'
-              : 'On file'}
-        </span>
+        <CredentialStatusBadge cert={cert} />
         {editing && onDelete && (
           <button type="button" onClick={onDelete} className="text-xs text-red-400 flex items-center gap-1 hover:underline">
             <Trash2 className="w-3 h-3" />

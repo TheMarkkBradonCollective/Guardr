@@ -10,6 +10,7 @@ import {
 } from '../../lib/guardResume';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
+import { getCredentialStatusBadgeClass, getCredentialStatusLabel } from '../../lib/certStatus';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
@@ -174,8 +175,8 @@ export function GuardProfileScreen({
                           {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
                         </p>
                       </div>
-                      <span className={`text-xs font-semibold shrink-0 ${cert.status === 'verified' ? 'text-brand-primary' : 'text-brand-text-muted'}`}>
-                        {cert.status === 'verified' ? 'Guardr verified' : 'On file'}
+                      <span className={`text-[10px] font-semibold uppercase shrink-0 px-2 py-0.5 rounded border ${getCredentialStatusBadgeClass(cert)}`}>
+                        {getCredentialStatusLabel(cert)}
                       </span>
                     </div>
                   ))}
