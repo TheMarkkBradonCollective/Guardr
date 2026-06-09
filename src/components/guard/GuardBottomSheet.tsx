@@ -78,7 +78,7 @@ export function GuardBottomSheet({
 
   const sheetLabel = selectedJob
     ? 'Assignment details'
-    : `${jobs.length} available shift${jobs.length === 1 ? '' : 's'}`;
+    : `${jobs.length} available offer${jobs.length === 1 ? '' : 's'}`;
 
   const panelContent = (
     <GuardJobsPanelContent

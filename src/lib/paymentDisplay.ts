@@ -32,10 +32,10 @@ export function clientPaymentStatusHint(
     return 'Funds received — you can hire a guard.';
   }
   if (status === 'held') {
-    return 'Your payment is held while the shift runs.';
+    return 'Your payment is held while the job runs.';
   }
   if (status === 'released') {
-    return 'Shift finished and the guard has been paid.';
+    return 'Job finished and the guard has been paid.';
   }
   return undefined;
 }
@@ -67,24 +67,24 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
     }
     case 'client-paid-active':
       return {
-        headline: isCashClientPayment(req) ? 'Client paid cash · shift running' : 'Client paid by card · shift running',
-        detail: `Guard earns $${guardPay.toFixed(2)} after the shift is marked complete.`,
+        headline: isCashClientPayment(req) ? 'Client paid cash · job running' : 'Client paid by card · job running',
+        detail: `Guard earns $${guardPay.toFixed(2)} after the job is marked complete.`,
       };
     case 'awaiting-guard-payout':
       if (req.guardCashPayoutRequested) {
         return {
-          headline: 'Shift done · guard wants cash',
+          headline: 'Job done · guard wants cash',
           detail: `Hand $${guardPay.toFixed(2)} to the guard in person, then mark paid.`,
         };
       }
       if (isCashGuardPayout(req)) {
         return {
-          headline: 'Shift done · pay guard in cash',
+          headline: 'Job done · pay guard in cash',
           detail: `Hand $${guardPay.toFixed(2)} to the guard and mark paid.`,
         };
       }
       return {
-        headline: 'Shift done · send guard pay via Stripe',
+        headline: 'Job done · send guard pay via Stripe',
         detail: `$${guardPay.toFixed(2)} ready to transfer to the guard's connected account.`,
       };
     case 'settled':
@@ -99,7 +99,7 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 
 export const PIPELINE_FLOW_STEPS = [
   { step: 1, label: 'Client pays', description: 'Card checkout or staff records cash on site' },
-  { step: 2, label: 'Shift runs', description: 'Funds stay secured until the job is complete' },
+  { step: 2, label: 'Job in progress', description: 'Funds stay secured until the job is complete' },
   { step: 3, label: 'Guard gets paid', description: 'Stripe transfer or staff hands cash to the guard' },
 ] as const;
 

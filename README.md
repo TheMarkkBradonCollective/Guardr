@@ -7,7 +7,7 @@ Guardr is an independent contractor marketplace connecting licensed security pro
 ## Product Overview
 
 - **Clients** post security requests with site details, schedules, and requirements
-- **Guards** browse open jobs, accept shifts, complete self-audits, and submit reports
+- **Guards** browse open job offers, accept jobs, complete self-audits, and submit reports
 - **Staff** approve clients, guards, certifications, and job postings
 - **Admins** have full platform control
 
@@ -81,8 +81,8 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 - Client & guard accounts with staff approval
 - Job posting with site name, address, uniform/equipment requirements
 - Job marketplace & acceptance
-- Pre-shift self-audits (appearance, equipment, selfie)
-- Shift reporting & ratings
+- Pre-job check-in self-audits (appearance, equipment, selfie)
+- Job reporting & ratings
 - Theme switching
 - Mobile-responsive PWA shell
 

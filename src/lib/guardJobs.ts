@@ -5,7 +5,7 @@ import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
 import {
-  guardCanWorkFieldShifts,
+  guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
   guardMeets32HourBlock,
   guardMeetsPtaUofTraining,
@@ -86,7 +86,7 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
 
-  if (!guardCanWorkFieldShifts(guard, jobState)) {
+  if (!guardCanWorkFieldJobs(guard, jobState)) {
     return {
       checks: [{ label: 'Active credential pathway on file', met: false }],
       canAccept: false,
@@ -181,7 +181,7 @@ export function guardCanViewJob(
   guard: SecurityGuard,
   job: Pick<GuardJobView, 'status' | 'requestType' | 'targetGuardId' | 'state'>
 ): boolean {
-  if (!guardCanWorkFieldShifts(guard, job.state ?? 'CA')) return false;
+  if (!guardCanWorkFieldJobs(guard, job.state ?? 'CA')) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
   return true;

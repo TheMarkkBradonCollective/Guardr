@@ -43,7 +43,7 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
         </div>
 
         <div className="p-5 space-y-5">
-          <p className="text-sm text-brand-text-muted">Confirm your appearance and equipment before starting your shift.</p>
+          <p className="text-sm text-brand-text-muted">Confirm your appearance and equipment before starting your job.</p>
 
           <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
             {(Object.keys(uniform) as (keyof typeof uniform)[]).map((key) => (
@@ -84,7 +84,7 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
             disabled={!selfie}
             className="app-button-primary disabled:opacity-40"
           >
-            Submit and begin shift
+            Submit and start job
           </button>
         </div>
       </div>

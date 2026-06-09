@@ -35,13 +35,13 @@ export function validateShiftSchedule(
     return 'Enter a valid start and end time.';
   }
   if (startMs < now.getTime()) {
-    return 'Shift cannot start in the past.';
+    return 'Job cannot start in the past.';
   }
   if (endMs <= startMs) {
     return 'End time must be after start time.';
   }
   if (computeDurationHours(startDate, endDate) <= 0) {
-    return 'Shift duration must be greater than zero.';
+    return 'Job duration must be greater than zero.';
   }
   return null;
 }

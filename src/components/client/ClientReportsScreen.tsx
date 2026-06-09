@@ -27,7 +27,7 @@ export function ClientReportsScreen({ reports, onBack }: ClientReportsScreenProp
 
       {reports.length === 0 ? (
         <p className="app-empty-state text-sm">
-          No reports yet. Completed shifts with activity logs and incident reports appear here.
+          No reports yet. Completed jobs with activity logs and incident reports appear here.
         </p>
       ) : (
         <AppList>

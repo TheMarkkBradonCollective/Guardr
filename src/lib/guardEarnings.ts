@@ -17,7 +17,7 @@ function shiftEarnings(job: GuardJobView): number {
   return getGuardShiftEarnings(job);
 }
 
-/** Split completed shift earnings by cash vs online payout path */
+/** Split completed job earnings by cash vs online payout path */
 export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarningsBreakdown {
   let totalEarnings = 0;
   let cashPaid = 0;
@@ -27,7 +27,7 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
 
   for (const job of jobs) {
     if (job.status !== 'completed' || job.assignedGuardId == null) continue;
-    // Only count shifts where the client payment is in the pipeline (paid, held, or released)
+    // Only count jobs where the client payment is in the pipeline (paid, held, or released)
     if (job.payoutStatus == null) continue;
 
     const amount = shiftEarnings(job);

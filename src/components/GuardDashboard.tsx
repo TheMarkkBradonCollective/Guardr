@@ -309,7 +309,7 @@ export function GuardDashboard({
       return;
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
-    if (failed) onRecordAuditViolation(guard.id, 'Pre-shift audit incomplete');
+    if (failed) onRecordAuditViolation(guard.id, 'Pre-job check-in audit incomplete');
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'in-progress',
       checkInAudit: {
@@ -360,7 +360,7 @@ export function GuardDashboard({
         completed: true,
         noViolations: true,
         noEquipmentIssues: true,
-        dailyActivityReport: 'Shift completed. No incidents to report.',
+        dailyActivityReport: 'Job completed. No incidents to report.',
         incidentReport: { hasIncident: false },
         clientNotes: '',
       },
@@ -469,7 +469,7 @@ export function GuardDashboard({
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
           onIncidentReport={() => alert('Incident report filed. Client and staff notified.')}
-          onActivityReport={() => alert('Activity report saved to shift log.')}
+          onActivityReport={() => alert('Activity report saved to job log.')}
           onEndShift={handleEndShift}
         />
       )}
@@ -560,8 +560,8 @@ export function GuardDashboard({
       {showCheckout && activeShiftJob && (
         <div className="absolute inset-0 z-[1003] modal-overlay flex items-center justify-center p-4">
           <div className="w-full max-w-sm modal-panel p-6 space-y-4">
-            <h3 className="font-bold text-lg">End shift?</h3>
-            <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your shift duties are complete.</p>
+            <h3 className="font-bold text-lg">Complete job?</h3>
+            <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">Cancel</button>
               <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">Confirm</button>

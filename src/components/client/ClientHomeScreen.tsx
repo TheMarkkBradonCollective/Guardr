@@ -30,7 +30,7 @@ interface ClientHomeScreenProps {
 }
 
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
-  { id: 'request', icon: Plus, label: 'Request security', sub: 'Open to any guard', accent: true },
+  { id: 'request', icon: Plus, label: 'Post job offer', sub: 'Open to any guard', accent: true },
   { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes, licenses & certs' },
   { id: 'schedule', icon: Calendar, label: 'Schedule coverage', sub: 'Plan ahead' },
   { id: 'recurring', icon: Building2, label: 'Recurring sites', sub: 'Weekly / monthly' },
@@ -100,7 +100,7 @@ export function ClientHomeScreen({
             >
               <Calendar className="w-5 h-5 text-brand-primary" />
               <p className="font-semibold text-sm">Upcoming</p>
-              <WfMetricTile label="Scheduled shifts" value={upcoming.length} className="!p-3" />
+              <WfMetricTile label="Scheduled jobs" value={upcoming.length} className="!p-3" />
             </button>
             <button type="button" onClick={() => onAction('reports')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
               <FileText className="w-5 h-5 text-brand-primary" />
@@ -109,7 +109,7 @@ export function ClientHomeScreen({
             </button>
             <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
               <ClipboardList className="w-5 h-5 text-brand-primary" />
-              <p className="font-semibold text-sm">Open requests</p>
+              <p className="font-semibold text-sm">Open jobs</p>
               <WfMetricTile label="Pending" value={openRequestCount} className="!p-3" />
             </button>
           </div>
@@ -150,7 +150,7 @@ export function ClientHomeScreen({
           <WfSectionHeader title="Upcoming coverage" className="mb-3" />
           {upcoming.length === 0 ? (
             <p className="app-empty-state">
-              No upcoming coverage. Tap Request security to get started.
+              No upcoming coverage. Tap Post job offer to get started.
             </p>
           ) : (
             <div className="app-scroll-row scrollbar-hide pb-1">
@@ -189,7 +189,7 @@ export function ClientHomeScreen({
           />
           {recentReports.length === 0 ? (
             <p className="app-empty-state">
-              Reports from completed shifts will appear here.
+              Reports from completed jobs will appear here.
             </p>
           ) : (
             <div className="space-y-3">

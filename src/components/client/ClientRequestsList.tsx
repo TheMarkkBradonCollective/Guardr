@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -115,15 +115,15 @@ export function ClientRequestsList({
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in pb-8">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">All Requests</h1>
-          <p className="text-sm text-brand-text-muted mt-1">Manage postings, hires, and reviews</p>
+          <h1 className="text-xl font-bold">Your jobs</h1>
+          <p className="text-sm text-brand-text-muted mt-1">Job offers and direct guard requests — hires and reviews</p>
         </div>
         <button
           type="button"
           onClick={onRequestNew}
           className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0"
         >
-          + New
+          + Post offer
         </button>
       </div>
 
@@ -131,17 +131,17 @@ export function ClientRequestsList({
         <WfSearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search requests..."
+          placeholder="Search jobs..."
         />
       )}
 
       {requests.length === 0 ? (
         <div className="app-empty-state">
           <Shield className="w-10 h-10 text-brand-primary/30 mx-auto mb-3" />
-          <p className="text-brand-text-muted text-sm text-center">No requests yet.</p>
+          <p className="text-brand-text-muted text-sm text-center">No jobs yet.</p>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-sm text-brand-text-muted py-12">No requests match your search.</p>
+        <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your search.</p>
       ) : (
         <AppItemCardStack>
           {filtered.map((req) => {
@@ -156,6 +156,9 @@ export function ClientRequestsList({
                   subtitle={req.type.replace('-', ' ')}
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
+                      <WfBadge tone={req.requestType === 'direct' ? 'primary' : 'default'}>
+                        {jobPostingTypeLabel(req.requestType)}
+                      </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
                       <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
                     </div>
@@ -173,6 +176,9 @@ export function ClientRequestsList({
                   subtitle={req.type.replace('-', ' ')}
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
+                      <WfBadge tone={req.requestType === 'direct' ? 'primary' : 'default'}>
+                        {jobPostingTypeLabel(req.requestType)}
+                      </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
                       <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
                     </div>
@@ -192,7 +198,7 @@ export function ClientRequestsList({
 
                 {isJobPaid(req) && (
                   <p className="text-xs text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5 w-full">
-                    Job locked — paid shifts cannot be edited.
+                    Job locked — paid jobs cannot be edited.
                   </p>
                 )}
 
@@ -294,7 +300,7 @@ export function ClientRequestsList({
 
                 {req.status === 'in-progress' && hiredGuard && (
                   <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary !h-9 !text-xs w-full">
-                    <Check className="w-3.5 h-3.5 inline" /> End Shift
+                    <Check className="w-3.5 h-3.5 inline" /> Complete job
                   </button>
                 )}
 

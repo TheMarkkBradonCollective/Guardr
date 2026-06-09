@@ -1263,7 +1263,7 @@ export default function App() {
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkGuardPaidCash(req)) {
-      alert('This shift is not ready for a cash guard payout.');
+      alert('This job is not ready for a cash guard payout.');
       return;
     }
     const amount = guardPayoutAmount(req);
@@ -1463,7 +1463,7 @@ export default function App() {
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
-      alert('Staff accounts cannot accept field shifts. Sign in with a guard account to work assignments.');
+      alert('Staff accounts cannot accept field jobs. Sign in with a guard account to work assignments.');
       return;
     }
     const workBlocked = guardWorkBlockedMessage(activeGuard);
@@ -1480,7 +1480,7 @@ export default function App() {
       const { checks, canAccept } = checkJobRequirements(activeGuard, job);
       if (!canAccept) {
         const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
-        alert(`You do not meet the requirements for this shift: ${missing}. Upload the required credentials in your profile.`);
+        alert(`You do not meet the requirements for this job: ${missing}. Upload the required credentials in your profile.`);
         return;
       }
     }
@@ -1582,13 +1582,13 @@ export default function App() {
         !r.guardCashPayoutRequested
     );
     if (eligible.length === 0) {
-      alert('No completed shifts are available for a cash payout request.');
+      alert('No completed jobs are available for a cash payout request.');
       return;
     }
     const total = Math.round(eligible.reduce((s, r) => s + guardPayoutAmount(r), 0) * 100) / 100;
     if (
       !window.confirm(
-        `Request $${total} in cash from the director for ${eligible.length} completed shift(s)?`
+        `Request $${total} in cash from the director for ${eligible.length} completed job(s)?`
       )
     ) {
       return;
@@ -1634,7 +1634,7 @@ export default function App() {
       subject: `Stripe payout request — $${total}`,
       category: 'payment',
       priority: 'normal',
-      body: `${guard?.name || 'Guard'} requests Stripe Connect payout for ${eligible.length} completed shift(s), totaling $${total}.`,
+      body: `${guard?.name || 'Guard'} requests Stripe Connect payout for ${eligible.length} completed job(s), totaling $${total}.`,
     });
     alert('Stripe payout request sent to the director.');
   };
@@ -1646,11 +1646,11 @@ export default function App() {
       return;
     }
     if (req.guardPayoutMethod === 'cash') {
-      alert('This guard was already paid in cash for this shift.');
+      alert('This guard was already paid in cash for this job.');
       return;
     }
     if (req.guardCashPayoutRequested) {
-      alert('Guard requested cash for this shift — use Guard paid cash, not Stripe.');
+      alert('Guard requested cash for this job — use Guard paid cash, not Stripe.');
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);

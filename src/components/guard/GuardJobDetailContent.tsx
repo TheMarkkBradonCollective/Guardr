@@ -58,7 +58,7 @@ export function GuardJobDetailContent({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap gap-2 mb-2">
             <WfBadge>{JOB_STATUS_LABELS[job.status]}</WfBadge>
-            {isUpcoming && <WfBadge tone="primary">Upcoming shift</WfBadge>}
+            {isUpcoming && <WfBadge tone="primary">Upcoming job</WfBadge>}
             {isDirectRequest && job.status === 'open' && (
               <WfBadge tone="warning">Direct request</WfBadge>
             )}

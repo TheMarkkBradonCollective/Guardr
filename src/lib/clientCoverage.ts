@@ -145,7 +145,7 @@ export function buildActivityFeed(
       items.push({
         id: `${req.id}-complete`,
         timestamp: req.checkOutAudit.checkedAt,
-        label: 'Shift completed',
+        label: 'Job completed',
         requestId: req.id,
         sortKey: new Date(req.checkOutAudit.checkedAt).getTime() + 3,
       });
@@ -154,7 +154,7 @@ export function buildActivityFeed(
       items.push({
         id: `${req.id}-mid-${mid.checkedAt}`,
         timestamp: mid.checkedAt,
-        label: 'Mid-shift verification logged',
+        label: 'Mid-job verification logged',
         requestId: req.id,
         sortKey: new Date(mid.checkedAt).getTime(),
       });
@@ -175,7 +175,7 @@ export function buildRecentReports(requests: SecurityRequest[]): ClientReportCar
         requestId: req.id,
         title: req.title,
         type: 'incident',
-        summary: req.checkOutAudit.incidentReport.description || 'Incident logged during shift.',
+        summary: req.checkOutAudit.incidentReport.description || 'Incident logged during job.',
         submittedAt: req.checkOutAudit.checkedAt,
         siteName: site,
       });

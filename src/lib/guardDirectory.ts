@@ -1,5 +1,5 @@
 import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
-import { guardCanWorkFieldShifts } from './guardQualification';
+import { guardCanWorkFieldJobs } from './guardQualification';
 
 /** Match a session user to their guard row (staff often share one email across roles). */
 export function findGuardProfileForUser(
@@ -24,7 +24,7 @@ export interface GuardWorkHistoryItem {
 /** Active guards only — clients may browse, hire, and send direct requests */
 export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
   return guards
-    .filter((g) => guardCanWorkFieldShifts(g))
+    .filter((g) => guardCanWorkFieldJobs(g))
     .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
 }
 

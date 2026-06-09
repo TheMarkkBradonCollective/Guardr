@@ -21,7 +21,7 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
   { id: 'guards', label: 'Guards', icon: Users },
-  { id: 'requests', label: 'Requests', icon: ClipboardList },
+  { id: 'requests', label: 'Jobs', icon: ClipboardList },
 ];
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -35,10 +35,10 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   home: 'Home',
   guards: 'Guards',
   coverage: 'Live coverage',
-  requests: 'Requests',
+  requests: 'Jobs',
   support: 'Support',
   profile: 'Profile',
-  request: 'New request',
+  request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
 };

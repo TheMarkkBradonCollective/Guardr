@@ -82,7 +82,7 @@ export function StaffAddStaffForm({ onAdd, onCreated }: StaffAddStaffFormProps) 
         <div>
           <h3 className="text-sm font-semibold">Add platform staff</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Staff manage the platform only — they cannot accept field security shifts.
+            Staff manage the platform only — they cannot accept field jobs.
           </p>
         </div>
         <button

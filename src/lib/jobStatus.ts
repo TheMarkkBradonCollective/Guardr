@@ -1,4 +1,9 @@
-import { JobStatus } from '../types';
+import { JobStatus, RequestType } from '../types';
+
+/** Marketplace post vs direct guard hire — user-facing labels */
+export function jobPostingTypeLabel(requestType?: RequestType): string {
+  return requestType === 'direct' ? 'Direct request' : 'Job offer';
+}
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   draft: 'Draft',

@@ -23,7 +23,7 @@ import {
   buildDisputes,
   buildIncidents,
   buildOverviewActionQueue,
-  buildOverviewLiveShifts,
+  buildOverviewLiveJobs,
   buildPlatformActivityFeed,
   computePlatformStats,
   computeWeeklyCompletedJobs,
@@ -184,7 +184,7 @@ export function StaffDashboard({
     () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets)),
     [stats, requests, incidents, supportTickets]
   );
-  const overviewLiveShifts = useMemo(() => buildOverviewLiveShifts(guards, requests), [guards, requests]);
+  const overviewLiveJobs = useMemo(() => buildOverviewLiveJobs(guards, requests), [guards, requests]);
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
 
   const badges = useMemo(
@@ -206,7 +206,7 @@ export function StaffDashboard({
             stats={stats}
             activityFeed={activityFeed}
             actionItems={overviewActions}
-            liveShifts={overviewLiveShifts}
+            liveJobs={overviewLiveJobs}
             weeklyTrend={overviewWeeklyTrend}
             onNavigate={navigateSection}
             staffName={currentUser.name}

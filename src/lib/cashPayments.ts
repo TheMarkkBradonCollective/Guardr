@@ -73,7 +73,7 @@ export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
   );
 }
 
-/** Stripe Connect payout — never pay online for cash-paid or cash-requested shifts */
+/** Stripe Connect payout — never pay online for cash-paid or cash-requested jobs */
 export function canStripePayGuard(req: SecurityRequest): boolean {
   if (isCashGuardPayout(req)) return false;
   if (req.guardCashPayoutRequested) return false;

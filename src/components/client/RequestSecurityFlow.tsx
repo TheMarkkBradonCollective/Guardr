@@ -175,7 +175,7 @@ export function RequestSecurityFlow({
             {serviceId === 'custom' && (
               <input
                 type="text"
-                placeholder="Describe your request title..."
+                placeholder="Describe your job offer..."
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 className="uber-input mt-2"
@@ -353,7 +353,7 @@ export function RequestSecurityFlow({
 
         {step === 7 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Review request</h2>
+            <h2 className="text-xl font-bold">Review job offer</h2>
             <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
               <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Service</span>
@@ -424,7 +424,7 @@ export function RequestSecurityFlow({
               onClick={handleSubmit}
               className="app-button-primary"
             >
-              Submit Request
+              Post job offer
             </button>
           )}
         </div>

@@ -58,7 +58,7 @@ export function GuardEarningsPanel({
 
       <div className="px-5 pb-4">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          When you finish a shift, your pay shows up here. Choose to receive it in your bank (Stripe) or pick up cash from staff.
+          When you finish a job, your pay shows up here. Choose to receive it in your bank (Stripe) or pick up cash from staff.
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export function GuardEarningsPanel({
             <p className="text-sm font-semibold">Connect your bank to get paid online</p>
           </div>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            Link a Stripe account so we can send shift pay directly to your bank. You can still request cash without it.
+            Link a Stripe account so we can send job pay directly to your bank. You can still request cash without it.
           </p>
           <button
             type="button"
@@ -98,7 +98,7 @@ export function GuardEarningsPanel({
           ${breakdown.onlineAvailable.toFixed(2)}
         </p>
         <p className="text-sm text-brand-text-muted mb-5">
-          From finished shifts you haven&apos;t been paid for yet.
+          From finished jobs you haven&apos;t been paid for yet.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -163,7 +163,7 @@ export function GuardEarningsPanel({
           </p>
         </div>
         <p className="text-xs text-brand-text-muted mt-3">
-          Total earned from all completed shifts: ${breakdown.totalEarnings.toFixed(2)}
+          Total earned from all completed jobs: ${breakdown.totalEarnings.toFixed(2)}
         </p>
       </div>
 
@@ -175,7 +175,7 @@ export function GuardEarningsPanel({
 
       <div className="px-5 mt-6 mb-3">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[1.0625rem] font-bold tracking-tight">Completed shifts</h2>
+          <h2 className="text-[1.0625rem] font-bold tracking-tight">Completed jobs</h2>
           <span className="text-sm text-brand-text-muted">{sortedShifts.length}</span>
         </div>
         <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">
@@ -185,7 +185,7 @@ export function GuardEarningsPanel({
 
       {sortedShifts.length === 0 ? (
         <p className="text-sm text-brand-text-muted text-center py-10 px-5">
-          Complete shifts to see earnings here.
+          Complete jobs to see earnings here.
         </p>
       ) : (
         <AppList>

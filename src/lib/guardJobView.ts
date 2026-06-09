@@ -82,7 +82,7 @@ function formatPayDate(iso?: string): string | undefined {
   });
 }
 
-/** Guard-facing pay line for a completed shift — one place for shift vs payout wording */
+/** Guard-facing pay line for a completed job — one place for shift vs payout wording */
 export function getShiftPayDisplay(
   job: GuardJobView,
   payment?: GuardPayoutView

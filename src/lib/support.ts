@@ -16,7 +16,7 @@ export const SUPPORT_CATEGORY_OPTIONS: { id: SupportTicketCategory; label: strin
   { id: 'general', label: 'General question' },
   { id: 'account', label: 'Account & profile' },
   { id: 'payment', label: 'Payments & billing' },
-  { id: 'job-issue', label: 'Job or shift issue' },
+  { id: 'job-issue', label: 'Job issue' },
   { id: 'safety', label: 'Safety concern' },
   { id: 'technical', label: 'Technical problem' },
   { id: 'other', label: 'Other' },

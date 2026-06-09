@@ -66,7 +66,7 @@ export function GuardActiveShift({
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
         <div>
-          <p className="text-sm font-medium text-brand-primary mb-1">Active shift</p>
+          <p className="text-sm font-medium text-brand-primary mb-1">Active job</p>
           <h2 className="text-xl font-bold">{job.title}</h2>
         </div>
 
@@ -148,7 +148,7 @@ export function GuardActiveShift({
 
         {phase === 'upcoming' && clockInOpen && (
           <p className="text-xs text-brand-text-muted text-center">
-            Clock-in open until shift ends
+            Clock-in open until job ends
           </p>
         )}
 
@@ -184,7 +184,7 @@ export function GuardActiveShift({
               disabled={!clockOutOpen}
               className="app-button-primary disabled:opacity-40"
             >
-              End shift · clock out
+              Complete job · clock out
             </button>
           </div>
         )}

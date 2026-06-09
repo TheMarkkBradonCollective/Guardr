@@ -13,10 +13,10 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">Shift audits, activity logs, and compliance</p>
+      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">Job audits, activity logs, and compliance</p>
 
       {withAudits.length === 0 ? (
-        <p className="staff-empty-state border-t border-brand-border">No shift reports recorded yet.</p>
+        <p className="staff-empty-state border-t border-brand-border">No job reports recorded yet.</p>
       ) : (
         <AppList>
           {withAudits.map((req) => {

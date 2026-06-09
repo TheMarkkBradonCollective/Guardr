@@ -18,7 +18,7 @@ export function StaffIncidentsPanel({ incidents }: StaffIncidentsPanelProps) {
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4 max-w-2xl">
-        Incident reports are filed by guards during shifts and delivered to the client. Guardr staff can
+        Incident reports are filed by guards during jobs and delivered to the client. Guardr staff can
         review them here for context only — response and follow-up are handled by the client.
       </p>
 
@@ -35,7 +35,7 @@ export function StaffIncidentsPanel({ incidents }: StaffIncidentsPanelProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <WfBadge tone={SEVERITY_TONE[inc.severity]}>{inc.severity} severity</WfBadge>
                 <WfBadge tone={inc.status === 'open' ? 'warning' : 'default'}>
-                  {inc.status === 'open' ? 'Active shift' : 'Shift completed'}
+                  {inc.status === 'open' ? 'Active job' : 'Job completed'}
                 </WfBadge>
                 <span className="text-xs text-brand-text-muted">{new Date(inc.timestamp).toLocaleString()}</span>
               </div>

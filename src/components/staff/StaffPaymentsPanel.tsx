@@ -118,7 +118,7 @@ export function StaffPaymentsPanel({
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <div className="px-4 sm:px-5 pb-5 border-b border-brand-border">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          Every job follows the same path: the client pays, the shift runs, then you pay the guard.
+          Every job follows the same path: the client pays, the job runs, then you pay the guard.
           Jobs below are grouped by what needs to happen next.
         </p>
         <ol className="mt-4 space-y-1.5 text-xs text-brand-text-muted list-decimal list-inside">

@@ -37,7 +37,7 @@ export const PIPELINE_SECTION_META: Record<
 > = {
   'awaiting-guard-payout': {
     title: 'Pay the guard',
-    description: 'These shifts are finished. Send pay through Stripe or hand cash to the guard on site.',
+    description: 'These jobs are finished. Send pay through Stripe or hand cash to the guard on site.',
   },
   'cash-deposit-pending': {
     title: 'Deposit client cash to Stripe',
@@ -49,8 +49,8 @@ export const PIPELINE_SECTION_META: Record<
     description: 'The client has not paid yet. You can mark cash received if they paid on site.',
   },
   'client-paid-active': {
-    title: 'Paid — shift in progress',
-    description: 'Money is secured. Pay the guard after the shift is marked complete.',
+    title: 'Paid — job in progress',
+    description: 'Money is secured. Pay the guard after the job is marked complete.',
   },
   settled: {
     title: 'Done',

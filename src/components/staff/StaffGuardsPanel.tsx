@@ -117,7 +117,7 @@ export function StaffGuardsPanel({
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept shifts — staff can add profiles, verify credentials, and manage accounts.
+              Field guards who accept jobs — staff can add profiles, verify credentials, and manage accounts.
             </p>
             {canManage && onAddGuard && (
               <StaffAddGuardForm

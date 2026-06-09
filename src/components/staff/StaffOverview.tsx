@@ -4,7 +4,7 @@ import {
   LIVE_JOB_STATUS_LABEL,
   OpsActivityItem,
   OverviewActionItem,
-  OverviewLiveShift,
+  OverviewLiveJob,
   PlatformStats,
   StaffSection,
 } from '../../lib/staffOps';
@@ -25,7 +25,7 @@ interface StaffOverviewProps {
   stats: PlatformStats;
   activityFeed: OpsActivityItem[];
   actionItems: OverviewActionItem[];
-  liveShifts: OverviewLiveShift[];
+  liveJobs: OverviewLiveJob[];
   weeklyTrend: number[];
   onNavigate: (section: StaffSection) => void;
   staffName: string;
@@ -38,7 +38,7 @@ const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> =
   incidents: <AlertTriangle className="w-4 h-4" />,
   payments: <Shield className="w-4 h-4" />,
   support: <LifeBuoy className="w-4 h-4" />,
-  'live-shifts': <MapPin className="w-4 h-4" />,
+  'live-jobs': <MapPin className="w-4 h-4" />,
 };
 
 function formatOverviewDate(): string {
@@ -64,13 +64,13 @@ export function StaffOverview({
   stats,
   activityFeed,
   actionItems,
-  liveShifts,
+  liveJobs,
   weeklyTrend,
   onNavigate,
   staffName,
 }: StaffOverviewProps) {
   const urgentCount = actionItems.filter((item) => item.tone === 'urgent').length;
-  const summary = buildOverviewSummaryLine(urgentCount, liveShifts.filter((s) => s.status === 'in-progress').length);
+  const summary = buildOverviewSummaryLine(urgentCount, liveJobs.filter((j) => j.status === 'in-progress').length);
   const hasWeeklyData = weeklyTrend.some((h) => h > 0);
 
   const metrics = [
@@ -87,7 +87,7 @@ export function StaffOverview({
       <header className="staff-overview-hero">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted">{formatOverviewDate()}</p>
-          <h2 className="text-xl sm:text-2xl font-semibold mt-1 truncate">Good shift, {staffName.split(' ')[0]}</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold mt-1 truncate">Hello, {staffName.split(' ')[0]}</h2>
           <p className="text-sm text-brand-text-muted mt-1.5 leading-relaxed">{summary}</p>
         </div>
         <div
@@ -125,7 +125,7 @@ export function StaffOverview({
             <div>
               <p className="text-sm font-medium">You&apos;re caught up</p>
               <p className="text-xs text-brand-text-muted mt-0.5">
-                No approvals, incidents, or payouts waiting. Browse jobs or open the map to monitor shifts.
+                No approvals, incidents, or payouts waiting. Browse jobs or open the map to monitor jobs.
               </p>
             </div>
           </div>
@@ -158,43 +158,43 @@ export function StaffOverview({
 
       <section>
         <WfSectionHeader
-          title="Live shifts"
-          count={liveShifts.length || undefined}
-          actionLabel={liveShifts.length > 0 ? 'Open map' : undefined}
-          onAction={liveShifts.length > 0 ? () => onNavigate('map') : undefined}
+          title="Live jobs"
+          count={liveJobs.length || undefined}
+          actionLabel={liveJobs.length > 0 ? 'Open map' : undefined}
+          onAction={liveJobs.length > 0 ? () => onNavigate('map') : undefined}
         />
-        {liveShifts.length === 0 ? (
+        {liveJobs.length === 0 ? (
           <div className="staff-overview-empty-card">
             <MapPin className="w-5 h-5 text-brand-text-muted shrink-0" />
             <div>
               <p className="text-sm font-medium">No guards on site</p>
               <p className="text-xs text-brand-text-muted mt-0.5">
-                Accepted and in-progress jobs show up here when a shift is running.
+                Accepted and in-progress jobs show up here when work is underway on site.
               </p>
             </div>
           </div>
         ) : (
           <AppItemCardStack>
-            {liveShifts.map((shift) => {
-              const statusCfg = LIVE_JOB_STATUS_LABEL[shift.status];
+            {liveJobs.map((job) => {
+              const statusCfg = LIVE_JOB_STATUS_LABEL[job.status];
               return (
-                <AppItemCard key={shift.id} onClick={() => onNavigate('jobs')}>
+                <AppItemCard key={job.id} onClick={() => onNavigate('jobs')}>
                   <div className="flex items-start justify-between gap-3 w-full text-left">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold truncate">{shift.title}</p>
-                        <WfBadge tone={shift.status === 'in-progress' ? 'success' : 'primary'}>
+                        <p className="text-sm font-semibold truncate">{job.title}</p>
+                        <WfBadge tone={job.status === 'in-progress' ? 'success' : 'primary'}>
                           {statusCfg.emoji} {statusCfg.label}
                         </WfBadge>
                       </div>
                       <p className="text-xs text-brand-text-muted mt-1">
-                        {shift.guardName} · {shift.clientName}
+                        {job.guardName} · {job.clientName}
                       </p>
-                      <p className="text-xs text-brand-text-muted mt-0.5 truncate">{shift.site}</p>
+                      <p className="text-xs text-brand-text-muted mt-0.5 truncate">{job.site}</p>
                     </div>
-                    {shift.startedAt && (
+                    {job.startedAt && (
                       <p className="text-[11px] text-brand-text-muted shrink-0">
-                        {formatActivityTime(shift.startedAt)}
+                        {formatActivityTime(job.startedAt)}
                       </p>
                     )}
                   </div>

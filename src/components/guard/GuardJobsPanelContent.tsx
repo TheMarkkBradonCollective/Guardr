@@ -65,7 +65,7 @@ export function GuardJobsPanelContent({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-brand-text-muted">Available shifts</p>
+        <p className="text-sm font-medium text-brand-text-muted">Available offers</p>
         {jobs.length === 0 ? (
           <p className="text-center text-brand-text-muted py-10">No jobs in this category right now.</p>
         ) : (

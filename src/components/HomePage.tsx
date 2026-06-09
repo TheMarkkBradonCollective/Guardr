@@ -30,10 +30,10 @@ const HOW_IT_WORKS = [
 ];
 
 const WHY_GUARDR = [
-  { icon: Zap, title: 'Fast staffing', body: 'Fill shifts quickly with on-demand professionals.' },
+  { icon: Zap, title: 'Fast staffing', body: 'Fill jobs quickly with on-demand professionals.' },
   { icon: BadgeCheck, title: 'Verified professionals', body: 'Licensed guards with credentials on every profile.' },
   { icon: DollarSign, title: 'Transparent pricing', body: 'Clear rates and estimated totals before you commit.' },
-  { icon: Radio, title: 'Real-time operations', body: 'Live coverage status, reports, and shift activity.' },
+  { icon: Radio, title: 'Real-time operations', body: 'Live coverage status, reports, and job activity.' },
 ];
 
 export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePageProps) {
@@ -164,7 +164,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-brand-text-muted mb-8">
-            Whether you need coverage tonight or want to pick up your next shift.
+            Whether you need coverage tonight or want to pick up your next job.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button type="button" onClick={() => onNavigateToAuth(undefined, 'sign-up')} className="uber-button-sage">

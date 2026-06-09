@@ -64,7 +64,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                       <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />
                       <span>{guard.rating.toFixed(1)}</span>
                       <span>·</span>
-                      <span>{guard.jobsCompleted} shifts</span>
+                      <span>{guard.jobsCompleted} jobs</span>
                       {guard.yearsExperience != null && guard.yearsExperience > 0 && (
                         <>
                           <span>·</span>

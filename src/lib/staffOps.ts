@@ -71,7 +71,7 @@ export interface OverviewActionItem {
   tone: OverviewActionTone;
 }
 
-export interface OverviewLiveShift {
+export interface OverviewLiveJob {
   id: string;
   title: string;
   site: string;
@@ -164,17 +164,17 @@ export function computePlatformStats(
 
 export function buildOverviewSummaryLine(
   actionCount: number,
-  liveShiftCount: number
+  liveJobCount: number
 ): string {
-  if (actionCount === 0 && liveShiftCount === 0) {
-    return 'Nothing urgent right now — check live shifts or browse jobs.';
+  if (actionCount === 0 && liveJobCount === 0) {
+    return 'Nothing urgent right now — check live jobs or browse open offers.';
   }
   const parts: string[] = [];
   if (actionCount > 0) {
     parts.push(`${actionCount} item${actionCount === 1 ? '' : 's'} need your attention`);
   }
-  if (liveShiftCount > 0) {
-    parts.push(`${liveShiftCount} guard${liveShiftCount === 1 ? '' : 's'} on site`);
+  if (liveJobCount > 0) {
+    parts.push(`${liveJobCount} guard${liveJobCount === 1 ? '' : 's'} on site`);
   }
   return parts.join(' · ');
 }
@@ -191,8 +191,8 @@ export function buildOverviewActionQueue(
   if (pendingJobs > 0) {
     items.push({
       id: 'pending-jobs',
-      title: 'Approve new job requests',
-      description: `${pendingJobs} client request${pendingJobs === 1 ? '' : 's'} waiting for go / no-go`,
+      title: 'Approve new job offers',
+      description: `${pendingJobs} client job offer${pendingJobs === 1 ? '' : 's'} waiting for go / no-go`,
       count: pendingJobs,
       section: 'jobs',
       tone: 'urgent',
@@ -214,8 +214,8 @@ export function buildOverviewActionQueue(
   if (openJobs > 0) {
     items.push({
       id: 'open-marketplace',
-      title: 'Unassigned shifts on the board',
-      description: 'Open jobs waiting for a guard to accept',
+      title: 'Unassigned job offers on the board',
+      description: 'Open offers waiting for a guard to accept',
       count: openJobs,
       section: 'jobs',
       tone: 'normal',
@@ -227,7 +227,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'incidents',
       title: 'Review client incident reports',
-      description: 'Filed during shift checkout — see what happened on site',
+      description: 'Filed during job checkout — see what happened on site',
       count: openIncidents,
       section: 'incidents',
       tone: 'urgent',
@@ -237,7 +237,7 @@ export function buildOverviewActionQueue(
   if (stats.paymentHolds > 0) {
     items.push({
       id: 'payments',
-      title: 'Pay guards for finished shifts',
+      title: 'Pay guards for finished jobs',
       description: 'Completed jobs where payout or rating is still outstanding',
       count: stats.paymentHolds,
       section: 'payments',
@@ -259,7 +259,7 @@ export function buildOverviewActionQueue(
   const inProgress = requests.filter((r) => r.status === 'in-progress').length;
   if (inProgress > 0) {
     items.push({
-      id: 'live-shifts',
+      id: 'live-jobs',
       title: 'Watch live operations',
       description: 'Guards checked in — view them on the ops map',
       count: inProgress,
@@ -271,10 +271,10 @@ export function buildOverviewActionQueue(
   return items;
 }
 
-export function buildOverviewLiveShifts(
+export function buildOverviewLiveJobs(
   guards: SecurityGuard[],
   requests: SecurityRequest[]
-): OverviewLiveShift[] {
+): OverviewLiveJob[] {
   return requests
     .filter((r) => ['accepted', 'in-progress'].includes(r.status))
     .map((r) => ({
@@ -371,7 +371,7 @@ export function buildIncidents(
       location: req.location,
       guardName: guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown',
       clientName: req.clientName,
-      description: ir.description ?? 'Incident reported during shift.',
+      description: ir.description ?? 'Incident reported during job.',
       timestamp: req.checkOutAudit?.checkedAt ?? req.endDate,
       status: req.status === 'completed' ? 'resolved' : 'open',
     });
