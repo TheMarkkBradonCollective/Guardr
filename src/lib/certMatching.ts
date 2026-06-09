@@ -5,7 +5,7 @@ import {
   resolveCertCatalogId,
 } from './certCatalog';
 import { guardCanWorkInState } from './guardLicenses';
-import { guardHasCredentialOnFile } from './guardQualification';
+import { guardHasCredentialOnFile, guardMeetsLevel2Training } from './guardQualification';
 
 export function guardHasVerifiedCert(
   guard: SecurityGuard,
@@ -45,9 +45,7 @@ function isGuardCardOnFile(cert: Certification): boolean {
 
 export function guardMeetsCaListingBaseline(guard: SecurityGuard, state = 'CA'): boolean {
   if (!guardCanWorkInState(guard, state, false)) return false;
-  return CA_REQUIRED_LISTING_IDS.filter((id) => id !== 'bsis-guard-card').every((id) =>
-    guardHasVerifiedCert(guard, id, state)
-  );
+  return guardMeetsLevel2Training(guard);
 }
 
 export function guardMeetsJobCertRequirements(

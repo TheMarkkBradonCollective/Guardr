@@ -45,7 +45,7 @@ export function JobCertRequirementsPicker({
       <div className="space-y-2">
         <p className="text-sm font-semibold">Minimum guard qualification</p>
         <p className="text-xs text-brand-text-muted">
-          Choose whether guards still completing their 40-hour BSIS training can accept this job.
+          Choose whether guards with only a guard card (Level 1) can accept, or require the 8-hour PTA & UOF training (Level 2).
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {

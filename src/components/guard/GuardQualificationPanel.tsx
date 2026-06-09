@@ -1,7 +1,6 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
-  CORE_BIS_TRAINING_COURSE_IDS,
   getQualificationProgress,
   guardHasCredentialOnFile,
   guardHasGuardrVerifiedCredential,
@@ -26,16 +25,21 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
         ? 'border-amber-500/40 bg-amber-500/10 text-amber-400'
         : 'border-brand-border bg-brand-surface text-brand-text-muted';
 
+  const ptaUofDetail = progress.ptaUofCombined
+    ? 'Combined 8-hr certificate on file'
+    : progress.legacyPta && progress.legacyUof
+      ? 'Legacy separate PTA & UOF certs on file'
+      : progress.legacyPta || progress.legacyUof
+        ? 'Upload combined 8-hr PTA & UOF cert (or both legacy certs)'
+        : undefined;
+
   const rows = [
     { label: 'BSIS Guard Card (valid)', met: progress.guardCard, verified: progress.guardCardVerified },
-    { label: 'Power to Arrest (8 hr)', met: progress.powerToArrest },
-    { label: 'Appropriate Use of Force (8 hr)', met: progress.useOfForce },
     {
-      label: '40-hour BSIS training',
-      met: progress.fortyHourRollup || progress.coreTrainingComplete,
-      detail: progress.fortyHourRollup
-        ? 'Completion certificate on file'
-        : `${progress.uploadedTrainingCount} / ${CORE_BIS_TRAINING_COURSE_IDS.length} core courses`,
+      label: '8-Hour Power to Arrest & Appropriate Use of Force (2-part)',
+      met: progress.ptaUofTraining,
+      verified: progress.ptaUofCombinedVerified,
+      detail: ptaUofDetail,
     },
   ];
 

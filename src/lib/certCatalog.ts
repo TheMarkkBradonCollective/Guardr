@@ -21,8 +21,8 @@ export interface CertCatalogEntry {
 
 export const CERT_CATEGORY_LABELS: Record<CertCategory, string> = {
   'guard-card': 'BSIS Guard Card',
-  'bsis-required': 'Required to Work (CA)',
-  'bsis-training': 'BSIS Training Courses',
+  'bsis-required': 'BSIS Training (legacy)',
+  'bsis-training': 'BSIS Training',
   'bsis-permit': 'BSIS Permits (Armed / Weapons)',
   'medical': 'Medical & Emergency',
   'fema': 'FEMA / Homeland Security',
@@ -42,44 +42,53 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     description: 'California Bureau of Security and Investigative Services guard registration.',
   },
 
-  // ── Required to work in CA (beyond the card itself) ──
+  // ── BSIS training (guard card is separate — see guard-card) ──
+  {
+    id: 'bsis-pta-uof-8hr',
+    name: '8-Hour Power to Arrest & Appropriate Use of Force (2-Part)',
+    shortLabel: 'PTA & UOF (8 hr)',
+    category: 'bsis-training',
+    description: 'As of 2024, BSIS requires this single 8-hour, 2-part course for Level 2 (Active).',
+  },
+  {
+    id: 'bsis-8-hour-refresher',
+    name: '8-Hour BSIS Refresher Course',
+    shortLabel: '8-Hr Refresher',
+    category: 'bsis-training',
+    description: '8-hour refresher — upload when applicable for renewals.',
+  },
+
+  // ── Legacy / supplemental BSIS training (optional uploads) ──
   {
     id: 'bsis-power-to-arrest',
-    name: 'Power to Arrest Training',
-    shortLabel: 'Power to Arrest',
-    category: 'bsis-required',
-    requiredForCaListing: true,
-    description: '8-hour BSIS-required course before guard card issuance.',
+    name: 'Power to Arrest (legacy separate cert)',
+    shortLabel: 'PTA (legacy)',
+    category: 'bsis-training',
+    description: 'Pre-2024 separate certificate. Upload the combined 8-hr course cert when possible.',
   },
   {
     id: 'bsis-appropriate-use-of-force',
-    name: 'Appropriate Use of Force Training',
-    shortLabel: 'Use of Force',
-    category: 'bsis-required',
-    requiredForCaListing: true,
-    description: '8-hour BSIS-required course before guard card issuance.',
+    name: 'Appropriate Use of Force (legacy separate cert)',
+    shortLabel: 'UOF (legacy)',
+    category: 'bsis-training',
+    description: 'Pre-2024 separate certificate. Upload the combined 8-hr course cert when possible.',
   },
-  {
-    id: 'bsis-40-hour-completed',
-    name: '40-Hour BSIS Training Completed',
-    shortLabel: '40-Hr BSIS',
-    category: 'bsis-required',
-    requiredForCaListing: true,
-    description: 'Completion of all required BSIS training hours within mandated timeframes.',
-  },
-
-  // ── BSIS training course certificates (40-hour pathway) ──
-  { id: 'bsis-public-relations', name: 'Public Relations (Community & Customer)', shortLabel: 'Public Relations', category: 'bsis-training' },
-  { id: 'bsis-observation-documentation', name: 'Observation & Documentation', shortLabel: 'Observation', category: 'bsis-training' },
-  { id: 'bsis-communication', name: 'Communication & Its Significance', shortLabel: 'Communication', category: 'bsis-training' },
-  { id: 'bsis-liability-legal', name: 'Liability & Legal Aspects', shortLabel: 'Legal Aspects', category: 'bsis-training' },
+  { id: 'bsis-communication', name: 'Communication and Its Significance', shortLabel: 'Communication', category: 'bsis-training' },
+  { id: 'bsis-public-relations', name: 'Public Relations', shortLabel: 'Public Relations', category: 'bsis-training' },
+  { id: 'bsis-observation-documentation', name: 'Observation and Documentation', shortLabel: 'Observation', category: 'bsis-training' },
+  { id: 'bsis-liability-legal', name: 'Liability / Legal Aspects', shortLabel: 'Legal Aspects', category: 'bsis-training' },
   { id: 'bsis-officer-safety', name: 'Officer Safety', shortLabel: 'Officer Safety', category: 'bsis-training' },
+  { id: 'bsis-trespass', name: 'Trespass', shortLabel: 'Trespass', category: 'bsis-training' },
+  { id: 'bsis-evacuation-procedures', name: 'Evacuation Procedures', shortLabel: 'Evacuation', category: 'bsis-training' },
+  { id: 'bsis-monitoring-crowd-control', name: 'Monitoring Crowd Control', shortLabel: 'Crowd Control', category: 'bsis-training' },
+  { id: 'bsis-arrest-search-seizure', name: 'Arrests, Search and Seizure', shortLabel: 'Search & Seizure', category: 'bsis-training' },
+
+  // ── Additional BSIS / security training (optional) ──
   { id: 'bsis-patrol-techniques', name: 'Patrol Techniques', shortLabel: 'Patrol', category: 'bsis-training' },
-  { id: 'bsis-arrest-search-seizure', name: 'Arrest, Search & Seizure', shortLabel: 'Search & Seizure', category: 'bsis-training' },
   { id: 'bsis-access-control', name: 'Access Control', shortLabel: 'Access Control', category: 'bsis-training' },
+  { id: 'bsis-crowd-control', name: 'Crowd Control', shortLabel: 'Crowd Control', category: 'bsis-training' },
   { id: 'bsis-terrorism-awareness', name: 'Terrorism Awareness', shortLabel: 'Terrorism Aware', category: 'bsis-training' },
   { id: 'bsis-wmd-awareness', name: 'Weapons of Mass Destruction Awareness', shortLabel: 'WMD Aware', category: 'bsis-training' },
-  { id: 'bsis-crowd-control', name: 'Crowd Control', shortLabel: 'Crowd Control', category: 'bsis-training' },
   { id: 'bsis-incident-command', name: 'Incident Command System (ICS)', shortLabel: 'ICS', category: 'bsis-training' },
   { id: 'bsis-fire-safety', name: 'Fire Safety', shortLabel: 'Fire Safety', category: 'bsis-training' },
   { id: 'bsis-emergency-procedures', name: 'Emergency Procedures', shortLabel: 'Emergency Proc.', category: 'bsis-training' },
@@ -206,6 +215,15 @@ export function resolveCertCatalogId(cert: { catalogId?: string; name: string })
   if (/cpr/i.test(cert.name)) return 'cpr';
   if (/first aid/i.test(cert.name)) return 'first-aid';
   if (/aed/i.test(cert.name)) return 'aed';
+  if (/power to arrest/i.test(cert.name) && /use of force|appropriate use/i.test(cert.name)) {
+    return 'bsis-pta-uof-8hr';
+  }
+  if (/power to arrest/i.test(cert.name)) return 'bsis-power-to-arrest';
+  if (/use of force|appropriate use of force/i.test(cert.name)) return 'bsis-appropriate-use-of-force';
+  if (/monitoring crowd/i.test(cert.name)) return 'bsis-monitoring-crowd-control';
+  if (/trespass/i.test(cert.name) && /bsis|security/i.test(cert.name)) return 'bsis-trespass';
+  if (/evacuation/i.test(cert.name)) return 'bsis-evacuation-procedures';
+  if (/refresher/i.test(cert.name) && /bsis|8/i.test(cert.name)) return 'bsis-8-hour-refresher';
   return undefined;
 }
 

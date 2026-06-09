@@ -61,7 +61,6 @@ export function GuardProfileScreen({
 
   const credentialSections: CertCategory[] = [
     'guard-card',
-    'bsis-required',
     'bsis-training',
     'bsis-permit',
     'medical',

@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { getCertsByCategory, resolveCertCatalogId } from './certCatalog';
+import { resolveCertCatalogId } from './certCatalog';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
 
@@ -10,31 +10,18 @@ export const QUALIFICATION_LEVEL_LABELS: Record<Exclude<GuardQualificationLevel,
 
 export const QUALIFICATION_LEVEL_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Valid BSIS Guard Card on file',
-  active: 'Guard Card + Power to Arrest + Use of Force + 40-hour BSIS training',
+  active: 'Guard Card + 8-hour Power to Arrest & Appropriate Use of Force (2-part) training',
 };
 
-/** Core 40-hour pathway courses (excluding PTA / UOF, which are separate required items). */
-export const CORE_BIS_TRAINING_COURSE_IDS = [
-  'bsis-public-relations',
-  'bsis-observation-documentation',
-  'bsis-communication',
-  'bsis-liability-legal',
-  'bsis-officer-safety',
-  'bsis-patrol-techniques',
-  'bsis-arrest-search-seizure',
-  'bsis-access-control',
-] as const;
+/**
+ * As of 2024, BSIS requires one combined 8-hour, 2-part course covering
+ * Power to Arrest and Appropriate Use of Force — not separate certificates.
+ */
+export const BSIS_PTA_UOF_COMBINED_ID = 'bsis-pta-uof-8hr';
 
-export const LEVEL_2_REQUIRED_IDS = [
-  'bsis-power-to-arrest',
-  'bsis-appropriate-use-of-force',
-] as const;
-
-export const OPTIONAL_WEAPON_PERMIT_IDS = [
-  'bsis-exposed-firearm',
-  'bsis-baton',
-  'bsis-chemical-agent',
-] as const;
+/** Legacy separate cert IDs — both on file still counts for guards who uploaded before 2024. */
+const LEGACY_PTA_ID = 'bsis-power-to-arrest';
+const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
 
 function isCertNotExpired(cert: Certification): boolean {
   if (!cert.expiryDate) return true;
@@ -77,9 +64,18 @@ export function guardHasGuardrVerifiedCredential(
   });
 }
 
-export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
-  if (guardHasCredentialOnFile(guard, 'bsis-40-hour-completed')) return true;
-  return CORE_BIS_TRAINING_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id));
+/** Combined 8-hr PTA/UOF cert, or legacy pair of separate uploads. */
+export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
+  if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  return (
+    guardHasCredentialOnFile(guard, LEGACY_PTA_ID) &&
+    guardHasCredentialOnFile(guard, LEGACY_UOF_ID)
+  );
+}
+
+/** Level 2 training only — guard card is separate (Level 1). */
+export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
+  return guardMeetsPtaUofTraining(guard);
 }
 
 export function guardMeetsLevel1(guard: SecurityGuard, state = 'CA'): boolean {
@@ -89,13 +85,12 @@ export function guardMeetsLevel1(guard: SecurityGuard, state = 'CA'): boolean {
 
 export function guardMeetsLevel2(guard: SecurityGuard, state = 'CA'): boolean {
   if (!guardMeetsLevel1(guard, state)) return false;
-  if (!LEVEL_2_REQUIRED_IDS.every((id) => guardHasCredentialOnFile(guard, id))) return false;
-  return guardMeets40HourTraining(guard);
+  return guardMeetsLevel2Training(guard);
 }
 
 export function getGuardQualificationLevel(guard: SecurityGuard, state = 'CA'): GuardQualificationLevel {
   if (!guardMeetsLevel1(guard, state)) return 'none';
-  if (!guardMeetsLevel2(guard, state)) return 'pending';
+  if (!guardMeetsLevel2Training(guard)) return 'pending';
   return 'active';
 }
 
@@ -112,20 +107,19 @@ export function guardMeetsQualificationLevel(
 
 export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const jobState = state || 'CA';
-  const trainingCourses = getCertsByCategory('bsis-training');
-  const uploadedTrainingCount = trainingCourses.filter((entry) =>
-    guardHasCredentialOnFile(guard, entry.id)
-  ).length;
+  const ptaUofCombined = guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
+  const legacyPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
+  const legacyUof = guardHasCredentialOnFile(guard, LEGACY_UOF_ID);
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
     guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', jobState),
-    powerToArrest: guardHasCredentialOnFile(guard, 'bsis-power-to-arrest'),
-    useOfForce: guardHasCredentialOnFile(guard, 'bsis-appropriate-use-of-force'),
-    fortyHourRollup: guardHasCredentialOnFile(guard, 'bsis-40-hour-completed'),
-    coreTrainingComplete: CORE_BIS_TRAINING_COURSE_IDS.every((id) => guardHasCredentialOnFile(guard, id)),
-    uploadedTrainingCount,
-    totalTrainingCourses: trainingCourses.length,
+    ptaUofTraining: guardMeetsPtaUofTraining(guard),
+    ptaUofCombined,
+    ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
+    legacyPta,
+    legacyUof,
+    trainingPathwayComplete: guardMeetsLevel2Training(guard),
   };
 }

@@ -1,15 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getVerifiedProfileBadges } from '../../lib/certMatching';
-import { getCertCatalogEntry } from '../../lib/certCatalog';
-import {
-  CORE_BIS_TRAINING_COURSE_IDS,
-  getQualificationProgress,
-  guardHasCredentialOnFile,
-  guardHasGuardrVerifiedCredential,
-  LEVEL_2_REQUIRED_IDS,
-  QUALIFICATION_LEVEL_LABELS,
-} from '../../lib/guardQualification';
+import { getQualificationProgress, QUALIFICATION_LEVEL_LABELS } from '../../lib/guardQualification';
 import { getVerifiedLicensedStates } from '../../lib/guardLicenses';
 import { formatStateName } from '../../lib/states';
 import { Check, Shield } from 'lucide-react';
@@ -27,17 +19,11 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
 
   const requiredRows = [
     { id: 'bsis-guard-card', label: 'Guard Card', onFile: progress.guardCard, verified: progress.guardCardVerified },
-    ...LEVEL_2_REQUIRED_IDS.map((id) => ({
-      id,
-      label: getCertCatalogEntry(id)?.shortLabel ?? id,
-      onFile: guardHasCredentialOnFile(guard, id),
-      verified: guardHasGuardrVerifiedCredential(guard, id),
-    })),
     {
-      id: 'bsis-40-hour',
-      label: '40-Hr BSIS',
-      onFile: progress.fortyHourRollup || progress.coreTrainingComplete,
-      verified: guardHasGuardrVerifiedCredential(guard, 'bsis-40-hour-completed'),
+      id: 'bsis-pta-uof',
+      label: 'PTA & UOF (8 hr)',
+      onFile: progress.ptaUofTraining,
+      verified: progress.ptaUofCombinedVerified,
     },
   ];
 
@@ -84,11 +70,6 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
               </span>
             ))}
           </div>
-          {progress.level === 'pending' && !progress.coreTrainingComplete && !progress.fortyHourRollup && (
-            <p className="text-[10px] text-brand-text-muted mt-2">
-              {progress.uploadedTrainingCount} of {CORE_BIS_TRAINING_COURSE_IDS.length} core BSIS courses on file
-            </p>
-          )}
         </div>
       )}
 

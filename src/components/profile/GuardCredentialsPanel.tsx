@@ -24,15 +24,10 @@ const CREDENTIAL_SECTIONS: {
     icon: Shield,
   },
   {
-    category: 'bsis-required',
-    title: 'Required to Work (California)',
-    subtitle: 'Power to Arrest, Use of Force, and 40-hour BSIS completion — required for Level 2 (Active).',
-    icon: BookOpen,
-  },
-  {
     category: 'bsis-training',
-    title: 'BSIS Training Course Certificates',
-    subtitle: 'Individual course certs earned while completing the 40-hour requirement.',
+    title: 'BSIS Training',
+    subtitle:
+      'As of 2024: one 8-hour, 2-part Power to Arrest & Appropriate Use of Force course for Level 2. Guard card is uploaded separately.',
     icon: BookOpen,
   },
   {
