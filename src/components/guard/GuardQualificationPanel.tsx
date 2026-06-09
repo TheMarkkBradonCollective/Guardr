@@ -29,9 +29,11 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
     ? 'Combined 8-hr certificate on file'
     : progress.legacyPta && progress.legacyUof
       ? 'Legacy separate PTA & UOF certs on file'
-      : progress.legacyPta || progress.legacyUof
-        ? 'Upload combined 8-hr PTA & UOF cert (or both legacy certs)'
-        : undefined;
+      : progress.legacyPta && progress.legacyWmd
+        ? 'PTA & WMD certs on file (2-part course)'
+        : progress.legacyPta || progress.legacyUof || progress.legacyWmd
+          ? 'Upload combined 8-hr cert, or both parts (PTA + UOF, or PTA + WMD)'
+          : undefined;
 
   const rows = [
     {

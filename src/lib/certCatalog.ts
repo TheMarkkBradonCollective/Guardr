@@ -193,6 +193,30 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
 
 const CATALOG_BY_ID = new Map(CERT_CATALOG.map((e) => [e.id, e]));
 
+/** Legacy / import handles → canonical catalog IDs (PTA, UOF, AUF, WMD, combined 8-hr). */
+export const CATALOG_ID_ALIASES: Record<string, string> = {
+  'pta-uof-8hr': 'bsis-pta-uof-8hr',
+  'pta-uof': 'bsis-pta-uof-8hr',
+  'bsis-pta-uof': 'bsis-pta-uof-8hr',
+  'pta': 'bsis-power-to-arrest',
+  'bsis-pta': 'bsis-power-to-arrest',
+  'power-to-arrest': 'bsis-power-to-arrest',
+  'uof': 'bsis-appropriate-use-of-force',
+  'auf': 'bsis-appropriate-use-of-force',
+  'bsis-uof': 'bsis-appropriate-use-of-force',
+  'appropriate-use-of-force': 'bsis-appropriate-use-of-force',
+  'wmd': 'bsis-wmd-awareness',
+  'bsis-wmd': 'bsis-wmd-awareness',
+  'wmd-awareness': 'bsis-wmd-awareness',
+};
+
+export function canonicalCatalogId(catalogId: string | undefined): string | undefined {
+  if (!catalogId) return undefined;
+  const trimmed = catalogId.trim();
+  if (!trimmed) return undefined;
+  return CATALOG_ID_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+}
+
 export const BSIS_REFRESHER_CATALOG_ID = 'bsis-8-hour-refresher';
 
 /** Client job-posting quick filters */
@@ -227,8 +251,8 @@ export function getCertsByCategory(category: CertCategory): CertCatalogEntry[] {
 
 /** Match certs to catalog IDs by stored catalog_id, exact name, or training-provider aliases. */
 export function resolveCertCatalogId(cert: { catalogId?: string; name: string }): string | undefined {
-  const storedId = cert.catalogId?.trim();
-  if (storedId && CATALOG_BY_ID.has(storedId)) return storedId;
+  const storedCanonical = canonicalCatalogId(cert.catalogId);
+  if (storedCanonical && CATALOG_BY_ID.has(storedCanonical)) return storedCanonical;
 
   const name = cert.name.trim();
   const normalized = name.toLowerCase();
@@ -238,7 +262,15 @@ export function resolveCertCatalogId(cert: { catalogId?: string; name: string })
 
   const aliases: [RegExp, string][] = [
     [/power to arrest.*(wmd|weapons of mass destruction|mass destruction)/i, 'bsis-pta-uof-8hr'],
-    [/power to arrest.*(use of force|appropriate use of force)/i, 'bsis-pta-uof-8hr'],
+    [/power to arrest.*(use of force|appropriate use of force|\buof\b|\bauf\b)/i, 'bsis-pta-uof-8hr'],
+    [/(use of force|appropriate use of force).*power to arrest/i, 'bsis-pta-uof-8hr'],
+    [/^pta$/i, 'bsis-power-to-arrest'],
+    [/power to arrest training/i, 'bsis-power-to-arrest'],
+    [/^uof$/i, 'bsis-appropriate-use-of-force'],
+    [/^auf$/i, 'bsis-appropriate-use-of-force'],
+    [/appropriate use of force training/i, 'bsis-appropriate-use-of-force'],
+    [/^wmd$/i, 'bsis-wmd-awareness'],
+    [/weapons of mass destruction/i, 'bsis-wmd-awareness'],
     [/communication/i, 'bsis-communication'],
     [/public relations/i, 'bsis-public-relations'],
     [/observation.*documentation|documentation.*observation/i, 'bsis-observation-documentation'],
@@ -263,7 +295,12 @@ export function resolveCertCatalogId(cert: { catalogId?: string; name: string })
   );
   if (byShortLabel) return byShortLabel.id;
 
-  if (storedId) return storedId;
+  if (
+    /power to arrest/i.test(name) &&
+    /(use of force|appropriate use of force|\buof\b|\bauf\b|wmd|weapons of mass destruction)/i.test(name)
+  ) {
+    return 'bsis-pta-uof-8hr';
+  }
 
   if (/firearm|armed/i.test(name) && /permit|bsis/i.test(name)) return 'bsis-exposed-firearm';
   if (/baton/i.test(name)) return 'bsis-baton';
@@ -274,7 +311,11 @@ export function resolveCertCatalogId(cert: { catalogId?: string; name: string })
   if (/32.?hour|32.?hr/i.test(name) && /bsis|training/i.test(name)) return 'bsis-32-hour-completed';
   if (/40.?hour|40.?hr/i.test(name) && /bsis|training/i.test(name)) return 'bsis-40-hour-completed';
   if (/power to arrest/i.test(name)) return 'bsis-power-to-arrest';
-  if (/use of force|appropriate use of force/i.test(name)) return 'bsis-appropriate-use-of-force';
+  if (/use of force|appropriate use of force|\buof\b|\bauf\b/i.test(name)) {
+    return 'bsis-appropriate-use-of-force';
+  }
+
+  if (storedCanonical && CATALOG_BY_ID.has(storedCanonical)) return storedCanonical;
 
   return undefined;
 }

@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
+import { canonicalCatalogId, getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
 
@@ -68,6 +68,8 @@ export const CORE_BIS_TRAINING_COURSE_IDS = THIRTY_TWO_HOUR_COURSE_IDS;
 
 const LEGACY_PTA_ID = 'bsis-power-to-arrest';
 const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
+/** Second half of modern 2-part 8-hr course when issued as a separate WMD cert. */
+export const BSIS_WMD_AWARENESS_ID = 'bsis-wmd-awareness';
 
 /** Catalog IDs on the Inactive→Active pathway — not shown as supplemental badges. */
 export function getRequiredPathwayCatalogIds(): readonly string[] {
@@ -76,6 +78,7 @@ export function getRequiredPathwayCatalogIds(): readonly string[] {
     BSIS_PTA_UOF_COMBINED_ID,
     LEGACY_PTA_ID,
     LEGACY_UOF_ID,
+    BSIS_WMD_AWARENESS_ID,
     ...THIRTY_TWO_HOUR_ROLLUP_IDS,
     ...THIRTY_TWO_HOUR_COURSE_IDS,
   ];
@@ -103,7 +106,13 @@ export function isThirtyTwoHourCatalogId(catalogId: string | undefined): boolean
 
 export function isPtaUofCatalogId(catalogId: string | undefined): boolean {
   if (!catalogId) return false;
-  return catalogId === BSIS_PTA_UOF_COMBINED_ID || catalogId === LEGACY_PTA_ID || catalogId === LEGACY_UOF_ID;
+  const canonical = canonicalCatalogId(catalogId) ?? catalogId;
+  return (
+    canonical === BSIS_PTA_UOF_COMBINED_ID ||
+    canonical === LEGACY_PTA_ID ||
+    canonical === LEGACY_UOF_ID ||
+    canonical === BSIS_WMD_AWARENESS_ID
+  );
 }
 
 export function getPtaUofCatalogEntries() {
@@ -133,8 +142,8 @@ function expiryBlocksQualification(catalogId: string): boolean {
 }
 
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
-  const storedId = cert.catalogId?.trim();
-  if (storedId && storedId === catalogId) return true;
+  const storedCanonical = canonicalCatalogId(cert.catalogId);
+  if (storedCanonical && storedCanonical === catalogId) return true;
   return resolveCertCatalogId(cert) === catalogId;
 }
 
@@ -205,12 +214,14 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
   );
 }
 
-/** Combined 8-hr PTA/UOF cert, or legacy pair of separate uploads. */
+/** Combined 8-hr cert, or both parts on file (PTA+UOF legacy, or PTA+WMD modern). */
 export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  const hasPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
+  if (!hasPta) return false;
   return (
-    guardHasCredentialOnFile(guard, LEGACY_PTA_ID) &&
-    guardHasCredentialOnFile(guard, LEGACY_UOF_ID)
+    guardHasCredentialOnFile(guard, LEGACY_UOF_ID) ||
+    guardHasCredentialOnFile(guard, BSIS_WMD_AWARENESS_ID)
   );
 }
 
@@ -263,6 +274,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const ptaUofCombined = guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
   const legacyPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
   const legacyUof = guardHasCredentialOnFile(guard, LEGACY_UOF_ID);
+  const legacyWmd = guardHasCredentialOnFile(guard, BSIS_WMD_AWARENESS_ID);
   const uploaded32HourCount = THIRTY_TWO_HOUR_COURSE_IDS.filter((id) =>
     guardHasCredentialOnFile(guard, id)
   ).length;
@@ -280,6 +292,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
     legacyPta,
     legacyUof,
+    legacyWmd,
     thirtyTwoHourRollup,
     thirtyTwoHourBlockComplete: guardMeets32HourBlock(guard),
     uploaded32HourCount,

@@ -338,7 +338,9 @@ export function GuardCredentialsPanel({
                     {ptaUofProgress.ptaUofTraining
                       ? ptaUofProgress.ptaUofCombined
                         ? 'Combined 8-hr certificate on file'
-                        : 'Legacy separate PTA & UOF certs on file'
+                        : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
+                          ? 'PTA & WMD certs on file'
+                          : 'Legacy separate PTA & UOF certs on file'
                       : 'Not yet on file'}
                   </p>
                 </div>
