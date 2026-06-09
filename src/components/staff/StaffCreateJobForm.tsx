@@ -1,0 +1,380 @@
+import React, { useMemo, useState } from 'react';
+import { Plus, X } from 'lucide-react';
+import { Client, JobType, SecurityGuard } from '../../types';
+import {
+  CLIENT_SERVICE_OPTIONS,
+  ClientServiceId,
+  serviceDefaultTitle,
+  serviceToJobType,
+} from '../../lib/clientRequestFlow';
+import {
+  computeDurationHours,
+  formatDuration,
+  getDefaultShiftEnd,
+  getDefaultShiftStart,
+} from '../../lib/dates';
+import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
+import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { US_STATES } from '../../lib/states';
+
+export interface StaffCreateJobInput {
+  clientId: string;
+  title: string;
+  address: string;
+  state: string;
+  siteName: string;
+  type: JobType;
+  startDate: string;
+  endDate: string;
+  durationHours: number;
+  hourlyRate: number;
+  guardPay: number;
+  guardsNeeded: number;
+  estimatedPayout: number;
+  assignGuardId?: string;
+  description?: string;
+}
+
+interface StaffCreateJobFormProps {
+  clients: Client[];
+  guards: SecurityGuard[];
+  onCreate: (input: StaffCreateJobInput) => Promise<string | void>;
+  onCreated?: (jobId: string) => void;
+}
+
+export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: StaffCreateJobFormProps) {
+  const [open, setOpen] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
+  const [customTitle, setCustomTitle] = useState('');
+  const [address, setAddress] = useState('');
+  const [jobState, setJobState] = useState('CA');
+  const [siteName, setSiteName] = useState('');
+  const [startDate, setStartDate] = useState(() => getDefaultShiftStart());
+  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(getDefaultShiftStart(), 8));
+  const [hourlyRate, setHourlyRate] = useState(30);
+  const [guardsNeeded, setGuardsNeeded] = useState(1);
+  const [assignGuardId, setAssignGuardId] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
+  const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const approvedClients = useMemo(
+    () => [...clients].filter((c) => c.approved !== false).sort((a, b) => a.companyName.localeCompare(b.companyName)),
+    [clients]
+  );
+
+  const assignableGuards = useMemo(
+    () =>
+      guards
+        .filter((g) => !g.isStaff && (g.userStatus || 'active') === 'active')
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [guards]
+  );
+
+  const title =
+    serviceId === 'custom' && customTitle.trim()
+      ? customTitle.trim()
+      : serviceDefaultTitle(serviceId);
+  const durationHours = computeDurationHours(startDate, endDate);
+  const guardPay = computeGuardPay(hourlyRate);
+  const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
+  const scheduleError = validateShiftSchedule(startDate, endDate);
+
+  const reset = () => {
+    setClientId('');
+    setServiceId('standing-guard');
+    setCustomTitle('');
+    setAddress('');
+    setJobState('CA');
+    setSiteName('');
+    setStartDate(getDefaultShiftStart());
+    setEndDate(getDefaultShiftEnd(getDefaultShiftStart(), 8));
+    setHourlyRate(30);
+    setGuardsNeeded(1);
+    setAssignGuardId('');
+    setDescription('');
+    setError('');
+    setMsg('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMsg('');
+    if (!clientId) {
+      setError('Select a client for this job.');
+      return;
+    }
+    if (address.trim().length < 4) {
+      setError('Enter a valid job address.');
+      return;
+    }
+    if (scheduleError) {
+      setError(scheduleError);
+      return;
+    }
+    setSaving(true);
+    try {
+      const jobId = await onCreate({
+        clientId,
+        title,
+        address: address.trim(),
+        state: jobState.toUpperCase(),
+        siteName: siteName.trim() || title,
+        type: serviceToJobType(serviceId),
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        durationHours,
+        hourlyRate,
+        guardPay,
+        guardsNeeded,
+        estimatedPayout,
+        assignGuardId: assignGuardId || undefined,
+        description: description.trim() || undefined,
+      });
+      const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
+      setMsg(
+        assignGuardId
+          ? `Job created for ${clientLabel} and assigned to guard.`
+          : `Job posted for ${clientLabel} — open for guard assignment.`
+      );
+      reset();
+      if (jobId) onCreated?.(jobId);
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create job.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        Create job for client
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="staff-onboard-form border border-brand-border rounded-xl p-4 space-y-4 bg-brand-bg-sec/40"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">Create job for client</h3>
+          <p className="text-xs text-brand-text-muted mt-1">
+            Post a job on behalf of a client. Optionally assign a guard now — otherwise it goes live as an open offer.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setError('');
+            setMsg('');
+          }}
+          className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20"
+          aria-label="Close form"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
+          <label className="uber-label block mb-1">Client</label>
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="uber-input w-full"
+            required
+          >
+            <option value="">Select client…</option>
+            {approvedClients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.companyName || c.name} ({c.email})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">Service type</label>
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value as ClientServiceId)}
+            className="uber-input w-full"
+          >
+            {CLIENT_SERVICE_OPTIONS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.emoji} {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {serviceId === 'custom' && (
+          <div>
+            <label className="uber-label block mb-1">Custom title</label>
+            <input
+              type="text"
+              value={customTitle}
+              onChange={(e) => setCustomTitle(e.target.value)}
+              className="uber-input w-full"
+              placeholder="Job title"
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="uber-label block mb-1">Site name</label>
+          <input
+            type="text"
+            value={siteName}
+            onChange={(e) => setSiteName(e.target.value)}
+            className="uber-input w-full"
+            placeholder="Optional"
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="uber-label block mb-1">Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="uber-input w-full"
+            placeholder="123 Main St, City"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">State</label>
+          <select
+            value={jobState}
+            onChange={(e) => setJobState(e.target.value)}
+            className="uber-input w-full"
+          >
+            {US_STATES.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">Guards needed</label>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={guardsNeeded}
+            onChange={(e) => setGuardsNeeded(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            className="uber-input w-full"
+          />
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">Start</label>
+          <input
+            type="datetime-local"
+            value={startDate}
+            min={minScheduleDatetimeLocal()}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              setEndDate(getDefaultShiftEnd(e.target.value, 8));
+            }}
+            className="uber-input w-full"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">End</label>
+          <input
+            type="datetime-local"
+            value={endDate}
+            min={startDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="uber-input w-full"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">Hourly rate ($)</label>
+          <input
+            type="number"
+            min={20}
+            step={1}
+            value={hourlyRate}
+            onChange={(e) => setHourlyRate(Math.max(20, parseInt(e.target.value, 10) || 30))}
+            className="uber-input w-full"
+          />
+        </div>
+
+        <div>
+          <label className="uber-label block mb-1">Assign guard now (optional)</label>
+          <select
+            value={assignGuardId}
+            onChange={(e) => setAssignGuardId(e.target.value)}
+            className="uber-input w-full"
+          >
+            <option value="">Leave open — guards can accept</option>
+            {assignableGuards.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="uber-label block mb-1">Notes for guards (optional)</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="uber-input w-full min-h-[4rem]"
+            placeholder="Site instructions, uniform, etc."
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-brand-text-muted">
+        {title} · {formatDuration(durationHours)} · ${estimatedPayout.toFixed(2)} client bill · platform fee $
+        {PLATFORM_FEE_PER_HOUR}/hr
+        {scheduleError ? ` · ${scheduleError}` : ''}
+      </p>
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
+      {msg && <p className="text-sm text-brand-primary">{msg}</p>}
+
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" disabled={saving || !!scheduleError} className="app-button-primary !w-auto !h-10 !px-5">
+          {saving ? 'Creating…' : assignGuardId ? 'Create & assign guard' : 'Create open job'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setError('');
+          }}
+          className="app-button-outline !w-auto !h-10 !px-5"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}

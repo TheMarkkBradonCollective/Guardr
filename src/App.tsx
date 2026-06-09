@@ -18,7 +18,8 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { canRecordCashPayments, isStaffRole } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, isStaffRole } from './lib/permissions';
+import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
@@ -1122,6 +1123,173 @@ export default function App() {
     }
   };
 
+  const handleStaffCreateJob = async (input: StaffCreateJobInput): Promise<string> => {
+    if (!currentUser || !canManageCompanyOperations(currentUser)) {
+      throw new Error('Only directors can create jobs for clients.');
+    }
+    const scheduleError = validateShiftSchedule(input.startDate, input.endDate);
+    if (scheduleError) {
+      throw new Error(scheduleError);
+    }
+    const clientRecord = clients.find((c) => c.id === input.clientId);
+    if (!clientRecord) {
+      throw new Error('Client not found.');
+    }
+    if (input.assignGuardId) {
+      const guard = guards.find((g) => g.id === input.assignGuardId);
+      if (!guard) throw new Error('Guard not found.');
+      const userStatus = guard.userStatus || 'active';
+      if (userStatus === 'suspended' || userStatus === 'blocked') {
+        throw new Error(`${guard.name} cannot be assigned — account is ${userStatus}.`);
+      }
+    }
+
+    const clientName = clientRecord.companyName || clientRecord.name;
+    const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
+    const siteName = input.siteName || '';
+    const address = input.address;
+    const location = siteName ? `${siteName} — ${address}` : address;
+    const assignedGuardId = input.assignGuardId ?? null;
+    const status: SecurityRequest['status'] = assignedGuardId ? 'accepted' : 'open';
+
+    const freshJob: SecurityRequest = {
+      id: `req-${Date.now()}`,
+      title: input.title,
+      description: input.description || 'General security coverage.',
+      clientId: clientRecord.id,
+      clientName,
+      clientLogo,
+      clientRating: clientRecord.rating,
+      siteName,
+      address,
+      state: input.state,
+      location,
+      type: input.type,
+      armedRequired: false,
+      guardsNeeded: input.guardsNeeded,
+      uniformRequirements: '',
+      equipmentRequirements: '',
+      siteInstructions: input.description || '',
+      startDate: input.startDate,
+      endDate: input.endDate,
+      durationHours: input.durationHours,
+      hourlyRate: input.hourlyRate,
+      guardPay: input.guardPay,
+      platformFeePerHour: PLATFORM_FEE_PER_HOUR,
+      estimatedPayout: input.estimatedPayout,
+      status,
+      paymentStatus: 'unpaid',
+      assignedGuardId,
+      requestType: assignedGuardId ? 'direct' : 'marketplace',
+      targetGuardId: assignedGuardId,
+      requiredCertifications: [],
+      minGuardQualification: 'pending',
+      applicants: assignedGuardId ? [assignedGuardId] : [],
+    };
+
+    setRequests((prev) => [freshJob, ...prev]);
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientRecord.id ? { ...c, totalRequests: c.totalRequests + 1 } : c))
+    );
+
+    if (assignedGuardId && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId: assignedGuardId,
+        requestId: freshJob.id,
+        location: freshJob.location,
+        body: `You were assigned to ${freshJob.title}`,
+      });
+    }
+
+    if (isDbConnected) {
+      try {
+        await supabase.from('clients').update({ total_requests: clientRecord.totalRequests + 1 }).eq('id', clientRecord.id);
+        await supabase.from('security_requests').insert({
+          id: freshJob.id,
+          title: freshJob.title,
+          description: freshJob.description,
+          client_id: freshJob.clientId,
+          client_name: freshJob.clientName,
+          client_logo: freshJob.clientLogo,
+          site_name: freshJob.siteName,
+          address: freshJob.address,
+          state: freshJob.state ?? '',
+          location: freshJob.location,
+          type: freshJob.type,
+          armed_required: freshJob.armedRequired,
+          guards_needed: freshJob.guardsNeeded,
+          uniform_requirements: freshJob.uniformRequirements,
+          equipment_requirements: freshJob.equipmentRequirements,
+          site_instructions: freshJob.siteInstructions,
+          start_date: freshJob.startDate,
+          end_date: freshJob.endDate,
+          duration_hours: freshJob.durationHours,
+          hourly_rate: freshJob.hourlyRate,
+          guard_pay: freshJob.guardPay,
+          platform_fee_per_hour: freshJob.platformFeePerHour,
+          estimated_payout: freshJob.estimatedPayout,
+          status: freshJob.status,
+          payment_status: 'unpaid',
+          assigned_guard_id: freshJob.assignedGuardId,
+          request_type: freshJob.requestType ?? 'marketplace',
+          target_guard_id: freshJob.targetGuardId ?? null,
+          required_certifications: freshJob.requiredCertifications,
+          min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
+          applicants: freshJob.applicants,
+        });
+      } catch (e) {
+        console.error('Staff job insert error:', e);
+      }
+    }
+
+    return freshJob.id;
+  };
+
+  const handleStaffAssignGuard = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canManageCompanyOperations(currentUser)) {
+      alert('Only directors can assign guards to jobs.');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    const guard = guards.find((g) => g.id === guardId);
+    if (!job || !guard) return;
+    if (job.assignedGuardId) {
+      alert('This job already has a guard assigned.');
+      return;
+    }
+    if (!['open', 'pending-review'].includes(job.status)) {
+      alert('Guards can only be assigned to open jobs awaiting a guard.');
+      return;
+    }
+    const userStatus = guard.userStatus || 'active';
+    if (userStatus === 'suspended' || userStatus === 'blocked') {
+      alert(`${guard.name} cannot be assigned — account is ${userStatus}.`);
+      return;
+    }
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [guardId] }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] })
+        .eq('id', requestId);
+    }
+    void reportPushEvent(currentUser, {
+      type: 'assignment',
+      guardId,
+      requestId,
+      location: job.location,
+      body: `You were assigned to ${job.title}`,
+    });
+  };
+
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, paymentStatus } : r));
     if (isDbConnected) {
@@ -2054,6 +2222,8 @@ export default function App() {
           onUpdateStaffRole={handleUpdateStaffRole}
           onAddGuardProfile={handleAddGuardProfile}
           onAddClientProfile={handleAddClientProfile}
+          onStaffCreateJob={handleStaffCreateJob}
+          onStaffAssignGuard={handleStaffAssignGuard}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

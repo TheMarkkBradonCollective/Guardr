@@ -187,6 +187,11 @@ export function canRecordCashPayments(user: Pick<SessionUser, 'role'>): boolean 
   return user.role === 'director';
 }
 
+/** Director creates jobs for clients and assigns guards */
+export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'director.manage_company_operations');
+}
+
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;

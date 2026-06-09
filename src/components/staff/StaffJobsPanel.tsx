@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
@@ -8,15 +8,21 @@ import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
+import { StaffCreateJobForm } from './StaffCreateJobForm';
+import type { StaffCreateJobInput } from './StaffCreateJobForm';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
 interface StaffJobsPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  clients?: Client[];
+  canManageJobs?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  onCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
+  onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   initialSelectedId?: string | null;
 }
 
@@ -54,19 +60,48 @@ function statusBadgeTone(status: SecurityRequest['status']): 'default' | 'primar
 function JobDetailPanel({
   req,
   guards,
+  canManageJobs,
   onApproveRequest,
   onDenyRequest,
+  onAssignGuard,
   onBack,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
+  canManageJobs?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
+  onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onBack?: () => void;
 }) {
+  const [assignGuardId, setAssignGuardId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
+  const canAssign =
+    canManageJobs &&
+    onAssignGuard &&
+    !req.assignedGuardId &&
+    (req.status === 'open' || req.status === 'pending-review');
+  const assignableGuards = useMemo(
+    () =>
+      guards
+        .filter((g) => !g.isStaff && (g.userStatus || 'active') === 'active')
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [guards]
+  );
+
+  const handleAssign = async () => {
+    if (!assignGuardId || !onAssignGuard) return;
+    setAssigning(true);
+    try {
+      await onAssignGuard(req.id, assignGuardId);
+      setAssignGuardId('');
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   return (
     <div className="staff-detail-pane h-full space-y-4">
@@ -96,6 +131,34 @@ function JobDetailPanel({
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
       )}
       <JobBillingSummaryFromRequest req={req} variant="staff" />
+      {canAssign && (
+        <div className="pt-2 border-t border-brand-border space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Assign guard</p>
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={assignGuardId}
+              onChange={(e) => setAssignGuardId(e.target.value)}
+              className="uber-input flex-1 min-w-[12rem] !h-9 !text-sm"
+            >
+              <option value="">Select guard…</option>
+              {assignableGuards.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleAssign}
+              disabled={!assignGuardId || assigning}
+              className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
+            >
+              {assigning ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+              Assign guard
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
         {req.status === 'pending-review' && (
           <button type="button" onClick={() => onApproveRequest(req.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
@@ -115,8 +178,12 @@ function JobDetailPanel({
 export function StaffJobsPanel({
   requests,
   guards,
+  clients = [],
+  canManageJobs = false,
   onApproveRequest,
   onDenyRequest,
+  onCreateJob,
+  onAssignGuard,
   initialSelectedId = null,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
@@ -170,6 +237,14 @@ export function StaffJobsPanel({
 
   return (
     <div className="animate-fade-in space-y-4">
+      {canManageJobs && onCreateJob && !showDetailOnly && (
+        <StaffCreateJobForm
+          clients={clients}
+          guards={guards}
+          onCreate={onCreateJob}
+          onCreated={(jobId) => setSelectedId(jobId)}
+        />
+      )}
       {!showDetailOnly && (
         <>
           <div className="flex flex-wrap gap-2">
@@ -204,8 +279,10 @@ export function StaffJobsPanel({
         <JobDetailPanel
           req={selected}
           guards={guards}
+          canManageJobs={canManageJobs}
           onApproveRequest={onApproveRequest}
           onDenyRequest={onDenyRequest}
+          onAssignGuard={onAssignGuard}
           onBack={() => setSelectedId(null)}
         />
       ) : splitView ? (
@@ -219,8 +296,10 @@ export function StaffJobsPanel({
             <JobDetailPanel
               req={selected}
               guards={guards}
+              canManageJobs={canManageJobs}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
+              onAssignGuard={onAssignGuard}
             />
           )}
         </div>

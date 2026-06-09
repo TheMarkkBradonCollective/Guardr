@@ -15,10 +15,12 @@ import {
 import {
   canAccessFinancialControls,
   canManageClients,
+  canManageCompanyOperations,
   canManageGuards,
   canManageStaffAccounts,
   canSuspendUsers,
 } from '../lib/permissions';
+import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
 import {
   buildDisputes,
   buildIncidents,
@@ -97,6 +99,8 @@ interface StaffDashboardProps {
     companyName?: string;
     phone?: string;
   }) => Promise<string>;
+  onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
+  onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
@@ -138,6 +142,8 @@ export function StaffDashboard({
   onUpdateStaffRole,
   onAddGuardProfile,
   onAddClientProfile,
+  onStaffCreateJob,
+  onStaffAssignGuard,
   themeMode,
   onChangeTheme,
   onSignOut,
@@ -174,6 +180,7 @@ export function StaffDashboard({
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
+  const canManageJobs = canManageCompanyOperations(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
@@ -231,8 +238,12 @@ export function StaffDashboard({
           <StaffJobsPanel
             requests={requests}
             guards={guards}
+            clients={clients}
+            canManageJobs={canManageJobs}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
+            onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
+            onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             initialSelectedId={selectedJobId}
           />
         );
