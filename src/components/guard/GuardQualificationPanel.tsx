@@ -20,10 +20,10 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
 
   const levelBadge =
     progress.level === 'active'
-      ? 'border-brand-primary/40 bg-brand-primary/10 text-brand-primary'
+      ? 'bg-brand-bg-sec text-brand-text'
       : progress.level === 'pending'
-        ? 'border-amber-500/40 bg-amber-500/10 text-amber-400'
-        : 'border-brand-border bg-brand-surface text-brand-text-muted';
+        ? 'text-brand-text-muted'
+        : 'text-brand-text-muted';
 
   const ptaUofDetail = progress.ptaUofCombined
     ? 'Combined 8-hr certificate on file'
@@ -59,11 +59,11 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
   ];
 
   return (
-    <div className="app-card space-y-4 border-brand-primary/20 bg-brand-primary/5">
+    <section className="app-form-section space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="uber-label flex items-center gap-2">
-            <Shield className="w-4 h-4 text-brand-primary" />
+            <Shield className="w-4 h-4" strokeWidth={1.5} />
             Guard status
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -71,26 +71,26 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
             to become Active.
           </p>
         </div>
-        <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${levelBadge}`}>
+        <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${levelBadge}`}>
           {guardPathwayStatusLabel(progress.level)}
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="border-t border-brand-border">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-start justify-between gap-3 text-sm">
+          <div key={row.label} className="app-list-subrow flex items-start justify-between gap-3 text-sm">
             <div className="min-w-0">
               <p className={row.met ? 'text-brand-text' : 'text-brand-text-muted'}>{row.label}</p>
               {row.detail && <p className="text-xs text-brand-text-muted mt-0.5">{row.detail}</p>}
             </div>
             <span
               className={`shrink-0 inline-flex items-center gap-1 text-xs font-semibold ${
-                row.expired ? 'text-amber-400' : row.met ? 'text-brand-primary' : 'text-brand-text-muted'
+                row.expired ? 'text-amber-600' : row.met ? 'text-brand-text' : 'text-brand-text-muted'
               }`}
             >
               {row.met ? <Check className="w-3.5 h-3.5" /> : row.expired ? '!' : '—'}
               {row.expired
-                ? ' · On file · Expired'
+                ? ' · Expired'
                 : row.met && row.verified
                   ? ' · Verified'
                   : row.met
@@ -101,11 +101,11 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
         ))}
       </div>
 
-      <p className="text-[11px] text-brand-text-muted border-t border-brand-border pt-3">
+      <p className="text-[11px] text-brand-text-muted pt-1">
         <strong>{GUARD_STATUS_LABELS.inactive}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}.{' '}
         <strong>{GUARD_STATUS_LABELS.active}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}.
       </p>
-    </div>
+    </section>
   );
 }
 
@@ -115,16 +115,14 @@ export function QualificationBadgeList({ guard, state = 'CA' }: GuardQualificati
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-bg-sec text-brand-text">
         {guardPathwayStatusLabel(progress.level)}
       </span>
       {getSupplementalCredentialsOnFile(guard).map((badge) => (
         <span
           key={badge.id}
-          className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
-            badge.verified
-              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-              : 'bg-brand-border/20 text-brand-text-muted border-brand-border'
+          className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
+            badge.verified ? 'text-brand-text' : 'text-brand-text-muted'
           }`}
         >
           {badge.verified && <Check className="w-3 h-3" />}

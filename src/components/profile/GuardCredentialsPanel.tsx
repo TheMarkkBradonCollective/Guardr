@@ -295,9 +295,9 @@ export function GuardCredentialsPanel({
               </form>
             )}
 
-            <div className="space-y-2">
+            <div className="border-t border-brand-border">
               {items.length === 0 ? (
-                <p className="text-xs text-brand-text-muted text-center py-3">
+                <p className="text-xs text-brand-text-muted py-3">
                   No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
                 </p>
               ) : (
@@ -319,7 +319,7 @@ export function GuardCredentialsPanel({
         return (
           <React.Fragment key="guard-and-bsis-training">
             {sectionCard}
-            <section className="app-form-section space-y-3 border-brand-primary/20">
+            <section className="app-form-section space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="uber-label flex items-center gap-2">
@@ -409,9 +409,9 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="space-y-2">
+              <div className="border-t border-brand-border">
                 {ptaUofItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted text-center py-3">No PTA/UOF training on file.</p>
+                  <p className="text-xs text-brand-text-muted py-3">No PTA/UOF training on file.</p>
                 ) : (
                   ptaUofItems.map((cert) => (
                     <CredentialRow
@@ -494,9 +494,9 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="space-y-2">
+              <div className="border-t border-brand-border">
                 {refresherItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted text-center py-3">No refresher course on file.</p>
+                  <p className="text-xs text-brand-text-muted py-3">No refresher course on file.</p>
                 ) : (
                   refresherItems.map((cert) => (
                     <CredentialRow
@@ -581,9 +581,9 @@ export function GuardCredentialsPanel({
                 </form>
               )}
 
-              <div className="space-y-2">
+              <div className="border-t border-brand-border">
                 {otherBsisItems.length === 0 ? (
-                  <p className="text-xs text-brand-text-muted text-center py-3">
+                  <p className="text-xs text-brand-text-muted py-3">
                     No other BSIS training on file.
                   </p>
                 ) : (
@@ -616,7 +616,7 @@ function CredentialRow({
 }) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
   return (
-    <div className="app-list-row app-list-row-align-top">
+    <div className="app-list-subrow flex items-start justify-between gap-3">
       <div className="min-w-0 flex gap-3">
         {cert.imageUrl && (
           <img

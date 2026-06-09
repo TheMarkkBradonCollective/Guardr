@@ -3,7 +3,6 @@ import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
   getCourseUploadStatus,
-  getCourseUploadStatusBadgeClass,
   getCourseUploadStatusLabel,
   isCertExpired,
 } from '../../lib/certStatus';
@@ -125,10 +124,10 @@ export function GuardThirtyTwoHourPanel({
   };
 
   return (
-    <section className="app-card space-y-4 border-brand-primary/20">
+    <section className="app-form-section space-y-4">
       <div>
         <p className="uber-label flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-brand-primary" />
+          <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -148,15 +147,15 @@ export function GuardThirtyTwoHourPanel({
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
-        <div className="h-2 rounded-full bg-brand-border/40 overflow-hidden">
+        <div className="app-medication-progress">
           <div
-            className={`h-full rounded-full transition-all ${progress.thirtyTwoHourBlockComplete ? 'bg-brand-primary' : 'bg-amber-500/80'}`}
+            className="app-medication-progress-fill"
             style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>
 
-      <div className="space-y-3 border-t border-brand-border pt-3">
+      <div className="border-t border-brand-border pt-3 space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
           Completion certificate (optional shortcut)
         </p>
@@ -170,13 +169,13 @@ export function GuardThirtyTwoHourPanel({
             />
           ))
         ) : (
-          <p className="text-xs text-brand-text-muted">No 32-hour completion certificate on file.</p>
+          <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
         )}
         {editing && onAddCertification && rollupCerts.length === 0 && (
           <button
             type="button"
             onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-brand-primary/40 text-brand-primary text-xs font-semibold hover:bg-brand-primary/10"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline py-1"
           >
             <Plus className="w-3.5 h-3.5" />
             Add completion cert
@@ -184,58 +183,52 @@ export function GuardThirtyTwoHourPanel({
         )}
       </div>
 
-      <div className="space-y-2 border-t border-brand-border pt-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+      <div className="border-t border-brand-border pt-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
           Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
         </p>
-        <div className="space-y-2">
-          {courses.map((course) => {
-            const uploadStatus = getCourseUploadStatus(guard, course.id);
-            const onFile = uploadStatus !== 'missing';
-            const uploaded = certsForCatalogId(guard, course.id);
-            const isAdding = addingCatalogId === course.id;
+        {courses.map((course) => {
+          const uploadStatus = getCourseUploadStatus(guard, course.id);
+          const onFile = uploadStatus !== 'missing';
+          const uploaded = certsForCatalogId(guard, course.id);
+          const isAdding = addingCatalogId === course.id;
 
-            return (
-              <div key={course.id} className="rounded-xl surface-muted p-3 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
-                      {course.name}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getCourseUploadStatusBadgeClass(uploadStatus)}`}
-                  >
-                    {onFile ? <Check className="w-3 h-3" /> : null}
-                    {getCourseUploadStatusLabel(uploadStatus)}
-                  </span>
-                </div>
-
-                {uploaded.map((cert) => (
-                  <ThirtyTwoHourCertRow
-                    key={cert.id}
-                    cert={cert}
-                    editing={editing}
-                    compact
-                    showUploadBadge={false}
-                    onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
-                  />
-                ))}
-
-                {editing && onAddCertification && !isAdding && (
-                  <button
-                    type="button"
-                    onClick={() => startAdd(course.id)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    {uploaded.length > 0 ? 'Add another' : 'Upload course cert'}
-                  </button>
-                )}
+          return (
+            <div key={course.id} className="app-list-subrow space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                  {course.name}
+                </p>
+                <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase text-brand-text-muted">
+                  {onFile ? <Check className="w-3 h-3" /> : null}
+                  {getCourseUploadStatusLabel(uploadStatus)}
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              {uploaded.map((cert) => (
+                <ThirtyTwoHourCertRow
+                  key={cert.id}
+                  cert={cert}
+                  editing={editing}
+                  compact
+                  showUploadBadge={false}
+                  onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                />
+              ))}
+
+              {editing && onAddCertification && !isAdding && (
+                <button
+                  type="button"
+                  onClick={() => startAdd(course.id)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text-muted hover:text-brand-text"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {uploaded.length > 0 ? 'Add another' : 'Upload course cert'}
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {addingCatalogId && editing && (
@@ -267,14 +260,14 @@ export function GuardThirtyTwoHourPanel({
             <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
           </label>
           {imageUrl && (
-            <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+            <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
           )}
-          {formError && <p className="text-xs text-red-400">{formError}</p>}
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
           <div className="flex gap-2">
-            <button type="button" onClick={resetForm} className="flex-1 uber-button-secondary h-11 text-sm">
+            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
               Cancel
             </button>
-            <button type="submit" className="flex-1 uber-button-sage h-11 text-sm">
+            <button type="submit" className="flex-1 app-button-primary !h-11 !text-sm">
               Upload credential
             </button>
           </div>
@@ -299,13 +292,13 @@ function ThirtyTwoHourCertRow({
 }) {
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
   return (
-    <div className={`flex justify-between gap-3 ${compact ? 'pl-2 border-l-2 border-brand-primary/30' : 'p-3 rounded-xl surface-muted'}`}>
+    <div className={`flex justify-between gap-3 ${compact ? 'pl-3 border-l border-brand-border' : ''}`}>
       <div className="min-w-0 flex gap-3">
         {cert.imageUrl && !compact && (
           <img
             src={cert.imageUrl}
             alt={`${cert.name} document`}
-            className="w-12 h-12 rounded-lg object-cover border border-brand-border shrink-0"
+            className="w-12 h-12 rounded-lg object-cover shrink-0"
           />
         )}
         <div className="min-w-0">
@@ -315,7 +308,7 @@ function ThirtyTwoHourCertRow({
             {cert.issuer} · #{cert.number}
           </p>
           {cert.expiryDate && (
-            <p className={`text-xs mt-0.5 ${isCertExpired(cert) ? 'text-amber-400' : 'text-brand-text-muted'}`}>
+            <p className={`text-xs mt-0.5 ${isCertExpired(cert) ? 'text-amber-600' : 'text-brand-text-muted'}`}>
               {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
             </p>
           )}
@@ -324,7 +317,7 @@ function ThirtyTwoHourCertRow({
       <div className="flex flex-col items-end gap-1 shrink-0">
         <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
         {editing && onDelete && (
-          <button type="button" onClick={onDelete} className="text-xs text-red-400 flex items-center gap-1 hover:underline">
+          <button type="button" onClick={onDelete} className="text-xs text-red-500 flex items-center gap-1 hover:underline">
             <Trash2 className="w-3 h-3" />
             Delete
           </button>
