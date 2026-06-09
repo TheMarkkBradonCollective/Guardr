@@ -17,6 +17,7 @@ import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
 import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
+import { WfMetricTile } from '../ui/wireframe';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -129,13 +130,12 @@ export function RequestSecurityFlow({
 
   return (
     <div className="max-w-lg mx-auto h-full flex flex-col animate-fade-in client-content-shell">
-      {/* Top bar — Uber-style */}
       <div className="flex items-center gap-3 mb-6 shrink-0">
         <button type="button" onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface transition-colors" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-widest">
+          <p className="text-sm text-brand-text-muted">
             Step {step} of 7 · {STEP_LABELS[step - 1]}
           </p>
           <div className="flex gap-1 mt-2">
@@ -152,25 +152,23 @@ export function RequestSecurityFlow({
       <div className="guard-scroll-panel flex-1 pb-24">
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">What do you need?</h2>
+            <h2 className="text-xl font-bold">What do you need?</h2>
             <div className="grid grid-cols-1 gap-2">
               {CLIENT_SERVICE_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => setServiceId(opt.id)}
-                  className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
-                    serviceId === opt.id
-                      ? 'border-brand-primary bg-brand-primary/10'
-                      : 'border-brand-border hover:border-brand-primary/40'
+                  className={`wf-list-card transition-all ${
+                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
                 >
                   <span className="text-2xl">{opt.emoji}</span>
-                  <div>
-                    <p className="font-black text-sm">{opt.label}</p>
-                    <p className="text-xs text-brand-text-muted font-mono">{opt.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm">{opt.label}</p>
+                    <p className="text-xs text-brand-text-muted">{opt.description}</p>
                   </div>
-                  {serviceId === opt.id && <Check className="w-5 h-5 text-brand-primary ml-auto" />}
+                  {serviceId === opt.id && <Check className="w-5 h-5 text-brand-primary shrink-0" />}
                 </button>
               ))}
             </div>
@@ -188,7 +186,7 @@ export function RequestSecurityFlow({
 
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">Where?</h2>
+            <h2 className="text-xl font-bold">Where?</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
               <input
@@ -225,7 +223,7 @@ export function RequestSecurityFlow({
               />
             </div>
             {address && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-brand-surface border border-brand-border text-sm">
+              <div className="wf-list-card items-start gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                 <span>{address}</span>
               </div>
@@ -235,7 +233,7 @@ export function RequestSecurityFlow({
 
         {step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">When?</h2>
+            <h2 className="text-xl font-bold">When?</h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="uber-label block mb-1.5">Start Date</label>
@@ -264,7 +262,7 @@ export function RequestSecurityFlow({
                 }} className="uber-input rounded-xl" />
               </div>
             </div>
-            <div className={`rounded-xl p-4 border text-sm font-mono ${
+            <div className={`rounded-2xl p-4 border text-sm ${
               !validateShiftSchedule(startDate, endDate) && durationHours > 0
                 ? 'border-brand-primary/30 bg-brand-primary/5 text-brand-primary'
                 : 'border-red-500/30 text-red-400'
@@ -279,17 +277,15 @@ export function RequestSecurityFlow({
 
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">How many guards?</h2>
-            <div className="grid grid-cols-4 gap-2">
+            <h2 className="text-xl font-bold">How many guards?</h2>
+            <div className="segmented-control">
               {GUARD_COUNT_PRESETS.map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => { setGuardsNeeded(n); setCustomGuards(''); }}
-                  className={`h-16 rounded-xl font-black text-lg border transition-all ${
-                    guardsNeeded === n && !customGuards
-                      ? 'bg-brand-primary text-black border-brand-primary'
-                      : 'border-brand-border hover:border-brand-primary/50'
+                  className={`segmented-control-btn flex-1 py-3 text-base ${
+                    guardsNeeded === n && !customGuards ? 'segmented-control-btn-active' : ''
                   }`}
                 >
                   {n}
@@ -312,18 +308,16 @@ export function RequestSecurityFlow({
 
         {step === 5 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">Pay rate</h2>
-            <p className="text-xs text-brand-text-muted font-mono">Client hourly rate per guard</p>
-            <div className="grid grid-cols-3 gap-2">
+            <h2 className="text-xl font-bold">Pay rate</h2>
+            <p className="text-xs text-brand-text-muted">Client hourly rate per guard</p>
+            <div className="segmented-control">
               {PAY_RATE_PRESETS.map((rate) => (
                 <button
                   key={rate}
                   type="button"
                   onClick={() => { setHourlyRate(rate); setCustomRate(''); }}
-                  className={`h-16 rounded-xl font-black border transition-all ${
-                    hourlyRate === rate && !customRate
-                      ? 'bg-brand-primary text-black border-brand-primary'
-                      : 'border-brand-border hover:border-brand-primary/50'
+                  className={`segmented-control-btn flex-1 py-3 ${
+                    hourlyRate === rate && !customRate ? 'segmented-control-btn-active' : ''
                   }`}
                 >
                   ${rate}/hr
@@ -341,7 +335,7 @@ export function RequestSecurityFlow({
                 className="uber-input rounded-xl"
               />
             </div>
-            <p className="text-[11px] font-mono text-brand-text-muted">
+            <p className="text-xs text-brand-text-muted">
               Guard receives ${guardPay}/hr · Platform fee ${PLATFORM_FEE_PER_HOUR}/hr per guard
             </p>
           </div>
@@ -359,37 +353,37 @@ export function RequestSecurityFlow({
 
         {step === 7 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-black">Review request</h2>
-            <div className="rounded-2xl border border-brand-border bg-brand-surface p-5 space-y-4">
-              <div className="flex justify-between text-sm">
+            <h2 className="text-xl font-bold">Review request</h2>
+            <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Service</span>
-                <span className="font-bold">{selectedService.emoji} {selectedService.label}</span>
+                <span className="font-semibold">{selectedService.emoji} {selectedService.label}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">State</span>
-                <span className="font-bold">{formatStateName(jobState)}</span>
+                <span className="font-semibold">{formatStateName(jobState)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Location</span>
-                <span className="font-bold text-right max-w-[60%]">{address}</span>
+                <span className="font-semibold text-right max-w-[60%]">{address}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Schedule</span>
-                <span className="font-bold">{formatDuration(durationHours)}</span>
+                <span className="font-semibold">{formatDuration(durationHours)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Guards needed</span>
-                <span className="font-bold">{effectiveGuards}</span>
+                <span className="font-semibold">{effectiveGuards}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm w-full">
                 <span className="text-brand-text-muted">Rate</span>
-                <span className="font-bold">${effectiveRate}/hr</span>
+                <span className="font-semibold">${effectiveRate}/hr</span>
               </div>
-              <div className="flex justify-between text-sm border-t border-brand-border pt-3">
+              <div className="flex justify-between text-sm border-t border-brand-border pt-3 w-full">
                 <span className="text-brand-text-muted">Min guard status</span>
-                <span className="font-bold text-right max-w-[60%]">{GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]}</span>
+                <span className="font-semibold text-right max-w-[60%]">{GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]}</span>
               </div>
-              <div className="text-sm">
+              <div className="text-sm w-full">
                 <span className="text-brand-text-muted">Additional credentials</span>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
@@ -397,22 +391,15 @@ export function RequestSecurityFlow({
                   ))}
                 </div>
               </div>
-              <div className="border-t border-brand-border pt-4 space-y-2">
-                <div className="flex justify-between font-black">
-                  <span>Estimated cost</span>
-                  <span className="text-brand-primary">${estimatedTotal}</span>
-                </div>
-                <div className="flex justify-between text-xs font-mono text-brand-text-muted">
-                  <span>Platform fee</span>
-                  <span>${platformFeeTotal}</span>
-                </div>
+              <div className="border-t border-brand-border pt-4 w-full grid grid-cols-2 gap-2">
+                <WfMetricTile label="Estimated cost" value={`$${estimatedTotal}`} accent />
+                <WfMetricTile label="Platform fee" value={`$${platformFeeTotal}`} />
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
         <div className="max-w-lg mx-auto">
           {step < 7 ? (
@@ -420,7 +407,7 @@ export function RequestSecurityFlow({
               type="button"
               onClick={goNext}
               disabled={!canNext()}
-              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide gap-2 disabled:opacity-40"
+              className="app-button-primary gap-2 disabled:opacity-40"
             >
               Continue
               <ArrowRight className="w-4 h-4" />
@@ -429,7 +416,7 @@ export function RequestSecurityFlow({
             <button
               type="button"
               onClick={handleSubmit}
-              className="uber-button-sage w-full h-14 rounded-xl text-sm font-black uppercase tracking-wide"
+              className="app-button-primary"
             >
               Submit Request
             </button>

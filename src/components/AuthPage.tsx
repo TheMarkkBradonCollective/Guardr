@@ -207,35 +207,53 @@ export function AuthPage({
 
   return (
     <div className="page-shell min-h-screen flex flex-col" id="guardr-auth-root">
-      <header className="px-4 sm:px-6 h-16 flex items-center justify-between">
-        <button
-          onClick={onBackToHome}
-          className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-sm font-medium"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-        <div className="flex items-center gap-2">
-          <Logo size={28} className="text-brand-primary" />
-          <span className="font-bold text-base">Guardr</span>
-        </div>
-        <div className="w-16" />
-      </header>
+      <div className="auth-hero relative h-36 sm:h-44 shrink-0 bg-gradient-to-br from-brand-primary/25 via-brand-primary/10 to-brand-bg overflow-hidden">
+        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-8 bg-brand-bg rounded-t-[2rem]" />
+        <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
+          <button
+            onClick={onBackToHome}
+            className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="flex items-center gap-2">
+            <Logo size={26} className="text-brand-primary" />
+            <span className="font-semibold text-base">Guardr</span>
+          </div>
+          <div className="w-14" />
+        </header>
+      </div>
 
-      <div className="flex flex-1 items-center justify-center px-4 py-8">
+      <div className="flex flex-1 items-start justify-center px-5 py-6 sm:py-10">
         <div className="w-full max-w-md animate-fade-in">
-          <div className="app-card p-8">
-            <div className="text-center mb-8">
-              <div className="inline-flex w-14 h-14 rounded-2xl bg-brand-primary items-center justify-center mb-4">
-                <Shield className="w-7 h-7 text-brand-accent-text" />
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                {isSignUp ? 'Create account' : 'Welcome back'}
-              </h1>
-              <p className="text-brand-text-muted text-sm mt-2">
-                {isSignUp ? 'Join the Guardr marketplace' : 'Sign in to your dashboard'}
-              </p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold tracking-tight">
+              {isSignUp ? 'Create account' : 'Sign in'}
+            </h1>
+            <p className="text-brand-text-muted text-sm mt-1.5">
+              {isSignUp ? 'Join the Guardr marketplace' : 'Welcome back to your dashboard'}
+            </p>
+          </div>
+
+          <div className="segmented-control w-full mb-6">
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(false); setErrorMsg(''); }}
+              className={`segmented-control-btn flex-1 text-center ${!isSignUp ? 'segmented-control-btn-active' : ''}`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(true); setErrorMsg(''); }}
+              className={`segmented-control-btn flex-1 text-center ${isSignUp ? 'segmented-control-btn-active' : ''}`}
+            >
+              Sign up
+            </button>
+          </div>
+
+          <div className="space-y-5">
 
             {errorMsg && (
               <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/8 text-red-400 text-sm px-4 py-3">
@@ -370,27 +388,14 @@ export function AuthPage({
                 </p>
               )}
 
-              <button type="submit" className="uber-button-sage w-full mt-2">
+              <button type="submit" className="app-button-primary mt-2">
                 {isSignUp ? 'Create account' : 'Sign in'}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-brand-text-muted">
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-              </span>{' '}
-              <button
-                type="button"
-                onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }}
-                className="text-brand-primary hover:underline font-semibold"
-              >
-                {isSignUp ? 'Sign in' : 'Sign up'}
-              </button>
-            </div>
           </div>
 
-          <p className="mt-6 text-center text-xs text-brand-text-muted leading-relaxed px-4">
+          <p className="mt-8 text-center text-xs text-brand-text-muted leading-relaxed">
             Guardr is an independent contractor marketplace. We do not employ or vet security professionals.
           </p>
         </div>

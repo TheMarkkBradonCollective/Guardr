@@ -2,7 +2,7 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { Home, Map, Radio, ClipboardList, User, Users, LifeBuoy, LogOut } from 'lucide-react';
+import { Home, Map, ClipboardList, User, Users, LifeBuoy, Radio, LogOut } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -16,12 +16,15 @@ interface ClientAppLayoutProps {
   onNavigate?: (view: ClientView) => void;
 }
 
-const NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
   { id: 'guards', label: 'Guards', icon: Users },
-  { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'requests', label: 'Requests', icon: ClipboardList },
+];
+
+const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'support', label: 'Support', icon: LifeBuoy },
   { id: 'profile', label: 'Profile', icon: User },
 ];
@@ -53,42 +56,41 @@ export function ClientAppLayout({
   const fullBleed = activeView === 'map' || activeView === 'coverage';
 
   const themeToggle = (
-    <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
+    <div className="segmented-control">
       {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
         <button
           key={m}
           type="button"
           onClick={() => onChangeTheme(m)}
-          className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
+          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
         >
-          {m}
+          {m === 'grey' ? 'Shade' : m}
         </button>
       ))}
     </div>
   );
 
-  const sidebarFooter = (
-    <button
-      type="button"
-      onClick={onSignOut}
-      className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
-    >
-      <LogOut className="w-3 h-3" />
-      Sign Out
+  const moreFooter = (
+    <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
+      <LogOut className="w-4 h-4" />
+      Sign out
     </button>
   );
 
   return (
     <RoleAppShell
       title={screenTitle}
-      subtitle={clientLabel}
-      sidebarTitle="Guardr"
-      sidebarSubtitle="Client"
-      navItems={NAV}
+      locationLabel={clientLabel}
+      avatarUrl={currentUser.avatar}
+      avatarName={currentUser.name}
+      onAvatarClick={() => onNavigate?.('profile')}
+      navItems={PRIMARY_NAV}
+      overflowNavItems={OVERFLOW_NAV}
       activeNavId={activeView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       headerRight={themeToggle}
-      sidebarFooter={sidebarFooter}
+      moreMenuFooter={moreFooter}
+      moreMenuTitle="Client menu"
       fullBleed={fullBleed}
       variant={activeView === 'map' ? 'dark' : 'default'}
     >

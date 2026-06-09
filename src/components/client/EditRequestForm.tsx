@@ -67,8 +67,8 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border border-brand-primary/30 rounded-xl p-4 space-y-3 bg-brand-primary/5">
-      <p className="text-[10px] font-mono uppercase text-brand-primary font-black">Edit job (unpaid only)</p>
+    <form onSubmit={handleSubmit} className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 border-brand-primary/30 bg-brand-primary/5">
+      <p className="text-sm font-semibold text-brand-primary">Edit job (unpaid only)</p>
       {error && (
         <p className="text-xs text-red-400 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>
       )}
@@ -117,7 +117,7 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
           />
         </div>
       </div>
-      <p className="text-[10px] font-mono text-brand-text-muted">
+      <p className="text-xs text-brand-text-muted">
         {durationHours > 0 ? formatDuration(durationHours) : 'End must be after start'} · no past times
       </p>
       <div className="grid grid-cols-2 gap-3">
@@ -152,11 +152,11 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
         />
       </div>
       <div className="flex gap-2 pt-1">
-        <button type="submit" disabled={saving} className="uber-button-sage h-9 px-4 text-xs font-black uppercase flex-1 gap-1.5">
+        <button type="submit" disabled={saving} className="app-button-primary !h-9 !px-4 !text-xs flex-1 gap-1.5">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           Save changes
         </button>
-        <button type="button" onClick={onCancel} className="h-9 px-4 text-xs font-black uppercase border border-brand-border rounded-lg">
+        <button type="button" onClick={onCancel} className="app-button-outline !h-9 !px-4 !text-xs !w-auto">
           Cancel
         </button>
       </div>

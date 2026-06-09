@@ -38,26 +38,22 @@ export function GuardOpportunitiesPanel({
   const selectedJob = filtered.find((j) => j.id === selectedJobId) ?? null;
 
   return (
-    <div className="absolute inset-0 z-[1002] bg-brand-bg flex flex-col pt-16">
-      <div className="px-4 py-3 border-b border-brand-border space-y-3 shrink-0">
-        <div className="flex items-center justify-between">
-          <h2 className="font-black text-lg tracking-tight">Opportunities</h2>
-          <div className="flex rounded-lg border border-brand-border p-0.5">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="px-1 py-3 border-b border-brand-border space-y-3 shrink-0">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold tracking-tight">Find shifts</h2>
+          <div className="segmented-control w-auto shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase flex items-center gap-1 ${
-                viewMode === 'list' ? 'bg-brand-primary text-black' : 'text-brand-text-muted'
-              }`}
+              className={`segmented-control-btn flex items-center gap-1 ${viewMode === 'list' ? 'segmented-control-btn-active' : ''}`}
             >
               <List className="w-3.5 h-3.5" /> List
             </button>
             <button
               type="button"
               onClick={() => setViewMode('map')}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase flex items-center gap-1 ${
-                viewMode === 'map' ? 'bg-brand-primary text-black' : 'text-brand-text-muted'
-              }`}
+              className={`segmented-control-btn flex items-center gap-1 ${viewMode === 'map' ? 'segmented-control-btn-active' : ''}`}
             >
               <MapIcon className="w-3.5 h-3.5" /> Map
             </button>

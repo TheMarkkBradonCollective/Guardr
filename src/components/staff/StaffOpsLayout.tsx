@@ -3,8 +3,8 @@ import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
 import { AppScreenHeader } from '../layouts/AppScreenHeader';
-import { SidebarDrawer } from '../layouts/SidebarDrawer';
-import { StaffNavItem, StaffSidebarNav } from './StaffSidebarNav';
+import { BottomNavBar, BottomNavItem } from '../layouts/BottomNavBar';
+import { MoreMenuSheet } from '../layouts/MoreMenuSheet';
 import {
   AlertTriangle,
   BarChart3,
@@ -53,6 +53,8 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   profile: 'Profile',
 };
 
+const PRIMARY_SECTIONS: StaffSection[] = ['overview', 'map', 'jobs', 'approvals'];
+
 export function StaffOpsLayout({
   children,
   currentUser,
@@ -65,114 +67,103 @@ export function StaffOpsLayout({
   badges = {},
   fullBleed = false,
 }: StaffOpsLayoutProps) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
   const bleed = fullBleed || isStaffOpsMapSection(activeSection);
 
-  const NAV: StaffNavItem[] = [
+  const allItems: (BottomNavItem & { id: StaffSection; adminOnly?: boolean })[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'map', label: 'Map', icon: Map },
     { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
-    { id: 'approvals', label: 'Verification', icon: ClipboardCheck, badge: badges.approvals },
+    { id: 'approvals', label: 'Verify', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'clients', label: 'Clients', icon: Building2 },
-    { id: 'incidents', label: 'Client incidents', icon: AlertTriangle, badge: badges.incidents },
-    { id: 'support', label: 'Support inbox', icon: LifeBuoy, badge: badges.support },
+    { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
+    { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
     { id: 'payments', label: 'Payments', icon: DollarSign, adminOnly: true },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'System Settings', icon: Settings, adminOnly: true },
+    { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 
+  const visible = allItems.filter((i) => !i.adminOnly || showFinance);
+  const primaryNav = visible.filter((i) => PRIMARY_SECTIONS.includes(i.id as StaffSection));
+  const overflowNav = visible.filter((i) => !PRIMARY_SECTIONS.includes(i.id as StaffSection));
+  const moreActive = overflowNav.some((i) => i.id === activeSection);
+  const moreBadge = overflowNav.reduce((sum, i) => sum + (i.badge ?? 0), 0);
+
   const navigate = (section: StaffSection) => {
     onNavigate(section);
-    setMobileSidebarOpen(false);
+    setMoreOpen(false);
   };
 
   const themeToggle = (
-    <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
+    <div className="segmented-control">
       {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
         <button
           key={m}
           type="button"
           onClick={() => onChangeTheme(m)}
-          className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
+          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
         >
-          {m}
+          {m === 'grey' ? 'Shade' : m}
         </button>
       ))}
     </div>
   );
 
-  const sidebarFooter = (
-    <>
+  const moreFooter = (
+    <div className="space-y-3 pb-4">
       {isDbConnected && (
-        <p className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 justify-center">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          DB connected
+        <p className="text-xs text-emerald-500 flex items-center gap-1.5 justify-center">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Database connected
         </p>
       )}
-      <button
-        type="button"
-        onClick={() => {
-          setMobileSidebarOpen(false);
-          onSignOut();
-        }}
-        className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
-      >
-        <LogOut className="w-3 h-3" />
-        Sign Out
+      <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm">
+        <LogOut className="w-4 h-4" />
+        Sign out
       </button>
-    </>
-  );
-
-  const sidebarNav = (
-    <StaffSidebarNav
-      items={NAV}
-      activeSection={activeSection}
-      onNavigate={navigate}
-      showFinance={showFinance}
-    />
+    </div>
   );
 
   return (
-    <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden staff-ops-root">
+    <div className="page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden staff-ops-root bg-brand-bg text-brand-text">
       <AppScreenHeader
         title={SECTION_TITLES[activeSection]}
-        subtitle={`${ROLE_LABELS[currentUser.role]} · Guardr`}
-        onMenuClick={() => setMobileSidebarOpen(true)}
-        menuLabel="Open menu"
-        menuClassName="md:hidden"
+        locationLabel={`${ROLE_LABELS[currentUser.role]} · Guardr`}
+        avatarUrl={currentUser.avatar}
+        avatarName={currentUser.name}
+        onAvatarClick={() => navigate('profile')}
         right={themeToggle}
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-brand-border bg-brand-bg-sec">
-          <div className="p-4 border-b border-brand-border">
-            <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">Guardr Staff</p>
-            <p className="font-black text-xs uppercase tracking-tight mt-0.5">Operations</p>
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2">{sidebarNav}</div>
-          <div className="shrink-0 p-3 border-t border-brand-border space-y-2">{sidebarFooter}</div>
-        </aside>
+      <main className={`flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
+        <div className={`h-full ${bleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
+          {children}
+        </div>
+      </main>
 
-        <main className={`flex-1 min-w-0 min-h-0 overflow-hidden ${bleed ? '' : 'p-4 sm:p-6 lg:p-8'}`}>
-          <div className={`h-full ${bleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
-            {children}
-          </div>
-        </main>
-      </div>
+      <BottomNavBar
+        items={primaryNav}
+        activeId={activeSection}
+        onNavigate={(id) => navigate(id as StaffSection)}
+        showMore
+        moreActive={moreActive}
+        moreBadge={moreBadge}
+        onMoreClick={() => setMoreOpen(true)}
+      />
 
-      <SidebarDrawer
-        open={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
-        title="Guardr Staff"
-        subtitle="Operations"
-        footer={sidebarFooter}
-      >
-        {sidebarNav}
-      </SidebarDrawer>
+      <MoreMenuSheet
+        open={moreOpen}
+        title="Staff menu"
+        items={overflowNav}
+        activeId={activeSection}
+        onNavigate={(id) => navigate(id as StaffSection)}
+        onClose={() => setMoreOpen(false)}
+        footer={moreFooter}
+      />
     </div>
   );
 }

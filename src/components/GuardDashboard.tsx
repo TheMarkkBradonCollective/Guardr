@@ -18,7 +18,7 @@ import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy, LogOut } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanViewJob,
@@ -528,42 +528,31 @@ export function GuardDashboard({
   }
 
   const themeToggle = (
-    <div className="flex border border-brand-border rounded-lg overflow-hidden text-[9px] font-mono">
+    <div className="segmented-control">
       {(['dark', 'light', 'grey'] as const).map((m) => (
         <button
           key={m}
           type="button"
           onClick={() => onChangeTheme(m)}
-          className={`px-2 py-1 font-bold uppercase ${themeMode === m ? 'bg-brand-primary text-black' : 'text-brand-text-muted'}`}
+          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
         >
-          {m}
+          {m === 'grey' ? 'Shade' : m}
         </button>
       ))}
     </div>
   );
 
-  const sidebarFooter = (
-    <button
-      type="button"
-      onClick={onSignOut}
-      className="w-full flex items-center justify-center gap-2 border border-brand-border py-2 text-[10px] font-mono font-bold uppercase rounded-lg hover:border-brand-primary transition-colors"
-    >
-      <LogOut className="w-3 h-3" />
-      Sign Out
-    </button>
-  );
-
   return (
     <RoleAppShell
       title={GUARD_TAB_TITLES[activeTab]}
-      subtitle={guard.name}
-      sidebarTitle="Guardr"
-      sidebarSubtitle="Guard shift"
+      locationLabel={guard.name}
+      avatarUrl={guard.avatar}
+      avatarName={guard.name}
+      onAvatarClick={() => setStandaloneTab('profile')}
       navItems={NAV_TABS}
       activeNavId={activeTab}
       onNavigate={(id) => setStandaloneTab(id as GuardTab)}
       headerRight={themeToggle}
-      sidebarFooter={sidebarFooter}
       fullBleed={activeTab === 'map'}
       variant={activeTab === 'map' ? 'dark' : 'default'}
     >

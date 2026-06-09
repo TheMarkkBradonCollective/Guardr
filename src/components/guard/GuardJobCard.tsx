@@ -126,7 +126,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
           type="button"
           onClick={onAccept}
           disabled={!canAccept}
-          className="w-full uber-button-sage disabled:opacity-40 disabled:cursor-not-allowed"
+          className="app-button-primary disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Accept assignment
         </button>

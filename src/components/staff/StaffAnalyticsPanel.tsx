@@ -1,6 +1,7 @@
 import React from 'react';
 import { computeAnalytics, computeWeeklyCompletedJobs } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
+import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 
 interface StaffAnalyticsPanelProps {
   guards: SecurityGuard[];
@@ -27,17 +28,16 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
   return (
     <div className="space-y-8 max-w-5xl animate-fade-in">
       <div>
-        <h1 className="text-2xl font-black">Analytics</h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase">Platform insights and trends</p>
+        <h1 className="text-2xl font-bold">Analytics</h1>
+        <p className="text-sm text-brand-text-muted mt-1">Platform insights and trends</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {metrics.map(({ label, value, pct }) => (
-          <div key={label} className="staff-ops-card">
-            <p className="text-[10px] font-mono uppercase text-brand-text-muted tracking-wide">{label}</p>
-            <p className="text-2xl font-black font-mono mt-2 text-brand-primary">{value}</p>
+          <div key={label}>
+            <WfMetricTile label={label} value={value} accent={pct != null} />
             {pct != null && (
-              <div className="mt-3 h-1.5 rounded-full bg-brand-border overflow-hidden">
+              <div className="mt-2 h-1.5 rounded-full bg-brand-border overflow-hidden">
                 <div className="h-full bg-brand-primary rounded-full transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
               </div>
             )}
@@ -45,19 +45,19 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
         ))}
       </div>
 
-      <div className="staff-ops-card">
-        <h3 className="text-xs font-mono uppercase text-brand-text-muted mb-4">Completed Jobs Trend</h3>
+      <div className="wf-list-card flex-col items-stretch !flex !flex-col">
+        <WfSectionHeader title="Completed Jobs Trend" className="mb-4" />
         {hasWeeklyData ? (
           <div className="flex items-end gap-2 h-32">
             {weeklyTrend.map((h, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full bg-brand-primary/80 rounded-t" style={{ height: `${Math.min(100, h)}%` }} />
-                <span className="text-[8px] font-mono text-brand-text-muted">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
+                <span className="text-xs text-brand-text-muted">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-brand-text-muted font-mono py-8 text-center">No completed jobs this week yet.</p>
+          <p className="text-sm text-brand-text-muted py-8 text-center">No completed jobs this week yet.</p>
         )}
       </div>
     </div>

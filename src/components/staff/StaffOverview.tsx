@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { OpsActivityItem, PlatformStats } from '../../lib/staffOps';
+import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 
 interface StaffOverviewProps {
   stats: PlatformStats;
@@ -47,25 +48,28 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
   return (
     <div className="space-y-8 max-w-6xl animate-fade-in">
       <div>
-        <h1 className="text-2xl font-black tracking-tight">Overview</h1>
-        <p className="text-xs font-mono text-brand-text-muted mt-1 uppercase tracking-wide">Real-time platform pulse</p>
+        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+        <p className="text-sm text-brand-text-muted mt-1">Real-time platform pulse</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         {statusCards.map((card) => (
           <div key={card.label} className={`rounded-xl border p-4 ${card.className}`}>
             <p className="text-2xl">{card.emoji}</p>
-            <p className="font-black text-sm mt-2">{card.label}</p>
-            <p className="text-[10px] font-mono text-brand-text-muted mt-1">{card.sub}</p>
+            <p className="font-semibold text-sm mt-2">{card.label}</p>
+            <p className="text-xs text-brand-text-muted mt-1">{card.sub}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 rounded-xl border border-brand-border bg-brand-bg-sec">
-          <div className="px-4 py-3 border-b border-brand-border flex items-center justify-between">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-brand-text-muted">Live Activity Feed</h2>
-            <span className="text-[9px] font-mono text-brand-primary animate-pulse">● Live</span>
+          <div className="px-4 py-3 border-b border-brand-border">
+            <WfSectionHeader
+              title="Live Activity Feed"
+              className="mb-0"
+            />
+            <span className="text-xs text-brand-primary animate-pulse">● Live</span>
           </div>
           <div className="divide-y divide-brand-border max-h-80 overflow-y-auto">
             {feed.map((item) => (
@@ -73,7 +77,7 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
                 <span className="text-brand-primary shrink-0">•</span>
                 <div>
                   <p>{item.message}</p>
-                  <p className="text-[10px] font-mono text-brand-text-muted mt-0.5">
+                  <p className="text-xs text-brand-text-muted mt-0.5">
                     {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                   </p>
                 </div>
@@ -83,13 +87,10 @@ export function StaffOverview({ stats, initialFeed }: StaffOverviewProps) {
         </div>
 
         <div className="lg:col-span-2 rounded-xl border border-brand-border bg-brand-bg-sec p-4">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-brand-text-muted mb-4">Today Snapshot</h2>
-          <div className="space-y-3">
+          <WfSectionHeader title="Today Snapshot" className="mb-4" />
+          <div className="grid grid-cols-2 gap-2">
             {snapshot.map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between py-2 border-b border-brand-border last:border-0">
-                <span className="text-sm text-brand-text-muted">{label}</span>
-                <span className="text-xl font-black font-mono text-brand-primary">{value}</span>
-              </div>
+              <WfMetricTile key={label} label={label} value={value} accent />
             ))}
           </div>
         </div>

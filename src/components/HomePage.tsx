@@ -73,56 +73,54 @@ export function HomePage({
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-5 pt-20 pb-24">
-        <div
-          className="hero-glow absolute top-0 left-1/2 w-[min(100%,640px)] h-80 rounded-full pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 18%, transparent) 0%, transparent 70%)',
-          }}
-        />
+      {/* Hero — wireframe splash with curved image area */}
+      <section className="relative">
+        <div className="onboarding-hero relative h-[min(52vh,22rem)] bg-gradient-to-br from-brand-primary/30 via-brand-primary/12 to-brand-bg flex items-end justify-center overflow-hidden">
+          <div
+            className="hero-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(100%,480px)] h-56 rounded-full pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 22%, transparent) 0%, transparent 70%)',
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-brand-bg rounded-t-[2.5rem]" />
+        </div>
 
-        <div className="relative max-w-3xl mx-auto text-center">
+        <div className="relative px-5 pt-8 pb-6 max-w-3xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-6"
+            className="text-3xl sm:text-5xl font-bold tracking-tight leading-[1.12] mb-4"
           >
-            Security staffing.
-            <br />
-            On demand.
+            Security staffing, on demand
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-lg sm:text-xl text-brand-text-muted leading-relaxed max-w-2xl mx-auto mb-10"
+            className="text-base sm:text-lg text-brand-text-muted leading-relaxed max-w-xl mx-auto mb-8"
           >
-            Connect with licensed security professionals for events, properties, construction sites, and long-term coverage.
+            Connect with licensed guards for events, sites, and long-term coverage — all in one app.
           </motion.p>
 
-          <motion.div
+          <motion.button
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.14 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            onClick={() => onNavigateToAuth(undefined, 'sign-up')}
+            className="app-button-primary max-w-sm mx-auto"
           >
-            <button
-              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
-              className="uber-button-sage w-full sm:w-auto min-w-[200px]"
-            >
-              Sign up
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="uber-button-outline w-full sm:w-auto min-w-[200px]"
-            >
-              Sign in
-            </button>
-          </motion.div>
+            Get started
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+
+          <button
+            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
+            className="mt-4 text-sm font-semibold text-brand-primary hover:underline"
+          >
+            I already have an account
+          </button>
         </div>
       </section>
 

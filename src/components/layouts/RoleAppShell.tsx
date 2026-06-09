@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
-import { AppSidebarNav, SidebarNavItem } from './AppSidebarNav';
-import { SidebarDrawer } from './SidebarDrawer';
+import { BottomNavBar, BottomNavItem } from './BottomNavBar';
+import { MoreMenuSheet } from './MoreMenuSheet';
 
 interface RoleAppShellProps {
   title: string;
   subtitle?: string;
-  sidebarTitle?: string;
-  sidebarSubtitle?: string;
-  navItems: SidebarNavItem[];
+  locationLabel?: string;
+  avatarUrl?: string;
+  avatarName?: string;
+  onAvatarClick?: () => void;
+  navItems: BottomNavItem[];
+  overflowNavItems?: BottomNavItem[];
   activeNavId: string;
   onNavigate: (id: string) => void;
   children: React.ReactNode;
   headerRight?: React.ReactNode;
-  sidebarFooter?: React.ReactNode;
+  moreMenuFooter?: React.ReactNode;
+  moreMenuTitle?: string;
   fullBleed?: boolean;
   variant?: 'default' | 'dark';
 }
@@ -21,77 +25,76 @@ interface RoleAppShellProps {
 export function RoleAppShell({
   title,
   subtitle,
-  sidebarTitle = 'Guardr',
-  sidebarSubtitle,
+  locationLabel,
+  avatarUrl,
+  avatarName,
+  onAvatarClick,
   navItems,
+  overflowNavItems = [],
   activeNavId,
   onNavigate,
   children,
   headerRight,
-  sidebarFooter,
+  moreMenuFooter,
+  moreMenuTitle = 'More',
   fullBleed = false,
   variant = 'default',
 }: RoleAppShellProps) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const isMapMode = variant === 'dark';
+  const hasOverflow = overflowNavItems.length > 0;
+  const moreActive = hasOverflow && overflowNavItems.some((i) => i.id === activeNavId);
+  const moreBadge = overflowNavItems.reduce((sum, i) => sum + (i.badge ?? 0), 0);
 
   const navigate = (id: string) => {
     onNavigate(id);
-    setMobileSidebarOpen(false);
+    setMoreOpen(false);
   };
-
-  const sidebarNav = (
-    <AppSidebarNav items={navItems} activeId={activeNavId} onNavigate={navigate} />
-  );
 
   return (
     <div className="role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
       <AppScreenHeader
         title={title}
         subtitle={subtitle}
-        onMenuClick={() => setMobileSidebarOpen(true)}
-        menuLabel="Open menu"
-        menuClassName="md:hidden"
+        locationLabel={locationLabel}
+        avatarUrl={avatarUrl}
+        avatarName={avatarName}
+        onAvatarClick={onAvatarClick}
         right={headerRight}
         className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
       />
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-brand-border bg-brand-bg-sec">
-          {(sidebarTitle || sidebarSubtitle) && (
-            <div className="p-4 border-b border-brand-border">
-              {sidebarSubtitle && (
-                <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">
-                  {sidebarSubtitle}
-                </p>
-              )}
-              {sidebarTitle && (
-                <p className="font-black text-xs uppercase tracking-tight mt-0.5">{sidebarTitle}</p>
-              )}
-            </div>
-          )}
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2">{sidebarNav}</div>
-          {sidebarFooter && (
-            <div className="shrink-0 p-3 border-t border-brand-border space-y-2">{sidebarFooter}</div>
-          )}
-        </aside>
-
-        <main className={`flex-1 min-w-0 min-h-0 overflow-hidden ${fullBleed ? '' : 'p-4 sm:p-6'}`}>
-          <div className={`h-full ${fullBleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
-            {children}
-          </div>
-        </main>
-      </div>
-
-      <SidebarDrawer
-        open={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
-        title={sidebarTitle}
-        subtitle={sidebarSubtitle}
-        footer={sidebarFooter}
+      <main
+        className={`flex-1 min-h-0 min-w-0 overflow-hidden ${fullBleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}
       >
-        {sidebarNav}
-      </SidebarDrawer>
+        <div className={`h-full ${fullBleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
+          {children}
+        </div>
+      </main>
+
+      <BottomNavBar
+        items={navItems}
+        activeId={activeNavId}
+        onNavigate={navigate}
+        showMore={hasOverflow}
+        moreActive={moreActive}
+        moreBadge={moreBadge}
+        onMoreClick={() => setMoreOpen(true)}
+      />
+
+      {hasOverflow && (
+        <MoreMenuSheet
+          open={moreOpen}
+          title={moreMenuTitle}
+          items={overflowNavItems}
+          activeId={activeNavId}
+          onNavigate={navigate}
+          onClose={() => setMoreOpen(false)}
+          footer={moreMenuFooter}
+        />
+      )}
     </div>
   );
 }
+
+export type { BottomNavItem };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ClientReportCard } from '../../lib/clientCoverage';
+import { WfBadge, WfListCard } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
 
 interface ClientReportsScreenProps {
@@ -7,10 +8,10 @@ interface ClientReportsScreenProps {
   onBack: () => void;
 }
 
-const REPORT_META: Record<ClientReportCard['type'], { emoji: string; label: string }> = {
-  incident: { emoji: '🚨', label: 'Incident Report' },
-  activity: { emoji: '📝', label: 'Activity Report' },
-  property: { emoji: '🏗️', label: 'Property Report' },
+const REPORT_META: Record<ClientReportCard['type'], { emoji: string; label: string; tone: 'default' | 'primary' | 'success' | 'warning' | 'danger' }> = {
+  incident: { emoji: '🚨', label: 'Incident Report', tone: 'danger' },
+  activity: { emoji: '📝', label: 'Activity Report', tone: 'primary' },
+  property: { emoji: '🏗️', label: 'Property Report', tone: 'warning' },
 };
 
 export function ClientReportsScreen({ reports, onBack }: ClientReportsScreenProps) {
@@ -20,11 +21,11 @@ export function ClientReportsScreen({ reports, onBack }: ClientReportsScreenProp
         <button type="button" onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-black">Reports</h1>
+        <h1 className="text-xl font-bold">Reports</h1>
       </div>
 
       {reports.length === 0 ? (
-        <div className="uber-card-flat rounded-2xl p-10 text-center text-sm text-brand-text-muted font-mono">
+        <div className="wf-list-card justify-center py-10 text-sm text-brand-text-muted">
           No reports yet. Completed shifts with activity logs and incident reports appear here.
         </div>
       ) : (
@@ -32,22 +33,25 @@ export function ClientReportsScreen({ reports, onBack }: ClientReportsScreenProp
           {reports.map((report) => {
             const meta = REPORT_META[report.type];
             return (
-              <div key={report.id} className="uber-card-flat rounded-xl p-5">
-                <p className="text-[10px] font-mono uppercase tracking-wide text-brand-primary">
-                  {meta.emoji} {meta.label}
-                </p>
-                <h3 className="font-black text-base mt-1">{report.title}</h3>
-                <p className="text-xs font-mono text-brand-text-muted mt-1">{report.siteName}</p>
-                <p className="text-sm text-brand-text-muted mt-3 leading-relaxed">{report.summary}</p>
-                <p className="text-[10px] font-mono text-brand-text-muted mt-3">
-                  {new Date(report.submittedAt).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
+              <WfListCard
+                key={report.id}
+                title={report.title}
+                subtitle={report.siteName}
+                meta={
+                  <div className="space-y-2">
+                    <WfBadge tone={meta.tone}>{meta.emoji} {meta.label}</WfBadge>
+                    <p className="text-sm text-brand-text-muted leading-relaxed">{report.summary}</p>
+                    <p className="text-xs text-brand-text-muted">
+                      {new Date(report.submittedAt).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                }
+              />
             );
           })}
         </div>

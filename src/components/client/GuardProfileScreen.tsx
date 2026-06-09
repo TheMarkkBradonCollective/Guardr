@@ -15,6 +15,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatStateName } from '../../lib/states';
 import { formatShiftRange } from '../../lib/dates';
+import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {
   ArrowLeft,
   Award,
@@ -25,7 +26,6 @@ import {
   GraduationCap,
   MapPin,
   Shield,
-  Star,
 } from 'lucide-react';
 
 interface GuardProfileScreenProps {
@@ -80,8 +80,7 @@ export function GuardProfileScreen({
             Back to directory
           </button>
 
-          {/* Hero */}
-          <div className="app-card p-0 overflow-hidden">
+          <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 overflow-hidden p-0">
             <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
               <div className="flex items-start gap-4">
                 <ProfileAvatar src={guard.avatar} name={guard.name} size="2xl" rounded="xl" />
@@ -89,22 +88,19 @@ export function GuardProfileScreen({
                   <h1 className="text-2xl font-bold">{guard.name}</h1>
                   <p className="text-base text-brand-primary font-medium mt-1">{getGuardDisplayHeadline(guard)}</p>
                   <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">{getGuardDisplaySummary(guard)}</p>
-                  <div className="flex flex-wrap items-center gap-3 mt-4 text-sm">
-                    <span className="inline-flex items-center gap-1 font-semibold">
-                      <Star className="w-4 h-4 fill-brand-primary text-brand-primary" />
-                      {guard.rating.toFixed(1)}
-                    </span>
-                    <span className="text-brand-text-muted">{guard.jobsCompleted} shifts with Guardr</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                    <WfMetricTile label="Rating" value={guard.rating.toFixed(1)} accent />
+                    <WfMetricTile label="Shifts" value={guard.jobsCompleted} />
                     {guard.yearsExperience != null && guard.yearsExperience > 0 && (
-                      <span className="text-brand-text-muted">{guard.yearsExperience}+ years experience</span>
-                    )}
-                    {guard.backgroundChecked && (
-                      <span className="inline-flex items-center gap-1 text-brand-primary">
-                        <Check className="w-3.5 h-3.5" />
-                        Background checked
-                      </span>
+                      <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
                   </div>
+                  {guard.backgroundChecked && (
+                    <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
+                      <Check className="w-4 h-4" />
+                      Background checked
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -112,20 +108,16 @@ export function GuardProfileScreen({
 
           <CertBadgeRow guard={guard} />
 
-          {/* Full description */}
           {aboutText && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Full profile
-              </h2>
-              <div className="app-card">
+            <section>
+              <WfSectionHeader title="Full profile" className="mb-2" />
+              <div className="wf-list-card flex-col items-stretch !flex !flex-col">
+                <BookOpen className="w-4 h-4 text-brand-primary mb-2" />
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{aboutText}</p>
               </div>
             </section>
           )}
 
-          {/* Quick facts */}
           <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {guard.skills && guard.skills.length > 0 && (
               <FactCard label="Skills" value={formatSkillList(guard.skills)} />
@@ -142,8 +134,8 @@ export function GuardProfileScreen({
           </section>
 
           {guard.specialties && guard.specialties.length > 0 && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-text-muted">Specialties</h2>
+            <section>
+              <WfSectionHeader title="Specialties" className="mb-2" />
               <div className="flex flex-wrap gap-2">
                 {guard.specialties.map((s) => (
                   <span key={s} className="chip chip-active text-xs">{s}</span>
@@ -156,15 +148,15 @@ export function GuardProfileScreen({
             const items = (groupedCerts[category] ?? []).filter((c) => c.status !== 'rejected');
             if (items.length === 0) return null;
             return (
-              <section key={category} className="space-y-2">
-                <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-                  {category === 'guard-card' ? <Shield className="w-4 h-4" /> : <Award className="w-4 h-4" />}
-                  {CERT_CATEGORY_LABELS[category]}
-                </h2>
+              <section key={category}>
+                <div className="flex items-center gap-2 mb-2">
+                  {category === 'guard-card' ? <Shield className="w-4 h-4 text-brand-text-muted" /> : <Award className="w-4 h-4 text-brand-text-muted" />}
+                  <h2 className="app-section-title mb-0">{CERT_CATEGORY_LABELS[category]}</h2>
+                </div>
                 <div className="space-y-2">
                   {items.map((cert) => (
-                    <div key={cert.id} className="app-card flex justify-between gap-3">
-                      <div>
+                    <div key={cert.id} className="wf-list-card gap-3">
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm">{certDisplayName(cert)}</p>
                         <p className="text-xs text-brand-text-muted mt-1">
                           {cert.state ? `${formatStateName(cert.state)} · ` : ''}{cert.issuer}
@@ -179,18 +171,18 @@ export function GuardProfileScreen({
           })}
 
           {guard.experience.length > 0 && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                Work experience
-              </h2>
+            <section>
+              <div className="flex items-center gap-2 mb-2">
+                <Briefcase className="w-4 h-4 text-brand-text-muted" />
+                <h2 className="app-section-title mb-0">Work experience</h2>
+              </div>
               <div className="space-y-3">
                 {guard.experience.map((exp) => (
-                  <div key={exp.id} className="app-card">
+                  <div key={exp.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
                     <p className="font-semibold">{exp.title}</p>
-                    <p className="text-sm text-brand-primary mt-0.5">{exp.company}</p>
-                    <p className="text-xs text-brand-text-muted mt-1">{exp.period}</p>
-                    <p className="text-sm text-brand-text-muted mt-2 leading-relaxed whitespace-pre-wrap">{exp.description}</p>
+                    <p className="text-sm text-brand-primary">{exp.company}</p>
+                    <p className="text-xs text-brand-text-muted">{exp.period}</p>
+                    <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">{exp.description}</p>
                   </div>
                 ))}
               </div>
@@ -198,21 +190,21 @@ export function GuardProfileScreen({
           )}
 
           {guard.education && guard.education.length > 0 && (
-            <section className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-text-muted flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" />
-                Education
-              </h2>
+            <section>
+              <div className="flex items-center gap-2 mb-2">
+                <GraduationCap className="w-4 h-4 text-brand-text-muted" />
+                <h2 className="app-section-title mb-0">Education</h2>
+              </div>
               <div className="space-y-3">
                 {guard.education.map((edu) => (
-                  <div key={edu.id} className="app-card">
+                  <div key={edu.id} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
                     <p className="font-semibold">{edu.school}</p>
-                    <p className="text-sm text-brand-primary mt-0.5">
+                    <p className="text-sm text-brand-primary">
                       {[edu.degree, edu.field].filter(Boolean).join(' · ') || 'Program'}
                     </p>
-                    <p className="text-xs text-brand-text-muted mt-1">{edu.period}</p>
+                    <p className="text-xs text-brand-text-muted">{edu.period}</p>
                     {edu.description && (
-                      <p className="text-sm text-brand-text-muted mt-2">{edu.description}</p>
+                      <p className="text-sm text-brand-text-muted">{edu.description}</p>
                     )}
                   </div>
                 ))}
@@ -220,24 +212,24 @@ export function GuardProfileScreen({
             </section>
           )}
 
-          <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-brand-text-muted">Your history with {guard.name.split(' ')[0]}</h2>
+          <section>
+            <WfSectionHeader title={`Your history with ${guard.name.split(' ')[0]}`} className="mb-2" />
             {history.length === 0 ? (
-              <div className="app-card text-sm text-brand-text-muted">
+              <div className="wf-list-card text-sm text-brand-text-muted justify-center">
                 You have not worked with this guard on Guardr yet.
               </div>
             ) : (
               <div className="space-y-2">
                 {history.map((item) => (
-                  <div key={item.requestId} className="app-card">
-                    <div className="flex items-start justify-between gap-2">
+                  <div key={item.requestId} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
+                    <div className="flex items-start justify-between gap-2 w-full">
                       <p className="font-semibold text-sm">{item.title}</p>
-                      <span className="text-xs text-brand-text-muted shrink-0">{STATUS_LABEL[item.status]}</span>
+                      <WfBadge className="shrink-0">{STATUS_LABEL[item.status]}</WfBadge>
                     </div>
-                    <p className="text-xs text-brand-text-muted mt-1">{item.location}</p>
-                    <p className="text-sm text-brand-primary mt-2">{formatShiftRange(item.startDate, item.endDate)}</p>
+                    <p className="text-xs text-brand-text-muted">{item.location}</p>
+                    <p className="text-sm text-brand-primary">{formatShiftRange(item.startDate, item.endDate)}</p>
                     {item.ratingGiven != null && (
-                      <p className="text-xs text-brand-text-muted mt-2">
+                      <p className="text-xs text-brand-text-muted">
                         Your rating: {item.ratingGiven}/5{item.reviewText ? ` — "${item.reviewText}"` : ''}
                       </p>
                     )}
@@ -253,7 +245,7 @@ export function GuardProfileScreen({
         <button
           type="button"
           onClick={() => onRequestGuard(guard)}
-          className="w-full uber-button-sage"
+          className="app-button-primary"
         >
           Send assignment request to {guard.name.split(' ')[0]}
         </button>
@@ -275,12 +267,12 @@ function FactCard({
   icon?: typeof MapPin;
 }) {
   return (
-    <div className="app-card">
-      <p className="text-xs font-semibold text-brand-text-muted flex items-center gap-1.5">
+    <div className="wf-metric-tile">
+      <p className="wf-metric-label flex items-center gap-1.5">
         {Icon && <Icon className="w-3.5 h-3.5" />}
         {label}
       </p>
-      <p className="text-sm mt-1.5 leading-relaxed">{value}</p>
+      <p className="wf-metric-value text-base leading-relaxed">{value}</p>
     </div>
   );
 }

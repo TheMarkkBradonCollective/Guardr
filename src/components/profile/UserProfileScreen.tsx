@@ -169,7 +169,7 @@ export function UserProfileScreen({
             type="button"
             onClick={() => void handleRemovePhoto()}
             disabled={photoSaving}
-            className="text-[10px] font-mono text-brand-text-muted hover:text-red-400 flex items-center gap-1 mb-2 disabled:opacity-50"
+            className="text-xs text-brand-text-muted hover:text-red-400 flex items-center gap-1 mb-2 disabled:opacity-50"
           >
             <X className="w-3 h-3" />
             Remove photo
@@ -186,7 +186,7 @@ export function UserProfileScreen({
           type="button"
           onClick={() => (editing ? void handleSave() : setEditing(true))}
           disabled={saving}
-          className="flex-1 flex items-center justify-center gap-2 uber-button-sage h-11 text-sm disabled:opacity-50"
+          className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
         >
           {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
           {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
@@ -195,14 +195,14 @@ export function UserProfileScreen({
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="px-4 uber-button-outline h-11 text-sm"
+            className="app-button-outline !w-auto !h-11 !px-4 !text-sm"
           >
             Cancel
           </button>
         )}
       </div>
 
-      <div className="app-card space-y-4">
+      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
         <Field label="Full name" value={name} onChange={setName} editing={editing} />
         {isClient && (
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
@@ -242,7 +242,7 @@ export function UserProfileScreen({
 
       <PushNotificationsPanel currentUser={currentUser} />
 
-      <div className="app-card space-y-3">
+      <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3">
         <p className="uber-label">Appearance</p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
       </div>
@@ -250,7 +250,7 @@ export function UserProfileScreen({
       <button
         type="button"
         onClick={onSignOut}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/10 transition-colors"
+        className="w-full app-button-outline !text-red-400 !border-red-500/40 hover:!bg-red-500/10"
       >
         <LogOut className="w-4 h-4" />
         Sign out
