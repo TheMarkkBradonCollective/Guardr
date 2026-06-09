@@ -7,7 +7,7 @@ import {
   formatJobTimeRange,
   getJobDistance,
   JOB_TYPE_LABELS,
-  minQualificationLabel,
+  guardJobMinQualificationLabel,
 } from '../../lib/guardJobs';
 import { requirementLabel } from '../../lib/certCatalog';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
@@ -111,8 +111,8 @@ export function GuardJobDetailContent({
             : null}
         </DetailBlock>
 
-        <DetailBlock label="Minimum guard status">
-          {minQualificationLabel(job.minGuardQualification)}
+        <DetailBlock label="Minimum for this job">
+          {guardJobMinQualificationLabel(job.minGuardQualification)}
         </DetailBlock>
 
         {job.description && <DetailBlock label="Description">{job.description}</DetailBlock>}
@@ -155,7 +155,12 @@ export function GuardJobDetailContent({
       )}
 
       <div className="space-y-2 border-t border-brand-border pt-3">
-        <p className="text-sm font-medium text-brand-text-muted">Your qualifications</p>
+        <div>
+          <p className="text-sm font-medium text-brand-text-muted">Requirements checklist</p>
+          <p className="text-xs text-brand-text-muted mt-0.5">
+            Credentials you need on file to accept this job.
+          </p>
+        </div>
         {checks.map((c) => (
           <div key={c.label} className="flex items-center gap-2 text-sm">
             {c.met ? (

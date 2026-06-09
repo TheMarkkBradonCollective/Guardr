@@ -87,7 +87,7 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
 
   if (!guardCanWorkFieldShifts(guard, jobState)) {
     return {
-      checks: [{ label: `${GUARD_STATUS_LABELS.active} guard status`, met: false }],
+      checks: [{ label: 'Active credential pathway on file', met: false }],
       canAccept: false,
     };
   }
@@ -97,15 +97,11 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
       label: stateLabel,
       met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     },
-    {
-      label: GUARD_PATHWAY_STATUS_LABELS.pending,
-      met: guardMeetsQualificationLevel(guard, 'pending', jobState),
-    },
   ];
 
   if (minLevel === 'active') {
     checks.push({
-      label: GUARD_PATHWAY_STATUS_LABELS.active,
+      label: `Active pathway — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}`,
       met: guardMeetsQualificationLevel(guard, 'active', jobState),
     });
   }
@@ -134,6 +130,15 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
 export function minQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
   const key = level ?? 'pending';
   return `${GUARD_PATHWAY_STATUS_LABELS[key]} — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS[key]}`;
+}
+
+/** Guard job detail — avoids ambiguous Inactive/Active account wording */
+export function guardJobMinQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
+  const key = level ?? 'pending';
+  if (key === 'active') {
+    return `Active pathway required — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}`;
+  }
+  return `Guard card on file — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}`;
 }
 
 /** Open jobs visible on a guard's map/list */
