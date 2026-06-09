@@ -44,7 +44,7 @@ export function GuardActiveShift({
   const currentIdx = statusSteps.indexOf(phase);
 
   return (
-    <div className="absolute inset-x-0 z-[1001] max-h-[calc(100dvh-5.5rem-env(safe-area-inset-bottom))] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
+    <div className="absolute inset-x-0 bottom-0 z-[1001] max-h-[88%] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
       <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-4" />
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">

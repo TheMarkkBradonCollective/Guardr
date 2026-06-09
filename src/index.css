@@ -626,15 +626,17 @@ html.theme-grey {
 }
 
 .guardr-bottom-sheet-uber {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   z-index: 1001;
   background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .guardr-active-shift {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .guardr-side-panel {
@@ -774,16 +776,6 @@ body[data-form-factor="mobile"] .guard-touch-target {
 }
 
 body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-}
-
-/* Staff guard view — sidebar nav, no bottom bar */
-.guard-staff-layout .guard-map-layout .guardr-map-root {
-  bottom: 0;
-}
-
-.guard-staff-layout .guardr-bottom-sheet-uber,
-.guard-staff-layout .guardr-active-shift {
   bottom: 0;
 }
 
