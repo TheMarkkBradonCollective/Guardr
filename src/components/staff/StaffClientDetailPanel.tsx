@@ -10,6 +10,7 @@ import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 interface StaffClientDetailPanelProps {
   client: Client;
   requests: SecurityRequest[];
+  canManage: boolean;
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onBack?: () => void;
@@ -20,6 +21,7 @@ interface StaffClientDetailPanelProps {
 export function StaffClientDetailPanel({
   client,
   requests,
+  canManage,
   onApproveClient,
   onRejectClient,
   onBack,
@@ -103,20 +105,22 @@ export function StaffClientDetailPanel({
         </div>
       </section>
 
-      <section className="py-4 border-b border-brand-border space-y-2">
-        <WfSectionHeader title="Account controls" className="mb-0" />
-        <div className="flex flex-wrap gap-2">
-          {isSuspended ? (
-            <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
-              Restore client account
-            </button>
-          ) : (
-            <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
-              Suspend client account
-            </button>
-          )}
-        </div>
-      </section>
+      {canManage && (
+        <section className="py-4 border-b border-brand-border space-y-2">
+          <WfSectionHeader title="Account controls" className="mb-0" />
+          <div className="flex flex-wrap gap-2">
+            {isSuspended ? (
+              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+                Restore client account
+              </button>
+            ) : (
+              <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
+                Suspend client account
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="py-4 space-y-2">
         <div className="flex items-center gap-1.5 mb-2">

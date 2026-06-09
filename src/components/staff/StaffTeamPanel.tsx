@@ -11,7 +11,6 @@ interface StaffTeamPanelProps {
   guards: SecurityGuard[];
   currentUserId: string;
   canManageStaff: boolean;
-  canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
     name: string;
@@ -27,7 +26,6 @@ export function StaffTeamPanel({
   guards,
   currentUserId,
   canManageStaff,
-  canSuspend,
   onUpdateUserStatus,
   onAddStaff,
   onUpdateStaffRole,
@@ -77,7 +75,6 @@ export function StaffTeamPanel({
       member={selected}
       currentUserId={currentUserId}
       canManageStaff={canManageStaff}
-      canSuspend={canSuspend}
       onUpdateUserStatus={onUpdateUserStatus}
       onUpdateStaffRole={onUpdateStaffRole}
       onBack={showDetailOnly ? () => setSelectedId(null) : undefined}
@@ -90,9 +87,10 @@ export function StaffTeamPanel({
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
-              Guardr platform staff — operations and administration only, not field security shifts.
-            </p>
-            {canManageStaff && onAddStaff && (
+            Guardr platform staff — operations and administration only, not field security shifts.
+            {!canManageStaff && ' Directors manage staff accounts; you have view-only access here.'}
+          </p>
+          {canManageStaff && onAddStaff && (
               <StaffAddStaffForm
                 onAdd={onAddStaff}
                 onCreated={(staffId) => {

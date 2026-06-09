@@ -14,6 +14,8 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canManageClients,
+  canManageGuards,
   canManageStaffAccounts,
   canSuspendUsers,
 } from '../lib/permissions';
@@ -169,7 +171,9 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
-  const showStaffOnboard = canManageStaffAccounts(currentUser);
+  const canManageStaff = canManageStaffAccounts(currentUser);
+  const canManageGuardAccounts = canManageGuards(currentUser);
+  const canManageClientAccounts = canManageClients(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
@@ -237,6 +241,7 @@ export function StaffDashboard({
           <StaffGuardsPanel
             guards={guards}
             requests={requests}
+            canManage={canManageGuardAccounts}
             canSuspend={canSuspend}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onResetAuditFailures={onResetAuditFailures}
@@ -247,7 +252,7 @@ export function StaffDashboard({
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
-            onAddGuard={onAddGuardProfile}
+            onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
           />
         );
       case 'team':
@@ -255,13 +260,15 @@ export function StaffDashboard({
           <StaffTeamPanel
             guards={guards}
             currentUserId={currentUser.id}
-            canManageStaff={showStaffOnboard}
-            canSuspend={canSuspend}
+            canManageStaff={canManageStaff}
             onUpdateUserStatus={onUpdateGuardUserStatus}
-            onAddStaff={(input) =>
-              onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+            onAddStaff={
+              canManageStaff
+                ? (input) =>
+                    onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+                : undefined
             }
-            onUpdateStaffRole={onUpdateStaffRole}
+            onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
             initialSelectedId={selectedTeamId}
           />
         );
@@ -270,11 +277,12 @@ export function StaffDashboard({
           <StaffClientsPanel
             clients={clients}
             requests={requests}
+            canManage={canManageClientAccounts}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             initialSelectedId={selectedClientId}
             onOpenJob={openJob}
-            onAddClient={onAddClientProfile}
+            onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}
           />
         );
       case 'incidents':
@@ -316,7 +324,7 @@ export function StaffDashboard({
         return showFinance ? (
           <StaffSettingsPanel
             currentUser={currentUser}
-            showStaffOnboard={showStaffOnboard}
+            showStaffOnboard={canManageStaff}
             onAddStaffProfile={onAddStaffProfile}
           />
         ) : null;

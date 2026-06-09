@@ -163,7 +163,17 @@ export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.suspend_users');
 }
 
-/** Staff can onboard new field guards and client accounts from the ops console */
+/** All platform staff can manage field guards (add, verify, suspend) */
+export function canManageGuards(user: Pick<SessionUser, 'role'>): boolean {
+  return hasAnyPermission(user, ['moderator.approve_guards', 'admin.manage_users']);
+}
+
+/** All platform staff can manage client accounts (add, approve, suspend) */
+export function canManageClients(user: Pick<SessionUser, 'role'>): boolean {
+  return hasAnyPermission(user, ['moderator.approve_clients', 'admin.manage_users']);
+}
+
+/** @deprecated Use canManageGuards / canManageClients */
 export function canOnboardPlatformUsers(user: Pick<SessionUser, 'role'>): boolean {
   return isStaffRole(user.role);
 }

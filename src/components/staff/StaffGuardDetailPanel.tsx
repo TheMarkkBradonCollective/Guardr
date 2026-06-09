@@ -18,6 +18,7 @@ import { ArrowLeft, Check, X } from 'lucide-react';
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
+  canManage: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onResetAuditFailures?: (id: string) => void;
@@ -34,6 +35,7 @@ interface StaffGuardDetailPanelProps {
 export function StaffGuardDetailPanel({
   guard,
   requests,
+  canManage,
   canSuspend,
   onUpdateUserStatus,
   onResetAuditFailures,
@@ -133,6 +135,7 @@ export function StaffGuardDetailPanel({
             <CertBadgeRow guard={guard} showCaBaseline />
           </section>
 
+          {canManage && (
           <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Account controls" className="mb-0" />
             <div className="flex flex-wrap gap-2">
@@ -177,6 +180,7 @@ export function StaffGuardDetailPanel({
               )}
             </div>
           </section>
+          )}
 
           <section className="py-4 border-b border-brand-border space-y-3">
             <WfSectionHeader
@@ -191,7 +195,7 @@ export function StaffGuardDetailPanel({
                 {allCerts.map((cert) => (
                   <div key={cert.id} className="space-y-2">
                     <CertItemCard cert={cert} guardName={guard.name} />
-                    {cert.status === 'pending' && (
+                    {canManage && cert.status === 'pending' && (
                       <div className="flex gap-1.5 justify-end">
                         <button
                           type="button"

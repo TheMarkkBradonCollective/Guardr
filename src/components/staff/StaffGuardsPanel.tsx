@@ -11,6 +11,7 @@ import { StaffAddGuardForm } from './StaffAddGuardForm';
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
+  canManage: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onResetAuditFailures?: (id: string) => void;
@@ -33,6 +34,7 @@ interface StaffGuardsPanelProps {
 export function StaffGuardsPanel({
   guards,
   requests,
+  canManage,
   canSuspend,
   onUpdateUserStatus,
   onResetAuditFailures,
@@ -66,6 +68,7 @@ export function StaffGuardsPanel({
     ? {
         guard: selected,
         requests,
+        canManage,
         canSuspend,
         onUpdateUserStatus,
         onResetAuditFailures,
@@ -114,9 +117,9 @@ export function StaffGuardsPanel({
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept shifts — click a profile to verify credentials and manage their account.
+              Field guards who accept shifts — staff can add profiles, verify credentials, and manage accounts.
             </p>
-            {onAddGuard && (
+            {canManage && onAddGuard && (
               <StaffAddGuardForm
                 onAdd={onAddGuard}
                 onCreated={(guardId) => {

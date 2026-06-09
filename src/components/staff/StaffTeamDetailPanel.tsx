@@ -9,7 +9,6 @@ interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
   currentUserId: string;
   canManageStaff: boolean;
-  canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
   onBack?: () => void;
@@ -19,7 +18,6 @@ export function StaffTeamDetailPanel({
   member,
   currentUserId,
   canManageStaff,
-  canSuspend,
   onUpdateUserStatus,
   onUpdateStaffRole,
   onBack,
@@ -121,45 +119,49 @@ export function StaffTeamDetailPanel({
             {roleMsg && <p className="text-sm text-brand-primary">{roleMsg}</p>}
           </div>
         ) : (
-          <p className="text-sm">{member.staffRole || 'Staff'}</p>
+          <p className="text-sm text-brand-text-muted">
+            {member.staffRole || 'Staff'} — only directors can change staff roles.
+          </p>
         )}
       </section>
 
-      <section className="py-4 border-b border-brand-border space-y-2">
-        <h3 className="text-sm font-semibold">Account controls</h3>
-        <div className="flex flex-wrap gap-2">
-          {canSuspend && !isSelf && accountStatus !== 'suspended' && (
-            <button
-              type="button"
-              onClick={() => onUpdateUserStatus(member.id, 'suspended')}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
-            >
-              Suspend
-            </button>
-          )}
-          {canSuspend && !isSelf && accountStatus !== 'blocked' && (
-            <button
-              type="button"
-              onClick={() => onUpdateUserStatus(member.id, 'blocked')}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
-            >
-              Block
-            </button>
-          )}
-          {canSuspend && !isSelf && accountStatus !== 'active' && (
-            <button
-              type="button"
-              onClick={() => onUpdateUserStatus(member.id, 'active')}
-              className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
-            >
-              Restore account
-            </button>
-          )}
-          {isSelf && (
-            <p className="text-xs text-brand-text-muted">Use another director account to suspend or change this profile.</p>
-          )}
-        </div>
-      </section>
+      {canManageStaff && (
+        <section className="py-4 border-b border-brand-border space-y-2">
+          <h3 className="text-sm font-semibold">Account controls</h3>
+          <div className="flex flex-wrap gap-2">
+            {!isSelf && accountStatus !== 'suspended' && (
+              <button
+                type="button"
+                onClick={() => onUpdateUserStatus(member.id, 'suspended')}
+                className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+              >
+                Suspend
+              </button>
+            )}
+            {!isSelf && accountStatus !== 'blocked' && (
+              <button
+                type="button"
+                onClick={() => onUpdateUserStatus(member.id, 'blocked')}
+                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+              >
+                Block
+              </button>
+            )}
+            {!isSelf && accountStatus !== 'active' && (
+              <button
+                type="button"
+                onClick={() => onUpdateUserStatus(member.id, 'active')}
+                className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+              >
+                Restore account
+              </button>
+            )}
+            {isSelf && (
+              <p className="text-xs text-brand-text-muted">Use another director account to suspend or change this profile.</p>
+            )}
+          </div>
+        </section>
+      )}
 
       {member.bio && (
         <section className="py-4">

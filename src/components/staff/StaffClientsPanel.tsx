@@ -10,6 +10,7 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 interface StaffClientsPanelProps {
   clients: Client[];
   requests: SecurityRequest[];
+  canManage: boolean;
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   initialSelectedId?: string | null;
@@ -25,6 +26,7 @@ interface StaffClientsPanelProps {
 export function StaffClientsPanel({
   clients,
   requests,
+  canManage,
   onApproveClient,
   onRejectClient,
   initialSelectedId = null,
@@ -85,9 +87,9 @@ export function StaffClientsPanel({
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
-              Click a client to open their profile and manage their account.
+              Staff can add client accounts, approve them, and suspend or restore access.
             </p>
-            {onAddClient && (
+            {canManage && onAddClient && (
               <StaffAddClientForm
                 onAdd={onAddClient}
                 onCreated={(clientId) => {
@@ -117,6 +119,7 @@ export function StaffClientsPanel({
         <StaffClientDetailPanel
           client={selected}
           requests={requests}
+          canManage={canManage}
           onApproveClient={onApproveClient}
           onRejectClient={onRejectClient}
           onOpenJob={onOpenJob}
@@ -133,6 +136,7 @@ export function StaffClientsPanel({
             <StaffClientDetailPanel
               client={selected}
               requests={requests}
+              canManage={canManage}
               onApproveClient={onApproveClient}
               onRejectClient={onRejectClient}
               onOpenJob={onOpenJob}
