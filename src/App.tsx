@@ -4,7 +4,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SecurityGuard, SecurityRequest, Certification, Client, SessionUser, Payment, PaymentStatus, Experience, GuardEducation } from './types';
+import {
+  SecurityGuard,
+  SecurityRequest,
+  Certification,
+  Client,
+  SessionUser,
+  Payment,
+  PaymentStatus,
+  Experience,
+  GuardEducation,
+  SupportTicket,
+  CreateSupportTicketInput,
+  SupportTicketStatus,
+} from './types';
 import { isStaffRole } from './lib/permissions';
 import { ClientDashboard, ClientView } from './components/ClientDashboard';
 import { GuardDashboard } from './components/GuardDashboard';
@@ -23,6 +36,13 @@ import { findGuardProfileForUser, loadStaffGuardMode, saveStaffGuardMode } from 
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
+import { SupportScreen } from './components/support/SupportScreen';
+import {
+  appendMessage,
+  buildNewTicket,
+  loadSupportTicketsFromStorage,
+  saveSupportTicketsToStorage,
+} from './lib/support';
 
 export default function App() {
   // ── Session ────────────────────────────────────────────────
@@ -65,6 +85,7 @@ export default function App() {
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [clientView, setClientView] = useState<ClientView>('home');
@@ -144,8 +165,13 @@ export default function App() {
       const { data: dbEducation, error: eduErr } = await supabase.from('education').select('*');
       const { data: dbRequests, error: requestsErr } = await supabase.from('security_requests').select('*');
       const { data: dbPayments, error: paymentsErr } = await supabase.from('payments').select('*');
+      const { data: dbSupportTickets, error: supportTicketsErr } = await supabase.from('support_tickets').select('*');
+      const { data: dbSupportMessages, error: supportMessagesErr } = await supabase.from('support_messages').select('*');
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
+      if (supportTicketsErr || supportMessagesErr) {
+        console.warn('Support tables load (run migration if missing):', supportTicketsErr ?? supportMessagesErr);
+      }
       if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
         setGuards([]);
@@ -241,6 +267,40 @@ export default function App() {
         createdAt: p.created_at,
         updatedAt: p.updated_at,
       })));
+
+      if (!supportTicketsErr && !supportMessagesErr && dbSupportTickets) {
+        setSupportTickets(
+          dbSupportTickets.map((t: any) => ({
+            id: t.id,
+            userId: t.user_id,
+            userName: t.user_name,
+            userEmail: t.user_email,
+            userRole: t.user_role,
+            kind: t.kind,
+            subject: t.subject,
+            category: t.category,
+            priority: t.priority,
+            status: t.status,
+            relatedRequestId: t.related_request_id ?? undefined,
+            createdAt: t.created_at,
+            updatedAt: t.updated_at,
+            messages: (dbSupportMessages ?? [])
+              .filter((m: any) => m.ticket_id === t.id)
+              .map((m: any) => ({
+                id: m.id,
+                ticketId: m.ticket_id,
+                senderId: m.sender_id,
+                senderName: m.sender_name,
+                senderRole: m.sender_role,
+                body: m.body,
+                createdAt: m.created_at,
+              }))
+              .sort((a: { createdAt: string }, b: { createdAt: string }) =>
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              ),
+          }))
+        );
+      }
 
       setIsDbConnected(true);
     } catch (err) {
@@ -965,6 +1025,85 @@ export default function App() {
     alert('✓ Compliance record cleared. Account reinstated.');
   };
 
+  const persistSupportTicketToDb = async (ticket: SupportTicket) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('support_tickets').upsert({
+        id: ticket.id,
+        user_id: ticket.userId,
+        user_name: ticket.userName,
+        user_email: ticket.userEmail,
+        user_role: ticket.userRole,
+        kind: ticket.kind,
+        subject: ticket.subject,
+        category: ticket.category,
+        priority: ticket.priority,
+        status: ticket.status,
+        related_request_id: ticket.relatedRequestId ?? null,
+        created_at: ticket.createdAt,
+        updated_at: ticket.updatedAt,
+      });
+      const latest = ticket.messages[ticket.messages.length - 1];
+      if (latest) {
+        await supabase.from('support_messages').upsert({
+          id: latest.id,
+          ticket_id: latest.ticketId,
+          sender_id: latest.senderId,
+          sender_name: latest.senderName,
+          sender_role: latest.senderRole,
+          body: latest.body,
+          created_at: latest.createdAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Support ticket DB sync:', e);
+    }
+  };
+
+  const handleCreateSupportTicket = async (input: CreateSupportTicketInput): Promise<string> => {
+    if (!currentUser) return '';
+    const ticket = buildNewTicket(currentUser, input);
+    setSupportTickets((prev) => {
+      const next = [ticket, ...prev];
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+    await persistSupportTicketToDb(ticket);
+    return ticket.id;
+  };
+
+  const handleSendSupportMessage = async (ticketId: string, body: string) => {
+    if (!currentUser || !body.trim()) return;
+    let updated: SupportTicket | null = null;
+    setSupportTickets((prev) => {
+      const next = prev.map((t) => {
+        if (t.id !== ticketId) return t;
+        updated = appendMessage(t, currentUser, body);
+        return updated;
+      });
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+    if (!updated) return;
+    await persistSupportTicketToDb(updated);
+  };
+
+  const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
+    const now = new Date().toISOString();
+    setSupportTickets((prev) => {
+      const next = prev.map((t) => (t.id === ticketId ? { ...t, status, updatedAt: now } : t));
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+    if (isDbConnected) {
+      try {
+        await supabase.from('support_tickets').update({ status, updated_at: now }).eq('id', ticketId);
+      } catch (e) {
+        console.warn('Support status DB sync:', e);
+      }
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────
   if (loading) {
     return (
@@ -1041,6 +1180,10 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onUpdateProfile={(payload) => handleUpdateGuardProfile(activeGuard.id, payload)}
           currentUser={currentUser}
+          supportTickets={supportTickets}
+          relatedRequests={requests.filter((r) => r.assignedGuardId === activeGuard.id)}
+          onCreateSupportTicket={handleCreateSupportTicket}
+          onSendSupportMessage={handleSendSupportMessage}
         />
         <InstallPrompt />
       </>
@@ -1078,6 +1221,14 @@ export default function App() {
               onSignOut={handleSignOut}
               client={clientRecord ?? null}
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
+            />
+          ) : clientView === 'support' ? (
+            <SupportScreen
+              currentUser={currentUser}
+              tickets={supportTickets}
+              relatedRequests={myRequests}
+              onCreateTicket={handleCreateSupportTicket}
+              onSendMessage={handleSendSupportMessage}
             />
           ) : (
             <ClientDashboard
@@ -1150,6 +1301,10 @@ export default function App() {
             onChangeTheme={changeThemeMode}
             onUpdateProfile={(payload) => handleUpdateGuardProfile(staffGuardProfile.id, payload)}
             currentUser={currentUser}
+            supportTickets={supportTickets}
+            relatedRequests={requests.filter((r) => r.assignedGuardId === staffGuardProfile.id)}
+            onCreateSupportTicket={handleCreateSupportTicket}
+            onSendSupportMessage={handleSendSupportMessage}
             onExitGuardMode={() => setStaffGuardModePersisted(false)}
           />
           <InstallPrompt />
@@ -1163,6 +1318,7 @@ export default function App() {
           guards={verifiedGuards}
           clients={clients}
           requests={requests}
+          supportTickets={supportTickets}
           payments={payments}
           onUpdateGuardStaffStatus={handleUpdateGuardStaffStatus}
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
@@ -1189,6 +1345,8 @@ export default function App() {
           onAddExperience={handleAddExperience}
           onAddEducation={handleAddEducation}
           onEnterGuardMode={() => setStaffGuardModePersisted(true)}
+          onSendSupportMessage={handleSendSupportMessage}
+          onUpdateSupportStatus={handleUpdateSupportTicketStatus}
         />
         <InstallPrompt />
       </>

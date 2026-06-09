@@ -22,6 +22,9 @@ import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffReportsPanel } from './staff/StaffReportsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
+import { StaffSupportPanel } from './staff/StaffSupportPanel';
+import { SupportTicket, SupportTicketStatus } from '../types';
+import { openTicketCount } from '../lib/support';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -34,6 +37,7 @@ interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
   requests: SecurityRequest[];
+  supportTickets?: SupportTicket[];
   payments?: Payment[];
   onUpdateGuardStaffStatus: (guardId: string, isStaff: boolean) => Promise<void>;
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
@@ -60,12 +64,15 @@ interface StaffDashboardProps {
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onEnterGuardMode?: () => void;
+  onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
+  onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
 }
 
 export function StaffDashboard({
   guards,
   clients,
   requests,
+  supportTickets = [],
   payments = [],
   onUpdateGuardStaffStatus,
   onUpdateGuardUserStatus,
@@ -91,6 +98,8 @@ export function StaffDashboard({
   onAddExperience,
   onAddEducation,
   onEnterGuardMode,
+  onSendSupportMessage,
+  onUpdateSupportStatus,
 }: StaffDashboardProps) {
   const [section, setSection] = useState<StaffSection>('overview');
 
@@ -110,8 +119,9 @@ export function StaffDashboard({
       'live-jobs': requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
+      support: openTicketCount(supportTickets),
     }),
-    [stats, requests, incidents, disputes]
+    [stats, requests, incidents, disputes, supportTickets]
   );
 
   const renderSection = () => {
@@ -166,6 +176,14 @@ export function StaffDashboard({
         return <StaffReportsPanel requests={requests} guards={guards} />;
       case 'incidents':
         return <StaffIncidentsPanel incidents={incidents} />;
+      case 'support':
+        return onSendSupportMessage && onUpdateSupportStatus ? (
+          <StaffSupportPanel
+            tickets={supportTickets}
+            onSendMessage={onSendSupportMessage}
+            onUpdateStatus={onUpdateSupportStatus}
+          />
+        ) : null;
       case 'payments':
         return showFinance ? (
           <StaffPaymentsPanel

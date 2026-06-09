@@ -9,6 +9,7 @@ export type StaffSection =
   | 'clients'
   | 'reports'
   | 'incidents'
+  | 'support'
   | 'payments'
   | 'disputes'
   | 'analytics'

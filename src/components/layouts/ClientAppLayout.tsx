@@ -2,7 +2,7 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { Home, Radio, ClipboardList, User, Users } from 'lucide-react';
+import { Home, Radio, ClipboardList, User, Users, LifeBuoy } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -21,6 +21,7 @@ const NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'guards', label: 'Guards', icon: Users },
   { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'requests', label: 'Requests', icon: ClipboardList },
+  { id: 'support', label: 'Support', icon: LifeBuoy },
   { id: 'profile', label: 'Profile', icon: User },
 ];
 

@@ -13,7 +13,7 @@ import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
 
-export type ClientView = 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile';
+export type ClientView = 'home' | 'request' | 'direct-request' | 'coverage' | 'reports' | 'requests' | 'guards' | 'profile' | 'support';
 
 interface ClientDashboardProps {
   companyName: string;

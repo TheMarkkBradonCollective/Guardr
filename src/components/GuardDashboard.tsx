@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { SecurityRequest, SecurityGuard, Certification, Payment, SessionUser, Experience, GuardEducation } from '../types';
+import {
+  SecurityRequest,
+  SecurityGuard,
+  Certification,
+  Payment,
+  SessionUser,
+  Experience,
+  GuardEducation,
+  CreateSupportTicketInput,
+  SupportTicket,
+} from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -8,9 +18,10 @@ import { GuardOpportunitiesPanel } from './guard/GuardOpportunitiesPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
+import { SupportScreen } from './support/SupportScreen';
 import { Logo } from './Logo';
 import { ROLE_LABELS } from '../lib/permissions';
-import { AlertTriangle, Map, DollarSign, Compass, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Compass, User, LogOut, LayoutDashboard, LifeBuoy } from 'lucide-react';
 import {
   computeEarningsSummary,
   filterJobsByCategory,
@@ -40,11 +51,15 @@ interface GuardDashboardProps {
   themeMode: string;
   onChangeTheme: (mode: string) => void;
   onUpdateProfile: (payload: ProfileSavePayload) => void | Promise<void>;
+  supportTickets?: SupportTicket[];
+  relatedRequests?: SecurityRequest[];
+  onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
+  onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   /** When staff toggles into guard shift mode */
   onExitGuardMode?: () => void;
 }
 
-type GuardTab = 'map' | 'earnings' | 'opportunities' | 'profile';
+type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
 
 export function GuardDashboard({
   guard,
@@ -62,6 +77,10 @@ export function GuardDashboard({
   themeMode,
   onChangeTheme,
   onUpdateProfile,
+  supportTickets = [],
+  relatedRequests = [],
+  onCreateSupportTicket,
+  onSendSupportMessage,
   onExitGuardMode,
 }: GuardDashboardProps) {
   const [activeTab, setActiveTab] = useState<GuardTab>('map');
@@ -339,6 +358,7 @@ export function GuardDashboard({
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'opportunities', icon: Compass, label: 'Jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'support', icon: LifeBuoy, label: 'Support' },
     { id: 'profile', icon: User, label: 'Profile' },
   ];
 
@@ -433,6 +453,18 @@ export function GuardDashboard({
             selectedJobId={selectedJobId}
             onSelectJob={setSelectedJobId}
             onAcceptJob={handleAcceptJob}
+          />
+        </div>
+      )}
+
+      {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
+        <div className={`absolute inset-0 bg-brand-bg flex flex-col overflow-hidden ${panelBottomPad}`}>
+          <SupportScreen
+            currentUser={currentUser}
+            tickets={supportTickets}
+            relatedRequests={relatedRequests}
+            onCreateTicket={onCreateSupportTicket}
+            onSendMessage={onSendSupportMessage}
           />
         </div>
       )}

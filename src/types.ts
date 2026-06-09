@@ -253,6 +253,54 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type SupportTicketKind = 'chat' | 'report';
+export type SupportTicketStatus = 'open' | 'in-progress' | 'resolved';
+export type SupportTicketCategory =
+  | 'general'
+  | 'account'
+  | 'payment'
+  | 'job-issue'
+  | 'safety'
+  | 'technical'
+  | 'other';
+export type SupportPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface SupportMessage {
+  id: string;
+  ticketId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: PlatformRole;
+  body: string;
+  createdAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: PlatformRole;
+  kind: SupportTicketKind;
+  subject: string;
+  category: SupportTicketCategory;
+  priority: SupportPriority;
+  status: SupportTicketStatus;
+  relatedRequestId?: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: SupportMessage[];
+}
+
+export interface CreateSupportTicketInput {
+  kind: SupportTicketKind;
+  subject: string;
+  category: SupportTicketCategory;
+  priority?: SupportPriority;
+  body: string;
+  relatedRequestId?: string;
+}
+
 export interface AIAnalysisResult {
   isAuthentic: boolean;
   score: number;
