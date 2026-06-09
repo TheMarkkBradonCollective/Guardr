@@ -8,6 +8,7 @@ import {
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import { formatStateName, US_STATES } from '../../lib/states';
+import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { Award, BookOpen, Shield } from 'lucide-react';
 
 const CREDENTIAL_SECTIONS: {
@@ -19,13 +20,13 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'guard-card',
     title: 'BSIS Guard Card',
-    subtitle: 'State registration — separate from training certificates. Staff verifies before you can accept jobs.',
+    subtitle: 'State license — upload a valid card to reach Level 1. Guardr verification is a trust badge for clients.',
     icon: Shield,
   },
   {
     category: 'bsis-required',
     title: 'Required to Work (California)',
-    subtitle: 'Power to Arrest, Use of Force, and 40-hour BSIS completion — required to be listed on Guardr.',
+    subtitle: 'Power to Arrest, Use of Force, and 40-hour BSIS completion — required for Level 2 (Active).',
     icon: BookOpen,
   },
   {
@@ -37,7 +38,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'bsis-permit',
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Baton, OC spray, firearm, and taser permits — required when jobs specify armed posts.',
+    subtitle: 'Required only when applicable — firearm (armed jobs), baton, pepper spray.',
     icon: Shield,
   },
   {
@@ -119,11 +120,13 @@ export function GuardCredentialsPanel({
 
   return (
     <div className="space-y-4">
+      <GuardQualificationPanel guard={guard} />
+
       <div className="app-card bg-brand-primary/5 border-brand-primary/20">
-        <p className="text-sm font-semibold text-brand-primary">Credentials & verification</p>
+        <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Your <strong>BSIS Guard Card</strong> is your state license. Training certificates and permits are uploaded
-          separately and verified by Signature Security staff. Clients filter jobs by these credentials.
+          Upload required BSIS documents to qualify for jobs. Guardr staff may verify uploads — that badge helps clients
+          trust your profile but is not required to accept work.
         </p>
       </div>
 
@@ -196,7 +199,7 @@ export function GuardCredentialsPanel({
                   <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
                 </div>
                 <button type="submit" className="w-full uber-button-sage h-11 text-sm">
-                  Submit for verification
+                  Upload credential
                 </button>
               </form>
             )}
@@ -238,13 +241,13 @@ function CredentialRow({ cert }: { cert: Certification }) {
       <span
         className={`shrink-0 text-[10px] font-semibold uppercase px-2 py-0.5 rounded border h-fit ${
           cert.status === 'verified'
-            ? 'text-brand-primary border-brand-primary/30 bg-brand-primary/10'
+            ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
             : cert.status === 'rejected'
               ? 'text-red-400 border-red-500/30'
               : 'text-brand-text-muted border-brand-border'
         }`}
       >
-        {cert.status}
+        {cert.status === 'verified' ? 'Guardr verified' : cert.status}
       </span>
     </div>
   );

@@ -78,6 +78,9 @@ export interface GuardEducation {
 /** How a security request was created */
 export type RequestType = 'marketplace' | 'direct';
 
+/** Minimum guard qualification to accept a job — see guardQualification.ts */
+export type MinGuardQualification = 'pending' | 'active';
+
 export const GUARD_SPECIALTY_OPTIONS = [
   'Event security',
   'Corporate / office',
@@ -198,6 +201,8 @@ export interface SecurityRequest {
   targetGuardId?: string | null;
   /** Catalog IDs from certCatalog — used for job matching filters */
   requiredCertifications: string[];
+  /** Level 1 (guard card) or Level 2 (full 40hr BSIS) — clients choose per job */
+  minGuardQualification?: MinGuardQualification;
   applicants: string[];
   ratingGiven?: number;
   reviewText?: string;

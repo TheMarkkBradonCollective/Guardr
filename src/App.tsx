@@ -242,6 +242,7 @@ export default function App() {
         requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
         targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
         requiredCertifications: r.required_certifications || [],
+        minGuardQualification: r.min_guard_qualification === 'active' ? 'active' : 'pending',
         applicants: r.applicants || [],
         ratingGiven: r.rating_given ?? undefined,
         reviewText: r.review_text ?? undefined,
@@ -683,6 +684,7 @@ export default function App() {
       requestType: newRequest.requestType ?? 'marketplace',
       targetGuardId: newRequest.requestType === 'direct' ? (newRequest.targetGuardId ?? null) : null,
       requiredCertifications: newRequest.requiredCertifications || [],
+      minGuardQualification: newRequest.minGuardQualification ?? 'pending',
       applicants: [],
     };
 
@@ -717,6 +719,7 @@ export default function App() {
           request_type: freshJob.requestType ?? 'marketplace',
           target_guard_id: freshJob.targetGuardId ?? null,
           required_certifications: freshJob.requiredCertifications,
+          min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
         });
       } catch (e) { console.error('Request insert error:', e); }
@@ -849,16 +852,16 @@ export default function App() {
 
   // ── Guard accept shift ─────────────────────────────────────
   const handleAcceptJob = async (requestId: string) => {
-    if (!activeGuard.verified) { alert('Your profile must be verified before accepting shifts.'); return; }
     const job = requests.find((r) => r.id === requestId);
     if (job) {
       if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
         alert('This assignment was sent to another guard from their profile.');
         return;
       }
-      const { canAccept } = checkJobRequirements(activeGuard, job);
+      const { checks, canAccept } = checkJobRequirements(activeGuard, job);
       if (!canAccept) {
-        alert('You do not meet the requirements for this shift. Add a verified guard card for the job state in your profile.');
+        const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
+        alert(`You do not meet the requirements for this shift: ${missing}. Upload the required credentials in your profile.`);
         return;
       }
     }
