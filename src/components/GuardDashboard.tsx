@@ -12,14 +12,14 @@ import { ShiftMap } from './guard/ShiftMap';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
-import { GuardOpportunitiesPanel } from './guard/GuardOpportunitiesPanel';
+import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { THEME_LABELS } from '../lib/platform/theme';
-import { AlertTriangle, Map, DollarSign, Compass, User, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanViewJob,
@@ -70,11 +70,11 @@ interface GuardDashboardProps {
   initialTab?: GuardTab;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'opportunities' | 'support' | 'profile';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'support' | 'profile';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
-  opportunities: 'Jobs',
+  myJobs: 'My jobs',
   earnings: 'Pay',
   support: 'Support',
   profile: 'Profile',
@@ -134,9 +134,28 @@ export function GuardDashboard({
     [requests, guard.id]
   );
 
-  const upcomingShifts = useMemo(
-    () => assignedJobs.filter((r) => r.status === 'accepted'),
-    [assignedJobs]
+  const upcomingMyJobs = useMemo(
+    () =>
+      requests
+        .filter(
+          (r) =>
+            r.assignedGuardId === guard.id &&
+            (r.status === 'accepted' || r.status === 'in-progress')
+        )
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
+    [requests, guard.id]
+  );
+
+  const pastMyJobs = useMemo(
+    () =>
+      requests
+        .filter(
+          (r) =>
+            r.assignedGuardId === guard.id &&
+            (r.status === 'completed' || r.status === 'closed')
+        )
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()),
+    [requests, guard.id]
   );
 
   const activeShiftJob = useMemo(() => {
@@ -219,7 +238,7 @@ export function GuardDashboard({
     onAcceptJob(jobId);
     updatePhase(jobId, 'upcoming');
     setSelectedJobId(null);
-    if (!isEmbedded) setStandaloneTab('map');
+    if (!isEmbedded) setStandaloneTab('myJobs');
   };
 
   const handleArrived = () => {
@@ -381,7 +400,7 @@ export function GuardDashboard({
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
-    { id: 'opportunities', icon: Compass, label: 'Jobs' },
+    { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
     { id: 'support', icon: LifeBuoy, label: 'Support' },
     { id: 'profile', icon: User, label: 'Profile' },
@@ -413,7 +432,6 @@ export function GuardDashboard({
       {activeTab === 'map' && !showShiftOverlay && (
         <GuardBottomSheet
           jobs={filteredBrowseJobs}
-          upcomingShifts={upcomingShifts}
           guard={guard}
           selectedJob={selectedJob}
           selectedCategory={selectedCategory}
@@ -443,14 +461,12 @@ export function GuardDashboard({
         </div>
       )}
 
-      {activeTab === 'opportunities' && (
+      {activeTab === 'myJobs' && (
         <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <GuardOpportunitiesPanel
-            jobs={availableJobs}
+          <GuardMyJobsPanel
+            upcomingJobs={upcomingMyJobs}
+            pastJobs={pastMyJobs}
             guard={guard}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-            onAcceptJob={handleAcceptJob}
           />
         </div>
       )}

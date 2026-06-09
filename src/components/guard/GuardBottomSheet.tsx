@@ -18,7 +18,6 @@ const SNAP_MAX_PX = 520;
 
 interface GuardBottomSheetProps {
   jobs: GuardJobView[];
-  upcomingShifts?: GuardJobView[];
   guard: SecurityGuard;
   selectedJob: GuardJobView | null;
   selectedCategory: JobCategoryId | null;
@@ -47,7 +46,6 @@ function useViewportHeight(): number {
 
 export function GuardBottomSheet({
   jobs,
-  upcomingShifts = [],
   guard,
   selectedJob,
   selectedCategory,
@@ -79,17 +77,12 @@ export function GuardBottomSheet({
   };
 
   const sheetLabel = selectedJob
-    ? selectedJob.status === 'open'
-      ? 'Assignment details'
-      : 'Upcoming shift'
-    : upcomingShifts.length > 0
-      ? `${upcomingShifts.length} upcoming · ${jobs.length} available`
-      : `${jobs.length} available assignments`;
+    ? 'Assignment details'
+    : `${jobs.length} available shift${jobs.length === 1 ? '' : 's'}`;
 
   const panelContent = (
     <GuardJobsPanelContent
       jobs={jobs}
-      upcomingShifts={upcomingShifts}
       guard={guard}
       selectedJob={selectedJob}
       selectedCategory={selectedCategory}
