@@ -4,6 +4,7 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
+import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -118,7 +119,8 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             <div className="min-w-0">
               <span className="font-bold text-lg block leading-tight">Guardr</span>
               <span className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted hidden sm:block truncate">
-                by Signature Security Specialist
+                by{' '}
+                <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors" />
               </span>
             </div>
           </div>
@@ -187,7 +189,8 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
           >
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-none">Guardr</h1>
             <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-brand-text-muted mt-3">
-              by Signature Security Specialist
+              by{' '}
+              <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-[0.22em]" />
             </p>
           </motion.div>
 
@@ -368,14 +371,19 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             <div>
               <span className="font-semibold block">Guardr</span>
               <span className="text-[10px] uppercase tracking-wider text-brand-text-muted">
-                by Signature Security Specialist
+                by{' '}
+                <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-wider" />
               </span>
             </div>
           </div>
           <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-          <p className="text-xs text-brand-text-muted max-w-xs">
-            © {new Date().getFullYear()} Guardr — all data handled according to state license laws.
-          </p>
+          <div className="text-xs text-brand-text-muted max-w-xs space-y-1">
+            <p>© {new Date().getFullYear()} Guardr — all data handled according to state license laws.</p>
+            <p className="uppercase tracking-wide text-[10px]">
+              Powered by{' '}
+              <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-wide" />
+            </p>
+          </div>
         </div>
       </footer>
     </div>
