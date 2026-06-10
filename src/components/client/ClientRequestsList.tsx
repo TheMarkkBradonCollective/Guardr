@@ -161,7 +161,7 @@ export function ClientRequestsList({
             }
 
             return (
-              <div key={req.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4 app-item-card-selected">
+              <div key={req.id} className="space-y-4">
                 <JobListCard
                   job={req}
                   subtitle={req.siteName ? `${req.siteName} · ${req.clientName}` : req.clientName}
@@ -179,6 +179,7 @@ export function ClientRequestsList({
                   selected
                 />
 
+                <div className="staff-detail-pane space-y-4">
                 {editingId !== req.id && (
                   <JobListingProfile
                     job={req}
@@ -192,7 +193,7 @@ export function ClientRequestsList({
                 )}
 
                 {isJobPaid(req) && (
-                  <p className="text-xs text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5 w-full">
+                  <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
                     Job locked — paid jobs cannot be edited.
                   </p>
                 )}
@@ -228,7 +229,7 @@ export function ClientRequestsList({
 
                 {req.status === 'pending-review' && (
                   <div className="border-t border-brand-border pt-3 w-full">
-                    <p className="text-xs text-amber-400/95 bg-amber-500/10 border border-amber-500/25 px-2.5 py-2 rounded-lg leading-relaxed">
+                    <p className="text-xs text-amber-400/95 leading-relaxed">
                       Waiting for staff approval. You can pay after Guardr approves this job offer; guards apply and staff assigns the best fit.
                     </p>
                   </div>
@@ -237,7 +238,7 @@ export function ClientRequestsList({
                 {req.status === 'open' && (
                   <div className="border-t border-brand-border pt-3 space-y-3 w-full">
                     {canClientPayForJob(req) && (
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3 rounded-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
@@ -259,13 +260,13 @@ export function ClientRequestsList({
                       </div>
                     )}
                     {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
-                      <p className="text-xs text-emerald-400/90 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1.5 flex items-center gap-1.5 rounded-lg">
+                      <p className="text-xs text-emerald-400/90 flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         {clientPaymentStatusLabel(req.paymentStatus)}
                         {clientPaymentStatusHint(req.paymentStatus, req.status) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status)}` : ''}
                       </p>
                     )}
-                    <p className="text-sm text-brand-text-muted bg-brand-surface border border-brand-border rounded-lg px-3 py-2.5">
+                    <p className="text-sm text-brand-text-muted">
                       {req.applicants.length === 0 ? (
                         <>Guards can apply to this offer. Guardr staff will review applicants and assign the best fit.</>
                       ) : (
@@ -318,6 +319,7 @@ export function ClientRequestsList({
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             );
           })}

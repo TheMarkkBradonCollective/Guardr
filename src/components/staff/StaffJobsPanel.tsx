@@ -10,8 +10,8 @@ import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfSearchBar } from '../ui/wireframe';
-import { ArrowLeft, Loader2, Star, UserPlus, X } from 'lucide-react';
+import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 
@@ -144,35 +144,36 @@ function JobDetailPanel({
             Review applicants and approve the best fit for this job.
           </p>
           <div className="space-y-2">
-            {rankedApplicants.map((guard, index) => (
-              <div
-                key={guard.id}
-                className="flex items-center justify-between gap-3 border border-brand-border rounded-lg px-3 py-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {guard.name}
-                      {index === 0 ? <span className="text-brand-primary text-xs ml-1.5">Best fit</span> : null}
-                    </p>
-                    <p className="text-xs text-brand-text-muted flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
-                      {guard.rating.toFixed(1)} · {guard.jobsCompleted} jobs
-                      {!guardMeetsJobRequirements(guard, req) ? ' · Missing requirements' : ''}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                  disabled={!guardMeetsJobRequirements(guard, req)}
-                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Approve guard
-                </button>
-              </div>
-            ))}
+            {rankedApplicants.map((guard, index) => {
+              const meets = guardMeetsJobRequirements(guard, req);
+              return (
+                <WfListCard
+                  key={guard.id}
+                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
+                  title={
+                    index === 0
+                      ? `${guard.name} · Best fit`
+                      : guard.name
+                  }
+                  subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
+                  meta={
+                    <span className={meets ? 'text-emerald-400' : 'text-amber-400'}>
+                      {meets ? 'Meets job requirements' : 'Missing required credentials'}
+                    </span>
+                  }
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => onApproveGuardApplication(req.id, guard.id)}
+                      disabled={!meets}
+                      className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Approve guard
+                    </button>
+                  }
+                />
+              );
+            })}
           </div>
         </div>
       )}

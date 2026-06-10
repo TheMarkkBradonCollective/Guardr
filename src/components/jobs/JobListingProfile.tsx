@@ -24,7 +24,7 @@ import {
 import { JobListingLike, jobTypeLabel } from '../../lib/jobListing';
 import { WfBadge } from '../ui/wireframe';
 
-function Section({
+function DetailField({
   icon,
   title,
   children,
@@ -35,8 +35,8 @@ function Section({
 }) {
   if (!children || (typeof children === 'string' && !children.trim())) return null;
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-surface/40 p-3.5 space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted flex items-center gap-2">
+    <div className="detail-field">
+      <p className="detail-field-label">
         {icon}
         {title}
       </p>
@@ -47,9 +47,7 @@ function Section({
 
 interface JobListingProfileProps {
   job: JobListingLike;
-  /** Show client branding header — marketplace advertising */
   showClientHeader?: boolean;
-  /** Show status / armed badges */
   showBadges?: boolean;
   distanceMiles?: number;
   payLine?: React.ReactNode;
@@ -68,7 +66,7 @@ export function JobListingProfile({
   const typeLabel = JOB_TYPE_LABELS[job.type] || jobTypeLabel(job);
 
   return (
-    <div className="space-y-4">
+    <div className="staff-detail-pane space-y-4">
       {showClientHeader && (
         <div className="flex items-start gap-3">
           <div className="w-12 h-12 rounded-xl bg-brand-primary/15 border border-brand-primary/25 flex items-center justify-center shrink-0">
@@ -106,9 +104,9 @@ export function JobListingProfile({
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-brand-border p-3 space-y-1">
-          <p className="text-xs font-semibold text-brand-text-muted flex items-center gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <div className="detail-field !border-t-0 !pt-0">
+          <p className="detail-field-label">
             <MapPin className="w-3.5 h-3.5 text-brand-primary" />
             Location
           </p>
@@ -122,8 +120,8 @@ export function JobListingProfile({
           )}
         </div>
 
-        <div className="rounded-xl border border-brand-border p-3 space-y-1">
-          <p className="text-xs font-semibold text-brand-text-muted flex items-center gap-1.5">
+        <div className="detail-field !border-t-0 !pt-0 sm:border-t-0">
+          <p className="detail-field-label">
             <Clock className="w-3.5 h-3.5 text-brand-primary" />
             Schedule
           </p>
@@ -132,19 +130,17 @@ export function JobListingProfile({
         </div>
       </div>
 
-      {payLine && (
-        <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 p-3">{payLine}</div>
-      )}
+      {payLine && <div className="detail-pay-block">{payLine}</div>}
 
-      <div className="rounded-xl border border-brand-border p-3 space-y-2">
-        <p className="text-xs font-semibold text-brand-text-muted flex items-center gap-1.5">
+      <div className="detail-field">
+        <p className="detail-field-label">
           <Shield className="w-3.5 h-3.5 text-brand-primary" />
           Guard requirements
         </p>
         <p className="text-sm">
           Minimum status: <span className="font-medium">{guardJobMinQualificationLabel(job.minGuardQualification)}</span>
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 mt-2">
           {credentialLabels.map((label) => (
             <span key={label} className="chip chip-inactive text-xs">
               {label}
@@ -153,34 +149,34 @@ export function JobListingProfile({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted flex items-center gap-2">
+      <div className="space-y-0">
+        <p className="detail-field-label mb-2">
           <Briefcase className="w-3.5 h-3.5" />
           Post orders & professional standards
         </p>
 
-        <Section icon={<Shirt className="w-3.5 h-3.5" />} title="Dress code & uniform">
+        <DetailField icon={<Shirt className="w-3.5 h-3.5" />} title="Dress code & uniform">
           {job.uniformRequirements}
-        </Section>
+        </DetailField>
 
-        <Section icon={<Wrench className="w-3.5 h-3.5" />} title="Equipment">
+        <DetailField icon={<Wrench className="w-3.5 h-3.5" />} title="Equipment">
           {job.equipmentRequirements}
-        </Section>
+        </DetailField>
 
-        <Section icon={<FileText className="w-3.5 h-3.5" />} title="Site instructions">
+        <DetailField icon={<FileText className="w-3.5 h-3.5" />} title="Site instructions">
           {job.siteInstructions}
-        </Section>
+        </DetailField>
 
-        <Section icon={<Car className="w-3.5 h-3.5" />} title="Parking & arrival">
+        <DetailField icon={<Car className="w-3.5 h-3.5" />} title="Parking & arrival">
           {job.parkingInstructions}
-        </Section>
+        </DetailField>
 
-        <Section icon={<DoorOpen className="w-3.5 h-3.5" />} title="Access & check-in">
+        <DetailField icon={<DoorOpen className="w-3.5 h-3.5" />} title="Access & check-in">
           {job.accessInstructions}
-        </Section>
+        </DetailField>
 
         {(job.contactName || job.contactPhone) && (
-          <Section icon={<User className="w-3.5 h-3.5" />} title="On-site contact">
+          <DetailField icon={<User className="w-3.5 h-3.5" />} title="On-site contact">
             <>
               {job.contactName}
               {job.contactPhone && (
@@ -190,7 +186,7 @@ export function JobListingProfile({
                 </p>
               )}
             </>
-          </Section>
+          </DetailField>
         )}
       </div>
 

@@ -9,7 +9,7 @@ import { CertDetailModal } from '../credentials/CertDetailModal';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSectionHeader } from '../ui/wireframe';
-import { Briefcase, Check, Eye, MapPin, Shield, Star, X } from 'lucide-react';
+import { Briefcase, Check, Eye, MapPin, Shield, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
@@ -60,44 +60,39 @@ export function StaffApprovals({
               <p className="text-xs text-brand-text-muted mt-1 mb-3">
                 Clients cannot pay until staff approves. Approving moves the offer to open so checkout unlocks.
               </p>
-              <AppItemCardStack>
+              <div className="space-y-6">
                 {pendingJobs.map((req) => (
-                  <div
-                    key={req.id}
-                    className="app-item-card app-item-card-align-top flex-col !items-stretch gap-3"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3 w-full">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
-                          <p className="font-semibold text-sm">{req.title}</p>
-                          <WfBadge tone="warning">Pending approval</WfBadge>
-                          <WfBadge tone="default">{jobPostingTypeLabel(req.requestType)}</WfBadge>
-                        </div>
-                        <p className="text-sm text-brand-text-muted">{req.clientName}</p>
-                        <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3 shrink-0" />
-                          {req.location}
-                        </p>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
-                          {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)}
-                        </p>
-                        {req.description && (
-                          <p className="text-xs text-brand-text-muted mt-2 border-l-2 border-brand-primary pl-2 leading-relaxed">
-                            {req.description}
-                          </p>
-                        )}
-                        {req.uniformRequirements && (
-                          <p className="text-[11px] text-brand-text-muted mt-2">
-                            <span className="font-medium text-brand-text">Uniform:</span> {req.uniformRequirements}
-                          </p>
-                        )}
-                        {req.equipmentRequirements && (
-                          <p className="text-[11px] text-brand-text-muted mt-1">
-                            <span className="font-medium text-brand-text">Equipment:</span> {req.equipmentRequirements}
-                          </p>
-                        )}
+                  <div key={req.id} className="staff-detail-pane space-y-3 pb-6 border-b border-brand-border last:border-b-0 last:pb-0">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
+                        <p className="font-semibold text-sm">{req.title}</p>
+                        <WfBadge tone="warning">Pending approval</WfBadge>
+                        <WfBadge tone="default">{jobPostingTypeLabel(req.requestType)}</WfBadge>
                       </div>
+                      <p className="text-sm text-brand-text-muted">{req.clientName}</p>
+                      <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        {req.location}
+                      </p>
+                      <p className="text-xs text-brand-text-muted mt-0.5">
+                        {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)}
+                      </p>
+                      {req.description && (
+                        <p className="text-xs text-brand-text-muted mt-2 border-l-2 border-brand-primary pl-2 leading-relaxed">
+                          {req.description}
+                        </p>
+                      )}
+                      {req.uniformRequirements && (
+                        <p className="text-[11px] text-brand-text-muted mt-2">
+                          <span className="font-medium text-brand-text">Uniform:</span> {req.uniformRequirements}
+                        </p>
+                      )}
+                      {req.equipmentRequirements && (
+                        <p className="text-[11px] text-brand-text-muted mt-1">
+                          <span className="font-medium text-brand-text">Equipment:</span> {req.equipmentRequirements}
+                        </p>
+                      )}
                     </div>
                     <JobBillingSummaryFromRequest req={req} variant="staff" />
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border w-full">
@@ -118,7 +113,7 @@ export function StaffApprovals({
                     </div>
                   </div>
                 ))}
-              </AppItemCardStack>
+              </div>
             </section>
           )}
 
@@ -131,14 +126,11 @@ export function StaffApprovals({
               <p className="text-xs text-brand-text-muted mt-1 mb-3">
                 Multiple guards can apply to the same open offer. Review applicants and assign the best match.
               </p>
-              <AppItemCardStack>
+              <div className="space-y-6">
                 {jobsWithApplications.map((req) => {
                   const ranked = rankApplicantGuards(req, guards);
                   return (
-                    <div
-                      key={req.id}
-                      className="app-item-card app-item-card-align-top flex-col !items-stretch gap-3"
-                    >
+                    <div key={req.id} className="staff-detail-pane space-y-3 pb-6 border-b border-brand-border last:border-b-0 last:pb-0">
                       <div>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <Shield className="w-4 h-4 text-brand-primary shrink-0" />
@@ -150,40 +142,22 @@ export function StaffApprovals({
                           {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)}
                         </p>
                       </div>
-                      <ul className="space-y-2 border-t border-brand-border pt-3">
+                      <div className="space-y-2 border-t border-brand-border pt-3">
                         {ranked.map((guard, index) => {
                           const meets = guardMeetsJobRequirements(guard, req);
                           return (
-                            <li
+                            <WfListCard
                               key={guard.id}
-                              className="flex flex-wrap items-center justify-between gap-3 border border-brand-border rounded-lg px-3 py-2.5"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {index === 0 ? '★ ' : ''}
-                                    {guard.name}
-                                  </p>
-                                  <p className="text-xs text-brand-text-muted flex items-center gap-2 mt-0.5">
-                                    <Star className="w-3 h-3" />
-                                    {guard.rating.toFixed(1)} · {guard.jobsCompleted} jobs
-                                  </p>
-                                  <p className={`text-xs mt-0.5 ${meets ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                    {meets ? 'Meets job requirements' : 'Missing required credentials'}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex flex-wrap gap-2 shrink-0">
-                                {onViewGuard && (
-                                  <button
-                                    type="button"
-                                    onClick={() => onViewGuard(guard.id)}
-                                    className="app-button-outline !w-auto !h-8 !px-3 !text-xs"
-                                  >
-                                    Profile
-                                  </button>
-                                )}
+                              avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
+                              title={`${index === 0 ? '★ ' : ''}${guard.name}`}
+                              subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
+                              meta={
+                                <span className={meets ? 'text-emerald-400' : 'text-amber-400'}>
+                                  {meets ? 'Meets job requirements' : 'Missing required credentials'}
+                                </span>
+                              }
+                              onClick={onViewGuard ? () => onViewGuard(guard.id) : undefined}
+                              action={
                                 <button
                                   type="button"
                                   onClick={() => onApproveGuardApplication(req.id, guard.id)}
@@ -192,15 +166,15 @@ export function StaffApprovals({
                                 >
                                   Approve guard
                                 </button>
-                              </div>
-                            </li>
+                              }
+                            />
                           );
                         })}
-                      </ul>
+                      </div>
                     </div>
                   );
                 })}
-              </AppItemCardStack>
+              </div>
             </section>
           )}
 

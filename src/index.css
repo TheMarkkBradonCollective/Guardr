@@ -226,6 +226,30 @@ html.theme-grey {
   box-shadow: none;
 }
 
+.detail-field {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+.detail-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.detail-pay-block {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-top: 1px solid var(--brand-border);
+}
+
 /* ─── STAFF SHELL (left sidebar) ───────────────────────────── */
 .staff-shell {
   font-family: var(--font-sans);
