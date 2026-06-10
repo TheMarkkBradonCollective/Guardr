@@ -70,7 +70,7 @@ export function GuardActiveShift({
           <h2 className="text-xl font-bold">{job.title}</h2>
         </div>
 
-        <div className="segmented-control">
+        <div className="segmented-control segmented-control-full">
           {statusSteps.slice(0, 3).map((step) => (
             <span
               key={step}

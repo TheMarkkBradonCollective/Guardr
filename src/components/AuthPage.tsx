@@ -249,7 +249,7 @@ export function AuthPage({
             </p>
           </div>
 
-          <div className="segmented-control w-full mb-6">
+          <div className="segmented-control segmented-control-full mb-6">
             <button
               type="button"
               onClick={() => { setIsSignUp(false); setErrorMsg(''); }}

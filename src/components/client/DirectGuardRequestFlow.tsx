@@ -278,7 +278,7 @@ export function DirectGuardRequestFlow({
         {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Pay rate</h2>
-            <div className="segmented-control">
+            <div className="segmented-control segmented-control-full">
               {PAY_RATE_PRESETS.map((rate) => (
                 <button
                   key={rate}

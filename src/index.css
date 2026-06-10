@@ -117,11 +117,18 @@ html.theme-grey {
   html {
     background: var(--brand-bg);
     color: var(--brand-text);
+    overflow-x: hidden;
+    max-width: 100%;
+    overscroll-behavior-x: none;
   }
 
   body,
   #root {
     min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
     background: var(--brand-bg);
     color: var(--brand-text);
     -webkit-font-smoothing: antialiased;
@@ -913,6 +920,9 @@ html.theme-grey {
 
 .page-shell {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--brand-bg);
   color: var(--brand-text);
 }
@@ -941,7 +951,7 @@ html.theme-grey {
 /* ─── SEGMENTED CONTROL (auth / theme toggles) ───────────── */
 .segmented-control {
   display: inline-flex;
-  width: 100%;
+  max-width: 100%;
   padding: 3px;
   border-radius: var(--radius-pill);
   background: var(--brand-bg-sec);
@@ -964,6 +974,12 @@ html.theme-grey {
   background: var(--brand-surface);
   color: var(--brand-text);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--brand-text) 8%, transparent);
+}
+
+/* Full-width segmented controls in forms only */
+.segmented-control-full {
+  display: flex;
+  width: 100%;
 }
 
 /* ─── APP BUTTONS (wireframe pill CTAs) ──────────────────── */
@@ -1054,13 +1070,11 @@ html.theme-grey {
 .app-scroll-row {
   display: flex;
   gap: 0.75rem;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   padding-bottom: 0.25rem;
-  margin: 0 -0.25rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
 }
 
 .app-scroll-row > * {
@@ -1354,9 +1368,26 @@ body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
 .guard-scroll-panel {
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+.client-content-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.app-screen-header {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */
@@ -1508,12 +1539,12 @@ body[data-form-factor="desktop"] .guard-side-panel {
 }
 
 body[data-form-factor="tablet"] .client-content-shell {
-  max-width: 960px;
+  max-width: min(960px, 100%);
   margin-inline: auto;
 }
 
 body[data-form-factor="desktop"] .client-content-shell {
-  max-width: 1200px;
+  max-width: min(1200px, 100%);
   margin-inline: auto;
 }
 
@@ -1927,10 +1958,11 @@ a.app-item-card:active,
 .app-h-scroll {
   display: flex;
   gap: 1.25rem;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
-  padding: 0 1.25rem 0.25rem;
+  padding: 0 0 0.25rem;
   scrollbar-width: none;
 }
 
@@ -1969,7 +2001,7 @@ a.app-item-card:active,
 /* Metric strip — single row, divided */
 .app-metric-strip {
   display: flex;
-  margin: 0 1.25rem;
+  max-width: 100%;
   padding: 1rem 0;
   border-top: 1px solid var(--brand-border);
   border-bottom: 1px solid var(--brand-border);
@@ -2012,8 +2044,10 @@ a.app-item-card:active,
 .app-category-row {
   display: flex;
   gap: 1.5rem;
+  max-width: 100%;
   overflow-x: auto;
-  padding: 0 1.25rem 0.25rem;
+  overscroll-behavior-x: contain;
+  padding: 0 0 0.25rem;
   scrollbar-width: none;
 }
 

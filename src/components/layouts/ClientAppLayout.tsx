@@ -2,7 +2,7 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { THEME_LABELS } from '../../lib/platform/theme';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { Home, Map, ClipboardList, User, Users, LifeBuoy, Radio, LogOut } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -56,20 +56,7 @@ export function ClientAppLayout({
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map' || activeView === 'coverage';
 
-  const themeToggle = (
-    <div className="segmented-control">
-      {(['dark', 'light', 'grey'] as ThemeMode[]).map((m) => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => onChangeTheme(m)}
-          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
-        >
-          {THEME_LABELS[m]}
-        </button>
-      ))}
-    </div>
-  );
+  const themeToggle = <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />;
 
   const moreFooter = (
     <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">

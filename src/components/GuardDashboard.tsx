@@ -21,7 +21,7 @@ import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { THEME_LABELS } from '../lib/platform/theme';
+import { ThemeToggle } from './ui/ThemeToggle';
 import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
@@ -634,18 +634,11 @@ export function GuardDashboard({
   }
 
   const themeToggle = (
-    <div className="segmented-control">
-      {(['dark', 'light', 'grey'] as const).map((m) => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => onChangeTheme(m)}
-          className={`segmented-control-btn ${themeMode === m ? 'segmented-control-btn-active' : ''}`}
-        >
-          {THEME_LABELS[m]}
-        </button>
-      ))}
-    </div>
+    <ThemeToggle
+      value={themeMode as 'dark' | 'light' | 'grey'}
+      onChange={(m) => onChangeTheme(m)}
+      size="sm"
+    />
   );
 
   return (

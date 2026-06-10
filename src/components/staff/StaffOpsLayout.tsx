@@ -187,7 +187,7 @@ export function StaffOpsLayout({
         </header>
 
         <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
-          <div className={`h-full ${bleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}>
+          <div className={`h-full max-w-full min-w-0 ${bleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>
             {children}
           </div>
         </main>

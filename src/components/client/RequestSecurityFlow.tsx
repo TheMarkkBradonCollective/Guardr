@@ -320,7 +320,7 @@ export function RequestSecurityFlow({
         {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">How many guards?</h2>
-            <div className="segmented-control">
+            <div className="segmented-control segmented-control-full">
               {GUARD_COUNT_PRESETS.map((n) => (
                 <button
                   key={n}
@@ -352,7 +352,7 @@ export function RequestSecurityFlow({
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Pay rate</h2>
             <p className="text-xs text-brand-text-muted">Client hourly rate per guard</p>
-            <div className="segmented-control">
+            <div className="segmented-control segmented-control-full">
               {PAY_RATE_PRESETS.map((rate) => (
                 <button
                   key={rate}
