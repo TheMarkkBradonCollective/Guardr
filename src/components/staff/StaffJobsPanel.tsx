@@ -171,7 +171,8 @@ function JobDetailPanel({
                 <button
                   type="button"
                   onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+                  disabled={!guardMeetsJobRequirements(guard, req)}
+                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Approve guard
                 </button>

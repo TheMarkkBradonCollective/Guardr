@@ -177,7 +177,8 @@ export function StaffApprovals({
                                 <button
                                   type="button"
                                   onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs"
+                                  disabled={!meets}
+                                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                   Approve guard
                                 </button>

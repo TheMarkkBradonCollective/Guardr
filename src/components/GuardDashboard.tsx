@@ -23,7 +23,9 @@ import { THEME_LABELS } from '../lib/platform/theme';
 import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
+  guardCanApplyToJob,
   guardCanViewJob,
+  checkJobRequirements,
   JobCategoryId,
   loadShiftPhase,
   saveShiftPhase,
@@ -32,7 +34,7 @@ import {
 } from '../lib/guardJobs';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
-import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
+import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -269,6 +271,15 @@ export function GuardDashboard({
     const workBlocked = guardWorkBlockedMessage(guard);
     if (workBlocked) {
       alert(workBlocked);
+      return;
+    }
+    const job = requests.find((r) => r.id === jobId);
+    const jobView = job ? toGuardJobView(job) : null;
+    if (!jobView || !guardCanApplyToJob(guard, jobView)) {
+      const missing = jobView
+        ? checkJobRequirements(guard, jobView).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
+        : 'job requirements';
+      alert(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`);
       return;
     }
     onAcceptJob(jobId);

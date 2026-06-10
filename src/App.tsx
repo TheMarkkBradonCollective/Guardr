@@ -57,7 +57,7 @@ import {
   saveGuardPayoutInvoicesToStorage,
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
-import { checkJobRequirements } from './lib/guardJobs';
+import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
@@ -1681,10 +1681,12 @@ export default function App() {
       alert('You already applied for this job. Staff will review your application.');
       return;
     }
-    const { checks, canAccept } = checkJobRequirements(activeGuard, toGuardJobView(job));
-    if (!canAccept) {
-      const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
-      alert(`You do not meet the requirements for this job: ${missing}. Upload the required credentials in your profile.`);
+    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job))) {
+      const missing = checkJobRequirements(activeGuard, toGuardJobView(job))
+        .checks.filter((c) => !c.met)
+        .map((c) => c.label)
+        .join(', ');
+      alert(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`);
       return;
     }
     const nextApplicants = [...job.applicants, activeGuardId];

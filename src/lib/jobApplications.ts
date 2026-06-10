@@ -1,6 +1,8 @@
 import { SecurityGuard, SecurityRequest } from '../types';
-import { checkJobRequirements } from './guardJobs';
+import { checkJobRequirements, guardCanApplyToJob } from './guardJobs';
 import { toGuardJobView } from './guardJobView';
+
+export { guardCanApplyToJob };
 
 export function guardHasApplied(job: Pick<SecurityRequest, 'applicants'>, guardId: string): boolean {
   return job.applicants.includes(guardId);
@@ -17,7 +19,7 @@ export function countPendingGuardApplications(requests: SecurityRequest[]): numb
 }
 
 export function guardMeetsJobRequirements(guard: SecurityGuard, job: SecurityRequest): boolean {
-  return checkJobRequirements(guard, toGuardJobView(job)).canAccept;
+  return guardCanApplyToJob(guard, toGuardJobView(job));
 }
 
 /** Sort applicants — verified/active credentials first, then rating, then experience */

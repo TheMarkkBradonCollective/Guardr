@@ -98,6 +98,10 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
       label: stateLabel,
       met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     },
+    {
+      label: `Minimum guard status: ${GUARD_PATHWAY_STATUS_LABELS[minLevel]}`,
+      met: guardMeetsQualificationLevel(guard, minLevel, jobState),
+    },
   ];
 
   if (minLevel === 'active') {
@@ -176,15 +180,32 @@ export function getJobRequiredCredentialLabels(
   return labels;
 }
 
-/** Open jobs visible on a guard's map/list */
-export function guardCanViewJob(
-  guard: SecurityGuard,
-  job: Pick<GuardJobView, 'status' | 'requestType' | 'targetGuardId' | 'state'>
-): boolean {
-  if (!guardCanWorkFieldJobs(guard, job.state ?? 'CA')) return false;
+type GuardJobVisibility = Pick<
+  GuardJobView,
+  | 'status'
+  | 'requestType'
+  | 'targetGuardId'
+  | 'state'
+  | 'minGuardQualification'
+  | 'requiredCertifications'
+  | 'armedRequired'
+>;
+
+/** Open jobs visible on a guard's map/list — marketplace offers require full qualification to apply */
+export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
+  const jobState = job.state ?? 'CA';
+  if (!guardCanWorkFieldJobs(guard, jobState)) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
-  return true;
+  if (job.requestType === 'direct' && job.targetGuardId === guard.id) return true;
+  return checkJobRequirements(guard, job as GuardJobView).canAccept;
+}
+
+/** Whether a guard meets all requirements to apply to an open job offer */
+export function guardCanApplyToJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
+  if (job.status !== 'open') return false;
+  if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
+  return checkJobRequirements(guard, job as GuardJobView).canAccept;
 }
 
 export function sortJobs<T extends GuardJobLike>(jobs: T[], sortBy: JobSortKey): T[] {

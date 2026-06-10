@@ -179,15 +179,16 @@ export function GuardJobDetailContent({
         </p>
       )}
 
-      {onAccept && job.status === 'open' && !hasApplied && (
-        <button
-          type="button"
-          onClick={onAccept}
-          disabled={!canAccept}
-          className="app-button-primary disabled:opacity-40 disabled:cursor-not-allowed"
-        >
+      {onAccept && job.status === 'open' && !hasApplied && canAccept && (
+        <button type="button" onClick={onAccept} className="app-button-primary">
           Apply for this job
         </button>
+      )}
+
+      {onAccept && job.status === 'open' && !hasApplied && !canAccept && (
+        <p className="text-sm text-amber-400/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
+          You must meet all requirements above before you can apply for this offer.
+        </p>
       )}
     </div>
   );
