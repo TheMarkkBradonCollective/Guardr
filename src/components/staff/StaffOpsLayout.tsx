@@ -87,7 +87,7 @@ export function StaffOpsLayout({
     { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
-    { id: 'payments', label: 'Payments', icon: DollarSign, adminOnly: true },
+    { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
     { id: 'profile', label: 'Profile', icon: User },

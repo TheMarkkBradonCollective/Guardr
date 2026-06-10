@@ -1,5 +1,6 @@
-import React from 'react';
-import { Payment, SecurityGuard, SecurityRequest } from '../../types';
+import React, { useMemo } from 'react';
+import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
+import { openGuardPayoutInvoices } from '../../lib/guardPayoutInvoiceStorage';
 import { PIPELINE_FLOW_STEPS } from '../../lib/paymentDisplay';
 import {
   PIPELINE_SECTION_META,
@@ -9,17 +10,20 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
 import { StaffPaymentSummary } from './StaffPaymentSummary';
+import { StaffPayoutInvoiceRow } from './StaffPayoutInvoiceRow';
 
 interface StaffPaymentsPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   payments: Payment[];
+  payoutInvoices?: GuardPayoutInvoice[];
   isDirector: boolean;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
+  onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
 
 function PipelineSection({
@@ -90,14 +94,17 @@ export function StaffPaymentsPanel({
   requests,
   guards,
   payments,
+  payoutInvoices = [],
   isDirector,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
   onDepositCashToStripe,
+  onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
+  const openInvoices = useMemo(() => openGuardPayoutInvoices(payoutInvoices), [payoutInvoices]);
 
   const sectionProps = {
     guards,
@@ -111,6 +118,7 @@ export function StaffPaymentsPanel({
   };
 
   const actionCount =
+    openInvoices.length +
     summary.awaitingGuardPayout.length +
     summary.cashDepositPending.length +
     summary.awaitingClient.length;
@@ -142,6 +150,29 @@ export function StaffPaymentsPanel({
       </div>
 
       <div className="px-4 sm:px-5 space-y-8 pt-6">
+        {openInvoices.length > 0 && (
+          <section className="space-y-3">
+            <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
+            <p className="text-xs text-brand-text-muted leading-relaxed">
+              Guards submit these from Pay when they want cash pickup or a bank transfer. Pay each line item, then mark the invoice completed.
+            </p>
+            <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
+              {openInvoices.map((invoice) => (
+                <StaffPayoutInvoiceRow
+                  key={invoice.id}
+                  invoice={invoice}
+                  requests={requests}
+                  guards={guards}
+                  isDirector={isDirector}
+                  onMarkGuardPaidCash={onMarkGuardPaidCash}
+                  onReleasePayout={onReleasePayout}
+                  onCompleteInvoice={onCompletePayoutInvoice}
+                />
+              ))}
+            </AppItemCardStack>
+          </section>
+        )}
+
         <PipelineSection stage="awaiting-guard-payout" items={summary.awaitingGuardPayout} {...sectionProps} />
         <PipelineSection stage="cash-deposit-pending" items={summary.cashDepositPending} {...sectionProps} />
         <PipelineSection stage="awaiting-client" items={summary.awaitingClient} {...sectionProps} />
@@ -154,7 +185,8 @@ export function StaffPaymentsPanel({
           limit={8}
         />
 
-        {summary.awaitingClient.length === 0 &&
+        {openInvoices.length === 0 &&
+          summary.awaitingClient.length === 0 &&
           summary.cashDepositPending.length === 0 &&
           summary.awaitingGuardPayout.length === 0 &&
           summary.clientPaidActive.length === 0 &&

@@ -6,6 +6,7 @@ import {
   Experience,
   GuardEducation,
   CreateSupportTicketInput,
+  GuardPayoutInvoice,
   SupportTicket,
 } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
@@ -30,7 +31,7 @@ import {
   sortJobs,
 } from '../lib/guardJobs';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
-import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoice';
+import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
@@ -60,6 +61,7 @@ interface GuardDashboardProps {
   onChangeTheme: (mode: string) => void;
   onUpdateProfile: (payload: ProfileSavePayload) => void | Promise<void>;
   supportTickets?: SupportTicket[];
+  guardPayoutInvoices?: GuardPayoutInvoice[];
   relatedRequests?: GuardJobView[];
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
@@ -102,6 +104,7 @@ export function GuardDashboard({
   onChangeTheme,
   onUpdateProfile,
   supportTickets = [],
+  guardPayoutInvoices = [],
   relatedRequests = [],
   onCreateSupportTicket,
   onSendSupportMessage,
@@ -210,12 +213,12 @@ export function GuardDashboard({
   );
 
   const openCashInvoices = useMemo(
-    () => openGuardPayoutInvoices(supportTickets, guard.id, 'cash').length,
-    [supportTickets, guard.id]
+    () => openGuardPayoutInvoices(guardPayoutInvoices, guard.id, 'cash').length,
+    [guardPayoutInvoices, guard.id]
   );
   const openStripeInvoices = useMemo(
-    () => openGuardPayoutInvoices(supportTickets, guard.id, 'stripe').length,
-    [supportTickets, guard.id]
+    () => openGuardPayoutInvoices(guardPayoutInvoices, guard.id, 'stripe').length,
+    [guardPayoutInvoices, guard.id]
   );
 
   useEffect(() => {

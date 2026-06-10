@@ -5,6 +5,7 @@ import {
   CreateSupportTicketInput,
   Experience,
   GuardEducation,
+  GuardPayoutInvoice,
   Payment,
   SecurityGuard,
   SecurityRequest,
@@ -43,6 +44,7 @@ import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
 import { openTicketCount } from '../lib/support';
+import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -57,6 +59,7 @@ interface StaffDashboardProps {
   requests: SecurityRequest[];
   supportTickets?: SupportTicket[];
   payments?: Payment[];
+  guardPayoutInvoices?: GuardPayoutInvoice[];
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
   onApproveRequest: (requestId: string) => Promise<void>;
   onDenyRequest: (requestId: string) => Promise<void>;
@@ -74,6 +77,7 @@ interface StaffDashboardProps {
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
+  onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
   onAddStaffProfile: (
@@ -120,6 +124,7 @@ export function StaffDashboard({
   requests,
   supportTickets = [],
   payments = [],
+  guardPayoutInvoices = [],
   onUpdateGuardUserStatus,
   onApproveRequest,
   onDenyRequest,
@@ -136,6 +141,7 @@ export function StaffDashboard({
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
   onDepositCashToStripe,
+  onCompletePayoutInvoice,
   isDbConnected,
   currentUser,
   onAddStaffProfile,
@@ -194,6 +200,11 @@ export function StaffDashboard({
   const overviewLiveJobs = useMemo(() => buildOverviewLiveJobs(guards, requests), [guards, requests]);
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
 
+  const openPayoutInvoices = useMemo(
+    () => openGuardPayoutInvoices(guardPayoutInvoices).length,
+    [guardPayoutInvoices]
+  );
+
   const badges = useMemo(
     () => ({
       approvals: stats.pendingApprovals,
@@ -201,8 +212,9 @@ export function StaffDashboard({
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
+      payments: openPayoutInvoices,
     }),
-    [stats, requests, incidents, disputes, supportTickets]
+    [stats, requests, incidents, disputes, supportTickets, openPayoutInvoices]
   );
 
   const renderSection = () => {
@@ -316,12 +328,14 @@ export function StaffDashboard({
             requests={requests}
             guards={guards}
             payments={payments}
+            payoutInvoices={guardPayoutInvoices}
             isDirector={currentUser.role === 'director'}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
+            onCompletePayoutInvoice={onCompletePayoutInvoice}
           />
         ) : null;
       case 'disputes':

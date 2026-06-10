@@ -62,7 +62,7 @@ export function GuardEarningsPanel({
 
       <div className="px-5 pb-4">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          When you finish a job, your pay shows up here. Send an invoice to Guardr for each payout — bank transfer or cash pickup.
+          When you finish a job, your pay shows up here. Send an invoice to Payments for each payout — bank transfer or cash pickup.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function GuardEarningsPanel({
               Send to my bank
             </span>
             <span className="text-xs font-normal opacity-80">
-              Sends an invoice to Guardr for a bank transfer
+              Sends an invoice to Payments for a bank transfer
             </span>
           </button>
           <button
@@ -139,7 +139,7 @@ export function GuardEarningsPanel({
               Request cash pickup
             </span>
             <span className="text-xs font-normal opacity-80">
-              Sends an invoice to Guardr for cash pickup
+              Sends an invoice to Payments for cash pickup
             </span>
           </button>
         </div>
@@ -148,13 +148,13 @@ export function GuardEarningsPanel({
           <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 rounded-lg px-3 py-2 leading-relaxed">
             {openCashInvoices > 0 && (
               <span>
-                {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} with Guardr.
+                {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
               </span>
             )}
             {openCashInvoices > 0 && openStripeInvoices > 0 ? ' ' : null}
             {openStripeInvoices > 0 && (
               <span>
-                {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} with Guardr.
+                {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} in Payments.
               </span>
             )}
             {' '}You can send another invoice when more jobs are ready to collect.

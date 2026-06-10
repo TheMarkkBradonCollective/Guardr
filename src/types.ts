@@ -132,6 +132,32 @@ export interface Payment {
   updatedAt?: string;
 }
 
+export type GuardPayoutInvoiceMethod = 'cash' | 'stripe';
+export type GuardPayoutInvoiceStatus = 'open' | 'completed' | 'cancelled';
+
+export interface GuardPayoutInvoiceLine {
+  jobId: string;
+  title: string;
+  clientName: string;
+  amount: number;
+  schedule: string;
+}
+
+/** Guard-submitted payout request — staff processes in Payments */
+export interface GuardPayoutInvoice {
+  id: string;
+  guardId: string;
+  guardName: string;
+  guardEmail: string;
+  method: GuardPayoutInvoiceMethod;
+  lines: GuardPayoutInvoiceLine[];
+  jobIds: string[];
+  total: number;
+  status: GuardPayoutInvoiceStatus;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;

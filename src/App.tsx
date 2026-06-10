@@ -14,6 +14,7 @@ import {
   PaymentStatus,
   Experience,
   GuardEducation,
+  GuardPayoutInvoice,
   SupportTicket,
   CreateSupportTicketInput,
   SupportTicketStatus,
@@ -48,10 +49,13 @@ import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
+import { getGuardPayoutEligibleJobs } from './lib/guardPayoutInvoice';
 import {
-  buildGuardPayoutInvoice,
-  getGuardPayoutEligibleJobs,
-} from './lib/guardPayoutInvoice';
+  createGuardPayoutInvoiceRecord,
+  loadGuardPayoutInvoicesFromStorage,
+  maybeCompletePayoutInvoice,
+  saveGuardPayoutInvoicesToStorage,
+} from './lib/guardPayoutInvoiceStorage';
 import { checkJobRequirements } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
@@ -179,6 +183,9 @@ export default function App() {
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
+  const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
+    loadGuardPayoutInvoicesFromStorage()
+  );
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
 
@@ -280,10 +287,16 @@ export default function App() {
       const { data: dbPayments, error: paymentsErr } = await supabase.from('payments').select('*');
       const { data: dbSupportTickets, error: supportTicketsErr } = await supabase.from('support_tickets').select('*');
       const { data: dbSupportMessages, error: supportMessagesErr } = await supabase.from('support_messages').select('*');
+      const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
+        .from('guard_payout_invoices')
+        .select('*');
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
       if (supportTicketsErr || supportMessagesErr) {
         console.warn('Support tables load (run migration if missing):', supportTicketsErr ?? supportMessagesErr);
+      }
+      if (payoutInvoicesErr) {
+        console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
       }
       if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
@@ -395,6 +408,24 @@ export default function App() {
         createdAt: p.created_at,
         updatedAt: p.updated_at,
       })));
+
+      if (!payoutInvoicesErr && dbPayoutInvoices) {
+        setGuardPayoutInvoices(
+          dbPayoutInvoices.map((row: any) => ({
+            id: row.id,
+            guardId: row.guard_id,
+            guardName: row.guard_name,
+            guardEmail: row.guard_email,
+            method: row.method === 'cash' ? 'cash' : 'stripe',
+            jobIds: row.job_ids || [],
+            lines: row.lines || [],
+            total: Number(row.total),
+            status: row.status,
+            createdAt: row.created_at,
+            resolvedAt: row.resolved_at ?? undefined,
+          }))
+        );
+      }
 
       if (!supportTicketsErr && !supportMessagesErr && dbSupportTickets) {
         setSupportTickets(
@@ -1446,19 +1477,18 @@ export default function App() {
       (p) => p.jobId === requestId && p.status === 'released'
     );
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              paymentStatus: 'released',
-              guardPayoutMethod: 'cash',
-              guardCashPayoutRequested: false,
-              guardCashPayoutRequestedAt: undefined,
-            }
-          : r
-      )
+    const nextRequests = requests.map((r) =>
+      r.id === requestId
+        ? {
+            ...r,
+            paymentStatus: 'released' as const,
+            guardPayoutMethod: 'cash' as const,
+            guardCashPayoutRequested: false,
+            guardCashPayoutRequestedAt: undefined,
+          }
+        : r
     );
+    setRequests(nextRequests);
     setPayments((prev) => {
       if (existingGuardPayment) {
         return prev.map((p) =>
@@ -1504,6 +1534,7 @@ export default function App() {
         });
       }
     }
+    await syncOpenPayoutInvoices(nextRequests);
     alert(`Recorded $${amount} cash payout to guard.`);
   };
 
@@ -1744,6 +1775,85 @@ export default function App() {
     }
   };
 
+  const persistGuardPayoutInvoiceToDb = async (invoice: GuardPayoutInvoice) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('guard_payout_invoices').upsert({
+        id: invoice.id,
+        guard_id: invoice.guardId,
+        guard_name: invoice.guardName,
+        guard_email: invoice.guardEmail,
+        method: invoice.method,
+        job_ids: invoice.jobIds,
+        lines: invoice.lines,
+        total: invoice.total,
+        status: invoice.status,
+        created_at: invoice.createdAt,
+        resolved_at: invoice.resolvedAt ?? null,
+      });
+    } catch (e) {
+      console.warn('Guard payout invoice DB sync:', e);
+    }
+  };
+
+  const appendGuardPayoutInvoice = async (invoice: GuardPayoutInvoice) => {
+    setGuardPayoutInvoices((prev) => {
+      const next = [invoice, ...prev];
+      saveGuardPayoutInvoicesToStorage(next);
+      return next;
+    });
+    await persistGuardPayoutInvoiceToDb(invoice);
+  };
+
+  const syncOpenPayoutInvoices = async (nextRequests: SecurityRequest[]) => {
+    let changed: GuardPayoutInvoice[] = [];
+    setGuardPayoutInvoices((prev) => {
+      const next = prev.map((invoice) => {
+        const updated = maybeCompletePayoutInvoice(invoice, nextRequests);
+        if (updated !== invoice) changed.push(updated);
+        return updated;
+      });
+      if (changed.length > 0) saveGuardPayoutInvoicesToStorage(next);
+      return next;
+    });
+    for (const invoice of changed) {
+      await persistGuardPayoutInvoiceToDb(invoice);
+    }
+  };
+
+  const handleCompletePayoutInvoice = async (invoiceId: string) => {
+    const now = new Date().toISOString();
+    let updated: GuardPayoutInvoice | null = null;
+    setGuardPayoutInvoices((prev) => {
+      const next = prev.map((invoice) => {
+        if (invoice.id !== invoiceId) return invoice;
+        updated = { ...invoice, status: 'completed', resolvedAt: now };
+        return updated;
+      });
+      saveGuardPayoutInvoicesToStorage(next);
+      return next;
+    });
+    if (updated) await persistGuardPayoutInvoiceToDb(updated);
+  };
+
+  const submitGuardPayoutInvoice = async (
+    guard: SecurityGuard,
+    method: 'cash' | 'stripe',
+    eligible: SecurityRequest[]
+  ) => {
+    const draft = createGuardPayoutInvoiceRecord({ guard, method, jobs: eligible });
+    const label = method === 'cash' ? 'cash pickup' : 'bank transfer';
+    if (
+      !window.confirm(
+        `Send a $${draft.total.toFixed(2)} ${label} invoice to Payments for ${eligible.length} completed job(s)?`
+      )
+    ) {
+      return;
+    }
+    await appendGuardPayoutInvoice(draft);
+    alert(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`);
+  };
+
   const handleGuardRequestCashPayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return;
@@ -1752,22 +1862,7 @@ export default function App() {
       alert('No completed jobs are available for a cash payout invoice.');
       return;
     }
-    const invoice = buildGuardPayoutInvoice({ guard, method: 'cash', jobs: eligible });
-    if (
-      !window.confirm(
-        `Send a $${invoice.total.toFixed(2)} cash pickup invoice to Guardr for ${eligible.length} completed job(s)?`
-      )
-    ) {
-      return;
-    }
-    await handleCreateSupportTicket({
-      kind: 'report',
-      subject: invoice.subject,
-      category: 'payment',
-      priority: 'normal',
-      body: invoice.body,
-    });
-    alert('Cash pickup invoice sent to Guardr. Request again anytime you have more unpaid jobs.');
+    await submitGuardPayoutInvoice(guard, 'cash', eligible);
   };
 
   const handleGuardRequestStripePayout = async (guardId: string) => {
@@ -1778,22 +1873,7 @@ export default function App() {
       alert('No earnings are available for a bank payout invoice right now.');
       return;
     }
-    const invoice = buildGuardPayoutInvoice({ guard, method: 'stripe', jobs: eligible });
-    if (
-      !window.confirm(
-        `Send a $${invoice.total.toFixed(2)} bank transfer invoice to Guardr for ${eligible.length} completed job(s)?`
-      )
-    ) {
-      return;
-    }
-    await handleCreateSupportTicket({
-      kind: 'report',
-      subject: invoice.subject,
-      category: 'payment',
-      priority: 'normal',
-      body: invoice.body,
-    });
-    alert('Bank payout invoice sent to Guardr. Request again anytime you have more unpaid jobs.');
+    await submitGuardPayoutInvoice(guard, 'stripe', eligible);
   };
 
   const handleReleasePayout = async (requestId: string, force = false) => {
@@ -1820,11 +1900,10 @@ export default function App() {
         force,
       });
       await handleJobPaymentStatus(requestId, 'released');
-      setRequests((prev) =>
-        prev.map((r) =>
-          r.id === requestId ? { ...r, paymentStatus: 'released', guardPayoutMethod: 'stripe' } : r
-        )
+      const nextRequests = requests.map((r) =>
+        r.id === requestId ? { ...r, paymentStatus: 'released' as const, guardPayoutMethod: 'stripe' as const } : r
       );
+      setRequests(nextRequests);
       if (isDbConnected) {
         await supabase
           .from('security_requests')
@@ -1845,6 +1924,7 @@ export default function App() {
             .eq('id', payment.id);
         }
       }
+      await syncOpenPayoutInvoices(nextRequests);
       alert(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`);
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Payout failed');
@@ -2103,6 +2183,7 @@ export default function App() {
           relatedRequests={guardJobs.filter((r) => r.assignedGuardId === activeGuard.id)}
           onCreateSupportTicket={handleCreateSupportTicket}
           onSendSupportMessage={handleSendSupportMessage}
+          guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
         />
@@ -2185,6 +2266,7 @@ export default function App() {
           requests={requests}
           supportTickets={supportTickets}
           payments={payments}
+          guardPayoutInvoices={guardPayoutInvoices}
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
           onDenyRequest={handleDenyRequest}
@@ -2201,6 +2283,7 @@ export default function App() {
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
           onDepositCashToStripe={handleDepositCashToStripe}
+          onCompletePayoutInvoice={handleCompletePayoutInvoice}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}
