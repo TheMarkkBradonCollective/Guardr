@@ -11,12 +11,15 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
+import { hasSpotChecksForClientReview } from '../../lib/spotChecks';
 import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
+  onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onBack: () => void;
 }
 
@@ -37,7 +40,7 @@ function formatStartedTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onBack }: LiveCoverageScreenProps) {
+export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onConfirmSpotCheck, onBack }: LiveCoverageScreenProps) {
   const liveRequests = requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
   const guardRows = buildGuardRows(liveRequests, guards);
   const feed = buildActivityFeed(liveRequests, guards);
@@ -108,6 +111,20 @@ export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onBac
               <div key={req.id} className="staff-detail-pane">
                 <p className="text-sm font-semibold mb-2">{req.title}</p>
                 <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {onConfirmSpotCheck && liveRequests.some((r) => hasSpotChecksForClientReview(r)) && (
+        <section>
+          <WfSectionHeader title="Spot check review" />
+          <div className="space-y-4">
+            {liveRequests.filter((r) => hasSpotChecksForClientReview(r)).map((req) => (
+              <div key={req.id} className="staff-detail-pane">
+                <p className="text-sm font-semibold mb-2">{req.title}</p>
+                <ClientSpotCheckConfirm request={req} onConfirm={onConfirmSpotCheck} />
               </div>
             ))}
           </div>

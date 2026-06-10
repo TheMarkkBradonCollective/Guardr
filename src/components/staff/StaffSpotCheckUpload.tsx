@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { SecurityRequest } from '../../types';
-import { canStaffUploadSpotCheck, isNoSpotCheckFlagged, sortedSpotChecks } from '../../lib/spotChecks';
+import { canStaffUploadSpotCheck, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { ImagePlus, Loader2, MapPin } from 'lucide-react';
 
@@ -79,6 +79,15 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
                   {check.uploadedBy}
                   <br />
                   {new Date(check.uploadedAt).toLocaleString()}
+                  <br />
+                  {isSpotCheckClientConfirmed(check) ? (
+                    <span className="text-emerald-400/90">
+                      Client confirmed
+                      {check.clientConfirmedAt ? ` · ${new Date(check.clientConfirmedAt).toLocaleString()}` : ''}
+                    </span>
+                  ) : (
+                    <span className="text-amber-400/90">Awaiting client confirmation</span>
+                  )}
                 </p>
               </div>
             ))}

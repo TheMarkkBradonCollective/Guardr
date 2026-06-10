@@ -3,7 +3,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { isNoSpotCheckFlagged, sortedSpotChecks } from '../../lib/spotChecks';
+import { isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
@@ -78,6 +78,20 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                             />
                             <p className="text-[10px] text-brand-text-muted mt-1">
                               {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
+                              {isSpotCheckClientConfirmed(check) ? (
+                                <>
+                                  <br />
+                                  <span className="text-emerald-400/90">
+                                    Client confirmed
+                                    {check.clientConfirmedAt ? ` · ${new Date(check.clientConfirmedAt).toLocaleString()}` : ''}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <br />
+                                  <span className="text-amber-400/90">Awaiting client confirmation</span>
+                                </>
+                              )}
                             </p>
                           </div>
                         ))}

@@ -1,4 +1,4 @@
-import { SecurityRequest } from '../types';
+import { SecurityRequest, StaffSpotCheck } from '../types';
 
 export const NO_SPOT_CHECK_LABEL = 'No Spot Check';
 
@@ -34,4 +34,29 @@ export function sortedSpotChecks(req: Pick<SecurityRequest, 'spotChecks'>) {
   return [...(req.spotChecks ?? [])].sort(
     (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
   );
+}
+
+const CLIENT_REVIEW_STATUSES: SecurityRequest['status'][] = ['in-progress', 'completed'];
+
+export function isSpotCheckClientConfirmed(check: StaffSpotCheck): boolean {
+  return !!check.clientConfirmedAt;
+}
+
+export function hasSpotChecksForClientReview(req: SecurityRequest): boolean {
+  if (!CLIENT_REVIEW_STATUSES.includes(req.status)) return false;
+  return spotCheckApplies(req) || hasSpotChecks(req);
+}
+
+export function getUnconfirmedSpotChecks(req: SecurityRequest): StaffSpotCheck[] {
+  return sortedSpotChecks(req).filter((check) => !isSpotCheckClientConfirmed(check));
+}
+
+export function canClientConfirmSpotCheck(req: SecurityRequest, spotCheckId: string): boolean {
+  if (!CLIENT_REVIEW_STATUSES.includes(req.status)) return false;
+  const check = req.spotChecks?.find((c) => c.id === spotCheckId);
+  return !!check && !isSpotCheckClientConfirmed(check);
+}
+
+export function hasUnconfirmedSpotChecks(req: SecurityRequest): boolean {
+  return getUnconfirmedSpotChecks(req).length > 0;
 }

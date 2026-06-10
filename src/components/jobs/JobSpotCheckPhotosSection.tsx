@@ -1,6 +1,6 @@
 import React from 'react';
 import { SecurityRequest } from '../../types';
-import { hasSpotChecks, isNoSpotCheckFlagged, sortedSpotChecks } from '../../lib/spotChecks';
+import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from './NoSpotCheckBadge';
 import { MapPin } from 'lucide-react';
 
@@ -29,6 +29,13 @@ export function JobSpotCheckPhotosSection({ request }: { request: SecurityReques
               <p className="text-[10px] text-brand-text-muted mt-1">
                 {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
               </p>
+              {isSpotCheckClientConfirmed(check) ? (
+                <p className="text-[10px] text-emerald-400/90 mt-0.5">
+                  Client confirmed {check.clientConfirmedAt ? new Date(check.clientConfirmedAt).toLocaleString() : ''}
+                </p>
+              ) : (
+                <p className="text-[10px] text-amber-400/90 mt-0.5">Awaiting client confirmation</p>
+              )}
             </div>
           ))}
         </div>

@@ -202,6 +202,8 @@ export interface StaffSpotCheck {
   imageUrl: string;
   uploadedAt: string;
   uploadedBy: string;
+  clientConfirmedAt?: string;
+  clientConfirmedBy?: string;
 }
 
 export interface SecurityRequest {

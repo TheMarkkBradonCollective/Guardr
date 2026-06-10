@@ -41,6 +41,7 @@ interface ClientDashboardProps {
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
+  onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
 }
 
 export function ClientDashboard({
@@ -57,6 +58,7 @@ export function ClientDashboard({
   onUpdateStatus,
   onAddReview,
   onConfirmSelfAudit,
+  onConfirmSpotCheck,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -174,6 +176,7 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         onConfirmSelfAudit={onConfirmSelfAudit}
+        onConfirmSpotCheck={onConfirmSpotCheck}
         onBack={() => navigate('home')}
       />
     );
@@ -199,6 +202,7 @@ export function ClientDashboard({
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
         onConfirmSelfAudit={onConfirmSelfAudit}
+        onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

@@ -1,6 +1,6 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
-import { hasSpotChecks, isNoSpotCheckFlagged } from './spotChecks';
+import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
@@ -504,15 +504,23 @@ export function buildPlatformActivityFeed(
         sortKey: new Date(ts).getTime() + 3,
       });
     } else if (hasSpotChecks(req)) {
-      const latest = [...(req.spotChecks ?? [])].sort(
-        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-      )[0];
+      const latest = sortedSpotChecks(req)[0];
       items.push({
         id: `${req.id}-spot-check`,
         timestamp: latest.uploadedAt,
         message: `Staff spot check saved — ${guard?.name ?? 'Guard'} at ${site}`,
         sortKey: new Date(latest.uploadedAt).getTime() + 3,
       });
+      for (const check of sortedSpotChecks(req)) {
+        if (isSpotCheckClientConfirmed(check)) {
+          items.push({
+            id: `${req.id}-spot-check-client-${check.id}`,
+            timestamp: check.clientConfirmedAt!,
+            message: `${req.clientName} confirmed staff spot check — ${site}`,
+            sortKey: new Date(check.clientConfirmedAt!).getTime() + 4,
+          });
+        }
+      }
     }
     if (req.checkOutAudit?.incidentReport?.hasIncident) {
       items.push({

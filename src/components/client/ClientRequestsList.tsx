@@ -29,6 +29,7 @@ import {
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { EditRequestForm } from './EditRequestForm';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
@@ -39,6 +40,7 @@ interface ClientRequestsListProps {
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
+  onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestNew: () => void;
 }
 
@@ -72,6 +74,7 @@ export function ClientRequestsList({
   onUpdateStatus,
   onAddReview,
   onConfirmSelfAudit,
+  onConfirmSpotCheck,
   onRequestNew,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
@@ -298,6 +301,10 @@ export function ClientRequestsList({
 
                 {onConfirmSelfAudit && (
                   <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
+                )}
+
+                {onConfirmSpotCheck && (
+                  <ClientSpotCheckConfirm request={req} onConfirm={onConfirmSpotCheck} />
                 )}
 
                 {req.status === 'in-progress' && hiredGuard && (

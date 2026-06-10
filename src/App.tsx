@@ -26,7 +26,7 @@ import {
   canStaffUploadSelfAuditPhotos,
   selfAuditPhotosComplete,
 } from './lib/selfAuditPhotos';
-import { canStaffUploadSpotCheck } from './lib/spotChecks';
+import { canClientConfirmSpotCheck, canStaffUploadSpotCheck } from './lib/spotChecks';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -2007,6 +2007,42 @@ export default function App() {
     }
   };
 
+  const handleClientConfirmSpotCheck = async (requestId: string, spotCheckId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing) {
+      alert('Job not found.');
+      return;
+    }
+    const ownsJob =
+      existing.clientId === currentUser.id ||
+      existing.clientName === currentUser.clientName ||
+      existing.clientName === currentUser.name;
+    if (!ownsJob) {
+      alert('You can only confirm spot checks on your own jobs.');
+      return;
+    }
+    if (!canClientConfirmSpotCheck(existing, spotCheckId)) {
+      alert('This spot check cannot be confirmed right now.');
+      return;
+    }
+
+    const spotChecks = (existing.spotChecks ?? []).map((check) =>
+      check.id === spotCheckId
+        ? {
+            ...check,
+            clientConfirmedAt: new Date().toISOString(),
+            clientConfirmedBy: currentUser.name,
+          }
+        : check
+    );
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+    }
+  };
+
   const persistGuardPayoutInvoiceToDb = async (invoice: GuardPayoutInvoice) => {
     if (!isDbConnected) return;
     try {
@@ -2478,6 +2514,7 @@ export default function App() {
               onCancelRequest={handleCancelRequest}
               onAddReview={handleAddReview}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
+              onConfirmSpotCheck={handleClientConfirmSpotCheck}
             />
           )}
         </ClientAppLayout>
