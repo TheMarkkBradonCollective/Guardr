@@ -15,6 +15,7 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canEditJobListingDetails,
   canManageClients,
   canManageCompanyOperations,
   canManageGuards,
@@ -106,6 +107,7 @@ interface StaffDashboardProps {
   }) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
+  onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
@@ -152,6 +154,7 @@ export function StaffDashboard({
   onAddClientProfile,
   onStaffCreateJob,
   onStaffAssignGuard,
+  onEditJobListing,
   themeMode,
   onChangeTheme,
   onSignOut,
@@ -189,6 +192,7 @@ export function StaffDashboard({
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
+  const canEditJobListing = canEditJobListingDetails(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
@@ -259,10 +263,12 @@ export function StaffDashboard({
             guards={guards}
             clients={clients}
             canManageJobs={canManageJobs}
+            canEditJobListing={canEditJobListing}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
+            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
             initialSelectedId={selectedJobId}
           />

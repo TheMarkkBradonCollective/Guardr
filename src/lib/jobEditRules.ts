@@ -1,7 +1,25 @@
 import { JobStatus, SecurityRequest } from '../types';
 import { computeDurationHours } from './dates';
 
-const EDITABLE_STATUSES: JobStatus[] = ['pending-review', 'open'];
+const FULL_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open'];
+
+/** Title and location may be updated through in-progress (not after completed/closed). */
+const LISTING_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open', 'accepted', 'in-progress'];
+
+const TITLE_LOCATION_FIELDS = [
+  'title',
+  'siteName',
+  'address',
+  'state',
+  'location',
+  'latitude',
+  'longitude',
+] as const;
+
+export type JobTitleLocationUpdate = Pick<
+  SecurityRequest,
+  'title' | 'siteName' | 'address' | 'state' | 'location' | 'latitude' | 'longitude'
+>;
 
 export function isJobPaid(req: Pick<SecurityRequest, 'paymentStatus'>): boolean {
   return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
@@ -12,9 +30,27 @@ export function canClientPayForJob(req: Pick<SecurityRequest, 'status' | 'paymen
   return req.status === 'open' && !isJobPaid(req);
 }
 
-/** Client may change job details only before payment clears */
+export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {
+  return LISTING_EDIT_STATUSES.includes(req.status);
+}
+
+export function canEditJobSchedule(req: SecurityRequest): boolean {
+  return FULL_EDIT_STATUSES.includes(req.status) && !isJobPaid(req);
+}
+
+/** Schedule is locked once the client has paid — title/location stay editable. */
+export function isJobScheduleLocked(req: SecurityRequest): boolean {
+  return isJobPaid(req);
+}
+
+/** Client may change schedule and billing only before payment clears */
 export function canClientEditRequest(req: SecurityRequest): boolean {
-  return EDITABLE_STATUSES.includes(req.status) && !isJobPaid(req);
+  return canEditJobSchedule(req);
+}
+
+/** Client may update title and location while the job is still active */
+export function canClientEditJobListing(req: SecurityRequest): boolean {
+  return canEditJobTitleAndLocation(req);
 }
 
 export function canClientCancelRequest(req: SecurityRequest): boolean {
@@ -22,11 +58,44 @@ export function canClientCancelRequest(req: SecurityRequest): boolean {
 }
 
 export function jobEditBlockedReason(req: SecurityRequest): string | null {
-  if (isJobPaid(req)) return 'This job was paid — details are locked. Contact staff if something must change.';
-  if (!EDITABLE_STATUSES.includes(req.status)) {
-    return 'Only open unpaid jobs can be edited.';
+  if (!canEditJobTitleAndLocation(req)) {
+    return 'This job cannot be edited in its current status.';
   }
   return null;
+}
+
+export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
+  if (isJobScheduleLocked(req)) {
+    return 'Schedule is locked after payment. Update title and location only, or contact staff.';
+  }
+  if (!FULL_EDIT_STATUSES.includes(req.status)) {
+    return 'Schedule can only be changed on open unpaid jobs.';
+  }
+  return null;
+}
+
+/** Strip schedule/billing fields when payment has cleared. */
+export function sanitizeJobListingUpdates(
+  existing: SecurityRequest,
+  updates: Partial<SecurityRequest>
+): Partial<SecurityRequest> {
+  if (!isJobPaid(existing)) {
+    return updates;
+  }
+
+  const safe: Partial<SecurityRequest> = {};
+  for (const key of TITLE_LOCATION_FIELDS) {
+    if (updates[key] !== undefined) {
+      (safe as Record<string, unknown>)[key] = updates[key];
+    }
+  }
+  return safe;
+}
+
+export function buildLocationLabel(siteName: string | undefined, address: string): string {
+  const site = siteName?.trim();
+  const addr = address.trim();
+  return site ? `${site} — ${addr}` : addr;
 }
 
 export function validateShiftSchedule(

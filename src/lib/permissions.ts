@@ -192,6 +192,11 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
   return hasPermission(user, 'director.manage_company_operations');
 }
 
+/** Director and administrator may edit job title and location any time before completion */
+export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'director' || user.role === 'administrator';
+}
+
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;
