@@ -240,6 +240,8 @@ export function StaffDashboard({
             liveJobs={overviewLiveJobs}
             weeklyTrend={overviewWeeklyTrend}
             onNavigate={navigateSection}
+            onOpenJob={openJob}
+            canUpdateJobs={canEditJobListing || canUploadSelfAuditPhotos}
             staffName={currentUser.name}
           />
         );

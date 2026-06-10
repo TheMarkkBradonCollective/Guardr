@@ -32,6 +32,8 @@ interface StaffOverviewProps {
   liveJobs: OverviewLiveJob[];
   weeklyTrend: number[];
   onNavigate: (section: StaffSection) => void;
+  onOpenJob?: (jobId: string) => void;
+  canUpdateJobs?: boolean;
   staffName: string;
 }
 
@@ -40,6 +42,7 @@ const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> =
   'pending-certs': <ClipboardCheck className="w-4 h-4" />,
   'guard-applications': <UserCheck className="w-4 h-4" />,
   'open-marketplace': <Briefcase className="w-4 h-4" />,
+  'active-guard-jobs': <Briefcase className="w-4 h-4" />,
   incidents: <AlertTriangle className="w-4 h-4" />,
   payments: <Shield className="w-4 h-4" />,
   support: <LifeBuoy className="w-4 h-4" />,
@@ -73,6 +76,8 @@ export function StaffOverview({
   liveJobs,
   weeklyTrend,
   onNavigate,
+  onOpenJob,
+  canUpdateJobs = false,
   staffName,
 }: StaffOverviewProps) {
   const hasWeeklyData = weeklyTrend.some((h) => h > 0);
@@ -125,7 +130,7 @@ export function StaffOverview({
         ) : (
           <AppItemCardStack>
             {actionItems.map((item) => (
-              <AppItemCard key={item.id} onClick={() => onNavigate(item.section)}>
+                <AppItemCard key={item.id} onClick={() => onNavigate(item.section)}>
                 <div className="flex items-start gap-3 w-full text-left">
                   <span
                     className={`staff-overview-action-icon ${
@@ -171,9 +176,12 @@ export function StaffOverview({
             {liveJobs.map((job) => {
               const statusCfg = LIVE_JOB_STATUS_LABEL[job.status];
               return (
-                <AppItemCard key={job.id} onClick={() => onNavigate('jobs')}>
+                <AppItemCard
+                  key={job.id}
+                  onClick={() => (onOpenJob ? onOpenJob(job.id) : onNavigate('jobs'))}
+                >
                   <div className="flex items-start justify-between gap-3 w-full text-left">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold truncate">{job.title}</p>
                         <WfBadge tone={job.status === 'in-progress' ? 'success' : 'primary'}>
@@ -184,6 +192,18 @@ export function StaffOverview({
                         {job.guardName} · {job.clientName}
                       </p>
                       <p className="text-xs text-brand-text-muted mt-0.5 truncate">{job.site}</p>
+                      {canUpdateJobs && onOpenJob && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenJob(job.id);
+                          }}
+                          className="mt-2 app-button-outline !w-auto !h-8 !px-3 !text-xs"
+                        >
+                          Edit / update job
+                        </button>
+                      )}
                     </div>
                     {job.startedAt && (
                       <p className="text-[11px] text-brand-text-muted shrink-0">
