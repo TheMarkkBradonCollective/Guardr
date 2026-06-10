@@ -89,7 +89,17 @@ import {
 } from './lib/appNavigation';
 import type { GuardTab } from './components/GuardDashboard';
 import { type StaffSection } from './lib/staffOps';
-import { canClientEditRequest, validateShiftSchedule } from './lib/jobEditRules';
+import {
+  buildLocationLabel,
+  canClientEditJobListing,
+  canClientEditRequest,
+  canEditJobTitleAndLocation,
+  isJobPaid,
+  jobEditBlockedReason,
+  sanitizeJobListingUpdates,
+  validateShiftSchedule,
+} from './lib/jobEditRules';
+import { canEditJobListingDetails } from './lib/permissions';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -1593,62 +1603,99 @@ export default function App() {
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
   };
 
-  const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
-    const existing = requests.find(r => r.id === requestId);
-    if (!existing || !canClientEditRequest(existing)) {
-      alert(existing ? 'This job is locked after payment.' : 'Job not found.');
-      return;
-    }
-    const startDate = updates.startDate || existing.startDate;
-    const endDate = updates.endDate || existing.endDate;
-    const scheduleError = validateShiftSchedule(startDate, endDate);
-    if (scheduleError) {
-      alert(scheduleError);
-      return;
-    }
-    const durationHours = updates.durationHours ?? computeDurationHours(startDate, endDate);
-    const hourlyRate = updates.hourlyRate ?? existing.hourlyRate;
-    const siteName = updates.siteName ?? existing.siteName ?? '';
-    const address = updates.address ?? existing.address ?? existing.location;
+  const persistJobListingUpdate = async (requestId: string, existing: SecurityRequest, raw: Partial<SecurityRequest>) => {
+    const safe = sanitizeJobListingUpdates(existing, raw);
+    const siteName = safe.siteName ?? existing.siteName ?? '';
+    const address = safe.address ?? existing.address ?? existing.location;
+    const startDate = safe.startDate ?? existing.startDate;
+    const endDate = safe.endDate ?? existing.endDate;
+    const hourlyRate = safe.hourlyRate ?? existing.hourlyRate;
+    const durationHours = safe.durationHours ?? computeDurationHours(startDate, endDate);
+
     const merged: Partial<SecurityRequest> = {
-      ...updates,
+      ...safe,
       startDate,
       endDate,
       durationHours,
       hourlyRate,
-      guardPay: updates.guardPay ?? computeGuardPay(hourlyRate),
-      estimatedPayout: updates.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100,
-      location: siteName ? `${siteName} — ${address}` : address,
-      state: updates.state?.toUpperCase() ?? existing.state,
-      description: updates.description ?? existing.description,
-      status: existing.status === 'open' ? 'open' : 'pending-review',
+      guardPay: safe.guardPay ?? computeGuardPay(hourlyRate),
+      estimatedPayout:
+        safe.estimatedPayout ?? Math.round(durationHours * hourlyRate * (safe.guardsNeeded ?? existing.guardsNeeded ?? 1) * 100) / 100,
+      location: safe.location ?? buildLocationLabel(siteName, address),
+      state: safe.state?.toUpperCase() ?? existing.state,
+      description: safe.description ?? existing.description,
+      status: !isJobPaid(existing) && existing.status === 'open' ? 'open' : existing.status,
     };
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...merged } : r));
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, ...merged } : r)));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({
-        title: merged.title,
-        description: merged.description,
-        site_name: merged.siteName,
-        address: merged.address,
-        state: merged.state,
-        location: merged.location,
-        type: merged.type,
-        armed_required: merged.armedRequired,
-        guards_needed: merged.guardsNeeded,
-        uniform_requirements: merged.uniformRequirements,
-        equipment_requirements: merged.equipmentRequirements,
-        site_instructions: merged.siteInstructions,
-        start_date: merged.startDate,
-        end_date: merged.endDate,
-        duration_hours: merged.durationHours,
-        hourly_rate: merged.hourlyRate,
-        guard_pay: merged.guardPay,
-        estimated_payout: merged.estimatedPayout,
-        required_certifications: merged.requiredCertifications,
-        status: merged.status,
-        ...listingDetailDbColumns(merged),
-      }).eq('id', requestId);
+      await supabase
+        .from('security_requests')
+        .update({
+          title: merged.title,
+          description: merged.description,
+          site_name: merged.siteName,
+          address: merged.address,
+          state: merged.state,
+          location: merged.location,
+          type: merged.type,
+          armed_required: merged.armedRequired,
+          guards_needed: merged.guardsNeeded,
+          uniform_requirements: merged.uniformRequirements,
+          equipment_requirements: merged.equipmentRequirements,
+          site_instructions: merged.siteInstructions,
+          start_date: merged.startDate,
+          end_date: merged.endDate,
+          duration_hours: merged.durationHours,
+          hourly_rate: merged.hourlyRate,
+          guard_pay: merged.guardPay,
+          estimated_payout: merged.estimatedPayout,
+          required_certifications: merged.requiredCertifications,
+          status: merged.status,
+          ...listingDetailDbColumns(merged),
+        })
+        .eq('id', requestId);
     }
+  };
+
+  const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !canClientEditJobListing(existing)) {
+      alert(existing ? jobEditBlockedReason(existing) ?? 'This job cannot be edited.' : 'Job not found.');
+      return;
+    }
+    if (!isJobPaid(existing)) {
+      const startDate = updates.startDate || existing.startDate;
+      const endDate = updates.endDate || existing.endDate;
+      const scheduleError = validateShiftSchedule(startDate, endDate);
+      if (scheduleError) {
+        alert(scheduleError);
+        return;
+      }
+    }
+    await persistJobListingUpdate(requestId, existing, updates);
+  };
+
+  const handleStaffEditJobListing = async (requestId: string, updates: Partial<SecurityRequest>) => {
+    if (!currentUser || !canEditJobListingDetails(currentUser)) {
+      alert('Only directors and administrators can edit job listings.');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !canEditJobTitleAndLocation(existing)) {
+      alert(existing ? 'This job cannot be edited in its current status.' : 'Job not found.');
+      return;
+    }
+    if (!isJobPaid(existing)) {
+      const startDate = updates.startDate || existing.startDate;
+      const endDate = updates.endDate || existing.endDate;
+      const scheduleError = validateShiftSchedule(startDate, endDate);
+      if (scheduleError) {
+        alert(scheduleError);
+        return;
+      }
+    }
+    await persistJobListingUpdate(requestId, existing, updates);
   };
 
   const assignGuardToJob = async (requestId: string, guardId: string) => {
@@ -2443,6 +2490,7 @@ export default function App() {
           onStaffCreateJob={handleStaffCreateJob}
           onStaffAssignGuard={handleStaffAssignGuard}
           onUploadSelfAuditPhotos={handleStaffUploadSelfAuditPhotos}
+          onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}

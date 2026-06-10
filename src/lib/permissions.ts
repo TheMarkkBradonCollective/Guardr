@@ -197,6 +197,11 @@ export function canUploadJobSelfAuditPhotos(user: Pick<SessionUser, 'role'>): bo
   return hasPermission(user, 'moderator.review_reports');
 }
 
+/** Director and administrator may edit job title and location any time before completion */
+export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'director' || user.role === 'administrator';
+}
+
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;

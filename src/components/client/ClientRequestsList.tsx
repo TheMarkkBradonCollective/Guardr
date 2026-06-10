@@ -19,7 +19,13 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import { canClientCancelRequest, canClientEditRequest, canClientPayForJob, isJobPaid } from '../../lib/jobEditRules';
+import {
+  canClientCancelRequest,
+  canClientEditJobListing,
+  canClientEditRequest,
+  canClientPayForJob,
+  isJobScheduleLocked,
+} from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { EditRequestForm } from './EditRequestForm';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
@@ -196,28 +202,29 @@ export function ClientRequestsList({
                   <JobBillingSummaryFromRequest req={req} variant="client" />
                 )}
 
-                {isJobPaid(req) && (
+                {isJobScheduleLocked(req) && editingId !== req.id && (
                   <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
-                    Job locked — paid jobs cannot be edited.
+                    Schedule is locked after payment. You can still update the job title and location.
                   </p>
                 )}
 
-                {editingId === req.id && canClientEditRequest(req) && (
+                {editingId === req.id && canClientEditJobListing(req) && (
                   <EditRequestForm
                     request={req}
+                    scheduleLocked={isJobScheduleLocked(req)}
                     onSave={onEditRequest}
                     onCancel={() => setEditingId(null)}
                   />
                 )}
 
-                {canClientEditRequest(req) && editingId !== req.id && (
+                {canClientEditJobListing(req) && editingId !== req.id && (
                   <div className="flex flex-wrap gap-2 w-full">
                     <button
                       type="button"
                       onClick={() => setEditingId(req.id)}
                       className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                     >
-                      <Pencil className="w-3 h-3 inline" /> Edit
+                      <Pencil className="w-3 h-3 inline" /> {isJobScheduleLocked(req) ? 'Edit title & location' : 'Edit'}
                     </button>
                     {canClientCancelRequest(req) && (
                       <button

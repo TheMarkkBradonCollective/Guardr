@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
@@ -6,12 +6,14 @@ import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApp
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
+import { canEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
+import { EditRequestForm } from '../client/EditRequestForm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
-import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Pencil, UserPlus, X } from 'lucide-react';
 import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
@@ -31,6 +33,8 @@ interface StaffJobsPanelProps {
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
   canUploadSelfAuditPhotos?: boolean;
+  onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
+  canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   initialSelectedId?: string | null;
 }
@@ -70,11 +74,13 @@ function JobDetailPanel({
   req,
   guards,
   canManageJobs,
+  canEditJobListing,
   onApproveRequest,
   onDenyRequest,
   onAssignGuard,
   onUploadSelfAuditPhotos,
   canUploadSelfAuditPhotos,
+  onEditJobListing,
   onApproveGuardApplication,
   onBack,
 }: {
@@ -82,15 +88,22 @@ function JobDetailPanel({
   guards: SecurityGuard[];
   canManageJobs?: boolean;
   canUploadSelfAuditPhotos?: boolean;
+  canEditJobListing?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
+  onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onBack?: () => void;
 }) {
   const [assignGuardId, setAssignGuardId] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [editing, setEditing] = useState(false);
+  useEffect(() => setEditing(false), [req.id]);
+  const scheduleLocked = isJobScheduleLocked(req);
+  const showEdit =
+    canEditJobListing && onEditJobListing && canEditJobTitleAndLocation(req);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const workflowLabel = JOB_STATUS_LABELS[req.status];
@@ -144,12 +157,40 @@ function JobDetailPanel({
         Guard: <strong>{assigned ? assigned.name : 'No guard yet'}</strong>
         {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
       </p>
-      <JobListingProfile
-        job={req}
-        showClientHeader
-        showBadges={false}
-        payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
-      />
+      {!editing && (
+        <JobListingProfile
+          job={req}
+          showClientHeader
+          showBadges={false}
+          payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
+        />
+      )}
+      {editing && <JobBillingSummaryFromRequest req={req} variant="staff" />}
+      {scheduleLocked && !editing && (
+        <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
+          Schedule is locked after payment. Title and location can still be updated.
+        </p>
+      )}
+      {editing && showEdit && (
+        <EditRequestForm
+          request={req}
+          scheduleLocked={scheduleLocked}
+          onSave={async (requestId, updates) => {
+            await onEditJobListing!(requestId, updates);
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      )}
+      {showEdit && !editing && (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+        >
+          <Pencil className="w-3 h-3 inline" /> {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
+        </button>
+      )}
       {rankedApplicants.length > 0 && onApproveGuardApplication && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
@@ -250,6 +291,8 @@ export function StaffJobsPanel({
   onAssignGuard,
   onUploadSelfAuditPhotos,
   canUploadSelfAuditPhotos = false,
+  onEditJobListing,
+  canEditJobListing = false,
   onApproveGuardApplication,
   initialSelectedId = null,
 }: StaffJobsPanelProps) {
@@ -355,10 +398,12 @@ export function StaffJobsPanel({
           guards={guards}
           canManageJobs={canManageJobs}
           canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+          canEditJobListing={canEditJobListing}
           onApproveRequest={onApproveRequest}
           onDenyRequest={onDenyRequest}
           onAssignGuard={onAssignGuard}
           onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
+          onEditJobListing={onEditJobListing}
           onApproveGuardApplication={onApproveGuardApplication}
           onBack={() => setSelectedId(null)}
         />
@@ -375,10 +420,12 @@ export function StaffJobsPanel({
               guards={guards}
               canManageJobs={canManageJobs}
               canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+              canEditJobListing={canEditJobListing}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
               onAssignGuard={onAssignGuard}
               onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
+              onEditJobListing={onEditJobListing}
               onApproveGuardApplication={onApproveGuardApplication}
             />
           )}

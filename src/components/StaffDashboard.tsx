@@ -15,6 +15,7 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canEditJobListingDetails,
   canManageClients,
   canManageCompanyOperations,
   canManageGuards,
@@ -109,6 +110,7 @@ interface StaffDashboardProps {
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
+  onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
@@ -156,6 +158,7 @@ export function StaffDashboard({
   onStaffCreateJob,
   onStaffAssignGuard,
   onUploadSelfAuditPhotos,
+  onEditJobListing,
   themeMode,
   onChangeTheme,
   onSignOut,
@@ -194,6 +197,7 @@ export function StaffDashboard({
   const canManageClientAccounts = canManageClients(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canUploadSelfAuditPhotos = canUploadJobSelfAuditPhotos(currentUser);
+  const canEditJobListing = canEditJobListingDetails(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
@@ -265,11 +269,13 @@ export function StaffDashboard({
             clients={clients}
             canManageJobs={canManageJobs}
             canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+            canEditJobListing={canEditJobListing}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
+            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
             initialSelectedId={selectedJobId}
           />
