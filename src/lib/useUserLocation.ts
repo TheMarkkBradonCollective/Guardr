@@ -5,18 +5,24 @@ export interface GeoPosition {
   lng: number;
 }
 
-/** Request device location once when a map (or other view) mounts. */
-export function useUserLocation(): GeoPosition | null {
+/** Device location for map routing — optional live watch (Uber-style). */
+export function useUserLocation(watch = false): GeoPosition | null {
   const [position, setPosition] = useState<GeoPosition | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setPosition(null),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 }
-    );
-  }, []);
+    const opts: PositionOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 30_000 };
+    const onOk = (pos: GeolocationPosition) =>
+      setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    const onErr = () => setPosition(null);
+
+    if (watch) {
+      const id = navigator.geolocation.watchPosition(onOk, onErr, opts);
+      return () => navigator.geolocation.clearWatch(id);
+    }
+
+    navigator.geolocation.getCurrentPosition(onOk, onErr, opts);
+  }, [watch]);
 
   return position;
 }

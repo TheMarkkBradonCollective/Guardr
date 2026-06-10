@@ -1139,6 +1139,136 @@ html.theme-grey {
   box-shadow: var(--shadow-float);
 }
 
+/* Uber-style map route + offer cards */
+.map-route-banner {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1003;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-float);
+  max-width: min(92vw, 22rem);
+}
+
+.map-selection-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1002;
+  pointer-events: none;
+}
+
+.map-selection-layer > * {
+  pointer-events: auto;
+}
+
+.client-map-offer-offset {
+  bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.map-offer-card {
+  margin: 0 0.75rem 0.75rem;
+  padding: 0.75rem 1rem 1rem;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-nav);
+  color: var(--brand-text);
+}
+
+.map-offer-card-expanded {
+  max-height: min(70dvh, 540px);
+  display: flex;
+  flex-direction: column;
+}
+
+.map-offer-card-handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--brand-border);
+  margin: 0 auto 0.625rem;
+  flex-shrink: 0;
+}
+
+.map-offer-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.map-offer-card-close {
+  padding: 0.25rem;
+  border-radius: 999px;
+  color: var(--brand-text-muted);
+  flex-shrink: 0;
+}
+
+.map-offer-card-close:hover {
+  color: var(--brand-text);
+  background: color-mix(in srgb, var(--brand-border) 40%, transparent);
+}
+
+.map-offer-card-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+}
+
+.map-offer-card-pay {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+}
+
+.map-offer-card-route {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+.map-offer-card-meta {
+  margin-top: 0.5rem;
+}
+
+.map-offer-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-shrink: 0;
+}
+
+body[data-form-factor="mobile"] .guard-map-layout .map-route-banner {
+  top: max(4.25rem, calc(env(safe-area-inset-top) + 3rem));
+}
+
+body[data-form-factor="tablet"] .client-map-layout .map-selection-layer,
+body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
+  bottom: 1rem;
+}
+
+body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
+body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
+  left: 1rem;
+  transform: none;
+  max-width: 18rem;
+}
+
 .guardr-bottom-sheet {
   position: absolute;
   bottom: 0;

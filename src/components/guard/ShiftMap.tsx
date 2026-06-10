@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { jobCoords, METRO_CENTER } from '../../lib/geo';
-import { JOB_TYPE_LABELS } from '../../lib/guardJobs';
 import { useUserLocation } from '../../lib/useUserLocation';
+import { MapRouteLayer } from '../map/MapRouteLayer';
+import { MapRouteSummary } from '../../lib/mapRouting';
 
 function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
   return L.divIcon({
@@ -31,12 +32,15 @@ interface ShiftMapProps {
   selectedJobId: string | null;
   onSelectJob: (jobId: string | null) => void;
   className?: string;
-  /** Guards see their pay rate; staff ops map shows client billing rate */
-  pinMode?: 'guard' | 'staff';
+  pinMode?: 'guard' | 'staff' | 'client';
+  /** Draw driving route from user to selected pin */
+  drawRoute?: boolean;
+  onRouteChange?: (route: MapRouteSummary | null) => void;
+  onRouteLoadingChange?: (loading: boolean) => void;
 }
 
-function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff'): number {
-  if (pinMode === 'staff' && 'hourlyRate' in job) {
+function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff' | 'client'): number {
+  if (pinMode !== 'guard' && 'hourlyRate' in job) {
     return (job as SecurityRequest).hourlyRate;
   }
   return 'guardPay' in job ? job.guardPay : 0;
@@ -48,8 +52,12 @@ export function ShiftMap({
   onSelectJob,
   className = '',
   pinMode = 'guard',
+  drawRoute = true,
+  onRouteChange,
+  onRouteLoadingChange,
 }: ShiftMapProps) {
-  const userLocation = useUserLocation();
+  const userLocation = useUserLocation(true);
+
   const jobPins = useMemo(
     () =>
       jobs.map((job) => ({
@@ -59,14 +67,16 @@ export function ShiftMap({
     [jobs]
   );
 
+  const selectedPin = useMemo(
+    () => jobPins.find((p) => p.job.id === selectedJobId) ?? null,
+    [jobPins, selectedJobId]
+  );
+
   const mapCenter: [number, number] = useMemo(() => {
-    if (selectedJobId) {
-      const pin = jobPins.find((p) => p.job.id === selectedJobId);
-      if (pin) return [pin.coords.lat, pin.coords.lng];
-    }
+    if (selectedPin) return [selectedPin.coords.lat, selectedPin.coords.lng];
     if (userLocation) return [userLocation.lat, userLocation.lng];
     return [METRO_CENTER.lat, METRO_CENTER.lng];
-  }, [selectedJobId, jobPins, userLocation]);
+  }, [selectedPin, userLocation]);
 
   const guardIcon = L.divIcon({
     className: 'guardr-guard-pin',
@@ -74,6 +84,20 @@ export function ShiftMap({
     iconSize: [20, 20],
     iconAnchor: [10, 10],
   });
+
+  const handleRouteChange = (route: MapRouteSummary | null) => {
+    onRouteLoadingChange?.(false);
+    onRouteChange?.(route);
+  };
+
+  useEffect(() => {
+    if (drawRoute && selectedPin && userLocation) {
+      onRouteLoadingChange?.(true);
+    } else {
+      onRouteLoadingChange?.(false);
+      onRouteChange?.(null);
+    }
+  }, [selectedJobId, drawRoute, selectedPin, userLocation, onRouteChange, onRouteLoadingChange]);
 
   return (
     <div className={`guardr-map-root ${className}`}>
@@ -84,7 +108,7 @@ export function ShiftMap({
         className="guardr-map-container"
         attributionControl={false}
       >
-        <MapRecenter center={mapCenter} zoom={selectedJobId ? 14 : 13} />
+        {!selectedPin && <MapRecenter center={mapCenter} zoom={userLocation ? 13 : 12} />}
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
         {userLocation && (
@@ -98,6 +122,15 @@ export function ShiftMap({
           </>
         )}
 
+        {drawRoute && userLocation && selectedPin && (
+          <MapRouteLayer
+            from={userLocation}
+            to={selectedPin.coords}
+            active
+            onRoute={handleRouteChange}
+          />
+        )}
+
         {jobPins.map(({ job, coords }) => (
           <Marker
             key={job.id}
@@ -106,28 +139,11 @@ export function ShiftMap({
             eventHandlers={{
               click: () => onSelectJob(selectedJobId === job.id ? null : job.id),
             }}
-          >
-            <Popup className="guardr-map-popup">
-              <div className="text-xs space-y-1.5 min-w-[200px] max-w-[240px]">
-                <p className="font-bold text-black text-[11px] leading-tight">{job.title}</p>
-                <p className="text-neutral-600 text-[10px]">{JOB_TYPE_LABELS[job.type]}{job.armedRequired ? ' · Armed' : ''}</p>
-                <p className="text-neutral-600 text-[10px]">{job.siteName || job.location}</p>
-                {job.uniformRequirements && (
-                  <p className="text-neutral-500 text-[9px] line-clamp-2">Dress: {job.uniformRequirements}</p>
-                )}
-                <p className="text-brand-primary font-black text-sm">
-                  ${pinHourlyRate(job, pinMode)}/hr
-                  {pinMode === 'staff' && 'estimatedPayout' in job ? (
-                    <span className="block text-[9px] text-neutral-500 font-normal">
-                      Client bill ${(job as SecurityRequest).estimatedPayout}
-                    </span>
-                  ) : null}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
+          />
         ))}
       </MapContainer>
     </div>
   );
 }
+
+export type { ShiftMapJob };

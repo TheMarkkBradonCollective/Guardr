@@ -10,6 +10,8 @@ import {
   SupportTicket,
 } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
+import { MapRouteBanner } from './map/MapRouteBanner';
+import { MapRouteSummary } from '../lib/mapRouting';
 import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
@@ -135,6 +137,8 @@ export function GuardDashboard({
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
+  const [mapRouteLoading, setMapRouteLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -475,11 +479,21 @@ export function GuardDashboard({
         </div>
       )}
 
+      {activeTab === 'map' && selectedJobId && !showShiftOverlay && (
+        <MapRouteBanner
+          route={mapRoute}
+          loading={mapRouteLoading}
+          label="Route to offer"
+        />
+      )}
+
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
           selectedJobId={selectedJobId}
           onSelectJob={setSelectedJobId}
+          onRouteChange={setMapRoute}
+          onRouteLoadingChange={setMapRouteLoading}
         />
       )}
 
@@ -503,7 +517,13 @@ export function GuardDashboard({
           selectedJob={selectedJob}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
-          onSelectJob={(job) => setSelectedJobId(job?.id ?? null)}
+          onSelectJob={(job) => {
+            setSelectedJobId(job?.id ?? null);
+            if (!job) {
+              setMapRoute(null);
+              setMapRouteLoading(false);
+            }
+          }}
           onAcceptJob={handleAcceptJob}
         />
       )}
