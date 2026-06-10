@@ -72,11 +72,12 @@ export function guardPathwayStatusLabel(level: GuardQualificationLevel): string 
   return GUARD_PATHWAY_STATUS_LABELS[level];
 }
 
-/**
- * As of 2024, BSIS requires one combined 8-hour, 2-part course covering
- * Power to Arrest and Appropriate Use of Force.
- */
+/** Combined 8-hour, 2-part course — or upload Power to Arrest and UOF as separate certs. */
 export const BSIS_PTA_UOF_COMBINED_ID = 'bsis-pta-uof-8hr';
+
+/** Shown in upload flows — combined cert or two separate PTA + UOF certificates. */
+export const PTA_UOF_UPLOAD_GUIDANCE =
+  'Upload the combined 8-hour certificate, or Power to Arrest and Appropriate Use of Force as two separate certs.';
 
 /** Mandatory 32-hour BSIS course block (9 courses). */
 export const THIRTY_TWO_HOUR_COURSE_IDS = [
@@ -146,7 +147,7 @@ export function isPtaUofCatalogId(catalogId: string | undefined): boolean {
 }
 
 export function getPtaUofCatalogEntries() {
-  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID]
+  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID, BSIS_WMD_AWARENESS_ID]
     .map((id) => getCertCatalogEntry(id))
     .filter((entry): entry is NonNullable<typeof entry> => !!entry);
 }
@@ -244,7 +245,7 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
   );
 }
 
-/** Combined 8-hr cert, or both parts on file (PTA+UOF legacy, or PTA+WMD modern). */
+/** Combined 8-hr cert, or both parts on file (separate PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
   const hasPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);

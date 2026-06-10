@@ -15,6 +15,7 @@ import {
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
   BSIS_PTA_UOF_COMBINED_ID,
+  PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
@@ -326,8 +327,7 @@ export function GuardCredentialsPanel({
                     Power to Arrest &amp; Appropriate Use of Force
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                    Highly recommended by Guardr. As of 2024, upload the combined 8-hour, 2-part course
-                    certificate — or both legacy separate PTA and UOF certs if you have those.
+                    Highly recommended by Guardr. {PTA_UOF_UPLOAD_GUIDANCE}
                   </p>
                   <p
                     className={`text-xs font-semibold mt-2 ${
@@ -339,7 +339,7 @@ export function GuardCredentialsPanel({
                         ? 'Combined 8-hr certificate on file'
                         : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
                           ? 'PTA & WMD certs on file'
-                          : 'Legacy separate PTA & UOF certs on file'
+                          : 'Separate PTA & UOF certificates on file'
                       : 'Not yet on file'}
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import {
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_STATUS_LABELS,
   GUARDR_RECOMMENDED_TRAINING_LABEL,
+  PTA_UOF_UPLOAD_GUIDANCE,
   guardPathwayStatusLabel,
   THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
@@ -29,12 +30,10 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
   const ptaUofDetail = progress.ptaUofCombined
     ? 'Combined 8-hr certificate on file'
     : progress.legacyPta && progress.legacyUof
-      ? 'Legacy separate PTA & UOF certs on file'
+      ? 'Separate PTA & UOF certificates on file'
       : progress.legacyPta && progress.legacyWmd
-        ? 'PTA & WMD certs on file (2-part course)'
-        : progress.legacyPta || progress.legacyUof || progress.legacyWmd
-          ? 'Upload combined 8-hr cert, or both parts (PTA + UOF, or PTA + WMD)'
-          : undefined;
+        ? 'Separate PTA & WMD certificates on file'
+        : PTA_UOF_UPLOAD_GUIDANCE;
 
   const rows = [
     {

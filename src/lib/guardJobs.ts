@@ -115,7 +115,7 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
 
   checks.push(
     {
-      label: `${requirementLabel('bsis-pta-uof-8hr')} — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
+      label: `8-hour PTA & UOF (combined cert or separate PTA + UOF) — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
       met: guardMeetsPtaUofTraining(guard),
       recommended: true,
     },
