@@ -23,6 +23,7 @@ import {
   canSuspendUsers,
   canStaffManageJobs,
   canUploadJobSelfAuditPhotos,
+  canUploadJobSpotCheck,
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -111,6 +112,7 @@ interface StaffDashboardProps {
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
+  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
@@ -159,6 +161,7 @@ export function StaffDashboard({
   onStaffCreateJob,
   onStaffAssignGuard,
   onUploadSelfAuditPhotos,
+  onUploadSpotCheck,
   onEditJobListing,
   themeMode,
   onChangeTheme,
@@ -198,6 +201,7 @@ export function StaffDashboard({
   const canManageClientAccounts = canManageClients(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canUploadSelfAuditPhotos = canUploadJobSelfAuditPhotos(currentUser);
+  const canUploadSpotCheck = canUploadJobSpotCheck(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
@@ -276,12 +280,14 @@ export function StaffDashboard({
             clients={clients}
             canManageJobs={canManageJobs}
             canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+            canUploadSpotCheck={canUploadSpotCheck}
             canEditJobListing={canEditJobListing}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
+            onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
             initialSelectedId={selectedJobId}

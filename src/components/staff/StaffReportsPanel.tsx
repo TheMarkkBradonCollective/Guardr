@@ -3,6 +3,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
+import { sortedSpotChecks } from '../../lib/spotChecks';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
@@ -12,7 +13,7 @@ interface StaffReportsPanelProps {
 }
 
 export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) {
-  const withAudits = requests.filter((r) => r.checkInAudit || r.checkOutAudit);
+  const withAudits = requests.filter((r) => r.checkInAudit || r.checkOutAudit || (r.spotChecks?.length ?? 0) > 0);
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -52,6 +53,25 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                       </p>
                     )}
                     <SelfAuditPhotoGallery audit={req.checkInAudit} />
+                  </div>
+                )}
+                {(req.spotChecks?.length ?? 0) > 0 && (
+                  <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-2 w-full">
+                    <p className="text-brand-primary text-xs font-semibold">Spot checks</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {sortedSpotChecks(req).map((check) => (
+                        <div key={check.id}>
+                          <img
+                            src={check.imageUrl}
+                            alt="Spot check"
+                            className="w-full h-24 object-cover rounded-lg border border-brand-border"
+                          />
+                          <p className="text-[10px] text-brand-text-muted mt-1">
+                            {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {req.checkOutAudit?.dailyActivityReport && (

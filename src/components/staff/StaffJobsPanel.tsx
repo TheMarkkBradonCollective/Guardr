@@ -21,6 +21,8 @@ import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
 import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
+import { StaffSpotCheckUpload } from './StaffSpotCheckUpload';
+import { canStaffUploadSpotCheck, shouldShowSpotCheckSection } from '../../lib/spotChecks';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
@@ -35,6 +37,8 @@ interface StaffJobsPanelProps {
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
   canUploadSelfAuditPhotos?: boolean;
+  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
+  canUploadSpotCheck?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -83,6 +87,8 @@ function JobDetailPanel({
   onAssignGuard,
   onUploadSelfAuditPhotos,
   canUploadSelfAuditPhotos,
+  onUploadSpotCheck,
+  canUploadSpotCheck,
   onEditJobListing,
   onApproveGuardApplication,
   onBack,
@@ -92,12 +98,14 @@ function JobDetailPanel({
   guards: SecurityGuard[];
   canManageJobs?: boolean;
   canUploadSelfAuditPhotos?: boolean;
+  canUploadSpotCheck?: boolean;
   canEditJobListing?: boolean;
   staffRole?: PlatformRole;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
+  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onBack?: () => void;
@@ -117,6 +125,8 @@ function JobDetailPanel({
     !!canUploadSelfAuditPhotos &&
     !!onUploadSelfAuditPhotos &&
     canStaffUploadSelfAuditPhotos(req, staffRole);
+  const showSpotCheck =
+    !!canUploadSpotCheck && !!onUploadSpotCheck && shouldShowSpotCheckSection(req);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const workflowLabel = JOB_STATUS_LABELS[req.status];
@@ -250,6 +260,9 @@ function JobDetailPanel({
       {auditUploadOpen && canUploadAudit && (
         <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos!} />
       )}
+      {showSpotCheck && (
+        <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck!} />
+      )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
@@ -305,6 +318,8 @@ export function StaffJobsPanel({
   onAssignGuard,
   onUploadSelfAuditPhotos,
   canUploadSelfAuditPhotos = false,
+  onUploadSpotCheck,
+  canUploadSpotCheck = false,
   onEditJobListing,
   canEditJobListing = false,
   onApproveGuardApplication,
@@ -418,6 +433,8 @@ export function StaffJobsPanel({
           onDenyRequest={onDenyRequest}
           onAssignGuard={onAssignGuard}
           onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
+          onUploadSpotCheck={onUploadSpotCheck}
+          canUploadSpotCheck={canUploadSpotCheck}
           onEditJobListing={onEditJobListing}
           onApproveGuardApplication={onApproveGuardApplication}
           onBack={() => setSelectedId(null)}
@@ -441,6 +458,8 @@ export function StaffJobsPanel({
               onDenyRequest={onDenyRequest}
               onAssignGuard={onAssignGuard}
               onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
+              onUploadSpotCheck={onUploadSpotCheck}
+              canUploadSpotCheck={canUploadSpotCheck}
               onEditJobListing={onEditJobListing}
               onApproveGuardApplication={onApproveGuardApplication}
               staffRole={staffRole}

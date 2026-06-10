@@ -197,6 +197,13 @@ export interface SecurityGuard {
   stripeConnectAccountId?: string;
 }
 
+export interface StaffSpotCheck {
+  id: string;
+  imageUrl: string;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
 export interface SecurityRequest {
   id: string;
   title: string;
@@ -286,6 +293,8 @@ export interface SecurityRequest {
     clientConfirmedAt?: string;
     clientConfirmedBy?: string;
   };
+  /** Staff-uploaded presence verification photos for an assigned guard */
+  spotChecks?: StaffSpotCheck[];
   midShiftAudits?: Array<{
     checkedAt: string;
     selfie: string;

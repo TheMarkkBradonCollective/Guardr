@@ -206,6 +206,11 @@ export function canUploadJobSelfAuditPhotos(user: Pick<SessionUser, 'role'>): bo
   return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
 }
 
+/** Staff may upload spot-check photos to confirm guard presence on site */
+export function canUploadJobSpotCheck(user: Pick<SessionUser, 'role'>): boolean {
+  return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
+}
+
 /** Director and administrator may edit job listings (director: any non-closed job) */
 export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
@@ -217,7 +222,8 @@ export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
     hasDirectorStaffOverride(user) ||
     canManageCompanyOperations(user) ||
     canEditJobListingDetails(user) ||
-    canUploadJobSelfAuditPhotos(user)
+    canUploadJobSelfAuditPhotos(user) ||
+    canUploadJobSpotCheck(user)
   );
 }
 

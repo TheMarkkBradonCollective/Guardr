@@ -19,13 +19,14 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, isStaffRole } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
   canStaffUploadSelfAuditPhotos,
   selfAuditPhotosComplete,
 } from './lib/selfAuditPhotos';
+import { canStaffUploadSpotCheck } from './lib/spotChecks';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -417,6 +418,7 @@ export default function App() {
         guardCashPayoutRequested: !!r.guard_cash_payout_requested,
         guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
         checkInAudit: r.check_in_audit ?? undefined,
+        spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
         midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
         checkOutAudit: r.check_out_audit ?? undefined,
       })));
@@ -1939,6 +1941,36 @@ export default function App() {
     }
   };
 
+  const handleStaffUploadSpotCheck = async (requestId: string, imageUrl: string) => {
+    if (!currentUser || !canUploadJobSpotCheck(currentUser)) {
+      alert('Only staff can upload spot checks.');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !canStaffUploadSpotCheck(existing)) {
+      alert(
+        existing?.assignedGuardId
+          ? 'Spot checks can only be added while a guard is assigned to an active or completed job.'
+          : 'Assign a guard before uploading a spot check.'
+      );
+      return;
+    }
+    if (!imageUrl) return;
+
+    const spotCheck = {
+      id: crypto.randomUUID(),
+      imageUrl,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: currentUser.name,
+    };
+    const spotChecks = [...(existing.spotChecks ?? []), spotCheck];
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+    }
+  };
+
   const handleClientConfirmSelfAudit = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
@@ -2493,6 +2525,7 @@ export default function App() {
           onStaffCreateJob={handleStaffCreateJob}
           onStaffAssignGuard={handleStaffAssignGuard}
           onUploadSelfAuditPhotos={handleStaffUploadSelfAuditPhotos}
+          onUploadSpotCheck={handleStaffUploadSpotCheck}
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           themeMode={themeMode}
