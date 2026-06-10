@@ -19,7 +19,9 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, isStaffRole } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, isStaffRole } from './lib/permissions';
+import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
+import { canStaffUploadSelfAuditPhotos } from './lib/selfAuditPhotos';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -1825,6 +1827,56 @@ export default function App() {
     }
   };
 
+  const handleStaffUploadSelfAuditPhotos = async (requestId: string, photos: StaffSelfAuditPhotoPayload) => {
+    if (!currentUser || !canUploadJobSelfAuditPhotos(currentUser)) {
+      alert('Only staff can upload audit photos on behalf of guards.');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || !canStaffUploadSelfAuditPhotos(existing)) {
+      alert(
+        existing?.assignedGuardId
+          ? 'Audit photos can only be added once a guard is picked up and the job is active or completed.'
+          : 'Assign a guard before uploading audit photos.'
+      );
+      return;
+    }
+    if (Object.keys(photos).length === 0) return;
+
+    const baseAudit = existing.checkInAudit ?? {
+      checkedAt: new Date().toISOString(),
+      uniform: {
+        uniformPresent: true,
+        blackShoes: true,
+        dutyBelt: true,
+        nameBadge: true,
+        professionalAppearance: true,
+      },
+      equipment: {
+        radio: true,
+        flashlight: true,
+        requiredEquipment: true,
+      },
+      selfieUpload: '',
+      gpsVerified: false,
+      readyForDuty: existing.status === 'in-progress' || existing.status === 'completed',
+    };
+
+    const checkInAudit = {
+      ...baseAudit,
+      ...(photos.self ? { selfieUpload: photos.self } : {}),
+      ...(photos.uniform ? { uniformPhoto: photos.uniform } : {}),
+      ...(photos.shoes ? { shoesPhoto: photos.shoes } : {}),
+      staffUploadedAt: new Date().toISOString(),
+      staffUploadedBy: currentUser.name,
+    };
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+    }
+  };
+
   const persistGuardPayoutInvoiceToDb = async (invoice: GuardPayoutInvoice) => {
     if (!isDbConnected) return;
     try {
@@ -2341,6 +2393,7 @@ export default function App() {
           onAddClientProfile={handleAddClientProfile}
           onStaffCreateJob={handleStaffCreateJob}
           onStaffAssignGuard={handleStaffAssignGuard}
+          onUploadSelfAuditPhotos={handleStaffUploadSelfAuditPhotos}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}

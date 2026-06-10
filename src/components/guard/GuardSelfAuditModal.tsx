@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
-import { Check, Camera } from 'lucide-react';
+import { Check, Camera, Loader2 } from 'lucide-react';
+import { SELF_AUDIT_PHOTO_LABELS, SelfAuditPhotoKind } from '../../lib/selfAuditPhotos';
 
 interface GuardSelfAuditModalProps {
   onSubmit: (payload: {
     uniform: { uniformPresent: boolean; blackShoes: boolean; dutyBelt: boolean; requiredEquipment: boolean };
     selfieUpload: string;
+    uniformPhoto?: string;
+    shoesPhoto?: string;
   }) => void;
   onClose: () => void;
   onTriggerCamera: () => Promise<string | null>;
 }
 
+const PHOTO_KINDS: SelfAuditPhotoKind[] = ['self', 'uniform', 'shoes'];
+
 export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: GuardSelfAuditModalProps) {
   const [uniform, setUniform] = useState({ uniformPresent: false, blackShoes: false, dutyBelt: false, requiredEquipment: false });
-  const [selfie, setSelfie] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [photos, setPhotos] = useState<Partial<Record<SelfAuditPhotoKind, string>>>({});
+  const [loadingKind, setLoadingKind] = useState<SelfAuditPhotoKind | null>(null);
 
   const labels = {
     uniformPresent: 'Uniform',
@@ -22,16 +27,21 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
     requiredEquipment: 'Required equipment',
   };
 
-  const handleCapture = async () => {
-    setLoading(true);
+  const handleCapture = async (kind: SelfAuditPhotoKind) => {
+    setLoadingKind(kind);
     const url = await onTriggerCamera();
-    if (url) setSelfie(url);
-    setLoading(false);
+    if (url) setPhotos((prev) => ({ ...prev, [kind]: url }));
+    setLoadingKind(null);
   };
 
   const handleSubmit = () => {
-    if (!selfie) return;
-    onSubmit({ uniform, selfieUpload: selfie });
+    if (!photos.self) return;
+    onSubmit({
+      uniform,
+      selfieUpload: photos.self,
+      uniformPhoto: photos.uniform,
+      shoesPhoto: photos.shoes,
+    });
   };
 
   return (
@@ -61,27 +71,40 @@ export function GuardSelfAuditModal({ onSubmit, onClose, onTriggerCamera }: Guar
             ))}
           </div>
 
-          <div>
-            <p className="uber-label mb-2">Take selfie</p>
-            {selfie ? (
-              <img src={selfie} alt="Selfie" className="w-full h-40 object-cover rounded-xl border border-brand-primary/30" />
-            ) : (
-              <button
-                type="button"
-                onClick={handleCapture}
-                disabled={loading}
-                className="w-full h-40 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2 hover:border-brand-primary transition-colors surface-inset"
-              >
-                <Camera className="w-8 h-8 text-brand-text-muted" />
-                <span className="text-sm text-brand-text-muted">{loading ? 'Capturing…' : 'Tap to capture'}</span>
-              </button>
-            )}
+          <div className="space-y-3">
+            {PHOTO_KINDS.map((kind) => (
+              <div key={kind}>
+                <p className="uber-label mb-2">
+                  {SELF_AUDIT_PHOTO_LABELS[kind]}
+                  {kind === 'self' ? ' (required)' : ' (optional)'}
+                </p>
+                {photos[kind] ? (
+                  <img src={photos[kind]} alt={SELF_AUDIT_PHOTO_LABELS[kind]} className="w-full h-32 object-cover rounded-xl border border-brand-primary/30" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void handleCapture(kind)}
+                    disabled={loadingKind !== null}
+                    className="w-full h-32 rounded-2xl border border-dashed border-brand-border flex flex-col items-center justify-center gap-2 hover:border-brand-primary transition-colors surface-inset"
+                  >
+                    {loadingKind === kind ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-brand-text-muted" />
+                    ) : (
+                      <>
+                        <Camera className="w-8 h-8 text-brand-text-muted" />
+                        <span className="text-sm text-brand-text-muted">Tap to capture</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
 
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!selfie}
+            disabled={!photos.self}
             className="app-button-primary disabled:opacity-40"
           >
             Submit and start job

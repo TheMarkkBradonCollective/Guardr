@@ -1,5 +1,6 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
+import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
@@ -31,9 +32,15 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                   <WfBadge tone="primary">{req.status}</WfBadge>
                 </div>
                 {req.checkInAudit && (
-                  <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-1 w-full">
+                  <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-2 w-full">
                     <p className="text-brand-primary text-xs font-semibold">Check-in · {req.checkInAudit.checkedAt}</p>
                     <p>Uniform ✓ · Equipment ✓ · GPS {req.checkInAudit.gpsVerified ? '✓' : '×'}</p>
+                    {req.checkInAudit.staffUploadedBy && (
+                      <p className="text-xs text-brand-text-muted">
+                        Photos uploaded by staff ({req.checkInAudit.staffUploadedBy})
+                      </p>
+                    )}
+                    <SelfAuditPhotoGallery audit={req.checkInAudit} />
                   </div>
                 )}
                 {req.checkOutAudit?.dailyActivityReport && (

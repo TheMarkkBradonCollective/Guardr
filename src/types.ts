@@ -273,8 +273,13 @@ export interface SecurityRequest {
       requiredEquipment: boolean;
     };
     selfieUpload: string;
+    uniformPhoto?: string;
+    shoesPhoto?: string;
     gpsVerified: boolean;
     readyForDuty?: boolean;
+    /** Staff uploaded photos on behalf of the guard */
+    staffUploadedAt?: string;
+    staffUploadedBy?: string;
   };
   midShiftAudits?: Array<{
     checkedAt: string;

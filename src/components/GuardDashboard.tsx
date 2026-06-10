@@ -323,6 +323,8 @@ export function GuardDashboard({
   const handleSelfAuditSubmit = (payload: {
     uniform: { uniformPresent: boolean; blackShoes: boolean; dutyBelt: boolean; requiredEquipment: boolean };
     selfieUpload: string;
+    uniformPhoto?: string;
+    shoesPhoto?: string;
   }) => {
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
@@ -354,6 +356,8 @@ export function GuardDashboard({
           requiredEquipment: payload.uniform.requiredEquipment,
         },
         selfieUpload: payload.selfieUpload,
+        uniformPhoto: payload.uniformPhoto,
+        shoesPhoto: payload.shoesPhoto,
         readyForDuty: !failed,
       },
     });

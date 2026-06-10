@@ -192,6 +192,11 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
   return hasPermission(user, 'director.manage_company_operations');
 }
 
+/** Staff may upload self-audit photos when a guard sent them outside the app */
+export function canUploadJobSelfAuditPhotos(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.review_reports');
+}
+
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;

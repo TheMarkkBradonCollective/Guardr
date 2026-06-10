@@ -12,8 +12,10 @@ import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
+import { canStaffUploadSelfAuditPhotos } from '../../lib/selfAuditPhotos';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
+import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
@@ -26,6 +28,8 @@ interface StaffJobsPanelProps {
   onDenyRequest: (id: string) => void;
   onCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
+  onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
+  canUploadSelfAuditPhotos?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   initialSelectedId?: string | null;
 }
@@ -68,15 +72,19 @@ function JobDetailPanel({
   onApproveRequest,
   onDenyRequest,
   onAssignGuard,
+  onUploadSelfAuditPhotos,
+  canUploadSelfAuditPhotos,
   onApproveGuardApplication,
   onBack,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
   canManageJobs?: boolean;
+  canUploadSelfAuditPhotos?: boolean;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
+  onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onBack?: () => void;
 }) {
@@ -182,6 +190,9 @@ function JobDetailPanel({
           </div>
         </div>
       )}
+      {canUploadSelfAuditPhotos && onUploadSelfAuditPhotos && canStaffUploadSelfAuditPhotos(req) && (
+        <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos} />
+      )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
@@ -235,6 +246,8 @@ export function StaffJobsPanel({
   onDenyRequest,
   onCreateJob,
   onAssignGuard,
+  onUploadSelfAuditPhotos,
+  canUploadSelfAuditPhotos = false,
   onApproveGuardApplication,
   initialSelectedId = null,
 }: StaffJobsPanelProps) {
@@ -339,9 +352,11 @@ export function StaffJobsPanel({
           req={selected}
           guards={guards}
           canManageJobs={canManageJobs}
+          canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
           onApproveRequest={onApproveRequest}
           onDenyRequest={onDenyRequest}
           onAssignGuard={onAssignGuard}
+          onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
           onApproveGuardApplication={onApproveGuardApplication}
           onBack={() => setSelectedId(null)}
         />
@@ -357,9 +372,11 @@ export function StaffJobsPanel({
               req={selected}
               guards={guards}
               canManageJobs={canManageJobs}
+              canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
               onAssignGuard={onAssignGuard}
+              onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
               onApproveGuardApplication={onApproveGuardApplication}
             />
           )}
