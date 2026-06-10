@@ -255,6 +255,8 @@ export function StaffDashboard({
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onApproveGuardApplication={onApproveGuardApplication}
+            canEditJobListing={canEditJobListing}
+            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');

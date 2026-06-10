@@ -13,11 +13,12 @@ import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
-import { ArrowLeft, Loader2, Pencil, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
+import { StaffJobActionsBar } from './StaffJobActionsBar';
 import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
@@ -100,10 +101,16 @@ function JobDetailPanel({
   const [assignGuardId, setAssignGuardId] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [auditUploadOpen, setAuditUploadOpen] = useState(() => isNoSelfAuditFlagged(req));
   useEffect(() => setEditing(false), [req.id]);
+  useEffect(() => {
+    if (isNoSelfAuditFlagged(req)) setAuditUploadOpen(true);
+  }, [req.id, req.checkInAudit?.selfAuditSkipped, req.checkInAudit?.selfieUpload, req.checkInAudit?.uniformPhoto, req.checkInAudit?.shoesPhoto]);
   const scheduleLocked = isJobScheduleLocked(req);
   const showEdit =
     canEditJobListing && onEditJobListing && canEditJobTitleAndLocation(req);
+  const canUploadAudit =
+    !!canUploadSelfAuditPhotos && !!onUploadSelfAuditPhotos && canStaffUploadSelfAuditPhotos(req);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const workflowLabel = JOB_STATUS_LABELS[req.status];
@@ -171,6 +178,15 @@ function JobDetailPanel({
           Schedule is locked after payment. Title and location can still be updated.
         </p>
       )}
+      <StaffJobActionsBar
+        request={req}
+        showEdit={showEdit}
+        editing={editing}
+        onStartEdit={() => setEditing(true)}
+        canUploadAudit={canUploadAudit}
+        auditUploadOpen={auditUploadOpen}
+        onToggleAuditUpload={() => setAuditUploadOpen((open) => !open)}
+      />
       {editing && showEdit && (
         <EditRequestForm
           request={req}
@@ -181,15 +197,6 @@ function JobDetailPanel({
           }}
           onCancel={() => setEditing(false)}
         />
-      )}
-      {showEdit && !editing && (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
-        >
-          <Pencil className="w-3 h-3 inline" /> {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
-        </button>
       )}
       {rankedApplicants.length > 0 && onApproveGuardApplication && (
         <div className="pt-2 border-t border-brand-border space-y-2">
@@ -233,8 +240,8 @@ function JobDetailPanel({
           </div>
         </div>
       )}
-      {canUploadSelfAuditPhotos && onUploadSelfAuditPhotos && canStaffUploadSelfAuditPhotos(req) && (
-        <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos} />
+      {auditUploadOpen && canUploadAudit && (
+        <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos!} />
       )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">

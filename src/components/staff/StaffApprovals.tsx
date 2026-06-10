@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Certification, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
+import { canEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
+import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingJobApprovals } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -9,7 +11,7 @@ import { CertDetailModal } from '../credentials/CertDetailModal';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSectionHeader } from '../ui/wireframe';
-import { Briefcase, Check, Eye, MapPin, Shield, X } from 'lucide-react';
+import { Briefcase, Check, Eye, MapPin, Pencil, Shield, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
@@ -20,6 +22,8 @@ interface StaffApprovalsProps {
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onViewGuard?: (guardId: string) => void;
+  canEditJobListing?: boolean;
+  onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
 }
 
 export function StaffApprovals({
@@ -31,11 +35,14 @@ export function StaffApprovals({
   onRejectCert,
   onApproveGuardApplication,
   onViewGuard,
+  canEditJobListing = false,
+  onEditJobListing,
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const queueEmpty =
     pendingJobs.length === 0 && pendingCerts.length === 0 && jobsWithApplications.length === 0;
 
@@ -61,8 +68,27 @@ export function StaffApprovals({
                 Clients cannot pay until staff approves. Approving moves the offer to open so checkout unlocks.
               </p>
               <div className="space-y-6">
-                {pendingJobs.map((req) => (
+                {pendingJobs.map((req) => {
+                  const showEdit =
+                    canEditJobListing && onEditJobListing && canEditJobTitleAndLocation(req);
+                  const editing = editingJobId === req.id;
+                  const scheduleLocked = isJobScheduleLocked(req);
+                  return (
                   <div key={req.id} className="staff-detail-pane space-y-3 pb-6 border-b border-brand-border last:border-b-0 last:pb-0">
+                    {editing ? (
+                      <>
+                        <JobBillingSummaryFromRequest req={req} variant="staff" />
+                        <EditRequestForm
+                          request={req}
+                          scheduleLocked={scheduleLocked}
+                          onSave={async (requestId, updates) => {
+                            await onEditJobListing!(requestId, updates);
+                            setEditingJobId(null);
+                          }}
+                          onCancel={() => setEditingJobId(null)}
+                        />
+                      </>
+                    ) : (
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
@@ -94,8 +120,19 @@ export function StaffApprovals({
                         </p>
                       )}
                     </div>
-                    <JobBillingSummaryFromRequest req={req} variant="staff" />
+                    )}
+                    {!editing && <JobBillingSummaryFromRequest req={req} variant="staff" />}
+                    {!editing && (
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border w-full">
+                      {showEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingJobId(req.id)}
+                          className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit job listing
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => onDenyRequest(req.id)}
@@ -111,8 +148,10 @@ export function StaffApprovals({
                         <Check className="w-3.5 h-3.5" /> Approve — unlock payment
                       </button>
                     </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
