@@ -24,7 +24,7 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import { canClientCancelRequest, canClientEditRequest, isJobPaid } from '../../lib/jobEditRules';
+import { canClientCancelRequest, canClientEditRequest, canClientPayForJob, isJobPaid } from '../../lib/jobEditRules';
 import { checkJobRequirements } from '../../lib/guardJobs';
 import { toGuardJobView } from '../../lib/guardJobView';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
@@ -231,9 +231,17 @@ export function ClientRequestsList({
                   </div>
                 )}
 
+                {req.status === 'pending-review' && (
+                  <div className="border-t border-brand-border pt-3 w-full">
+                    <p className="text-xs text-amber-400/95 bg-amber-500/10 border border-amber-500/25 px-2.5 py-2 rounded-lg leading-relaxed">
+                      Waiting for staff approval. You can pay and hire a guard after Guardr approves this job offer.
+                    </p>
+                  </div>
+                )}
+
                 {req.status === 'open' && (
                   <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                    {(!req.paymentStatus || req.paymentStatus === 'unpaid') && (
+                    {canClientPayForJob(req) && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3 rounded-lg">
                         <div>
                           <p className="text-sm text-brand-primary font-semibold">Pay to hire a guard</p>

@@ -225,7 +225,10 @@ export function StaffDashboard({
       case 'approvals':
         return (
           <StaffApprovals
+            requests={requests}
             guards={guards}
+            onApproveRequest={onApproveRequest}
+            onDenyRequest={onDenyRequest}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onViewGuard={(guardId) => {

@@ -51,7 +51,10 @@ export interface PlatformStats {
   activeJobs: number;
   onDutyGuards: number;
   activeClients: number;
+  /** Job offers + guard credentials waiting in Approvals */
   pendingApprovals: number;
+  pendingJobApprovals: number;
+  pendingCertApprovals: number;
   completedJobs: number;
 }
 
@@ -135,8 +138,10 @@ export function computePlatformStats(
     (n, g) => n + g.certifications.filter((c) => c.status === 'pending').length,
     0
   );
-  const pendingApprovals = pendingCerts;
-  const pendingReviews = pendingJobReviews + pendingCerts;
+  const pendingJobApprovals = pendingJobReviews;
+  const pendingCertApprovals = pendingCerts;
+  const pendingApprovals = pendingJobApprovals + pendingCertApprovals;
+  const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const paymentsNeedingAction = paymentAttentionSummary(requests).count;
 
@@ -158,6 +163,8 @@ export function computePlatformStats(
     onDutyGuards,
     activeClients,
     pendingApprovals,
+    pendingJobApprovals,
+    pendingCertApprovals,
     completedJobs,
   };
 }
@@ -209,8 +216,17 @@ export function buildOverviewMetricCells(
       value: String(stats.pendingApprovals),
       sub:
         stats.pendingApprovals === 0
-          ? 'All guard credentials reviewed'
-          : `${stats.pendingApprovals} license or cert upload${stats.pendingApprovals === 1 ? '' : 's'} waiting for staff review`,
+          ? 'No job offers or credentials waiting for review'
+          : [
+              stats.pendingJobApprovals > 0
+                ? `${stats.pendingJobApprovals} job offer${stats.pendingJobApprovals === 1 ? '' : 's'}`
+                : null,
+              stats.pendingCertApprovals > 0
+                ? `${stats.pendingCertApprovals} credential${stats.pendingCertApprovals === 1 ? '' : 's'}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ') + ' in Approvals',
       accent: stats.pendingApprovals > 0,
     },
     {
@@ -268,24 +284,23 @@ export function buildOverviewActionQueue(
 ): OverviewActionItem[] {
   const items: OverviewActionItem[] = [];
 
-  const pendingJobs = requests.filter((r) => r.status === 'pending-review').length;
-  if (pendingJobs > 0) {
+  if (stats.pendingJobApprovals > 0) {
     items.push({
       id: 'pending-jobs',
-      title: 'Approve new job offers',
-      description: `${pendingJobs} client job offer${pendingJobs === 1 ? '' : 's'} waiting for go / no-go`,
-      count: pendingJobs,
-      section: 'jobs',
+      title: 'Approve job offers before payment',
+      description: `${stats.pendingJobApprovals} client job offer${stats.pendingJobApprovals === 1 ? '' : 's'} waiting — client cannot pay until approved`,
+      count: stats.pendingJobApprovals,
+      section: 'approvals',
       tone: 'urgent',
     });
   }
 
-  if (stats.pendingApprovals > 0) {
+  if (stats.pendingCertApprovals > 0) {
     items.push({
       id: 'pending-certs',
       title: 'Verify guard credentials',
       description: 'Licenses and certs uploaded — review before guards can work',
-      count: stats.pendingApprovals,
+      count: stats.pendingCertApprovals,
       section: 'approvals',
       tone: 'urgent',
     });
@@ -528,6 +543,12 @@ export function computeAnalytics(
     avgGuardEarnings,
     completedJobs: completed.length,
   };
+}
+
+export function getPendingJobApprovals(requests: SecurityRequest[]): SecurityRequest[] {
+  return [...requests]
+    .filter((r) => r.status === 'pending-review')
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 }
 
 export function getPendingCertifications(guards: SecurityGuard[]) {

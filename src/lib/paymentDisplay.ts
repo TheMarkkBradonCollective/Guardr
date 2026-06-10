@@ -95,6 +95,9 @@ export function clientPaymentStatusHint(
   jobStatus?: SecurityRequest['status']
 ): string | undefined {
   if (!status || status === 'unpaid') {
+    if (jobStatus === 'pending-review') {
+      return 'Staff must approve this job offer before you can pay.';
+    }
     return 'Pay to unlock hiring a guard for this job.';
   }
   if (status === 'paid' && jobStatus === 'open') {

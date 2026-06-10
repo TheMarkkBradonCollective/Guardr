@@ -52,12 +52,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (db) {
       const { data: job } = await db
         .from('security_requests')
-        .select('payment_status')
+        .select('payment_status, status')
         .eq('id', jobId)
         .maybeSingle();
 
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
+      }
+
+      if (job.status !== 'open') {
+        return res.status(400).json({ error: 'This job must be approved by staff before payment' });
       }
 
       if (job.payment_status && job.payment_status !== 'unpaid') {

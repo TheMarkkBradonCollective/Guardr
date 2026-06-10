@@ -7,6 +7,11 @@ export function isJobPaid(req: Pick<SecurityRequest, 'paymentStatus'>): boolean 
   return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
 }
 
+/** Client checkout is only available after staff approves the job offer */
+export function canClientPayForJob(req: Pick<SecurityRequest, 'status' | 'paymentStatus'>): boolean {
+  return req.status === 'open' && !isJobPaid(req);
+}
+
 /** Client may change job details only before payment clears */
 export function canClientEditRequest(req: SecurityRequest): boolean {
   return EDITABLE_STATUSES.includes(req.status) && !isJobPaid(req);
