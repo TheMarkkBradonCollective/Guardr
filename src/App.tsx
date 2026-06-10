@@ -21,7 +21,7 @@ import {
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, isStaffRole } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
-import { canStaffUploadSelfAuditPhotos } from './lib/selfAuditPhotos';
+import { canClientConfirmSelfAudit, canStaffUploadSelfAuditPhotos } from './lib/selfAuditPhotos';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -1877,6 +1877,38 @@ export default function App() {
     }
   };
 
+  const handleClientConfirmSelfAudit = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing) {
+      alert('Job not found.');
+      return;
+    }
+    const ownsJob =
+      existing.clientId === currentUser.id ||
+      existing.clientName === currentUser.clientName ||
+      existing.clientName === currentUser.name;
+    if (!ownsJob) {
+      alert('You can only confirm audits on your own jobs.');
+      return;
+    }
+    if (!canClientConfirmSelfAudit(existing)) {
+      alert(existing.checkInAudit?.clientConfirmedAt ? 'Self-audit photos are already confirmed.' : 'No self-audit photos to confirm yet.');
+      return;
+    }
+
+    const checkInAudit = {
+      ...existing.checkInAudit!,
+      clientConfirmedAt: new Date().toISOString(),
+      clientConfirmedBy: currentUser.name,
+    };
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+    }
+  };
+
   const persistGuardPayoutInvoiceToDb = async (invoice: GuardPayoutInvoice) => {
     if (!isDbConnected) return;
     try {
@@ -2347,6 +2379,7 @@ export default function App() {
               onUpdateStatus={handleUpdateStatus}
               onCancelRequest={handleCancelRequest}
               onAddReview={handleAddReview}
+              onConfirmSelfAudit={handleClientConfirmSelfAudit}
             />
           )}
         </ClientAppLayout>

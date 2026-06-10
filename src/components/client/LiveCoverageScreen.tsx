@@ -10,11 +10,14 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
+import { hasSelfAuditPhotosToReview } from '../../lib/selfAuditPhotos';
 import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onBack: () => void;
 }
 
@@ -35,7 +38,7 @@ function formatStartedTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScreenProps) {
+export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onBack }: LiveCoverageScreenProps) {
   const liveRequests = requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
   const guardRows = buildGuardRows(liveRequests, guards);
   const feed = buildActivityFeed(liveRequests, guards);
@@ -97,6 +100,20 @@ export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScr
           </AppList>
         )}
       </section>
+
+      {onConfirmSelfAudit && liveRequests.some(hasSelfAuditPhotosToReview) && (
+        <section>
+          <WfSectionHeader title="Self-audit review" />
+          <div className="space-y-4">
+            {liveRequests.filter(hasSelfAuditPhotosToReview).map((req) => (
+              <div key={req.id} className="staff-detail-pane">
+                <p className="text-sm font-semibold mb-2">{req.title}</p>
+                <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <WfSectionHeader title="Activity Feed" count={feed.length} />

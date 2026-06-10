@@ -40,6 +40,12 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                         Photos uploaded by staff ({req.checkInAudit.staffUploadedBy})
                       </p>
                     )}
+                    {req.checkInAudit.clientConfirmedAt && (
+                      <p className="text-xs text-emerald-400/90">
+                        Client confirmed {new Date(req.checkInAudit.clientConfirmedAt).toLocaleString()}
+                        {req.checkInAudit.clientConfirmedBy ? ` (${req.checkInAudit.clientConfirmedBy})` : ''}
+                      </p>
+                    )}
                     <SelfAuditPhotoGallery audit={req.checkInAudit} />
                   </div>
                 )}

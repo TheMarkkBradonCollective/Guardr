@@ -40,6 +40,7 @@ interface ClientDashboardProps {
   onCancelRequest: (requestId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
 }
 
 export function ClientDashboard({
@@ -55,6 +56,7 @@ export function ClientDashboard({
   onCancelRequest,
   onUpdateStatus,
   onAddReview,
+  onConfirmSelfAudit,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -171,6 +173,7 @@ export function ClientDashboard({
       <LiveCoverageScreen
         requests={requests}
         guards={guards}
+        onConfirmSelfAudit={onConfirmSelfAudit}
         onBack={() => navigate('home')}
       />
     );
@@ -195,6 +198,7 @@ export function ClientDashboard({
         onEditRequest={onEditRequest}
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
+        onConfirmSelfAudit={onConfirmSelfAudit}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

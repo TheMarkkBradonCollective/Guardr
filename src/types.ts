@@ -280,6 +280,9 @@ export interface SecurityRequest {
     /** Staff uploaded photos on behalf of the guard */
     staffUploadedAt?: string;
     staffUploadedBy?: string;
+    /** Client reviewed and confirmed the self-audit photos */
+    clientConfirmedAt?: string;
+    clientConfirmedBy?: string;
   };
   midShiftAudits?: Array<{
     checkedAt: string;

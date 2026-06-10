@@ -447,6 +447,14 @@ export function buildPlatformActivityFeed(
         sortKey: new Date(req.checkInAudit.checkedAt).getTime() + 1,
       });
     }
+    if (req.checkInAudit?.clientConfirmedAt) {
+      items.push({
+        id: `${req.id}-audit-client`,
+        timestamp: req.checkInAudit.clientConfirmedAt,
+        message: `${req.clientName} confirmed self-audit photos — ${site}`,
+        sortKey: new Date(req.checkInAudit.clientConfirmedAt).getTime() + 2,
+      });
+    }
     if (req.checkOutAudit?.incidentReport?.hasIncident) {
       items.push({
         id: `${req.id}-incident`,

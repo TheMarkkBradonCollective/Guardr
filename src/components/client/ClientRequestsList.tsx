@@ -22,6 +22,7 @@ import {
 import { canClientCancelRequest, canClientEditRequest, canClientPayForJob, isJobPaid } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { EditRequestForm } from './EditRequestForm';
+import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
@@ -31,6 +32,7 @@ interface ClientRequestsListProps {
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
+  onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onRequestNew: () => void;
 }
 
@@ -63,6 +65,7 @@ export function ClientRequestsList({
   onEditRequest,
   onUpdateStatus,
   onAddReview,
+  onConfirmSelfAudit,
   onRequestNew,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
@@ -284,6 +287,10 @@ export function ClientRequestsList({
                   <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary !h-9 !text-xs w-full">
                     <Activity className="w-3.5 h-3.5 inline" /> Start Deployment
                   </button>
+                )}
+
+                {onConfirmSelfAudit && (
+                  <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
                 )}
 
                 {req.status === 'in-progress' && hiredGuard && (

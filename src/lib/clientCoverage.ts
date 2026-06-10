@@ -62,6 +62,7 @@ export function computeCoverageSummary(requests: SecurityRequest[]): CoverageSum
 export function computeSiteStatus(requests: SecurityRequest[]): SiteStatusLevel {
   const live = requests.filter((r) => r.status === 'in-progress');
   if (live.some((r) => r.checkOutAudit?.incidentReport?.hasIncident)) return 'incident';
+  if (live.some((r) => r.checkInAudit?.selfieUpload && !r.checkInAudit?.clientConfirmedAt)) return 'attention';
   if (live.some((r) => !r.checkInAudit?.readyForDuty)) return 'attention';
   return 'secured';
 }
@@ -121,6 +122,15 @@ export function buildActivityFeed(
         label: 'Self audit completed',
         requestId: req.id,
         sortKey: new Date(req.checkInAudit.checkedAt).getTime() + 1,
+      });
+    }
+    if (req.checkInAudit?.clientConfirmedAt) {
+      items.push({
+        id: `${req.id}-audit-confirmed`,
+        timestamp: req.checkInAudit.clientConfirmedAt,
+        label: 'Client confirmed self-audit photos',
+        requestId: req.id,
+        sortKey: new Date(req.checkInAudit.clientConfirmedAt).getTime() + 2,
       });
     }
     if (req.checkOutAudit?.incidentReport?.hasIncident) {

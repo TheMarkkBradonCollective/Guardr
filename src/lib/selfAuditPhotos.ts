@@ -33,3 +33,17 @@ export function missingSelfAuditPhotoKinds(
 ): SelfAuditPhotoKind[] {
   return (['self', 'uniform', 'shoes'] as SelfAuditPhotoKind[]).filter((kind) => !getSelfAuditPhoto(audit, kind));
 }
+
+const CLIENT_CONFIRM_STATUSES: SecurityRequest['status'][] = ['in-progress', 'completed'];
+
+export function isSelfAuditClientConfirmed(audit: SecurityRequest['checkInAudit'] | undefined): boolean {
+  return !!audit?.clientConfirmedAt;
+}
+
+export function hasSelfAuditPhotosToReview(req: SecurityRequest): boolean {
+  return !!req.checkInAudit?.selfieUpload && CLIENT_CONFIRM_STATUSES.includes(req.status);
+}
+
+export function canClientConfirmSelfAudit(req: SecurityRequest): boolean {
+  return hasSelfAuditPhotosToReview(req) && !isSelfAuditClientConfirmed(req.checkInAudit);
+}
