@@ -67,6 +67,7 @@ interface StaffDashboardProps {
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
+  onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
   onApproveGuard: (guardId: string) => void;
   onRejectGuard: (guardId: string) => void;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
@@ -132,6 +133,7 @@ export function StaffDashboard({
   onRejectClient,
   onApproveCert,
   onRejectCert,
+  onApproveGuardApplication,
   onApproveGuard,
   onRejectGuard,
   onUpdateBackgroundChecked,
@@ -243,6 +245,7 @@ export function StaffDashboard({
             onDenyRequest={onDenyRequest}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
+            onApproveGuardApplication={onApproveGuardApplication}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');
@@ -260,6 +263,7 @@ export function StaffDashboard({
             onDenyRequest={onDenyRequest}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
+            onApproveGuardApplication={onApproveGuardApplication}
             initialSelectedId={selectedJobId}
           />
         );

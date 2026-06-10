@@ -3,18 +3,16 @@ import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
   Award,
   Calendar,
   Check,
   CheckCircle2,
-  ChevronRight,
   Clock,
   CreditCard,
   Loader2,
@@ -25,8 +23,6 @@ import {
   X,
 } from 'lucide-react';
 import { canClientCancelRequest, canClientEditRequest, canClientPayForJob, isJobPaid } from '../../lib/jobEditRules';
-import { checkJobRequirements } from '../../lib/guardJobs';
-import { toGuardJobView } from '../../lib/guardJobView';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { EditRequestForm } from './EditRequestForm';
 
@@ -36,7 +32,6 @@ interface ClientRequestsListProps {
   clientEmail: string;
   onCancelRequest: (requestId: string) => void;
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
-  onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onRequestNew: () => void;
@@ -69,7 +64,6 @@ export function ClientRequestsList({
   clientEmail,
   onCancelRequest,
   onEditRequest,
-  onHireGuard,
   onUpdateStatus,
   onAddReview,
   onRequestNew,
@@ -116,7 +110,7 @@ export function ClientRequestsList({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold">Your jobs</h1>
-          <p className="text-sm text-brand-text-muted mt-1">Job offers and direct guard requests — hires and reviews</p>
+          <p className="text-sm text-brand-text-muted mt-1">Job offers and direct guard requests — payments and reviews</p>
         </div>
         <button
           type="button"
@@ -234,7 +228,7 @@ export function ClientRequestsList({
                 {req.status === 'pending-review' && (
                   <div className="border-t border-brand-border pt-3 w-full">
                     <p className="text-xs text-amber-400/95 bg-amber-500/10 border border-amber-500/25 px-2.5 py-2 rounded-lg leading-relaxed">
-                      Waiting for staff approval. You can pay and hire a guard after Guardr approves this job offer.
+                      Waiting for staff approval. You can pay after Guardr approves this job offer; guards apply and staff assigns the best fit.
                     </p>
                   </div>
                 )}
@@ -244,7 +238,7 @@ export function ClientRequestsList({
                     {canClientPayForJob(req) && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-primary/8 border border-brand-primary/25 p-3 rounded-lg">
                         <div>
-                          <p className="text-sm text-brand-primary font-semibold">Pay to hire a guard</p>
+                          <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
                             {clientPaymentStatusHint(req.paymentStatus, req.status)} Total: ${req.estimatedPayout.toFixed(2)}.
                           </p>
@@ -270,33 +264,16 @@ export function ClientRequestsList({
                         {clientPaymentStatusHint(req.paymentStatus, req.status) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status)}` : ''}
                       </p>
                     )}
-                    <p className="uber-label">Hire a guard</p>
-                    {guards.filter((guard) => checkJobRequirements(guard, toGuardJobView(req)).canAccept).length === 0 ? (
-                      <p className="text-sm text-brand-text-muted">
-                        No Active guards meet this job&apos;s requirements right now.
-                      </p>
-                    ) : (
-                      guards
-                        .filter((guard) => checkJobRequirements(guard, toGuardJobView(req)).canAccept)
-                        .map((guard) => (
-                          <WfListCard
-                            key={guard.id}
-                            avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
-                            title={guard.name}
-                            subtitle={`★ ${guard.rating}`}
-                            action={
-                              <button
-                                type="button"
-                                onClick={() => onHireGuard(req.id, guard.id)}
-                                disabled={!req.paymentStatus || req.paymentStatus === 'unpaid'}
-                                className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
-                              >
-                                Hire <ChevronRight className="w-3 h-3 inline" />
-                              </button>
-                            }
-                          />
-                        ))
-                    )}
+                    <p className="text-sm text-brand-text-muted bg-brand-surface border border-brand-border rounded-lg px-3 py-2.5">
+                      {req.applicants.length === 0 ? (
+                        <>Guards can apply to this offer. Guardr staff will review applicants and assign the best fit.</>
+                      ) : (
+                        <>
+                          <span className="font-medium text-brand-text">{req.applicants.length} guard{req.applicants.length === 1 ? '' : 's'} applied.</span>
+                          {' '}Staff will approve the best match for this job.
+                        </>
+                      )}
+                    </p>
                   </div>
                 )}
 

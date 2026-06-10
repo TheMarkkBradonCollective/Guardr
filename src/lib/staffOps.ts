@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
 
@@ -55,6 +56,8 @@ export interface PlatformStats {
   pendingApprovals: number;
   pendingJobApprovals: number;
   pendingCertApprovals: number;
+  pendingGuardApplicationJobs: number;
+  pendingGuardApplications: number;
   completedJobs: number;
 }
 
@@ -140,7 +143,10 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingApprovals = pendingJobApprovals + pendingCertApprovals;
+  const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
+  const pendingGuardApplications = countPendingGuardApplications(requests);
+  const pendingApprovals =
+    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const paymentsNeedingAction = paymentAttentionSummary(requests).count;
@@ -165,6 +171,8 @@ export function computePlatformStats(
     pendingApprovals,
     pendingJobApprovals,
     pendingCertApprovals,
+    pendingGuardApplicationJobs,
+    pendingGuardApplications,
     completedJobs,
   };
 }
@@ -223,6 +231,9 @@ export function buildOverviewMetricCells(
                 : null,
               stats.pendingCertApprovals > 0
                 ? `${stats.pendingCertApprovals} credential${stats.pendingCertApprovals === 1 ? '' : 's'}`
+                : null,
+              stats.pendingGuardApplicationJobs > 0
+                ? `${stats.pendingGuardApplications} guard application${stats.pendingGuardApplications === 1 ? '' : 's'}`
                 : null,
             ]
               .filter(Boolean)
@@ -306,13 +317,26 @@ export function buildOverviewActionQueue(
     });
   }
 
-  const openJobs = requests.filter((r) => r.status === 'open').length;
-  if (openJobs > 0) {
+  if (stats.pendingGuardApplicationJobs > 0) {
+    items.push({
+      id: 'guard-applications',
+      title: 'Approve guard for job offers',
+      description: `${stats.pendingGuardApplications} application${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} open job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
+      count: stats.pendingGuardApplications,
+      section: 'approvals',
+      tone: 'urgent',
+    });
+  }
+
+  const openJobsWithoutApplicants = requests.filter(
+    (r) => r.status === 'open' && !r.assignedGuardId && r.applicants.length === 0
+  ).length;
+  if (openJobsWithoutApplicants > 0) {
     items.push({
       id: 'open-marketplace',
-      title: 'Unassigned job offers on the board',
-      description: 'Open offers waiting for a guard to accept',
-      count: openJobs,
+      title: 'Open job offers waiting for guards',
+      description: 'Posted offers with no guard applications yet',
+      count: openJobsWithoutApplicants,
       section: 'jobs',
       tone: 'normal',
     });

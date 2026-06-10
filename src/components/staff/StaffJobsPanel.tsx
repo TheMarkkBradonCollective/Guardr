@@ -2,13 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
-import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Star, UserPlus, X } from 'lucide-react';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 
@@ -23,6 +25,7 @@ interface StaffJobsPanelProps {
   onDenyRequest: (id: string) => void;
   onCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
+  onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   initialSelectedId?: string | null;
 }
 
@@ -64,6 +67,7 @@ function JobDetailPanel({
   onApproveRequest,
   onDenyRequest,
   onAssignGuard,
+  onApproveGuardApplication,
   onBack,
 }: {
   req: SecurityRequest;
@@ -72,6 +76,7 @@ function JobDetailPanel({
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
+  onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onBack?: () => void;
 }) {
   const [assignGuardId, setAssignGuardId] = useState('');
@@ -90,6 +95,10 @@ function JobDetailPanel({
         .filter((g) => !g.isStaff && (g.userStatus || 'active') === 'active')
         .sort((a, b) => a.name.localeCompare(b.name)),
     [guards]
+  );
+  const rankedApplicants = useMemo(
+    () => (req.status === 'open' && !req.assignedGuardId ? rankApplicantGuards(req, guards) : []),
+    [req, guards]
   );
 
   const handleAssign = async () => {
@@ -131,6 +140,46 @@ function JobDetailPanel({
         <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
       )}
       <JobBillingSummaryFromRequest req={req} variant="staff" />
+      {rankedApplicants.length > 0 && onApproveGuardApplication && (
+        <div className="pt-2 border-t border-brand-border space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+            Guard applications ({rankedApplicants.length})
+          </p>
+          <p className="text-xs text-brand-text-muted">
+            Review applicants and approve the best fit for this job.
+          </p>
+          <div className="space-y-2">
+            {rankedApplicants.map((guard, index) => (
+              <div
+                key={guard.id}
+                className="flex items-center justify-between gap-3 border border-brand-border rounded-lg px-3 py-2"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {guard.name}
+                      {index === 0 ? <span className="text-brand-primary text-xs ml-1.5">Best fit</span> : null}
+                    </p>
+                    <p className="text-xs text-brand-text-muted flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
+                      {guard.rating.toFixed(1)} · {guard.jobsCompleted} jobs
+                      {!guardMeetsJobRequirements(guard, req) ? ' · Missing requirements' : ''}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onApproveGuardApplication(req.id, guard.id)}
+                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+                >
+                  Approve guard
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Assign guard</p>
@@ -184,6 +233,7 @@ export function StaffJobsPanel({
   onDenyRequest,
   onCreateJob,
   onAssignGuard,
+  onApproveGuardApplication,
   initialSelectedId = null,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
@@ -225,7 +275,13 @@ export function StaffJobsPanel({
         meta={
           <div className="flex flex-wrap items-center gap-1.5">
             <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-            <span>{assignedGuard ? `Guard: ${assignedGuard.name}` : 'Unassigned'}</span>
+            <span>
+              {assignedGuard
+                ? `Guard: ${assignedGuard.name}`
+                : req.status === 'open' && req.applicants.length > 0
+                  ? `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`
+                  : 'Unassigned'}
+            </span>
           </div>
         }
         onClick={() => setSelectedId(req.id)}
@@ -283,6 +339,7 @@ export function StaffJobsPanel({
           onApproveRequest={onApproveRequest}
           onDenyRequest={onDenyRequest}
           onAssignGuard={onAssignGuard}
+          onApproveGuardApplication={onApproveGuardApplication}
           onBack={() => setSelectedId(null)}
         />
       ) : splitView ? (
@@ -300,6 +357,7 @@ export function StaffJobsPanel({
               onApproveRequest={onApproveRequest}
               onDenyRequest={onDenyRequest}
               onAssignGuard={onAssignGuard}
+              onApproveGuardApplication={onApproveGuardApplication}
             />
           )}
         </div>

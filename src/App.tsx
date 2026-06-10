@@ -56,6 +56,7 @@ import {
   maybeCompletePayoutInvoice,
   saveGuardPayoutInvoicesToStorage,
 } from './lib/guardPayoutInvoiceStorage';
+import { guardHasApplied } from './lib/jobApplications';
 import { checkJobRequirements } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
@@ -1131,33 +1132,6 @@ export default function App() {
     }
   };
 
-  const handleHireGuard = async (requestId: string, guardId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    const guard = guards.find((g) => g.id === guardId);
-    if (!job || !guard) return;
-    const workBlocked = guardWorkBlockedMessage(guard, job.state);
-    if (workBlocked) {
-      alert(workBlocked);
-      return;
-    }
-    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job));
-    if (!canAccept) {
-      alert(`${guard.name} does not meet the requirements for this job.`);
-      return;
-    }
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...r.applicants, guardId] } : r));
-    if (isDbConnected) await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] }).eq('id', requestId);
-    if (currentUser && job) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        guardId,
-        requestId,
-        location: job.location,
-        body: `You were assigned to ${job.title}`,
-      });
-    }
-  };
-
   const handleStaffCreateJob = async (input: StaffCreateJobInput): Promise<string> => {
     if (!currentUser || !canManageCompanyOperations(currentUser)) {
       throw new Error('Only directors can create jobs for clients.');
@@ -1303,26 +1277,7 @@ export default function App() {
       return;
     }
 
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [guardId] }
-          : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({ status: 'accepted', assigned_guard_id: guardId, applicants: [guardId] })
-        .eq('id', requestId);
-    }
-    void reportPushEvent(currentUser, {
-      type: 'assignment',
-      guardId,
-      requestId,
-      location: job.location,
-      body: `You were assigned to ${job.title}`,
-    });
+    await assignGuardToJob(requestId, guardId);
   };
 
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
@@ -1663,10 +1618,48 @@ export default function App() {
     }
   };
 
-  // ── Guard accept shift ─────────────────────────────────────
-  const handleAcceptJob = async (requestId: string) => {
+  const assignGuardToJob = async (requestId: string, guardId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    const guard = guards.find((g) => g.id === guardId);
+    if (!job || !guard) return;
+    const workBlocked = guardWorkBlockedMessage(guard, job.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job));
+    if (!canAccept) {
+      alert(`${guard.name} does not meet the requirements for this job.`);
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...new Set([...r.applicants, guardId])] }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ status: 'accepted', assigned_guard_id: guardId, applicants: [...new Set([...job.applicants, guardId])] })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        guardId,
+        requestId,
+        location: job.location,
+        body: `You were assigned to ${job.title}`,
+      });
+    }
+  };
+
+  // ── Guard applies to open job offer (staff approves best fit) ──
+  const handleApplyToJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
-      alert('Staff accounts cannot accept field jobs. Sign in with a guard account to work assignments.');
+      alert('Staff accounts cannot apply to field jobs. Sign in with a guard account to work assignments.');
       return;
     }
     const workBlocked = guardWorkBlockedMessage(activeGuard);
@@ -1675,22 +1668,50 @@ export default function App() {
       return;
     }
     const job = requests.find((r) => r.id === requestId);
-    if (job) {
-      if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
-        alert('This assignment was sent to another guard from their profile.');
-        return;
-      }
-      const { checks, canAccept } = checkJobRequirements(activeGuard, job);
-      if (!canAccept) {
-        const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
-        alert(`You do not meet the requirements for this job: ${missing}. Upload the required credentials in your profile.`);
-        return;
-      }
+    if (!job) return;
+    if (job.status !== 'open') {
+      alert('This job is no longer open for applications.');
+      return;
     }
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted', assignedGuardId: activeGuardId, applicants: [...r.applicants, activeGuardId] } : r));
+    if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
+      alert('This assignment was sent to another guard from their profile.');
+      return;
+    }
+    if (guardHasApplied(job, activeGuardId)) {
+      alert('You already applied for this job. Staff will review your application.');
+      return;
+    }
+    const { checks, canAccept } = checkJobRequirements(activeGuard, toGuardJobView(job));
+    if (!canAccept) {
+      const missing = checks.filter((c) => !c.met).map((c) => c.label).join(', ');
+      alert(`You do not meet the requirements for this job: ${missing}. Upload the required credentials in your profile.`);
+      return;
+    }
+    const nextApplicants = [...job.applicants, activeGuardId];
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
+    );
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ status: 'accepted', assigned_guard_id: activeGuardId, applicants: [activeGuardId] }).eq('id', requestId);
+      await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
     }
+    alert('Application submitted. Guardr staff will review applicants and assign the best fit.');
+  };
+
+  const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
+    if (!currentUser || !isStaffRole(currentUser.role)) {
+      alert('Only staff can approve guard applications.');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.status !== 'open') {
+      alert('This job is not open for guard assignment.');
+      return;
+    }
+    if (!job.applicants.includes(guardId)) {
+      alert('This guard has not applied for the job.');
+      return;
+    }
+    await assignGuardToJob(requestId, guardId);
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
@@ -2170,7 +2191,7 @@ export default function App() {
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
-          onAcceptJob={handleAcceptJob}
+          onAcceptJob={handleApplyToJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}
           onUpdateStripeAccount={handleUpdateGuardStripeAccount}
@@ -2242,7 +2263,6 @@ export default function App() {
               onViewChange={setClientView}
               onPostRequest={handlePostRequest}
               onEditRequest={handleEditRequest}
-              onHireGuard={handleHireGuard}
               onUpdateStatus={handleUpdateStatus}
               onCancelRequest={handleCancelRequest}
               onAddReview={handleAddReview}
@@ -2292,6 +2312,7 @@ export default function App() {
           onAddClientProfile={handleAddClientProfile}
           onStaffCreateJob={handleStaffCreateJob}
           onStaffAssignGuard={handleStaffAssignGuard}
+          onApproveGuardApplication={handleStaffApproveGuardApplication}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

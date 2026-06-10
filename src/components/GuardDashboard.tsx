@@ -272,9 +272,7 @@ export function GuardDashboard({
       return;
     }
     onAcceptJob(jobId);
-    updatePhase(jobId, 'upcoming');
     setSelectedJobId(null);
-    if (!isEmbedded) setTab('myJobs');
   };
 
   const handleArrived = () => {

@@ -38,7 +38,6 @@ interface ClientDashboardProps {
   onPostRequest: (req: Partial<SecurityRequest>) => void;
   onEditRequest: (requestId: string, req: Partial<SecurityRequest>) => void;
   onCancelRequest: (requestId: string) => void;
-  onHireGuard: (requestId: string, guardId: string) => void;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
 }
@@ -54,7 +53,6 @@ export function ClientDashboard({
   onPostRequest,
   onEditRequest,
   onCancelRequest,
-  onHireGuard,
   onUpdateStatus,
   onAddReview,
 }: ClientDashboardProps) {
@@ -195,7 +193,6 @@ export function ClientDashboard({
         clientEmail={clientEmail}
         onCancelRequest={onCancelRequest}
         onEditRequest={onEditRequest}
-        onHireGuard={onHireGuard}
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
         onRequestNew={() => {

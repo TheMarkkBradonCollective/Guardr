@@ -13,6 +13,7 @@ import {
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { guardHasApplied } from '../../lib/jobApplications';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { WfBadge } from '../ui/wireframe';
 import { MapPin, Star, Clock, Check, X } from 'lucide-react';
@@ -48,6 +49,7 @@ export function GuardJobDetailContent({
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
   const { checks, canAccept } = checkJobRequirements(guard, job);
+  const hasApplied = guardHasApplied(job, guard.id);
   const isUpcoming = job.status === 'accepted';
   const isDirectRequest = job.requestType === 'direct';
   const requiredCredentialLabels = getJobRequiredCredentialLabels(job);
@@ -156,7 +158,7 @@ export function GuardJobDetailContent({
         <div>
           <p className="text-sm font-medium text-brand-text-muted">Requirements checklist</p>
           <p className="text-xs text-brand-text-muted mt-0.5">
-            Credentials you need on file to accept this job.
+            Credentials you need on file to apply for this job.
           </p>
         </div>
         {checks.map((c) => (
@@ -171,14 +173,20 @@ export function GuardJobDetailContent({
         ))}
       </div>
 
-      {onAccept && job.status === 'open' && (
+      {hasApplied && job.status === 'open' && (
+        <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
+          Application submitted. Guardr staff will review applicants and assign the best fit.
+        </p>
+      )}
+
+      {onAccept && job.status === 'open' && !hasApplied && (
         <button
           type="button"
           onClick={onAccept}
           disabled={!canAccept}
           className="app-button-primary disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Accept assignment
+          Apply for this job
         </button>
       )}
     </div>
