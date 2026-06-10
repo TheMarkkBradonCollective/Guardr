@@ -124,7 +124,7 @@ export function StaffApprovals({
                 count={jobsWithApplications.reduce((n, job) => n + job.applicants.length, 0)}
               />
               <p className="text-xs text-brand-text-muted mt-1 mb-3">
-                Multiple guards can apply to the same open offer. Review applicants and assign the best match.
+                Multiple guards can apply to the same open offer. Review applicants and approve the best match.
               </p>
               <div className="space-y-6">
                 {jobsWithApplications.map((req) => {

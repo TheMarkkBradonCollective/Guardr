@@ -124,7 +124,7 @@ export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
 }
 
 export const LIVE_JOB_STATUS_LABEL: Record<LiveJobStatus, { emoji: string; label: string; className: string }> = {
-  'pending-assignment': { emoji: '🟡', label: 'Pending Assignment', className: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
+  'pending-assignment': { emoji: '🟡', label: 'Awaiting guard', className: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
   active: { emoji: '🟢', label: 'Active', className: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
   'in-progress': { emoji: '🔵', label: 'In Progress', className: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
   completed: { emoji: '⚫', label: 'Completed', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
@@ -402,7 +402,7 @@ export function buildOverviewLiveJobs(
       id: r.id,
       title: r.title,
       site: r.siteName || r.location,
-      guardName: guards.find((g) => g.id === r.assignedGuardId)?.name ?? 'Unassigned',
+      guardName: guards.find((g) => g.id === r.assignedGuardId)?.name ?? 'No guard yet',
       clientName: r.clientName,
       status: getLiveJobStatus(r),
       startedAt: r.checkInAudit?.checkedAt ?? r.startDate,

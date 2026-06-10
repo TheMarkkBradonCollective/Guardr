@@ -1114,7 +1114,7 @@ export default function App() {
         guardId: freshJob.targetGuardId,
         requestId: freshJob.id,
         location: freshJob.location,
-        body: `New direct assignment: ${freshJob.title}`,
+        body: `New direct job request: ${freshJob.title}`,
       });
     }
 
@@ -1163,7 +1163,7 @@ export default function App() {
       if (!guard) throw new Error('Guard not found.');
       const userStatus = guard.userStatus || 'active';
       if (userStatus === 'suspended' || userStatus === 'blocked') {
-        throw new Error(`${guard.name} cannot be assigned — account is ${userStatus}.`);
+        throw new Error(`${guard.name} cannot be approved for this job — account is ${userStatus}.`);
       }
     }
 
@@ -1227,7 +1227,7 @@ export default function App() {
         guardId: assignedGuardId,
         requestId: freshJob.id,
         location: freshJob.location,
-        body: `You were assigned to ${freshJob.title}`,
+        body: `You were approved for ${freshJob.title}`,
       });
     }
 
@@ -1278,23 +1278,23 @@ export default function App() {
 
   const handleStaffAssignGuard = async (requestId: string, guardId: string) => {
     if (!currentUser || !canManageCompanyOperations(currentUser)) {
-      alert('Only directors can assign guards to jobs.');
+      alert('Only directors can select guards for jobs.');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
     if (!job || !guard) return;
     if (job.assignedGuardId) {
-      alert('This job already has a guard assigned.');
+      alert('This job already has an approved guard.');
       return;
     }
     if (!['open', 'pending-review'].includes(job.status)) {
-      alert('Guards can only be assigned to open jobs awaiting a guard.');
+      alert('Guards can only be approved for open jobs awaiting a guard.');
       return;
     }
     const userStatus = guard.userStatus || 'active';
     if (userStatus === 'suspended' || userStatus === 'blocked') {
-      alert(`${guard.name} cannot be assigned — account is ${userStatus}.`);
+      alert(`${guard.name} cannot be approved for this job — account is ${userStatus}.`);
       return;
     }
 
@@ -1312,7 +1312,7 @@ export default function App() {
     const req = requests.find(r => r.id === requestId);
     if (req && status === 'in-progress' && req.assignedGuardId) {
       const assigned = guards.find((g) => g.id === req.assignedGuardId);
-      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Assigned guard not found.';
+      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Approved guard not found.';
       if (workBlocked) {
         alert(workBlocked);
         return;
@@ -1673,7 +1673,7 @@ export default function App() {
         guardId,
         requestId,
         location: job.location,
-        body: `You were assigned to ${job.title}`,
+        body: `You were approved for ${job.title}`,
       });
     }
   };
@@ -1681,7 +1681,7 @@ export default function App() {
   // ── Guard applies to open job offer (staff approves best fit) ──
   const handleApplyToJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
-      alert('Staff accounts cannot apply to field jobs. Sign in with a guard account to work assignments.');
+      alert('Staff accounts cannot apply to field jobs. Sign in with a guard account to work jobs.');
       return;
     }
     const workBlocked = guardWorkBlockedMessage(activeGuard);
@@ -1696,7 +1696,7 @@ export default function App() {
       return;
     }
     if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
-      alert('This assignment was sent to another guard from their profile.');
+      alert('This request was sent to another guard from their profile.');
       return;
     }
     if (guardHasApplied(job, activeGuardId)) {
@@ -1718,7 +1718,7 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
     }
-    alert('Application submitted. Guardr staff will review applicants and assign the best fit.');
+    alert('Application submitted. Guardr staff will review applicants and approve the best fit.');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
@@ -1728,7 +1728,7 @@ export default function App() {
     }
     const job = requests.find((r) => r.id === requestId);
     if (!job || job.status !== 'open') {
-      alert('This job is not open for guard assignment.');
+      alert('This job is not open for guard applications.');
       return;
     }
     if (!job.applicants.includes(guardId)) {
@@ -1924,7 +1924,7 @@ export default function App() {
   const handleReleasePayout = async (requestId: string, force = false) => {
     const req = requests.find(r => r.id === requestId);
     if (!req?.assignedGuardId) {
-      alert('No guard assigned to this job.');
+      alert('No guard approved for this job yet.');
       return;
     }
     if (req.guardPayoutMethod === 'cash') {

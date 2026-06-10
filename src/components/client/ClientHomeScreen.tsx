@@ -172,7 +172,7 @@ export function ClientHomeScreen({
                     {formatShiftTimeRange(req.startDate, req.endDate)}
                   </p>
                   <p className="text-xs text-brand-text pt-2 border-t border-brand-border">
-                    {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} assigned
+                    {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} needed
                   </p>
                 </button>
               ))}

@@ -108,7 +108,7 @@ export function JobPaymentRow({
             <WfBadge tone="default">{JOB_STATUS_LABELS[req.status]}</WfBadge>
           </div>
           <p className="text-sm text-brand-text-muted">
-            {req.clientName} · Guard: {guard?.name || 'Unassigned'}
+            {req.clientName} · Guard: {guard?.name || 'No guard yet'}
           </p>
           <p className="text-sm font-medium mt-2">{summary.headline}</p>
           {summary.detail && (

@@ -68,7 +68,7 @@ export function LiveCoverageScreen({ requests, guards, onBack }: LiveCoverageScr
         <WfSectionHeader title="Active Guards" count={guardRows.length} />
         {guardRows.length === 0 ? (
           <p className="app-empty-state text-sm">
-            No guards currently assigned to active coverage.
+            No guards currently on active coverage.
           </p>
         ) : (
           <AppList>

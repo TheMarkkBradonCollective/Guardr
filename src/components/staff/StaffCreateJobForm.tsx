@@ -162,8 +162,8 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
         assignGuardId
-          ? `Job created for ${clientLabel} and assigned to guard.`
-          : `Job posted for ${clientLabel} — open for guard assignment.`
+          ? `Job created for ${clientLabel} with guard approved.`
+          : `Job posted for ${clientLabel} — open for guard applications.`
       );
       reset();
       if (jobId) onCreated?.(jobId);
@@ -197,7 +197,7 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
         <div>
           <h3 className="text-sm font-semibold">Create job for client</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Post a job on behalf of a client. Optionally assign a guard now — otherwise it goes live as an open offer.
+            Post a job on behalf of a client. Optionally approve a guard now — otherwise it goes live as an open offer.
           </p>
         </div>
         <button
@@ -361,13 +361,13 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
         </div>
 
         <div>
-          <label className="uber-label block mb-1">Assign guard now (optional)</label>
+          <label className="uber-label block mb-1">Approve guard now (optional)</label>
           <select
             value={assignGuardId}
             onChange={(e) => setAssignGuardId(e.target.value)}
             className="uber-input w-full"
           >
-            <option value="">Leave open — guards can accept</option>
+            <option value="">Leave open — guards can apply</option>
             {assignableGuards.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
@@ -413,7 +413,7 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
 
       <div className="flex flex-wrap gap-2">
         <button type="submit" disabled={saving || !!scheduleError} className="app-button-primary !w-auto !h-10 !px-5">
-          {saving ? 'Creating…' : assignGuardId ? 'Create & assign guard' : 'Create open job'}
+          {saving ? 'Creating…' : assignGuardId ? 'Create & approve guard' : 'Create open job'}
         </button>
         <button
           type="button"

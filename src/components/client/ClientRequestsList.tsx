@@ -231,7 +231,7 @@ export function ClientRequestsList({
                 {req.status === 'pending-review' && (
                   <div className="border-t border-brand-border pt-3 w-full">
                     <p className="text-xs text-amber-400/95 leading-relaxed">
-                      Waiting for staff approval. You can pay after Guardr approves this job offer; guards apply and staff assigns the best fit.
+                      Waiting for staff approval. You can pay after Guardr approves this job offer; guards apply and staff approves the best fit.
                     </p>
                   </div>
                 )}
@@ -269,7 +269,7 @@ export function ClientRequestsList({
                     )}
                     <p className="text-sm text-brand-text-muted">
                       {req.applicants.length === 0 ? (
-                        <>Guards can apply to this offer. Guardr staff will review applicants and assign the best fit.</>
+                        <>Guards can apply to this offer. Guardr staff will review applicants and approve the best fit.</>
                       ) : (
                         <>
                           <span className="font-medium text-brand-text">{req.applicants.length} guard{req.applicants.length === 1 ? '' : 's'} applied.</span>

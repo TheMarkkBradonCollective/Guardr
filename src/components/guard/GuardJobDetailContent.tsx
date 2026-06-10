@@ -80,7 +80,7 @@ export function GuardJobDetailContent({
 
             {hasApplied && job.status === 'open' && (
               <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
-                Application submitted. Guardr staff will review applicants and assign the best fit.
+                Application submitted. Guardr staff will review applicants and approve the best fit.
               </p>
             )}
 

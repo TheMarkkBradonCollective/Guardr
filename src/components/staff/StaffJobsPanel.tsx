@@ -131,7 +131,7 @@ function JobDetailPanel({
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
       <p className="text-sm">
-        Assigned: <strong>{assigned ? assigned.name : 'Unassigned'}</strong>
+        Guard: <strong>{assigned ? assigned.name : 'No guard yet'}</strong>
         {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
       </p>
       <JobListingProfile
@@ -184,7 +184,7 @@ function JobDetailPanel({
       )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Assign guard</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
           <div className="flex flex-wrap gap-2">
             <select
               value={assignGuardId}
@@ -205,7 +205,7 @@ function JobDetailPanel({
               className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
             >
               {assigning ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-              Assign guard
+              Select guard
             </button>
           </div>
         </div>
@@ -282,7 +282,7 @@ export function StaffJobsPanel({
                 ? `Guard: ${assignedGuard.name}`
                 : req.status === 'open' && req.applicants.length > 0
                   ? `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`
-                  : 'Unassigned'}
+                  : 'No guard yet'}
             </span>
           </div>
         }

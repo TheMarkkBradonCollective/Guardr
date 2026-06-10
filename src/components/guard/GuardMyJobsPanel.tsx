@@ -37,7 +37,7 @@ export function GuardMyJobsPanel({ upcomingJobs, pastJobs, guard }: GuardMyJobsP
           <h2 className="text-sm font-medium text-brand-text-muted">Upcoming</h2>
         </div>
         {upcomingJobs.length === 0 ? (
-          <p className="text-sm text-brand-text-muted py-4">No upcoming assignments.</p>
+          <p className="text-sm text-brand-text-muted py-4">No upcoming jobs.</p>
         ) : (
           <AppItemCardStack>
             {upcomingJobs.map((job) => (
@@ -68,7 +68,7 @@ export function GuardMyJobsPanel({ upcomingJobs, pastJobs, guard }: GuardMyJobsP
           <h2 className="text-sm font-medium text-brand-text-muted">Past</h2>
         </div>
         {pastJobs.length === 0 ? (
-          <p className="text-sm text-brand-text-muted py-4">No completed assignments yet.</p>
+          <p className="text-sm text-brand-text-muted py-4">No completed jobs yet.</p>
         ) : (
           <AppItemCardStack>
             {pastJobs.map((job) => (

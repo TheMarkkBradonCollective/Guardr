@@ -220,9 +220,9 @@ export function StaffGuardDetailPanel({
           </section>
 
           <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Recent assignments" className="mb-0" />
+            <WfSectionHeader title="Recent jobs" className="mb-0" />
             {guardJobs.length === 0 ? (
-              <p className="text-sm text-brand-text-muted">No assignments on record.</p>
+              <p className="text-sm text-brand-text-muted">No jobs on record.</p>
             ) : (
               <AppItemCardStack>
                 {guardJobs.map((job) => (
