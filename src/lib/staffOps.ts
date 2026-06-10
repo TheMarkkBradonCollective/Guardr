@@ -47,7 +47,8 @@ export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
 export interface PlatformStats {
   platformHealthy: boolean;
   pendingReviews: number;
-  activeIncidents: number;
+  /** Guards assigned to picked-up or in-progress jobs */
+  activeGuards: number;
   /** Jobs where client, guard, or Stripe deposit still needs money action */
   paymentsNeedingAction: number;
   activeJobs: number;
@@ -149,7 +150,12 @@ export function computePlatformStats(
   const pendingApprovals =
     pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs;
   const pendingReviews = pendingApprovals;
-  const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
+  const activeGuardIds = new Set(
+    requests
+      .filter((r) => (r.status === 'accepted' || r.status === 'in-progress') && r.assignedGuardId)
+      .map((r) => r.assignedGuardId as string)
+  );
+  const activeGuards = activeGuardIds.size;
   const paymentsNeedingAction = paymentAttentionSummary(requests).count;
 
   const activeJobs = requests.filter((r) =>
@@ -164,7 +170,7 @@ export function computePlatformStats(
   return {
     platformHealthy: pendingReviews < 20,
     pendingReviews,
-    activeIncidents,
+    activeGuards,
     paymentsNeedingAction,
     activeJobs,
     onDutyGuards,
@@ -260,13 +266,13 @@ export function buildOverviewMetricCells(
       accent: false,
     },
     {
-      label: 'Open incidents',
-      value: String(stats.activeIncidents),
+      label: 'Active guards',
+      value: String(stats.activeGuards),
       sub:
-        stats.activeIncidents === 0
-          ? 'No open incident reports from job checkout'
-          : `${stats.activeIncidents} checkout report${stats.activeIncidents === 1 ? '' : 's'} need follow-up`,
-      accent: stats.activeIncidents > 0,
+        stats.activeGuards === 0
+          ? 'No guards on picked-up or in-progress jobs'
+          : `${stats.activeGuards} guard${stats.activeGuards === 1 ? '' : 's'} on active coverage`,
+      accent: stats.activeGuards > 0,
     },
   ];
 }
