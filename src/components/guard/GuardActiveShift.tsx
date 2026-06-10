@@ -17,6 +17,7 @@ interface GuardActiveShiftProps {
   dutySeconds: number;
   onArrived: () => void;
   onBeginAudit: () => void;
+  onSkipAudit: () => void;
   onIncidentReport: () => void;
   onActivityReport: () => void;
   onEndShift: () => void;
@@ -42,6 +43,7 @@ export function GuardActiveShift({
   dutySeconds,
   onArrived,
   onBeginAudit,
+  onSkipAudit,
   onIncidentReport,
   onActivityReport,
   onEndShift,
@@ -136,14 +138,27 @@ export function GuardActiveShift({
         )}
 
         {phase === 'arrived' && (
-          <button
-            type="button"
-            onClick={onBeginAudit}
-            disabled={!clockInOpen}
-            className="app-button-primary disabled:opacity-40"
-          >
-            Begin self audit · clock in
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={onBeginAudit}
+              disabled={!clockInOpen}
+              className="app-button-primary disabled:opacity-40"
+            >
+              Begin self audit · clock in
+            </button>
+            <button
+              type="button"
+              onClick={onSkipAudit}
+              disabled={!clockInOpen}
+              className="app-button-outline disabled:opacity-40 text-amber-400/95 border-amber-500/40"
+            >
+              Skip self audit · clock in
+            </button>
+            <p className="text-xs text-brand-text-muted text-center">
+              Skipping flags this job as No Self Audit until staff add photos after the job.
+            </p>
+          </div>
         )}
 
         {phase === 'upcoming' && clockInOpen && (

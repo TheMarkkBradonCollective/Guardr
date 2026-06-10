@@ -8,7 +8,10 @@ export const SELF_AUDIT_PHOTO_LABELS: Record<SelfAuditPhotoKind, string> = {
   shoes: 'Shoes',
 };
 
+export const NO_SELF_AUDIT_LABEL = 'No Self Audit';
+
 const ACTIVE_JOB_STATUSES: SecurityRequest['status'][] = ['accepted', 'in-progress', 'completed'];
+const CLIENT_CONFIRM_STATUSES: SecurityRequest['status'][] = ['in-progress', 'completed'];
 
 export function getSelfAuditPhoto(
   audit: SecurityRequest['checkInAudit'] | undefined,
@@ -24,8 +27,8 @@ export function selfAuditPhotosComplete(audit: SecurityRequest['checkInAudit'] |
   return (['self', 'uniform', 'shoes'] as SelfAuditPhotoKind[]).every((kind) => !!getSelfAuditPhoto(audit, kind));
 }
 
-export function canStaffUploadSelfAuditPhotos(req: SecurityRequest): boolean {
-  return !!req.assignedGuardId && ACTIVE_JOB_STATUSES.includes(req.status);
+export function isNoSelfAuditFlagged(req: SecurityRequest): boolean {
+  return !!req.checkInAudit?.selfAuditSkipped && !selfAuditPhotosComplete(req.checkInAudit);
 }
 
 export function missingSelfAuditPhotoKinds(
@@ -34,14 +37,19 @@ export function missingSelfAuditPhotoKinds(
   return (['self', 'uniform', 'shoes'] as SelfAuditPhotoKind[]).filter((kind) => !getSelfAuditPhoto(audit, kind));
 }
 
-const CLIENT_CONFIRM_STATUSES: SecurityRequest['status'][] = ['in-progress', 'completed'];
+/** Staff may upload during active jobs when photos are missing; after completion, only to clear No Self Audit */
+export function canStaffUploadSelfAuditPhotos(req: SecurityRequest): boolean {
+  if (!req.assignedGuardId || !ACTIVE_JOB_STATUSES.includes(req.status)) return false;
+  if (req.status === 'completed') return isNoSelfAuditFlagged(req);
+  return isNoSelfAuditFlagged(req) || !selfAuditPhotosComplete(req.checkInAudit);
+}
 
 export function isSelfAuditClientConfirmed(audit: SecurityRequest['checkInAudit'] | undefined): boolean {
   return !!audit?.clientConfirmedAt;
 }
 
 export function hasSelfAuditPhotosToReview(req: SecurityRequest): boolean {
-  return !!req.checkInAudit?.selfieUpload && CLIENT_CONFIRM_STATUSES.includes(req.status);
+  return selfAuditPhotosComplete(req.checkInAudit) && CLIENT_CONFIRM_STATUSES.includes(req.status);
 }
 
 export function canClientConfirmSelfAudit(req: SecurityRequest): boolean {

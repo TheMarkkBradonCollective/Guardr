@@ -21,7 +21,11 @@ import {
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, isStaffRole } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
-import { canClientConfirmSelfAudit, canStaffUploadSelfAuditPhotos } from './lib/selfAuditPhotos';
+import {
+  canClientConfirmSelfAudit,
+  canStaffUploadSelfAuditPhotos,
+  selfAuditPhotosComplete,
+} from './lib/selfAuditPhotos';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -1835,9 +1839,11 @@ export default function App() {
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canStaffUploadSelfAuditPhotos(existing)) {
       alert(
-        existing?.assignedGuardId
-          ? 'Audit photos can only be added once a guard is picked up and the job is active or completed.'
-          : 'Assign a guard before uploading audit photos.'
+        existing?.status === 'completed'
+          ? 'Completed jobs only accept staff audit photos when flagged No Self Audit.'
+          : existing?.assignedGuardId
+            ? 'Audit photos cannot be added for this job right now.'
+            : 'Assign a guard before uploading audit photos.'
       );
       return;
     }
@@ -1859,7 +1865,8 @@ export default function App() {
       },
       selfieUpload: '',
       gpsVerified: false,
-      readyForDuty: existing.status === 'in-progress' || existing.status === 'completed',
+      selfAuditSkipped: true,
+      readyForDuty: false,
     };
 
     const checkInAudit = {
@@ -1870,6 +1877,11 @@ export default function App() {
       staffUploadedAt: new Date().toISOString(),
       staffUploadedBy: currentUser.name,
     };
+
+    if (selfAuditPhotosComplete(checkInAudit)) {
+      checkInAudit.selfAuditSkipped = false;
+      checkInAudit.readyForDuty = true;
+    }
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
     if (isDbConnected) {
@@ -1893,7 +1905,11 @@ export default function App() {
       return;
     }
     if (!canClientConfirmSelfAudit(existing)) {
-      alert(existing.checkInAudit?.clientConfirmedAt ? 'Self-audit photos are already confirmed.' : 'No self-audit photos to confirm yet.');
+      alert(
+        existing.checkInAudit?.clientConfirmedAt
+          ? 'Self-audit photos are already confirmed.'
+          : 'All three self-audit photos must be on file before you can confirm.'
+      );
       return;
     }
 

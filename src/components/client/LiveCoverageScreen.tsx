@@ -11,7 +11,6 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
-import { hasSelfAuditPhotosToReview } from '../../lib/selfAuditPhotos';
 import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
@@ -101,11 +100,11 @@ export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onBac
         )}
       </section>
 
-      {onConfirmSelfAudit && liveRequests.some(hasSelfAuditPhotosToReview) && (
+      {onConfirmSelfAudit && liveRequests.some((r) => r.checkInAudit) && (
         <section>
           <WfSectionHeader title="Self-audit review" />
           <div className="space-y-4">
-            {liveRequests.filter(hasSelfAuditPhotosToReview).map((req) => (
+            {liveRequests.filter((r) => r.checkInAudit).map((req) => (
               <div key={req.id} className="staff-detail-pane">
                 <p className="text-sm font-semibold mb-2">{req.title}</p>
                 <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />

@@ -1,6 +1,8 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
+import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
+import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
@@ -33,7 +35,10 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                 </div>
                 {req.checkInAudit && (
                   <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-2 w-full">
-                    <p className="text-brand-primary text-xs font-semibold">Check-in · {req.checkInAudit.checkedAt}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-brand-primary text-xs font-semibold">Check-in · {req.checkInAudit.checkedAt}</p>
+                      {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
+                    </div>
                     <p>Uniform ✓ · Equipment ✓ · GPS {req.checkInAudit.gpsVerified ? '✓' : '×'}</p>
                     {req.checkInAudit.staffUploadedBy && (
                       <p className="text-xs text-brand-text-muted">

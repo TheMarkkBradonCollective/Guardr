@@ -1,5 +1,6 @@
 import { SecurityGuard, SecurityRequest } from '../types';
 import { formatDuration } from './dates';
+import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 
 export interface CoverageSummary {
   activeAssignments: number;
@@ -62,8 +63,9 @@ export function computeCoverageSummary(requests: SecurityRequest[]): CoverageSum
 export function computeSiteStatus(requests: SecurityRequest[]): SiteStatusLevel {
   const live = requests.filter((r) => r.status === 'in-progress');
   if (live.some((r) => r.checkOutAudit?.incidentReport?.hasIncident)) return 'incident';
-  if (live.some((r) => r.checkInAudit?.selfieUpload && !r.checkInAudit?.clientConfirmedAt)) return 'attention';
-  if (live.some((r) => !r.checkInAudit?.readyForDuty)) return 'attention';
+  if (live.some((r) => isNoSelfAuditFlagged(r))) return 'attention';
+  if (live.some((r) => selfAuditPhotosComplete(r.checkInAudit) && !r.checkInAudit?.clientConfirmedAt)) return 'attention';
+  if (live.some((r) => !r.checkInAudit?.readyForDuty && !r.checkInAudit?.selfAuditSkipped)) return 'attention';
   return 'secured';
 }
 
@@ -115,7 +117,15 @@ export function buildActivityFeed(
         sortKey: new Date(req.checkInAudit.checkedAt).getTime(),
       });
     }
-    if (req.checkInAudit?.readyForDuty) {
+    if (req.checkInAudit?.selfAuditSkipped && !selfAuditPhotosComplete(req.checkInAudit)) {
+      items.push({
+        id: `${req.id}-audit-skipped`,
+        timestamp: req.checkInAudit.checkedAt,
+        label: 'No Self Audit — guard skipped check-in photos',
+        requestId: req.id,
+        sortKey: new Date(req.checkInAudit.checkedAt).getTime() + 1,
+      });
+    } else if (req.checkInAudit?.readyForDuty) {
       items.push({
         id: `${req.id}-audit`,
         timestamp: req.checkInAudit.checkedAt,

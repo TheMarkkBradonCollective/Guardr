@@ -12,7 +12,8 @@ import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
-import { canStaffUploadSelfAuditPhotos } from '../../lib/selfAuditPhotos';
+import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
+import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
@@ -136,6 +137,7 @@ function JobDetailPanel({
           <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
         )}
         <WfBadge tone={statusBadgeTone(req.status)}>{workflowLabel}</WfBadge>
+        {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
       <p className="text-sm">

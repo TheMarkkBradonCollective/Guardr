@@ -1,8 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { SecurityRequest } from '../../types';
+import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import {
   getSelfAuditPhoto,
+  isNoSelfAuditFlagged,
   missingSelfAuditPhotoKinds,
+  NO_SELF_AUDIT_LABEL,
   SELF_AUDIT_PHOTO_LABELS,
   SelfAuditPhotoKind,
 } from '../../lib/selfAuditPhotos';
@@ -95,6 +98,7 @@ function PhotoSlot({
 
 export function StaffSelfAuditPhotoUpload({ request, onUpload }: StaffSelfAuditPhotoUploadProps) {
   const audit = request.checkInAudit;
+  const flagged = isNoSelfAuditFlagged(request);
   const missing = missingSelfAuditPhotoKinds(audit);
   const [pending, setPending] = useState<StaffSelfAuditPhotoPayload>({});
   const [saving, setSaving] = useState(false);
@@ -119,9 +123,14 @@ export function StaffSelfAuditPhotoUpload({ request, onUpload }: StaffSelfAuditP
       <div className="flex items-start gap-2">
         <Camera className="w-4 h-4 text-brand-primary mt-0.5 shrink-0" />
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Self-audit photos</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Self-audit photos</p>
+            {flagged && <NoSelfAuditBadge />}
+          </div>
           <p className="text-xs text-brand-text-muted mt-1">
-            Upload self, uniform, and shoes photos when a guard sent them to staff outside the app.
+            {request.status === 'completed'
+              ? `Upload all three photos to clear the ${NO_SELF_AUDIT_LABEL} flag on this completed job.`
+              : 'Upload self, uniform, and shoes when a guard sent them outside the app or skipped the audit.'}
           </p>
           {audit?.staffUploadedBy && (
             <p className="text-xs text-brand-text-muted mt-1">
@@ -129,7 +138,7 @@ export function StaffSelfAuditPhotoUpload({ request, onUpload }: StaffSelfAuditP
               {audit.staffUploadedAt ? ` · ${new Date(audit.staffUploadedAt).toLocaleString()}` : ''}
             </p>
           )}
-          {missing.length > 0 && missing.length < 3 && (
+          {missing.length > 0 && (
             <p className="text-xs text-amber-400/90 mt-1">Missing: {missing.map((k) => SELF_AUDIT_PHOTO_LABELS[k]).join(', ')}</p>
           )}
         </div>

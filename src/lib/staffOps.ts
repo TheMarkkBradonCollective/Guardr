@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
@@ -439,7 +440,14 @@ export function buildPlatformActivityFeed(
         sortKey: new Date(req.checkInAudit.checkedAt).getTime(),
       });
     }
-    if (req.checkInAudit?.readyForDuty) {
+    if (isNoSelfAuditFlagged(req)) {
+      items.push({
+        id: `${req.id}-audit-skipped`,
+        timestamp: req.checkInAudit!.checkedAt,
+        message: `${guard?.name ?? 'Guard'} skipped self-audit — ${site}`,
+        sortKey: new Date(req.checkInAudit!.checkedAt).getTime() + 1,
+      });
+    } else if (req.checkInAudit?.readyForDuty && selfAuditPhotosComplete(req.checkInAudit)) {
       items.push({
         id: `${req.id}-audit`,
         timestamp: req.checkInAudit.checkedAt,

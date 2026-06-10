@@ -275,6 +275,8 @@ export interface SecurityRequest {
     selfieUpload: string;
     uniformPhoto?: string;
     shoesPhoto?: string;
+    /** Guard clocked in without completing self-audit photos */
+    selfAuditSkipped?: boolean;
     gpsVerified: boolean;
     readyForDuty?: boolean;
     /** Staff uploaded photos on behalf of the guard */

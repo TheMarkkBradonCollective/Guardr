@@ -343,6 +343,7 @@ export function GuardDashboard({
       checkInAudit: {
         checkedAt: new Date().toISOString(),
         gpsVerified: true,
+        selfAuditSkipped: false,
         uniform: {
           uniformPresent: payload.uniform.uniformPresent,
           blackShoes: payload.uniform.blackShoes,
@@ -364,6 +365,46 @@ export function GuardDashboard({
     updatePhase(activeShiftJob.id, 'on-duty');
     setDutySeconds(0);
     setShowSelfAudit(false);
+  };
+
+  const handleSkipSelfAudit = () => {
+    if (!activeShiftJob) return;
+    const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
+    if (workBlocked) {
+      alert(workBlocked);
+      return;
+    }
+    if (!canGuardClockIn(activeShiftJob)) {
+      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      return;
+    }
+    if (!window.confirm('Skip self audit and clock in? This job will be flagged No Self Audit until staff add photos after the job.')) {
+      return;
+    }
+    onUpdateJobAudit(activeShiftJob.id, {
+      status: 'in-progress',
+      checkInAudit: {
+        checkedAt: new Date().toISOString(),
+        gpsVerified: true,
+        selfAuditSkipped: true,
+        uniform: {
+          uniformPresent: false,
+          blackShoes: false,
+          dutyBelt: false,
+          nameBadge: false,
+          professionalAppearance: false,
+        },
+        equipment: {
+          radio: false,
+          flashlight: false,
+          requiredEquipment: false,
+        },
+        selfieUpload: '',
+        readyForDuty: false,
+      },
+    });
+    updatePhase(activeShiftJob.id, 'on-duty');
+    setDutySeconds(0);
   };
 
   const handleEndShift = () => {
@@ -508,6 +549,7 @@ export function GuardDashboard({
           dutySeconds={dutySeconds}
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
+          onSkipAudit={handleSkipSelfAudit}
           onIncidentReport={() => alert('Incident report filed. Client and staff notified.')}
           onActivityReport={() => alert('Activity report saved to job log.')}
           onEndShift={handleEndShift}

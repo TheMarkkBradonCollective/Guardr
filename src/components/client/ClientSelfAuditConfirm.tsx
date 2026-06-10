@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { SecurityRequest } from '../../types';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
+import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import {
   canClientConfirmSelfAudit,
+  hasSelfAuditPhotosToReview,
+  isNoSelfAuditFlagged,
   isSelfAuditClientConfirmed,
-  missingSelfAuditPhotoKinds,
-  SELF_AUDIT_PHOTO_LABELS,
 } from '../../lib/selfAuditPhotos';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
@@ -17,13 +18,32 @@ interface ClientSelfAuditConfirmProps {
 export function ClientSelfAuditConfirm({ request, onConfirm }: ClientSelfAuditConfirmProps) {
   const audit = request.checkInAudit;
   const [confirming, setConfirming] = useState(false);
+  const flagged = isNoSelfAuditFlagged(request);
+  const canReview = hasSelfAuditPhotosToReview(request);
 
-  if (!audit?.selfieUpload || !['in-progress', 'completed'].includes(request.status)) {
+  if (!audit || !['in-progress', 'completed'].includes(request.status)) {
+    return null;
+  }
+
+  if (flagged && !canReview) {
+    return (
+      <div className="border-t border-brand-border pt-4 space-y-2 w-full">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-brand-primary">Guard self-audit</p>
+          <NoSelfAuditBadge />
+        </div>
+        <p className="text-xs text-brand-text-muted">
+          The guard skipped the self-audit at clock-in. Photos will appear here once all three are on file.
+        </p>
+      </div>
+    );
+  }
+
+  if (!canReview && !isSelfAuditClientConfirmed(audit)) {
     return null;
   }
 
   const confirmed = isSelfAuditClientConfirmed(audit);
-  const missing = missingSelfAuditPhotoKinds(audit);
   const canConfirm = canClientConfirmSelfAudit(request);
 
   const handleConfirm = async () => {
@@ -40,22 +60,11 @@ export function ClientSelfAuditConfirm({ request, onConfirm }: ClientSelfAuditCo
       <div>
         <p className="text-sm font-semibold text-brand-primary">Guard self-audit photos</p>
         <p className="text-xs text-brand-text-muted mt-1">
-          Review the guard&apos;s appearance photos before or during coverage.
+          Review the guard&apos;s self, uniform, and shoes photos when you are ready.
         </p>
-        {audit.staffUploadedBy && (
-          <p className="text-xs text-brand-text-muted mt-1">
-            Some photos were uploaded by staff ({audit.staffUploadedBy}).
-          </p>
-        )}
       </div>
 
       <SelfAuditPhotoGallery audit={audit} />
-
-      {!confirmed && missing.length > 0 && (
-        <p className="text-xs text-amber-400/90">
-          Still waiting on: {missing.map((k) => SELF_AUDIT_PHOTO_LABELS[k]).join(', ')}.
-        </p>
-      )}
 
       {confirmed ? (
         <p className="text-xs text-emerald-400/90 flex items-center gap-1.5">
