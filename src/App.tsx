@@ -48,6 +48,10 @@ import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
+import {
+  buildGuardPayoutInvoice,
+  getGuardPayoutEligibleJobs,
+} from './lib/guardPayoutInvoice';
 import { checkJobRequirements } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
@@ -1741,70 +1745,55 @@ export default function App() {
   };
 
   const handleGuardRequestCashPayout = async (guardId: string) => {
-    const eligible = requests.filter(
-      (r) =>
-        r.assignedGuardId === guardId &&
-        r.status === 'completed' &&
-        ['paid', 'held'].includes(r.paymentStatus || '') &&
-        r.guardPayoutMethod !== 'cash' &&
-        !r.guardCashPayoutRequested
-    );
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) return;
+    const eligible = getGuardPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      alert('No completed jobs are available for a cash payout request.');
+      alert('No completed jobs are available for a cash payout invoice.');
       return;
     }
-    const total = Math.round(eligible.reduce((s, r) => s + guardPayoutAmount(r), 0) * 100) / 100;
+    const invoice = buildGuardPayoutInvoice({ guard, method: 'cash', jobs: eligible });
     if (
       !window.confirm(
-        `Request $${total} in cash from the director for ${eligible.length} completed job(s)?`
+        `Send a $${invoice.total.toFixed(2)} cash pickup invoice to Guardr for ${eligible.length} completed job(s)?`
       )
     ) {
       return;
     }
-    const requestedAt = new Date().toISOString();
-    const eligibleIds = new Set(eligible.map((r) => r.id));
-    setRequests((prev) =>
-      prev.map((r) =>
-        eligibleIds.has(r.id)
-          ? { ...r, guardCashPayoutRequested: true, guardCashPayoutRequestedAt: requestedAt }
-          : r
-      )
-    );
-    if (isDbConnected) {
-      await supabase
-        .from('security_requests')
-        .update({
-          guard_cash_payout_requested: true,
-          guard_cash_payout_requested_at: requestedAt,
-        })
-        .in('id', [...eligibleIds]);
-    }
-    alert('Cash payout request sent to the director.');
+    await handleCreateSupportTicket({
+      kind: 'report',
+      subject: invoice.subject,
+      category: 'payment',
+      priority: 'normal',
+      body: invoice.body,
+    });
+    alert('Cash pickup invoice sent to Guardr. Request again anytime you have more unpaid jobs.');
   };
 
   const handleGuardRequestStripePayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
-    const eligible = requests.filter(
-      (r) =>
-        r.assignedGuardId === guardId &&
-        r.status === 'completed' &&
-        ['paid', 'held'].includes(r.paymentStatus || '') &&
-        r.guardPayoutMethod !== 'cash' &&
-        !r.guardCashPayoutRequested
-    );
+    if (!guard) return;
+    const eligible = getGuardPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      alert('No earnings are available for Stripe payout right now.');
+      alert('No earnings are available for a bank payout invoice right now.');
       return;
     }
-    const total = Math.round(eligible.reduce((s, r) => s + guardPayoutAmount(r), 0) * 100) / 100;
+    const invoice = buildGuardPayoutInvoice({ guard, method: 'stripe', jobs: eligible });
+    if (
+      !window.confirm(
+        `Send a $${invoice.total.toFixed(2)} bank transfer invoice to Guardr for ${eligible.length} completed job(s)?`
+      )
+    ) {
+      return;
+    }
     await handleCreateSupportTicket({
       kind: 'report',
-      subject: `Stripe payout request — $${total}`,
+      subject: invoice.subject,
       category: 'payment',
       priority: 'normal',
-      body: `${guard?.name || 'Guard'} requests Stripe Connect payout for ${eligible.length} completed job(s), totaling $${total}.`,
+      body: invoice.body,
     });
-    alert('Stripe payout request sent to the director.');
+    alert('Bank payout invoice sent to Guardr. Request again anytime you have more unpaid jobs.');
   };
 
   const handleReleasePayout = async (requestId: string, force = false) => {
@@ -1815,10 +1804,6 @@ export default function App() {
     }
     if (req.guardPayoutMethod === 'cash') {
       alert('This guard was already paid in cash for this job.');
-      return;
-    }
-    if (req.guardCashPayoutRequested) {
-      alert('Guard requested cash for this job — use Guard paid cash, not Stripe.');
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);

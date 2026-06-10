@@ -30,6 +30,7 @@ import {
   sortJobs,
 } from '../lib/guardJobs';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
+import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoice';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
@@ -206,6 +207,15 @@ export function GuardDashboard({
   const earningsBreakdown = useMemo(
     () => computeGuardEarningsBreakdown(completedJobs),
     [completedJobs]
+  );
+
+  const openCashInvoices = useMemo(
+    () => openGuardPayoutInvoices(supportTickets, guard.id, 'cash').length,
+    [supportTickets, guard.id]
+  );
+  const openStripeInvoices = useMemo(
+    () => openGuardPayoutInvoices(supportTickets, guard.id, 'stripe').length,
+    [supportTickets, guard.id]
   );
 
   useEffect(() => {
@@ -500,6 +510,8 @@ export function GuardDashboard({
               onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
               cashRequestPending={cashRequestPending}
               stripeRequestPending={stripeRequestPending}
+              openCashInvoices={openCashInvoices}
+              openStripeInvoices={openStripeInvoices}
               payments={payments}
             />
           </div>

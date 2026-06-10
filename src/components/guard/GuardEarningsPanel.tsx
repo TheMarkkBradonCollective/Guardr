@@ -21,6 +21,8 @@ interface GuardEarningsPanelProps {
   onRequestCashPayout?: () => Promise<void>;
   stripeRequestPending?: boolean;
   cashRequestPending?: boolean;
+  openCashInvoices?: number;
+  openStripeInvoices?: number;
   payments?: GuardPayoutView[];
 }
 
@@ -35,6 +37,8 @@ export function GuardEarningsPanel({
   onRequestCashPayout,
   stripeRequestPending = false,
   cashRequestPending = false,
+  openCashInvoices = 0,
+  openStripeInvoices = 0,
   payments = [],
 }: GuardEarningsPanelProps) {
   const paymentByJobId = useMemo(
@@ -58,7 +62,7 @@ export function GuardEarningsPanel({
 
       <div className="px-5 pb-4">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          When you finish a job, your pay shows up here. Choose to receive it in your bank (Stripe) or pick up cash from staff.
+          When you finish a job, your pay shows up here. Send an invoice to Guardr for each payout — bank transfer or cash pickup.
         </p>
       </div>
 
@@ -117,7 +121,7 @@ export function GuardEarningsPanel({
               Send to my bank
             </span>
             <span className="text-xs font-normal opacity-80">
-              Transfers to your connected Stripe account
+              Sends an invoice to Guardr for a bank transfer
             </span>
           </button>
           <button
@@ -135,14 +139,25 @@ export function GuardEarningsPanel({
               Request cash pickup
             </span>
             <span className="text-xs font-normal opacity-80">
-              Staff will pay you in person
+              Sends an invoice to Guardr for cash pickup
             </span>
           </button>
         </div>
 
-        {breakdown.cashPendingRequest > 0 && (
-          <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 rounded-lg px-3 py-2">
-            ${breakdown.cashPendingRequest.toFixed(2)} cash requested — waiting for staff to pay you.
+        {(openCashInvoices > 0 || openStripeInvoices > 0) && (
+          <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 rounded-lg px-3 py-2 leading-relaxed">
+            {openCashInvoices > 0 && (
+              <span>
+                {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} with Guardr.
+              </span>
+            )}
+            {openCashInvoices > 0 && openStripeInvoices > 0 ? ' ' : null}
+            {openStripeInvoices > 0 && (
+              <span>
+                {openStripeInvoices} open bank transfer invoice{openStripeInvoices === 1 ? '' : 's'} with Guardr.
+              </span>
+            )}
+            {' '}You can send another invoice when more jobs are ready to collect.
           </p>
         )}
       </div>

@@ -105,13 +105,6 @@ export function getShiftPayDisplay(
     return { headline: 'Paid', subtext: paidDate };
   }
 
-  if (job.cashPayoutRequested) {
-    return {
-      headline: 'Cash payout requested',
-      subtext: 'Waiting for platform staff to pay you in cash',
-    };
-  }
-
   if (job.payoutStatus === 'processing') {
     return {
       headline: 'Payout processing',
@@ -121,7 +114,7 @@ export function getShiftPayDisplay(
 
   return {
     headline: 'Not paid yet',
-    subtext: 'Tap Send to my bank or Request cash pickup above',
+    subtext: 'Send a bank or cash pickup invoice from Pay',
   };
 }
 

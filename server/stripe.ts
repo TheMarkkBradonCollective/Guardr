@@ -613,9 +613,6 @@ export function registerStripeRoutes(app: Express) {
         return res.status(400).json({ error: 'Guard was paid in cash for this shift' });
       }
 
-      if (job.guard_cash_payout_requested) {
-        return res.status(400).json({ error: 'Guard requested cash payout for this shift' });
-      }
     }
 
     const amountCents = computeGuardPayoutCents(hourlyRate, durationHours);

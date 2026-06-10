@@ -143,12 +143,6 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
         detail: `Guard earns $${guardPay.toFixed(2)} after the job is marked complete.`,
       };
     case 'awaiting-guard-payout':
-      if (req.guardCashPayoutRequested) {
-        return {
-          headline: 'Job done · guard wants cash',
-          detail: `Hand $${guardPay.toFixed(2)} to the guard in person, then mark paid.`,
-        };
-      }
       if (isCashGuardPayout(req)) {
         return {
           headline: 'Job done · pay guard in cash',

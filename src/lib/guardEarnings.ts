@@ -6,7 +6,6 @@ export interface GuardEarningsBreakdown {
   cashPaid: number;
   stripePaid: number;
   onlineAvailable: number;
-  cashPendingRequest: number;
 }
 
 function roundMoney(n: number): number {
@@ -23,7 +22,6 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
   let cashPaid = 0;
   let stripePaid = 0;
   let onlineAvailable = 0;
-  let cashPendingRequest = 0;
 
   for (const job of jobs) {
     if (job.status !== 'completed' || job.assignedGuardId == null) continue;
@@ -43,11 +41,6 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
       continue;
     }
 
-    if (job.cashPayoutRequested) {
-      cashPendingRequest += amount;
-      continue;
-    }
-
     if (job.payoutMethod !== 'cash') {
       onlineAvailable += amount;
     }
@@ -58,6 +51,5 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
     cashPaid: roundMoney(cashPaid),
     stripePaid: roundMoney(stripePaid),
     onlineAvailable: roundMoney(onlineAvailable),
-    cashPendingRequest: roundMoney(cashPendingRequest),
   };
 }

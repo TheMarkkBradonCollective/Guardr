@@ -76,7 +76,6 @@ export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
 /** Stripe Connect payout — never pay online for cash-paid or cash-requested jobs */
 export function canStripePayGuard(req: SecurityRequest): boolean {
   if (isCashGuardPayout(req)) return false;
-  if (req.guardCashPayoutRequested) return false;
   return true;
 }
 
@@ -130,7 +129,6 @@ export function platformFundsDisplay(req: SecurityRequest): string {
 export function guardPayoutDisplay(req: SecurityRequest): string {
   if (req.paymentStatus !== 'released') {
     if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus || '')) {
-      if (req.guardCashPayoutRequested) return 'Cash requested';
       return 'Payout pending';
     }
     return '—';
