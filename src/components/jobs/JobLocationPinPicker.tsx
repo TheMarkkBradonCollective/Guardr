@@ -3,6 +3,8 @@ import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Loader2, MapPin } from 'lucide-react';
 import { GeoCoords, METRO_CENTER, geocodeAddress } from '../../lib/geo';
+import { mapTileUrl } from '../../lib/mapTiles';
+import { useThemeMode } from '../../lib/platform/useThemeMode';
 
 function DraggablePin({
   position,
@@ -59,6 +61,7 @@ export function JobLocationPinPicker({
   longitude,
   onCoordsChange,
 }: JobLocationPinPickerProps) {
+  const themeMode = useThemeMode();
   const [geocoding, setGeocoding] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
 
@@ -106,7 +109,7 @@ export function JobLocationPinPicker({
       </div>
       <div className="guardr-map-root h-44 rounded-xl overflow-hidden border border-brand-border">
         <MapContainer center={center} zoom={hasPin ? 15 : 11} className="guardr-map-container h-full" zoomControl={false} attributionControl={false}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+          <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
           <MapClickPin onPick={onCoordsChange} />
           {hasPin && (
             <DraggablePin

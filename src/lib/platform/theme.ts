@@ -47,3 +47,14 @@ export function applyThemeToDocument(mode: ThemeMode): void {
   html.dataset.theme = mode;
   html.style.colorScheme = mode === 'light' || mode === 'grey' ? 'light' : 'dark';
 }
+
+/** Read active theme from the document root (for maps, etc.) */
+export function readThemeFromDocument(): ThemeMode {
+  if (typeof document === 'undefined') return DEFAULT_THEME;
+  const fromDataset = document.documentElement.dataset.theme;
+  if (isThemeMode(fromDataset)) return fromDataset;
+  for (const m of THEME_MODES) {
+    if (document.documentElement.classList.contains(`theme-${m}`)) return m;
+  }
+  return DEFAULT_THEME;
+}

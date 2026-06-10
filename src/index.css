@@ -1091,7 +1091,19 @@ html.theme-grey {
 
 /* ─── GUARD MAP / DRIVER LAYOUT ────────────────────────────── */
 .guardr-map-root      { position: absolute; inset: 0; }
-.guardr-map-container { height: 100%; width: 100%; background: var(--brand-bg-sec); }
+.guardr-map-container { height: 100%; width: 100%; background: var(--brand-bg-sec); transition: background-color 0.2s ease; }
+
+html.theme-dark .guardr-map-container .leaflet-tile-pane {
+  filter: saturate(0.95) brightness(0.98);
+}
+
+html.theme-light .guardr-map-container .leaflet-tile-pane {
+  filter: saturate(0.9) brightness(1.02);
+}
+
+html.theme-grey .guardr-map-container .leaflet-tile-pane {
+  filter: saturate(0.75) brightness(0.94) contrast(1.02);
+}
 
 .guardr-shift-pin,
 .guardr-guard-pin {

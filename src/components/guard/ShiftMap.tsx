@@ -5,6 +5,8 @@ import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { jobCoords, METRO_CENTER } from '../../lib/geo';
 import { useUserLocation } from '../../lib/useUserLocation';
+import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
+import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { MapRouteLayer } from '../map/MapRouteLayer';
 import { MapRouteSummary } from '../../lib/mapRouting';
 
@@ -56,7 +58,9 @@ export function ShiftMap({
   onRouteChange,
   onRouteLoadingChange,
 }: ShiftMapProps) {
+  const themeMode = useThemeMode();
   const userLocation = useUserLocation(true);
+  const userLocStyle = mapUserLocationColors(themeMode);
 
   const jobPins = useMemo(
     () =>
@@ -109,14 +113,19 @@ export function ShiftMap({
         attributionControl={false}
       >
         {!selectedPin && <MapRecenter center={mapCenter} zoom={userLocation ? 13 : 12} />}
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
 
         {userLocation && (
           <>
             <Circle
               center={[userLocation.lat, userLocation.lng]}
               radius={800}
-              pathOptions={{ color: '#84a279', fillColor: '#84a279', fillOpacity: 0.08, weight: 1 }}
+              pathOptions={{
+                color: userLocStyle.ring,
+                fillColor: userLocStyle.fill,
+                fillOpacity: userLocStyle.fillOpacity,
+                weight: 1,
+              }}
             />
             <Marker position={[userLocation.lat, userLocation.lng]} icon={guardIcon} />
           </>

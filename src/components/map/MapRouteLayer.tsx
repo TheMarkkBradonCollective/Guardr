@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Polyline, useMap } from 'react-leaflet';
 import { GeoCoords } from '../../lib/geo';
 import { fetchDrivingRoute, MapRouteSummary } from '../../lib/mapRouting';
+import { mapRoutePathOptions } from '../../lib/mapTiles';
+import { useThemeMode } from '../../lib/platform/useThemeMode';
 
 function FitRouteBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
@@ -21,6 +23,8 @@ interface MapRouteLayerProps {
 }
 
 export function MapRouteLayer({ from, to, active, onRoute }: MapRouteLayerProps) {
+  const themeMode = useThemeMode();
+  const routeStyle = mapRoutePathOptions(themeMode);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const onRouteRef = useRef(onRoute);
   onRouteRef.current = onRoute;
@@ -47,26 +51,8 @@ export function MapRouteLayer({ from, to, active, onRoute }: MapRouteLayerProps)
 
   return (
     <>
-      <Polyline
-        positions={route.points}
-        pathOptions={{
-          color: '#84a279',
-          weight: 5,
-          opacity: 0.92,
-          lineCap: 'round',
-          lineJoin: 'round',
-        }}
-      />
-      <Polyline
-        positions={route.points}
-        pathOptions={{
-          color: '#ffffff',
-          weight: 2,
-          opacity: 0.35,
-          dashArray: '6 10',
-          lineCap: 'round',
-        }}
-      />
+      <Polyline positions={route.points} pathOptions={routeStyle.main} />
+      <Polyline positions={route.points} pathOptions={routeStyle.dash} />
       <FitRouteBounds points={route.points} />
     </>
   );
