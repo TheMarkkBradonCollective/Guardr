@@ -15,6 +15,7 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
+import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
@@ -183,6 +184,7 @@ function JobDetailPanel({
           Schedule is locked after payment. Title and location can still be updated.
         </p>
       )}
+      {!editing && !auditUploadOpen && <JobSelfAuditPhotosSection request={req} />}
       <StaffJobActionsBar
         request={req}
         showEdit={showEdit}

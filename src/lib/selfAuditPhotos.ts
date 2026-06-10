@@ -37,6 +37,17 @@ export function missingSelfAuditPhotoKinds(
   return (['self', 'uniform', 'shoes'] as SelfAuditPhotoKind[]).filter((kind) => !getSelfAuditPhoto(audit, kind));
 }
 
+export function hasAnySelfAuditPhoto(audit: SecurityRequest['checkInAudit'] | undefined): boolean {
+  return (['self', 'uniform', 'shoes'] as SelfAuditPhotoKind[]).some((kind) => !!getSelfAuditPhoto(audit, kind));
+}
+
+/** Job detail views show self-audit when clocked in, flagged, or photos exist */
+export function shouldShowJobSelfAuditPhotos(req: Pick<SecurityRequest, 'checkInAudit'>): boolean {
+  const audit = req.checkInAudit;
+  if (!audit) return false;
+  return hasAnySelfAuditPhoto(audit) || !!audit.selfAuditSkipped || !!audit.checkedAt;
+}
+
 /** Staff may upload during active jobs when photos are missing; after completion, only to clear No Self Audit */
 export function canStaffUploadSelfAuditPhotos(req: SecurityRequest, role?: PlatformRole): boolean {
   if (!req.assignedGuardId || !ACTIVE_JOB_STATUSES.includes(req.status)) return false;

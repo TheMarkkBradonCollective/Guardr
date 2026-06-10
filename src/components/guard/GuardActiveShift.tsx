@@ -9,6 +9,7 @@ import {
   guardClockOutBlockedMessage,
   shiftClockOutOpensAt,
 } from '../../lib/shiftWindow';
+import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
@@ -117,6 +118,10 @@ export function GuardActiveShift({
             </p>
             <p className="text-sm leading-relaxed">{job.siteInstructions}</p>
           </div>
+        )}
+
+        {(phase === 'on-duty' || phase === 'complete') && (
+          <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
         )}
 
         {(phase === 'upcoming' || phase === 'arrived') && !clockInOpen && clockInMsg && (
