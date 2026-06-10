@@ -146,7 +146,7 @@ function JobDetailPanel({
             Guard applications ({rankedApplicants.length})
           </p>
           <p className="text-xs text-brand-text-muted">
-            Review applicants and approve the best fit for this job.
+            Review applicants — approve who picks up this job.
           </p>
           <div className="space-y-2">
             {rankedApplicants.map((guard, index) => {

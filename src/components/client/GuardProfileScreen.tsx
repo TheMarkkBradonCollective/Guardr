@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
   draft: 'Draft',
   'pending-review': 'Pending',
   open: 'Open',
-  accepted: 'Scheduled',
+  accepted: 'Picked up',
   'in-progress': 'In progress',
   completed: 'Completed',
   closed: 'Closed',

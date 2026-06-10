@@ -273,7 +273,7 @@ export function ClientRequestsList({
                       ) : (
                         <>
                           <span className="font-medium text-brand-text">{req.applicants.length} guard{req.applicants.length === 1 ? '' : 's'} applied.</span>
-                          {' '}Staff will approve the best match for this job.
+                          {' '}Staff will approve who picks up this job.
                         </>
                       )}
                     </p>

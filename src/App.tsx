@@ -1163,7 +1163,7 @@ export default function App() {
       if (!guard) throw new Error('Guard not found.');
       const userStatus = guard.userStatus || 'active';
       if (userStatus === 'suspended' || userStatus === 'blocked') {
-        throw new Error(`${guard.name} cannot be approved for this job — account is ${userStatus}.`);
+        throw new Error(`${guard.name} cannot pick up this job — account is ${userStatus}.`);
       }
       if (!guardHasWorkedWithClient(input.assignGuardId, input.clientId, requests)) {
         throw new Error(
@@ -1232,7 +1232,7 @@ export default function App() {
         guardId: assignedGuardId,
         requestId: freshJob.id,
         location: freshJob.location,
-        body: `You were approved for ${freshJob.title}`,
+        body: `You picked up ${freshJob.title}`,
       });
     }
 
@@ -1290,16 +1290,16 @@ export default function App() {
     const guard = guards.find((g) => g.id === guardId);
     if (!job || !guard) return;
     if (job.assignedGuardId) {
-      alert('This job already has an approved guard.');
+      alert('A guard has already picked up this job.');
       return;
     }
     if (!['open', 'pending-review'].includes(job.status)) {
-      alert('Guards can only be approved for open jobs awaiting a guard.');
+      alert('Guards can only be placed on open jobs awaiting a guard.');
       return;
     }
     const userStatus = guard.userStatus || 'active';
     if (userStatus === 'suspended' || userStatus === 'blocked') {
-      alert(`${guard.name} cannot be approved for this job — account is ${userStatus}.`);
+      alert(`${guard.name} cannot pick up this job — account is ${userStatus}.`);
       return;
     }
 
@@ -1317,7 +1317,7 @@ export default function App() {
     const req = requests.find(r => r.id === requestId);
     if (req && status === 'in-progress' && req.assignedGuardId) {
       const assigned = guards.find((g) => g.id === req.assignedGuardId);
-      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Approved guard not found.';
+      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Guard on job not found.';
       if (workBlocked) {
         alert(workBlocked);
         return;
@@ -1678,7 +1678,7 @@ export default function App() {
         guardId,
         requestId,
         location: job.location,
-        body: `You were approved for ${job.title}`,
+        body: `You picked up ${job.title}`,
       });
     }
   };
@@ -1929,7 +1929,7 @@ export default function App() {
   const handleReleasePayout = async (requestId: string, force = false) => {
     const req = requests.find(r => r.id === requestId);
     if (!req?.assignedGuardId) {
-      alert('No guard approved for this job yet.');
+      alert('No guard has picked up this job yet.');
       return;
     }
     if (req.guardPayoutMethod === 'cash') {

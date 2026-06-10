@@ -162,7 +162,7 @@ export function StaffOverview({
             <div>
               <p className="text-sm font-medium">No guards on site</p>
               <p className="text-xs text-brand-text-muted mt-0.5">
-                Accepted and in-progress jobs show up here when work is underway on site.
+                Picked-up and in-progress jobs show up here when work is underway on site.
               </p>
             </div>
           </div>

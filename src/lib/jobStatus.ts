@@ -9,7 +9,7 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   draft: 'Draft',
   'pending-review': 'Pending Review',
   open: 'Open',
-  accepted: 'Accepted',
+  accepted: 'Picked up',
   'in-progress': 'In Progress',
   completed: 'Completed',
   closed: 'Closed',

@@ -120,11 +120,11 @@ export function StaffApprovals({
           {jobsWithApplications.length > 0 && (
             <section>
               <WfSectionHeader
-                title="Guard applications — approve best fit"
+                title="Guard applications — pick best fit"
                 count={jobsWithApplications.reduce((n, job) => n + job.applicants.length, 0)}
               />
               <p className="text-xs text-brand-text-muted mt-1 mb-3">
-                Multiple guards can apply to the same open offer. Review applicants and approve the best match.
+                Multiple guards can apply to the same open offer. Review applicants and approve who picks up the job.
               </p>
               <div className="space-y-6">
                 {jobsWithApplications.map((req) => {

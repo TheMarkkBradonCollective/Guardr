@@ -203,7 +203,7 @@ export function buildOverviewMetricCells(
           : [
               pendingJobs > 0 ? `${pendingJobs} awaiting approval` : null,
               openJobs > 0 ? `${openJobs} open offer${openJobs === 1 ? '' : 's'}` : null,
-              acceptedJobs > 0 ? `${acceptedJobs} accepted` : null,
+              acceptedJobs > 0 ? `${acceptedJobs} picked up` : null,
               inProgress > 0 ? `${inProgress} in progress` : null,
             ]
               .filter(Boolean)
@@ -320,7 +320,7 @@ export function buildOverviewActionQueue(
   if (stats.pendingGuardApplicationJobs > 0) {
     items.push({
       id: 'guard-applications',
-      title: 'Approve guard for job offers',
+      title: 'Review guard applications',
       description: `${stats.pendingGuardApplications} application${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} open job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
       count: stats.pendingGuardApplications,
       section: 'approvals',
