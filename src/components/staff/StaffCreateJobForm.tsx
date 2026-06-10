@@ -16,6 +16,9 @@ import {
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
+import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 
 export interface StaffCreateJobInput {
   clientId: string;
@@ -33,6 +36,15 @@ export interface StaffCreateJobInput {
   estimatedPayout: number;
   assignGuardId?: string;
   description?: string;
+  uniformRequirements?: string;
+  equipmentRequirements?: string;
+  siteInstructions?: string;
+  contactName?: string;
+  contactPhone?: string;
+  parkingInstructions?: string;
+  accessInstructions?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface StaffCreateJobFormProps {
@@ -55,7 +67,9 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
   const [hourlyRate, setHourlyRate] = useState(30);
   const [guardsNeeded, setGuardsNeeded] = useState(1);
   const [assignGuardId, setAssignGuardId] = useState('');
-  const [description, setDescription] = useState('');
+  const [listing, setListing] = useState<JobListingFields>(() => serviceListingDefaults('standing-guard'));
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [saving, setSaving] = useState(false);
@@ -94,7 +108,9 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
     setHourlyRate(30);
     setGuardsNeeded(1);
     setAssignGuardId('');
-    setDescription('');
+    setListing(serviceListingDefaults('standing-guard'));
+    setLatitude(undefined);
+    setLongitude(undefined);
     setError('');
     setMsg('');
   };
@@ -132,7 +148,16 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
         guardsNeeded,
         estimatedPayout,
         assignGuardId: assignGuardId || undefined,
-        description: description.trim() || undefined,
+        description: listing.description.trim() || undefined,
+        uniformRequirements: listing.uniformRequirements.trim() || undefined,
+        equipmentRequirements: listing.equipmentRequirements.trim() || undefined,
+        siteInstructions: listing.siteInstructions.trim() || undefined,
+        contactName: listing.contactName.trim() || undefined,
+        contactPhone: listing.contactPhone.trim() || undefined,
+        parkingInstructions: listing.parkingInstructions.trim() || undefined,
+        accessInstructions: listing.accessInstructions.trim() || undefined,
+        latitude,
+        longitude,
       });
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
@@ -211,7 +236,18 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
           <label className="uber-label block mb-1">Service type</label>
           <select
             value={serviceId}
-            onChange={(e) => setServiceId(e.target.value as ClientServiceId)}
+            onChange={(e) => {
+              const id = e.target.value as ClientServiceId;
+              setServiceId(id);
+              const svc = CLIENT_SERVICE_OPTIONS.find((s) => s.id === id);
+              setListing(
+                serviceListingDefaults(id, {
+                  siteName,
+                  address,
+                  serviceLabel: svc?.label,
+                })
+              );
+            }}
             className="uber-input w-full"
           >
             {CLIENT_SERVICE_OPTIONS.map((s) => (
@@ -340,14 +376,29 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
           </select>
         </div>
 
-        <div className="sm:col-span-2">
-          <label className="uber-label block mb-1">Notes for guards (optional)</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="uber-input w-full min-h-[4rem]"
-            placeholder="Site instructions, uniform, etc."
-          />
+        {address.trim().length > 3 && (
+          <div className="sm:col-span-2">
+            <JobLocationPinPicker
+              address={address}
+              state={jobState}
+              siteName={siteName}
+              latitude={latitude}
+              longitude={longitude}
+              onCoordsChange={(coords) => {
+                if (coords) {
+                  setLatitude(coords.lat);
+                  setLongitude(coords.lng);
+                } else {
+                  setLatitude(undefined);
+                  setLongitude(undefined);
+                }
+              }}
+            />
+          </div>
+        )}
+
+        <div className="sm:col-span-2 border-t border-brand-border pt-4">
+          <JobPostOrdersFields value={listing} onChange={setListing} />
         </div>
       </div>
 

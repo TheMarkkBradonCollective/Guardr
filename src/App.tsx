@@ -57,6 +57,7 @@ import {
   saveGuardPayoutInvoicesToStorage,
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
+import { listingDetailDbColumns } from './lib/jobListing';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
@@ -363,6 +364,12 @@ export default function App() {
         siteName: r.site_name || undefined,
         address: r.address || undefined,
         state: r.state || undefined,
+        latitude: r.latitude != null ? Number(r.latitude) : undefined,
+        longitude: r.longitude != null ? Number(r.longitude) : undefined,
+        contactName: r.contact_name || undefined,
+        contactPhone: r.contact_phone || undefined,
+        parkingInstructions: r.parking_instructions || undefined,
+        accessInstructions: r.access_instructions || undefined,
         location: r.location, type: r.type,
         armedRequired: r.armed_required,
         guardsNeeded: r.guards_needed ?? 1,
@@ -1071,6 +1078,12 @@ export default function App() {
       uniformRequirements: newRequest.uniformRequirements || '',
       equipmentRequirements: newRequest.equipmentRequirements || '',
       siteInstructions: newRequest.siteInstructions || newRequest.description || '',
+      contactName: newRequest.contactName,
+      contactPhone: newRequest.contactPhone,
+      parkingInstructions: newRequest.parkingInstructions,
+      accessInstructions: newRequest.accessInstructions,
+      latitude: newRequest.latitude,
+      longitude: newRequest.longitude,
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
@@ -1127,6 +1140,7 @@ export default function App() {
           required_certifications: freshJob.requiredCertifications,
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
+          ...listingDetailDbColumns(freshJob),
         });
       } catch (e) { console.error('Request insert error:', e); }
     }
@@ -1176,9 +1190,15 @@ export default function App() {
       type: input.type,
       armedRequired: false,
       guardsNeeded: input.guardsNeeded,
-      uniformRequirements: '',
-      equipmentRequirements: '',
-      siteInstructions: input.description || '',
+      uniformRequirements: input.uniformRequirements || '',
+      equipmentRequirements: input.equipmentRequirements || '',
+      siteInstructions: input.siteInstructions || input.description || '',
+      contactName: input.contactName,
+      contactPhone: input.contactPhone,
+      parkingInstructions: input.parkingInstructions,
+      accessInstructions: input.accessInstructions,
+      latitude: input.latitude,
+      longitude: input.longitude,
       startDate: input.startDate,
       endDate: input.endDate,
       durationHours: input.durationHours,
@@ -1246,6 +1266,7 @@ export default function App() {
           required_certifications: freshJob.requiredCertifications,
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
+          ...listingDetailDbColumns(freshJob),
         });
       } catch (e) {
         console.error('Staff job insert error:', e);
@@ -1588,7 +1609,7 @@ export default function App() {
       estimatedPayout: updates.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100,
       location: siteName ? `${siteName} — ${address}` : address,
       state: updates.state?.toUpperCase() ?? existing.state,
-      description: updates.description || updates.siteInstructions || existing.description,
+      description: updates.description ?? existing.description,
       status: existing.status === 'open' ? 'open' : 'pending-review',
     };
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...merged } : r));
@@ -1614,6 +1635,7 @@ export default function App() {
         estimated_payout: merged.estimatedPayout,
         required_certifications: merged.requiredCertifications,
         status: merged.status,
+        ...listingDetailDbColumns(merged),
       }).eq('id', requestId);
     }
   };

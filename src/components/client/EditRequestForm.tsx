@@ -4,6 +4,9 @@ import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
+import { listingFieldsFromJob } from '../../lib/jobListing';
+import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { Loader2 } from 'lucide-react';
 
 interface EditRequestFormProps {
@@ -21,7 +24,9 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
   const [endDate, setEndDate] = useState(toDatetimeLocal(request.endDate));
   const [guardsNeeded, setGuardsNeeded] = useState(request.guardsNeeded ?? 1);
   const [hourlyRate, setHourlyRate] = useState(request.hourlyRate);
-  const [siteInstructions, setSiteInstructions] = useState(request.siteInstructions || request.description);
+  const [listing, setListing] = useState(() => listingFieldsFromJob(request));
+  const [latitude, setLatitude] = useState(request.latitude);
+  const [longitude, setLongitude] = useState(request.longitude);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -57,8 +62,16 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
         hourlyRate,
         guardPay,
         estimatedPayout,
-        siteInstructions: siteInstructions.trim(),
-        description: siteInstructions.trim() || request.description,
+        description: listing.description.trim(),
+        uniformRequirements: listing.uniformRequirements.trim(),
+        equipmentRequirements: listing.equipmentRequirements.trim(),
+        siteInstructions: listing.siteInstructions.trim(),
+        contactName: listing.contactName.trim() || undefined,
+        contactPhone: listing.contactPhone.trim() || undefined,
+        parkingInstructions: listing.parkingInstructions.trim() || undefined,
+        accessInstructions: listing.accessInstructions.trim() || undefined,
+        latitude,
+        longitude,
       });
       onCancel();
     } finally {
@@ -67,8 +80,8 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 border-brand-primary/30 bg-brand-primary/5">
-      <p className="text-sm font-semibold text-brand-primary">Edit job (unpaid only)</p>
+    <form onSubmit={handleSubmit} className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 border-brand-primary/30 bg-brand-primary/5">
+      <p className="text-sm font-semibold text-brand-primary">Edit listing (unpaid only)</p>
       {error && (
         <p className="text-xs text-red-400 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>
       )}
@@ -95,6 +108,24 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
         <label className="uber-label block mb-1">Address</label>
         <input value={address} onChange={(e) => setAddress(e.target.value)} className="uber-input w-full" />
       </div>
+      {address.trim().length > 3 && state.length === 2 && (
+        <JobLocationPinPicker
+          address={address}
+          state={state}
+          siteName={siteName}
+          latitude={latitude}
+          longitude={longitude}
+          onCoordsChange={(coords) => {
+            if (coords) {
+              setLatitude(coords.lat);
+              setLongitude(coords.lng);
+            } else {
+              setLatitude(undefined);
+              setLongitude(undefined);
+            }
+          }}
+        />
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="uber-label block mb-1">Start</label>
@@ -142,19 +173,11 @@ export function EditRequestForm({ request, onSave, onCancel }: EditRequestFormPr
           />
         </div>
       </div>
-      <div>
-        <label className="uber-label block mb-1">Site instructions</label>
-        <textarea
-          value={siteInstructions}
-          onChange={(e) => setSiteInstructions(e.target.value)}
-          rows={3}
-          className="uber-input w-full resize-none"
-        />
-      </div>
+      <JobPostOrdersFields value={listing} onChange={setListing} />
       <div className="flex gap-2 pt-1">
         <button type="submit" disabled={saving} className="app-button-primary !h-9 !px-4 !text-xs flex-1 gap-1.5">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-          Save changes
+          Save listing
         </button>
         <button type="button" onClick={onCancel} className="app-button-outline !h-9 !px-4 !text-xs !w-auto">
           Cancel

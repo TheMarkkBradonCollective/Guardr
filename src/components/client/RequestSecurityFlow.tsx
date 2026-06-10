@@ -11,15 +11,17 @@ import {
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
-import { US_STATES, formatStateName } from '../../lib/states';
-import { ArrowLeft, ArrowRight, Check, MapPin, Search } from 'lucide-react';
+import { US_STATES } from '../../lib/states';
+import { ArrowLeft, ArrowRight, Check, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
-import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
-import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
+import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
+import { JobListingPreview } from '../jobs/JobListingPreview';
+import { buildMarketplaceDescription, JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
@@ -29,7 +31,7 @@ interface RequestSecurityFlowProps {
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Review'];
 
 export function RequestSecurityFlow({
   preset = 'default',
@@ -62,6 +64,11 @@ export function RequestSecurityFlow({
   const [customTitle, setCustomTitle] = useState('');
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
+  const [listing, setListing] = useState<JobListingFields>(() =>
+    serviceListingDefaults('standing-guard')
+  );
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
 
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
@@ -84,13 +91,19 @@ export function RequestSecurityFlow({
       case 4: return effectiveGuards >= 1;
       case 5: return effectiveRate >= 20;
       case 6: return true;
+      case 7:
+        return (
+          listing.description.trim().length > 10 &&
+          listing.uniformRequirements.trim().length > 3 &&
+          listing.siteInstructions.trim().length > 3
+        );
       default: return true;
     }
   };
 
   const goNext = () => {
     if (!canNext()) return;
-    if (step < 7) setStep((s) => (s + 1) as FlowStep);
+    if (step < 8) setStep((s) => (s + 1) as FlowStep);
   };
 
   const goBack = () => {
@@ -119,8 +132,16 @@ export function RequestSecurityFlow({
       hourlyRate: effectiveRate,
       guardPay,
       estimatedPayout: estimatedTotal,
-      description: `${selectedService.label} coverage at ${address}.`,
-      siteInstructions: `${selectedService.label} post orders for ${siteName || address}.`,
+      description: buildMarketplaceDescription(selectedService.label, address, listing.description),
+      uniformRequirements: listing.uniformRequirements.trim(),
+      equipmentRequirements: listing.equipmentRequirements.trim(),
+      siteInstructions: listing.siteInstructions.trim(),
+      contactName: listing.contactName.trim() || undefined,
+      contactPhone: listing.contactPhone.trim() || undefined,
+      parkingInstructions: listing.parkingInstructions.trim() || undefined,
+      accessInstructions: listing.accessInstructions.trim() || undefined,
+      latitude,
+      longitude,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
@@ -136,7 +157,7 @@ export function RequestSecurityFlow({
         </button>
         <div className="flex-1">
           <p className="text-sm text-brand-text-muted">
-            Step {step} of 7 · {STEP_LABELS[step - 1]}
+            Step {step} of 8 · {STEP_LABELS[step - 1]}
           </p>
           <div className="flex gap-1 mt-2">
             {STEP_LABELS.map((_, i) => (
@@ -158,7 +179,16 @@ export function RequestSecurityFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setServiceId(opt.id)}
+                  onClick={() => {
+                    setServiceId(opt.id);
+                    setListing(
+                      serviceListingDefaults(opt.id, {
+                        siteName,
+                        address,
+                        serviceLabel: opt.label,
+                      })
+                    );
+                  }}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
@@ -222,11 +252,23 @@ export function RequestSecurityFlow({
                 className="uber-input rounded-xl"
               />
             </div>
-            {address && (
-              <div className="wf-list-card items-start gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                <span>{address}</span>
-              </div>
+            {address.trim().length > 3 && jobState.length === 2 && (
+              <JobLocationPinPicker
+                address={address}
+                state={jobState}
+                siteName={siteName}
+                latitude={latitude}
+                longitude={longitude}
+                onCoordsChange={(coords) => {
+                  if (coords) {
+                    setLatitude(coords.lat);
+                    setLongitude(coords.lng);
+                  } else {
+                    setLatitude(undefined);
+                    setLongitude(undefined);
+                  }
+                }}
+              />
             )}
           </div>
         )}
@@ -353,54 +395,56 @@ export function RequestSecurityFlow({
 
         {step === 7 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Review job offer</h2>
-            <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4">
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">Service</span>
-                <span className="font-semibold">{selectedService.emoji} {selectedService.label}</span>
-              </div>
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">State</span>
-                <span className="font-semibold">{formatStateName(jobState)}</span>
-              </div>
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">Location</span>
-                <span className="font-semibold text-right max-w-[60%]">{address}</span>
-              </div>
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">Schedule</span>
-                <span className="font-semibold">{formatDuration(durationHours)}</span>
-              </div>
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">Guards needed</span>
-                <span className="font-semibold">{effectiveGuards}</span>
-              </div>
-              <div className="flex justify-between text-sm w-full">
-                <span className="text-brand-text-muted">Rate</span>
-                <span className="font-semibold">${effectiveRate}/hr</span>
-              </div>
-              <div className="flex justify-between text-sm border-t border-brand-border pt-3 w-full">
-                <span className="text-brand-text-muted">Min guard status</span>
-                <span className="font-semibold text-right max-w-[60%]">{GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]}</span>
-              </div>
-              <div className="text-sm w-full">
-                <span className="text-brand-text-muted">Additional credentials</span>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
-                    <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="border-t border-brand-border pt-4 w-full">
-                <JobBillingSummary
-                  variant="client"
-                  hourlyRate={effectiveRate}
-                  durationHours={durationHours}
-                  estimatedPayout={estimatedTotal}
-                  guardPay={guardPay}
-                  platformFeeTotal={platformFeeTotal}
-                />
-              </div>
+            <h2 className="text-xl font-bold">Professional listing details</h2>
+            <p className="text-sm text-brand-text-muted">
+              Guards review this like a job posting — dress code, equipment, access, and post orders.
+            </p>
+            <JobPostOrdersFields value={listing} onChange={setListing} />
+          </div>
+        )}
+
+        {step === 8 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Review your listing</h2>
+            <JobListingPreview
+              job={{
+                title,
+                description: buildMarketplaceDescription(selectedService.label, address, listing.description),
+                clientName: 'Your company',
+                clientLogo: 'YOU',
+                siteName: siteName || title,
+                address,
+                state: jobState.toUpperCase(),
+                location: siteName ? `${siteName} — ${address}` : address,
+                type: serviceToJobType(serviceId),
+                armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
+                guardsNeeded: effectiveGuards,
+                uniformRequirements: listing.uniformRequirements,
+                equipmentRequirements: listing.equipmentRequirements,
+                siteInstructions: listing.siteInstructions,
+                contactName: listing.contactName,
+                contactPhone: listing.contactPhone,
+                parkingInstructions: listing.parkingInstructions,
+                accessInstructions: listing.accessInstructions,
+                latitude,
+                longitude,
+                startDate: new Date(startDate).toISOString(),
+                endDate: new Date(endDate).toISOString(),
+                durationHours,
+                minGuardQualification,
+                requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
+                requestType: 'marketplace',
+              }}
+            />
+            <div className="border-t border-brand-border pt-4">
+              <JobBillingSummary
+                variant="client"
+                hourlyRate={effectiveRate}
+                durationHours={durationHours}
+                estimatedPayout={estimatedTotal}
+                guardPay={guardPay}
+                platformFeeTotal={platformFeeTotal}
+              />
             </div>
           </div>
         )}
@@ -408,7 +452,7 @@ export function RequestSecurityFlow({
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
         <div className="max-w-lg mx-auto">
-          {step < 7 ? (
+          {step < 8 ? (
             <button
               type="button"
               onClick={goNext}

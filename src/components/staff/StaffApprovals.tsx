@@ -87,6 +87,16 @@ export function StaffApprovals({
                             {req.description}
                           </p>
                         )}
+                        {req.uniformRequirements && (
+                          <p className="text-[11px] text-brand-text-muted mt-2">
+                            <span className="font-medium text-brand-text">Uniform:</span> {req.uniformRequirements}
+                          </p>
+                        )}
+                        {req.equipmentRequirements && (
+                          <p className="text-[11px] text-brand-text-muted mt-1">
+                            <span className="font-medium text-brand-text">Equipment:</span> {req.equipmentRequirements}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <JobBillingSummaryFromRequest req={req} variant="staff" />

@@ -1,6 +1,6 @@
 import { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { GuardJobView } from './guardJobView';
-import { estimateJobDistanceMiles } from './geo';
+import { estimateJobDistanceMiles, jobCoords } from './geo';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
@@ -69,8 +69,10 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
   }
 }
 
-export function getJobDistance(job: Pick<GuardJobLike, 'location' | 'id'>): number {
-  return estimateJobDistanceMiles(job.location, job.id);
+export function getJobDistance(
+  job: Pick<GuardJobLike, 'location' | 'id'> & { latitude?: number; longitude?: number }
+): number {
+  return estimateJobDistanceMiles(job.location, job.id, undefined, jobCoords(job));
 }
 
 export function getGuardHourlyPay(job: Pick<GuardJobView, 'guardPay'>): number {

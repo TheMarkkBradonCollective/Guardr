@@ -1,22 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
-import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
+import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
   Award,
-  Calendar,
   Check,
   CheckCircle2,
-  Clock,
   CreditCard,
   Loader2,
-  MapPin,
   Pencil,
   Shield,
   Star,
@@ -147,7 +144,7 @@ export function ClientRequestsList({
                 <JobListCard
                   key={req.id}
                   job={req}
-                  subtitle={req.type.replace('-', ' ')}
+                  subtitle={req.siteName ? `${req.siteName} · ${req.clientName}` : req.clientName}
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
                       <WfBadge tone={req.requestType === 'direct' ? 'primary' : 'default'}>
@@ -167,7 +164,7 @@ export function ClientRequestsList({
               <div key={req.id} className="app-item-card app-item-card-align-top flex-col !items-stretch gap-4 app-item-card-selected">
                 <JobListCard
                   job={req}
-                  subtitle={req.type.replace('-', ' ')}
+                  subtitle={req.siteName ? `${req.siteName} · ${req.clientName}` : req.clientName}
                   meta={
                     <div className="flex flex-wrap items-center gap-1.5">
                       <WfBadge tone={req.requestType === 'direct' ? 'primary' : 'default'}>
@@ -182,13 +179,17 @@ export function ClientRequestsList({
                   selected
                 />
 
-                <div className="grid grid-cols-2 gap-2 text-sm text-brand-text-muted w-full">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-brand-primary" />{formatShiftRange(req.startDate, req.endDate)}</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-brand-primary" />{formatDuration(req.durationHours)}</span>
-                  <span className="flex items-center gap-1 col-span-2 truncate"><MapPin className="w-3 h-3 text-brand-primary shrink-0" />{req.location}</span>
-                </div>
+                {editingId !== req.id && (
+                  <JobListingProfile
+                    job={req}
+                    showClientHeader={false}
+                    payLine={<JobBillingSummaryFromRequest req={req} variant="client" />}
+                  />
+                )}
 
-                <JobBillingSummaryFromRequest req={req} variant="client" />
+                {editingId === req.id && (
+                  <JobBillingSummaryFromRequest req={req} variant="client" />
+                )}
 
                 {isJobPaid(req) && (
                   <p className="text-xs text-brand-text-muted border border-brand-border rounded-lg px-2.5 py-1.5 w-full">

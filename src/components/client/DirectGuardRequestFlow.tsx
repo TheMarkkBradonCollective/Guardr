@@ -11,18 +11,20 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
-import { US_STATES, formatStateName } from '../../lib/states';
+import { US_STATES } from '../../lib/states';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ArrowLeft, ArrowRight, MapPin, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
-import { requirementLabel } from '../../lib/certCatalog';
 import { MinGuardQualification } from '../../types';
-import { GUARD_PATHWAY_STATUS_LABELS } from '../../lib/guardQualification';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
+import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
+import { JobListingPreview } from '../jobs/JobListingPreview';
+import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5 | 6;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 'Post orders', 'Review'];
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
@@ -49,7 +51,11 @@ export function DirectGuardRequestFlow({
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, 8));
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
-  const [notes, setNotes] = useState('');
+  const [listing, setListing] = useState<JobListingFields>(() =>
+    serviceListingDefaults('standing-guard')
+  );
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
 
@@ -68,12 +74,18 @@ export function DirectGuardRequestFlow({
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveRate >= 20;
       case 5: return true;
+      case 6:
+        return (
+          listing.description.trim().length > 10 &&
+          listing.uniformRequirements.trim().length > 3 &&
+          listing.siteInstructions.trim().length > 3
+        );
       default: return true;
     }
   };
 
   const goNext = () => {
-    if (!canNext() || step >= 6) return;
+    if (!canNext() || step >= 7) return;
     setStep((s) => (s + 1) as FlowStep);
   };
 
@@ -104,8 +116,18 @@ export function DirectGuardRequestFlow({
       hourlyRate: effectiveRate,
       guardPay,
       estimatedPayout: estimatedTotal,
-      description: notes.trim() || `Direct assignment request for ${guard.name}. ${selectedService.label} at ${address}.`,
-      siteInstructions: notes.trim() || `${selectedService.label} post orders for ${siteName || address}.`,
+      description:
+        listing.description.trim() ||
+        `Direct assignment request for ${guard.name}. ${selectedService.label} at ${address}.`,
+      uniformRequirements: listing.uniformRequirements.trim(),
+      equipmentRequirements: listing.equipmentRequirements.trim(),
+      siteInstructions: listing.siteInstructions.trim(),
+      contactName: listing.contactName.trim() || undefined,
+      contactPhone: listing.contactPhone.trim() || undefined,
+      parkingInstructions: listing.parkingInstructions.trim() || undefined,
+      accessInstructions: listing.accessInstructions.trim() || undefined,
+      latitude,
+      longitude,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
@@ -135,7 +157,7 @@ export function DirectGuardRequestFlow({
           </button>
           <div className="flex-1">
             <p className="text-sm text-brand-text-muted">
-              Step {step} of 6 · {STEP_LABELS[step - 1]}
+              Step {step} of 7 · {STEP_LABELS[step - 1]}
             </p>
             <div className="flex gap-1 mt-2">
               {STEP_LABELS.map((_, i) => (
@@ -155,7 +177,16 @@ export function DirectGuardRequestFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setServiceId(opt.id)}
+                  onClick={() => {
+                    setServiceId(opt.id);
+                    setListing(
+                      serviceListingDefaults(opt.id, {
+                        siteName,
+                        address,
+                        serviceLabel: opt.label,
+                      })
+                    );
+                  }}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
@@ -191,11 +222,23 @@ export function DirectGuardRequestFlow({
               <label className="uber-label block mb-1">Site name (optional)</label>
               <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
             </div>
-            {address && (
-              <div className="wf-list-card items-start gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                <span>{address}</span>
-              </div>
+            {address.trim().length > 3 && jobState.length === 2 && (
+              <JobLocationPinPicker
+                address={address}
+                state={jobState}
+                siteName={siteName}
+                latitude={latitude}
+                longitude={longitude}
+                onCoordsChange={(coords) => {
+                  if (coords) {
+                    setLatitude(coords.lat);
+                    setLongitude(coords.lng);
+                  } else {
+                    setLatitude(undefined);
+                    setLongitude(undefined);
+                  }
+                }}
+              />
             )}
           </div>
         )}
@@ -229,10 +272,6 @@ export function DirectGuardRequestFlow({
               {validateShiftSchedule(startDate, endDate) ??
                 (durationHours <= 0 ? 'End must be after start' : formatDuration(durationHours))}
             </p>
-            <div>
-              <label className="uber-label">Assignment notes for {guard.name.split(' ')[0]}</label>
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="uber-input w-full mt-1 resize-none" placeholder="Site access, dress code, special instructions…" />
-            </div>
           </div>
         )}
 
@@ -273,40 +312,64 @@ export function DirectGuardRequestFlow({
 
         {step === 6 && (
           <div className="space-y-4">
+            <h2 className="text-xl font-bold">Assignment details for {guard.name.split(' ')[0]}</h2>
+            <p className="text-sm text-brand-text-muted">
+              Professional post orders — dress code, equipment, access, and on-site instructions.
+            </p>
+            <JobPostOrdersFields value={listing} onChange={setListing} />
+          </div>
+        )}
+
+        {step === 7 && (
+          <div className="space-y-4">
             <h2 className="text-xl font-bold">Review & send</h2>
-            <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-3 text-sm">
-              <Row label="Guard" value={guard.name} />
-              <Row label="Service" value={selectedService.label} />
-              <Row label="State" value={formatStateName(jobState)} />
-              <Row label="Location" value={address} />
-              <Row label="Schedule" value={formatDuration(durationHours)} />
-              <Row label="Rate" value={`$${effectiveRate}/hr`} />
-              <Row label="Min guard status" value={GUARD_PATHWAY_STATUS_LABELS[minGuardQualification]} />
-              <div className="w-full">
-                <p className="text-brand-text-muted mb-1">Additional credentials</p>
-                <div className="flex flex-wrap gap-1">
-                  {['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')].map((id) => (
-                    <span key={id} className="chip chip-active text-xs">{requirementLabel(id)}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="border-t border-brand-border pt-3 w-full">
-                <JobBillingSummary
-                  variant="client"
-                  hourlyRate={effectiveRate}
-                  durationHours={durationHours}
-                  estimatedPayout={estimatedTotal}
-                  guardPay={guardPay}
-                  platformFeeTotal={platformFeeTotal}
-                />
-              </div>
+            <p className="text-sm text-brand-text-muted">Only {guard.name.split(' ')[0]} will see this listing.</p>
+            <JobListingPreview
+              job={{
+                title: `${title} — ${guard.name}`,
+                description: listing.description,
+                clientName: 'Your company',
+                clientLogo: 'YOU',
+                siteName: siteName || title,
+                address,
+                state: jobState.toUpperCase(),
+                location: siteName ? `${siteName} — ${address}` : address,
+                type: serviceToJobType(serviceId),
+                armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
+                guardsNeeded: 1,
+                uniformRequirements: listing.uniformRequirements,
+                equipmentRequirements: listing.equipmentRequirements,
+                siteInstructions: listing.siteInstructions,
+                contactName: listing.contactName,
+                contactPhone: listing.contactPhone,
+                parkingInstructions: listing.parkingInstructions,
+                accessInstructions: listing.accessInstructions,
+                latitude,
+                longitude,
+                startDate: new Date(startDate).toISOString(),
+                endDate: new Date(endDate).toISOString(),
+                durationHours,
+                minGuardQualification,
+                requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
+                requestType: 'direct',
+              }}
+            />
+            <div className="border-t border-brand-border pt-3">
+              <JobBillingSummary
+                variant="client"
+                hourlyRate={effectiveRate}
+                durationHours={durationHours}
+                estimatedPayout={estimatedTotal}
+                guardPay={guardPay}
+                platformFeeTotal={platformFeeTotal}
+              />
             </div>
           </div>
         )}
       </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95">
-        {step < 6 ? (
+        {step < 7 ? (
           <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">
             Continue <ArrowRight className="w-4 h-4" />
           </button>
@@ -320,11 +383,3 @@ export function DirectGuardRequestFlow({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4 w-full">
-      <span className="text-brand-text-muted">{label}</span>
-      <span className="font-medium text-right">{value}</span>
-    </div>
-  );
-}

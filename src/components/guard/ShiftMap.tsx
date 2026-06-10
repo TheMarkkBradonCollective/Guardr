@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-le
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
-import { locationToCoords, METRO_CENTER } from '../../lib/geo';
+import { jobCoords, METRO_CENTER } from '../../lib/geo';
+import { JOB_TYPE_LABELS } from '../../lib/guardJobs';
 import { useUserLocation } from '../../lib/useUserLocation';
 
 function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
@@ -53,7 +54,7 @@ export function ShiftMap({
     () =>
       jobs.map((job) => ({
         job,
-        coords: locationToCoords(job.location, job.id),
+        coords: jobCoords(job),
       })),
     [jobs]
   );
@@ -107,13 +108,17 @@ export function ShiftMap({
             }}
           >
             <Popup className="guardr-map-popup">
-              <div className="text-xs font-mono space-y-1 min-w-[180px]">
-                <p className="font-bold text-black uppercase text-[10px]">{job.title}</p>
-                <p className="text-neutral-600">{job.location}</p>
-                <p className="text-brand-primary font-black">
+              <div className="text-xs space-y-1.5 min-w-[200px] max-w-[240px]">
+                <p className="font-bold text-black text-[11px] leading-tight">{job.title}</p>
+                <p className="text-neutral-600 text-[10px]">{JOB_TYPE_LABELS[job.type]}{job.armedRequired ? ' · Armed' : ''}</p>
+                <p className="text-neutral-600 text-[10px]">{job.siteName || job.location}</p>
+                {job.uniformRequirements && (
+                  <p className="text-neutral-500 text-[9px] line-clamp-2">Dress: {job.uniformRequirements}</p>
+                )}
+                <p className="text-brand-primary font-black text-sm">
                   ${pinHourlyRate(job, pinMode)}/hr
                   {pinMode === 'staff' && 'estimatedPayout' in job ? (
-                    <span className="block text-[9px] text-neutral-500 font-mono">
+                    <span className="block text-[9px] text-neutral-500 font-normal">
                       Client bill ${(job as SecurityRequest).estimatedPayout}
                     </span>
                   ) : null}

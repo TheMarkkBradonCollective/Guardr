@@ -7,6 +7,7 @@ import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
+import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
@@ -125,21 +126,15 @@ function JobDetailPanel({
         <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
-      <h3 className="font-semibold text-lg">{req.title}</h3>
-      <p className="text-sm text-brand-text-muted">{req.clientName} · {req.location}</p>
-      {req.siteName && <p className="text-xs text-brand-text-muted">Site: {req.siteName}</p>}
-      {req.address && <p className="text-xs text-brand-text-muted">{req.address}</p>}
-      <p className="text-xs text-brand-text-muted">
-        {formatShiftRange(req.startDate, req.endDate)} · {formatDuration(req.durationHours)}
-      </p>
       <p className="text-sm">
         Assigned: <strong>{assigned ? assigned.name : 'Unassigned'}</strong>
         {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
       </p>
-      {req.description && (
-        <p className="text-xs text-brand-text-muted border-l-2 border-brand-primary pl-3">{req.description}</p>
-      )}
-      <JobBillingSummaryFromRequest req={req} variant="staff" />
+      <JobListingProfile
+        job={req}
+        showClientHeader
+        payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
+      />
       {rankedApplicants.length > 0 && onApproveGuardApplication && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">

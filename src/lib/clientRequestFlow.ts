@@ -7,6 +7,7 @@ export type ClientServiceId =
   | 'fire-watch'
   | 'property'
   | 'construction'
+  | 'executive-protection'
   | 'custom';
 
 export interface ClientServiceOption {
@@ -25,6 +26,7 @@ export const CLIENT_SERVICE_OPTIONS: ClientServiceOption[] = [
   { id: 'fire-watch', emoji: '🔥', label: 'Fire Watch', description: 'Hot work & compliance posts', jobType: 'other', defaultTitle: 'Fire Watch Assignment' },
   { id: 'property', emoji: '🏢', label: 'Property Security', description: 'Buildings & facilities', jobType: 'asset-protection', defaultTitle: 'Property Security Coverage' },
   { id: 'construction', emoji: '🚧', label: 'Construction Security', description: 'Job sites & equipment', jobType: 'patrol', defaultTitle: 'Construction Site Security' },
+  { id: 'executive-protection', emoji: '👔', label: 'Executive Protection', description: 'VIP, corporate & close protection', jobType: 'bodyguard', defaultTitle: 'Executive Protection Detail' },
   { id: 'custom', emoji: '📍', label: 'Custom Request', description: 'Describe your own need', jobType: 'other', defaultTitle: 'Custom Security Request' },
 ];
 

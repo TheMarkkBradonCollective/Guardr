@@ -208,7 +208,15 @@ export interface SecurityRequest {
   siteName?: string;
   address?: string;
   state?: string;
+  /** Geocoded map pin — preferred over hash-based placement */
+  latitude?: number;
+  longitude?: number;
   location: string;
+  /** On-site point of contact */
+  contactName?: string;
+  contactPhone?: string;
+  parkingInstructions?: string;
+  accessInstructions?: string;
   type: JobType;
   armedRequired: boolean;
   guardsNeeded?: number;

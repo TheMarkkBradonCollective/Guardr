@@ -17,6 +17,12 @@ export interface GuardJobView {
   siteName?: string;
   address?: string;
   state?: string;
+  latitude?: number;
+  longitude?: number;
+  contactName?: string;
+  contactPhone?: string;
+  parkingInstructions?: string;
+  accessInstructions?: string;
   location: string;
   type: SecurityRequest['type'];
   armedRequired: boolean;
@@ -132,6 +138,12 @@ export function toGuardJobView(req: SecurityRequest): GuardJobView {
     siteName: req.siteName,
     address: req.address,
     state: req.state,
+    latitude: req.latitude,
+    longitude: req.longitude,
+    contactName: req.contactName,
+    contactPhone: req.contactPhone,
+    parkingInstructions: req.parkingInstructions,
+    accessInstructions: req.accessInstructions,
     location: req.location,
     type: req.type,
     armedRequired: req.armedRequired,
