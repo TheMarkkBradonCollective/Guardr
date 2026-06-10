@@ -84,6 +84,8 @@ function JobDetailPanel({
   const [assigning, setAssigning] = useState(false);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
+  const workflowLabel = JOB_STATUS_LABELS[req.status];
+  const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== workflowLabel;
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const canAssign =
     canManageJobs &&
@@ -122,8 +124,10 @@ function JobDetailPanel({
         </button>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
-        <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+        {showLiveBadge && (
+          <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
+        )}
+        <WfBadge tone={statusBadgeTone(req.status)}>{workflowLabel}</WfBadge>
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
       <p className="text-sm">
@@ -133,6 +137,7 @@ function JobDetailPanel({
       <JobListingProfile
         job={req}
         showClientHeader
+        showBadges={false}
         payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
       />
       {rankedApplicants.length > 0 && onApproveGuardApplication && (

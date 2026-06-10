@@ -184,6 +184,7 @@ export function ClientRequestsList({
                   <JobListingProfile
                     job={req}
                     showClientHeader={false}
+                    showBadges={false}
                     payLine={<JobBillingSummaryFromRequest req={req} variant="client" />}
                   />
                 )}
