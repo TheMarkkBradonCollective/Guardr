@@ -16,13 +16,15 @@ import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
+import { JobSpotCheckPhotosSection } from '../jobs/JobSpotCheckPhotosSection';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
 import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
 import { StaffSpotCheckUpload } from './StaffSpotCheckUpload';
-import { canStaffUploadSpotCheck, shouldShowSpotCheckSection } from '../../lib/spotChecks';
+import { canStaffUploadSpotCheck, hasSpotChecks, isNoSpotCheckFlagged, shouldShowSpotCheckSection } from '../../lib/spotChecks';
+import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
@@ -114,10 +116,14 @@ function JobDetailPanel({
   const [assigning, setAssigning] = useState(false);
   const [editing, setEditing] = useState(false);
   const [auditUploadOpen, setAuditUploadOpen] = useState(() => isNoSelfAuditFlagged(req));
+  const [spotCheckOpen, setSpotCheckOpen] = useState(() => isNoSpotCheckFlagged(req));
   useEffect(() => setEditing(false), [req.id]);
   useEffect(() => {
     if (isNoSelfAuditFlagged(req)) setAuditUploadOpen(true);
   }, [req.id, req.checkInAudit?.selfAuditSkipped, req.checkInAudit?.selfieUpload, req.checkInAudit?.uniformPhoto, req.checkInAudit?.shoesPhoto]);
+  useEffect(() => {
+    if (isNoSpotCheckFlagged(req)) setSpotCheckOpen(true);
+  }, [req.id, req.status, req.spotChecks?.length, req.checkInAudit?.checkedAt]);
   const scheduleLocked = isJobScheduleLocked(req);
   const showEdit =
     canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
@@ -174,6 +180,7 @@ function JobDetailPanel({
         )}
         <WfBadge tone={statusBadgeTone(req.status)}>{workflowLabel}</WfBadge>
         {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
+        {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
       <p className="text-sm">
@@ -195,6 +202,9 @@ function JobDetailPanel({
         </p>
       )}
       {!editing && !auditUploadOpen && <JobSelfAuditPhotosSection request={req} />}
+      {!editing && !spotCheckOpen && (hasSpotChecks(req) || isNoSpotCheckFlagged(req)) && (
+        <JobSpotCheckPhotosSection request={req} />
+      )}
       <StaffJobActionsBar
         request={req}
         showEdit={showEdit}
@@ -203,6 +213,9 @@ function JobDetailPanel({
         canUploadAudit={canUploadAudit}
         auditUploadOpen={auditUploadOpen}
         onToggleAuditUpload={() => setAuditUploadOpen((open) => !open)}
+        canUploadSpotCheck={showSpotCheck}
+        spotCheckOpen={spotCheckOpen}
+        onToggleSpotCheck={() => setSpotCheckOpen((open) => !open)}
       />
       {editing && showEdit && (
         <EditRequestForm
@@ -260,7 +273,7 @@ function JobDetailPanel({
       {auditUploadOpen && canUploadAudit && (
         <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos!} />
       )}
-      {showSpotCheck && (
+      {spotCheckOpen && showSpotCheck && (
         <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck!} />
       )}
       {canAssign && (

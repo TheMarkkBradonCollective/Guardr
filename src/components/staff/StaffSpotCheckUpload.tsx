@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { SecurityRequest } from '../../types';
-import { canStaffUploadSpotCheck, sortedSpotChecks } from '../../lib/spotChecks';
+import { canStaffUploadSpotCheck, isNoSpotCheckFlagged, sortedSpotChecks } from '../../lib/spotChecks';
+import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { ImagePlus, Loader2, MapPin } from 'lucide-react';
 
 interface StaffSpotCheckUploadProps {
@@ -24,6 +25,7 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
   const [saving, setSaving] = useState(false);
 
   const canUpload = canStaffUploadSpotCheck(request);
+  const flagged = isNoSpotCheckFlagged(request);
   const history = sortedSpotChecks(request);
 
   const handleFile = async (file: File | undefined) => {
@@ -52,9 +54,12 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
       <div className="flex items-start gap-2">
         <MapPin className="w-4 h-4 text-brand-primary mt-0.5 shrink-0" />
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Spot check</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Spot check</p>
+            {flagged && <NoSpotCheckBadge />}
+          </div>
           <p className="text-xs text-brand-text-muted mt-1">
-            Upload a photo to confirm the assigned guard is on site.
+            Staff-only — optional, but jobs are flagged until you upload a photo confirming the guard is on site.
           </p>
         </div>
       </div>

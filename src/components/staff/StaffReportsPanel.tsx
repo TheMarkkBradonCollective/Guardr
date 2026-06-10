@@ -3,7 +3,8 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { sortedSpotChecks } from '../../lib/spotChecks';
+import { isNoSpotCheckFlagged, sortedSpotChecks } from '../../lib/spotChecks';
+import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
@@ -13,7 +14,9 @@ interface StaffReportsPanelProps {
 }
 
 export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) {
-  const withAudits = requests.filter((r) => r.checkInAudit || r.checkOutAudit || (r.spotChecks?.length ?? 0) > 0);
+  const withAudits = requests.filter(
+    (r) => r.checkInAudit || r.checkOutAudit || (r.spotChecks?.length ?? 0) > 0 || isNoSpotCheckFlagged(r)
+  );
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -55,23 +58,31 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                     <SelfAuditPhotoGallery audit={req.checkInAudit} />
                   </div>
                 )}
-                {(req.spotChecks?.length ?? 0) > 0 && (
+                {(isNoSpotCheckFlagged(req) || (req.spotChecks?.length ?? 0) > 0) && (
                   <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-2 w-full">
-                    <p className="text-brand-primary text-xs font-semibold">Spot checks</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {sortedSpotChecks(req).map((check) => (
-                        <div key={check.id}>
-                          <img
-                            src={check.imageUrl}
-                            alt="Spot check"
-                            className="w-full h-24 object-cover rounded-lg border border-brand-border"
-                          />
-                          <p className="text-[10px] text-brand-text-muted mt-1">
-                            {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-brand-primary text-xs font-semibold">Staff spot checks</p>
+                      {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
                     </div>
+                    {isNoSpotCheckFlagged(req) && (
+                      <p className="text-xs text-amber-400/90">No spot-check photo on file yet — staff-only, optional but flagged.</p>
+                    )}
+                    {(req.spotChecks?.length ?? 0) > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {sortedSpotChecks(req).map((check) => (
+                          <div key={check.id}>
+                            <img
+                              src={check.imageUrl}
+                              alt="Spot check"
+                              className="w-full h-24 object-cover rounded-lg border border-brand-border"
+                            />
+                            <p className="text-[10px] text-brand-text-muted mt-1">
+                              {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {req.checkOutAudit?.dailyActivityReport && (

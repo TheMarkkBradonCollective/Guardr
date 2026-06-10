@@ -2,7 +2,8 @@ import React from 'react';
 import { SecurityRequest } from '../../types';
 import { isJobScheduleLocked } from '../../lib/jobEditRules';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { Camera, Pencil } from 'lucide-react';
+import { isNoSpotCheckFlagged } from '../../lib/spotChecks';
+import { Camera, MapPin, Pencil } from 'lucide-react';
 
 interface StaffJobActionsBarProps {
   request: SecurityRequest;
@@ -12,6 +13,9 @@ interface StaffJobActionsBarProps {
   canUploadAudit: boolean;
   auditUploadOpen: boolean;
   onToggleAuditUpload: () => void;
+  canUploadSpotCheck?: boolean;
+  spotCheckOpen?: boolean;
+  onToggleSpotCheck?: () => void;
 }
 
 export function StaffJobActionsBar({
@@ -22,11 +26,15 @@ export function StaffJobActionsBar({
   canUploadAudit,
   auditUploadOpen,
   onToggleAuditUpload,
+  canUploadSpotCheck = false,
+  spotCheckOpen = false,
+  onToggleSpotCheck,
 }: StaffJobActionsBarProps) {
-  if (!showEdit && !canUploadAudit) return null;
+  if (!showEdit && !canUploadAudit && !canUploadSpotCheck) return null;
 
   const scheduleLocked = isJobScheduleLocked(request);
-  const flagged = isNoSelfAuditFlagged(request);
+  const auditFlagged = isNoSelfAuditFlagged(request);
+  const spotCheckFlagged = isNoSpotCheckFlagged(request);
 
   return (
     <div className="border-t border-brand-border pt-3 space-y-2">
@@ -47,11 +55,23 @@ export function StaffJobActionsBar({
             type="button"
             onClick={onToggleAuditUpload}
             className={`app-button-outline !w-auto !h-9 !px-4 !text-xs ${
-              flagged ? 'border-amber-500/50 text-amber-400' : ''
+              auditFlagged ? 'border-amber-500/50 text-amber-400' : ''
             }`}
           >
             <Camera className="w-3 h-3 inline" />
-            {auditUploadOpen ? 'Hide self-audit upload' : flagged ? 'Upload self-audit photos — required' : 'Upload self-audit photos'}
+            {auditUploadOpen ? 'Hide self-audit upload' : auditFlagged ? 'Upload self-audit photos — required' : 'Upload self-audit photos'}
+          </button>
+        )}
+        {canUploadSpotCheck && onToggleSpotCheck && (
+          <button
+            type="button"
+            onClick={onToggleSpotCheck}
+            className={`app-button-outline !w-auto !h-9 !px-4 !text-xs ${
+              spotCheckFlagged ? 'border-amber-500/50 text-amber-400' : ''
+            }`}
+          >
+            <MapPin className="w-3 h-3 inline" />
+            {spotCheckOpen ? 'Hide spot check' : spotCheckFlagged ? 'Upload spot check — flagged' : 'Upload spot check'}
           </button>
         )}
       </div>
