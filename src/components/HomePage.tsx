@@ -159,7 +159,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
       </header>
 
       <section className="relative">
-        <div className="onboarding-hero relative h-[min(48vh,20rem)] bg-gradient-to-br from-brand-primary/30 via-brand-primary/12 to-brand-bg flex items-end justify-center overflow-hidden">
+        <div className="onboarding-hero relative h-[min(48vh,20rem)] bg-gradient-to-br from-brand-primary/30 via-brand-primary/12 to-brand-bg flex items-center justify-center overflow-hidden">
           <div
             className="hero-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(100%,480px)] h-56 rounded-full pointer-events-none"
             style={{
@@ -167,6 +167,14 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
                 'radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 22%, transparent) 0%, transparent 70%)',
             }}
           />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.55 }}
+            className="relative z-10 pb-6"
+          >
+            <Logo size={112} className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-md" />
+          </motion.div>
           <div className="absolute inset-x-0 bottom-0 h-10 bg-brand-bg rounded-t-[2.5rem]" />
         </div>
 
