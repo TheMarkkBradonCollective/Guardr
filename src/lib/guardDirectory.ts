@@ -28,6 +28,48 @@ export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
     .sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
 }
 
+/** Jobs that count as this client having worked with the guard before (rehire eligible). */
+const CLIENT_REHIRE_STATUSES: SecurityRequest['status'][] = [
+  'accepted',
+  'in-progress',
+  'completed',
+  'closed',
+];
+
+export function guardHasWorkedWithClient(
+  guardId: string,
+  clientId: string,
+  requests: SecurityRequest[]
+): boolean {
+  return requests.some(
+    (r) =>
+      r.clientId === clientId &&
+      r.assignedGuardId === guardId &&
+      CLIENT_REHIRE_STATUSES.includes(r.status)
+  );
+}
+
+/** Guards a client may rehire — bypasses Guardr applicant review when selected at job create. */
+export function getClientRehireableGuards(
+  clientId: string,
+  requests: SecurityRequest[],
+  guards: SecurityGuard[]
+): SecurityGuard[] {
+  const guardIds = new Set(
+    requests
+      .filter(
+        (r) =>
+          r.clientId === clientId &&
+          r.assignedGuardId &&
+          CLIENT_REHIRE_STATUSES.includes(r.status)
+      )
+      .map((r) => r.assignedGuardId as string)
+  );
+  return guards
+    .filter((g) => guardIds.has(g.id) && !g.isStaff && (g.userStatus || 'active') === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function getGuardHistoryWithClient(
   guardId: string,
   clientId: string,

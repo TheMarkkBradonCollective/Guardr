@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { Client, JobType, SecurityGuard } from '../../types';
+import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
+import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
@@ -50,11 +51,12 @@ export interface StaffCreateJobInput {
 interface StaffCreateJobFormProps {
   clients: Client[];
   guards: SecurityGuard[];
+  requests: SecurityRequest[];
   onCreate: (input: StaffCreateJobInput) => Promise<string | void>;
   onCreated?: (jobId: string) => void;
 }
 
-export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: StaffCreateJobFormProps) {
+export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCreated }: StaffCreateJobFormProps) {
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
@@ -79,12 +81,9 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
     [clients]
   );
 
-  const assignableGuards = useMemo(
-    () =>
-      guards
-        .filter((g) => !g.isStaff && (g.userStatus || 'active') === 'active')
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [guards]
+  const rehireableGuards = useMemo(
+    () => (clientId ? getClientRehireableGuards(clientId, requests, guards) : []),
+    [clientId, requests, guards]
   );
 
   const title =
@@ -131,6 +130,10 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
       setError(scheduleError);
       return;
     }
+    if (assignGuardId && !guardHasWorkedWithClient(assignGuardId, clientId, requests)) {
+      setError('That guard has not worked with this client before. Leave the job open for applications.');
+      return;
+    }
     setSaving(true);
     try {
       const jobId = await onCreate({
@@ -162,8 +165,8 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
         assignGuardId
-          ? `Job created for ${clientLabel} with guard approved.`
-          : `Job posted for ${clientLabel} — open for guard applications.`
+          ? `Job created for ${clientLabel} with prior guard rehired.`
+          : `Job posted for ${clientLabel} — open for guard applications (Guardr approves best fit).`
       );
       reset();
       if (jobId) onCreated?.(jobId);
@@ -197,7 +200,7 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
         <div>
           <h3 className="text-sm font-semibold">Create job for client</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Post a job on behalf of a client. Optionally approve a guard now — otherwise it goes live as an open offer.
+            Post a job on behalf of a client. Rehire a guard the client has worked with before to skip Guardr applicant review — otherwise leave open for guards to apply (Guardr approves the best fit).
           </p>
         </div>
         <button
@@ -219,7 +222,10 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
           <label className="uber-label block mb-1">Client</label>
           <select
             value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
+            onChange={(e) => {
+              setClientId(e.target.value);
+              setAssignGuardId('');
+            }}
             className="uber-input w-full"
             required
           >
@@ -360,20 +366,35 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
           />
         </div>
 
-        <div>
-          <label className="uber-label block mb-1">Approve guard now (optional)</label>
+        <div className="sm:col-span-2">
+          <label className="uber-label block mb-1">Rehire guard (optional)</label>
           <select
             value={assignGuardId}
             onChange={(e) => setAssignGuardId(e.target.value)}
             className="uber-input w-full"
+            disabled={!clientId}
           >
-            <option value="">Leave open — guards can apply</option>
-            {assignableGuards.map((g) => (
+            <option value="">
+              {!clientId
+                ? 'Select a client first'
+                : 'Leave open — guards apply, Guardr approves best fit'}
+            </option>
+            {rehireableGuards.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
               </option>
             ))}
           </select>
+          {clientId && rehireableGuards.length === 0 && (
+            <p className="text-xs text-brand-text-muted mt-1.5">
+              This client has no prior jobs with guards on Guardr yet. New offers stay open for applications.
+            </p>
+          )}
+          {clientId && rehireableGuards.length > 0 && (
+            <p className="text-xs text-brand-text-muted mt-1.5">
+              Only guards this client has worked with before. Rehire skips Guardr applicant review.
+            </p>
+          )}
         </div>
 
         {address.trim().length > 3 && (
@@ -413,7 +434,7 @@ export function StaffCreateJobForm({ clients, guards, onCreate, onCreated }: Sta
 
       <div className="flex flex-wrap gap-2">
         <button type="submit" disabled={saving || !!scheduleError} className="app-button-primary !w-auto !h-10 !px-5">
-          {saving ? 'Creating…' : assignGuardId ? 'Create & approve guard' : 'Create open job'}
+          {saving ? 'Creating…' : assignGuardId ? 'Create & rehire guard' : 'Create open job'}
         </button>
         <button
           type="button"

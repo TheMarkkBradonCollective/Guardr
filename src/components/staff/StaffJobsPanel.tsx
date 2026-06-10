@@ -299,6 +299,7 @@ export function StaffJobsPanel({
         <StaffCreateJobForm
           clients={clients}
           guards={guards}
+          requests={requests}
           onCreate={onCreateJob}
           onCreated={(jobId) => setSelectedId(jobId)}
         />

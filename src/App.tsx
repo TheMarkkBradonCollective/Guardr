@@ -60,7 +60,7 @@ import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns } from './lib/jobListing';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
-import { findGuardProfileForUser, getBrowsableGuards } from './lib/guardDirectory';
+import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -1164,6 +1164,11 @@ export default function App() {
       const userStatus = guard.userStatus || 'active';
       if (userStatus === 'suspended' || userStatus === 'blocked') {
         throw new Error(`${guard.name} cannot be approved for this job — account is ${userStatus}.`);
+      }
+      if (!guardHasWorkedWithClient(input.assignGuardId, input.clientId, requests)) {
+        throw new Error(
+          `${guard.name} has not worked with this client before. Leave the job open for applications — Guardr will approve the best fit.`
+        );
       }
     }
 
