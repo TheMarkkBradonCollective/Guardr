@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, SecurityGuard, SecurityRequest } from '../../types';
+import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
-import { canEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
+import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
@@ -38,6 +38,7 @@ interface StaffJobsPanelProps {
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   initialSelectedId?: string | null;
+  staffRole?: PlatformRole;
 }
 
 function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
@@ -84,12 +85,14 @@ function JobDetailPanel({
   onEditJobListing,
   onApproveGuardApplication,
   onBack,
+  staffRole,
 }: {
   req: SecurityRequest;
   guards: SecurityGuard[];
   canManageJobs?: boolean;
   canUploadSelfAuditPhotos?: boolean;
   canEditJobListing?: boolean;
+  staffRole?: PlatformRole;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
@@ -108,9 +111,11 @@ function JobDetailPanel({
   }, [req.id, req.checkInAudit?.selfAuditSkipped, req.checkInAudit?.selfieUpload, req.checkInAudit?.uniformPhoto, req.checkInAudit?.shoesPhoto]);
   const scheduleLocked = isJobScheduleLocked(req);
   const showEdit =
-    canEditJobListing && onEditJobListing && canEditJobTitleAndLocation(req);
+    canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
   const canUploadAudit =
-    !!canUploadSelfAuditPhotos && !!onUploadSelfAuditPhotos && canStaffUploadSelfAuditPhotos(req);
+    !!canUploadSelfAuditPhotos &&
+    !!onUploadSelfAuditPhotos &&
+    canStaffUploadSelfAuditPhotos(req, staffRole);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const workflowLabel = JOB_STATUS_LABELS[req.status];
@@ -302,6 +307,7 @@ export function StaffJobsPanel({
   canEditJobListing = false,
   onApproveGuardApplication,
   initialSelectedId = null,
+  staffRole,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
@@ -413,6 +419,7 @@ export function StaffJobsPanel({
           onEditJobListing={onEditJobListing}
           onApproveGuardApplication={onApproveGuardApplication}
           onBack={() => setSelectedId(null)}
+          staffRole={staffRole}
         />
       ) : splitView ? (
         <div className="tablet-split-panel">
@@ -434,6 +441,7 @@ export function StaffJobsPanel({
               onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
               onEditJobListing={onEditJobListing}
               onApproveGuardApplication={onApproveGuardApplication}
+              staffRole={staffRole}
             />
           )}
         </div>

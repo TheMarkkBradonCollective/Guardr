@@ -21,6 +21,7 @@ import {
   canManageGuards,
   canManageStaffAccounts,
   canSuspendUsers,
+  canStaffManageJobs,
   canUploadJobSelfAuditPhotos,
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
@@ -198,6 +199,7 @@ export function StaffDashboard({
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canUploadSelfAuditPhotos = canUploadJobSelfAuditPhotos(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
+  const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
@@ -241,7 +243,7 @@ export function StaffDashboard({
             weeklyTrend={overviewWeeklyTrend}
             onNavigate={navigateSection}
             onOpenJob={openJob}
-            canUpdateJobs={canEditJobListing || canUploadSelfAuditPhotos}
+            canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
           />
         );
@@ -259,6 +261,7 @@ export function StaffDashboard({
             onApproveGuardApplication={onApproveGuardApplication}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
+            staffRole={currentUser.role}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');
@@ -282,6 +285,7 @@ export function StaffDashboard({
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
             initialSelectedId={selectedJobId}
+            staffRole={currentUser.role}
           />
         );
       case 'guards':

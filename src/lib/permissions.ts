@@ -142,6 +142,15 @@ export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administ
   return role === 'moderator' || role === 'administrator' || role === 'director';
 }
 
+export function isDirector(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'director';
+}
+
+/** Director has unrestricted staff-side operational access */
+export function hasDirectorStaffOverride(user: Pick<SessionUser, 'role'>): boolean {
+  return isDirector(user) || hasPermission(user, 'director.override_restrictions');
+}
+
 export function hasPermission(user: Pick<SessionUser, 'role'>, permission: Permission): boolean {
   const perms = ROLE_PERMISSIONS[user.role] ?? [];
   return perms.includes(permission);
@@ -194,12 +203,22 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
 
 /** Staff may upload self-audit photos when a guard sent them outside the app */
 export function canUploadJobSelfAuditPhotos(user: Pick<SessionUser, 'role'>): boolean {
-  return hasPermission(user, 'moderator.review_reports');
+  return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
 }
 
-/** Director and administrator may edit job title and location any time before completion */
+/** Director and administrator may edit job listings (director: any non-closed job) */
 export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
-  return user.role === 'director' || user.role === 'administrator';
+  return hasDirectorStaffOverride(user) || user.role === 'administrator';
+}
+
+/** Director receives all staff job-management capabilities */
+export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
+  return (
+    hasDirectorStaffOverride(user) ||
+    canManageCompanyOperations(user) ||
+    canEditJobListingDetails(user) ||
+    canUploadJobSelfAuditPhotos(user)
+  );
 }
 
 /** Map legacy auth / DB staff_role to platform role */

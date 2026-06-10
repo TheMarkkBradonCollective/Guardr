@@ -94,6 +94,7 @@ import {
   canClientEditJobListing,
   canClientEditRequest,
   canEditJobTitleAndLocation,
+  canStaffEditJobTitleAndLocation,
   isJobPaid,
   jobEditBlockedReason,
   sanitizeJobListingUpdates,
@@ -1682,7 +1683,7 @@ export default function App() {
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canEditJobTitleAndLocation(existing)) {
+    if (!existing || !canStaffEditJobTitleAndLocation(existing, currentUser.role)) {
       alert(existing ? 'This job cannot be edited in its current status.' : 'Job not found.');
       return;
     }
@@ -1884,10 +1885,12 @@ export default function App() {
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canStaffUploadSelfAuditPhotos(existing)) {
+    if (!existing || !canStaffUploadSelfAuditPhotos(existing, currentUser.role)) {
       alert(
         existing?.status === 'completed'
-          ? 'Completed jobs only accept staff audit photos when flagged No Self Audit.'
+          ? currentUser.role === 'director'
+            ? 'Completed jobs only accept audit photos when photos are missing or flagged No Self Audit.'
+            : 'Completed jobs only accept staff audit photos when flagged No Self Audit.'
           : existing?.assignedGuardId
             ? 'Audit photos cannot be added for this job right now.'
             : 'Assign a guard before uploading audit photos.'

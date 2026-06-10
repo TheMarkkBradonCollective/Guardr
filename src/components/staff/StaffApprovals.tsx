@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Certification, SecurityGuard, SecurityRequest } from '../../types';
+import { Certification, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { canEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
+import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
@@ -24,6 +24,7 @@ interface StaffApprovalsProps {
   onViewGuard?: (guardId: string) => void;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
+  staffRole?: PlatformRole;
 }
 
 export function StaffApprovals({
@@ -37,6 +38,7 @@ export function StaffApprovals({
   onViewGuard,
   canEditJobListing = false,
   onEditJobListing,
+  staffRole,
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
@@ -70,7 +72,7 @@ export function StaffApprovals({
               <div className="space-y-6">
                 {pendingJobs.map((req) => {
                   const showEdit =
-                    canEditJobListing && onEditJobListing && canEditJobTitleAndLocation(req);
+                    canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
                   const editing = editingJobId === req.id;
                   const scheduleLocked = isJobScheduleLocked(req);
                   return (

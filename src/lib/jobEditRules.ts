@@ -1,4 +1,4 @@
-import { JobStatus, SecurityRequest } from '../types';
+import { JobStatus, PlatformRole, SecurityRequest } from '../types';
 import { computeDurationHours } from './dates';
 
 const FULL_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open'];
@@ -32,6 +32,13 @@ export function canClientPayForJob(req: Pick<SecurityRequest, 'status' | 'paymen
 
 export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {
   return LISTING_EDIT_STATUSES.includes(req.status);
+}
+
+/** Staff listing edits — directors may update through completed; administrators follow client window */
+export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: PlatformRole): boolean {
+  if (role === 'director') return req.status !== 'closed';
+  if (role === 'administrator') return canEditJobTitleAndLocation(req);
+  return false;
 }
 
 export function canEditJobSchedule(req: SecurityRequest): boolean {
