@@ -129,7 +129,7 @@ export function GuardThirtyTwoHourPanel({
           32-Hour BSIS Course Block
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required for Active status. Upload all 9 individual course certificates, or a single 32-hour
+          Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
           completion certificate if your training provider issued one.
         </p>
       </div>

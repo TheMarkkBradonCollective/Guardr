@@ -326,7 +326,7 @@ export function GuardCredentialsPanel({
                     Power to Arrest &amp; Appropriate Use of Force
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                    Required for Active status. As of 2024, upload the combined 8-hour, 2-part course
+                    Highly recommended by Guardr. As of 2024, upload the combined 8-hour, 2-part course
                     certificate — or both legacy separate PTA and UOF certs if you have those.
                   </p>
                   <p

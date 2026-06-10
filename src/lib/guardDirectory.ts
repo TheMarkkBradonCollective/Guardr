@@ -21,7 +21,7 @@ export interface GuardWorkHistoryItem {
   reviewText?: string;
 }
 
-/** Active guards only — clients may browse, hire, and send direct requests */
+/** Guards with a valid guard card on file — clients may browse, hire, and send direct requests */
 export function getBrowsableGuards(guards: SecurityGuard[]): SecurityGuard[] {
   return guards
     .filter((g) => guardCanWorkFieldJobs(g))

@@ -67,17 +67,29 @@ export function GuardJobDetailContent({
               <div>
                 <p className="text-sm font-medium text-brand-text-muted">Your qualification checklist</p>
                 <p className="text-xs text-brand-text-muted mt-0.5">
-                  Credentials you need on file to apply for this job.
+                  A valid guard card is required to apply. Training items marked as recommended are not required.
                 </p>
               </div>
               {checks.map((c) => (
                 <div key={c.label} className="flex items-center gap-2 text-sm">
                   {c.met ? (
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
+                  ) : c.recommended ? (
+                    <span className="w-4 h-4 shrink-0 text-center text-brand-text-muted text-xs leading-4">·</span>
                   ) : (
                     <X className="w-4 h-4 text-red-400 shrink-0" />
                   )}
-                  <span className={c.met ? 'text-brand-text' : 'text-red-400'}>{c.label}</span>
+                  <span
+                    className={
+                      c.met
+                        ? 'text-brand-text'
+                        : c.recommended
+                          ? 'text-brand-text-muted'
+                          : 'text-red-400'
+                    }
+                  >
+                    {c.label}
+                  </span>
                 </div>
               ))}
 

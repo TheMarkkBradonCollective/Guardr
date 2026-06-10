@@ -4,6 +4,7 @@ import {
   getQualificationProgress,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_STATUS_LABELS,
+  GUARDR_RECOMMENDED_TRAINING_LABEL,
   guardPathwayStatusLabel,
   THIRTY_TWO_HOUR_COURSE_IDS,
 } from '../../lib/guardQualification';
@@ -44,13 +45,13 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
       detail: progress.guardCardExpired ? 'Guard card on file but expired — upload a valid card' : undefined,
     },
     {
-      label: '8-Hour Power to Arrest & Appropriate Use of Force (2-part)',
+      label: `8-Hour Power to Arrest & Appropriate Use of Force (2-part) — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
       met: progress.ptaUofTraining,
       verified: progress.ptaUofCombinedVerified,
       detail: ptaUofDetail,
     },
     {
-      label: '32-hour BSIS course block',
+      label: `32-hour BSIS course block — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
       met: progress.thirtyTwoHourBlockComplete,
       verified: progress.thirtyTwoHourBlockVerified,
       detail: progress.thirtyTwoHourBlockVerified
@@ -72,8 +73,8 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
             Guard status
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Upload required credentials to accept jobs. Guardr verification is a trust badge for clients — not required
-            to become Active.
+            A valid BSIS Guard Card is required to accept jobs. 8-hour and 32-hour training are{' '}
+            {GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}. Guardr verification is a trust badge for clients.
           </p>
         </div>
         <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${levelBadge}`}>

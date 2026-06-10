@@ -7,7 +7,6 @@ import {
 import { guardCanWorkInState } from './guardLicenses';
 import {
   guardHasCredentialOnFile,
-  guardMeetsLevel2Training,
   isRequiredPathwayCredential,
 } from './guardQualification';
 
@@ -49,7 +48,7 @@ function isGuardCardOnFile(cert: Certification): boolean {
 
 export function guardMeetsCaListingBaseline(guard: SecurityGuard, state = 'CA'): boolean {
   if (!guardCanWorkInState(guard, state, false)) return false;
-  return guardMeetsLevel2Training(guard);
+  return guardHasCredentialOnFile(guard, 'bsis-guard-card', state);
 }
 
 export function guardMeetsJobCertRequirements(
