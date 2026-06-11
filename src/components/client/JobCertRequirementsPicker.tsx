@@ -43,16 +43,16 @@ export function JobCertRequirementsPicker({
 
       <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 p-3 text-sm">
         <span className="font-semibold text-brand-primary">Always required:</span> Valid BSIS Guard Card uploaded for{' '}
-        {jobState ? `${jobState} ` : ''}jobs ({GUARD_STATUS_LABELS.inactive} minimum). Guardr verification is shown to
+        {jobState ? `${jobState} ` : ''}jobs ({GUARD_STATUS_LABELS.active} with guard card). Guardr verification is shown to
         clients as a trust badge.
       </div>
 
       <div className="space-y-2">
         <p className="text-sm font-semibold">Minimum guard status</p>
         <p className="text-xs text-brand-text-muted">
-          All guards need a valid guard card to work. Choose whether you prefer guards who have also completed full BSIS
-          training ({GUARD_STATUS_LABELS.active}) — training is highly recommended by Guardr but not required to accept
-          jobs.
+          All guards need a valid guard card to be {GUARD_STATUS_LABELS.active} and work. Choose whether you prefer
+          guards who have also completed full BSIS training — training is highly recommended by Guardr but not required
+          to accept jobs.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {

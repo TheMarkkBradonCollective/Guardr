@@ -36,7 +36,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'guard-card',
     title: 'BSIS Guard Card',
-    subtitle: 'State license — upload a valid card to move from Inactive toward Active. Guardr verification is a trust badge for clients.',
+    subtitle: 'State license — upload a valid card to become Active and work jobs. Guardr verification is a trust badge for clients.',
     icon: Shield,
   },
   {
@@ -215,7 +215,7 @@ export function GuardCredentialsPanel({
       <div className="app-form-section space-y-1">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Upload credentials for the Inactive→Active pathway, then add any others you hold — permits, medical, extra training,
+          Upload your guard card to become Active, then add any other credentials you hold — permits, medical, extra training,
           and more. Guardr verification is a trust badge for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
         </p>
       </div>
