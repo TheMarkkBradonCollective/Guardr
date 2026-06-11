@@ -100,10 +100,6 @@ export function CertDetailModal({ cert, onClose, guardName }: CertDetailModalPro
               </div>
             )}
             <div>
-              <dt className="text-xs text-brand-text-muted">Issue date</dt>
-              <dd className="font-medium mt-0.5">{formatDisplayDate(cert.issueDate)}</dd>
-            </div>
-            <div>
               <dt className="text-xs text-brand-text-muted">Expiry date</dt>
               <dd className={`font-medium mt-0.5 ${isCertExpired(cert) ? 'text-amber-500' : ''}`}>
                 {cert.expiryDate ? formatDisplayDate(cert.expiryDate) : '—'}
