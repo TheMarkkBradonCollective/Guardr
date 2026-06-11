@@ -94,7 +94,6 @@ export function GuardCredentialsPanel({
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [state, setState] = useState('CA');
-  const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
@@ -106,7 +105,6 @@ export function GuardCredentialsPanel({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setIssueDate('');
     setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
@@ -138,7 +136,6 @@ export function GuardCredentialsPanel({
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
-      issueDate: issueDate || new Date().toISOString().split('T')[0],
       expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       imageUrl,
@@ -296,10 +293,13 @@ export function GuardCredentialsPanel({
                   onChange={(e) => setNumber(e.target.value)}
                   required
                 />
-                <div className="grid grid-cols-2 gap-2">
-                  <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
-                  <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
-                </div>
+                <input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  className="uber-input w-full"
+                  aria-label="Expiry date"
+                />
                 <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                   <ImagePlus className="w-4 h-4 shrink-0" />
                   <span>Optional now — add a photo later from the credential list</span>
@@ -409,10 +409,13 @@ export function GuardCredentialsPanel({
                     onChange={(e) => setNumber(e.target.value)}
                     required
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
-                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
-                  </div>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="uber-input w-full"
+                    aria-label="Expiry date"
+                  />
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
                     <span>Optional now — add a photo later from the credential list</span>
@@ -495,10 +498,13 @@ export function GuardCredentialsPanel({
                     onChange={(e) => setNumber(e.target.value)}
                     required
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
-                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
-                  </div>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="uber-input w-full"
+                    aria-label="Expiry date"
+                  />
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
                     <span>Optional now — add a photo later from the credential list</span>
@@ -582,10 +588,13 @@ export function GuardCredentialsPanel({
                     onChange={(e) => setNumber(e.target.value)}
                     required
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="uber-input w-full" />
-                    <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="uber-input w-full" />
-                  </div>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="uber-input w-full"
+                    aria-label="Expiry date"
+                  />
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
                     <span>Optional now — add a photo later from the credential list</span>
