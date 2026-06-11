@@ -30,7 +30,11 @@ interface GuardResumeEditorProps {
   payload: GuardResumeSavePayload;
   onChange: (patch: Partial<GuardResumeSavePayload>) => void;
   onAddCertification?: (cert: Partial<Certification>) => Promise<import('../../lib/certUniqueness').AddCertificationResult>;
-  onDeleteCertification?: (certId: string) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
+  onAttachCertificationImage?: (
+    certId: string,
+    imageUrl: string
+  ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
 }
@@ -42,6 +46,7 @@ export function GuardResumeEditor({
   onChange,
   onAddCertification,
   onDeleteCertification,
+  onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
 }: GuardResumeEditorProps) {
@@ -216,6 +221,7 @@ export function GuardResumeEditor({
         editing={editing}
         onAddCertification={onAddCertification}
         onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
       />
 
       <ExperienceSection

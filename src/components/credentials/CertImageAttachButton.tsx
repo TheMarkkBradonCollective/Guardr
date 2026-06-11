@@ -1,0 +1,63 @@
+import React, { useRef, useState } from 'react';
+import { ImagePlus, Loader2 } from 'lucide-react';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+
+interface CertImageAttachButtonProps {
+  onAttach: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
+  compact?: boolean;
+}
+
+export function CertImageAttachButton({ onAttach, compact = false }: CertImageAttachButtonProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setError('');
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Could not read image file.'));
+        reader.readAsDataURL(file);
+      });
+      const result = await onAttach(dataUrl);
+      if (!result.ok) {
+        setError(result.error);
+      }
+    } catch {
+      setError('Could not read image file. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+        className={`inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline disabled:opacity-60 ${
+          compact ? '' : 'py-0.5'
+        }`}
+      >
+        {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
+        {uploading ? 'Uploading…' : 'Add photo'}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={handleImageSelect}
+      />
+      {error && <p className="text-[10px] text-red-400 leading-snug">{error}</p>}
+    </div>
+  );
+}
