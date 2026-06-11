@@ -20,9 +20,13 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 };
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: 'Valid BSIS Guard Card on file',
-  active: 'Guard Card + 8-hr PTA/UOF (2-part) + 32-hour BSIS course block',
+  pending: 'Valid BSIS Guard Card on file — required to work jobs',
+  active:
+    'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
 };
+
+/** Shown on training credentials and job checklists — not a work blocker. */
+export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
 
 /** @deprecated Use GUARD_PATHWAY_STATUS_LABELS */
 export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
@@ -37,12 +41,12 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   return getGuardQualificationLevel(guard, state) === 'active' ? 'active' : 'inactive';
 }
 
-/** Active account + Active credential pathway — required to accept, be hired, or work jobs */
+/** Active account + valid BSIS guard card — required to accept, be hired, or work jobs */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   const userStatus = guard.userStatus || 'active';
   if (userStatus !== 'active') return false;
-  return getGuardQualificationLevel(guard, state) === 'active';
+  return guardMeetsLevel1(guard, state);
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
@@ -56,8 +60,9 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (userStatus === 'blocked') {
     return 'Your account is blocked. Contact Guardr support.';
   }
-  if (getGuardQualificationLevel(guard, state) !== 'active') {
-    return `${GUARD_STATUS_LABELS.inactive} guards cannot accept or work jobs. Complete the Active credential pathway in your profile first.`;
+  if (!guardMeetsLevel1(guard, state)) {
+    const jobState = state || 'CA';
+    return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
   }
   return null;
 }
@@ -67,11 +72,12 @@ export function guardPathwayStatusLabel(level: GuardQualificationLevel): string 
   return GUARD_PATHWAY_STATUS_LABELS[level];
 }
 
-/**
- * As of 2024, BSIS requires one combined 8-hour, 2-part course covering
- * Power to Arrest and Appropriate Use of Force.
- */
+/** Combined 8-hour, 2-part course — or upload Power to Arrest and UOF as separate certs. */
 export const BSIS_PTA_UOF_COMBINED_ID = 'bsis-pta-uof-8hr';
+
+/** Shown in upload flows — combined cert or two separate PTA + UOF certificates. */
+export const PTA_UOF_UPLOAD_GUIDANCE =
+  'Upload the combined 8-hour certificate, or Power to Arrest and Appropriate Use of Force as two separate certs.';
 
 /** Mandatory 32-hour BSIS course block (9 courses). */
 export const THIRTY_TWO_HOUR_COURSE_IDS = [
@@ -141,7 +147,7 @@ export function isPtaUofCatalogId(catalogId: string | undefined): boolean {
 }
 
 export function getPtaUofCatalogEntries() {
-  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID]
+  return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID, BSIS_WMD_AWARENESS_ID]
     .map((id) => getCertCatalogEntry(id))
     .filter((entry): entry is NonNullable<typeof entry> => !!entry);
 }
@@ -239,7 +245,7 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
   );
 }
 
-/** Combined 8-hr cert, or both parts on file (PTA+UOF legacy, or PTA+WMD modern). */
+/** Combined 8-hr cert, or both parts on file (separate PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
   const hasPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
@@ -291,15 +297,13 @@ export function getGuardQualificationLevel(guard: SecurityGuard, state = 'CA'): 
   return 'active';
 }
 
+/** Client job preference — only a valid guard card is required to work. */
 export function guardMeetsQualificationLevel(
   guard: SecurityGuard,
-  minLevel: 'pending' | 'active',
+  _minLevel: 'pending' | 'active',
   state = 'CA'
 ): boolean {
-  const level = getGuardQualificationLevel(guard, state);
-  if (level === 'none') return false;
-  if (minLevel === 'pending') return true;
-  return level === 'active';
+  return guardMeetsLevel1(guard, state);
 }
 
 export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {

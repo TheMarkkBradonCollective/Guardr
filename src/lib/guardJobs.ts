@@ -7,11 +7,12 @@ import { requirementLabel } from './certCatalog';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
+  getGuardQualificationLevel,
   guardMeets32HourBlock,
   guardMeetsPtaUofTraining,
-  guardMeetsQualificationLevel,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_PATHWAY_STATUS_LABELS,
+  GUARDR_RECOMMENDED_TRAINING_LABEL,
 } from './guardQualification';
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -41,6 +42,8 @@ export type JobSortKey = 'distance' | 'pay' | 'startTime' | 'clientRating';
 export interface RequirementCheck {
   label: string;
   met: boolean;
+  /** Informational only — does not block apply/accept when false. */
+  recommended?: boolean;
 }
 
 type GuardJobLike = Pick<
@@ -90,7 +93,7 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
 
   if (!guardCanWorkFieldJobs(guard, jobState)) {
     return {
-      checks: [{ label: 'Active credential pathway on file', met: false }],
+      checks: [{ label: stateLabel, met: false }],
       canAccept: false,
     };
   }
@@ -100,22 +103,28 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
       label: stateLabel,
       met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     },
-    {
-      label: `Minimum guard status: ${GUARD_PATHWAY_STATUS_LABELS[minLevel]}`,
-      met: guardMeetsQualificationLevel(guard, minLevel, jobState),
-    },
   ];
 
   if (minLevel === 'active') {
     checks.push({
-      label: requirementLabel('bsis-pta-uof-8hr'),
-      met: guardMeetsPtaUofTraining(guard),
-    });
-    checks.push({
-      label: requirementLabel('bsis-32-hour-completed'),
-      met: guardMeets32HourBlock(guard),
+      label: `Client prefers ${GUARD_PATHWAY_STATUS_LABELS.active} guard (full BSIS training on file)`,
+      met: getGuardQualificationLevel(guard, jobState) === 'active',
+      recommended: true,
     });
   }
+
+  checks.push(
+    {
+      label: `8-hour PTA & UOF (combined cert or separate PTA + UOF) — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
+      met: guardMeetsPtaUofTraining(guard),
+      recommended: true,
+    },
+    {
+      label: `${requirementLabel('bsis-32-hour-completed')} — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
+      met: guardMeets32HourBlock(guard),
+      recommended: true,
+    }
+  );
 
   if (job.armedRequired) {
     checks.push({
@@ -135,7 +144,8 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
     });
   }
 
-  return { checks, canAccept: checks.every((c) => c.met) };
+  const blockingChecks = checks.filter((c) => !c.recommended);
+  return { checks, canAccept: blockingChecks.every((c) => c.met) };
 }
 
 export function minQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
@@ -165,11 +175,6 @@ export function getJobRequiredCredentialLabels(
 
   add('bsis-guard-card');
 
-  if ((job.minGuardQualification ?? 'pending') === 'active') {
-    add('bsis-pta-uof-8hr');
-    add('bsis-32-hour-completed');
-  }
-
   for (const certId of job.requiredCertifications) {
     if (certId === 'bsis-guard-card') continue;
     add(certId);
@@ -193,7 +198,7 @@ type GuardJobVisibility = Pick<
   | 'armedRequired'
 >;
 
-/** Open jobs visible on a guard's map/list — marketplace offers require full qualification to apply */
+/** Open jobs visible on a guard's map/list — guards need a valid guard card to browse marketplace offers */
 export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
   const jobState = job.state ?? 'CA';
   if (!guardCanWorkFieldJobs(guard, jobState)) return false;

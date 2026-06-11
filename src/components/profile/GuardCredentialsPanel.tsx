@@ -15,6 +15,7 @@ import {
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
   BSIS_PTA_UOF_COMBINED_ID,
+  PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
@@ -23,6 +24,8 @@ import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -74,7 +77,8 @@ interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
   editing: boolean;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
-  onDeleteCertification?: (certId: string) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
 }
 
 export function GuardCredentialsPanel({
@@ -82,6 +86,7 @@ export function GuardCredentialsPanel({
   editing,
   onAddCertification,
   onDeleteCertification,
+  onAttachCertificationImage,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -147,9 +152,25 @@ export function GuardCredentialsPanel({
 
   const handleDelete = async (certId: string) => {
     if (!onDeleteCertification) return;
+    const cert = guard.certifications.find((c) => c.id === certId);
+    if (cert) {
+      const allowed = validateCertDeletion(cert);
+      if (!allowed.ok) {
+        window.alert(allowed.error);
+        return;
+      }
+    }
     if (!window.confirm('Remove this credential from your profile?')) return;
-    await onDeleteCertification(certId);
+    const result = await onDeleteCertification(certId);
+    if (!result.ok) window.alert(result.error);
   };
+
+  const certCardProps = (cert: Certification) => ({
+    onDelete: onDeleteCertification ? () => handleDelete(cert.id) : undefined,
+    onAttachImage: onAttachCertificationImage
+      ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
+      : undefined,
+  });
 
   const ptaUofProgress = getQualificationProgress(guard);
   const ptaUofCatalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
@@ -198,7 +219,7 @@ export function GuardCredentialsPanel({
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Upload credentials for the Inactive→Active pathway, then add any others you hold — permits, medical, extra training,
-          and more. Guardr verification is a trust badge for clients, not required to accept work. Delete and re-upload to change details.
+          and more. Guardr verification is a trust badge for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
         </p>
       </div>
 
@@ -281,7 +302,7 @@ export function GuardCredentialsPanel({
                 </div>
                 <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                   <ImagePlus className="w-4 h-4 shrink-0" />
-                  <span>Optional: attach scan or photo</span>
+                  <span>Optional now — add a photo later from the credential list</span>
                   <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
                 </label>
                 {imageUrl && (
@@ -305,7 +326,7 @@ export function GuardCredentialsPanel({
                     key={cert.id}
                     cert={cert}
                     editing={editing}
-                    onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                    {...certCardProps(cert)}
                   />
                 ))}
               </div>
@@ -326,8 +347,7 @@ export function GuardCredentialsPanel({
                     Power to Arrest &amp; Appropriate Use of Force
                   </p>
                   <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                    Required for Active status. As of 2024, upload the combined 8-hour, 2-part course
-                    certificate — or both legacy separate PTA and UOF certs if you have those.
+                    Highly recommended by Guardr. {PTA_UOF_UPLOAD_GUIDANCE}
                   </p>
                   <p
                     className={`text-xs font-semibold mt-2 ${
@@ -339,7 +359,7 @@ export function GuardCredentialsPanel({
                         ? 'Combined 8-hr certificate on file'
                         : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
                           ? 'PTA & WMD certs on file'
-                          : 'Legacy separate PTA & UOF certs on file'
+                          : 'Separate PTA & UOF certificates on file'
                       : 'Not yet on file'}
                   </p>
                 </div>
@@ -395,7 +415,7 @@ export function GuardCredentialsPanel({
                   </div>
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional: attach scan or photo</span>
+                    <span>Optional now — add a photo later from the credential list</span>
                     <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
                   </label>
                   {imageUrl && (
@@ -417,7 +437,7 @@ export function GuardCredentialsPanel({
                       key={cert.id}
                       cert={cert}
                       editing={editing}
-                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                      {...certCardProps(cert)}
                     />
                   ))}
                 </div>
@@ -428,6 +448,7 @@ export function GuardCredentialsPanel({
               editing={editing}
               onAddCertification={onAddCertification}
               onDeleteCertification={onDeleteCertification}
+              onAttachCertificationImage={onAttachCertificationImage}
             />
             <section className="app-form-section space-y-3">
               <div className="flex items-start justify-between gap-2">
@@ -480,7 +501,7 @@ export function GuardCredentialsPanel({
                   </div>
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional: attach scan or photo</span>
+                    <span>Optional now — add a photo later from the credential list</span>
                     <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
                   </label>
                   {imageUrl && (
@@ -502,7 +523,7 @@ export function GuardCredentialsPanel({
                       key={cert.id}
                       cert={cert}
                       editing={editing}
-                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                      {...certCardProps(cert)}
                     />
                   ))}
                 </div>
@@ -567,7 +588,7 @@ export function GuardCredentialsPanel({
                   </div>
                   <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                     <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional: attach scan or photo</span>
+                    <span>Optional now — add a photo later from the credential list</span>
                     <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
                   </label>
                   {imageUrl && (
@@ -591,7 +612,7 @@ export function GuardCredentialsPanel({
                       key={cert.id}
                       cert={cert}
                       editing={editing}
-                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                      {...certCardProps(cert)}
                     />
                   ))}
                 </div>

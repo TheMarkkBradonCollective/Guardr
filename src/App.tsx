@@ -52,6 +52,8 @@ import {
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
+import { validateCertDeletion, validateCertImageAttachment } from './lib/certImagePolicy';
+import type { CertImageMutationResult } from './lib/certImagePolicy';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
@@ -731,9 +733,90 @@ export default function App() {
     return { ok: true };
   };
 
-  const handleDeleteCertification = async (guardId: string, certId: string) => {
+  const handleDeleteCertification = async (
+    guardId: string,
+    certId: string
+  ): Promise<CertImageMutationResult> => {
+    const guard = guards.find((g) => g.id === guardId);
+    const cert = guard?.certifications.find((c) => c.id === certId);
+    if (cert) {
+      const allowed = validateCertDeletion(cert);
+      if (!allowed.ok) return allowed;
+    }
+
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.filter(c => c.id !== certId) } : g));
     if (isDbConnected) await supabase.from('certifications').delete().eq('id', certId);
+    return { ok: true };
+  };
+
+  const handleAttachCertificationImage = async (
+    guardId: string,
+    certId: string,
+    imageUrl: string
+  ): Promise<CertImageMutationResult> => {
+    const guard = guards.find((g) => g.id === guardId);
+    const cert = guard?.certifications.find((c) => c.id === certId);
+    if (!cert) {
+      return { ok: false, error: 'Credential not found.' };
+    }
+
+    const valid = validateCertImageAttachment(cert, imageUrl);
+    if (!valid.ok) return valid;
+
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              certifications: g.certifications.map((c) =>
+                c.id === certId ? { ...c, imageUrl } : c
+              ),
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from('certifications')
+          .update({ image_url: imageUrl })
+          .eq('id', certId);
+        if (error) {
+          setGuards((prev) =>
+            prev.map((g) =>
+              g.id === guardId
+                ? {
+                    ...g,
+                    certifications: g.certifications.map((c) =>
+                      c.id === certId ? { ...c, imageUrl: cert.imageUrl } : c
+                    ),
+                  }
+                : g
+            )
+          );
+          console.error('Cert image update error:', error);
+          return { ok: false, error: 'Could not save photo. Please try again.' };
+        }
+      } catch (e) {
+        setGuards((prev) =>
+          prev.map((g) =>
+            g.id === guardId
+              ? {
+                  ...g,
+                  certifications: g.certifications.map((c) =>
+                    c.id === certId ? { ...c, imageUrl: cert.imageUrl } : c
+                  ),
+                }
+              : g
+          )
+        );
+        console.error('Cert image update error:', e);
+        return { ok: false, error: 'Could not save photo. Please try again.' };
+      }
+    }
+
+    return { ok: true };
   };
 
   const handleApproveCert = async (guardId: string, certId: string) => {
@@ -2436,6 +2519,9 @@ export default function App() {
           payments={guardPayouts}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
+          onAttachCertificationImage={(certId, imageUrl) =>
+            handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
+          }
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
           onAcceptJob={handleApplyToJob}

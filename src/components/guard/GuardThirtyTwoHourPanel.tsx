@@ -14,6 +14,8 @@ import {
 } from '../../lib/guardQualification';
 import { BookOpen, ImagePlus, Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { validateCertDeletion } from '../../lib/certImagePolicy';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
@@ -21,7 +23,8 @@ interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
-  onDeleteCertification?: (certId: string) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -36,6 +39,7 @@ export function GuardThirtyTwoHourPanel({
   editing,
   onAddCertification,
   onDeleteCertification,
+  onAttachCertificationImage,
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
@@ -117,9 +121,25 @@ export function GuardThirtyTwoHourPanel({
 
   const handleDelete = async (certId: string) => {
     if (!onDeleteCertification) return;
+    const cert = guard.certifications.find((c) => c.id === certId);
+    if (cert) {
+      const allowed = validateCertDeletion(cert);
+      if (!allowed.ok) {
+        window.alert(allowed.error);
+        return;
+      }
+    }
     if (!window.confirm('Remove this credential from your profile?')) return;
-    await onDeleteCertification(certId);
+    const result = await onDeleteCertification(certId);
+    if (!result.ok) window.alert(result.error);
   };
+
+  const certCardProps = (cert: Certification) => ({
+    onDelete: onDeleteCertification ? () => handleDelete(cert.id) : undefined,
+    onAttachImage: onAttachCertificationImage
+      ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
+      : undefined,
+  });
 
   return (
     <section className="app-form-section space-y-4">
@@ -129,7 +149,7 @@ export function GuardThirtyTwoHourPanel({
           32-Hour BSIS Course Block
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required for Active status. Upload all 9 individual course certificates, or a single 32-hour
+          Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
           completion certificate if your training provider issued one.
         </p>
       </div>
@@ -165,7 +185,7 @@ export function GuardThirtyTwoHourPanel({
                 key={cert.id}
                 cert={cert}
                 editing={editing}
-                onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                {...certCardProps(cert)}
               />
             ))}
           </div>
@@ -214,7 +234,7 @@ export function GuardThirtyTwoHourPanel({
                       cert={cert}
                       editing={editing}
                       compact
-                      onDelete={onDeleteCertification ? () => handleDelete(cert.id) : undefined}
+                      {...certCardProps(cert)}
                     />
                   ))}
                 </div>
@@ -260,7 +280,7 @@ export function GuardThirtyTwoHourPanel({
           </div>
           <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
             <ImagePlus className="w-4 h-4 shrink-0" />
-            <span>Optional: attach scan or photo</span>
+            <span>Optional now — add a photo later from the credential list</span>
             <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
           </label>
           {imageUrl && (

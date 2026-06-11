@@ -48,14 +48,15 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     name: '8-Hour Power to Arrest & Appropriate Use of Force (2-Part)',
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
-    description: 'As of 2024, BSIS requires this single 8-hour, 2-part course — required for Active status.',
+    description:
+      'Single certificate covering both parts — highly recommended by Guardr. You may also upload Power to Arrest and Appropriate Use of Force as two separate certs.',
   },
   {
     id: 'bsis-32-hour-completed',
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Completion certificate for the mandatory 32-hour course block — required for Active status.',
+    description: 'Completion certificate for the mandatory 32-hour course block — highly recommended by Guardr.',
   },
   {
     id: 'bsis-40-hour-completed',
@@ -72,20 +73,22 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     description: '8-hour refresher — upload when applicable for guard card renewals.',
   },
 
-  // ── Legacy / supplemental BSIS training (optional uploads) ──
+  // ── PTA / UOF — valid as separate certs or as the combined 8-hr course ──
   {
     id: 'bsis-power-to-arrest',
-    name: 'Power to Arrest (legacy separate cert)',
-    shortLabel: 'PTA (legacy)',
+    name: 'Power to Arrest',
+    shortLabel: 'PTA',
     category: 'bsis-training',
-    description: 'Pre-2024 separate certificate. Upload the combined 8-hr course cert when possible.',
+    description:
+      'Upload as its own certificate. Pair with Appropriate Use of Force, or use the combined 8-hour PTA & UOF cert instead.',
   },
   {
     id: 'bsis-appropriate-use-of-force',
-    name: 'Appropriate Use of Force (legacy separate cert)',
-    shortLabel: 'UOF (legacy)',
+    name: 'Appropriate Use of Force',
+    shortLabel: 'UOF',
     category: 'bsis-training',
-    description: 'Pre-2024 separate certificate. Upload the combined 8-hr course cert when possible.',
+    description:
+      'Upload as its own certificate alongside Power to Arrest, or use the combined 8-hour PTA & UOF cert instead.',
   },
   // ── 32-hour mandatory course block (9 courses) ──
   { id: 'bsis-communication', name: 'Communication and Its Significance (4 hr)', shortLabel: 'Communication', category: 'bsis-training' },
@@ -103,7 +106,14 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
   { id: 'bsis-access-control', name: 'Access Control', shortLabel: 'Access Control', category: 'bsis-training' },
   { id: 'bsis-crowd-control', name: 'Crowd Control', shortLabel: 'Crowd Control', category: 'bsis-training' },
   { id: 'bsis-terrorism-awareness', name: 'Terrorism Awareness', shortLabel: 'Terrorism Aware', category: 'bsis-training' },
-  { id: 'bsis-wmd-awareness', name: 'Weapons of Mass Destruction Awareness', shortLabel: 'WMD Aware', category: 'bsis-training' },
+  {
+    id: 'bsis-wmd-awareness',
+    name: 'Weapons of Mass Destruction Awareness',
+    shortLabel: 'WMD Aware',
+    category: 'bsis-training',
+    description:
+      'May count as the second part of the 8-hour course alongside Power to Arrest when issued separately from UOF.',
+  },
   { id: 'bsis-incident-command', name: 'Incident Command System (ICS)', shortLabel: 'ICS', category: 'bsis-training' },
   { id: 'bsis-fire-safety', name: 'Fire Safety', shortLabel: 'Fire Safety', category: 'bsis-training' },
   { id: 'bsis-emergency-procedures', name: 'Emergency Procedures', shortLabel: 'Emergency Proc.', category: 'bsis-training' },

@@ -30,7 +30,11 @@ interface UserProfileScreenProps {
   guard?: SecurityGuard | null;
   client?: Client | null;
   onAddCertification?: (cert: Partial<Certification>) => Promise<import('../../lib/certUniqueness').AddCertificationResult>;
-  onDeleteCertification?: (certId: string) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
+  onAttachCertificationImage?: (
+    certId: string,
+    imageUrl: string
+  ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
 }
@@ -45,6 +49,7 @@ export function UserProfileScreen({
   client,
   onAddCertification,
   onDeleteCertification,
+  onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
 }: UserProfileScreenProps) {
@@ -234,6 +239,7 @@ export function UserProfileScreen({
           onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement }))}
           onAddCertification={onAddCertification}
           onDeleteCertification={onDeleteCertification}
+          onAttachCertificationImage={onAttachCertificationImage}
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}
         />

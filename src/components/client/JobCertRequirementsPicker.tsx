@@ -50,8 +50,9 @@ export function JobCertRequirementsPicker({
       <div className="space-y-2">
         <p className="text-sm font-semibold">Minimum guard status</p>
         <p className="text-xs text-brand-text-muted">
-          Choose whether guards with only a guard card ({GUARD_STATUS_LABELS.inactive}) can accept, or require full BSIS
-          training including the 32-hour block ({GUARD_STATUS_LABELS.active}).
+          All guards need a valid guard card to work. Choose whether you prefer guards who have also completed full BSIS
+          training ({GUARD_STATUS_LABELS.active}) — training is highly recommended by Guardr but not required to accept
+          jobs.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {

@@ -40,6 +40,7 @@ import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobVi
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import type { AddCertificationResult } from '../lib/certUniqueness';
+import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -53,7 +54,8 @@ interface GuardDashboardProps {
   currentUser: SessionUser;
   payments?: GuardPayoutView[];
   onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
-  onDeleteCertification?: (certId: string) => void | Promise<void>;
+  onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
   onAcceptJob: (requestId: string) => void;
@@ -97,6 +99,7 @@ export function GuardDashboard({
   payments = [],
   onAddCertification,
   onDeleteCertification,
+  onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
   onAcceptJob,
@@ -629,6 +632,7 @@ export function GuardDashboard({
             onSave={onUpdateProfile}
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
             onAddExperience={onAddExperience}
             onAddEducation={onAddEducation}
           />

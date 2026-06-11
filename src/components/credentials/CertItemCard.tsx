@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { getCertCatalogEntry } from '../../lib/certCatalog';
+import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertDetailModal } from './CertDetailModal';
+import { CertImageAttachButton } from './CertImageAttachButton';
 
 interface CertItemCardProps {
   cert: Certification;
   editing?: boolean;
   onDelete?: () => void;
+  onAttachImage?: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
   showUploadBadge?: boolean;
   compact?: boolean;
   guardName?: string;
@@ -21,12 +25,15 @@ export function CertItemCard({
   cert,
   editing = false,
   onDelete,
+  onAttachImage,
   showUploadBadge = true,
   compact = false,
   guardName,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
+  const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
+  const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
 
   return (
     <>
@@ -57,11 +64,21 @@ export function CertItemCard({
             {cert.imageUrl && compact && (
               <p className="text-[10px] text-brand-primary mt-1">Tap to view photo</p>
             )}
+            {!cert.imageUrl && !compact && editing && (
+              <p className="text-[10px] text-brand-text-muted mt-1">No photo on file</p>
+            )}
           </div>
         </button>
         <div className="app-cert-item-meta">
+          {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
           <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
-          {editing && onDelete ? (
+          {cert.imageUrl && editing && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
+              <Lock className="w-3 h-3" />
+              Photo locked
+            </span>
+          )}
+          {canDelete ? (
             <button
               type="button"
               onClick={onDelete}
@@ -70,7 +87,7 @@ export function CertItemCard({
               <Trash2 className="w-3 h-3" />
               Delete
             </button>
-          ) : (
+          ) : !editing ? (
             <button
               type="button"
               onClick={() => setShowDetail(true)}
@@ -79,7 +96,7 @@ export function CertItemCard({
             >
               <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
