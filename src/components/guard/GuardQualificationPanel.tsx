@@ -2,6 +2,7 @@ import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
   getQualificationProgress,
+  GUARD_INACTIVE_DESCRIPTION,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_STATUS_LABELS,
   GUARDR_RECOMMENDED_TRAINING_LABEL,
@@ -21,11 +22,9 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
   const progress = getQualificationProgress(guard, state);
 
   const levelBadge =
-    progress.level === 'active'
-      ? 'bg-brand-bg-sec text-brand-text'
-      : progress.level === 'pending'
-        ? 'text-brand-text-muted'
-        : 'text-brand-text-muted';
+    progress.level === 'none'
+      ? 'text-brand-text-muted'
+      : 'bg-brand-bg-sec text-brand-text';
 
   const ptaUofDetail = progress.ptaUofCombined
     ? 'Combined 8-hr certificate on file'
@@ -107,8 +106,8 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
       </div>
 
       <p className="text-[11px] text-brand-text-muted pt-1">
-        <strong>{GUARD_STATUS_LABELS.inactive}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}.{' '}
-        <strong>{GUARD_STATUS_LABELS.active}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.active}.
+        <strong>{GUARD_STATUS_LABELS.inactive}:</strong> {GUARD_INACTIVE_DESCRIPTION}.{' '}
+        <strong>{GUARD_STATUS_LABELS.active}:</strong> {GUARD_PATHWAY_STATUS_DESCRIPTIONS.pending}.
       </p>
     </section>
   );

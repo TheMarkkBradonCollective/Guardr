@@ -153,7 +153,7 @@ export function minQualificationLabel(level: SecurityRequest['minGuardQualificat
   return `${GUARD_PATHWAY_STATUS_LABELS[key]} — ${GUARD_PATHWAY_STATUS_DESCRIPTIONS[key]}`;
 }
 
-/** Guard job detail — pathway tier only (Active / Inactive) */
+/** Guard job detail — minimum guard status label */
 export function guardJobMinQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
   const key = level ?? 'pending';
   return GUARD_PATHWAY_STATUS_LABELS[key];

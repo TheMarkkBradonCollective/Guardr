@@ -13,17 +13,20 @@ export const GUARD_STATUS_LABELS: Record<GuardDisplayStatus, string> = {
   blocked: 'Blocked',
 };
 
-/** Credential pathway tiers — maps to Inactive / Active (replaces Level 1 / Level 2). */
+/** Credential pathway tiers — guard card = Active and eligible to work. */
 export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: GUARD_STATUS_LABELS.inactive,
-  active: GUARD_STATUS_LABELS.active,
+  pending: GUARD_STATUS_LABELS.active,
+  active: `${GUARD_STATUS_LABELS.active} — full training`,
 };
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: 'Valid BSIS Guard Card on file — required to work jobs',
+  pending: 'Valid BSIS Guard Card on file — Active and eligible to work jobs',
   active:
     'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
 };
+
+export const GUARD_INACTIVE_DESCRIPTION =
+  'No valid BSIS Guard Card on file — upload a guard card to become Active and work jobs';
 
 /** Shown on training credentials and job checklists — not a work blocker. */
 export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
@@ -38,7 +41,7 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   const userStatus = guard.userStatus || 'active';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
-  return getGuardQualificationLevel(guard, state) === 'active' ? 'active' : 'inactive';
+  return guardMeetsLevel1(guard, state) ? 'active' : 'inactive';
 }
 
 /** Active account + valid BSIS guard card — required to accept, be hired, or work jobs */
@@ -69,7 +72,8 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
 
 export function guardPathwayStatusLabel(level: GuardQualificationLevel): string {
   if (level === 'none') return GUARD_STATUS_LABELS.inactive;
-  return GUARD_PATHWAY_STATUS_LABELS[level];
+  if (level === 'active') return GUARD_PATHWAY_STATUS_LABELS.active;
+  return GUARD_STATUS_LABELS.active;
 }
 
 /** Combined 8-hour, 2-part course — or upload Power to Arrest and UOF as separate certs. */
@@ -276,7 +280,7 @@ export function guardMeets40HourTraining(guard: SecurityGuard): boolean {
   return guardMeets32HourBlock(guard);
 }
 
-/** Full Active training — guard card is separate (Inactive pathway). */
+/** Full BSIS training on file — recommended beyond guard-card Active status. */
 export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
   return guardMeetsPtaUofTraining(guard) && guardMeets32HourBlock(guard);
 }

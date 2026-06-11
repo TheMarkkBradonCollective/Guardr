@@ -80,7 +80,7 @@ export interface GuardEducation {
 /** How a security request was created */
 export type RequestType = 'marketplace' | 'direct';
 
-/** Minimum guard status to accept a job — Inactive (guard card) or Active (full training); see guardQualification.ts */
+/** Minimum guard status to accept a job — Active (guard card) or full-training preference; see guardQualification.ts */
 export type MinGuardQualification = 'pending' | 'active';
 
 export const GUARD_SPECIALTY_OPTIONS = [
@@ -261,7 +261,7 @@ export interface SecurityRequest {
   targetGuardId?: string | null;
   /** Catalog IDs from certCatalog — used for job matching filters */
   requiredCertifications: string[];
-  /** Inactive (guard card) or Active (full BSIS training) — clients choose per job */
+  /** Active (guard card) or full BSIS training preference — clients choose per job */
   minGuardQualification?: MinGuardQualification;
   applicants: string[];
   ratingGiven?: number;
