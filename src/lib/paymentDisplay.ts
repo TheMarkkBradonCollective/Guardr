@@ -69,7 +69,7 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
       statusLabel: isCashClientPayment(req)
         ? isStripeDepositSatisfied(req)
           ? isPlatformFeePaidCash(req)
-            ? 'Received in cash'
+            ? 'Manually deposited'
             : 'Recorded in Stripe'
           : `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`
         : clientUnpaid
@@ -133,10 +133,10 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
         return {
           headline: isPlatformFeePaidCash(req)
             ? 'Client paid cash · guard paid cash · card deposit due'
-            : 'Client paid cash · platform fee due',
+            : 'Client paid cash · platform fee deposit due',
           detail: isPlatformFeePaidCash(req)
-            ? `Deposit remaining $${due.toFixed(2)} to Stripe with card, or record platform fee in cash first.`
-            : `Record $${getPlatformFeeAmount(req).toFixed(2)} platform fee in cash or deposit via card.`,
+            ? `Deposit remaining $${due.toFixed(2)} to Stripe with card.`
+            : `Manually deposit $${getPlatformFeeAmount(req).toFixed(2)} platform fee or pay via card.`,
         };
       }
       return {

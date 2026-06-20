@@ -179,7 +179,7 @@ export function JobPaymentRow({
               ) : (
                 <Banknote className="w-3 h-3" />
               )}
-              Platform fee ${getPlatformFeeAmount(req).toFixed(2)} (cash)
+              Manually deposit ${getPlatformFeeAmount(req).toFixed(2)} platform fee
             </button>
           )}
 
