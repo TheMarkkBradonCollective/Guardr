@@ -19,6 +19,14 @@ export function jobCoords(job: JobCoordsSource): GeoCoords {
   return locationToCoords(job.location, job.id);
 }
 
+export function buildGeocodeQuery(parts: {
+  siteName?: string;
+  address?: string;
+  state?: string;
+}): string {
+  return [parts.siteName, parts.address, parts.state].filter(Boolean).join(', ').trim();
+}
+
 export async function geocodeAddress(query: string): Promise<GeoCoords | null> {
   const trimmed = query.trim();
   if (trimmed.length < 4) return null;

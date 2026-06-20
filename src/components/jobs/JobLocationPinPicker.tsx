@@ -1,10 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Loader2, MapPin } from 'lucide-react';
-import { GeoCoords, METRO_CENTER, geocodeAddress, parseGeoCoords } from '../../lib/geo';
+import {
+  GeoCoords,
+  METRO_CENTER,
+  buildGeocodeQuery,
+  geocodeAddress,
+  parseGeoCoords,
+} from '../../lib/geo';
 import { mapTileUrl } from '../../lib/mapTiles';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
+
+const GEOCODE_DEBOUNCE_MS = 700;
 
 function DraggablePin({
   position,
@@ -67,11 +75,27 @@ export function JobLocationPinPicker({
   const [coordError, setCoordError] = useState<string | null>(null);
   const [latInput, setLatInput] = useState(latitude != null ? String(latitude) : '');
   const [lngInput, setLngInput] = useState(longitude != null ? String(longitude) : '');
+  const manualPinRef = useRef(false);
+  const lastGeocodedQueryRef = useRef('');
+  const seededExistingPinRef = useRef(false);
+
+  const geocodeQuery = useMemo(
+    () => buildGeocodeQuery({ siteName, address, state }),
+    [siteName, address, state]
+  );
 
   useEffect(() => {
     setLatInput(latitude != null ? String(latitude) : '');
     setLngInput(longitude != null ? String(longitude) : '');
   }, [latitude, longitude]);
+
+  useEffect(() => {
+    if (seededExistingPinRef.current) return;
+    if (geocodeQuery.length < 4 || latitude == null || longitude == null) return;
+    lastGeocodedQueryRef.current = geocodeQuery;
+    manualPinRef.current = true;
+    seededExistingPinRef.current = true;
+  }, [geocodeQuery, latitude, longitude]);
 
   const center = useMemo<[number, number]>(() => {
     if (latitude != null && longitude != null) return [latitude, longitude];
@@ -86,27 +110,69 @@ export function JobLocationPinPicker({
     setCoordError(null);
   };
 
-  const handleCoordsChange = (coords: GeoCoords) => {
-    syncManualInputs(coords);
-    onCoordsChange(coords);
-  };
+  const applyCoords = useCallback(
+    (coords: GeoCoords, message?: string) => {
+      syncManualInputs(coords);
+      onCoordsChange(coords);
+      if (message) setHint(message);
+    },
+    [onCoordsChange]
+  );
 
-  const handleGeocode = async () => {
-    const query = [siteName, address, state].filter(Boolean).join(', ');
-    if (query.trim().length < 4) {
-      setHint('Enter an address first.');
-      return;
+  const markManualPin = useCallback(
+    (coords: GeoCoords, message?: string) => {
+      manualPinRef.current = true;
+      applyCoords(coords, message);
+    },
+    [applyCoords]
+  );
+
+  const runGeocode = useCallback(
+    async (query: string, force = false) => {
+      if (query.trim().length < 4) {
+        setHint('Enter an address first.');
+        return;
+      }
+      if (!force && manualPinRef.current && query === lastGeocodedQueryRef.current) {
+        return;
+      }
+
+      setGeocoding(true);
+      setHint(null);
+      const coords = await geocodeAddress(query);
+      setGeocoding(false);
+
+      if (coords) {
+        manualPinRef.current = false;
+        lastGeocodedQueryRef.current = query;
+        applyCoords(coords, 'Pin set from address.');
+        return;
+      }
+
+      if (query !== lastGeocodedQueryRef.current) {
+        setHint('Address not found — enter coordinates below or tap the map.');
+      }
+    },
+    [applyCoords]
+  );
+
+  useEffect(() => {
+    if (geocodeQuery.length < 4) return;
+    if (geocodeQuery === lastGeocodedQueryRef.current) return;
+    if (manualPinRef.current && geocodeQuery !== lastGeocodedQueryRef.current) {
+      manualPinRef.current = false;
     }
-    setGeocoding(true);
-    setHint(null);
-    const coords = await geocodeAddress(query);
-    setGeocoding(false);
-    if (coords) {
-      handleCoordsChange(coords);
-      setHint('Pin updated from address.');
-    } else {
-      setHint('Address not found — enter coordinates below or tap the map.');
-    }
+
+    const timer = window.setTimeout(() => {
+      void runGeocode(geocodeQuery);
+    }, GEOCODE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [geocodeQuery, runGeocode]);
+
+  const handleGeocode = () => {
+    manualPinRef.current = false;
+    void runGeocode(geocodeQuery, true);
   };
 
   const applyManualCoords = () => {
@@ -115,8 +181,7 @@ export function JobLocationPinPicker({
       setCoordError('Enter valid latitude (-90 to 90) and longitude (-180 to 180).');
       return;
     }
-    handleCoordsChange(coords);
-    setHint('Pin updated from coordinates.');
+    markManualPin(coords, 'Pin updated from coordinates.');
   };
 
   return (
@@ -125,6 +190,7 @@ export function JobLocationPinPicker({
         <p className="text-xs font-medium text-brand-text-muted flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-brand-primary" />
           Pin on map
+          {geocoding ? <Loader2 className="w-3 h-3 animate-spin text-brand-primary" /> : null}
         </p>
         <button
           type="button"
@@ -132,19 +198,21 @@ export function JobLocationPinPicker({
           disabled={geocoding}
           className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1.5"
         >
-          {geocoding ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
           Refresh pin
         </button>
       </div>
+      <p className="text-[11px] text-brand-text-muted leading-snug -mt-1">
+        Coordinates update automatically when you enter the address.
+      </p>
 
       <div className="guardr-map-root h-44 rounded-xl overflow-hidden border border-brand-border">
         <MapContainer center={center} zoom={hasPin ? 15 : 11} className="guardr-map-container h-full" zoomControl={false} attributionControl={false}>
           <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
-          <MapClickPin onPick={handleCoordsChange} />
+          <MapClickPin onPick={(coords) => markManualPin(coords, 'Pin placed on map.')} />
           {hasPin && (
             <DraggablePin
               position={[latitude!, longitude!]}
-              onMove={handleCoordsChange}
+              onMove={(coords) => markManualPin(coords, 'Pin moved on map.')}
             />
           )}
         </MapContainer>
@@ -201,6 +269,8 @@ export function JobLocationPinPicker({
                 setLngInput('');
                 setCoordError(null);
                 setHint(null);
+                manualPinRef.current = false;
+                lastGeocodedQueryRef.current = '';
                 onCoordsChange(null);
               }}
               className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-brand-text-muted"
