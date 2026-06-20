@@ -1629,16 +1629,16 @@ export default function App() {
 
   const handleMarkPlatformFeePaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can record platform fee cash payments.');
+      alert('Only the Director can manually deposit platform fees.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkPlatformFeePaidCash(req)) {
-      alert('This job does not have a platform fee due in cash.');
+      alert('This job does not have a platform fee ready to manually deposit.');
       return;
     }
     const feeAmount = getPlatformFeeAmount(req);
-    if (!window.confirm(`Record $${feeAmount.toFixed(2)} platform fee received in cash for "${req.title}"?`)) {
+    if (!window.confirm(`Manually deposit $${feeAmount.toFixed(2)} platform fee for "${req.title}"?`)) {
       return;
     }
 
@@ -1693,7 +1693,7 @@ export default function App() {
       ]);
     }
 
-    alert(`Recorded $${feeAmount.toFixed(2)} platform fee received in cash.`);
+    alert(`Manually deposited $${feeAmount.toFixed(2)} platform fee.`);
   };
 
   const handleDepositCashToStripe = async (requestId: string) => {

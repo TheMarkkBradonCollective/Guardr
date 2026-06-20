@@ -254,7 +254,7 @@ export interface SecurityRequest {
   /** Dollars paid into Stripe (card) for cash-client jobs */
   cashDepositedAmount?: number;
   cashDepositedAt?: string;
-  /** Director recorded platform fee received in cash */
+  /** Director manually deposited platform fee (off-Stripe) */
   platformFeePaidCash?: boolean;
   assignedGuardId: string | null;
   /** marketplace = open post for any guard; direct = client sent from a guard profile */

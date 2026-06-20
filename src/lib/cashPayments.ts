@@ -106,7 +106,7 @@ export function stripeDepositLabel(req: SecurityRequest): string {
 
 export function stripeDepositDescription(req: SecurityRequest): string {
   if (isCashGuardPayout(req)) {
-    return 'Guard was paid cash — pay the platform fee with your card (same checkout as a client would use).';
+    return 'Guard was paid cash — manually deposit the platform fee or pay with your card.';
   }
   return 'Client paid cash — pay the job amount with your own card to fund Stripe (can be after guard payout).';
 }
@@ -115,7 +115,7 @@ export function clientPaymentDisplay(req: SecurityRequest): string {
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'Unpaid';
   if (isCashClientPayment(req)) {
     if (isCashAwaitingStripeDeposit(req)) {
-      return isCashGuardPayout(req) ? 'Paid cash · fee due (card)' : 'Paid cash · card payment due';
+      return isCashGuardPayout(req) ? 'Paid cash · fee deposit due' : 'Paid cash · card payment due';
     }
     return 'Paid cash · funded in Stripe';
   }
@@ -139,12 +139,14 @@ export function platformFundsDisplay(req: SecurityRequest): string {
   if (isCashAwaitingStripeDeposit(req)) {
     if (isPlatformFeePaidCash(req)) {
       const remaining = getRemainingStripeDeposit(req);
-      return remaining > 0 ? `Fee cash · $${remaining.toFixed(2)} card due` : 'Fee received cash';
+      return remaining > 0
+        ? `Manually deposited · $${remaining.toFixed(2)} card due`
+        : 'Manually deposited';
     }
-    return isCashGuardPayout(req) ? 'Guard cash · fee due (card)' : 'Cash in hand · pay card';
+    return isCashGuardPayout(req) ? 'Guard paid cash · fee deposit due' : 'Cash in hand · pay card';
   }
   if (isPlatformFeePaidCash(req) && isCashGuardPayout(req)) {
-    return 'Fee received cash';
+    return 'Manually deposited';
   }
   return isCashGuardPayout(req) ? 'Fee in Stripe' : 'Funded in Stripe';
 }
