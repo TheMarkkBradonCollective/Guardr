@@ -3,6 +3,7 @@ import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
+import { computeOperationalFinancials } from './operationalFinancials';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
 
 export type StaffSection =
@@ -623,12 +624,11 @@ export function computeAnalytics(
         )
       : 0;
   const avgGuardEarnings =
-    guards.filter((g) => g.jobsCompleted > 0).length > 0
-      ? Math.round(
-          guards.reduce((s, g) => s + g.jobsCompleted * 200, 0) /
-            guards.filter((g) => g.jobsCompleted > 0).length
-        )
-      : 0;
+    (() => {
+      const financials = computeOperationalFinancials(requests);
+      if (financials.settledJobCount === 0) return 0;
+      return Math.round((financials.guardPayoutsPaid / financials.settledJobCount) * 100) / 100;
+    })();
 
   return {
     totalRevenue: Math.round(platformRevenue * 100) / 100,
