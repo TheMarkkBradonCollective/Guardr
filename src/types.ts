@@ -332,6 +332,49 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type JobChatThreadStatus = 'active' | 'archived';
+
+export interface JobChatThread {
+  id: string;
+  requestId: string;
+  clientId: string;
+  guardId: string;
+  status: JobChatThreadStatus;
+  createdAt: string;
+  archivedAt?: string;
+}
+
+export interface JobChatMessage {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: PlatformRole;
+  body: string;
+  createdAt: string;
+}
+
+export interface StaffMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: PlatformRole;
+  body: string;
+  createdAt: string;
+}
+
+export interface NotificationPreferences {
+  userId: string;
+  assignment: boolean;
+  guardCheckin: boolean;
+  missedCheckin: boolean;
+  emergencyAlert: boolean;
+  supportMessage: boolean;
+  jobChatMessage: boolean;
+  staffMessage: boolean;
+  updatedAt: string;
+}
+
 export type SupportTicketKind = 'chat' | 'report';
 export type SupportTicketStatus = 'open' | 'in-progress' | 'resolved';
 export type SupportTicketCategory =

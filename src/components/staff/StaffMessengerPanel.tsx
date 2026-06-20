@@ -1,0 +1,31 @@
+import React from 'react';
+import { SessionUser, StaffMessage } from '../../types';
+import { sortedStaffMessages } from '../../lib/staffMessenger';
+import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+
+interface StaffMessengerPanelProps {
+  messages: StaffMessage[];
+  currentUser: SessionUser;
+  onSend: (body: string) => void | Promise<void>;
+}
+
+export function StaffMessengerPanel({ messages, currentUser, onSend }: StaffMessengerPanelProps) {
+  return (
+    <div className="staff-split-pane-detail flex flex-col min-h-[420px] h-full">
+      <div className="staff-pane-header">
+        <h2 className="font-bold text-sm">Team chat</h2>
+        <p className="text-xs text-brand-text-muted mt-1">
+          Internal staff-only channel — not visible to clients or guards.
+        </p>
+      </div>
+      <div className="flex-1 min-h-0">
+        <ChatThreadPanel
+          messages={sortedStaffMessages(messages)}
+          currentUserId={currentUser.id}
+          onSend={onSend}
+          placeholder="Message the Guardr team…"
+        />
+      </div>
+    </div>
+  );
+}

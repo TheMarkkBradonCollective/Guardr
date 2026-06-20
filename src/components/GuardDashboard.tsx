@@ -8,6 +8,8 @@ import {
   CreateSupportTicketInput,
   GuardPayoutInvoice,
   SupportTicket,
+  JobChatThread,
+  JobChatMessage,
 } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
@@ -20,6 +22,8 @@ import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
+import { JobChatPanel } from './messaging/JobChatPanel';
+import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
@@ -71,6 +75,10 @@ interface GuardDashboardProps {
   relatedRequests?: GuardJobView[];
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  onReportIncident?: (requestId: string) => void | Promise<void>;
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
   /** Render inside staff dashboard — no outer shell */
@@ -115,6 +123,10 @@ export function GuardDashboard({
   relatedRequests = [],
   onCreateSupportTicket,
   onSendSupportMessage,
+  jobChatThreads = [],
+  jobChatMessages = [],
+  onSendJobChatMessage,
+  onReportIncident,
   onRequestCashPayout,
   onRequestStripePayout,
   variant = 'standalone',
@@ -145,6 +157,7 @@ export function GuardDashboard({
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showJobChat, setShowJobChat] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
@@ -545,7 +558,7 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
+      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && !showJobChat && (
         <GuardActiveShift
           job={activeShiftJob}
           phase={activePhase}
@@ -553,10 +566,28 @@ export function GuardDashboard({
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}
-          onIncidentReport={() => alert('Incident report filed. Client and staff notified.')}
+          onIncidentReport={() => {
+            void onReportIncident?.(activeShiftJob.id);
+            alert('Incident reported. Client and staff have been notified.');
+          }}
           onActivityReport={() => alert('Activity report saved to job log.')}
           onEndShift={handleEndShift}
+          onOpenJobChat={onSendJobChatMessage ? () => setShowJobChat(true) : undefined}
         />
+      )}
+
+      {activeTab === 'map' && showShiftOverlay && activeShiftJob && showJobChat && onSendJobChatMessage && (
+        <div className="absolute inset-x-0 bottom-0 z-[1002] h-[70vh] rounded-t-2xl border border-brand-border bg-brand-bg shadow-xl overflow-hidden">
+          <JobChatPanel
+            request={activeShiftJob}
+            thread={threadForRequest(jobChatThreads, activeShiftJob.id) ?? null}
+            messages={jobChatMessages}
+            currentUser={currentUser}
+            onSend={(body) => onSendJobChatMessage(activeShiftJob.id, body)}
+            onBack={() => setShowJobChat(false)}
+            compact
+          />
+        </div>
       )}
 
       {activeTab === 'map' && !showShiftOverlay && (
@@ -605,6 +636,10 @@ export function GuardDashboard({
             upcomingJobs={upcomingMyJobs}
             pastJobs={pastMyJobs}
             guard={guard}
+            currentUser={currentUser}
+            jobChatThreads={jobChatThreads}
+            jobChatMessages={jobChatMessages}
+            onSendJobChatMessage={onSendJobChatMessage}
           />
         </div>
       )}

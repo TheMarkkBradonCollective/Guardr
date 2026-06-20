@@ -6,6 +6,9 @@ export type PushNotificationType =
   | 'guard_checkin'
   | 'assignment'
   | 'emergency_alert'
+  | 'support_message'
+  | 'job_chat_message'
+  | 'staff_message'
   | 'test';
 
 export interface PushSendPayload {

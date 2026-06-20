@@ -22,6 +22,7 @@ interface GuardActiveShiftProps {
   onIncidentReport: () => void;
   onActivityReport: () => void;
   onEndShift: () => void;
+  onOpenJobChat?: () => void;
 }
 
 function formatTimer(seconds: number): string {
@@ -48,6 +49,7 @@ export function GuardActiveShift({
   onIncidentReport,
   onActivityReport,
   onEndShift,
+  onOpenJobChat,
 }: GuardActiveShiftProps) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -181,8 +183,13 @@ export function GuardActiveShift({
               <button type="button" onClick={onActivityReport} className="app-button-outline !h-12 !text-sm gap-2">
                 <Activity className="w-4 h-4" /> Activity report
               </button>
-              <button type="button" className="app-button-outline !h-12 !text-sm gap-2 col-span-2">
-                <Phone className="w-4 h-4" /> Contact client
+              <button
+                type="button"
+                onClick={onOpenJobChat}
+                disabled={!onOpenJobChat}
+                className="app-button-outline !h-12 !text-sm gap-2 col-span-2 disabled:opacity-40"
+              >
+                <Phone className="w-4 h-4" /> Message client
               </button>
             </div>
             {!clockOutOpen && clockOutMsg && (

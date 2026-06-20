@@ -19,6 +19,9 @@ import {
   CreateSupportTicketInput,
   SupportTicketStatus,
   StaffRole,
+  JobChatThread,
+  JobChatMessage,
+  StaffMessage,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModifyStaffMember } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
@@ -84,6 +87,20 @@ import {
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
 } from './lib/support';
+import {
+  buildJobChatMessage,
+  buildJobChatThread,
+  loadJobChatMessagesFromStorage,
+  loadJobChatThreadsFromStorage,
+  saveJobChatMessagesToStorage,
+  saveJobChatThreadsToStorage,
+  threadForRequest,
+} from './lib/jobChat';
+import {
+  buildStaffMessage,
+  loadStaffMessagesFromStorage,
+  saveStaffMessagesToStorage,
+} from './lib/staffMessenger';
 import { listenForPushNavigation } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import {
@@ -209,6 +226,10 @@ export default function App() {
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
+  const [jobChatThreads, setJobChatThreads] = useState<JobChatThread[]>(() => loadJobChatThreadsFromStorage());
+  const [jobChatMessages, setJobChatMessages] = useState<JobChatMessage[]>(() => loadJobChatMessagesFromStorage());
+  const [staffMessages, setStaffMessages] = useState<StaffMessage[]>(() => loadStaffMessagesFromStorage());
+  const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
   const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
     loadGuardPayoutInvoicesFromStorage()
   );
@@ -313,6 +334,9 @@ export default function App() {
       const { data: dbPayments, error: paymentsErr } = await supabase.from('payments').select('*');
       const { data: dbSupportTickets, error: supportTicketsErr } = await supabase.from('support_tickets').select('*');
       const { data: dbSupportMessages, error: supportMessagesErr } = await supabase.from('support_messages').select('*');
+      const { data: dbJobChatThreads, error: jobChatThreadsErr } = await supabase.from('job_chat_threads').select('*');
+      const { data: dbJobChatMessages, error: jobChatMessagesErr } = await supabase.from('job_chat_messages').select('*');
+      const { data: dbStaffMessages, error: staffMessagesErr } = await supabase.from('staff_messages').select('*');
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
         .from('guard_payout_invoices')
         .select('*');
@@ -320,6 +344,12 @@ export default function App() {
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
       if (supportTicketsErr || supportMessagesErr) {
         console.warn('Support tables load (run migration if missing):', supportTicketsErr ?? supportMessagesErr);
+      }
+      if (jobChatThreadsErr || jobChatMessagesErr) {
+        console.warn('Job chat tables load (run migration if missing):', jobChatThreadsErr ?? jobChatMessagesErr);
+      }
+      if (staffMessagesErr) {
+        console.warn('Staff messages load (run migration if missing):', staffMessagesErr);
       }
       if (payoutInvoicesErr) {
         console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
@@ -495,6 +525,47 @@ export default function App() {
         );
       }
 
+      if (!jobChatThreadsErr && dbJobChatThreads) {
+        setJobChatThreads(
+          dbJobChatThreads.map((t: any) => ({
+            id: t.id,
+            requestId: t.request_id,
+            clientId: t.client_id,
+            guardId: t.guard_id,
+            status: t.status,
+            createdAt: t.created_at,
+            archivedAt: t.archived_at ?? undefined,
+          }))
+        );
+      }
+
+      if (!jobChatMessagesErr && dbJobChatMessages) {
+        setJobChatMessages(
+          dbJobChatMessages.map((m: any) => ({
+            id: m.id,
+            threadId: m.thread_id,
+            senderId: m.sender_id,
+            senderName: m.sender_name,
+            senderRole: m.sender_role,
+            body: m.body,
+            createdAt: m.created_at,
+          }))
+        );
+      }
+
+      if (!staffMessagesErr && dbStaffMessages) {
+        setStaffMessages(
+          dbStaffMessages.map((m: any) => ({
+            id: m.id,
+            senderId: m.sender_id,
+            senderName: m.sender_name,
+            senderRole: m.sender_role,
+            body: m.body,
+            createdAt: m.created_at,
+          }))
+        );
+      }
+
       setIsDbConnected(true);
     } catch (err) {
       console.error('Supabase load error:', err);
@@ -523,6 +594,36 @@ export default function App() {
   const loadRef = useRef(loadFromSupabase);
   loadRef.current = loadFromSupabase;
   useSupabaseRealtimeSync(() => loadRef.current(), isDbConnected);
+
+  useEffect(() => {
+    if (!isDbConnected || !currentUser) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      for (const req of requests) {
+        if (req.status !== 'in-progress' || !req.assignedGuardId || !req.checkInAudit?.checkedAt) continue;
+        const key = `${req.id}-${Math.floor(now / (60 * 60 * 1000))}`;
+        if (missedCheckinNotifiedRef.current.has(key)) continue;
+
+        const lastMid = req.midShiftAudits?.[req.midShiftAudits.length - 1];
+        const lastActivity = lastMid?.checkedAt ?? req.checkInAudit.checkedAt;
+        const hoursSince = (now - new Date(lastActivity).getTime()) / (60 * 60 * 1000);
+        if (hoursSince < 1) continue;
+
+        missedCheckinNotifiedRef.current.add(key);
+        const guard = guards.find((g) => g.id === req.assignedGuardId);
+        void reportPushEvent(currentUser, {
+          type: 'missed_checkin',
+          guardId: guard?.id,
+          guardName: guard?.name,
+          requestId: req.id,
+          location: req.location,
+        });
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isDbConnected, currentUser?.id, requests, guards]);
 
   // Fallback when realtime reconnects after sleep / background tab
   useEffect(() => {
@@ -1889,6 +1990,7 @@ export default function App() {
         body: `You picked up ${job.title}`,
       });
     }
+    await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
   };
 
   // ── Guard applies to open job offer (staff approves best fit) ──
@@ -2030,6 +2132,26 @@ export default function App() {
         siteId: req?.siteName || undefined,
         location: req?.location,
       });
+      if (req?.assignedGuardId) {
+        void ensureJobChatThread({ ...req, status: 'in-progress' });
+      }
+    }
+
+    if (payload.checkOutAudit?.incidentReport?.hasIncident && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      const guard = guards.find((g) => g.id === req?.assignedGuardId);
+      void reportPushEvent(currentUser, {
+        type: 'emergency_alert',
+        requestId,
+        guardId: guard?.id,
+        guardName: guard?.name,
+        location: req?.location,
+        body: req?.checkOutAudit?.incidentReport?.description ?? 'Incident reported on active shift',
+      });
+    }
+
+    if (payload.status === 'completed') {
+      await archiveJobChatThread(requestId);
     }
   };
 
@@ -2444,6 +2566,203 @@ export default function App() {
     alert('✓ Compliance record cleared. Account reinstated.');
   };
 
+  const persistJobChatThreadToDb = async (thread: JobChatThread) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('job_chat_threads').upsert({
+        id: thread.id,
+        request_id: thread.requestId,
+        client_id: thread.clientId,
+        guard_id: thread.guardId,
+        status: thread.status,
+        created_at: thread.createdAt,
+        archived_at: thread.archivedAt ?? null,
+      });
+    } catch (e) {
+      console.warn('Job chat thread DB sync:', e);
+    }
+  };
+
+  const persistJobChatMessageToDb = async (message: JobChatMessage) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('job_chat_messages').upsert({
+        id: message.id,
+        thread_id: message.threadId,
+        sender_id: message.senderId,
+        sender_name: message.senderName,
+        sender_role: message.senderRole,
+        body: message.body,
+        created_at: message.createdAt,
+      });
+    } catch (e) {
+      console.warn('Job chat message DB sync:', e);
+    }
+  };
+
+  const persistStaffMessageToDb = async (message: StaffMessage) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('staff_messages').upsert({
+        id: message.id,
+        sender_id: message.senderId,
+        sender_name: message.senderName,
+        sender_role: message.senderRole,
+        body: message.body,
+        created_at: message.createdAt,
+      });
+    } catch (e) {
+      console.warn('Staff message DB sync:', e);
+    }
+  };
+
+  const ensureJobChatThread = async (req: SecurityRequest) => {
+    if (!req.assignedGuardId) return null;
+    const existing = threadForRequest(jobChatThreads, req.id);
+    if (existing) return existing;
+
+    const thread = buildJobChatThread(req);
+    setJobChatThreads((prev) => {
+      const next = [thread, ...prev.filter((t) => t.requestId !== req.id)];
+      saveJobChatThreadsToStorage(next);
+      return next;
+    });
+    await persistJobChatThreadToDb(thread);
+    return thread;
+  };
+
+  const archiveJobChatThread = async (requestId: string) => {
+    const now = new Date().toISOString();
+    setJobChatThreads((prev) => {
+      const next = prev.map((t) =>
+        t.requestId === requestId && t.status === 'active'
+          ? { ...t, status: 'archived' as const, archivedAt: now }
+          : t
+      );
+      saveJobChatThreadsToStorage(next);
+      return next;
+    });
+    if (isDbConnected) {
+      try {
+        await supabase
+          .from('job_chat_threads')
+          .update({ status: 'archived', archived_at: now })
+          .eq('request_id', requestId);
+      } catch (e) {
+        console.warn('Job chat archive DB sync:', e);
+      }
+    }
+  };
+
+  const notifyJobChatParticipants = async (
+    req: SecurityRequest,
+    sender: SessionUser,
+    body: string
+  ) => {
+    if (!currentUser) return;
+    const recipients: string[] = [];
+    if (sender.id !== req.clientId) recipients.push(req.clientId);
+    if (req.assignedGuardId && sender.id !== req.assignedGuardId) recipients.push(req.assignedGuardId);
+
+    for (const recipientUserId of recipients) {
+      void reportPushEvent(currentUser, {
+        type: 'job_chat_message',
+        recipientUserId,
+        requestId: req.id,
+        body: `${sender.name}: ${body.slice(0, 120)}`,
+      });
+    }
+
+    if (!isStaffRole(sender.role)) {
+      void reportPushEvent(currentUser, {
+        type: 'job_chat_message',
+        requestId: req.id,
+        body: `${sender.name} on ${req.title}: ${body.slice(0, 100)}`,
+      });
+    }
+  };
+
+  const handleSendJobChatMessage = async (requestId: string, body: string) => {
+    if (!currentUser || !body.trim()) return;
+    const req = requests.find((r) => r.id === requestId);
+    if (!req) return;
+
+    let thread = threadForRequest(jobChatThreads, requestId);
+    if (!thread) {
+      thread = (await ensureJobChatThread(req)) ?? undefined;
+    }
+    if (!thread) return;
+
+    const message = buildJobChatMessage(thread, currentUser, body);
+    setJobChatMessages((prev) => {
+      const next = [...prev, message];
+      saveJobChatMessagesToStorage(next);
+      return next;
+    });
+    await persistJobChatMessageToDb(message);
+    await notifyJobChatParticipants(req, currentUser, body.trim());
+  };
+
+  const handleSendStaffMessage = async (body: string) => {
+    if (!currentUser || !body.trim() || !isStaffRole(currentUser.role)) return;
+    const message = buildStaffMessage(currentUser, body);
+    setStaffMessages((prev) => {
+      const next = [...prev, message];
+      saveStaffMessagesToStorage(next);
+      return next;
+    });
+    await persistStaffMessageToDb(message);
+    void reportPushEvent(currentUser, {
+      type: 'staff_message',
+      body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
+    });
+  };
+
+  const notifySupportParticipants = async (
+    ticket: SupportTicket,
+    sender: SessionUser,
+    body: string
+  ) => {
+    if (!currentUser) return;
+
+    if (isStaffRole(sender.role)) {
+      void reportPushEvent(currentUser, {
+        type: 'support_message',
+        recipientUserId: ticket.userId,
+        body: `Guardr staff replied: ${body.slice(0, 120)}`,
+      });
+    } else {
+      void reportPushEvent(currentUser, {
+        type: 'support_message',
+        body: `${ticket.userName} (${ticket.userRole}): ${body.slice(0, 100)}`,
+      });
+      if (ticket.category === 'safety' && ticket.priority === 'urgent') {
+        void reportPushEvent(currentUser, {
+          type: 'emergency_alert',
+          body: `Urgent safety support ticket from ${ticket.userName}`,
+        });
+      }
+    }
+  };
+
+  const handleReportIncident = async (requestId: string) => {
+    if (!currentUser) return;
+    const req = requests.find((r) => r.id === requestId);
+    const guard = guards.find((g) => g.id === req?.assignedGuardId);
+    await handleSendJobChatMessage(
+      requestId,
+      'Incident reported — requesting immediate staff attention.'
+    );
+    void reportPushEvent(currentUser, {
+      type: 'emergency_alert',
+      requestId,
+      guardId: guard?.id,
+      guardName: guard?.name ?? currentUser.name,
+      location: req?.location,
+      body: `Incident reported by ${guard?.name ?? currentUser.name} at ${req?.location ?? 'active job'}`,
+    });
+  };
+
   const persistSupportTicketToDb = async (ticket: SupportTicket) => {
     if (!isDbConnected) return;
     try {
@@ -2488,6 +2807,10 @@ export default function App() {
       return next;
     });
     await persistSupportTicketToDb(ticket);
+    const latest = ticket.messages[ticket.messages.length - 1];
+    if (latest) {
+      await notifySupportParticipants(ticket, currentUser, latest.body);
+    }
     return ticket.id;
   };
 
@@ -2505,6 +2828,7 @@ export default function App() {
     });
     if (!updated) return;
     await persistSupportTicketToDb(updated);
+    await notifySupportParticipants(updated, currentUser, body.trim());
   };
 
   const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
@@ -2608,6 +2932,10 @@ export default function App() {
           relatedRequests={guardJobs.filter((r) => r.assignedGuardId === activeGuard.id)}
           onCreateSupportTicket={handleCreateSupportTicket}
           onSendSupportMessage={handleSendSupportMessage}
+          jobChatThreads={jobChatThreads}
+          jobChatMessages={jobChatMessages}
+          onSendJobChatMessage={handleSendJobChatMessage}
+          onReportIncident={handleReportIncident}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
@@ -2672,6 +3000,10 @@ export default function App() {
               onAddReview={handleAddReview}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
+              currentUser={currentUser}
+              jobChatThreads={jobChatThreads}
+              jobChatMessages={jobChatMessages}
+              onSendJobChatMessage={handleSendJobChatMessage}
             />
           )}
         </ClientAppLayout>
@@ -2729,6 +3061,11 @@ export default function App() {
           onUpdateGuardProfile={handleUpdateGuardProfile}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
+          jobChatThreads={jobChatThreads}
+          jobChatMessages={jobChatMessages}
+          staffMessages={staffMessages}
+          onSendStaffMessage={handleSendStaffMessage}
+          onSendJobChat={handleSendJobChatMessage}
         />
         <InstallPrompt />
       </>

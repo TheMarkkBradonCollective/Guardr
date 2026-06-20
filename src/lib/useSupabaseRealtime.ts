@@ -11,6 +11,9 @@ const SYNC_TABLES = [
   'payments',
   'support_tickets',
   'support_messages',
+  'job_chat_threads',
+  'job_chat_messages',
+  'staff_messages',
 ] as const;
 
 const DEBOUNCE_MS = 300;

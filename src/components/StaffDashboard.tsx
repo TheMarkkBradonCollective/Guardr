@@ -13,6 +13,9 @@ import {
   StaffRole,
   SupportTicket,
   SupportTicketStatus,
+  JobChatThread,
+  JobChatMessage,
+  StaffMessage,
 } from '../types';
 import {
   canAccessFinancialControls,
@@ -50,7 +53,9 @@ import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
+import { StaffMessagesHub } from './staff/StaffMessagesHub';
 import { openTicketCount } from '../lib/support';
+import { activeJobChatCount } from '../lib/jobChat';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
@@ -65,6 +70,9 @@ interface StaffDashboardProps {
   clients: Client[];
   requests: SecurityRequest[];
   supportTickets?: SupportTicket[];
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  staffMessages?: StaffMessage[];
   payments?: Payment[];
   guardPayoutInvoices?: GuardPayoutInvoice[];
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
@@ -123,6 +131,8 @@ interface StaffDashboardProps {
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onSendStaffMessage?: (body: string) => void | Promise<void>;
+  onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   initialSection?: StaffSection;
   /** Controlled section — when set, parent owns navigation state (URL sync). */
@@ -135,6 +145,9 @@ export function StaffDashboard({
   clients,
   requests,
   supportTickets = [],
+  jobChatThreads = [],
+  jobChatMessages = [],
+  staffMessages = [],
   payments = [],
   guardPayoutInvoices = [],
   onUpdateGuardUserStatus,
@@ -173,6 +186,8 @@ export function StaffDashboard({
   onUpdateGuardProfile,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  onSendStaffMessage,
+  onSendJobChat,
   initialSection = 'overview',
   section: controlledSection,
   onSectionChange,
@@ -233,9 +248,10 @@ export function StaffDashboard({
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
+      messages: activeJobChatCount(jobChatThreads),
       payments: openPayoutInvoices,
     }),
-    [stats, requests, incidents, disputes, supportTickets, openPayoutInvoices]
+    [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
 
   const renderSection = () => {
@@ -359,6 +375,19 @@ export function StaffDashboard({
             tickets={supportTickets}
             onSendMessage={onSendSupportMessage}
             onUpdateStatus={onUpdateSupportStatus}
+          />
+        ) : null;
+      case 'messages':
+        return onSendStaffMessage && onSendJobChat ? (
+          <StaffMessagesHub
+            requests={requests}
+            guards={guards}
+            jobChatThreads={jobChatThreads}
+            jobChatMessages={jobChatMessages}
+            staffMessages={staffMessages}
+            currentUser={currentUser}
+            onSendStaffMessage={onSendStaffMessage}
+            onSendJobChat={onSendJobChat}
           />
         ) : null;
       case 'payments':
