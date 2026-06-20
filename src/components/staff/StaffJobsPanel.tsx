@@ -23,7 +23,7 @@ import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
 import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
 import { StaffSpotCheckUpload } from './StaffSpotCheckUpload';
-import { canStaffUploadSpotCheck, hasSpotChecks, isNoSpotCheckFlagged, shouldShowSpotCheckSection } from '../../lib/spotChecks';
+import { canStaffAddSpotCheck, hasSpotChecks, isNoSpotCheckFlagged } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
@@ -131,8 +131,8 @@ function JobDetailPanel({
     !!canUploadSelfAuditPhotos &&
     !!onUploadSelfAuditPhotos &&
     canStaffUploadSelfAuditPhotos(req, staffRole);
-  const showSpotCheck =
-    !!canUploadSpotCheck && !!onUploadSpotCheck && shouldShowSpotCheckSection(req);
+  const canAddSpotCheck =
+    !!canUploadSpotCheck && !!onUploadSpotCheck && canStaffAddSpotCheck(req);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
   const workflowLabel = JOB_STATUS_LABELS[req.status];
@@ -213,7 +213,7 @@ function JobDetailPanel({
         canUploadAudit={canUploadAudit}
         auditUploadOpen={auditUploadOpen}
         onToggleAuditUpload={() => setAuditUploadOpen((open) => !open)}
-        canUploadSpotCheck={showSpotCheck}
+        canUploadSpotCheck={canAddSpotCheck}
         spotCheckOpen={spotCheckOpen}
         onToggleSpotCheck={() => setSpotCheckOpen((open) => !open)}
       />
@@ -273,7 +273,7 @@ function JobDetailPanel({
       {auditUploadOpen && canUploadAudit && (
         <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos!} />
       )}
-      {spotCheckOpen && showSpotCheck && (
+      {spotCheckOpen && canAddSpotCheck && (
         <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck!} />
       )}
       {canAssign && (

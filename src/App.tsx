@@ -26,7 +26,7 @@ import {
   canStaffUploadSelfAuditPhotos,
   selfAuditPhotosComplete,
 } from './lib/selfAuditPhotos';
-import { canClientConfirmSpotCheck, canStaffUploadSpotCheck } from './lib/spotChecks';
+import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from './lib/spotChecks';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorDepositCashToStripe,
@@ -2122,11 +2122,13 @@ export default function App() {
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canStaffUploadSpotCheck(existing)) {
+    if (!existing || !canStaffAddSpotCheck(existing)) {
       alert(
-        existing?.assignedGuardId
-          ? 'Spot checks can only be added while a guard is assigned to an active or completed job.'
-          : 'Assign a guard before uploading a spot check.'
+        hasSpotChecks(existing ?? { spotChecks: [] })
+          ? 'This job already has a spot check. Only one spot check is allowed per job.'
+          : existing?.assignedGuardId
+            ? 'Spot checks can only be added while a guard is assigned to an active or completed job.'
+            : 'Assign a guard before uploading a spot check.'
       );
       return;
     }
