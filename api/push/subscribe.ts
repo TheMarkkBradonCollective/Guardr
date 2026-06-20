@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director';
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
 
 async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
@@ -20,12 +20,14 @@ async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
 
 function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
   if (input.isStaff && input.staffRole) {
     switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
       case 'Director':
         return 'director';
       case 'Administrator':
@@ -46,6 +48,7 @@ function platformRoleToPushRole(role: PlatformRole | string): PushRole {
     case 'moderator':
     case 'administrator':
     case 'director':
+    case 'owner':
       return 'dispatch';
     case 'client':
       return 'client';

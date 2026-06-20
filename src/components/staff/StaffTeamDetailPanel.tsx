@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { SecurityGuard, StaffRole } from '../../types';
-import { ROLE_DESCRIPTIONS, staffRoleToPlatformRole, ROLE_LABELS } from '../../lib/permissions';
+import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
+import {
+  ROLE_DESCRIPTIONS,
+  staffRoleToPlatformRole,
+  ROLE_LABELS,
+  getAssignableStaffRoles,
+  canModifyStaffMember,
+} from '../../lib/permissions';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft } from 'lucide-react';
@@ -8,6 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
   currentUserId: string;
+  currentUserRole: PlatformRole;
   canManageStaff: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
@@ -17,6 +24,7 @@ interface StaffTeamDetailPanelProps {
 export function StaffTeamDetailPanel({
   member,
   currentUserId,
+  currentUserRole,
   canManageStaff,
   onUpdateUserStatus,
   onUpdateStaffRole,
@@ -36,6 +44,8 @@ export function StaffTeamDetailPanel({
 
   const isSelf = member.id === currentUserId;
   const platformRole = staffRoleToPlatformRole(role);
+  const assignableRoles = getAssignableStaffRoles(currentUserRole);
+  const canModifyMember = canManageStaff && canModifyStaffMember(currentUserRole, member.staffRole);
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
@@ -90,7 +100,7 @@ export function StaffTeamDetailPanel({
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
-        {canManageStaff && onUpdateStaffRole ? (
+        {canModifyMember && onUpdateStaffRole ? (
           <div className="space-y-2 max-w-sm">
             <select
               value={role}
@@ -98,9 +108,11 @@ export function StaffTeamDetailPanel({
               disabled={isSelf}
               className="uber-select w-full"
             >
-              <option value="Moderator">Moderator — {ROLE_LABELS.moderator}</option>
-              <option value="Administrator">Administrator — {ROLE_LABELS.administrator}</option>
-              <option value="Director">Director — {ROLE_LABELS.director}</option>
+              {assignableRoles.map((staffRole) => (
+                <option key={staffRole} value={staffRole}>
+                  {staffRole} — {ROLE_LABELS[staffRoleToPlatformRole(staffRole)]}
+                </option>
+              ))}
             </select>
             {isSelf && (
               <p className="text-xs text-brand-text-muted">You cannot change your own role.</p>
@@ -120,12 +132,17 @@ export function StaffTeamDetailPanel({
           </div>
         ) : (
           <p className="text-sm text-brand-text-muted">
-            {member.staffRole || 'Staff'} — only directors can change staff roles.
+            {member.staffRole || 'Staff'} —{' '}
+            {currentUserRole === 'owner'
+              ? 'view only for your own profile.'
+              : currentUserRole === 'director'
+                ? 'Directors manage Moderators and Administrators; Owners manage Directors.'
+                : 'only Directors and Owners can change staff roles.'}
           </p>
         )}
       </section>
 
-      {canManageStaff && (
+      {canModifyMember && (
         <section className="py-4 border-b border-brand-border space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="flex flex-wrap gap-2">
@@ -157,7 +174,9 @@ export function StaffTeamDetailPanel({
               </button>
             )}
             {isSelf && (
-              <p className="text-xs text-brand-text-muted">Use another director account to suspend or change this profile.</p>
+              <p className="text-xs text-brand-text-muted">
+                Use another {currentUserRole === 'owner' ? 'Owner' : 'Director or Owner'} account to suspend or change this profile.
+              </p>
             )}
           </div>
         </section>

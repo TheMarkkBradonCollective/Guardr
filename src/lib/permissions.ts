@@ -1,4 +1,4 @@
-import { PlatformRole, SessionUser } from '../types';
+import { PlatformRole, SessionUser, StaffRole } from '../types';
 
 /** Platform permission keys aligned with Guardr role spec */
 export type Permission =
@@ -50,7 +50,11 @@ export type Permission =
   | 'director.view_all_financial_data'
   | 'director.access_audit_logs'
   | 'director.override_restrictions'
-  | 'director.manage_company_operations';
+  | 'director.manage_company_operations'
+  // Owner (+ all director)
+  | 'owner.manage_directors'
+  | 'owner.manage_owners'
+  | 'owner.platform_governance';
 
 const CLIENT_PERMISSIONS: Permission[] = [
   'client.create_account',
@@ -114,12 +118,20 @@ const DIRECTOR_PERMISSIONS: Permission[] = [
   'director.manage_company_operations',
 ];
 
+const OWNER_PERMISSIONS: Permission[] = [
+  ...DIRECTOR_PERMISSIONS,
+  'owner.manage_directors',
+  'owner.manage_owners',
+  'owner.platform_governance',
+];
+
 export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
   client: CLIENT_PERMISSIONS,
   guard: GUARD_PERMISSIONS,
   moderator: MODERATOR_PERMISSIONS,
   administrator: ADMINISTRATOR_PERMISSIONS,
   director: DIRECTOR_PERMISSIONS,
+  owner: OWNER_PERMISSIONS,
 };
 
 export const ROLE_LABELS: Record<PlatformRole, string> = {
@@ -128,6 +140,7 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
   moderator: 'Moderator',
   administrator: 'Administrator',
   director: 'Director',
+  owner: 'Owner',
 };
 
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
@@ -135,20 +148,36 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   guard: 'Independent licensed security professionals.',
   moderator: 'Operations and support — no financial controls.',
   administrator: 'Platform management and daily operations.',
-  director: 'Owner-level unrestricted platform access.',
+  director: 'Executive platform operations and unrestricted staff-side access.',
+  owner: 'Platform governance — manages directors and holds ultimate authority.',
 };
 
-export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'director' {
-  return role === 'moderator' || role === 'administrator' || role === 'director';
+export const STAFF_ROLES_ORDERED: StaffRole[] = ['Moderator', 'Administrator', 'Director', 'Owner'];
+
+export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'director' | 'owner' {
+  return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
 }
 
 export function isDirector(user: Pick<SessionUser, 'role'>): boolean {
   return user.role === 'director';
 }
 
-/** Director has unrestricted staff-side operational access */
+export function isOwner(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'owner';
+}
+
+/** Director and Owner share executive payment and ops controls */
+export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
+  return user.role === 'director' || user.role === 'owner';
+}
+
+/** Director has unrestricted staff-side operational access; Owner inherits the same overrides */
 export function hasDirectorStaffOverride(user: Pick<SessionUser, 'role'>): boolean {
-  return isDirector(user) || hasPermission(user, 'director.override_restrictions');
+  return (
+    isDirector(user) ||
+    isOwner(user) ||
+    hasPermission(user, 'director.override_restrictions')
+  );
 }
 
 export function hasPermission(user: Pick<SessionUser, 'role'>, permission: Permission): boolean {
@@ -164,8 +193,36 @@ export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boo
   return hasAnyPermission(user, ['admin.manage_payouts', 'admin.manage_fees', 'director.view_all_financial_data']);
 }
 
+/** Directors manage moderators and administrators; Owners manage all staff tiers */
 export function canManageStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {
-  return hasAnyPermission(user, ['director.manage_administrators', 'director.manage_moderators']);
+  return hasAnyPermission(user, [
+    'director.manage_administrators',
+    'director.manage_moderators',
+    'owner.manage_directors',
+  ]);
+}
+
+export function canManageDirectorAccounts(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'owner.manage_directors');
+}
+
+export function getAssignableStaffRoles(role: PlatformRole): StaffRole[] {
+  if (role === 'owner') return STAFF_ROLES_ORDERED;
+  if (role === 'director') return ['Moderator', 'Administrator'];
+  return [];
+}
+
+export function canAssignStaffRole(actorRole: PlatformRole, targetRole: StaffRole): boolean {
+  return getAssignableStaffRoles(actorRole).includes(targetRole);
+}
+
+/** Whether an actor may change roles or account status for a staff member */
+export function canModifyStaffMember(actorRole: PlatformRole, memberStaffRole?: StaffRole): boolean {
+  if (actorRole === 'owner') return true;
+  if (actorRole === 'director') {
+    return memberStaffRole === 'Moderator' || memberStaffRole === 'Administrator';
+  }
+  return false;
 }
 
 export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
@@ -188,15 +245,15 @@ export function canOnboardPlatformUsers(user: Pick<SessionUser, 'role'>): boolea
 }
 
 export function canToggleStaffRole(user: Pick<SessionUser, 'role'>): boolean {
-  return hasPermission(user, 'director.manage_moderators');
+  return hasAnyPermission(user, ['director.manage_moderators', 'owner.manage_directors']);
 }
 
-/** Cash client payments and cash guard payouts are Director-only overrides */
+/** Cash client payments and cash guard payouts are Director/Owner overrides */
 export function canRecordCashPayments(user: Pick<SessionUser, 'role'>): boolean {
-  return user.role === 'director';
+  return hasExecutivePaymentControls(user);
 }
 
-/** Director creates jobs for clients and assigns guards */
+/** Director and Owner create jobs for clients and assign guards */
 export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_company_operations');
 }
@@ -211,12 +268,12 @@ export function canUploadJobSpotCheck(user: Pick<SessionUser, 'role'>): boolean 
   return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
 }
 
-/** Director and administrator may edit job listings (director: any non-closed job) */
+/** Director and Owner may edit job listings (any non-closed job) */
 export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
 }
 
-/** Director receives all staff job-management capabilities */
+/** Director and Owner receive all staff job-management capabilities */
 export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
   return (
     hasDirectorStaffOverride(user) ||
@@ -230,12 +287,14 @@ export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
 /** Map legacy auth / DB staff_role to platform role */
 export function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: StaffRole;
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
   if (input.isStaff && input.staffRole) {
     switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
       case 'Director':
         return 'director';
       case 'Administrator':
@@ -249,8 +308,10 @@ export function resolvePlatformRole(input: {
   return 'guard';
 }
 
-export function staffRoleToPlatformRole(staffRole: 'Director' | 'Administrator' | 'Moderator'): PlatformRole {
+export function staffRoleToPlatformRole(staffRole: StaffRole): PlatformRole {
   switch (staffRole) {
+    case 'Owner':
+      return 'owner';
     case 'Director':
       return 'director';
     case 'Administrator':
@@ -260,8 +321,10 @@ export function staffRoleToPlatformRole(staffRole: 'Director' | 'Administrator' 
   }
 }
 
-export function platformRoleToStaffRole(role: PlatformRole): 'Director' | 'Administrator' | 'Moderator' | null {
+export function platformRoleToStaffRole(role: PlatformRole): StaffRole | null {
   switch (role) {
+    case 'owner':
+      return 'Owner';
     case 'director':
       return 'Director';
     case 'administrator':

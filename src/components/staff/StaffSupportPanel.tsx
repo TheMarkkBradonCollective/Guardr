@@ -147,7 +147,7 @@ export function StaffSupportPanel({ tickets, onSendMessage, onUpdateStatus }: St
 
             <div className="staff-pane-body p-4 space-y-3">
               {selected.messages.map((msg) => {
-                const staff = msg.senderRole === 'moderator' || msg.senderRole === 'administrator' || msg.senderRole === 'director';
+                const staff = msg.senderRole === 'moderator' || msg.senderRole === 'administrator' || msg.senderRole === 'director' || msg.senderRole === 'owner';
                 return (
                   <div key={msg.id} className={`flex ${staff ? 'justify-end' : 'justify-start'}`}>
                     <div

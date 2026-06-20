@@ -150,7 +150,7 @@ export function UserProfileScreen({
     }
   };
 
-  const isGuardLike = currentUser.role === 'guard' || ['director', 'administrator', 'moderator'].includes(currentUser.role);
+  const isGuardLike = currentUser.role === 'guard' || ['owner', 'director', 'administrator', 'moderator'].includes(currentUser.role);
   const isClient = currentUser.role === 'client';
   const canBuildResume = isGuardLike && !!guard;
 

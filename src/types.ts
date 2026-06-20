@@ -28,10 +28,10 @@ export interface ShiftReport {
 }
 
 /** Platform user roles per Guardr spec */
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director';
+export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
-export type StaffRole = 'Director' | 'Administrator' | 'Moderator';
+export type StaffRole = 'Owner' | 'Director' | 'Administrator' | 'Moderator';
 
 export type CertCategory =
   | 'guard-card'

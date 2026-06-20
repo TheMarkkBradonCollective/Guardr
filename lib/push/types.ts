@@ -7,7 +7,7 @@ export type PushNotificationType =
   | 'emergency_alert'
   | 'test';
 
-export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director';
+export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 
 export interface PushSubscriptionKeys {
   p256dh: string;

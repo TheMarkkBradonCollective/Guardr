@@ -7,6 +7,7 @@ export function platformRoleToPushRole(role: PlatformRole | string): PushRole {
     case 'moderator':
     case 'administrator':
     case 'director':
+    case 'owner':
       return 'dispatch';
     case 'client':
       return 'client';

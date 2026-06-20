@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlatformRole } from '../../types';
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '../../lib/permissions';
-import { Shield, Users, Briefcase, DollarSign, Crown } from 'lucide-react';
+import { Shield, Users, Briefcase, DollarSign, Crown, Award } from 'lucide-react';
 
 const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: string[] }[] = [
   {
@@ -27,12 +27,23 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
   },
   {
     role: 'director',
-    icon: Crown,
+    icon: Award,
     permissions: [
-      'Full unrestricted platform access',
+      'Full unrestricted platform operations',
       'Manage Administrators & Moderators',
       'View all financial data & audit logs',
       'Override system restrictions',
+      'Cash payments, job creation & guard assignment',
+    ],
+  },
+  {
+    role: 'owner',
+    icon: Crown,
+    permissions: [
+      'Everything Directors can do',
+      'Manage Directors and all staff roles',
+      'Ultimate platform governance authority',
+      'Peer oversight of other Owners and Directors',
     ],
   },
 ];

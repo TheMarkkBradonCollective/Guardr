@@ -7,12 +7,14 @@ export interface VerifiedSession extends SessionCredentials {
 
 function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
   if (input.isStaff && input.staffRole) {
     switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
       case 'Director':
         return 'director';
       case 'Administrator':
