@@ -41,6 +41,11 @@ export function EditRequestForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setError('Job title is required.');
+      return;
+    }
     if (!address.trim() || state.length !== 2) {
       setError('Address and state are required.');
       return;
@@ -61,7 +66,7 @@ export function EditRequestForm({
 
       if (scheduleLocked) {
         await onSave(request.id, {
-          title: title.trim() || request.title,
+          title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
           state: state.toUpperCase(),
@@ -73,7 +78,7 @@ export function EditRequestForm({
         const guardPay = computeGuardPay(hourlyRate);
         const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
         await onSave(request.id, {
-          title: title.trim() || request.title,
+          title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
           state: state.toUpperCase(),
@@ -98,6 +103,9 @@ export function EditRequestForm({
         });
       }
       onCancel();
+    } catch (err) {
+      console.error('Failed to save job edit:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save changes. Please try again.');
     } finally {
       setSaving(false);
     }

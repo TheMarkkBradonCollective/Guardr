@@ -69,7 +69,7 @@ import {
   saveGuardPayoutInvoicesToStorage,
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
-import { listingDetailDbColumns } from './lib/jobListing';
+import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -1772,68 +1772,35 @@ export default function App() {
     const endDate = safe.endDate ?? existing.endDate;
     const hourlyRate = safe.hourlyRate ?? existing.hourlyRate;
     const durationHours = safe.durationHours ?? computeDurationHours(startDate, endDate);
+    const location = safe.location ?? buildLocationLabel(siteName, address);
+    const state = safe.state?.toUpperCase() ?? existing.state;
+    const status = !isJobPaid(existing) && existing.status === 'open' ? 'open' : existing.status;
 
-    const merged: Partial<SecurityRequest> = {
-      ...safe,
-      title: safe.title ?? existing.title,
+    const merged = mergeJobListingUpdates(existing, safe, {
       siteName,
       address,
       startDate,
       endDate,
       durationHours,
       hourlyRate,
-      guardPay: safe.guardPay ?? computeGuardPay(hourlyRate),
-      estimatedPayout:
-        safe.estimatedPayout ?? Math.round(durationHours * hourlyRate * (safe.guardsNeeded ?? existing.guardsNeeded ?? 1) * 100) / 100,
-      location: safe.location ?? buildLocationLabel(siteName, address),
-      state: safe.state?.toUpperCase() ?? existing.state,
-      description: safe.description ?? existing.description ?? '',
-      uniformRequirements: safe.uniformRequirements ?? existing.uniformRequirements ?? '',
-      equipmentRequirements: safe.equipmentRequirements ?? existing.equipmentRequirements ?? '',
-      siteInstructions: safe.siteInstructions ?? existing.siteInstructions ?? '',
-      contactName: safe.contactName ?? existing.contactName,
-      contactPhone: safe.contactPhone ?? existing.contactPhone,
-      parkingInstructions: safe.parkingInstructions ?? existing.parkingInstructions,
-      accessInstructions: safe.accessInstructions ?? existing.accessInstructions,
-      latitude: safe.latitude ?? existing.latitude,
-      longitude: safe.longitude ?? existing.longitude,
-      type: safe.type ?? existing.type,
-      armedRequired: safe.armedRequired ?? existing.armedRequired,
-      guardsNeeded: safe.guardsNeeded ?? existing.guardsNeeded,
-      requiredCertifications: safe.requiredCertifications ?? existing.requiredCertifications,
-      status: !isJobPaid(existing) && existing.status === 'open' ? 'open' : existing.status,
-    };
+      location,
+      state,
+      status,
+    });
 
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, ...merged } : r)));
     if (isDbConnected) {
       const { error } = await supabase
         .from('security_requests')
-        .update({
-          title: merged.title,
-          description: merged.description,
-          site_name: merged.siteName,
-          address: merged.address,
-          state: merged.state,
-          location: merged.location,
-          type: merged.type,
-          armed_required: merged.armedRequired,
-          guards_needed: merged.guardsNeeded,
-          start_date: merged.startDate,
-          end_date: merged.endDate,
-          duration_hours: merged.durationHours,
-          hourly_rate: merged.hourlyRate,
-          guard_pay: merged.guardPay,
-          estimated_payout: merged.estimatedPayout,
-          required_certifications: merged.requiredCertifications,
-          status: merged.status,
-          ...listingDetailDbColumns(merged),
-        })
+        .update(buildJobListingDbPayload(merged))
         .eq('id', requestId);
       if (error) {
         console.error('Job listing update error:', error);
         alert(`Could not save job changes: ${error.message}`);
+        throw new Error(error.message);
       }
     }
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? merged : r)));
   };
 
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {

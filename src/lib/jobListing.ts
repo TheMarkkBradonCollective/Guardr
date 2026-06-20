@@ -178,6 +178,79 @@ export function listingDetailDbColumns(job: Partial<SecurityRequest>) {
   };
 }
 
+/** Merge a partial edit onto an existing job without nulling fields that were not sent. */
+export function mergeJobListingUpdates(
+  existing: SecurityRequest,
+  safe: Partial<SecurityRequest>,
+  computed: {
+    siteName: string;
+    address: string;
+    startDate: string;
+    endDate: string;
+    durationHours: number;
+    hourlyRate: number;
+    location: string;
+    state?: string;
+    status: SecurityRequest['status'];
+  }
+): SecurityRequest {
+  const title = (safe.title ?? existing.title).trim() || existing.title;
+
+  return {
+    ...existing,
+    ...safe,
+    title,
+    siteName: computed.siteName,
+    address: computed.address,
+    startDate: computed.startDate,
+    endDate: computed.endDate,
+    durationHours: computed.durationHours,
+    hourlyRate: computed.hourlyRate,
+    location: computed.location,
+    state: computed.state ?? existing.state,
+    description: safe.description ?? existing.description ?? '',
+    uniformRequirements: safe.uniformRequirements ?? existing.uniformRequirements ?? '',
+    equipmentRequirements: safe.equipmentRequirements ?? existing.equipmentRequirements ?? '',
+    siteInstructions: safe.siteInstructions ?? existing.siteInstructions ?? '',
+    contactName: safe.contactName ?? existing.contactName,
+    contactPhone: safe.contactPhone ?? existing.contactPhone,
+    parkingInstructions: safe.parkingInstructions ?? existing.parkingInstructions,
+    accessInstructions: safe.accessInstructions ?? existing.accessInstructions,
+    latitude: safe.latitude ?? existing.latitude,
+    longitude: safe.longitude ?? existing.longitude,
+    type: safe.type ?? existing.type,
+    armedRequired: safe.armedRequired ?? existing.armedRequired,
+    guardsNeeded: safe.guardsNeeded ?? existing.guardsNeeded,
+    guardPay: safe.guardPay ?? existing.guardPay,
+    estimatedPayout: safe.estimatedPayout ?? existing.estimatedPayout,
+    requiredCertifications: safe.requiredCertifications ?? existing.requiredCertifications,
+    status: computed.status,
+  };
+}
+
+export function buildJobListingDbPayload(job: SecurityRequest) {
+  return {
+    title: job.title,
+    description: job.description ?? '',
+    site_name: job.siteName ?? '',
+    address: job.address ?? '',
+    state: job.state ?? '',
+    location: job.location,
+    type: job.type,
+    armed_required: job.armedRequired,
+    guards_needed: job.guardsNeeded ?? 1,
+    start_date: job.startDate,
+    end_date: job.endDate,
+    duration_hours: job.durationHours,
+    hourly_rate: job.hourlyRate,
+    guard_pay: job.guardPay,
+    estimated_payout: job.estimatedPayout,
+    required_certifications: job.requiredCertifications ?? [],
+    status: job.status,
+    ...listingDetailDbColumns(job),
+  };
+}
+
 export function hasListingPostOrders(job: Partial<JobListingLike>): boolean {
   return Boolean(
     job.uniformRequirements?.trim() ||
