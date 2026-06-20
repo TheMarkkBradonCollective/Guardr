@@ -165,6 +165,12 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_in_audit JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS spot_checks JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS mid_shift_audits JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_out_audit JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_name TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_phone TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS parking_instructions TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS access_instructions TEXT;
 
 -- Backfill nulls so NOT NULL constraints can apply
 UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
@@ -187,6 +193,10 @@ UPDATE security_requests SET request_type = 'marketplace'
   WHERE request_type IS NOT NULL AND request_type NOT IN ('marketplace', 'direct');
 UPDATE security_requests SET required_certifications = '{}' WHERE required_certifications IS NULL;
 UPDATE security_requests SET applicants = '{}' WHERE applicants IS NULL;
+UPDATE security_requests SET spot_checks = '[]'::jsonb WHERE spot_checks IS NULL;
+UPDATE security_requests SET mid_shift_audits = '[]'::jsonb WHERE mid_shift_audits IS NULL;
+UPDATE security_requests SET platform_fee_paid_cash = FALSE WHERE platform_fee_paid_cash IS NULL;
+UPDATE security_requests SET guard_cash_payout_requested = FALSE WHERE guard_cash_payout_requested IS NULL;
 
 -- Legacy status values → current app values
 UPDATE security_requests SET status = 'accepted' WHERE status = 'assigned';
@@ -255,6 +265,24 @@ CREATE TABLE IF NOT EXISTS payments (
 
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;
 
+-- ── GUARD PAYOUT INVOICES ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guard_payout_invoices (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL,
+  guard_name TEXT NOT NULL,
+  guard_email TEXT NOT NULL,
+  method TEXT NOT NULL CHECK (method IN ('cash', 'stripe')),
+  job_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  lines JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total NUMERIC(12, 2) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'completed', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS guard_payout_invoices_guard_id_idx ON guard_payout_invoices(guard_id);
+CREATE INDEX IF NOT EXISTS guard_payout_invoices_status_idx ON guard_payout_invoices(status);
+
 -- ── SUPPORT ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (
   id TEXT PRIMARY KEY,
@@ -310,6 +338,8 @@ CREATE INDEX IF NOT EXISTS idx_security_requests_assigned_guard ON security_requ
 CREATE INDEX IF NOT EXISTS idx_security_requests_request_type ON security_requests(request_type);
 CREATE INDEX IF NOT EXISTS idx_security_requests_target_guard ON security_requests(target_guard_id);
 CREATE INDEX IF NOT EXISTS idx_payments_job_id ON payments(job_id);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
 
 -- ── ROW LEVEL SECURITY (open policies — app uses anon key) ─────────────────
 ALTER TABLE guards ENABLE ROW LEVEL SECURITY;
@@ -319,6 +349,7 @@ ALTER TABLE experience ENABLE ROW LEVEL SECURITY;
 ALTER TABLE education ENABLE ROW LEVEL SECURITY;
 ALTER TABLE security_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_payout_invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
@@ -329,7 +360,8 @@ DECLARE
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'guards', 'clients', 'certifications', 'experience', 'education',
-    'security_requests', 'payments', 'support_tickets', 'support_messages', 'push_subscriptions'
+    'security_requests', 'payments', 'guard_payout_invoices',
+    'support_tickets', 'support_messages', 'push_subscriptions'
   ]
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', tbl || '_select', tbl);
@@ -357,7 +389,8 @@ DECLARE
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'guards', 'clients', 'certifications', 'experience', 'education',
-    'security_requests', 'payments', 'support_tickets', 'support_messages'
+    'security_requests', 'payments', 'guard_payout_invoices',
+    'support_tickets', 'support_messages'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
@@ -374,21 +407,62 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── VERIFY (read-only) ─────────────────────────────────────────────────────
--- 1) Columns the app inserts on job post
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'security_requests'
-ORDER BY ordinal_position;
+-- ── OPTIONAL: Director staff accounts ───────────────────────────────────────
+-- Passwords are checked in the app (AuthPage.tsx), not stored in the database.
+INSERT INTO guards (
+  id, name, email, badge_number, avatar, phone, bio,
+  is_armed, background_checked, verified, rating, jobs_completed,
+  is_staff, staff_role, user_status
+) VALUES
+  (
+    'staff-director',
+    'M. White',
+    'm.white@signaturesecurityspecialist.com',
+    'DIR-00001',
+    '', '',
+    'Director — Platform operations.',
+    false, true, true, 5.0, 0,
+    true, 'Director', 'active'
+  ),
+  (
+    'staff-director-tyrone',
+    'Tyrone Johnson',
+    't.johnson@signaturesecurityspecialist.com',
+    'DIR-00002',
+    '', '',
+    'Director — Platform operations.',
+    false, true, true, 5.0, 0,
+    true, 'Director', 'active'
+  )
+ON CONFLICT (email) DO UPDATE SET
+  name = EXCLUDED.name,
+  badge_number = EXCLUDED.badge_number,
+  is_staff = true,
+  staff_role = 'Director',
+  user_status = 'active';
 
--- 2) RLS policies on security_requests (need INSERT policy or posts fail silently)
-SELECT policyname, cmd, qual IS NOT NULL AS has_using, with_check IS NOT NULL AS has_check
+-- ── VERIFY (read-only) ─────────────────────────────────────────────────────
+-- 1) Columns the app writes when editing jobs (missing columns = silent save failures)
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'security_requests'
+  AND column_name IN (
+    'latitude', 'longitude', 'contact_name', 'contact_phone',
+    'parking_instructions', 'access_instructions',
+    'platform_fee_paid_cash', 'cash_deposited_amount',
+    'check_in_audit', 'spot_checks', 'mid_shift_audits', 'check_out_audit'
+  )
+ORDER BY column_name;
+
+-- 2) RLS policies on security_requests (need UPDATE policy or edits fail)
+SELECT policyname, cmd
 FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'security_requests'
 ORDER BY policyname;
 
--- 3) Clients registered (job posts use client_id from session — row must exist)
-SELECT id, name, email, company_name, total_requests, approved
-FROM clients
-ORDER BY created_at DESC
-LIMIT 20;
+-- 3) All public tables
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY table_name;

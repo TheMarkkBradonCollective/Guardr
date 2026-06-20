@@ -1790,7 +1790,7 @@ export default function App() {
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, ...merged } : r)));
     if (isDbConnected) {
-      await supabase
+      const { error } = await supabase
         .from('security_requests')
         .update({
           title: merged.title,
@@ -1816,6 +1816,10 @@ export default function App() {
           ...listingDetailDbColumns(merged),
         })
         .eq('id', requestId);
+      if (error) {
+        console.error('Job listing update error:', error);
+        alert(`Could not save job changes: ${error.message}`);
+      }
     }
   };
 
