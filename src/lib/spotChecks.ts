@@ -16,18 +16,25 @@ export function hasSpotChecks(req: Pick<SecurityRequest, 'spotChecks'>): boolean
   return (req.spotChecks?.length ?? 0) > 0;
 }
 
+/** Staff may upload at most one spot-check photo per job. */
+export function canStaffAddSpotCheck(req: SecurityRequest): boolean {
+  if (hasSpotChecks(req)) return false;
+  if (!req.assignedGuardId) return false;
+  return SPOT_CHECK_UPLOAD_STATUSES.includes(req.status);
+}
+
 /** Optional for staff, but flagged until at least one spot-check photo is saved */
 export function isNoSpotCheckFlagged(req: SecurityRequest): boolean {
   return spotCheckApplies(req) && !hasSpotChecks(req);
 }
 
+/** @deprecated Use canStaffAddSpotCheck — kept for call sites that mean "may upload another". */
 export function canStaffUploadSpotCheck(req: SecurityRequest): boolean {
-  if (!req.assignedGuardId) return false;
-  return SPOT_CHECK_UPLOAD_STATUSES.includes(req.status);
+  return canStaffAddSpotCheck(req);
 }
 
 export function shouldShowSpotCheckSection(req: SecurityRequest): boolean {
-  return canStaffUploadSpotCheck(req) || hasSpotChecks(req) || isNoSpotCheckFlagged(req);
+  return canStaffAddSpotCheck(req) || hasSpotChecks(req) || isNoSpotCheckFlagged(req);
 }
 
 export function sortedSpotChecks(req: Pick<SecurityRequest, 'spotChecks'>) {

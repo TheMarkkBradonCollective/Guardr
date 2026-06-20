@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { SecurityRequest } from '../../types';
-import { canStaffUploadSpotCheck, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
+import { canStaffAddSpotCheck, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { ImagePlus, Loader2, MapPin } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const canUpload = canStaffUploadSpotCheck(request);
+  const canUpload = canStaffAddSpotCheck(request);
   const flagged = isNoSpotCheckFlagged(request);
   const history = sortedSpotChecks(request);
 
@@ -59,14 +59,14 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
             {flagged && <NoSpotCheckBadge />}
           </div>
           <p className="text-xs text-brand-text-muted mt-1">
-            Staff-only — optional, but jobs are flagged until you upload a photo confirming the guard is on site.
+            Staff-only — one photo per job confirming the guard is on site. Jobs are flagged until it is uploaded.
           </p>
         </div>
       </div>
 
       {history.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">Previous checks</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">Spot check photo</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {history.map((check) => (
               <div key={check.id}>
