@@ -79,6 +79,29 @@ export function estimateJobDistanceMiles(
   return distanceMiles(from, jobPoint);
 }
 
+export function parseLatitude(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n < -90 || n > 90) return null;
+  return n;
+}
+
+export function parseLongitude(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n < -180 || n > 180) return null;
+  return n;
+}
+
+export function parseGeoCoords(latValue: string, lngValue: string): GeoCoords | null {
+  const lat = parseLatitude(latValue);
+  const lng = parseLongitude(lngValue);
+  if (lat == null || lng == null) return null;
+  return { lat, lng };
+}
+
 export function jobDistanceMiles(
   job: JobCoordsSource,
   from: GeoCoords = METRO_CENTER
