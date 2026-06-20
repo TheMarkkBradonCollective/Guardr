@@ -4,8 +4,10 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
+  canDirectorMarkPlatformFeePaidCash,
   canStripePayGuard,
   getCashDepositedAmount,
+  getPlatformFeeAmount,
   guardPayoutAmount,
   stripeDepositLabel,
 } from '../../lib/cashPayments';
@@ -54,6 +56,7 @@ interface JobPaymentRowProps {
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
 }
@@ -67,10 +70,11 @@ export function JobPaymentRow({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | 'platformFee' | null>(null);
 
   const stage = getPaymentPipelineStage(req);
   const summary = staffJobMoneySummary(req);
@@ -78,6 +82,8 @@ export function JobPaymentRow({
   const guardAmount = guardPayoutAmount(req);
   const canMarkClientCash = isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
+  const canPlatformFeeCash =
+    isDirector && canDirectorMarkPlatformFeePaidCash(req) && onMarkPlatformFeePaidCash;
   const canPayGuard = stage === 'awaiting-guard-payout' && !!guard;
   const stripePayAllowed = canStripePayGuard(req);
   const canStripeRelease = canPayGuard && onReleasePayout && !readOnly && stripePayAllowed;
@@ -135,7 +141,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canMarkClientCash || canDeposit || canStripeRelease || canCashGuard || canRefund) && (
+        (canMarkClientCash || canDeposit || canPlatformFeeCash || canStripeRelease || canCashGuard || canRefund) && (
         <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border w-full">
           {canMarkClientCash && (
             <button
@@ -158,6 +164,22 @@ export function JobPaymentRow({
             >
               {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
               {stripeDepositLabel(req)}
+            </button>
+          )}
+
+          {canPlatformFeeCash && (
+            <button
+              type="button"
+              onClick={() => run('platformFee', onMarkPlatformFeePaidCash)}
+              disabled={busy !== null}
+              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5"
+            >
+              {busy === 'platformFee' ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Banknote className="w-3 h-3" />
+              )}
+              Platform fee ${getPlatformFeeAmount(req).toFixed(2)} (cash)
             </button>
           )}
 

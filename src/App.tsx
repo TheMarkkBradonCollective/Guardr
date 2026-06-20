@@ -32,7 +32,10 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
+  canDirectorMarkPlatformFeePaidCash,
+  getPlatformFeeAmount,
   getRemainingStripeDeposit,
+  getRequiredStripeDeposit,
   guardPayoutAmount,
   isCashClientPayment,
   parsePaymentMethod,
@@ -417,6 +420,7 @@ export default function App() {
         cashDepositedToStripe: !!r.cash_deposited_to_stripe,
         cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
         cashDepositedAt: r.cash_deposited_at || undefined,
+        platformFeePaidCash: !!r.platform_fee_paid_cash,
         guardCashPayoutRequested: !!r.guard_cash_payout_requested,
         guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
         checkInAudit: r.check_in_audit ?? undefined,
@@ -1492,6 +1496,7 @@ export default function App() {
               cashDepositedToStripe: false,
               cashDepositedAmount: 0,
               cashDepositedAt: undefined,
+              platformFeePaidCash: false,
             }
           : r
       )
@@ -1523,6 +1528,7 @@ export default function App() {
           cash_deposited_to_stripe: false,
           cash_deposited_at: null,
           cash_deposited_amount: 0,
+          platform_fee_paid_cash: false,
         })
         .eq('id', requestId);
       if (existingPayment) {
@@ -1619,6 +1625,75 @@ export default function App() {
     }
     await syncOpenPayoutInvoices(nextRequests);
     alert(`Recorded $${amount} cash payout to guard.`);
+  };
+
+  const handleMarkPlatformFeePaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      alert('Only the Director can record platform fee cash payments.');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkPlatformFeePaidCash(req)) {
+      alert('This job does not have a platform fee due in cash.');
+      return;
+    }
+    const feeAmount = getPlatformFeeAmount(req);
+    if (!window.confirm(`Record $${feeAmount.toFixed(2)} platform fee received in cash for "${req.title}"?`)) {
+      return;
+    }
+
+    const depositedAt = new Date().toISOString();
+    const previousDeposited = req.cashDepositedAmount ?? 0;
+    const newDeposited = Math.round((previousDeposited + feeAmount) * 100) / 100;
+    const remaining = Math.max(0, getRequiredStripeDeposit(req) - newDeposited);
+    const fullySatisfied = remaining <= 0;
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              platformFeePaidCash: true,
+              cashDepositedAmount: newDeposited,
+              cashDepositedToStripe: fullySatisfied,
+              cashDepositedAt: depositedAt,
+            }
+          : r
+      )
+    );
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          platform_fee_paid_cash: true,
+          cash_deposited_amount: newDeposited,
+          cash_deposited_to_stripe: fullySatisfied,
+          cash_deposited_at: depositedAt,
+        })
+        .eq('id', requestId);
+
+      const paymentId = `pay-cash-platform-fee-${Date.now()}`;
+      await supabase.from('payments').insert({
+        id: paymentId,
+        job_id: requestId,
+        amount: feeAmount,
+        status: 'paid',
+        payment_method: 'cash',
+      });
+      setPayments((prev) => [
+        ...prev,
+        {
+          id: paymentId,
+          jobId: requestId,
+          amount: feeAmount,
+          status: 'paid',
+          paymentMethod: 'cash',
+        },
+      ]);
+    }
+
+    alert(`Recorded $${feeAmount.toFixed(2)} platform fee received in cash.`);
   };
 
   const handleDepositCashToStripe = async (requestId: string) => {
@@ -2637,6 +2712,7 @@ export default function App() {
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
+          onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
           onDepositCashToStripe={handleDepositCashToStripe}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           isDbConnected={isDbConnected}

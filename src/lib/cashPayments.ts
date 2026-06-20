@@ -60,8 +60,21 @@ export function canDirectorMarkClientPaidCash(req: SecurityRequest): boolean {
   return !req.paymentStatus || req.paymentStatus === 'unpaid';
 }
 
+export function isPlatformFeePaidCash(req: Pick<SecurityRequest, 'platformFeePaidCash'>): boolean {
+  return !!req.platformFeePaidCash;
+}
+
+export function getPlatformFeeCashDue(req: SecurityRequest): number {
+  if (!isCashAwaitingStripeDeposit(req) || isPlatformFeePaidCash(req)) return 0;
+  return getPlatformFeeAmount(req);
+}
+
+export function canDirectorMarkPlatformFeePaidCash(req: SecurityRequest): boolean {
+  return getPlatformFeeCashDue(req) > 0;
+}
+
 export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
-  return isCashAwaitingStripeDeposit(req);
+  return isCashAwaitingStripeDeposit(req) && getRemainingStripeDeposit(req) > 0;
 }
 
 export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
@@ -83,6 +96,9 @@ export function stripeDepositLabel(req: SecurityRequest): string {
   const remaining = getRemainingStripeDeposit(req);
   if (remaining <= 0) return 'Paid into Stripe';
   if (isCashGuardPayout(req) || getRequiredStripeDeposit(req) < req.estimatedPayout) {
+    if (isPlatformFeePaidCash(req)) {
+      return `Pay $${remaining} with card`;
+    }
     return `Pay $${remaining} platform fee (card)`;
   }
   return `Pay $${remaining} with card`;
@@ -121,7 +137,14 @@ export function platformFundsDisplay(req: SecurityRequest): string {
     return 'Stripe (card)';
   }
   if (isCashAwaitingStripeDeposit(req)) {
+    if (isPlatformFeePaidCash(req)) {
+      const remaining = getRemainingStripeDeposit(req);
+      return remaining > 0 ? `Fee cash · $${remaining.toFixed(2)} card due` : 'Fee received cash';
+    }
     return isCashGuardPayout(req) ? 'Guard cash · fee due (card)' : 'Cash in hand · pay card';
+  }
+  if (isPlatformFeePaidCash(req) && isCashGuardPayout(req)) {
+    return 'Fee received cash';
   }
   return isCashGuardPayout(req) ? 'Fee in Stripe' : 'Funded in Stripe';
 }

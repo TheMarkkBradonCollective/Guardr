@@ -42,7 +42,7 @@ export const PIPELINE_SECTION_META: Record<
   'cash-deposit-pending': {
     title: 'Deposit client cash to Stripe',
     description:
-      'The client paid in cash. Use your card in Stripe Checkout to record it — full job amount, or just the platform fee if the guard was paid cash.',
+      'The client paid in cash. Record the platform fee in cash or use your card in Stripe Checkout — full job amount, or just the platform fee if the guard was paid cash.',
   },
   'awaiting-client': {
     title: 'Waiting on the client',
