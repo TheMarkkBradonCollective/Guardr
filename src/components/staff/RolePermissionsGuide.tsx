@@ -30,7 +30,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Award,
     permissions: [
       'Full unrestricted platform operations',
-      'Manage Administrators & Moderators',
+      'Manage Administrators & Moderators (not other Directors)',
       'View all financial data & audit logs',
       'Override system restrictions',
       'Cash payments, job creation & guard assignment',
@@ -41,9 +41,9 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Crown,
     permissions: [
       'Everything Directors can do',
-      'Manage Directors and all staff roles',
+      'Manage Directors, Administrators & Moderators',
       'Ultimate platform governance authority',
-      'Peer oversight of other Owners and Directors',
+      'Cannot moderate other Owners',
     ],
   },
 ];
