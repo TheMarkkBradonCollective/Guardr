@@ -168,13 +168,13 @@ export function listingDetailDbColumns(job: Partial<SecurityRequest>) {
   return {
     latitude: job.latitude ?? null,
     longitude: job.longitude ?? null,
-    contact_name: job.contactName || null,
-    contact_phone: job.contactPhone || null,
-    parking_instructions: job.parkingInstructions || null,
-    access_instructions: job.accessInstructions || null,
-    uniform_requirements: job.uniformRequirements || null,
-    equipment_requirements: job.equipmentRequirements || null,
-    site_instructions: job.siteInstructions || null,
+    contact_name: job.contactName ?? null,
+    contact_phone: job.contactPhone ?? null,
+    parking_instructions: job.parkingInstructions ?? null,
+    access_instructions: job.accessInstructions ?? null,
+    uniform_requirements: job.uniformRequirements ?? '',
+    equipment_requirements: job.equipmentRequirements ?? '',
+    site_instructions: job.siteInstructions ?? '',
   };
 }
 
