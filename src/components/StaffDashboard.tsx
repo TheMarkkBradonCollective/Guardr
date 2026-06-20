@@ -243,6 +243,8 @@ export function StaffDashboard({
           <StaffOverview
             stats={stats}
             requests={requests}
+            guards={guards}
+            clients={clients}
             activityFeed={activityFeed}
             actionItems={overviewActions}
             liveJobs={overviewLiveJobs}
@@ -251,6 +253,7 @@ export function StaffDashboard({
             onOpenJob={openJob}
             canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
+            showDirectorFinancials={currentUser.role === 'director'}
           />
         );
       case 'map':

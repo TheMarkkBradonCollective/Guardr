@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   buildOverviewMetricCells,
   LIVE_JOB_STATUS_LABEL,
@@ -8,7 +8,12 @@ import {
   PlatformStats,
   StaffSection,
 } from '../../lib/staffOps';
-import { SecurityRequest } from '../../types';
+import {
+  buildDirectorFinancialCells,
+  buildDirectorOperationsLines,
+  computeOperationalFinancials,
+} from '../../lib/operationalFinancials';
+import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
@@ -27,6 +32,8 @@ import {
 interface StaffOverviewProps {
   stats: PlatformStats;
   requests: SecurityRequest[];
+  guards: SecurityGuard[];
+  clients: Client[];
   activityFeed: OpsActivityItem[];
   actionItems: OverviewActionItem[];
   liveJobs: OverviewLiveJob[];
@@ -35,6 +42,7 @@ interface StaffOverviewProps {
   onOpenJob?: (jobId: string) => void;
   canUpdateJobs?: boolean;
   staffName: string;
+  showDirectorFinancials?: boolean;
 }
 
 const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> = {
@@ -71,6 +79,8 @@ function formatActivityTime(timestamp: string): string {
 export function StaffOverview({
   stats,
   requests,
+  guards,
+  clients,
   activityFeed,
   actionItems,
   liveJobs,
@@ -79,9 +89,19 @@ export function StaffOverview({
   onOpenJob,
   canUpdateJobs = false,
   staffName,
+  showDirectorFinancials = false,
 }: StaffOverviewProps) {
   const hasWeeklyData = weeklyTrend.some((h) => h > 0);
   const metrics = buildOverviewMetricCells(stats, requests);
+  const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
+  const directorFinancialCells = useMemo(
+    () => buildDirectorFinancialCells(financials),
+    [financials]
+  );
+  const directorOperationsLines = useMemo(
+    () => buildDirectorOperationsLines(stats, financials, guards, clients, requests),
+    [stats, financials, guards, clients, requests]
+  );
 
   return (
     <div className="staff-overview animate-fade-in space-y-6 pb-6">
@@ -107,7 +127,43 @@ export function StaffOverview({
         </div>
       </header>
 
+      {showDirectorFinancials && (
+        <>
+          <section>
+            <WfSectionHeader
+              title="Company financials"
+              actionLabel="Payments"
+              onAction={() => onNavigate('payments')}
+            />
+            <div className="staff-payment-summary-grid">
+              {directorFinancialCells.map(({ label, value, sub, accent }) => (
+                <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
+              ))}
+            </div>
+          </section>
+
+          <section className="staff-overview-empty-card !items-start">
+            <div className="w-full">
+              <WfSectionHeader title="Operations snapshot" />
+              <ul className="space-y-2.5">
+                {directorOperationsLines.map((line) => (
+                  <li key={line.label} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 text-sm">
+                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-text-muted sm:w-36">
+                      {line.label}
+                    </span>
+                    <span className="text-brand-text leading-snug">{line.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        </>
+      )}
+
       <section>
+        {showDirectorFinancials ? (
+          <WfSectionHeader title="Live operations" />
+        ) : null}
         <div className="staff-overview-metrics">
           {metrics.map(({ label, value, sub, accent }) => (
             <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
