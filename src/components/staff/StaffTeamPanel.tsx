@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SecurityGuard, StaffRole } from '../../types';
+import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
+import { getAssignableStaffRoles } from '../../lib/permissions';
 import { useDevice } from '../../lib/platform';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
@@ -10,6 +11,7 @@ import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 interface StaffTeamPanelProps {
   guards: SecurityGuard[];
   currentUserId: string;
+  currentUserRole: PlatformRole;
   canManageStaff: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
@@ -25,6 +27,7 @@ interface StaffTeamPanelProps {
 export function StaffTeamPanel({
   guards,
   currentUserId,
+  currentUserRole,
   canManageStaff,
   onUpdateUserStatus,
   onAddStaff,
@@ -70,10 +73,13 @@ export function StaffTeamPanel({
     );
   }
 
+  const assignableRoles = getAssignableStaffRoles(currentUserRole);
+
   const detailPanel = selected ? (
     <StaffTeamDetailPanel
       member={selected}
       currentUserId={currentUserId}
+      currentUserRole={currentUserRole}
       canManageStaff={canManageStaff}
       onUpdateUserStatus={onUpdateUserStatus}
       onUpdateStaffRole={onUpdateStaffRole}
@@ -88,10 +94,11 @@ export function StaffTeamPanel({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
             Guardr platform staff — operations and administration only, not field jobs.
-            {!canManageStaff && ' Directors manage staff accounts; you have view-only access here.'}
+            {!canManageStaff && ' Directors and Owners manage staff accounts; you have view-only access here.'}
           </p>
-          {canManageStaff && onAddStaff && (
+          {canManageStaff && onAddStaff && assignableRoles.length > 0 && (
               <StaffAddStaffForm
+                assignableRoles={assignableRoles}
                 onAdd={onAddStaff}
                 onCreated={(staffId) => {
                   setSearch('');
@@ -112,7 +119,7 @@ export function StaffTeamPanel({
       {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {roster.length === 0
-            ? 'No staff accounts yet. Directors can use Add staff above.'
+            ? 'No staff accounts yet. Directors and Owners can use Add staff above.'
             : 'No staff match your search.'}
         </p>
       ) : showDetailOnly && detailPanel ? (

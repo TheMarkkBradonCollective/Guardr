@@ -10,16 +10,17 @@ export interface StaffAddStaffInput {
 }
 
 interface StaffAddStaffFormProps {
+  assignableRoles: StaffRole[];
   onAdd: (input: StaffAddStaffInput) => Promise<string | void>;
   onCreated?: (staffId: string) => void;
 }
 
-export function StaffAddStaffForm({ onAdd, onCreated }: StaffAddStaffFormProps) {
+export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAddStaffFormProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [badge, setBadge] = useState('');
-  const [role, setRole] = useState<StaffRole>('Moderator');
+  const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -28,7 +29,7 @@ export function StaffAddStaffForm({ onAdd, onCreated }: StaffAddStaffFormProps) 
     setName('');
     setEmail('');
     setBadge('');
-    setRole('Moderator');
+    setRole(assignableRoles[0] ?? 'Moderator');
     setError('');
     setMsg('');
   };
@@ -140,9 +141,11 @@ export function StaffAddStaffForm({ onAdd, onCreated }: StaffAddStaffFormProps) 
             onChange={(e) => setRole(e.target.value as StaffRole)}
             className="uber-select w-full"
           >
-            <option value="Moderator">Moderator</option>
-            <option value="Administrator">Administrator</option>
-            <option value="Director">Director</option>
+            {assignableRoles.map((staffRole) => (
+              <option key={staffRole} value={staffRole}>
+                {staffRole}
+              </option>
+            ))}
           </select>
         </div>
       </div>

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS guards (
   jobs_completed INTEGER NOT NULL DEFAULT 0,
   hourly_rate_requirement INTEGER,
   is_staff BOOLEAN NOT NULL DEFAULT FALSE,
-  staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Director', 'Administrator', 'Moderator')),
+  staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Owner', 'Director', 'Administrator', 'Moderator')),
   user_status TEXT NOT NULL DEFAULT 'active' CHECK (user_status IN ('active', 'suspended', 'blocked')),
   failed_audits INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
@@ -410,13 +410,23 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── OPTIONAL: Director staff accounts ───────────────────────────────────────
+-- ── OPTIONAL: Owner and Director staff accounts ───────────────────────────────
 -- Passwords are checked in the app (AuthPage.tsx), not stored in the database.
 INSERT INTO guards (
   id, name, email, badge_number, avatar, phone, bio,
   is_armed, background_checked, verified, rating, jobs_completed,
   is_staff, staff_role, user_status
 ) VALUES
+  (
+    'staff-owner',
+    'Platform Owner',
+    'owner@signaturesecurityspecialist.com',
+    'OWN-00001',
+    '', '',
+    'Owner — Platform governance.',
+    false, true, true, 5.0, 0,
+    true, 'Owner', 'active'
+  ),
   (
     'staff-director',
     'M. White',
@@ -441,7 +451,7 @@ ON CONFLICT (email) DO UPDATE SET
   name = EXCLUDED.name,
   badge_number = EXCLUDED.badge_number,
   is_staff = true,
-  staff_role = 'Director',
+  staff_role = EXCLUDED.staff_role,
   user_status = 'active';
 
 -- ── VERIFY (read-only) ─────────────────────────────────────────────────────

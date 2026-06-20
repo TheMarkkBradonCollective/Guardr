@@ -10,6 +10,7 @@ import {
   SecurityGuard,
   SecurityRequest,
   SessionUser,
+  StaffRole,
   SupportTicket,
   SupportTicketStatus,
 } from '../types';
@@ -24,6 +25,7 @@ import {
   canStaffManageJobs,
   canUploadJobSelfAuditPhotos,
   canUploadJobSpotCheck,
+  hasExecutivePaymentControls,
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -91,11 +93,11 @@ interface StaffDashboardProps {
     name: string,
     email: string,
     badgeNumber: string,
-    staffRole: 'Director' | 'Administrator' | 'Moderator'
+    staffRole: StaffRole
   ) => Promise<string>;
   onUpdateStaffRole: (
     staffId: string,
-    staffRole: 'Director' | 'Administrator' | 'Moderator'
+    staffRole: StaffRole
   ) => Promise<void>;
   onAddGuardProfile: (input: {
     name: string;
@@ -253,7 +255,7 @@ export function StaffDashboard({
             onOpenJob={openJob}
             canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
-            showDirectorFinancials={currentUser.role === 'director'}
+            showDirectorFinancials={hasExecutivePaymentControls(currentUser)}
           />
         );
       case 'map':
@@ -323,6 +325,7 @@ export function StaffDashboard({
           <StaffTeamPanel
             guards={guards}
             currentUserId={currentUser.id}
+            currentUserRole={currentUser.role}
             canManageStaff={canManageStaff}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onAddStaff={
@@ -365,7 +368,7 @@ export function StaffDashboard({
             guards={guards}
             payments={payments}
             payoutInvoices={guardPayoutInvoices}
-            isDirector={currentUser.role === 'director'}
+            isDirector={hasExecutivePaymentControls(currentUser)}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}

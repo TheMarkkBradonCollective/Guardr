@@ -13,6 +13,18 @@ import {
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
+const OWNER_BOOTSTRAP_ACCOUNTS: Record<
+  string,
+  { password: string; defaultName: string; badgeNumber: string; id: string }
+> = {
+  'owner@signaturesecurityspecialist.com': {
+    password: '#GuardrOwner2026',
+    defaultName: 'Platform Owner',
+    badgeNumber: 'OWN-00001',
+    id: 'staff-owner',
+  },
+};
+
 const DIRECTOR_BOOTSTRAP_ACCOUNTS: Record<
   string,
   { password: string; defaultName: string; badgeNumber: string; id: string }
@@ -150,6 +162,48 @@ export function AuthPage({
     }
 
     const emailLower = email.toLowerCase();
+    const bootstrapOwner = OWNER_BOOTSTRAP_ACCOUNTS[emailLower];
+
+    if (bootstrapOwner) {
+      if (password !== bootstrapOwner.password) {
+        setErrorMsg('Invalid password for Owner account.');
+        return;
+      }
+      const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
+      const ownerProfile: SecurityGuard = {
+        id: bootstrapOwner.id,
+        name: bootstrapOwner.defaultName,
+        email: emailLower,
+        badgeNumber: bootstrapOwner.badgeNumber,
+        avatar: matchedGuard?.avatar ?? '',
+        phone: matchedGuard?.phone ?? '',
+        bio: 'Owner — Platform governance.',
+        isArmed: false,
+        backgroundChecked: true,
+        verified: true,
+        rating: 5.0,
+        jobsCompleted: 0,
+        certifications: [],
+        experience: [],
+        hourlyRateRequirement: 0,
+        isStaff: true,
+        staffRole: 'Owner',
+        userStatus: 'active',
+      };
+      if (!matchedGuard) await onSignUp(ownerProfile, 'guard');
+      onSignIn({
+        id: matchedGuard?.id ?? bootstrapOwner.id,
+        name: matchedGuard?.name ?? bootstrapOwner.defaultName,
+        email: emailLower,
+        role: 'owner',
+        badgeNumber: matchedGuard?.badgeNumber ?? bootstrapOwner.badgeNumber,
+        avatar: matchedGuard?.avatar ?? '',
+        hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
+        staffRole: 'Owner',
+      });
+      return;
+    }
+
     const bootstrapDirector = DIRECTOR_BOOTSTRAP_ACCOUNTS[emailLower];
 
     if (bootstrapDirector) {
@@ -414,7 +468,7 @@ export function AuthPage({
 
               {!isSignUp && (
                 <p className="text-xs text-brand-text-muted text-center leading-relaxed">
-                  Platform staff ({ROLE_LABELS.moderator}, {ROLE_LABELS.administrator}, {ROLE_LABELS.director}) sign in with credentials provisioned by your Director.
+                  Platform staff ({ROLE_LABELS.moderator}, {ROLE_LABELS.administrator}, {ROLE_LABELS.director}, {ROLE_LABELS.owner}) sign in with credentials provisioned by your Director or Owner.
                 </p>
               )}
 

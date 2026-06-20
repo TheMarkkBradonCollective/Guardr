@@ -36,7 +36,7 @@ export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {
 
 /** Staff listing edits — directors may update through completed; administrators follow client window */
 export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: PlatformRole): boolean {
-  if (role === 'director') return req.status !== 'closed';
+  if (role === 'director' || role === 'owner') return req.status !== 'closed';
   if (role === 'administrator') return canEditJobTitleAndLocation(req);
   return false;
 }

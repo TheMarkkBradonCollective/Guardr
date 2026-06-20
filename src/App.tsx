@@ -18,8 +18,9 @@ import {
   SupportTicket,
   CreateSupportTicketInput,
   SupportTicketStatus,
+  StaffRole,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModifyStaffMember } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -1058,8 +1059,11 @@ export default function App() {
     name: string,
     email: string,
     badgeNumber: string,
-    staffRole: 'Director' | 'Administrator' | 'Moderator'
+    staffRole: StaffRole
   ): Promise<string> => {
+    if (!currentUser || !canAssignStaffRole(currentUser.role, staffRole)) {
+      throw new Error('You cannot assign that staff role.');
+    }
     const emailLower = assertEmailAvailable(email);
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
@@ -1112,7 +1116,7 @@ export default function App() {
 
   const handleUpdateStaffRole = async (
     staffId: string,
-    staffRole: 'Director' | 'Administrator' | 'Moderator'
+    staffRole: StaffRole
   ) => {
     if (staffId === currentUser?.id) {
       throw new Error('You cannot change your own role.');
@@ -1120,6 +1124,12 @@ export default function App() {
     const member = guards.find((g) => g.id === staffId);
     if (!member?.isStaff) {
       throw new Error('This account is not a staff profile.');
+    }
+    if (!currentUser || !canModifyStaffMember(currentUser.role, member.staffRole)) {
+      throw new Error('You cannot change this staff member\'s role.');
+    }
+    if (!canAssignStaffRole(currentUser.role, staffRole)) {
+      throw new Error('You cannot assign that staff role.');
     }
     const bio = `${staffRole} — Platform operations.`;
     setGuards((prev) =>
@@ -1473,7 +1483,7 @@ export default function App() {
 
   const handleMarkClientPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can record cash client payments.');
+      alert('Only Directors and Owners can record cash client payments.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -1550,7 +1560,7 @@ export default function App() {
 
   const handleMarkGuardPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can record cash guard payouts.');
+      alert('Only Directors and Owners can record cash guard payouts.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -1629,7 +1639,7 @@ export default function App() {
 
   const handleMarkPlatformFeePaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can manually deposit platform fees.');
+      alert('Only Directors and Owners can manually deposit platform fees.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -1698,7 +1708,7 @@ export default function App() {
 
   const handleDepositCashToStripe = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only the Director can pay client cash into Stripe.');
+      alert('Only Directors and Owners can pay client cash into Stripe.');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -2032,7 +2042,7 @@ export default function App() {
     if (!existing || !canStaffUploadSelfAuditPhotos(existing, currentUser.role)) {
       alert(
         existing?.status === 'completed'
-          ? currentUser.role === 'director'
+          ? currentUser.role === 'director' || currentUser.role === 'owner'
             ? 'Completed jobs only accept audit photos when photos are missing or flagged No Self Audit.'
             : 'Completed jobs only accept staff audit photos when flagged No Self Audit.'
           : existing?.assignedGuardId
