@@ -40,9 +40,9 @@ export const PIPELINE_SECTION_META: Record<
     description: 'These jobs are finished. Send pay through Stripe or hand cash to the guard on site.',
   },
   'cash-deposit-pending': {
-    title: 'Deposit client cash to Stripe',
+    title: 'Stripe deposit pending',
     description:
-      'The client paid in cash. Manually deposit the platform fee or use your card in Stripe Checkout — full job amount, or just the platform fee if the guard was paid cash.',
+      'The client paid in cash. Deposit to Stripe when ready — full job amount, or just the platform fee if the guard was paid cash.',
   },
   'awaiting-client': {
     title: 'Waiting on the client',
@@ -161,9 +161,6 @@ export function paymentAttentionSummary(requests: SecurityRequest[]): {
 export function clientPaymentBadgeClass(req: SecurityRequest): string {
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') {
     return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
-  }
-  if (isCashAwaitingStripeDeposit(req)) {
-    return 'text-orange-300 border-orange-500/40 bg-orange-500/10';
   }
   if (isCashClientPayment(req)) return 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10';
   return 'text-sky-300 border-sky-500/40 bg-sky-500/10';
