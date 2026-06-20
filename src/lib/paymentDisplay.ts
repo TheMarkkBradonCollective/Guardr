@@ -1,22 +1,25 @@
 import { SecurityRequest } from '../types';
 import {
   clientPaymentDisplay,
+  getCashDepositedAmount,
   getPlatformFeeAmount,
   getRemainingStripeDeposit,
+  getRequiredStripeDeposit,
   guardPayoutAmount,
   guardPayoutDisplay,
   isCashClientPayment,
   isCashGuardPayout,
-  isCashAwaitingStripeDeposit,
   isPlatformFeePaidCash,
   isStripeDepositSatisfied,
+  platformFeeLedgerLabel,
+  stripeDepositLedgerLabel,
 } from './cashPayments';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
 
 export type PaymentLedgerStatus = 'paid' | 'owed' | 'waiting' | 'na';
 
 export interface JobPaymentLedgerLine {
-  party: 'client' | 'guard' | 'platform';
+  party: 'client' | 'stripe' | 'guard' | 'platform';
   label: string;
   amount: number;
   status: PaymentLedgerStatus;
@@ -32,7 +35,6 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
 
   let clientStatus: PaymentLedgerStatus = 'paid';
   if (clientUnpaid) clientStatus = 'owed';
-  else if (isCashAwaitingStripeDeposit(req)) clientStatus = 'owed';
 
   let guardStatus: PaymentLedgerStatus = 'waiting';
   if (req.paymentStatus === 'released') guardStatus = 'paid';
@@ -40,13 +42,13 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
   else if (clientUnpaid || stage === 'awaiting-client') guardStatus = 'na';
 
   let platformStatus: PaymentLedgerStatus = 'na';
-  if (isCashClientPayment(req)) {
-    platformStatus = isStripeDepositSatisfied(req) ? 'paid' : 'owed';
+  if (isCashClientPayment(req) && !clientUnpaid) {
+    platformStatus = isStripeDepositSatisfied(req) ? 'paid' : isCashGuardPayout(req) ? 'owed' : 'waiting';
   } else if (!clientUnpaid) {
     platformStatus = 'paid';
   }
 
-  return [
+  const lines: JobPaymentLedgerLine[] = [
     {
       party: 'client',
       label: 'Client bill',
@@ -54,6 +56,24 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
       status: clientStatus,
       statusLabel: clientPaymentDisplay(req),
     },
+  ];
+
+  if (isCashClientPayment(req) && !clientUnpaid) {
+    const stripeSatisfied = isStripeDepositSatisfied(req);
+    const stripeAmount = stripeSatisfied
+      ? getCashDepositedAmount(req) || getRequiredStripeDeposit(req)
+      : getRemainingStripeDeposit(req);
+
+    lines.push({
+      party: 'stripe',
+      label: 'Stripe deposit',
+      amount: stripeAmount,
+      status: stripeSatisfied ? 'paid' : 'owed',
+      statusLabel: stripeDepositLedgerLabel(req),
+    });
+  }
+
+  lines.push(
     {
       party: 'guard',
       label: 'Guard pay',
@@ -66,17 +86,11 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
       label: 'Platform fee',
       amount: platformFee,
       status: platformStatus,
-      statusLabel: isCashClientPayment(req)
-        ? isStripeDepositSatisfied(req)
-          ? isPlatformFeePaidCash(req)
-            ? 'Manually deposited'
-            : 'Recorded in Stripe'
-          : `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`
-        : clientUnpaid
-          ? '—'
-          : 'Included in client payment',
-    },
-  ];
+      statusLabel: platformFeeLedgerLabel(req),
+    }
+  );
+
+  return lines;
 }
 
 /** Client-facing payment status — no internal ledger jargon */
@@ -132,16 +146,16 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       if (isCashGuardPayout(req)) {
         return {
           headline: isPlatformFeePaidCash(req)
-            ? 'Client paid cash · guard paid cash · card deposit due'
+            ? 'Client paid cash · guard paid cash'
             : 'Client paid cash · platform fee deposit due',
           detail: isPlatformFeePaidCash(req)
-            ? `Deposit remaining $${due.toFixed(2)} to Stripe with card.`
+            ? `$${due.toFixed(2)} still needs to be deposited to Stripe with card.`
             : `Manually deposit $${getPlatformFeeAmount(req).toFixed(2)} platform fee or pay via card.`,
         };
       }
       return {
-        headline: 'Client paid cash · job amount needs card deposit',
-        detail: `Deposit $${due.toFixed(2)} to Stripe (can be after paying the guard).`,
+        headline: 'Client paid cash · Stripe deposit pending',
+        detail: `$${due.toFixed(2)} not deposited to Stripe yet (can be after paying the guard).`,
       };
     }
     case 'client-paid-active':
