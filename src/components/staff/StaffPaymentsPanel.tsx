@@ -22,6 +22,7 @@ interface StaffPaymentsPanelProps {
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
@@ -36,6 +37,7 @@ function PipelineSection({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   readOnly = false,
   limit,
@@ -49,6 +51,7 @@ function PipelineSection({
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
@@ -77,6 +80,7 @@ function PipelineSection({
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
+            onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
@@ -100,6 +104,7 @@ export function StaffPaymentsPanel({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
@@ -114,6 +119,7 @@ export function StaffPaymentsPanel({
     onRefundPayment,
     onMarkClientPaidCash,
     onMarkGuardPaidCash,
+    onMarkPlatformFeePaidCash,
     onDepositCashToStripe,
   };
 

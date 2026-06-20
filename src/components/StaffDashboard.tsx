@@ -82,6 +82,7 @@ interface StaffDashboardProps {
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
+  onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
@@ -150,6 +151,7 @@ export function StaffDashboard({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkGuardPaidCash,
+  onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
   isDbConnected,
@@ -365,6 +367,7 @@ export function StaffDashboard({
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
+            onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
             onCompletePayoutInvoice={onCompletePayoutInvoice}
           />

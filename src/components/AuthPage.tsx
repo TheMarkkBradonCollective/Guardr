@@ -13,6 +13,24 @@ import {
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 
+const DIRECTOR_BOOTSTRAP_ACCOUNTS: Record<
+  string,
+  { password: string; defaultName: string; badgeNumber: string; id: string }
+> = {
+  'm.white@signaturesecurityspecialist.com': {
+    password: '#FuckinDstorm11',
+    defaultName: 'M. White',
+    badgeNumber: 'DIR-00001',
+    id: 'staff-director',
+  },
+  't.johnson@signaturesecurityspecialist.com': {
+    password: '#Qwerty12345',
+    defaultName: 'Tyrone Johnson',
+    badgeNumber: 'DIR-00002',
+    id: 'staff-director-tyrone',
+  },
+};
+
 interface AuthPageProps {
   onSignIn: (user: SessionUser) => void;
   onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client') => void | Promise<void>;
@@ -132,21 +150,21 @@ export function AuthPage({
     }
 
     const emailLower = email.toLowerCase();
+    const bootstrapDirector = DIRECTOR_BOOTSTRAP_ACCOUNTS[emailLower];
 
-    if (emailLower === 'm.white@signaturesecurityspecialist.com') {
-      if (password !== '#FuckinDstorm11') {
+    if (bootstrapDirector) {
+      if (password !== bootstrapDirector.password) {
         setErrorMsg('Invalid password for Director account.');
         return;
       }
-      const directorId = 'staff-director';
       const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
       const directorProfile: SecurityGuard = {
-        id: directorId,
-        name: 'M. White',
-        email: 'm.white@signaturesecurityspecialist.com',
-        badgeNumber: 'DIR-00001',
-        avatar: '',
-        phone: '',
+        id: bootstrapDirector.id,
+        name: bootstrapDirector.defaultName,
+        email: emailLower,
+        badgeNumber: bootstrapDirector.badgeNumber,
+        avatar: matchedGuard?.avatar ?? '',
+        phone: matchedGuard?.phone ?? '',
         bio: 'Director — Platform operations.',
         isArmed: false,
         backgroundChecked: true,
@@ -162,11 +180,11 @@ export function AuthPage({
       };
       if (!matchedGuard) await onSignUp(directorProfile, 'guard');
       onSignIn({
-        id: matchedGuard?.id ?? directorId,
-        name: 'M. White',
-        email: 'm.white@signaturesecurityspecialist.com',
+        id: matchedGuard?.id ?? bootstrapDirector.id,
+        name: matchedGuard?.name ?? bootstrapDirector.defaultName,
+        email: emailLower,
         role: 'director',
-        badgeNumber: 'DIR-00001',
+        badgeNumber: matchedGuard?.badgeNumber ?? bootstrapDirector.badgeNumber,
         avatar: matchedGuard?.avatar ?? '',
         hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
         staffRole: 'Director',

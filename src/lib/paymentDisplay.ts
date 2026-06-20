@@ -8,6 +8,7 @@ import {
   isCashClientPayment,
   isCashGuardPayout,
   isCashAwaitingStripeDeposit,
+  isPlatformFeePaidCash,
   isStripeDepositSatisfied,
 } from './cashPayments';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
@@ -67,7 +68,9 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
       status: platformStatus,
       statusLabel: isCashClientPayment(req)
         ? isStripeDepositSatisfied(req)
-          ? 'Recorded in Stripe'
+          ? isPlatformFeePaidCash(req)
+            ? 'Received in cash'
+            : 'Recorded in Stripe'
           : `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`
         : clientUnpaid
           ? '—'
@@ -128,8 +131,12 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       const due = getRemainingStripeDeposit(req);
       if (isCashGuardPayout(req)) {
         return {
-          headline: 'Client paid cash · platform fee needs card deposit',
-          detail: `Deposit $${due.toFixed(2)} platform fee to Stripe. Guard was or will be paid in cash.`,
+          headline: isPlatformFeePaidCash(req)
+            ? 'Client paid cash · guard paid cash · card deposit due'
+            : 'Client paid cash · platform fee due',
+          detail: isPlatformFeePaidCash(req)
+            ? `Deposit remaining $${due.toFixed(2)} to Stripe with card, or record platform fee in cash first.`
+            : `Record $${getPlatformFeeAmount(req).toFixed(2)} platform fee in cash or deposit via card.`,
         };
       }
       return {
