@@ -57,7 +57,14 @@ export async function sendTestPush(user: SessionUser, siteId?: string): Promise<
   return { sent: data.sent ?? 0, failed: data.failed ?? 0 };
 }
 
-export type PushEventType = 'guard_checkin' | 'missed_checkin' | 'assignment' | 'emergency_alert';
+export type PushEventType =
+  | 'guard_checkin'
+  | 'missed_checkin'
+  | 'assignment'
+  | 'emergency_alert'
+  | 'support_message'
+  | 'job_chat_message'
+  | 'staff_message';
 
 export async function reportPushEvent(
   user: SessionUser,
@@ -70,6 +77,7 @@ export async function reportPushEvent(
     requestId?: string;
     siteId?: string;
     location?: string;
+    recipientUserId?: string;
   }
 ): Promise<void> {
   try {

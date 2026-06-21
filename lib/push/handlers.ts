@@ -125,6 +125,7 @@ export async function handlePushEvent(
     siteId?: string;
     guardName?: string;
     location?: string;
+    recipientUserId?: string;
   }
 ) {
   const session = await verifySession(db, body);
@@ -163,6 +164,18 @@ export async function handlePushEvent(
       title: 'Emergency alert',
       body: body.body || 'Immediate attention required on an active shift',
     },
+    support_message: {
+      title: 'Support message',
+      body: body.body || 'You have a new support message',
+    },
+    job_chat_message: {
+      title: 'Job chat',
+      body: body.body || 'New message on an active job',
+    },
+    staff_message: {
+      title: 'Staff team chat',
+      body: body.body || 'New message from the Guardr team',
+    },
   };
 
   const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
@@ -184,6 +197,12 @@ export async function handlePushEvent(
 
   if (body.type === 'assignment' && body.guardId) {
     dispatchPayload.userId = body.guardId;
+  } else if (body.type === 'support_message' && body.recipientUserId) {
+    dispatchPayload.userId = body.recipientUserId;
+  } else if (body.type === 'job_chat_message' && body.recipientUserId) {
+    dispatchPayload.userId = body.recipientUserId;
+  } else if (body.type === 'staff_message') {
+    dispatchPayload.role = 'dispatch';
   }
 
   const { dispatchPushNotification } = await import('./delivery');

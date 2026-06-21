@@ -37,6 +37,7 @@ interface UserProfileScreenProps {
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+  isDbConnected?: boolean;
 }
 
 export function UserProfileScreen({
@@ -52,6 +53,7 @@ export function UserProfileScreen({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  isDbConnected = false,
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -245,7 +247,7 @@ export function UserProfileScreen({
         />
       )}
 
-      <PushNotificationsPanel currentUser={currentUser} />
+      <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
 
       <AppFormSection>
         <p className="uber-label mb-3">Appearance</p>

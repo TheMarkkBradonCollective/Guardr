@@ -16,6 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       siteId?: string;
       guardName?: string;
       location?: string;
+      recipientUserId?: string;
     };
 
     const session = await verifySession(db, {
@@ -62,6 +63,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         title: 'Emergency alert',
         body: body.body || 'Immediate attention required on an active shift',
       },
+      support_message: {
+        title: 'Support message',
+        body: body.body || 'You have a new support message',
+      },
+      job_chat_message: {
+        title: 'Job chat',
+        body: body.body || 'New message on an active job',
+      },
+      staff_message: {
+        title: 'Staff team chat',
+        body: body.body || 'New message from the Guardr team',
+      },
     };
 
     const fallback = defaults[body.type] ?? {
@@ -70,7 +83,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const result = await dispatchPushNotification(db, {
-      userId: body.type === 'assignment' ? body.guardId : undefined,
+      userId:
+        body.type === 'assignment'
+          ? body.guardId
+          : body.type === 'support_message' || body.type === 'job_chat_message'
+            ? body.recipientUserId
+            : undefined,
+      role: body.type === 'staff_message' ? 'dispatch' : undefined,
       title: body.title ?? fallback.title,
       body: body.body ?? fallback.body,
       type: body.type,

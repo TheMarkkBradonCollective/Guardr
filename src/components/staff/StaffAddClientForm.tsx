@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 
 export interface StaffAddClientInput {
   name: string;
@@ -48,7 +49,9 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
         companyName: companyName.trim(),
         phone: phone.trim(),
       });
-      setMsg(`${companyName.trim() || name.trim()} added and approved for posting jobs.`);
+      setMsg(
+        `${companyName.trim() || name.trim()} added. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+      );
       reset();
       if (clientId) onCreated?.(clientId);
       setOpen(false);
@@ -81,7 +84,9 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
         <div>
           <h3 className="text-sm font-semibold">Add client account</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Creates an approved client they can use to post security requests.
+            Creates an approved client account. Default sign-in password:{' '}
+            <span className="font-mono text-brand-text">{STAFF_PROVISIONED_DEFAULT_PASSWORD}</span>
+            {' '}— they will be prompted to change it on first login.
           </p>
         </div>
         <button

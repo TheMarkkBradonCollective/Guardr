@@ -12,13 +12,24 @@ import {
   unsubscribeFromPush,
 } from '../../lib/push';
 import { sendTestPush, subscribePush, unsubscribePush } from '../../lib/pushApi';
+import {
+  defaultNotificationPreferences,
+  loadNotificationPreferencesFromStorage,
+  optionsForRole,
+  prefsToDbRow,
+  roleCategory,
+  saveNotificationPreferencesToStorage,
+  type NotificationPreferences,
+} from '../../lib/notificationPreferences';
+import { supabase } from '../../lib/supabase';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 
 interface PushNotificationsPanelProps {
   currentUser: SessionUser;
+  isDbConnected?: boolean;
 }
 
-export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelProps) {
+export function PushNotificationsPanel({ currentUser, isDbConnected = false }: PushNotificationsPanelProps) {
   const supported = isPushSupported();
   const configured = !!getVapidPublicKey();
   const [enabled, setEnabled] = useState(isPushEnabledLocally());
@@ -29,6 +40,12 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
   const [quietEnd, setQuietEnd] = useState('07:00');
   const [useQuietHours, setUseQuietHours] = useState(false);
   const [siteId, setSiteId] = useState('');
+  const [prefs, setPrefs] = useState<NotificationPreferences>(() =>
+    loadNotificationPreferencesFromStorage(currentUser.id)
+  );
+
+  const role = roleCategory(currentUser.role);
+  const typeOptions = optionsForRole(role);
 
   useEffect(() => {
     void (async () => {
@@ -37,6 +54,52 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
       setEnabled(!!sub && isPushEnabledLocally());
     })();
   }, []);
+
+  useEffect(() => {
+    if (!isDbConnected) return;
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+        if (data) {
+          const loaded = {
+            userId: currentUser.id,
+            assignment: data.assignment !== false,
+            guardCheckin: data.guard_checkin !== false,
+            missedCheckin: data.missed_checkin !== false,
+            emergencyAlert: data.emergency_alert !== false,
+            supportMessage: data.support_message !== false,
+            jobChatMessage: data.job_chat_message !== false,
+            staffMessage: data.staff_message !== false,
+            updatedAt: data.updated_at ?? new Date().toISOString(),
+          };
+          setPrefs(loaded);
+          saveNotificationPreferencesToStorage(loaded);
+        }
+      } catch {
+        /* table may not exist yet */
+      }
+    })();
+  }, [currentUser.id, isDbConnected]);
+
+  const persistPrefs = async (next: NotificationPreferences) => {
+    setPrefs(next);
+    saveNotificationPreferencesToStorage(next);
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('notification_preferences').upsert(prefsToDbRow(next));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleTogglePref = async (key: keyof Omit<NotificationPreferences, 'userId' | 'updatedAt'>) => {
+    const next = { ...prefs, [key]: !prefs[key], updatedAt: new Date().toISOString() };
+    await persistPrefs(next);
+  };
 
   const handleToggle = async () => {
     if (!supported || !configured) return;
@@ -62,6 +125,9 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
         setEnabled(true);
         setPermission('granted');
         setMessage('Push notifications enabled.');
+        if (!isDbConnected) {
+          await persistPrefs(defaultNotificationPreferences(currentUser.id));
+        }
       }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Push setup failed');
@@ -102,7 +168,7 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
         <div>
           <p className="uber-label">Push notifications</p>
           <p className="text-xs text-brand-text-muted mt-1">
-            Receive dispatch alerts and assignment updates when Guardr is closed.
+            Receive job, chat, and operational alerts when Guardr is closed.
           </p>
         </div>
         {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
@@ -128,6 +194,30 @@ export function PushNotificationsPanel({ currentUser }: PushNotificationsPanelPr
           />
         </button>
       </div>
+
+      {enabled && typeOptions.length > 0 && (
+        <div className="space-y-3 border-t border-brand-border pt-3">
+          <p className="uber-label">Alert types</p>
+          {typeOptions.map((opt) => (
+            <label key={opt.key} className="flex items-start justify-between gap-3 py-1">
+              <span className="min-w-0">
+                <span className="text-sm font-medium block">{opt.label}</span>
+                <span className="text-xs text-brand-text-muted">{opt.description}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleTogglePref(opt.key)}
+                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 mt-0.5 ${prefs[opt.key] ? 'bg-brand-primary' : 'bg-brand-border'}`}
+                aria-pressed={prefs[opt.key]}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${prefs[opt.key] ? 'translate-x-5' : ''}`}
+                />
+              </button>
+            </label>
+          ))}
+        </div>
+      )}
 
       {currentUser.role === 'guard' && (
         <div className="space-y-3 border-t border-brand-border pt-3">

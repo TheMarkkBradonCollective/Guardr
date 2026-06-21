@@ -12,6 +12,11 @@ import {
 } from 'lucide-react';
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
+import {
+  getStoredPassword,
+  shouldPromptPasswordChange,
+  verifyAccountPassword,
+} from '../lib/accountPasswords';
 
 const OWNER_BOOTSTRAP_ACCOUNTS: Record<
   string,
@@ -44,14 +49,29 @@ const DIRECTOR_BOOTSTRAP_ACCOUNTS: Record<
 };
 
 interface AuthPageProps {
-  onSignIn: (user: SessionUser) => void;
-  onSignUp: (profile: SecurityGuard | Client, role: 'guard' | 'client') => void | Promise<void>;
+  onSignIn: (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => void;
+  onSignUp: (
+    profile: SecurityGuard | Client,
+    role: 'guard' | 'client',
+    password: string
+  ) => void | Promise<void>;
   guardsList: SecurityGuard[];
   clientsList: Client[];
   onBackToHome: () => void;
   initialRole?: 'guard' | 'client';
   initialMode?: 'sign-in' | 'sign-up';
   themeMode?: string;
+}
+
+function resolveStoredPassword(
+  emailLower: string,
+  account?: SecurityGuard | Client | null
+): string | undefined {
+  return account?.password ?? getStoredPassword(emailLower)?.password;
+}
+
+function signInOptionsForPassword(stored: string | undefined) {
+  return { passwordChangeRecommended: shouldPromptPasswordChange(stored) };
 }
 
 export function AuthPage({
@@ -117,15 +137,18 @@ export function AuthPage({
           totalRequests: 0,
           approved: true,
         };
-        await onSignUp(clientProfile, 'client');
-        onSignIn({
-          id: randomId,
-          name: fullName,
-          email,
-          role: 'client',
-          clientName: company || fullName,
-          avatar: '',
-        });
+        await onSignUp(clientProfile, 'client', password);
+        onSignIn(
+          {
+            id: randomId,
+            name: fullName,
+            email,
+            role: 'client',
+            clientName: company || fullName,
+            avatar: '',
+          },
+          signInOptionsForPassword(password)
+        );
         return;
       }
 
@@ -148,16 +171,19 @@ export function AuthPage({
         userStatus: 'active',
       };
 
-      await onSignUp(newGuardProfile, 'guard');
-      onSignIn({
-        id: randomId,
-        name: fullName,
-        email,
-        role: 'guard',
-        badgeNumber: newGuardProfile.badgeNumber,
-        avatar: newGuardProfile.avatar,
-        hourlyRate: newGuardProfile.hourlyRateRequirement,
-      });
+      await onSignUp(newGuardProfile, 'guard', password);
+      onSignIn(
+        {
+          id: randomId,
+          name: fullName,
+          email,
+          role: 'guard',
+          badgeNumber: newGuardProfile.badgeNumber,
+          avatar: newGuardProfile.avatar,
+          hourlyRate: newGuardProfile.hourlyRateRequirement,
+        },
+        signInOptionsForPassword(password)
+      );
       return;
     }
 
@@ -190,17 +216,22 @@ export function AuthPage({
         staffRole: 'Owner',
         userStatus: 'active',
       };
-      if (!matchedGuard) await onSignUp(ownerProfile, 'guard');
-      onSignIn({
-        id: matchedGuard?.id ?? bootstrapOwner.id,
-        name: matchedGuard?.name ?? bootstrapOwner.defaultName,
-        email: emailLower,
-        role: 'owner',
-        badgeNumber: matchedGuard?.badgeNumber ?? bootstrapOwner.badgeNumber,
-        avatar: matchedGuard?.avatar ?? '',
-        hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
-        staffRole: 'Owner',
-      });
+      if (!matchedGuard) await onSignUp(ownerProfile, 'guard', bootstrapOwner.password);
+      onSignIn(
+        {
+          id: matchedGuard?.id ?? bootstrapOwner.id,
+          name: matchedGuard?.name ?? bootstrapOwner.defaultName,
+          email: emailLower,
+          role: 'owner',
+          badgeNumber: matchedGuard?.badgeNumber ?? bootstrapOwner.badgeNumber,
+          avatar: matchedGuard?.avatar ?? '',
+          hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
+          staffRole: 'Owner',
+        },
+        signInOptionsForPassword(
+          resolveStoredPassword(emailLower, matchedGuard) ?? bootstrapOwner.password
+        )
+      );
       return;
     }
 
@@ -232,30 +263,43 @@ export function AuthPage({
         staffRole: 'Director',
         userStatus: 'active',
       };
-      if (!matchedGuard) await onSignUp(directorProfile, 'guard');
-      onSignIn({
-        id: matchedGuard?.id ?? bootstrapDirector.id,
-        name: matchedGuard?.name ?? bootstrapDirector.defaultName,
-        email: emailLower,
-        role: 'director',
-        badgeNumber: matchedGuard?.badgeNumber ?? bootstrapDirector.badgeNumber,
-        avatar: matchedGuard?.avatar ?? '',
-        hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
-        staffRole: 'Director',
-      });
+      if (!matchedGuard) await onSignUp(directorProfile, 'guard', bootstrapDirector.password);
+      onSignIn(
+        {
+          id: matchedGuard?.id ?? bootstrapDirector.id,
+          name: matchedGuard?.name ?? bootstrapDirector.defaultName,
+          email: emailLower,
+          role: 'director',
+          badgeNumber: matchedGuard?.badgeNumber ?? bootstrapDirector.badgeNumber,
+          avatar: matchedGuard?.avatar ?? '',
+          hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
+          staffRole: 'Director',
+        },
+        signInOptionsForPassword(
+          resolveStoredPassword(emailLower, matchedGuard) ?? bootstrapDirector.password
+        )
+      );
       return;
     }
 
     const matchedClient = clientsList.find((c) => c.email.toLowerCase() === emailLower);
     if (matchedClient) {
-      onSignIn({
-        id: matchedClient.id,
-        name: matchedClient.name,
-        email: matchedClient.email,
-        role: 'client',
-        clientName: matchedClient.companyName || matchedClient.name,
-        avatar: matchedClient.avatar,
-      });
+      const storedPassword = resolveStoredPassword(emailLower, matchedClient);
+      if (!verifyAccountPassword(storedPassword, password)) {
+        setErrorMsg('Invalid password.');
+        return;
+      }
+      onSignIn(
+        {
+          id: matchedClient.id,
+          name: matchedClient.name,
+          email: matchedClient.email,
+          role: 'client',
+          clientName: matchedClient.companyName || matchedClient.name,
+          avatar: matchedClient.avatar,
+        },
+        signInOptionsForPassword(storedPassword)
+      );
       return;
     }
 
@@ -265,20 +309,28 @@ export function AuthPage({
         setErrorMsg('Account blocked. Contact administration.');
         return;
       }
+      const storedPassword = resolveStoredPassword(emailLower, matchedGuard);
+      if (!verifyAccountPassword(storedPassword, password)) {
+        setErrorMsg('Invalid password.');
+        return;
+      }
       const platformRole: PlatformRole = resolvePlatformRole({
         isStaff: matchedGuard.isStaff,
         staffRole: matchedGuard.staffRole,
       });
-      onSignIn({
-        id: matchedGuard.id,
-        name: matchedGuard.name,
-        email: matchedGuard.email,
-        role: platformRole,
-        badgeNumber: matchedGuard.badgeNumber,
-        avatar: matchedGuard.avatar,
-        hourlyRate: matchedGuard.hourlyRateRequirement,
-        staffRole: matchedGuard.staffRole,
-      });
+      onSignIn(
+        {
+          id: matchedGuard.id,
+          name: matchedGuard.name,
+          email: matchedGuard.email,
+          role: platformRole,
+          badgeNumber: matchedGuard.badgeNumber,
+          avatar: matchedGuard.avatar,
+          hourlyRate: matchedGuard.hourlyRateRequirement,
+          staffRole: matchedGuard.staffRole,
+        },
+        signInOptionsForPassword(storedPassword)
+      );
     } else {
       setErrorMsg('Account not found. Please sign up or check your email address.');
     }

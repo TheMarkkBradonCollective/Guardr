@@ -17,6 +17,7 @@ import {
   LogOut,
   Map,
   Menu,
+  MessageSquare,
   Scale,
   Settings,
   Shield,
@@ -50,6 +51,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   clients: 'Clients',
   incidents: 'Client incidents',
   support: 'Support inbox',
+  messages: 'Messages',
   payments: 'Payments',
   disputes: 'Disputes',
   analytics: 'Analytics',
@@ -74,7 +76,8 @@ export function StaffOpsLayout({
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
-    activeSection === 'support';
+    activeSection === 'support' ||
+    activeSection === 'messages';
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -85,6 +88,7 @@ export function StaffOpsLayout({
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'team', label: 'Staff', icon: Users },
     { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, badge: badges.messages },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },

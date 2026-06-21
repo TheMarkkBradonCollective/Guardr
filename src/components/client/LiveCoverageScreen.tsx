@@ -1,5 +1,5 @@
-import React from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import React, { useState } from 'react';
+import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import {
   ActivityFeedItem,
   buildActivityFeed,
@@ -12,6 +12,8 @@ import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
+import { JobChatPanel } from '../messaging/JobChatPanel';
+import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { hasSpotChecksForClientReview } from '../../lib/spotChecks';
 import { ArrowLeft } from 'lucide-react';
 
@@ -21,6 +23,10 @@ interface LiveCoverageScreenProps {
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onBack: () => void;
+  currentUser?: SessionUser;
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
 }
 
 const SITE_STATUS_CONFIG: Record<
@@ -40,12 +46,40 @@ function formatStartedTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onConfirmSpotCheck, onBack }: LiveCoverageScreenProps) {
+export function LiveCoverageScreen({
+  requests,
+  guards,
+  onConfirmSelfAudit,
+  onConfirmSpotCheck,
+  onBack,
+  currentUser,
+  jobChatThreads = [],
+  jobChatMessages = [],
+  onSendJobChatMessage,
+}: LiveCoverageScreenProps) {
+  const [chatRequestId, setChatRequestId] = useState<string | null>(null);
   const liveRequests = requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
   const guardRows = buildGuardRows(liveRequests, guards);
   const feed = buildActivityFeed(liveRequests, guards);
   const siteStatus = computeSiteStatus(requests);
   const statusCfg = SITE_STATUS_CONFIG[siteStatus];
+
+  const chatRequest = chatRequestId ? liveRequests.find((r) => r.id === chatRequestId) ?? null : null;
+
+  if (chatRequest && currentUser && onSendJobChatMessage) {
+    return (
+      <div className="max-w-2xl mx-auto h-[calc(100vh-8rem)] animate-fade-in pb-8">
+        <JobChatPanel
+          request={chatRequest}
+          thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
+          messages={jobChatMessages}
+          currentUser={currentUser}
+          onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
+          onBack={() => setChatRequestId(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-fade-in pb-8">
@@ -94,6 +128,15 @@ export function LiveCoverageScreen({ requests, guards, onConfirmSelfAudit, onCon
                       </>
                     ) : (
                       <p className="text-xs text-brand-text-muted">Scheduled {formatStartedTime(request.startDate)}</p>
+                    )}
+                    {onSendJobChatMessage && currentUser && (isJobChatEligible(request) || threadForRequest(jobChatThreads, request.id)) && (
+                      <button
+                        type="button"
+                        onClick={() => setChatRequestId(request.id)}
+                        className="text-xs font-medium text-brand-primary mt-2"
+                      >
+                        {isJobChatEligible(request) ? 'Message guard' : 'View job chat'}
+                      </button>
                     )}
                   </div>
                 </div>

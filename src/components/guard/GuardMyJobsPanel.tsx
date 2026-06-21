@@ -1,30 +1,71 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityGuard } from '../../types';
+import { JobChatMessage, JobChatThread, SecurityGuard, SessionUser } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
+import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
-import { Calendar, ChevronRight, History } from 'lucide-react';
+import { JobChatPanel } from '../messaging/JobChatPanel';
+import { Calendar, ChevronRight, History, MessageCircle } from 'lucide-react';
 
 interface GuardMyJobsPanelProps {
   upcomingJobs: GuardJobView[];
   pastJobs: GuardJobView[];
   guard: SecurityGuard;
+  currentUser: SessionUser;
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
 }
 
-export function GuardMyJobsPanel({ upcomingJobs, pastJobs, guard }: GuardMyJobsPanelProps) {
+export function GuardMyJobsPanel({
+  upcomingJobs,
+  pastJobs,
+  guard,
+  currentUser,
+  jobChatThreads = [],
+  jobChatMessages = [],
+  onSendJobChatMessage,
+}: GuardMyJobsPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const selectedJob = useMemo(
     () => [...upcomingJobs, ...pastJobs].find((j) => j.id === selectedId) ?? null,
     [upcomingJobs, pastJobs, selectedId]
   );
 
-  if (selectedJob) {
+  if (selectedJob && chatOpen && onSendJobChatMessage) {
     return (
-      <div className="guard-scroll-panel flex-1 px-4 py-4">
+      <div className="guard-scroll-panel flex-1 flex flex-col min-h-0">
+        <JobChatPanel
+          request={selectedJob}
+          thread={threadForRequest(jobChatThreads, selectedJob.id) ?? null}
+          messages={jobChatMessages}
+          currentUser={currentUser}
+          onSend={(body) => onSendJobChatMessage(selectedJob.id, body)}
+          onBack={() => setChatOpen(false)}
+        />
+      </div>
+    );
+  }
+
+  if (selectedJob) {
+    const chatEligible = isJobChatEligible(selectedJob);
+    return (
+      <div className="guard-scroll-panel flex-1 px-4 py-4 space-y-4">
         <GuardJobCard job={selectedJob} guard={guard} onClose={() => setSelectedId(null)} />
+        {onSendJobChatMessage && (chatEligible || threadForRequest(jobChatThreads, selectedJob.id)) && (
+          <button
+            type="button"
+            onClick={() => setChatOpen(true)}
+            className="w-full app-button-outline !h-11 flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {chatEligible ? 'Message client' : 'View job chat history'}
+          </button>
+        )}
       </div>
     );
   }
@@ -77,9 +118,6 @@ export function GuardMyJobsPanel({ upcomingJobs, pastJobs, guard }: GuardMyJobsP
                   <p className="font-semibold truncate">{job.title}</p>
                   <p className="text-sm text-brand-text-muted mt-1 truncate">
                     {formatShiftRange(job.startDate, job.endDate)}
-                  </p>
-                  <p className="text-sm text-brand-text-muted mt-1 capitalize">
-                    {job.status.replace('-', ' ')}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />

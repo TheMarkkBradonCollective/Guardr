@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../types';
+import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -42,6 +42,10 @@ interface ClientDashboardProps {
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
+  currentUser?: SessionUser;
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
 }
 
 export function ClientDashboard({
@@ -59,6 +63,10 @@ export function ClientDashboard({
   onAddReview,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
+  currentUser,
+  jobChatThreads = [],
+  jobChatMessages = [],
+  onSendJobChatMessage,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -178,6 +186,10 @@ export function ClientDashboard({
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
         onBack={() => navigate('home')}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        jobChatMessages={jobChatMessages}
+        onSendJobChatMessage={onSendJobChatMessage}
       />
     );
   }

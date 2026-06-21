@@ -8,6 +8,34 @@ import {
 import { removePushSubscription } from './subscriptions';
 import type { PushNotificationType, PushRole, PushSendPayload } from './types';
 
+const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
+  assignment: 'assignment',
+  guard_checkin: 'guard_checkin',
+  missed_checkin: 'missed_checkin',
+  emergency_alert: 'emergency_alert',
+  support_message: 'support_message',
+  job_chat_message: 'job_chat_message',
+  staff_message: 'staff_message',
+};
+
+async function isTypeEnabledForUser(
+  db: SupabaseClient,
+  userId: string,
+  type: PushNotificationType
+): Promise<boolean> {
+  const column = PREF_COLUMN[type];
+  if (!column) return true;
+
+  const { data, error } = await db
+    .from('notification_preferences')
+    .select(column)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return true;
+  return (data as Record<string, boolean>)[column] !== false;
+}
+
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 500;
 
@@ -120,11 +148,30 @@ async function deliverToSubscriptions(
     auth: string;
     quiet_hours_start?: string | null;
     quiet_hours_end?: string | null;
+    user_id?: string;
   }>,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
   if (!subscriptions.length) return { sent: 0, failed: 0 };
   if (!(await ensureVapidConfigured())) return { sent: 0, failed: subscriptions.length };
+
+  const prefCache = new Map<string, boolean>();
+  const filtered: typeof subscriptions = [];
+
+  for (const sub of subscriptions) {
+    if (!sub.user_id) {
+      filtered.push(sub);
+      continue;
+    }
+    let enabled = prefCache.get(sub.user_id);
+    if (enabled === undefined) {
+      enabled = await isTypeEnabledForUser(db, sub.user_id, payload.type);
+      prefCache.set(sub.user_id, enabled);
+    }
+    if (enabled) filtered.push(sub);
+  }
+
+  if (!filtered.length) return { sent: 0, failed: 0 };
 
   const data = buildNotificationData(payload.type, {
     url: payload.url ?? resolveNotificationUrl(payload.type, {
@@ -149,7 +196,7 @@ async function deliverToSubscriptions(
   let failed = 0;
   const staleEndpoints: string[] = [];
 
-  for (const sub of subscriptions) {
+  for (const sub of filtered) {
     if (
       payload.type !== 'emergency_alert' &&
       payload.priority !== 'high' &&
@@ -178,9 +225,12 @@ export async function sendNotificationToUser(
   userId: string,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
+  const enabled = await isTypeEnabledForUser(db, userId, payload.type);
+  if (!enabled) return { sent: 0, failed: 0 };
+
   const { data: subscriptions, error } = await db
     .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, push_role')
+    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id')
     .eq('user_id', userId);
 
   if (error) throw new Error(error.message);
@@ -196,7 +246,7 @@ export async function sendNotificationToRole(
 
   const { data: subscriptions, error } = await db
     .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, push_role')
+    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role')
     .in('push_role', roles);
 
   if (error) throw new Error(error.message);

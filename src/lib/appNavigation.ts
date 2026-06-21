@@ -86,6 +86,10 @@ export function parseAppRoute(url: string): AppRoute | null {
     return { role: 'staff', staffSection: 'jobs' };
   }
 
+  if (pathname === '/staff/messages') {
+    return { role: 'staff', staffSection: 'messages' };
+  }
+
   const staffMatch = pathname.match(/^\/staff\/([^/]+)$/);
   if (staffMatch) {
     const section = normalizeStaffSection(staffMatch[1]);

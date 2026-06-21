@@ -23,15 +23,53 @@ export function resolveNotificationUrl(
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
-      return '/dispatch';
+      return '/staff/jobs';
     case 'assignment':
-      return options.guardId ? `/guard/${options.guardId}` : '/guard';
+      return options.guardId ? `/guard/${options.guardId}` : '/guard/my-jobs';
     case 'emergency_alert':
-      return '/dispatch';
+      return '/staff/incidents';
+    case 'support_message':
+      return '/staff/support';
+    case 'job_chat_message':
+      return options.requestId ? `/staff/messages` : '/staff/messages';
+    case 'staff_message':
+      return '/staff/messages';
     case 'test':
       return '/';
     default:
       return '/';
+  }
+}
+
+export function resolveNotificationUrlForRole(
+  type: PushNotificationType,
+  role: PlatformRole | string,
+  options: { guardId?: string; requestId?: string } = {}
+): string {
+  const isStaff =
+    role === 'moderator' ||
+    role === 'administrator' ||
+    role === 'director' ||
+    role === 'owner';
+
+  switch (type) {
+    case 'support_message':
+      if (role === 'client') return '/client/support';
+      if (role === 'guard') return '/guard/support';
+      return '/staff/support';
+    case 'job_chat_message':
+      if (role === 'client') return '/client/coverage';
+      if (role === 'guard') return '/guard/my-jobs';
+      return '/staff/messages';
+    case 'staff_message':
+      return '/staff/messages';
+    case 'assignment':
+      return '/guard/my-jobs';
+    default:
+      if (isStaff) return resolveNotificationUrl(type, options);
+      if (role === 'client') return '/client/home';
+      if (role === 'guard') return '/guard/map';
+      return resolveNotificationUrl(type, options);
   }
 }
 
@@ -44,6 +82,12 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['guard'];
     case 'emergency_alert':
       return ['guard', 'dispatch', 'admin'];
+    case 'support_message':
+      return ['dispatch', 'admin', 'client', 'guard'];
+    case 'job_chat_message':
+      return ['client', 'guard', 'dispatch', 'admin'];
+    case 'staff_message':
+      return ['dispatch', 'admin'];
     case 'test':
       return [];
     default:

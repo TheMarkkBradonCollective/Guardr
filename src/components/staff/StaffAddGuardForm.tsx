@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 
 export interface StaffAddGuardInput {
   name: string;
@@ -52,7 +53,9 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
         badgeNumber: badgeNumber.trim(),
         hourlyRate: parseInt(hourlyRate, 10) || 35,
       });
-      setMsg(`${name.trim()} added. They can sign in with this email once auth is linked.`);
+      setMsg(
+        `${name.trim()} added. They sign in with this email and the default password ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+      );
       reset();
       if (guardId) onCreated?.(guardId);
       setOpen(false);
@@ -85,7 +88,9 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
         <div>
           <h3 className="text-sm font-semibold">Add field guard</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Creates a guard profile in the system. They still sign in separately with this email.
+            Creates a guard profile in the system. Default sign-in password:{' '}
+            <span className="font-mono text-brand-text">{STAFF_PROVISIONED_DEFAULT_PASSWORD}</span>
+            {' '}— they will be prompted to change it on first login.
           </p>
         </div>
         <button
