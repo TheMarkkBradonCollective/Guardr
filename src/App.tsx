@@ -44,7 +44,13 @@ import {
   isCashClientPayment,
   parsePaymentMethod,
 } from './lib/cashPayments';
-import { ClientDashboard, type ClientView } from './components/ClientDashboard';
+import { ChangePasswordPrompt } from './components/auth/ChangePasswordPrompt';
+import {
+  provisionedPasswordFields,
+  setStoredPassword,
+  shouldPromptPasswordChange,
+  STAFF_PROVISIONED_DEFAULT_PASSWORD,
+} from './lib/accountPasswords';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
@@ -235,6 +241,7 @@ export default function App() {
   );
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
+  const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
 
   const initialRoute = readAppRouteFromWindow();
   const [clientView, setClientViewState] = useState<ClientView>(
@@ -384,6 +391,8 @@ export default function App() {
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
+        password: g.password ?? undefined,
+        mustChangePassword: g.must_change_password ?? false,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -409,6 +418,8 @@ export default function App() {
         approved: c.approved ?? true,
         rating: c.rating != null ? Number(c.rating) : undefined,
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
+        password: c.password ?? undefined,
+        mustChangePassword: c.must_change_password ?? false,
       })));
 
       setRequests((dbRequests ?? []).map((r: any) => ({
@@ -641,10 +652,59 @@ export default function App() {
   const activeGuard = verifiedGuards.find(g => g.id === activeGuardId) || verifiedGuards[0] || ({} as SecurityGuard);
 
   // ── Auth ───────────────────────────────────────────────────
-  const handleSignIn = (user: SessionUser) => {
+  const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {
     localStorage.setItem('guardr_current_user', JSON.stringify(user));
     setCurrentUser(user);
+    setPasswordChangePromptOpen(!!options?.passwordChangeRecommended);
     setIsAuthView(false);
+  };
+
+  const handleDismissPasswordChange = () => {
+    setPasswordChangePromptOpen(false);
+  };
+
+  const handleChangeAccountPassword = async (newPassword: string) => {
+    if (!currentUser) return;
+    if (newPassword === STAFF_PROVISIONED_DEFAULT_PASSWORD) {
+      throw new Error('Choose a password different from the default staff-assigned password.');
+    }
+
+    const emailLower = currentUser.email.toLowerCase();
+    const isClient = currentUser.role === 'client';
+
+    if (isClient) {
+      setClients((prev) =>
+        prev.map((c) =>
+          c.email.toLowerCase() === emailLower
+            ? { ...c, password: newPassword, mustChangePassword: false }
+            : c
+        )
+      );
+      if (isDbConnected) {
+        await supabase
+          .from('clients')
+          .update({ password: newPassword, must_change_password: false })
+          .eq('id', currentUser.id);
+      }
+      setStoredPassword(emailLower, { password: newPassword, mustChangePassword: false, role: 'client' });
+    } else {
+      setGuards((prev) =>
+        prev.map((g) =>
+          g.email.toLowerCase() === emailLower
+            ? { ...g, password: newPassword, mustChangePassword: false }
+            : g
+        )
+      );
+      if (isDbConnected) {
+        await supabase
+          .from('guards')
+          .update({ password: newPassword, must_change_password: false })
+          .eq('id', currentUser.id);
+      }
+      setStoredPassword(emailLower, { password: newPassword, mustChangePassword: false, role: 'guard' });
+    }
+
+    setPasswordChangePromptOpen(false);
   };
 
   const handleSignOut = () => {
@@ -660,7 +720,11 @@ export default function App() {
    *   auditor → guards table (auditor is a special reviewer role, same table)
    *   staff   → guards table
    */
-  const handleSignUp = async (profile: SecurityGuard | Client, role: 'guard' | 'client') => {
+  const handleSignUp = async (
+    profile: SecurityGuard | Client,
+    role: 'guard' | 'client',
+    password: string
+  ) => {
     if (!isDbConnected) {
       alert('Database is not connected. Cannot create accounts until Supabase is linked.');
       return;
@@ -673,7 +737,10 @@ export default function App() {
             id: client.id, name: client.name, email: client.email,
             company_name: client.companyName, phone: client.phone,
             avatar: client.avatar, total_requests: 0, approved: true,
+            password,
+            must_change_password: false,
           });
+          setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
           await loadFromSupabase();
         } catch (e) { console.error('Client DB insert error:', e); }
       }
@@ -691,6 +758,8 @@ export default function App() {
             hourly_rate_requirement: guard.hourlyRateRequirement,
             is_staff: guard.isStaff, staff_role: guard.staffRole,
             user_status: guard.userStatus || 'active',
+            password,
+            must_change_password: false,
           });
           if (guard.certifications.length > 0) {
             const seenNumbers = new Set<string>();
@@ -721,6 +790,7 @@ export default function App() {
               }))
             );
           }
+          setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
           await loadFromSupabase();
         } catch (e) { console.error('Guard DB insert error:', e); }
       }
@@ -1069,6 +1139,7 @@ export default function App() {
     hourlyRate?: number;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
+    const { password, mustChangePassword } = provisionedPasswordFields();
     const newGuard: SecurityGuard = {
       id: `guard-${Date.now()}`,
       name: input.name.trim(),
@@ -1087,6 +1158,8 @@ export default function App() {
       hourlyRateRequirement: input.hourlyRate ?? 35,
       userStatus: 'active',
       isStaff: false,
+      password,
+      mustChangePassword,
     };
     setGuards((prev) => [...prev, newGuard]);
     if (isDbConnected) {
@@ -1107,6 +1180,8 @@ export default function App() {
           hourly_rate_requirement: newGuard.hourlyRateRequirement,
           is_staff: false,
           user_status: 'active',
+          password,
+          must_change_password: mustChangePassword,
         });
       } catch (e) {
         setGuards((prev) => prev.filter((g) => g.id !== newGuard.id));
@@ -1114,6 +1189,7 @@ export default function App() {
         throw new Error('Could not save guard to the database.');
       }
     }
+    setStoredPassword(emailLower, { password, mustChangePassword, role: 'guard' });
     return newGuard.id;
   };
 
@@ -1124,6 +1200,7 @@ export default function App() {
     phone?: string;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
+    const { password, mustChangePassword } = provisionedPasswordFields();
     const newClient: Client = {
       id: `client-${Date.now()}`,
       name: input.name.trim(),
@@ -1133,6 +1210,8 @@ export default function App() {
       avatar: '',
       totalRequests: 0,
       approved: true,
+      password,
+      mustChangePassword,
     };
     setClients((prev) => [...prev, newClient]);
     if (isDbConnected) {
@@ -1146,6 +1225,8 @@ export default function App() {
           avatar: newClient.avatar,
           total_requests: 0,
           approved: true,
+          password,
+          must_change_password: mustChangePassword,
         });
       } catch (e) {
         setClients((prev) => prev.filter((c) => c.id !== newClient.id));
@@ -1153,6 +1234,7 @@ export default function App() {
         throw new Error('Could not save client to the database.');
       }
     }
+    setStoredPassword(emailLower, { password, mustChangePassword, role: 'client' });
     return newClient.id;
   };
 
@@ -1166,6 +1248,7 @@ export default function App() {
       throw new Error('You cannot assign that staff role.');
     }
     const emailLower = assertEmailAvailable(email);
+    const { password, mustChangePassword } = provisionedPasswordFields();
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
       name: name.trim(),
@@ -1185,6 +1268,8 @@ export default function App() {
       isStaff: true,
       staffRole,
       userStatus: 'active',
+      password,
+      mustChangePassword,
     };
     setGuards((prev) => [...prev, newStaff]);
     if (isDbConnected) {
@@ -1205,6 +1290,8 @@ export default function App() {
           is_staff: true,
           staff_role: staffRole,
           user_status: 'active',
+          password,
+          must_change_password: mustChangePassword,
         });
       } catch (e) {
         setGuards((prev) => prev.filter((g) => g.id !== newStaff.id));
@@ -1212,6 +1299,7 @@ export default function App() {
         throw new Error('Could not save staff account to the database.');
       }
     }
+    setStoredPassword(emailLower, { password, mustChangePassword, role: 'guard' });
     return newStaff.id;
   };
 
@@ -2848,6 +2936,15 @@ export default function App() {
   };
 
   // ── Render ─────────────────────────────────────────────────
+  const passwordChangeOverlay = currentUser ? (
+    <ChangePasswordPrompt
+      open={passwordChangePromptOpen}
+      userName={currentUser.name}
+      onChangePassword={handleChangeAccountPassword}
+      onDismiss={handleDismissPasswordChange}
+    />
+  ) : null;
+
   if (loading) {
     return (
       <div className="page-shell min-h-screen flex flex-col justify-center items-center gap-4">
@@ -2940,6 +3037,7 @@ export default function App() {
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
         />
+        {passwordChangeOverlay}
         <InstallPrompt />
       </>
     );
@@ -3007,6 +3105,7 @@ export default function App() {
             />
           )}
         </ClientAppLayout>
+        {passwordChangeOverlay}
         <InstallPrompt />
       </>
     );
@@ -3067,6 +3166,7 @@ export default function App() {
           onSendStaffMessage={handleSendStaffMessage}
           onSendJobChat={handleSendJobChatMessage}
         />
+        {passwordChangeOverlay}
         <InstallPrompt />
       </>
     );

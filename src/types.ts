@@ -111,6 +111,9 @@ export interface Client {
   rating?: number;
   createdAt?: string;
   themePreference?: 'dark' | 'light' | 'grey';
+  /** Set when staff provisions the account; used for sign-in only */
+  password?: string;
+  mustChangePassword?: boolean;
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
@@ -195,6 +198,9 @@ export interface SecurityGuard {
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
   themePreference?: 'dark' | 'light' | 'grey';
   stripeConnectAccountId?: string;
+  /** Set when staff provisions the account; used for sign-in only */
+  password?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface StaffSpotCheck {

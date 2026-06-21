@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StaffRole } from '../../types';
 import { Plus, X } from 'lucide-react';
+import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 
 export interface StaffAddStaffInput {
   name: string;
@@ -50,7 +51,9 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
         badgeNumber: badge.trim(),
         staffRole: role,
       });
-      setMsg(`${name.trim()} added as ${role}.`);
+      setMsg(
+        `${name.trim()} added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+      );
       reset();
       if (staffId) onCreated?.(staffId);
       setOpen(false);
@@ -83,7 +86,9 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
         <div>
           <h3 className="text-sm font-semibold">Add platform staff</h3>
           <p className="text-xs text-brand-text-muted mt-1">
-            Staff manage the platform only — they cannot accept field jobs.
+            Staff manage the platform only — they cannot accept field jobs. Default sign-in password:{' '}
+            <span className="font-mono text-brand-text">{STAFF_PROVISIONED_DEFAULT_PASSWORD}</span>
+            {' '}— they will be prompted to change it on first login.
           </p>
         </div>
         <button
