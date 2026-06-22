@@ -1,12 +1,11 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
-import { isGuardAccountPending } from './accountStatus';
 import {
   isSelfSubmittedClientAccount,
-  isSelfSubmittedGuardAccount,
   isUserSubmittedPendingCert,
 } from './approvalSubmissions';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
+import { getPendingGuardAccountReviews } from './guardAccountActivation';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
@@ -162,9 +161,7 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingGuardAccounts = guards.filter(
-    (g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g)
-  ).length;
+  const pendingGuardAccounts = getPendingGuardAccountReviews(guards).length;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingApprovals =
@@ -368,9 +365,7 @@ export function buildOverviewActionQueue(
     });
   }
 
-  const pendingGuardAccounts = guards.filter(
-    (g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g)
-  ).length;
+  const pendingGuardAccounts = getPendingGuardAccountReviews(guards).length;
   const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
   const accountQueueCount = pendingGuardAccounts + pendingClientAccounts;
   if (accountQueueCount > 0) {
@@ -706,7 +701,7 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
-  return guards.filter((g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g));
+  return getPendingGuardAccountReviews(guards);
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {

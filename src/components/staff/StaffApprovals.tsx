@@ -10,7 +10,6 @@ import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprov
 import {
   getGuardsReadyForAccountActivation,
   getPendingGuardAccountReviews,
-  getPendingGuardsMissingActivationRequirements,
   guardCanActivateAccount,
 } from '../../lib/guardAccountActivation';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
@@ -132,7 +131,6 @@ export function StaffApprovals({
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
   const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
-  const pendingGuardsMissingRequirements = getPendingGuardsMissingActivationRequirements(guards);
   const readyForActivation = getGuardsReadyForAccountActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
@@ -159,17 +157,13 @@ export function StaffApprovals({
       'job-offers': pendingJobs.length,
       applications: jobsWithApplications.length,
       credentials: pendingCerts.length,
-      accounts:
-        pendingGuardAccounts.length +
-        pendingGuardsMissingRequirements.length +
-        pendingClientAccounts.length,
+      accounts: pendingGuardAccounts.length + pendingClientAccounts.length,
     }),
     [
       pendingJobs.length,
       jobsWithApplications.length,
       pendingCerts.length,
       pendingGuardAccounts.length,
-      pendingGuardsMissingRequirements.length,
       pendingClientAccounts.length,
     ]
   );
@@ -509,10 +503,7 @@ export function StaffApprovals({
 
     if (activeQueue === 'accounts') {
       if (activeItemId) {
-        const guard =
-          pendingGuardsMissingRequirements.find((g) => g.id === activeItemId) ??
-          pendingGuardAccounts.find((g) => g.id === activeItemId) ??
-          null;
+        const guard = pendingGuardAccounts.find((g) => g.id === activeItemId) ?? null;
         const client = pendingClientAccounts.find((c) => c.id === activeItemId) ?? null;
 
         if (guard) {
@@ -588,12 +579,6 @@ export function StaffApprovals({
         <>
           <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
-            {pendingGuardsMissingRequirements.map((guard) => (
-              <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{guard.name}</p>
-                <p className="text-xs text-brand-text-muted">Missing activation requirements</p>
-              </AppItemCard>
-            ))}
             {pendingGuardAccounts.map((guard) => (
               <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
                 <p className="font-semibold text-sm truncate">{guard.name}</p>
