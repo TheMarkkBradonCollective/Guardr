@@ -41,3 +41,26 @@ export function validateCertDeletion(cert: Pick<Certification, 'imageUrl'>): Cer
   }
   return { ok: true };
 }
+
+/** Credential fields are locked while pending review or after verification. */
+export function guardCertificationIsLocked(cert: Pick<Certification, 'status' | 'imageUrl'>): boolean {
+  if (cert.status === 'verified') return true;
+  if (cert.status === 'pending' && certImageIsLocked(cert)) return true;
+  return false;
+}
+
+export function guardCertificationCanEdit(cert: Pick<Certification, 'status' | 'imageUrl'>): boolean {
+  if (cert.status === 'verified') return false;
+  if (cert.status === 'rejected') return true;
+  if (cert.status === 'pending') return !certImageIsLocked(cert);
+  return true;
+}
+
+export function certPhotoIsLockedForEditor(
+  cert: Pick<Certification, 'imageUrl' | 'status'>,
+  staffMode = false
+): boolean {
+  if (staffMode) return false;
+  if (cert.status === 'rejected') return false;
+  return certImageIsLocked(cert);
+}

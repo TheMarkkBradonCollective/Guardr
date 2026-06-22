@@ -47,6 +47,11 @@ interface StaffGuardsPanelProps {
     certId: string,
     imageUrl: string
   ) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    guardId: string,
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
@@ -90,6 +95,7 @@ export function StaffGuardsPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
@@ -153,6 +159,9 @@ export function StaffGuardsPanel({
         onDeleteCertification: onDeleteCertification ? (certId: string) => onDeleteCertification(selected.id, certId) : undefined,
         onAttachCertificationImage: onAttachCertificationImage
           ? (certId: string, imageUrl: string) => onAttachCertificationImage(selected.id, certId, imageUrl)
+          : undefined,
+        onUpdateCertification: onUpdateCertification
+          ? (certId, payload) => onUpdateCertification(selected.id, certId, payload)
           : undefined,
         onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
         onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,

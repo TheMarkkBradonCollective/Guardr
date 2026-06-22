@@ -44,6 +44,10 @@ interface UserProfileScreenProps {
     certId: string,
     imageUrl: string
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
+  onUpdateCertification?: (
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSubmitIdentityVerification?: (
@@ -61,6 +65,7 @@ export function UserProfileScreen({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
@@ -286,6 +291,7 @@ export function UserProfileScreen({
           onAddCertification={onAddCertification}
           onDeleteCertification={onDeleteCertification}
           onAttachCertificationImage={onAttachCertificationImage}
+          onUpdateCertification={onUpdateCertification}
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}
           onSubmitIdentityVerification={onSubmitIdentityVerification}

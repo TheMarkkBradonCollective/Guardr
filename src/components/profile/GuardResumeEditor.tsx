@@ -36,6 +36,10 @@ interface GuardResumeEditorProps {
     certId: string,
     imageUrl: string
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
+  onUpdateCertification?: (
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSubmitIdentityVerification?: (
@@ -43,6 +47,8 @@ interface GuardResumeEditorProps {
   ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
   credentialsEditing?: boolean;
+  /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
+  staffMode?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -53,10 +59,12 @@ export function GuardResumeEditor({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
   credentialsEditing,
+  staffMode = false,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
   const [showAddExp, setShowAddExp] = useState(false);
@@ -128,9 +136,11 @@ export function GuardResumeEditor({
       <GuardCredentialsPanel
         guard={guard}
         editing={credEditing}
+        staffMode={staffMode}
         onAddCertification={onAddCertification}
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}
+        onUpdateCertification={onUpdateCertification}
         onSubmitIdentityVerification={onSubmitIdentityVerification}
       />
 

@@ -33,8 +33,13 @@ import {
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
+import {
+  CERT_IMAGE_POLICY_HINT,
+  guardCertificationCanEdit,
+  validateCertDeletion,
+} from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
 
 const CREDENTIAL_SECTIONS: {
@@ -83,6 +88,7 @@ interface GuardCredentialsPanelProps {
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   onSubmitIdentityVerification?: (
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
@@ -99,6 +105,7 @@ export function GuardCredentialsPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onSubmitIdentityVerification,
   staffMode = false,
   staffIdReview,
@@ -183,6 +190,12 @@ export function GuardCredentialsPanel({
     onAttachImage: onAttachCertificationImage
       ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
       : undefined,
+    canEdit: staffMode || guardCertificationCanEdit(cert),
+    staffMode,
+    onUpdate: onUpdateCertification
+      ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
+      : undefined,
+    guardName: guard.name,
   });
 
   const renderCertRow = (cert: Certification) => (
@@ -267,10 +280,12 @@ export function GuardCredentialsPanel({
             guard={guard}
             editing={editing}
             nested
+            staffMode={staffMode}
             renderCertActions={renderCertActions}
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
+            onUpdateCertification={onUpdateCertification}
           />
         </div>
       )}
@@ -384,9 +399,11 @@ export function GuardCredentialsPanel({
       <GuardThirtyTwoHourPanel
         guard={guard}
         editing={editing}
+        staffMode={staffMode}
         onAddCertification={onAddCertification}
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}
+        onUpdateCertification={onUpdateCertification}
       />
       {showSection(refresherItems.length) && (
       <section className="app-form-section space-y-3">

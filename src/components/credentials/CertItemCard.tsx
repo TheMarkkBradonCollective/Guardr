@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
-import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
+import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
-import { CertDetailModal } from './CertDetailModal';
+import { CertDetailModal, type CertUpdatePayload, type CertUpdateResult } from './CertDetailModal';
 import { CertImageAttachButton } from './CertImageAttachButton';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 
@@ -16,6 +16,9 @@ interface CertItemCardProps {
   editing?: boolean;
   onDelete?: () => void;
   onAttachImage?: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
+  canEdit?: boolean;
+  staffMode?: boolean;
+  onUpdate?: (payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   showUploadBadge?: boolean;
   showCategory?: boolean;
   compact?: boolean;
@@ -28,6 +31,9 @@ export function CertItemCard({
   editing = false,
   onDelete,
   onAttachImage,
+  canEdit = false,
+  staffMode = false,
+  onUpdate,
   showUploadBadge = true,
   showCategory = true,
   compact = false,
@@ -35,6 +41,8 @@ export function CertItemCard({
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
+  const canEditCert = canEdit || staffMode || guardCertificationCanEdit(cert);
+  const openInEditMode = canEditCert && (cert.status === 'rejected' || (!cert.imageUrl && cert.status !== 'verified'));
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
   const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
   const thumbClass = compact
@@ -106,7 +114,15 @@ export function CertItemCard({
       </div>
 
       {showDetail && (
-        <CertDetailModal cert={cert} guardName={guardName} onClose={() => setShowDetail(false)} />
+        <CertDetailModal
+          cert={cert}
+          guardName={guardName}
+          canEdit={canEditCert && !!onUpdate}
+          staffMode={staffMode}
+          initialEditMode={openInEditMode}
+          onSubmit={onUpdate}
+          onClose={() => setShowDetail(false)}
+        />
       )}
     </>
   );

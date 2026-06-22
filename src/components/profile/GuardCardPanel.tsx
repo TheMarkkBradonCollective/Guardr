@@ -4,11 +4,12 @@ import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
+import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { WfBadge } from '../ui/wireframe';
 import { ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
+import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
 
@@ -18,6 +19,9 @@ interface GuardCardPanelProps {
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
+  /** Staff viewing a guard profile — enables credential edit in the detail modal. */
+  staffMode?: boolean;
   /** Render inside the credentials stack without a separate section header. */
   nested?: boolean;
   renderCertActions?: (cert: Certification) => React.ReactNode;
@@ -29,6 +33,8 @@ export function GuardCardPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
+  staffMode = false,
   nested = false,
   renderCertActions,
 }: GuardCardPanelProps) {
@@ -107,6 +113,12 @@ export function GuardCardPanel({
     onAttachImage: onAttachCertificationImage
       ? (url: string) => onAttachCertificationImage(cert.id, url)
       : undefined,
+    canEdit: staffMode || guardCertificationCanEdit(cert),
+    staffMode,
+    onUpdate: onUpdateCertification
+      ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
+      : undefined,
+    guardName: guard.name,
   });
 
   const statusTone = checklist.guardCardVerified

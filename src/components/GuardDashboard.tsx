@@ -49,6 +49,7 @@ import { getGuardUserStatus, isGuardAccountPending } from '../lib/accountStatus'
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
+import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -64,6 +65,7 @@ interface GuardDashboardProps {
   onAddCertification: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
   onSubmitIdentityVerification?: (
@@ -122,6 +124,7 @@ export function GuardDashboard({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
@@ -699,6 +702,7 @@ export function GuardDashboard({
                 onAddCertification={onAddCertification}
                 onDeleteCertification={onDeleteCertification}
                 onAttachCertificationImage={onAttachCertificationImage}
+                onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}

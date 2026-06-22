@@ -149,6 +149,11 @@ interface StaffDashboardProps {
     certId: string,
     imageUrl: string
   ) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    guardId: string,
+    certId: string,
+    payload: import('./credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('./credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
@@ -239,6 +244,7 @@ export function StaffDashboard({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSendSupportMessage,
@@ -460,6 +466,7 @@ export function StaffDashboard({
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
+            onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}

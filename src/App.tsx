@@ -73,7 +73,8 @@ import {
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
-import { validateCertDeletion, validateCertImageAttachment } from './lib/certImagePolicy';
+import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked } from './lib/certImagePolicy';
+import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
   buildCertImageResubmitReason,
@@ -1809,6 +1810,151 @@ export default function App() {
         );
         console.error('Cert image update error:', e);
         return { ok: false, error: 'Could not save photo. Please try again.' };
+      }
+    }
+
+    return { ok: true };
+  };
+
+  const handleUpdateCertification = async (
+    guardId: string,
+    certId: string,
+    payload: CertUpdatePayload,
+    submittedByRole: 'guard' | 'staff' = 'guard'
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const guard = guards.find((g) => g.id === guardId);
+    const cert = guard?.certifications.find((c) => c.id === certId);
+    if (!cert) return { ok: false, error: 'Credential not found.' };
+
+    const issuer = payload.issuer?.trim() || '';
+    const number = payload.number?.trim() || '';
+    const expiryDate = payload.expiryDate?.trim() || '';
+    const state = payload.state?.trim().toUpperCase() || undefined;
+    const imageUrl = payload.imageUrl?.trim() || undefined;
+
+    if (!issuer || !number || !expiryDate) {
+      return { ok: false, error: 'Enter issuer, number, and expiry date.' };
+    }
+
+    if (submittedByRole === 'guard' && !guardCertificationCanEdit(cert)) {
+      return { ok: false, error: 'This credential cannot be edited while under review.' };
+    }
+
+    if (
+      submittedByRole === 'guard' &&
+      imageUrl &&
+      imageUrl !== (cert.imageUrl ?? '').trim() &&
+      certImageIsLocked(cert)
+    ) {
+      return { ok: false, error: 'This credential photo cannot be changed after upload.' };
+    }
+
+    if (number !== cert.number.trim()) {
+      const available = validateCertNumberAvailable(guards, { number, guardId });
+      if (!available.ok) return available;
+    }
+
+    const dataChanged =
+      issuer !== cert.issuer.trim() ||
+      number !== cert.number.trim() ||
+      expiryDate !== cert.expiryDate.trim() ||
+      (state ?? '') !== (cert.state ?? '').trim().toUpperCase() ||
+      (imageUrl ?? '') !== (cert.imageUrl ?? '').trim();
+
+    if (!dataChanged) return { ok: true };
+
+    let nextStatus = cert.status;
+    if (cert.status === 'verified') {
+      nextStatus = 'verified';
+    } else if (submittedByRole === 'staff' || cert.status === 'rejected') {
+      nextStatus = 'pending';
+    }
+
+    const previous = { ...cert };
+    const nextSubmittedByRole =
+      submittedByRole === 'staff' && nextStatus === 'pending'
+        ? ('staff' as const)
+        : cert.submittedByRole;
+
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              certifications: g.certifications.map((c) =>
+                c.id === certId
+                  ? {
+                      ...c,
+                      issuer,
+                      number,
+                      expiryDate,
+                      state,
+                      imageUrl: imageUrl ?? c.imageUrl,
+                      status: nextStatus,
+                      rejectionReason:
+                        nextStatus === 'pending' && cert.status !== 'verified'
+                          ? undefined
+                          : c.rejectionReason,
+                      submittedByRole: nextSubmittedByRole,
+                    }
+                  : c
+              ),
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      try {
+        const { error } = await supabase
+          .from('certifications')
+          .update({
+            issuer,
+            number,
+            expiry_date: expiryDate,
+            state: state ?? null,
+            image_url: imageUrl ?? cert.imageUrl ?? null,
+            status: nextStatus,
+            rejection_reason:
+              nextStatus === 'pending' && cert.status !== 'verified' ? null : cert.rejectionReason ?? null,
+            submitted_by_role: nextSubmittedByRole ?? null,
+          })
+          .eq('id', certId);
+        if (error) {
+          setGuards((prev) =>
+            prev.map((g) =>
+              g.id === guardId
+                ? {
+                    ...g,
+                    certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                  }
+                : g
+            )
+          );
+          if (error.code === '23505') {
+            return {
+              ok: false,
+              error:
+                'This certificate or license number is already registered. Each number can only be linked to one profile.',
+            };
+          }
+          console.error('Cert update error:', error);
+          return { ok: false, error: 'Could not save credential. Please try again.' };
+        }
+      } catch (e) {
+        setGuards((prev) =>
+          prev.map((g) =>
+            g.id === guardId
+              ? {
+                  ...g,
+                  certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                }
+              : g
+          )
+        );
+        console.error('Cert update error:', e);
+        return { ok: false, error: 'Could not save credential. Please try again.' };
       }
     }
 
@@ -4413,6 +4559,9 @@ export default function App() {
           onAttachCertificationImage={(certId, imageUrl) =>
             handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
           }
+          onUpdateCertification={(certId, payload) =>
+            handleUpdateCertification(activeGuard.id, certId, payload, 'guard')
+          }
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
           onSubmitIdentityVerification={(payload) =>
@@ -4637,6 +4786,9 @@ export default function App() {
           onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
           onDeleteCertification={handleDeleteCertification}
           onAttachCertificationImage={handleAttachCertificationImage}
+          onUpdateCertification={(guardId, certId, payload) =>
+            handleUpdateCertification(guardId, certId, payload, 'staff')
+          }
           onAddExperience={handleAddExperience}
           onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}

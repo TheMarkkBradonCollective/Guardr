@@ -14,8 +14,9 @@ import {
 } from '../../lib/guardQualification';
 import { BookOpen, ImagePlus, Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { validateCertDeletion } from '../../lib/certImagePolicy';
+import { guardCertificationCanEdit, validateCertDeletion } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
@@ -23,9 +24,11 @@ const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
+  staffMode?: boolean;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -38,9 +41,11 @@ function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certificati
 export function GuardThirtyTwoHourPanel({
   guard,
   editing,
+  staffMode = false,
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
@@ -136,6 +141,12 @@ export function GuardThirtyTwoHourPanel({
     onAttachImage: onAttachCertificationImage
       ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
       : undefined,
+    canEdit: staffMode || guardCertificationCanEdit(cert),
+    staffMode,
+    onUpdate: onUpdateCertification
+      ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
+      : undefined,
+    guardName: guard.name,
   });
 
   return (

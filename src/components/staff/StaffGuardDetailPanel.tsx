@@ -47,6 +47,10 @@ interface StaffGuardDetailPanelProps {
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
@@ -87,6 +91,7 @@ export function StaffGuardDetailPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
@@ -543,6 +548,7 @@ export function StaffGuardDetailPanel({
               <GuardResumeEditor
                 guard={guard}
                 editing
+                staffMode={canManage}
                 payload={resume}
                 onChange={(patch) =>
                   setResume((r) => ({
@@ -554,6 +560,7 @@ export function StaffGuardDetailPanel({
                 onAddCertification={onAddCertification}
                 onDeleteCertification={onDeleteCertification}
                 onAttachCertificationImage={onAttachCertificationImage}
+                onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
@@ -571,6 +578,7 @@ export function StaffGuardDetailPanel({
                 editing={false}
                 staffMode={canManage}
                 onSubmitIdentityVerification={onUpdateGuardIdImages}
+                onUpdateCertification={onUpdateCertification}
                 staffIdReview={
                   canManage ? (
                     <StaffIdReviewSection
