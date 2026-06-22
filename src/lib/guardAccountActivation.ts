@@ -8,13 +8,10 @@ import {
   guardIdVerificationPhotosComplete,
 } from './guardIdentityVerification';
 import {
-  guardHasExpiredGuardCard,
   guardHasExpiredIdOnFile,
   guardHasGuardrVerifiedCredential,
   guardHasIdOnFile,
   guardHasVerifiedIdForWork,
-  guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
   guardMeetsWorkRequirements,
 } from './guardQualification';
 import { getGuardUserStatus, isGuardAccountPending } from './accountStatus';
@@ -26,7 +23,7 @@ export interface GuardActivationChecklist {
   guardCardVerified: boolean;
   /** Guard-facing — all work requirements met (ID, guard card, PTA/UOF). */
   canActivate: boolean;
-  /** Staff can approve with verified ID + valid guard card only. */
+  /** Staff can approve with verified government ID only. */
   canStaffApprove: boolean;
   /** Hard blockers preventing staff profile approval. */
   staffApprovalBlockers: string[];
@@ -59,9 +56,8 @@ export function guardIdIsVerified(guard: SecurityGuard): boolean {
   return getGuardIdVerificationStatus(guard) === 'verified';
 }
 
-function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[] {
+function buildStaffApprovalBlockers(guard: SecurityGuard, _state = 'CA'): string[] {
   const idStatus = getGuardIdVerificationStatus(guard);
-  const guardCardSubmitted = guardHasGuardCardSubmitted(guard);
   const blockers: string[] = [];
 
   if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') {
@@ -74,14 +70,6 @@ function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[
     blockers.push('Government ID has expired — guard must upload a valid ID');
   } else if (!guardHasVerifiedIdForWork(guard)) {
     blockers.push('Government ID awaiting staff verification');
-  } else if (!guardMeetsLevel1(guard, state)) {
-    if (guardHasExpiredGuardCard(guard, state)) {
-      blockers.push('BSIS Guard Card has expired — guard must upload a valid card');
-    } else if (!guardCardSubmitted) {
-      blockers.push('BSIS Guard Card not uploaded');
-    } else {
-      blockers.push('Valid BSIS Guard Card required');
-    }
   }
 
   return blockers;
@@ -97,7 +85,7 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
   const missingWorkCredentials = getGuardMissingWorkCredentialLabels(guard, state);
 
   const canStaffApprove = staffApprovalBlockers.length === 0;
-  const canActivate = canStaffApprove && guardMeetsWorkRequirements(guard, state);
+  const canActivate = guardMeetsWorkRequirements(guard, state);
 
   return {
     idSubmitted,
@@ -118,7 +106,7 @@ export function guardCanActivateAccount(guard: SecurityGuard, state = 'CA'): boo
   return getGuardActivationChecklist(guard, state).canActivate;
 }
 
-/** Staff-only — verified ID + valid guard card minimum. */
+/** Staff-only — verified government ID minimum. */
 export function guardCanStaffApproveProfile(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   return getGuardActivationChecklist(guard, state).canStaffApprove;
@@ -128,21 +116,21 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
   return getGuardActivationChecklist(guard, state).staffApprovalBlockers;
 }
 
-/** Pending sign-ups staff can review — must have submitted ID and guard card. */
+/** Pending sign-ups staff can review — must have submitted government ID. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
     const checklist = getGuardActivationChecklist(g);
-    return checklist.idSubmitted && checklist.guardCardSubmitted;
+    return checklist.idSubmitted;
   });
 }
 
-/** Pending sign-ups still missing ID or guard card uploads. */
+/** Pending sign-ups still missing government ID uploads. */
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
     const checklist = getGuardActivationChecklist(g);
-    return !checklist.idSubmitted || !checklist.guardCardSubmitted;
+    return !checklist.idSubmitted;
   });
 }
 
@@ -152,14 +140,11 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   if (checklist.canStaffApprove) {
     return checklist.missingWorkCredentials.length > 0
       ? `Missing: ${checklist.missingWorkCredentials.join(', ')}`
-      : 'Ready to approve';
+      : 'ID verified — ready to approve';
   }
   const parts: string[] = [];
   if (!checklist.idSubmitted) parts.push('ID missing');
   else if (!checklist.idVerified) parts.push('ID unverified');
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
-  if (!checklist.guardCardSubmitted) parts.push('Guard card missing');
-  else if (!guardMeetsLevel1(guard)) parts.push('Guard card invalid');
-  if (!guardMeetsPtaUofTraining(guard)) parts.push('PTA/UOF missing');
   return parts.join(' · ') || 'Awaiting requirements';
 }

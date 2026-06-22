@@ -505,7 +505,7 @@ export function StaffApprovals({
                             ? `Missing: ${getGuardActivationChecklist(guard).missingWorkCredentials.join(', ')} — can still approve`
                             : 'Approve guard profile'
                           : getGuardActivationChecklist(guard).staffApprovalBlockers.join(' · ') ||
-                            'Verified ID and guard card required'
+                            'Verified government ID required'
                       }
                       onClick={() => {
                         void (async () => {

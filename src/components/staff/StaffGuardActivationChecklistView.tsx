@@ -30,7 +30,7 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
   );
 }
 
-/** Staff-only profile approval checklist — minimum is verified ID + guard card. */
+/** Staff-only profile approval checklist — minimum is verified government ID. */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
   const missingWork = getGuardMissingWorkCredentialLabels(guard);
@@ -39,13 +39,13 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Profile approval (staff)</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Minimum to approve: verified government ID and valid BSIS Guard Card. Additional credentials can be
-        added later — the guard cannot work field jobs until all work requirements are on file.
+        Minimum to approve: verified government ID. Guard card is the minimum to activate for work — PTA/UOF and
+        other credentials can be added later. You will be prompted if anything is still missing.
       </p>
       <div className="app-checklist-steps">
         <StepRow
           done={guardHasVerifiedIdForWork(guard)}
-          label="Government ID (verified)"
+          label="Government ID (verified) — required to approve"
           detail={
             checklist.idVerified
               ? guardHasVerifiedIdForWork(guard)
@@ -58,13 +58,13 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
         />
         <StepRow
           done={guardMeetsLevel1(guard)}
-          label="BSIS Guard Card (valid)"
+          label="BSIS Guard Card (valid) — minimum to work"
           detail={
             guardMeetsLevel1(guard)
               ? 'Valid guard card on file'
               : checklist.guardCardSubmitted
                 ? 'On file — confirm current and valid'
-                : 'Not uploaded'
+                : 'Not uploaded — guard cannot work until added'
           }
         />
       </div>
@@ -76,13 +76,15 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
             Missing for work eligibility
           </p>
           <div className="flex flex-wrap gap-1.5">
+            {!guardMeetsLevel1(guard) && <WfBadge tone="warning">Guard card missing</WfBadge>}
             {!guardMeetsPtaUofTraining(guard) && <WfBadge tone="warning">PTA/UOF missing</WfBadge>}
             {missingWork.includes('32-hour BSIS training') && (
               <WfBadge tone="warning">32-hour block missing</WfBadge>
             )}
           </div>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            You can approve the profile now; flag these on the guard&apos;s credentials to add later.
+            You can approve once ID is verified; confirm when prompted if guard card or other credentials are
+            still missing.
           </p>
         </div>
       )}
@@ -90,7 +92,7 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
       {checklist.canStaffApprove && (
         <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
           {missingWork.length > 0
-            ? 'Minimum met — you may approve with missing credentials (guard will be prompted to add them).'
+            ? 'ID verified — you may approve now (you will be asked to confirm missing credentials).'
             : 'All work credentials on file — ready to approve.'}
         </p>
       )}
