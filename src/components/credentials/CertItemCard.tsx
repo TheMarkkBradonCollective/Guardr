@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Lock, Trash2 } from 'lucide-react';
+import { Award, ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
@@ -37,6 +37,12 @@ export function CertItemCard({
   const title = certDisplayName(cert);
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
   const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
+  const thumbClass = compact
+    ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
+    : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
+  const placeholderClass = compact
+    ? 'w-12 h-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0'
+    : 'w-14 h-14 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0';
 
   return (
     <>
@@ -46,12 +52,12 @@ export function CertItemCard({
           onClick={() => setShowDetail(true)}
           className="app-cert-item-interactive app-cert-item-body min-w-0 flex gap-3 flex-1 text-left"
         >
-          {cert.imageUrl && !compact && (
-            <img
-              src={cert.imageUrl}
-              alt=""
-              className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
-            />
+          {cert.imageUrl ? (
+            <img src={cert.imageUrl} alt="" className={thumbClass} />
+          ) : (
+            <div className={placeholderClass} aria-hidden>
+              <Award className="w-5 h-5 text-brand-text-muted" />
+            </div>
           )}
           <div className="min-w-0 flex-1">
             {showCategory && (
@@ -72,12 +78,9 @@ export function CertItemCard({
             {cert.status === 'rejected' && cert.rejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
             )}
-            {cert.imageUrl && compact && (
-              <p className="text-[10px] text-brand-primary mt-1">Tap to view photo</p>
-            )}
-            {!cert.imageUrl && !compact && editing && (
-              <p className="text-[10px] text-brand-text-muted mt-1">No photo on file</p>
-            )}
+            <p className="text-[10px] text-brand-primary mt-1">
+              {cert.imageUrl ? 'Tap to view details' : editing ? 'Tap to view · add photo' : 'Tap to view details'}
+            </p>
           </div>
         </button>
         <div className="app-cert-item-meta">
