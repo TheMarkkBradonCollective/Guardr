@@ -62,7 +62,7 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (isGuardAccountPending(guard)) {
     const checklist = getGuardActivationChecklist(guard);
     if (!checklist.idSubmitted || !checklist.guardCardSubmitted) {
-      return 'Submit your government ID and BSIS Guard Card in your profile. Staff will verify both before activating your account.';
+      return 'Submit your government ID and BSIS Guard Card in your profile (ID verification and Guard Card sections). Staff will verify both before activating your account.';
     }
     if (!checklist.canActivate) {
       return 'Your ID and Guard Card are under staff review. You will be notified when your account is activated.';
