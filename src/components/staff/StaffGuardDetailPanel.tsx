@@ -26,11 +26,13 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
+import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
-  guardCanActivateAccount,
+  guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
+import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 
 interface StaffGuardDetailPanelProps {
@@ -452,6 +454,7 @@ export function StaffGuardDetailPanel({
               {guard.backgroundChecked && (
                 <WfBadge tone="primary">Background checked</WfBadge>
               )}
+              <GuardMissingCredentialsBadge guard={guard} />
             </div>
           )}
         </div>
@@ -468,6 +471,8 @@ export function StaffGuardDetailPanel({
                   type="button"
                   onClick={() => {
                     void (async () => {
+                      if (!guardCanStaffApproveProfile(guard)) return;
+                      if (!promptStaffGuardProfileApproval(guard)) return;
                       try {
                         await onApproveGuardAccount(guard.id);
                       } catch (err) {
@@ -475,12 +480,14 @@ export function StaffGuardDetailPanel({
                       }
                     })();
                   }}
-                  disabled={!guardCanActivateAccount(guard)}
+                  disabled={!guardCanStaffApproveProfile(guard)}
                   className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
                   title={
-                    activationChecklist.blockers.length > 0
-                      ? activationChecklist.blockers.join(' · ')
-                      : 'Approve guard profile'
+                    activationChecklist.staffApprovalBlockers.length > 0
+                      ? activationChecklist.staffApprovalBlockers.join(' · ')
+                      : activationChecklist.missingWorkCredentials.length > 0
+                        ? `Missing: ${activationChecklist.missingWorkCredentials.join(', ')} — can still approve`
+                        : 'Approve guard profile'
                   }
                 >
                   Approve guard profile
@@ -577,7 +584,7 @@ export function StaffGuardDetailPanel({
           {editing ? renderPendingCertActions() : (
             <section className="staff-detail-section space-y-3">
               {!guard.isStaff && guardAccountStatus === 'pending' && (
-                <GuardActivationChecklistView guard={guard} compact />
+                <StaffGuardActivationChecklistView guard={guard} />
               )}
               <GuardCredentialsPanel
                 guard={guard}

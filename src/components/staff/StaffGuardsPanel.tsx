@@ -14,6 +14,7 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import type { GuardDisplayStatus } from '../../lib/guardQualification';
 import type { GuardUserStatus } from '../../lib/accountStatus';
 
@@ -215,6 +216,7 @@ export function StaffGuardsPanel({
             {isGuardTrusted(guard) && (
               <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
             )}
+            <GuardMissingCredentialsBadge guard={guard} />
             {activeShift && (
               <WfBadge tone="primary" className="max-w-full truncate">
                 On job: {activeShift.title}
