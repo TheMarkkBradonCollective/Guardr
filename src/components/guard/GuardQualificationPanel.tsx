@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
+  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   GUARD_INACTIVE_DESCRIPTION,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
@@ -71,7 +72,7 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
           : `All ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses verified`
         : progress.thirtyTwoHourRollup
           ? '32-hour completion certificate on file'
-          : `${progress.uploaded32HourCount} / ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses on file`,
+          : formatThirtyTwoHourCourseProgressCounts(progress),
     },
   ];
 

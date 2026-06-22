@@ -7,6 +7,7 @@ import {
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import {
+  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
   THIRTY_TWO_HOUR_COURSE_IDS,
@@ -200,7 +201,7 @@ export function GuardThirtyTwoHourPanel({
                 : progress.thirtyTwoHourRollup
                   ? '32-hour block complete (rollup cert on file)'
                   : '32-hour block complete (all 9 courses on file)'
-              : `${progress.uploaded32HourCount} of ${progress.total32HourCourses} courses on file`}
+              : formatThirtyTwoHourCourseProgressCounts(progress)}
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
