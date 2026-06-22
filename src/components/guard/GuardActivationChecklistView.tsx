@@ -4,6 +4,7 @@ import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import {
   guardHasVerifiedIdForWork,
+  guardHasCredentialListed,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
   PTA_UOF_UPLOAD_GUIDANCE,
@@ -98,11 +99,15 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               ? approved
                 ? 'Valid guard card on file — staff can activate your account'
                 : 'Valid guard card on file — staff will verify at activation'
-              : checklist.guardCardSubmitted
+              : guardHasCredentialListed(guard, 'bsis-guard-card')
                 ? approved
-                  ? 'On file — staff must confirm valid before activation'
-                  : 'On file — verified after profile approval'
-                : 'Upload in the Guard Card section of your profile'
+                  ? 'Guard card listed — upload document photo so staff can activate your account'
+                  : 'Guard card listed — add document photo before activation'
+                : checklist.guardCardSubmitted
+                  ? approved
+                    ? 'On file — staff must confirm valid before activation'
+                    : 'On file — verified after profile approval'
+                  : 'Upload in the Guard Card section of your profile'
           }
         />
         <StepRow
@@ -127,7 +132,9 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       )}
       {approved && !guardMeetsLevel1(guard) && (
         <p className="text-xs text-amber-400 font-medium pt-3 border-t border-brand-border mt-3">
-          Upload a valid BSIS Guard Card so staff can activate your account.
+          {guardHasCredentialListed(guard, 'bsis-guard-card')
+            ? 'Your guard card is listed but not on file — upload a document photo so staff can activate your account.'
+            : 'Upload a valid BSIS Guard Card so staff can activate your account.'}
         </p>
       )}
     </div>

@@ -118,7 +118,12 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import {
+  getClientAccountStatus,
+  getGuardUserStatus,
+  isGuardAccountApproved,
+  isGuardAccountPending,
+} from './lib/accountStatus';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
@@ -2224,6 +2229,23 @@ export default function App() {
       }
       if (!canModerateStaffMember(currentUser.role, currentUser.id, target)) {
         alert('You cannot moderate staff at the same role level or above your own.');
+        return;
+      }
+    }
+    if (!target.isStaff && status === 'active') {
+      if (isGuardAccountPending(target)) {
+        alert('Approve this guard profile before activating their account.');
+        return;
+      }
+      if (isGuardAccountApproved(target)) {
+        const blockers = guardAccountActivationBlockers(target);
+        if (blockers.length > 0) {
+          alert(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+          return;
+        }
+        alert(
+          'Use Activate account in Approvals to fully activate this guard (guard card on file, optional grace for missing PTA/32-hour).'
+        );
         return;
       }
     }

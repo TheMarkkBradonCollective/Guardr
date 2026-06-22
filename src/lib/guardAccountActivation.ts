@@ -56,10 +56,7 @@ export function guardHasGuardCardSubmitted(guard: SecurityGuard): boolean {
 }
 
 export function guardHasVerifiedGuardCard(guard: SecurityGuard, state = 'CA'): boolean {
-  if (guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', state)) return true;
-  return getGuardCardCertifications(guard).some(
-    (c) => c.status === 'verified' && certHasDocumentProof(c)
-  );
+  return guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', state);
 }
 
 export function guardIdIsVerified(guard: SecurityGuard): boolean {

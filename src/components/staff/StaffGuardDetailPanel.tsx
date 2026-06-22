@@ -552,7 +552,7 @@ export function StaffGuardDetailPanel({
                   Flag / Block
                 </button>
               )}
-              {canSuspend && guardAccountStatus !== 'active' && guardAccountStatus !== 'pending' && (
+              {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>
