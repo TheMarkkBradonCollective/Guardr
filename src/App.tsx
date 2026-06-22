@@ -67,6 +67,11 @@ import {
   getPendingGuardAccountReviews,
   guardAccountActivationBlockers,
 } from './lib/guardAccountActivation';
+import {
+  guardCredentialGracePatchForApproval,
+  processGuardCredentialGraceBatch,
+  syncGuardCredentialGraceState,
+} from './lib/guardCredentialGrace';
 import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
 import {
   AddCertificationResult,
@@ -975,6 +980,10 @@ export default function App() {
         idVerificationReviewedAt: g.id_verification_reviewed_at ?? undefined,
         idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
         idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
+        credentialGraceDeadline: g.credential_grace_deadline ?? undefined,
+        credentialGraceMissing: Array.isArray(g.credential_grace_missing)
+          ? (g.credential_grace_missing as string[])
+          : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1285,6 +1294,37 @@ export default function App() {
     if (shouldSkipRealtimeSync()) return;
     void loadRef.current();
   }, isDbConnected);
+
+  useEffect(() => {
+    const tick = () => {
+      setGuards((prev) => {
+        const next = processGuardCredentialGraceBatch(prev);
+        let changed = false;
+        for (let i = 0; i < prev.length; i++) {
+          const before = prev[i];
+          const after = next[i];
+          if (before === after) continue;
+          changed = true;
+          if (isDbConnected) {
+            beginLocalMutation();
+            void supabase
+              .from('guards')
+              .update({
+                user_status: after.userStatus,
+                credential_grace_deadline: after.credentialGraceDeadline ?? null,
+                credential_grace_missing: after.credentialGraceMissing ?? null,
+              })
+              .eq('id', after.id);
+          }
+        }
+        return changed ? next : prev;
+      });
+    };
+
+    tick();
+    const intervalId = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [isDbConnected]);
 
   useMessageRealtimeSync(
     {
@@ -1674,7 +1714,15 @@ export default function App() {
       imageUrl: newCert.imageUrl,
       submittedByRole: newCert.submittedByRole ?? submittedByRole,
     };
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        return syncGuardCredentialGraceState({
+          ...g,
+          certifications: [...g.certifications, certWithId],
+        });
+      })
+    );
     if (isDbConnected) {
       beginLocalMutation();
       try {
@@ -1969,8 +2017,44 @@ export default function App() {
   };
 
   const handleApproveCert = async (guardId: string, certId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.map(c => c.id === certId ? { ...c, status: 'verified' as const } : c) } : g));
-    if (isDbConnected) await supabase.from('certifications').update({ status: 'verified' }).eq('id', certId);
+    const before = guards.find((g) => g.id === guardId);
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        return syncGuardCredentialGraceState({
+          ...g,
+          certifications: g.certifications.map((c) =>
+            c.id === certId ? { ...c, status: 'verified' as const } : c
+          ),
+        });
+      })
+    );
+    if (isDbConnected) {
+      await supabase.from('certifications').update({ status: 'verified' }).eq('id', certId);
+      const after = before
+        ? syncGuardCredentialGraceState({
+            ...before,
+            certifications: before.certifications.map((c) =>
+              c.id === certId ? { ...c, status: 'verified' as const } : c
+            ),
+          })
+        : null;
+      if (
+        after &&
+        (after.credentialGraceDeadline !== before?.credentialGraceDeadline ||
+          JSON.stringify(after.credentialGraceMissing ?? []) !==
+            JSON.stringify(before?.credentialGraceMissing ?? []))
+      ) {
+        beginLocalMutation();
+        await supabase
+          .from('guards')
+          .update({
+            credential_grace_deadline: after.credentialGraceDeadline ?? null,
+            credential_grace_missing: after.credentialGraceMissing ?? null,
+          })
+          .eq('id', guardId);
+      }
+    }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
@@ -2413,14 +2497,25 @@ export default function App() {
       throw new Error(`Cannot approve profile yet:\n• ${blockers.join('\n• ')}`);
     }
 
-    setGuards((prev) =>
-      prev.map((g) => (g.id === guardId ? { ...g, userStatus: 'active' as const, verified: true } : g))
-    );
+    const gracePatch = guardCredentialGracePatchForApproval(guard);
+    const approvedGuard: SecurityGuard = {
+      ...guard,
+      userStatus: 'active',
+      verified: true,
+      ...gracePatch,
+    };
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
       const { error } = await supabase
         .from('guards')
-        .update({ user_status: 'active', verified: true })
+        .update({
+          user_status: 'active',
+          verified: true,
+          credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
+          credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
+        })
         .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));

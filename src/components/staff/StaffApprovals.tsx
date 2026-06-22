@@ -501,11 +501,11 @@ export function StaffApprovals({
                       disabled={!guardCanStaffApproveProfile(guard)}
                       title={
                         guardCanStaffApproveProfile(guard)
-                          ? getGuardActivationChecklist(guard).missingWorkCredentials.length > 0
-                            ? `Missing: ${getGuardActivationChecklist(guard).missingWorkCredentials.join(', ')} — can still approve`
-                            : 'Approve guard profile'
+                          ? getGuardActivationChecklist(guard).missingGraceCredentials.length > 0
+                            ? `Missing: ${getGuardActivationChecklist(guard).missingGraceCredentials.join(', ')} — 48h grace`
+                            : 'Activate guard profile'
                           : getGuardActivationChecklist(guard).staffApprovalBlockers.join(' · ') ||
-                            'Verified government ID required'
+                            'Verified ID and guard card required to activate'
                       }
                       onClick={() => {
                         void (async () => {

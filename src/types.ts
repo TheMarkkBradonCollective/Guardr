@@ -226,6 +226,10 @@ export interface SecurityGuard {
   idVerificationRejectionReason?: string;
   /** Who submitted government ID for approvals filtering */
   idSubmittedBy?: 'guard' | 'staff';
+  /** Staff-granted deadline to upload optional credentials before account deactivation */
+  credentialGraceDeadline?: string;
+  /** Credential labels missing when grace period started */
+  credentialGraceMissing?: string[];
 }
 
 export interface StaffSpotCheck {

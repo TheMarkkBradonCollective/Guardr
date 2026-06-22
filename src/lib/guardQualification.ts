@@ -39,6 +39,12 @@ export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTION
 
 import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
+import {
+  guardCredentialGraceExpired,
+  guardCredentialGraceMsRemaining,
+  guardHasActiveCredentialGrace,
+  formatCredentialGraceTimeRemaining,
+} from './guardCredentialGrace';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
@@ -51,14 +57,17 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   if (userStatus === 'pending') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
-  return guardMeetsWorkRequirements(guard, state) ? 'active' : 'inactive';
+  return guardCanWorkFieldJobs(guard, state) ? 'active' : 'inactive';
 }
 
-/** Active account + verified ID, valid guard card, and PTA/UOF — required to accept, be hired, or work jobs */
+/** Active account + verified ID, valid guard card, and PTA/UOF (or active staff grace). */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountActive(guard)) return false;
-  return guardMeetsWorkRequirements(guard, state);
+  if (!guardHasVerifiedIdForWork(guard)) return false;
+  if (!guardMeetsLevel1(guard, state)) return false;
+  if (guardMeetsPtaUofTraining(guard)) return true;
+  return guardHasActiveCredentialGrace(guard);
 }
 
 export function guardHasIdOnFile(guard: SecurityGuard): boolean {
@@ -121,6 +130,13 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
   }
   if (!guardMeetsPtaUofTraining(guard)) {
+    if (guardHasActiveCredentialGrace(guard)) {
+      const remaining = formatCredentialGraceTimeRemaining(guardCredentialGraceMsRemaining(guard));
+      return `Upload 8-hour PTA/UOF training in Credentials within ${remaining} or your account will be deactivated. ${PTA_UOF_UPLOAD_GUIDANCE}`;
+    }
+    if (guardCredentialGraceExpired(guard)) {
+      return 'Your credential grace period has expired — upload PTA/UOF training in Credentials to work again.';
+    }
     return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   return null;
