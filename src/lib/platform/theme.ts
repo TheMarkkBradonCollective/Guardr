@@ -8,8 +8,8 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
   grey: 'Shade',
 };
 
-/** Default — light with sage accent */
-export const DEFAULT_THEME: ThemeMode = 'light';
+/** Default — dark reduces glare on field guard mobile use */
+export const DEFAULT_THEME: ThemeMode = 'dark';
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 

@@ -13,8 +13,8 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
   const isGuard = role === 'guard';
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center p-6">
-      <div className="uber-card max-w-md w-full text-center space-y-5 rounded-2xl">
+    <div className="flex min-h-full items-center justify-center p-6 bg-brand-bg-sec">
+      <div className="uber-card max-w-md w-full text-center space-y-5 rounded-2xl border-brand-primary/20">
         <Clock className="w-10 h-10 text-amber-400 mx-auto" />
         <h2 className="font-black text-lg uppercase">Application pending</h2>
         <p className="text-brand-text-muted text-sm leading-relaxed">
