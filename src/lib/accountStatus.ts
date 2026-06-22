@@ -37,7 +37,7 @@ export const CLIENT_ACCOUNT_STATUS_LABELS: Record<ClientAccountStatus, string> =
 
 export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
   pending: 'Pending approval',
-  active: 'Active',
+  active: 'Approved',
   suspended: 'Suspended',
   blocked: 'Blocked',
 };
