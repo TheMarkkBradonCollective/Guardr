@@ -8,6 +8,7 @@ import {
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
 } from '../../lib/guardQualification';
+import { isGuardAccountActive, isGuardAccountApproved } from '../../lib/accountStatus';
 import { WfBadge } from '../ui/wireframe';
 import { AlertTriangle, Check, Circle } from 'lucide-react';
 
@@ -31,51 +32,59 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
   );
 }
 
-/** Staff-only activation checklist — guard card is mandatory; optional creds get grace. */
+/** Staff: approve on verified ID, activate on guard card (guard may upload everything upfront). */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
   const missingGrace = getGuardMissingGraceCredentialLabels(guard);
+  const approved = isGuardAccountApproved(guard);
+  const active = isGuardAccountActive(guard);
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">Profile activation (staff)</p>
+      <p className="text-sm font-semibold">Profile approval & activation (staff)</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Required to activate: verified government ID and valid BSIS Guard Card (no grace for guard card).
-        Optional credentials (PTA/UOF, 32-hour) can be waived for {CREDENTIAL_GRACE_PERIOD_HOURS} hours — the
-        guard is notified and auto-deactivated if not added in time.
+        Guards can upload ID, guard card, and other credentials all at once. Review in order: approve when
+        government ID is verified, then activate when a valid guard card is on file. PTA/UOF and 32-hour may be
+        missing at activation — {CREDENTIAL_GRACE_PERIOD_HOURS}-hour grace applies.
       </p>
       <div className="app-checklist-steps">
         <StepRow
-          done={guardHasVerifiedIdForWork(guard)}
-          label="Government ID (verified)"
+          done={approved || active}
+          label="1. Approve profile — verified government ID"
           detail={
-            checklist.idVerified
-              ? guardHasVerifiedIdForWork(guard)
-                ? 'Verified'
-                : 'Verified but expired'
-              : checklist.idSubmitted
-                ? 'Submitted — verify in Credentials'
-                : 'Not submitted'
+            approved || active
+              ? 'Profile approved'
+              : guardHasVerifiedIdForWork(guard)
+                ? 'ID verified — ready to approve'
+                : checklist.idSubmitted
+                  ? 'ID submitted — verify in Credentials'
+                  : 'ID not submitted'
           }
         />
         <StepRow
-          done={guardMeetsLevel1(guard)}
-          label="BSIS Guard Card (valid) — mandatory"
+          done={active}
+          label="2. Activate account — valid BSIS Guard Card"
           detail={
-            guardMeetsLevel1(guard)
-              ? 'Valid guard card on file'
-              : checklist.guardCardSubmitted
-                ? 'On file — confirm current and valid'
-                : 'Not uploaded — cannot activate without guard card'
+            active
+              ? 'Account active'
+              : approved
+                ? guardMeetsLevel1(guard)
+                  ? missingGrace.length > 0
+                    ? `Guard card on file — activate with ${CREDENTIAL_GRACE_PERIOD_HOURS}h grace`
+                    : 'Guard card on file — ready to activate'
+                  : checklist.guardCardSubmitted
+                    ? 'Guard card submitted — confirm valid'
+                    : 'Guard card not on file yet'
+                : 'Approve profile first'
           }
         />
       </div>
 
-      {missingGrace.length > 0 && (
+      {missingGrace.length > 0 && (approved || active) && (
         <div className="mt-3 pt-3 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-            Optional — {CREDENTIAL_GRACE_PERIOD_HOURS}-hour grace if missing
+            Optional at activation
           </p>
           <div className="flex flex-wrap gap-1.5">
             {!guardMeetsPtaUofTraining(guard) && <WfBadge tone="warning">PTA/UOF missing</WfBadge>}
@@ -83,19 +92,7 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
               <WfBadge tone="warning">32-hour block missing</WfBadge>
             )}
           </div>
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            You will be asked to confirm activation. The guard can work during the grace period but must upload
-            these credentials before auto-deactivation.
-          </p>
         </div>
-      )}
-
-      {checklist.canStaffApprove && (
-        <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
-          {missingGrace.length > 0
-            ? `ID and guard card met — you may activate with a ${CREDENTIAL_GRACE_PERIOD_HOURS}-hour grace for missing credentials.`
-            : 'All credentials on file — ready to activate.'}
-        </p>
       )}
     </div>
   );

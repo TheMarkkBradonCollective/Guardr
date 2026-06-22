@@ -29,6 +29,7 @@ import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
+  guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
@@ -56,6 +57,7 @@ interface StaffGuardDetailPanelProps {
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -97,6 +99,7 @@ export function StaffGuardDetailPanel({
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -472,7 +475,6 @@ export function StaffGuardDetailPanel({
                   onClick={() => {
                     void (async () => {
                       if (!guardCanStaffApproveProfile(guard)) return;
-                      if (!promptStaffGuardProfileApproval(guard)) return;
                       try {
                         await onApproveGuardAccount(guard.id);
                       } catch (err) {
@@ -485,15 +487,40 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : activationChecklist.missingGraceCredentials.length > 0
-                        ? `Missing: ${activationChecklist.missingGraceCredentials.join(', ')} — 48h grace`
-                        : 'Activate guard profile'
+                      : 'Approve guard profile'
                   }
                 >
-                  Approve guard profile
+                  Approve profile
                 </button>
               )}
-              {canSuspend && guardAccountStatus === 'pending' && onDeleteGuard && (
+              {guardAccountStatus === 'approved' && onActivateGuardAccount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void (async () => {
+                      if (!guardCanStaffActivateAccount(guard)) return;
+                      if (!promptStaffGuardProfileApproval(guard)) return;
+                      try {
+                        await onActivateGuardAccount(guard.id);
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Could not activate account.');
+                      }
+                    })();
+                  }}
+                  disabled={!guardCanStaffActivateAccount(guard)}
+                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  title={
+                    guardCanStaffActivateAccount(guard)
+                      ? activationChecklist.missingGraceCredentials.length > 0
+                        ? `Missing: ${activationChecklist.missingGraceCredentials.join(', ')} — 48h grace`
+                        : 'Verify guard card and activate account'
+                      : activationChecklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
+                  }
+                >
+                  Activate account
+                </button>
+              )}
+              {canSuspend && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && onDeleteGuard && (
                 <button
                   type="button"
                   onClick={() => void handleDeleteGuard()}
@@ -583,7 +610,7 @@ export function StaffGuardDetailPanel({
 
           {editing ? renderPendingCertActions() : (
             <section className="staff-detail-section space-y-3">
-              {!guard.isStaff && guardAccountStatus === 'pending' && (
+              {!guard.isStaff && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && (
                 <StaffGuardActivationChecklistView guard={guard} />
               )}
               <GuardCredentialsPanel

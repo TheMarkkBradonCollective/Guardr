@@ -26,6 +26,7 @@ function guardPathwayBadgeTone(status: GuardDisplayStatus): 'default' | 'primary
 
 function guardAccountBadgeTone(status: GuardUserStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   if (status === 'active') return 'success';
+  if (status === 'approved') return 'primary';
   if (status === 'pending') return 'warning';
   return 'danger';
 }
@@ -56,6 +57,7 @@ interface StaffGuardsPanelProps {
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,
@@ -100,6 +102,7 @@ export function StaffGuardsPanel({
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -167,6 +170,7 @@ export function StaffGuardsPanel({
         onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
         onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
         onApproveGuardAccount,
+        onActivateGuardAccount,
         onDeleteGuard,
         onSubmitIdentityVerification: onSubmitIdentityVerification
           ? (payload) => onSubmitIdentityVerification(selected.id, payload)

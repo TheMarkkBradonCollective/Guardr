@@ -1,5 +1,6 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
+import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import {
   guardHasVerifiedIdForWork,
@@ -45,6 +46,7 @@ function OptionalNote({ label, detail }: { label: string; detail: string }) {
 
 export function GuardActivationChecklistView({ guard, compact = false }: GuardActivationChecklistProps) {
   const checklist = getGuardActivationChecklist(guard);
+  const approved = isGuardAccountApproved(guard);
 
   if (compact) {
     return (
@@ -58,40 +60,48 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         <WfBadge tone={guardMeetsPtaUofTraining(guard) ? 'success' : 'default'}>
           PTA/UOF {guardMeetsPtaUofTraining(guard) ? 'on file' : 'needed'}
         </WfBadge>
-        {checklist.canActivate && <WfBadge tone="primary">Ready to approve</WfBadge>}
+        {approved && <WfBadge tone="primary">Profile approved</WfBadge>}
+        {checklist.canActivate && !approved && <WfBadge tone="primary">Ready for approval</WfBadge>}
       </div>
     );
   }
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">Required to work</p>
+      <p className="text-sm font-semibold">{approved ? 'Awaiting account activation' : 'Your application'}</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Verified government ID, valid BSIS Guard Card, and 8-hour PTA/UOF training must be on file before staff can
-        approve your profile.
+        Upload your government ID, BSIS Guard Card, and other credentials in your profile — you can add everything at
+        once. Staff reviews in order: verified ID to approve your profile, then your guard card to activate your
+        account.
       </p>
       <div className="app-checklist-steps">
         <StepRow
-          done={guardHasVerifiedIdForWork(guard)}
-          label="Government ID (verified)"
+          done={approved || guardHasVerifiedIdForWork(guard)}
+          label="1. Government ID — profile approval"
           detail={
-            checklist.idVerified
-              ? guardHasVerifiedIdForWork(guard)
-                ? 'Verified by staff — tap Government ID in Credentials to view'
-                : 'Verified but expired — update in Credentials'
-              : checklist.idSubmitted
-                ? 'Submitted — awaiting staff verification'
-                : 'Upload in Credentials — tap Government ID'
+            approved
+              ? 'Profile approved — ID verified'
+              : checklist.idVerified
+                ? guardHasVerifiedIdForWork(guard)
+                  ? 'Verified by staff — awaiting profile approval'
+                  : 'Verified but expired — update in Credentials'
+                : checklist.idSubmitted
+                  ? 'Submitted — awaiting staff verification'
+                  : 'Upload in Credentials — tap Government ID'
           }
         />
         <StepRow
           done={guardMeetsLevel1(guard)}
-          label="BSIS Guard Card (valid)"
+          label="2. BSIS Guard Card — account activation"
           detail={
             guardMeetsLevel1(guard)
-              ? 'Valid guard card on file'
+              ? approved
+                ? 'Valid guard card on file — staff can activate your account'
+                : 'Valid guard card on file — staff will verify at activation'
               : checklist.guardCardSubmitted
-                ? 'On file — must be current and valid to work'
+                ? approved
+                  ? 'On file — staff must confirm valid before activation'
+                  : 'On file — verified after profile approval'
                 : 'Upload in the Guard Card section of your profile'
           }
         />
@@ -101,17 +111,23 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           detail={
             guardMeetsPtaUofTraining(guard)
               ? 'PTA/UOF training on file'
-              : `Upload in Credentials — ${PTA_UOF_UPLOAD_GUIDANCE}`
+              : `Required to work field jobs — upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
           }
         />
         <OptionalNote
           label="Add extra credentials (optional)"
-          detail="Firearms permits, medical certs, FEMA, and more can be added in your profile anytime — not required for profile approval."
+          detail="Firearms permits, medical certs, FEMA, and more can be added anytime — not required for profile approval or activation."
         />
       </div>
-      {checklist.canActivate && (
+      {!approved && checklist.canStaffApprove && (
         <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
-          All required-to-work items complete — staff can approve your profile.
+          ID verified — staff can approve your profile. You can keep uploading guard card and other credentials while
+          you wait.
+        </p>
+      )}
+      {approved && !guardMeetsLevel1(guard) && (
+        <p className="text-xs text-amber-400 font-medium pt-3 border-t border-brand-border mt-3">
+          Upload a valid BSIS Guard Card so staff can activate your account.
         </p>
       )}
     </div>

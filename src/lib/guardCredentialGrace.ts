@@ -75,7 +75,7 @@ export function applyExpiredCredentialGrace(guard: SecurityGuard, state = 'CA'):
   }
   return {
     ...guard,
-    userStatus: 'pending',
+    userStatus: 'approved',
     ...guardCredentialGraceFieldsCleared(),
   };
 }
@@ -87,7 +87,7 @@ export function processGuardCredentialGraceBatch(
   return guards.map((guard) => applyExpiredCredentialGrace(guard, state));
 }
 
-export function guardCredentialGracePatchForApproval(
+export function guardCredentialGracePatchForActivation(
   guard: SecurityGuard,
   state = 'CA'
 ): Pick<SecurityGuard, 'credentialGraceDeadline' | 'credentialGraceMissing'> {
@@ -98,6 +98,9 @@ export function guardCredentialGracePatchForApproval(
     credentialGraceMissing: missing,
   };
 }
+
+/** @deprecated Use guardCredentialGracePatchForActivation */
+export const guardCredentialGracePatchForApproval = guardCredentialGracePatchForActivation;
 
 export function guardCredentialGracePatchAfterCredentialChange(
   guard: SecurityGuard,

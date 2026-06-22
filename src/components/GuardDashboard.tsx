@@ -45,7 +45,7 @@ import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
-import { getGuardUserStatus, isGuardAccountPending } from '../lib/accountStatus';
+import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -536,7 +536,7 @@ export function GuardDashboard({
   };
 
   const userStatus = getGuardUserStatus(guard);
-  const accountPending = isGuardAccountPending(guard);
+  const accountPreActive = isGuardAccountPreActive(guard);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-bg p-6">
@@ -561,7 +561,7 @@ export function GuardDashboard({
 
   const guardMainPanel = (
     <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
-      {!accountPending && activeTab !== 'profile' && (
+      {!accountPreActive && activeTab !== 'profile' && (
         <GuardCredentialGraceBanner guard={guard} onOpenCredentials={() => setTab('profile')} />
       )}
       <div className="relative flex-1 min-h-0">
@@ -798,7 +798,7 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPending && activeTab !== 'profile' && activeTab !== 'support';
+  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support';
   const shellFullBleed = !showPendingGate && activeTab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (

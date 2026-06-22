@@ -65,10 +65,11 @@ import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
   getPendingGuardAccountReviews,
+  guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
 } from './lib/guardAccountActivation';
 import {
-  guardCredentialGracePatchForApproval,
+  guardCredentialGracePatchForActivation,
   processGuardCredentialGraceBatch,
   syncGuardCredentialGraceState,
 } from './lib/guardCredentialGrace';
@@ -2492,20 +2493,55 @@ export default function App() {
   const handleApproveGuardAccount = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
-    const blockers = guardAccountActivationBlockers(guard);
+    const blockers = guardAccountApprovalBlockers(guard);
     if (blockers.length > 0) {
       throw new Error(`Cannot approve profile yet:\n• ${blockers.join('\n• ')}`);
     }
 
-    const gracePatch = guardCredentialGracePatchForApproval(guard);
     const approvedGuard: SecurityGuard = {
+      ...guard,
+      userStatus: 'approved',
+      verified: true,
+      credentialGraceDeadline: undefined,
+      credentialGraceMissing: undefined,
+    };
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          user_status: 'approved',
+          verified: true,
+          credential_grace_deadline: null,
+          credential_grace_missing: null,
+        })
+        .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
+        throw new Error('Could not approve guard profile. Please try again.');
+      }
+    }
+  };
+
+  const handleActivateGuardAccount = async (guardId: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) throw new Error('Guard not found.');
+    const blockers = guardAccountActivationBlockers(guard);
+    if (blockers.length > 0) {
+      throw new Error(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+    }
+
+    const gracePatch = guardCredentialGracePatchForActivation(guard);
+    const activeGuard: SecurityGuard = {
       ...guard,
       userStatus: 'active',
       verified: true,
       ...gracePatch,
     };
 
-    setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
       const { error } = await supabase
@@ -2519,7 +2555,7 @@ export default function App() {
         .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not approve guard profile. Please try again.');
+        throw new Error('Could not activate guard account. Please try again.');
       }
     }
   };
@@ -4830,6 +4866,7 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
+          onActivateGuardAccount={handleActivateGuardAccount}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}

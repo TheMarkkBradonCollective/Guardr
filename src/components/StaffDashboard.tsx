@@ -87,6 +87,7 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
+  onActivateGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onSubmitGuardIdentityVerification?: (
@@ -204,6 +205,7 @@ export function StaffDashboard({
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onDeleteGuardAccount,
   onDeleteClientAccount,
   onSubmitGuardIdentityVerification,
@@ -407,6 +409,7 @@ export function StaffDashboard({
             onApproveGuardApplication={onApproveGuardApplication}
             onApproveClient={onApproveClient}
             onApproveGuardAccount={onApproveGuardAccount}
+            onActivateGuardAccount={onActivateGuardAccount}
             onApproveIdentityVerification={onApproveGuardIdentityVerification}
             onRejectIdentityVerification={onRejectGuardIdentityVerification}
             onRequestIdentityResubmit={onRequestGuardIdResubmit}
@@ -467,6 +470,7 @@ export function StaffDashboard({
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}

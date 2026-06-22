@@ -1,7 +1,7 @@
 import { Client, SecurityGuard } from '../types';
 
 export type ClientAccountStatus = 'pending' | 'active' | 'suspended';
-export type GuardUserStatus = 'pending' | 'active' | 'suspended' | 'blocked';
+export type GuardUserStatus = 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
 
 export function getClientAccountStatus(client: Pick<Client, 'accountStatus' | 'approved'>): ClientAccountStatus {
   if (client.accountStatus) return client.accountStatus;
@@ -18,15 +18,29 @@ export function isClientAccountActive(client: Pick<Client, 'accountStatus' | 'ap
 
 export function getGuardUserStatus(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): GuardUserStatus {
   if (guard.isStaff) return 'active';
-  return (guard.userStatus as GuardUserStatus) || 'pending';
+  const status = guard.userStatus as GuardUserStatus | undefined;
+  if (status === 'approved' || status === 'active' || status === 'suspended' || status === 'blocked') {
+    return status;
+  }
+  return 'pending';
 }
 
 export function isGuardAccountPending(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
   return !guard.isStaff && getGuardUserStatus(guard) === 'pending';
 }
 
+export function isGuardAccountApproved(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  return !guard.isStaff && getGuardUserStatus(guard) === 'approved';
+}
+
 export function isGuardAccountActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
   return guard.isStaff || getGuardUserStatus(guard) === 'active';
+}
+
+/** Pending or approved — not yet active for field work. */
+export function isGuardAccountPreActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  const status = getGuardUserStatus(guard);
+  return !guard.isStaff && (status === 'pending' || status === 'approved');
 }
 
 export const CLIENT_ACCOUNT_STATUS_LABELS: Record<ClientAccountStatus, string> = {
@@ -37,7 +51,8 @@ export const CLIENT_ACCOUNT_STATUS_LABELS: Record<ClientAccountStatus, string> =
 
 export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
   pending: 'Pending approval',
-  active: 'Approved',
+  approved: 'Approved',
+  active: 'Active',
   suspended: 'Suspended',
   blocked: 'Blocked',
 };

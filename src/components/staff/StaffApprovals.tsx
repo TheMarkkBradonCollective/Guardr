@@ -8,12 +8,15 @@ import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import {
+  getApprovedGuardsAwaitingActivation,
   getGuardActivationChecklist,
   getPendingGuardAccountReviews,
+  guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
   guardActivationSummaryLabel,
 } from '../../lib/guardAccountActivation';
 import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -38,6 +41,7 @@ interface StaffApprovalsProps {
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onRequestIdentityResubmit?: (
@@ -79,7 +83,7 @@ const QUEUE_META: Record<
   },
   accounts: {
     title: 'Profile approval',
-    description: 'Approve guard and client sign-ups',
+    description: 'Approve on verified ID, then activate on guard card',
     icon: <Shield className="w-4 h-4" />,
   },
 };
@@ -117,6 +121,7 @@ export function StaffApprovals({
   onApproveGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
@@ -132,6 +137,7 @@ export function StaffApprovals({
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
   const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
+  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
 
@@ -157,13 +163,17 @@ export function StaffApprovals({
       'job-offers': pendingJobs.length,
       applications: jobsWithApplications.length,
       credentials: pendingCerts.length,
-      accounts: pendingGuardAccounts.length + pendingClientAccounts.length,
+      accounts:
+        pendingGuardAccounts.length +
+        approvedGuardsAwaitingActivation.length +
+        pendingClientAccounts.length,
     }),
     [
       pendingJobs.length,
       jobsWithApplications.length,
       pendingCerts.length,
       pendingGuardAccounts.length,
+      approvedGuardsAwaitingActivation.length,
       pendingClientAccounts.length,
     ]
   );
@@ -479,13 +489,23 @@ export function StaffApprovals({
 
     if (activeQueue === 'accounts') {
       if (activeItemId) {
-        const guard = pendingGuardAccounts.find((g) => g.id === activeItemId) ?? null;
+        const guard =
+          pendingGuardAccounts.find((g) => g.id === activeItemId) ??
+          approvedGuardsAwaitingActivation.find((g) => g.id === activeItemId) ??
+          null;
         const client = pendingClientAccounts.find((c) => c.id === activeItemId) ?? null;
 
         if (guard) {
+          const checklist = getGuardActivationChecklist(guard);
+          const isApprovedGuard = isGuardAccountApproved(guard);
+
           return (
             <>
-              <ApprovalBackBar title={guard.name} subtitle="Guard profile approval" onBack={() => setActiveItemId(null)} />
+              <ApprovalBackBar
+                title={guard.name}
+                subtitle={isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
+                onBack={() => setActiveItemId(null)}
+              />
               <div className="staff-detail-pane space-y-4">
                 <p className="text-sm text-brand-text-muted">{guard.email}</p>
                 <StaffGuardActivationChecklistView guard={guard} />
@@ -495,22 +515,18 @@ export function StaffApprovals({
                       Full profile
                     </button>
                   )}
-                  {onApproveGuardAccount && (
+                  {!isApprovedGuard && onApproveGuardAccount && (
                     <button
                       type="button"
                       disabled={!guardCanStaffApproveProfile(guard)}
                       title={
                         guardCanStaffApproveProfile(guard)
-                          ? getGuardActivationChecklist(guard).missingGraceCredentials.length > 0
-                            ? `Missing: ${getGuardActivationChecklist(guard).missingGraceCredentials.join(', ')} — 48h grace`
-                            : 'Activate guard profile'
-                          : getGuardActivationChecklist(guard).staffApprovalBlockers.join(' · ') ||
-                            'Verified ID and guard card required to activate'
+                          ? 'Verify government ID and approve profile'
+                          : checklist.staffApprovalBlockers.join(' · ') || 'Verified government ID required'
                       }
                       onClick={() => {
                         void (async () => {
                           if (!guardCanStaffApproveProfile(guard)) return;
-                          if (!promptStaffGuardProfileApproval(guard)) return;
                           try {
                             await onApproveGuardAccount(guard.id);
                             setActiveItemId(null);
@@ -522,6 +538,34 @@ export function StaffApprovals({
                       className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1 disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Approve profile
+                    </button>
+                  )}
+                  {isApprovedGuard && onActivateGuardAccount && (
+                    <button
+                      type="button"
+                      disabled={!guardCanStaffActivateAccount(guard)}
+                      title={
+                        guardCanStaffActivateAccount(guard)
+                          ? checklist.missingGraceCredentials.length > 0
+                            ? `Missing: ${checklist.missingGraceCredentials.join(', ')} — 48h grace`
+                            : 'Verify guard card and activate account'
+                          : checklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
+                      }
+                      onClick={() => {
+                        void (async () => {
+                          if (!guardCanStaffActivateAccount(guard)) return;
+                          if (!promptStaffGuardProfileApproval(guard)) return;
+                          try {
+                            await onActivateGuardAccount(guard.id);
+                            setActiveItemId(null);
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Could not activate account.');
+                          }
+                        })();
+                      }}
+                      className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1 disabled:opacity-50"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Activate account
                     </button>
                   )}
                 </div>
@@ -572,7 +616,16 @@ export function StaffApprovals({
                   <p className="font-semibold text-sm truncate">{guard.name}</p>
                   <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
                 </div>
-                <p className="text-xs text-brand-text-muted">{guardActivationSummaryLabel(guard)}</p>
+                <p className="text-xs text-brand-text-muted">Profile approval · {guardActivationSummaryLabel(guard)}</p>
+              </AppItemCard>
+            ))}
+            {approvedGuardsAwaitingActivation.map((guard) => (
+              <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm truncate">{guard.name}</p>
+                  <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                </div>
+                <p className="text-xs text-brand-text-muted">Account activation · {guardActivationSummaryLabel(guard)}</p>
               </AppItemCard>
             ))}
             {pendingClientAccounts.map((client) => (

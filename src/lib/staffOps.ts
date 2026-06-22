@@ -5,7 +5,7 @@ import {
 } from './approvalSubmissions';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
-import { getPendingGuardAccountReviews } from './guardAccountActivation';
+import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
@@ -161,7 +161,9 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingGuardAccounts = getPendingGuardAccountReviews(guards).length;
+  const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
+  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
+  const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingApprovals =
@@ -365,14 +367,16 @@ export function buildOverviewActionQueue(
     });
   }
 
-  const pendingGuardAccounts = getPendingGuardAccountReviews(guards).length;
+  const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
+  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
+  const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
   const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
   const accountQueueCount = pendingGuardAccounts + pendingClientAccounts;
   if (accountQueueCount > 0) {
     items.push({
       id: 'pending-accounts',
       title: 'Approve guard and client profiles',
-      description: 'Review sign-ups after required-to-work items are complete',
+      description: 'Verify ID to approve profile, then guard card to activate account',
       count: accountQueueCount,
       section: 'approvals',
       approvalQueue: 'accounts',
@@ -701,7 +705,7 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
-  return getPendingGuardAccountReviews(guards);
+  return [...getPendingGuardAccountReviews(guards), ...getApprovedGuardsAwaitingActivation(guards)];
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {

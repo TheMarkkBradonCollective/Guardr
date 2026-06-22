@@ -206,7 +206,7 @@ export interface SecurityGuard {
   hourlyRateRequirement?: number;
   isStaff?: boolean;
   staffRole?: StaffRole;
-  userStatus?: 'pending' | 'active' | 'suspended' | 'blocked';
+  userStatus?: 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
   themePreference?: 'dark' | 'light' | 'grey';
   stripeConnectAccountId?: string;

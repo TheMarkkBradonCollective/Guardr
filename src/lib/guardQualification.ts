@@ -37,7 +37,7 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 /** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
-import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+import { getGuardUserStatus, isGuardAccountActive, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
   guardCredentialGraceExpired,
@@ -54,7 +54,7 @@ import {
 
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
   const userStatus = getGuardUserStatus(guard);
-  if (userStatus === 'pending') return 'inactive';
+  if (userStatus === 'pending' || userStatus === 'approved') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
   return guardCanWorkFieldJobs(guard, state) ? 'active' : 'inactive';
@@ -95,10 +95,13 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (guard.isStaff) {
     return 'Staff accounts cannot work field jobs.';
   }
-  if (isGuardAccountPending(guard)) {
+  if (isGuardAccountPreActive(guard)) {
     const checklist = getGuardActivationChecklist(guard);
     if (!checklist.idSubmitted || !checklist.guardCardSubmitted) {
-      return 'Submit your government ID and BSIS Guard Card in your profile (ID verification and Guard Card sections). Staff will verify both before activating your account.';
+      return 'Submit your government ID and BSIS Guard Card in your profile (ID verification and Guard Card sections). Staff will verify both before approving your profile.';
+    }
+    if (isGuardAccountApproved(guard)) {
+      return 'Your profile is approved — Guardr staff will activate your account so you can work jobs.';
     }
     if (!checklist.canActivate) {
       return 'Your ID and Guard Card are under staff review. You will be notified when your profile is approved.';
