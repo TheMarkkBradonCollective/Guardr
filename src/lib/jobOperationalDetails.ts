@@ -32,7 +32,12 @@ export function normalizeJobOperationalDetails(raw: unknown): JobOperationalDeta
     doorsOpenTime: trimOptional(source.doorsOpenTime),
     doorsCloseTime: trimOptional(source.doorsCloseTime),
     curfewTime: trimOptional(source.curfewTime),
-    smokingAreaDetails: trimOptional(source.smokingAreaDetails),
+    smokingAreaLocation: trimOptional(source.smokingAreaLocation),
+    smokingAreaOpenTime: trimOptional(source.smokingAreaOpenTime),
+    smokingAreaCloseTime: trimOptional(source.smokingAreaCloseTime),
+    smokingAreaRules:
+      trimOptional(source.smokingAreaRules) ?? trimOptional(source.smokingAreaDetails),
+    smokingAreaGuardNotes: trimOptional(source.smokingAreaGuardNotes),
     barDetails: trimOptional(source.barDetails),
     barLastCallTime: trimOptional(source.barLastCallTime),
     barCloseTime: trimOptional(source.barCloseTime),

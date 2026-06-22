@@ -101,9 +101,25 @@ export function JobOperationalBriefingProfile({
           </>
         </DetailField>
       )}
-      <DetailField icon={<MapPin className="w-3.5 h-3.5" />} title="Smoking area">
-        {d.smokingAreaDetails}
-      </DetailField>
+      {(d.smokingAreaLocation ||
+        d.smokingAreaOpenTime ||
+        d.smokingAreaCloseTime ||
+        d.smokingAreaRules ||
+        d.smokingAreaGuardNotes) && (
+        <DetailField icon={<MapPin className="w-3.5 h-3.5" />} title="Smoking area">
+          <>
+            {d.smokingAreaLocation && <p>Location: {d.smokingAreaLocation}</p>}
+            {(d.smokingAreaOpenTime || d.smokingAreaCloseTime) && (
+              <p>
+                Hours:{' '}
+                {[d.smokingAreaOpenTime, d.smokingAreaCloseTime].filter(Boolean).join(' – ')}
+              </p>
+            )}
+            {d.smokingAreaRules && <p>Guest rules: {d.smokingAreaRules}</p>}
+            {d.smokingAreaGuardNotes && <p>Guard notes: {d.smokingAreaGuardNotes}</p>}
+          </>
+        </DetailField>
+      )}
 
       <DetailField icon={<Wine className="w-3.5 h-3.5" />} title="Bar details">
         {d.barDetails}

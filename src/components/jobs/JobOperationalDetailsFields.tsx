@@ -202,10 +202,37 @@ export function JobOperationalDetailsFields({ value, onChange }: JobOperationalD
           <TimeField label="Curfew" value={value.curfewTime} onChange={(v) => set('curfewTime', v)} />
         </div>
         <TextField
-          label="Smoking area"
-          value={value.smokingAreaDetails}
-          onChange={(v) => set('smokingAreaDetails', v)}
-          placeholder="Location, hours, escort rules..."
+          label="Smoking area location"
+          value={value.smokingAreaLocation}
+          onChange={(v) => set('smokingAreaLocation', v)}
+          placeholder="e.g. North patio, rear lot behind kitchen"
+          rows={2}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <TimeField
+            label="Smoking area opens"
+            value={value.smokingAreaOpenTime}
+            onChange={(v) => set('smokingAreaOpenTime', v)}
+          />
+          <TimeField
+            label="Smoking area closes"
+            value={value.smokingAreaCloseTime}
+            onChange={(v) => set('smokingAreaCloseTime', v)}
+          />
+        </div>
+        <TextField
+          label="Smoking rules for guests"
+          value={value.smokingAreaRules}
+          onChange={(v) => set('smokingAreaRules', v)}
+          placeholder="Escort required, wristband, re-entry line, distance from doors..."
+          rows={2}
+        />
+        <TextField
+          label="Guard coverage / post notes"
+          value={value.smokingAreaGuardNotes}
+          onChange={(v) => set('smokingAreaGuardNotes', v)}
+          placeholder="Assigned post, patrol interval, conflict de-escalation..."
+          rows={2}
         />
       </Section>
 
