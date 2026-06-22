@@ -18,7 +18,7 @@ import {
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
-import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
@@ -74,7 +74,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
   const [hourlyRate, setHourlyRate] = useState(30);
   const [guardsNeeded, setGuardsNeeded] = useState(1);
   const [assignGuardId, setAssignGuardId] = useState('');
-  const [listing, setListing] = useState<JobListingFields>(() => serviceListingDefaults('standing-guard'));
+  const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
@@ -113,7 +113,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
     setHourlyRate(30);
     setGuardsNeeded(1);
     setAssignGuardId('');
-    setListing(serviceListingDefaults('standing-guard'));
+    setListing({ ...EMPTY_LISTING_FIELDS });
     setOperational(EMPTY_JOB_OPERATIONAL_DETAILS);
     setLatitude(undefined);
     setLongitude(undefined);
@@ -253,14 +253,6 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
             onChange={(e) => {
               const id = e.target.value as ClientServiceId;
               setServiceId(id);
-              const svc = CLIENT_SERVICE_OPTIONS.find((s) => s.id === id);
-              setListing(
-                serviceListingDefaults(id, {
-                  siteName,
-                  address,
-                  serviceLabel: svc?.label,
-                })
-              );
             }}
             className="uber-input w-full"
           >
@@ -427,7 +419,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
         )}
 
         <div className="sm:col-span-2 border-t border-brand-border pt-4">
-          <JobPostOrdersFields value={listing} onChange={setListing} />
+          <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
           <JobOperationalDetailsFields value={operational} onChange={setOperational} />
         </div>
       </div>

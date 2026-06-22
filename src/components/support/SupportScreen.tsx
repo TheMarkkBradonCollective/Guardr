@@ -32,7 +32,7 @@ import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { AppPageTransition } from '../ui/motion/AppMotion';
 import { ArrowLeft, ChevronRight, FileText, LifeBuoy } from 'lucide-react';
 
-type SupportView = 'home' | 'report' | 'thread';
+type SupportView = 'home' | 'report' | 'thread' | 'compose-chat';
 type SupportSection = 'support' | 'reports';
 
 interface SupportScreenProps {
@@ -66,6 +66,8 @@ export function SupportScreen({
   const [reportCategory, setReportCategory] = useState<SupportTicketCategory>('general');
   const [reportPriority, setReportPriority] = useState<SupportPriority>('normal');
   const [relatedRequestId, setRelatedRequestId] = useState('');
+  const [chatSubject, setChatSubject] = useState('');
+  const [chatBody, setChatBody] = useState('');
 
   const myTickets = useMemo(() => ticketsForUser(tickets, currentUser), [tickets, currentUser]);
   const chatTickets = useMemo(() => myTickets.filter((t) => t.kind === 'chat'), [myTickets]);
@@ -100,18 +102,27 @@ export function SupportScreen({
     setView('thread');
   };
 
-  const startChat = async (defaults?: Partial<CreateSupportTicketInput>) => {
+  const startChat = () => {
+    if (activeChatTicket) {
+      openThread(activeChatTicket.id);
+      return;
+    }
+    setChatSubject('');
+    setChatBody('');
+    setSection('support');
+    setView('compose-chat');
+  };
+
+  const handleSubmitChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatSubject.trim() || !chatBody.trim()) return;
     setSubmitting(true);
     try {
-      if (activeChatTicket) {
-        openThread(activeChatTicket.id);
-        return;
-      }
       const ticketId = await onCreateTicket({
         kind: 'chat',
-        subject: defaults?.subject ?? 'Message to Guardr staff',
-        category: defaults?.category ?? 'general',
-        body: defaults?.body ?? 'Hi — I need help from the Guardr team.',
+        subject: chatSubject.trim(),
+        category: 'general',
+        body: chatBody.trim(),
         priority: 'normal',
       });
       if (ticketId) openThread(ticketId);
@@ -167,6 +178,47 @@ export function SupportScreen({
       <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
     </button>
   );
+
+  if (view === 'compose-chat') {
+    return (
+      <AppPageTransition motionKey="compose-chat" className="h-full min-h-0">
+        <AppScreen className="pb-8">
+          <div className="flex items-center gap-2 px-3 pt-2 mb-2">
+            {backButton()}
+            <h1 className="text-[1.75rem] font-bold tracking-tight">Contact support</h1>
+          </div>
+          <p className="text-sm text-brand-text-muted px-5 mb-6">
+            Tell the Guardr team what you need — we will reply in this thread.
+          </p>
+          <form onSubmit={(e) => void handleSubmitChat(e)} className="px-5 space-y-4">
+            <div>
+              <label className="uber-label block mb-1">Subject</label>
+              <input
+                value={chatSubject}
+                onChange={(e) => setChatSubject(e.target.value)}
+                className="uber-input w-full"
+                placeholder="e.g. Question about my shift"
+                required
+              />
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Message</label>
+              <textarea
+                value={chatBody}
+                onChange={(e) => setChatBody(e.target.value)}
+                className="uber-input w-full min-h-[140px] resize-y"
+                placeholder="Describe what you need help with..."
+                required
+              />
+            </div>
+            <button type="submit" disabled={submitting} className="w-full app-button-primary disabled:opacity-50">
+              Send to Guardr staff
+            </button>
+          </form>
+        </AppScreen>
+      </AppPageTransition>
+    );
+  }
 
   if (view === 'thread' && activeTicket) {
     const isReport = activeTicket.kind === 'report';
@@ -320,7 +372,7 @@ export function SupportScreen({
           <>
             <AppDashboardZone title="Contact support">
               <AppItemCardStack>
-                <AppItemCard onClick={() => !submitting && void startChat()}>
+                <AppItemCard onClick={() => !submitting && startChat()}>
                   <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm">

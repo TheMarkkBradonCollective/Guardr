@@ -19,7 +19,7 @@ import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
-import { buildMarketplaceDescription, JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
@@ -67,9 +67,7 @@ export function RequestSecurityFlow({
   const [customTitle, setCustomTitle] = useState('');
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
-  const [listing, setListing] = useState<JobListingFields>(() =>
-    serviceListingDefaults('standing-guard')
-  );
+  const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
@@ -138,7 +136,7 @@ export function RequestSecurityFlow({
       hourlyRate: effectiveRate,
       guardPay,
       estimatedPayout: estimatedTotal,
-      description: buildMarketplaceDescription(selectedService.label, address, listing.description),
+      description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
       equipmentRequirements: listing.equipmentRequirements.trim(),
       siteInstructions: listing.siteInstructions.trim(),
@@ -186,16 +184,7 @@ export function RequestSecurityFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => {
-                    setServiceId(opt.id);
-                    setListing(
-                      serviceListingDefaults(opt.id, {
-                        siteName,
-                        address,
-                        serviceLabel: opt.label,
-                      })
-                    );
-                  }}
+                  onClick={() => setServiceId(opt.id)}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
@@ -406,7 +395,7 @@ export function RequestSecurityFlow({
             <p className="text-sm text-brand-text-muted">
               Guards review this like a job posting — dress code, equipment, access, and post orders.
             </p>
-            <JobPostOrdersFields value={listing} onChange={setListing} />
+            <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
           </div>
         )}
 
@@ -423,7 +412,7 @@ export function RequestSecurityFlow({
             <JobListingPreview
               job={{
                 title,
-                description: buildMarketplaceDescription(selectedService.label, address, listing.description),
+                description: listing.description.trim(),
                 clientName: 'Your company',
                 clientLogo: 'YOU',
                 siteName: siteName || title,

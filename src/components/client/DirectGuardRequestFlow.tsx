@@ -20,7 +20,7 @@ import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
-import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
@@ -54,9 +54,7 @@ export function DirectGuardRequestFlow({
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, 8));
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
-  const [listing, setListing] = useState<JobListingFields>(() =>
-    serviceListingDefaults('standing-guard')
-  );
+  const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
@@ -122,9 +120,7 @@ export function DirectGuardRequestFlow({
       hourlyRate: effectiveRate,
       guardPay,
       estimatedPayout: estimatedTotal,
-      description:
-        listing.description.trim() ||
-        `Direct assignment request for ${guard.name}. ${selectedService.label} at ${address}.`,
+      description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
       equipmentRequirements: listing.equipmentRequirements.trim(),
       siteInstructions: listing.siteInstructions.trim(),
@@ -184,16 +180,7 @@ export function DirectGuardRequestFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => {
-                    setServiceId(opt.id);
-                    setListing(
-                      serviceListingDefaults(opt.id, {
-                        siteName,
-                        address,
-                        serviceLabel: opt.label,
-                      })
-                    );
-                  }}
+                  onClick={() => setServiceId(opt.id)}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
@@ -323,7 +310,7 @@ export function DirectGuardRequestFlow({
             <p className="text-sm text-brand-text-muted">
               Professional post orders — dress code, equipment, access, and on-site instructions.
             </p>
-            <JobPostOrdersFields value={listing} onChange={setListing} />
+            <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
           </div>
         )}
 

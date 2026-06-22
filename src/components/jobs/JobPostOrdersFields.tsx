@@ -1,13 +1,22 @@
 import React from 'react';
-import { JobListingFields } from '../../lib/jobListing';
+import { ClientServiceId } from '../../lib/clientRequestFlow';
+import { JobListingFields, serviceListingPlaceholders } from '../../lib/jobListing';
 
 interface JobPostOrdersFieldsProps {
   value: JobListingFields;
   onChange: (next: JobListingFields) => void;
   showContact?: boolean;
+  serviceId?: ClientServiceId;
 }
 
-export function JobPostOrdersFields({ value, onChange, showContact = true }: JobPostOrdersFieldsProps) {
+export function JobPostOrdersFields({
+  value,
+  onChange,
+  showContact = true,
+  serviceId = 'standing-guard',
+}: JobPostOrdersFieldsProps) {
+  const placeholders = serviceListingPlaceholders(serviceId);
+
   const set = <K extends keyof JobListingFields>(key: K, val: JobListingFields[K]) => {
     onChange({ ...value, [key]: val });
   };
@@ -23,7 +32,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.description}
           onChange={(e) => set('description', e.target.value)}
           rows={4}
-          placeholder="Describe the assignment, environment, and professional standards..."
+          placeholder={placeholders.description}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>
@@ -34,7 +43,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.uniformRequirements}
           onChange={(e) => set('uniformRequirements', e.target.value)}
           rows={3}
-          placeholder="e.g. Black tactical pants, polo, duty belt, polished boots..."
+          placeholder={placeholders.uniformRequirements}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>
@@ -45,7 +54,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.equipmentRequirements}
           onChange={(e) => set('equipmentRequirements', e.target.value)}
           rows={3}
-          placeholder="e.g. Radio, flashlight, notepad, vehicle if applicable..."
+          placeholder={placeholders.equipmentRequirements}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>
@@ -56,7 +65,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.siteInstructions}
           onChange={(e) => set('siteInstructions', e.target.value)}
           rows={4}
-          placeholder="Check-in procedure, patrol routes, reporting, emergency contacts..."
+          placeholder={placeholders.siteInstructions}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>
@@ -92,7 +101,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.parkingInstructions}
           onChange={(e) => set('parkingInstructions', e.target.value)}
           rows={2}
-          placeholder="Where guards park, load-in, or meet motorcade..."
+          placeholder={placeholders.parkingInstructions}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>
@@ -103,7 +112,7 @@ export function JobPostOrdersFields({ value, onChange, showContact = true }: Job
           value={value.accessInstructions}
           onChange={(e) => set('accessInstructions', e.target.value)}
           rows={2}
-          placeholder="Gate codes, entrance, ID requirements, escort procedure..."
+          placeholder={placeholders.accessInstructions}
           className="uber-input w-full resize-none rounded-xl"
         />
       </div>

@@ -61,89 +61,95 @@ export const EMPTY_LISTING_FIELDS: JobListingFields = {
   accessInstructions: '',
 };
 
-export function serviceListingDefaults(
-  serviceId: ClientServiceId,
-  context?: { siteName?: string; address?: string; serviceLabel?: string }
-): JobListingFields {
-  const site = context?.siteName || context?.address || 'the site';
-  const label = context?.serviceLabel || 'Security';
+export interface JobListingPlaceholders {
+  description: string;
+  uniformRequirements: string;
+  equipmentRequirements: string;
+  siteInstructions: string;
+  parkingInstructions: string;
+  accessInstructions: string;
+}
 
-  const base: JobListingFields = {
-    description: `${label} coverage at ${site}. Professional appearance and clear communication with site leadership required.`,
-    uniformRequirements:
-      'Black tactical pants or slacks, black belt, black duty boots or dress shoes, company-issued or plain black polo/shirt. Name badge visible when on post.',
-    equipmentRequirements:
-      'Duty belt, flashlight, radio (if issued), notepad and pen. Client may issue additional gear on arrival.',
-    siteInstructions:
-      `Report to the site contact on arrival. Confirm post orders, patrol routes, and emergency procedures before beginning coverage.`,
-    contactName: '',
-    contactPhone: '',
-    parkingInstructions: 'Confirm parking with site contact on arrival.',
-    accessInstructions: 'Check in at the main entrance or security desk. Have government ID ready.',
-  };
+const BASE_LISTING_PLACEHOLDERS: JobListingPlaceholders = {
+  description: 'Describe the assignment, environment, and professional standards...',
+  uniformRequirements: 'e.g. Black tactical pants, polo, duty belt, polished boots...',
+  equipmentRequirements: 'e.g. Radio, flashlight, notepad, vehicle if applicable...',
+  siteInstructions: 'Check-in procedure, patrol routes, reporting, emergency contacts...',
+  parkingInstructions: 'Where guards park, load-in, or meet motorcade...',
+  accessInstructions: 'Gate codes, entrance, ID requirements, escort procedure...',
+};
 
+/** Grey example text only — never written into form values. */
+export function serviceListingPlaceholders(serviceId: ClientServiceId): JobListingPlaceholders {
   switch (serviceId) {
     case 'executive-protection':
       return {
-        ...base,
-        description: `Executive protection detail at ${site}. Discreet, professional close-protection coverage for principals, executives, or VIP movement.`,
+        description:
+          'e.g. Executive protection detail — discreet close coverage for principals or VIP movement',
         uniformRequirements:
-          'Low-profile executive attire: dark suit or business casual as directed. Concealed carry rig if armed. No visible tactical branding unless client requests.',
-        equipmentRequirements:
-          'Covert earpiece, radio, flashlight, notepad. Vehicle coordination may be required. Advance work and route planning per client briefing.',
+          'e.g. Low-profile suit or business casual; concealed carry rig if armed',
+        equipmentRequirements: 'e.g. Covert earpiece, radio, flashlight, notepad',
         siteInstructions:
-          `Advance coordination required. Confirm principal schedule, motorcade plan, venue access, and emergency rally points. Maintain confidentiality at all times.`,
-        parkingInstructions: 'Valet, garage, or motorcade staging as directed by client or advance team.',
-        accessInstructions: 'Coordinate entry through client POC or venue security. No social media or photos on detail.',
+          'e.g. Confirm principal schedule, motorcade plan, venue access, rally points',
+        parkingInstructions: 'e.g. Valet, garage, or motorcade staging as directed',
+        accessInstructions: 'e.g. Coordinate entry through client POC or venue security',
       };
     case 'event':
       return {
-        ...base,
-        description: `Event security at ${site}. Crowd management, access control, and VIP lane support.`,
-        uniformRequirements:
-          'Event-appropriate black uniform or client-branded attire. Visible credential and professional grooming.',
-        equipmentRequirements: 'Radio, flashlight, crowd control barriers coordination, incident report forms.',
+        description: 'e.g. Event security — crowd management, access control, VIP lane support',
+        uniformRequirements: 'e.g. Event-appropriate black uniform or client-branded attire',
+        equipmentRequirements: 'e.g. Radio, flashlight, crowd control coordination',
         siteInstructions:
-          'Review event layout, credentialing levels, artist/VIP zones, and medical/emergency contacts before doors open.',
+          'e.g. Review event layout, credentialing levels, VIP zones, medical contacts',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
       };
     case 'fire-watch':
       return {
-        ...base,
-        description: `Fire watch compliance post at ${site}. Active patrol during hot work or system impairment.`,
-        uniformRequirements: 'High-visibility vest over black uniform. Steel-toe boots if required by site.',
-        equipmentRequirements: 'Flashlight, radio, fire extinguisher familiarity, hourly patrol log.',
-        siteInstructions:
-          'Document patrol rounds per fire marshal requirements. Know alarm pull stations and muster points.',
+        description: 'e.g. Fire watch during hot work or system impairment',
+        uniformRequirements: 'e.g. High-visibility vest over black uniform; steel-toe if required',
+        equipmentRequirements: 'e.g. Flashlight, radio, hourly patrol log',
+        siteInstructions: 'e.g. Document patrol rounds; know alarm pulls and muster points',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
       };
     case 'construction':
       return {
-        ...base,
-        description: `Construction site security at ${site}. Equipment protection, access control, and after-hours patrol.`,
-        uniformRequirements: 'ANSI-compliant vest when required, black boots, hard hat if mandated by GC.',
-        equipmentRequirements: 'Flashlight, radio, gate log, vehicle inspection checklist if applicable.',
-        siteInstructions:
-          'Lock all gates after hours. Log all contractor vehicles. Report trespassers immediately.',
+        description: 'e.g. Construction site — equipment protection, access control, after-hours patrol',
+        uniformRequirements: 'e.g. ANSI vest when required, black boots, hard hat if mandated',
+        equipmentRequirements: 'e.g. Flashlight, radio, gate log, vehicle checklist',
+        siteInstructions: 'e.g. Lock gates after hours; log contractor vehicles',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
       };
     case 'patrol':
       return {
-        ...base,
-        description: `Mobile patrol coverage for ${site}. Perimeter checks and visible deterrence.`,
-        uniformRequirements: 'Standard black security uniform with duty belt. Reflective gear for night patrol if needed.',
-        equipmentRequirements: 'Radio, flashlight, keys/access cards as issued, patrol log.',
-        siteInstructions: 'Complete all checkpoints each round. Note lighting outages, open doors, and hazards.',
+        description: 'e.g. Mobile patrol — perimeter checks and visible deterrence',
+        uniformRequirements: 'e.g. Standard black uniform with duty belt; reflective gear at night',
+        equipmentRequirements: 'e.g. Radio, flashlight, keys/access cards, patrol log',
+        siteInstructions: 'e.g. Complete all checkpoints each round; note hazards',
+        parkingInstructions: BASE_LISTING_PLACEHOLDERS.parkingInstructions,
+        accessInstructions: BASE_LISTING_PLACEHOLDERS.accessInstructions,
       };
     default:
-      return base;
+      return BASE_LISTING_PLACEHOLDERS;
   }
 }
 
+/** @deprecated Use EMPTY_LISTING_FIELDS + serviceListingPlaceholders */
+export function serviceListingDefaults(
+  serviceId: ClientServiceId,
+  _context?: { siteName?: string; address?: string; serviceLabel?: string }
+): JobListingFields {
+  return { ...EMPTY_LISTING_FIELDS };
+}
+
 export function buildMarketplaceDescription(
-  serviceLabel: string,
-  address: string,
+  _serviceLabel: string,
+  _address: string,
   customDescription?: string
 ): string {
-  if (customDescription?.trim()) return customDescription.trim();
-  return `Professional ${serviceLabel.toLowerCase()} coverage at ${address}.`;
+  return customDescription?.trim() ?? '';
 }
 
 export function listingFieldsFromJob(job: Partial<SecurityRequest>): JobListingFields {
