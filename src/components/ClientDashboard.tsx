@@ -54,6 +54,12 @@ interface ClientDashboardProps {
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  jobChatRequestId?: string | null;
+  openJobChat?: boolean;
+  onJobChatRequestIdChange?: (requestId: string | null) => void;
+  onJobChatOpenChange?: (open: boolean) => void;
+  supportTicketId?: string | null;
+  onSupportTicketIdChange?: (ticketId: string | null) => void;
 }
 
 export function ClientDashboard({
@@ -81,6 +87,12 @@ export function ClientDashboard({
   jobChatThreads = [],
   jobChatMessages = [],
   onSendJobChatMessage,
+  jobChatRequestId = null,
+  openJobChat = false,
+  onJobChatRequestIdChange,
+  onJobChatOpenChange,
+  supportTicketId = null,
+  onSupportTicketIdChange,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -235,6 +247,10 @@ export function ClientDashboard({
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
         onSendJobChatMessage={onSendJobChatMessage}
+        initialChatRequestId={jobChatRequestId}
+        initialChatOpen={openJobChat}
+        onChatRequestIdChange={onJobChatRequestIdChange}
+        onChatOpenChange={onJobChatOpenChange}
       />
     );
   }

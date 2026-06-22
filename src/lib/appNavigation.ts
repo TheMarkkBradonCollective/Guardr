@@ -27,6 +27,14 @@ export interface AppRoute {
   clientGuardId?: string;
   /** Client direct-request flow — target guard */
   clientDirectGuardId?: string;
+  /** Job chat thread — opens the conversation directly */
+  jobChatRequestId?: string;
+  /** Support ticket — opens the thread directly */
+  supportTicketId?: string;
+  /** Staff messages hub tab */
+  staffMessageTab?: 'team' | 'jobs';
+  /** Open job chat UI immediately (guard/client) */
+  openJobChat?: boolean;
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
@@ -97,6 +105,10 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const staffEdit = searchParams.get('edit');
   const clientGuardId = searchParams.get('pg');
   const clientDirectGuardId = searchParams.get('dr');
+  const jobChatRequestId = searchParams.get('jc');
+  const supportTicketId = searchParams.get('st');
+  const staffMessageTab = searchParams.get('mtab');
+  const openJobChat = searchParams.get('chat');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
 
@@ -107,6 +119,10 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffEdit === '1' || staffEdit === 'true') nested.staffEdit = true;
   if (clientGuardId) nested.clientGuardId = clientGuardId;
   if (clientDirectGuardId) nested.clientDirectGuardId = clientDirectGuardId;
+  if (jobChatRequestId) nested.jobChatRequestId = jobChatRequestId;
+  if (supportTicketId) nested.supportTicketId = supportTicketId;
+  if (staffMessageTab === 'team' || staffMessageTab === 'jobs') nested.staffMessageTab = staffMessageTab;
+  if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
   if (authView === 'sign-in' || authView === 'sign-up') nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client') nested.authRole = authRole;
 
@@ -122,6 +138,10 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffEdit) params.set('edit', '1');
   if (route.clientGuardId) params.set('pg', route.clientGuardId);
   if (route.clientDirectGuardId) params.set('dr', route.clientDirectGuardId);
+  if (route.jobChatRequestId) params.set('jc', route.jobChatRequestId);
+  if (route.supportTicketId) params.set('st', route.supportTicketId);
+  if (route.staffMessageTab) params.set('mtab', route.staffMessageTab);
+  if (route.openJobChat) params.set('chat', '1');
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
   return params;
@@ -242,5 +262,9 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     staffEdit: undefined,
     clientGuardId: undefined,
     clientDirectGuardId: undefined,
+    jobChatRequestId: undefined,
+    supportTicketId: undefined,
+    staffMessageTab: undefined,
+    openJobChat: undefined,
   };
 }

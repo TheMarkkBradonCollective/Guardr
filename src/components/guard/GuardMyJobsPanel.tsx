@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { JobChatMessage, JobChatThread, SecurityGuard, SessionUser } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
@@ -17,6 +17,10 @@ interface GuardMyJobsPanelProps {
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  initialSelectedJobId?: string | null;
+  initialChatOpen?: boolean;
+  onSelectedJobIdChange?: (jobId: string | null) => void;
+  onChatOpenChange?: (open: boolean) => void;
 }
 
 export function GuardMyJobsPanel({
@@ -27,9 +31,35 @@ export function GuardMyJobsPanel({
   jobChatThreads = [],
   jobChatMessages = [],
   onSendJobChatMessage,
+  initialSelectedJobId = null,
+  initialChatOpen = false,
+  onSelectedJobIdChange,
+  onChatOpenChange,
 }: GuardMyJobsPanelProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedJobId);
+  const [chatOpen, setChatOpen] = useState(initialChatOpen);
+
+  useEffect(() => {
+    if (initialSelectedJobId) {
+      setSelectedId(initialSelectedJobId);
+    }
+  }, [initialSelectedJobId]);
+
+  useEffect(() => {
+    if (initialChatOpen) {
+      setChatOpen(true);
+    }
+  }, [initialChatOpen, initialSelectedJobId]);
+
+  const updateSelectedId = (jobId: string | null) => {
+    setSelectedId(jobId);
+    onSelectedJobIdChange?.(jobId);
+  };
+
+  const updateChatOpen = (open: boolean) => {
+    setChatOpen(open);
+    onChatOpenChange?.(open);
+  };
 
   const selectedJob = useMemo(
     () => [...upcomingJobs, ...pastJobs].find((j) => j.id === selectedId) ?? null,
@@ -45,7 +75,7 @@ export function GuardMyJobsPanel({
           messages={jobChatMessages}
           currentUser={currentUser}
           onSend={(body) => onSendJobChatMessage(selectedJob.id, body)}
-          onBack={() => setChatOpen(false)}
+          onBack={() => updateChatOpen(false)}
         />
       </div>
     );
@@ -55,11 +85,11 @@ export function GuardMyJobsPanel({
     const chatEligible = isJobChatEligible(selectedJob);
     return (
       <div className="guard-scroll-panel flex-1 px-4 py-4 space-y-4">
-        <GuardJobCard job={selectedJob} guard={guard} onClose={() => setSelectedId(null)} />
+        <GuardJobCard job={selectedJob} guard={guard} onClose={() => updateSelectedId(null)} />
         {onSendJobChatMessage && (chatEligible || threadForRequest(jobChatThreads, selectedJob.id)) && (
           <button
             type="button"
-            onClick={() => setChatOpen(true)}
+            onClick={() => updateChatOpen(true)}
             className="w-full app-button-outline !h-11 flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
@@ -84,7 +114,7 @@ export function GuardMyJobsPanel({
             {upcomingJobs.map((job) => (
               <AppItemCard
                 key={job.id}
-                onClick={() => setSelectedId(job.id)}
+                onClick={() => updateSelectedId(job.id)}
                 className="border-brand-primary/30 bg-brand-primary/8"
               >
                 <div className="min-w-0 flex-1 text-left">

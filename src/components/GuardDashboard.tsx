@@ -86,6 +86,12 @@ interface GuardDashboardProps {
   onReportIncident?: (requestId: string) => void | Promise<void>;
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
+  jobChatRequestId?: string | null;
+  openJobChat?: boolean;
+  onJobChatRequestIdChange?: (requestId: string | null) => void;
+  onJobChatOpenChange?: (open: boolean) => void;
+  supportTicketId?: string | null;
+  onSupportTicketIdChange?: (ticketId: string | null) => void;
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
@@ -135,6 +141,12 @@ export function GuardDashboard({
   onReportIncident,
   onRequestCashPayout,
   onRequestStripePayout,
+  jobChatRequestId = null,
+  openJobChat = false,
+  onJobChatRequestIdChange,
+  onJobChatOpenChange,
+  supportTicketId = null,
+  onSupportTicketIdChange,
   variant = 'standalone',
   shiftTab = 'map',
   initialTab = 'map',
@@ -646,6 +658,10 @@ export function GuardDashboard({
             jobChatThreads={jobChatThreads}
             jobChatMessages={jobChatMessages}
             onSendJobChatMessage={onSendJobChatMessage}
+            initialSelectedJobId={jobChatRequestId}
+            initialChatOpen={openJobChat}
+            onSelectedJobIdChange={onJobChatRequestIdChange}
+            onChatOpenChange={onJobChatOpenChange}
           />
         </div>
       )}
@@ -658,6 +674,8 @@ export function GuardDashboard({
             relatedRequests={relatedRequests}
             onCreateTicket={onCreateSupportTicket}
             onSendMessage={onSendSupportMessage}
+            initialTicketId={supportTicketId}
+            onActiveTicketIdChange={onSupportTicketIdChange}
           />
         </div>
       )}

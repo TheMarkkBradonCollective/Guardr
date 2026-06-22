@@ -109,6 +109,7 @@ export async function reportPushEvent(
     siteId?: string;
     location?: string;
     recipientUserId?: string;
+    ticketId?: string;
   }
 ): Promise<void> {
   try {

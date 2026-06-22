@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SessionUser, StaffMessage } from '../../types';
 import { StaffJobChatsPanel } from './StaffJobChatsPanel';
 import { StaffMessengerPanel } from './StaffMessengerPanel';
@@ -18,6 +18,10 @@ interface StaffMessagesHubProps {
   currentUser: SessionUser;
   onSendStaffMessage: (body: string) => void | Promise<void>;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
+  initialTab?: 'team' | 'jobs';
+  onTabChange?: (tab: 'team' | 'jobs') => void;
+  selectedJobChatRequestId?: string | null;
+  onSelectedJobChatRequestIdChange?: (requestId: string | null) => void;
 }
 
 export function StaffMessagesHub({
@@ -29,8 +33,24 @@ export function StaffMessagesHub({
   currentUser,
   onSendStaffMessage,
   onSendJobChat,
+  initialTab = 'team',
+  onTabChange,
+  selectedJobChatRequestId,
+  onSelectedJobChatRequestIdChange,
 }: StaffMessagesHubProps) {
-  const [tab, setTab] = useState<'team' | 'jobs'>('team');
+  const [tab, setTab] = useState<'team' | 'jobs'>(initialTab);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
+  const changeTab = (next: 'team' | 'jobs') => {
+    setTab(next);
+    onTabChange?.(next);
+    if (next === 'team') {
+      onSelectedJobChatRequestIdChange?.(null);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -39,7 +59,7 @@ export function StaffMessagesHub({
           <button
             key={id}
             type="button"
-            onClick={() => setTab(id)}
+            onClick={() => changeTab(id)}
             className={`flex-1 py-2 text-sm font-medium rounded-full border transition-colors ${
               tab === id
                 ? 'bg-brand-primary text-brand-accent-text border-brand-primary'
@@ -65,6 +85,9 @@ export function StaffMessagesHub({
             messages={jobChatMessages}
             currentUser={currentUser}
             onSendJobChat={onSendJobChat}
+            selectedRequestId={selectedJobChatRequestId}
+            onSelectedRequestIdChange={onSelectedJobChatRequestIdChange}
+            initialSelectedRequestId={selectedJobChatRequestId}
           />
         )}
       </div>

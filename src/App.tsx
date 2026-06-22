@@ -251,6 +251,18 @@ export default function App() {
   const [clientDirectGuardId, setClientDirectGuardIdState] = useState<string | null>(
     () => initialRoute?.clientDirectGuardId ?? null
   );
+  const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
+    () => initialRoute?.jobChatRequestId ?? null
+  );
+  const [supportTicketId, setSupportTicketIdState] = useState<string | null>(
+    () => initialRoute?.supportTicketId ?? null
+  );
+  const [staffMessageTab, setStaffMessageTabState] = useState<'team' | 'jobs'>(
+    () => initialRoute?.staffMessageTab ?? 'team'
+  );
+  const [openJobChat, setOpenJobChatState] = useState(
+    () => initialRoute?.openJobChat ?? false
+  );
 
   const buildAppRoute = (overrides: Partial<AppRoute> = {}): AppRoute => {
     const role = currentUser ? appRoleForUser(currentUser) ?? 'client' : 'client';
@@ -266,6 +278,10 @@ export default function App() {
       staffEdit: staffEdit || undefined,
       clientGuardId: clientGuardId ?? undefined,
       clientDirectGuardId: clientDirectGuardId ?? undefined,
+      jobChatRequestId: jobChatRequestId ?? undefined,
+      supportTicketId: supportTicketId ?? undefined,
+      staffMessageTab: staffMessageTab ?? undefined,
+      openJobChat: openJobChat || undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
     };
@@ -283,6 +299,10 @@ export default function App() {
     setStaffEditState(route.staffEdit ?? false);
     setClientGuardIdState(route.clientGuardId ?? null);
     setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
+    setJobChatRequestIdState(route.jobChatRequestId ?? null);
+    setSupportTicketIdState(route.supportTicketId ?? null);
+    if (route.staffMessageTab) setStaffMessageTabState(route.staffMessageTab);
+    setOpenJobChatState(route.openJobChat ?? false);
     if (route.authView) {
       setIsAuthView(true);
       setInitialAuthMode(route.authView);
@@ -296,14 +316,26 @@ export default function App() {
     setClientViewState(view);
     const nextGuardId = view === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = view === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
+    const nextJobChatId = view === 'coverage' ? jobChatRequestId ?? undefined : undefined;
+    const nextSupportId = view === 'support' ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
+    if (view !== 'coverage') {
+      setJobChatRequestIdState(null);
+      setOpenJobChatState(false);
+    }
+    if (view !== 'support') {
+      setSupportTicketIdState(null);
+    }
     syncAppRoute(
       buildAppRoute({
         role: 'client',
         clientView: view,
         clientGuardId: nextGuardId,
         clientDirectGuardId: nextDirectId,
+        jobChatRequestId: nextJobChatId,
+        openJobChat: view === 'coverage' && openJobChat ? true : undefined,
+        supportTicketId: nextSupportId,
       })
     );
   };
@@ -333,7 +365,109 @@ export default function App() {
 
   const setGuardTab = (tab: GuardTab) => {
     setGuardTabState(tab);
-    syncAppRoute(buildAppRoute({ role: 'guard', guardTab: tab }));
+    const keepJobChat = tab === 'myJobs' ? jobChatRequestId ?? undefined : undefined;
+    const keepOpenChat = tab === 'myJobs' && openJobChat ? true : undefined;
+    if (tab !== 'myJobs') {
+      setJobChatRequestIdState(null);
+      setOpenJobChatState(false);
+    }
+    if (tab !== 'support') {
+      setSupportTicketIdState(null);
+    }
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: tab,
+        jobChatRequestId: keepJobChat,
+        openJobChat: keepOpenChat,
+        supportTicketId: tab === 'support' ? supportTicketId ?? undefined : undefined,
+      })
+    );
+  };
+
+  const setJobChatRequestId = (requestId: string | null, options?: { openChat?: boolean }) => {
+    setJobChatRequestIdState(requestId);
+    if (options?.openChat !== undefined) setOpenJobChatState(options.openChat);
+    const role = currentUser ? appRoleForUser(currentUser) : null;
+    if (role === 'staff') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'staff',
+          staffSection: 'messages',
+          staffMessageTab: 'jobs',
+          jobChatRequestId: requestId ?? undefined,
+        })
+      );
+      return;
+    }
+    if (role === 'guard') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'guard',
+          guardTab: 'myJobs',
+          jobChatRequestId: requestId ?? undefined,
+          openJobChat: options?.openChat ?? openJobChat,
+        })
+      );
+      return;
+    }
+    if (role === 'client') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'client',
+          clientView: 'coverage',
+          jobChatRequestId: requestId ?? undefined,
+          openJobChat: options?.openChat ?? true,
+        })
+      );
+    }
+  };
+
+  const setSupportTicketId = (ticketId: string | null) => {
+    setSupportTicketIdState(ticketId);
+    const role = currentUser ? appRoleForUser(currentUser) : null;
+    if (role === 'staff') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'staff',
+          staffSection: 'support',
+          supportTicketId: ticketId ?? undefined,
+        })
+      );
+      return;
+    }
+    if (role === 'guard') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'guard',
+          guardTab: 'support',
+          supportTicketId: ticketId ?? undefined,
+        })
+      );
+      return;
+    }
+    if (role === 'client') {
+      syncAppRoute(
+        buildAppRoute({
+          role: 'client',
+          clientView: 'support',
+          supportTicketId: ticketId ?? undefined,
+        })
+      );
+    }
+  };
+
+  const setStaffMessageTab = (tab: 'team' | 'jobs') => {
+    setStaffMessageTabState(tab);
+    if (tab === 'team') setJobChatRequestIdState(null);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'messages',
+        staffMessageTab: tab,
+        jobChatRequestId: tab === 'jobs' ? jobChatRequestId ?? undefined : undefined,
+      })
+    );
   };
 
   const setStaffSection = (section: StaffSection) => {
@@ -342,11 +476,16 @@ export default function App() {
     const nextClientId = section === 'clients' ? staffClientId ?? undefined : undefined;
     const nextJobId = section === 'jobs' ? staffJobId ?? undefined : undefined;
     const nextTeamId = section === 'team' ? staffTeamId ?? undefined : undefined;
+    const nextJobChatId = section === 'messages' ? jobChatRequestId ?? undefined : undefined;
+    const nextSupportId = section === 'support' ? supportTicketId ?? undefined : undefined;
+    const nextMessageTab = section === 'messages' ? staffMessageTab : undefined;
     const nextEdit = section === 'guards' && nextGuardId ? staffEdit || undefined : undefined;
     setStaffGuardIdState(nextGuardId ?? null);
     setStaffClientIdState(nextClientId ?? null);
     setStaffJobIdState(nextJobId ?? null);
     setStaffTeamIdState(nextTeamId ?? null);
+    if (section !== 'messages') setJobChatRequestIdState(null);
+    if (section !== 'support') setSupportTicketIdState(null);
     if (section !== 'guards') setStaffEditState(false);
     syncAppRoute(
       buildAppRoute({
@@ -357,6 +496,9 @@ export default function App() {
         staffJobId: nextJobId,
         staffTeamId: nextTeamId,
         staffEdit: nextEdit,
+        jobChatRequestId: nextJobChatId,
+        supportTicketId: nextSupportId,
+        staffMessageTab: nextMessageTab,
       })
     );
   };
@@ -3417,11 +3559,13 @@ export default function App() {
       void reportPushEvent(currentUser, {
         type: 'support_message',
         recipientUserId: ticket.userId,
+        ticketId: ticket.id,
         body: `Guardr staff replied: ${body.slice(0, 120)}`,
       });
     } else {
       void reportPushEvent(currentUser, {
         type: 'support_message',
+        ticketId: ticket.id,
         body: `${ticket.userName} (${ticket.userRole}): ${body.slice(0, 100)}`,
       });
       if (ticket.category === 'safety' && ticket.priority === 'urgent') {
@@ -3638,6 +3782,16 @@ export default function App() {
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           onSendJobChatMessage={handleSendJobChatMessage}
+          jobChatRequestId={jobChatRequestId}
+          openJobChat={openJobChat}
+          onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
+          onJobChatOpenChange={(open) => {
+            setOpenJobChatState(open);
+            if (!open) setJobChatRequestId(null);
+            else if (jobChatRequestId) setJobChatRequestId(jobChatRequestId, { openChat: true });
+          }}
+          supportTicketId={supportTicketId}
+          onSupportTicketIdChange={setSupportTicketId}
           onReportIncident={handleReportIncident}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
@@ -3686,6 +3840,8 @@ export default function App() {
               relatedRequests={myRequests}
               onCreateTicket={handleCreateSupportTicket}
               onSendMessage={handleSendSupportMessage}
+              initialTicketId={supportTicketId}
+              onActiveTicketIdChange={setSupportTicketId}
             />
           ) : (
             <ClientDashboard
@@ -3714,6 +3870,16 @@ export default function App() {
               jobChatThreads={jobChatThreads}
               jobChatMessages={jobChatMessages}
               onSendJobChatMessage={handleSendJobChatMessage}
+              jobChatRequestId={jobChatRequestId}
+              openJobChat={openJobChat}
+              onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
+              onJobChatOpenChange={(open) => {
+                setOpenJobChatState(open);
+                if (!open) setJobChatRequestId(null);
+                else if (jobChatRequestId) setJobChatRequestId(jobChatRequestId, { openChat: true });
+              }}
+              supportTicketId={supportTicketId}
+              onSupportTicketIdChange={setSupportTicketId}
             />
           )}
         </ClientAppLayout>
@@ -3740,6 +3906,12 @@ export default function App() {
           onSelectedTeamIdChange={setStaffTeamId}
           staffGuardEdit={staffEdit}
           onStaffGuardEditChange={setStaffEdit}
+          selectedSupportTicketId={supportTicketId}
+          onSelectedSupportTicketIdChange={setSupportTicketId}
+          staffMessageTab={staffMessageTab}
+          onStaffMessageTabChange={setStaffMessageTab}
+          selectedJobChatRequestId={jobChatRequestId}
+          onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}

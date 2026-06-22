@@ -178,10 +178,12 @@ async function deliverToSubscriptions(
     url: payload.url ?? resolveNotificationUrl(payload.type, {
       guardId: payload.guardId,
       requestId: payload.requestId,
+      ticketId: payload.ticketId,
     }),
     siteId: payload.siteId,
     guardId: payload.guardId,
     requestId: payload.requestId,
+    ticketId: payload.ticketId,
     priority: payload.priority,
   });
 

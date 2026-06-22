@@ -134,6 +134,7 @@ export async function handlePushEvent(
     guardName?: string;
     location?: string;
     recipientUserId?: string;
+    ticketId?: string;
   }
 ) {
   const session = await verifySession(db, body);
@@ -190,6 +191,7 @@ export async function handlePushEvent(
   const url = resolveNotificationUrl(body.type, {
     guardId: body.guardId,
     requestId: body.requestId,
+    ticketId: body.ticketId,
   });
 
   const dispatchPayload: PushSendPayload = {
@@ -199,6 +201,7 @@ export async function handlePushEvent(
     url,
     guardId: body.guardId,
     requestId: body.requestId,
+    ticketId: body.ticketId,
     siteId: body.siteId,
     priority: body.type === 'emergency_alert' ? 'high' : 'normal',
   };

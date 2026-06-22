@@ -160,6 +160,12 @@ interface StaffDashboardProps {
   onSelectedTeamIdChange?: (id: string | null) => void;
   staffGuardEdit?: boolean;
   onStaffGuardEditChange?: (editing: boolean) => void;
+  selectedSupportTicketId?: string | null;
+  onSelectedSupportTicketIdChange?: (id: string | null) => void;
+  staffMessageTab?: 'team' | 'jobs';
+  onStaffMessageTabChange?: (tab: 'team' | 'jobs') => void;
+  selectedJobChatRequestId?: string | null;
+  onSelectedJobChatRequestIdChange?: (id: string | null) => void;
 }
 
 export function StaffDashboard({
@@ -235,6 +241,12 @@ export function StaffDashboard({
   onSelectedTeamIdChange,
   staffGuardEdit: controlledStaffGuardEdit,
   onStaffGuardEditChange,
+  selectedSupportTicketId,
+  onSelectedSupportTicketIdChange,
+  staffMessageTab = 'team',
+  onStaffMessageTabChange,
+  selectedJobChatRequestId,
+  onSelectedJobChatRequestIdChange,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -469,6 +481,9 @@ export function StaffDashboard({
             tickets={supportTickets}
             onSendMessage={onSendSupportMessage}
             onUpdateStatus={onUpdateSupportStatus}
+            selectedTicketId={selectedSupportTicketId}
+            onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
+            initialSelectedTicketId={selectedSupportTicketId}
           />
         ) : null;
       case 'messages':
@@ -482,6 +497,10 @@ export function StaffDashboard({
             currentUser={currentUser}
             onSendStaffMessage={onSendStaffMessage}
             onSendJobChat={onSendJobChat}
+            initialTab={staffMessageTab}
+            onTabChange={onStaffMessageTabChange}
+            selectedJobChatRequestId={selectedJobChatRequestId}
+            onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
           />
         ) : null;
       case 'payments':

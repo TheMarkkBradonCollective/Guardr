@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import {
   ActivityFeedItem,
@@ -27,6 +27,10 @@ interface LiveCoverageScreenProps {
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  initialChatRequestId?: string | null;
+  initialChatOpen?: boolean;
+  onChatRequestIdChange?: (requestId: string | null) => void;
+  onChatOpenChange?: (open: boolean) => void;
 }
 
 const SITE_STATUS_CONFIG: Record<
@@ -56,8 +60,12 @@ export function LiveCoverageScreen({
   jobChatThreads = [],
   jobChatMessages = [],
   onSendJobChatMessage,
+  initialChatRequestId = null,
+  initialChatOpen = false,
+  onChatRequestIdChange,
+  onChatOpenChange,
 }: LiveCoverageScreenProps) {
-  const [chatRequestId, setChatRequestId] = useState<string | null>(null);
+  const [chatRequestId, setChatRequestId] = useState<string | null>(initialChatRequestId);
   const liveRequests = requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
   const guardRows = buildGuardRows(liveRequests, guards);
   const feed = buildActivityFeed(liveRequests, guards);
@@ -65,6 +73,29 @@ export function LiveCoverageScreen({
   const statusCfg = SITE_STATUS_CONFIG[siteStatus];
 
   const chatRequest = chatRequestId ? liveRequests.find((r) => r.id === chatRequestId) ?? null : null;
+
+  useEffect(() => {
+    if (!initialChatRequestId) return;
+    setChatRequestId(initialChatRequestId);
+  }, [initialChatRequestId]);
+
+  useEffect(() => {
+    if (initialChatOpen && initialChatRequestId) {
+      setChatRequestId(initialChatRequestId);
+    }
+  }, [initialChatOpen, initialChatRequestId]);
+
+  const openChat = (requestId: string) => {
+    setChatRequestId(requestId);
+    onChatRequestIdChange?.(requestId);
+    onChatOpenChange?.(true);
+  };
+
+  const closeChat = () => {
+    setChatRequestId(null);
+    onChatRequestIdChange?.(null);
+    onChatOpenChange?.(false);
+  };
 
   if (chatRequest && currentUser && onSendJobChatMessage) {
     return (
@@ -75,7 +106,7 @@ export function LiveCoverageScreen({
           messages={jobChatMessages}
           currentUser={currentUser}
           onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
-          onBack={() => setChatRequestId(null)}
+          onBack={() => closeChat()}
         />
       </div>
     );
@@ -132,7 +163,7 @@ export function LiveCoverageScreen({
                     {onSendJobChatMessage && currentUser && (isJobChatEligible(request) || threadForRequest(jobChatThreads, request.id)) && (
                       <button
                         type="button"
-                        onClick={() => setChatRequestId(request.id)}
+                        onClick={() => openChat(request.id)}
                         className="text-xs font-medium text-brand-primary mt-2"
                       >
                         {isJobChatEligible(request) ? 'Message guard' : 'View job chat'}

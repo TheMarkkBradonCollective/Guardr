@@ -29,6 +29,7 @@ export interface PushNotificationData {
   siteId?: string;
   guardId?: string;
   requestId?: string;
+  ticketId?: string;
   priority?: 'normal' | 'high';
 }
 
@@ -42,6 +43,7 @@ export interface PushSendPayload {
   siteId?: string;
   guardId?: string;
   requestId?: string;
+  ticketId?: string;
   priority?: 'normal' | 'high';
 }
 

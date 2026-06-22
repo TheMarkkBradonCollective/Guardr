@@ -18,7 +18,7 @@ export function platformRoleToPushRole(role: PlatformRole | string): PushRole {
 
 export function resolveNotificationUrl(
   type: PushNotificationType,
-  options: { guardId?: string; requestId?: string } = {}
+  options: { guardId?: string; requestId?: string; ticketId?: string } = {}
 ): string {
   switch (type) {
     case 'missed_checkin':
@@ -29,11 +29,13 @@ export function resolveNotificationUrl(
     case 'emergency_alert':
       return '/staff/incidents';
     case 'support_message':
-      return '/staff/support';
+      return options.ticketId ? `/staff/support?st=${encodeURIComponent(options.ticketId)}` : '/staff/support';
     case 'job_chat_message':
-      return options.requestId ? `/staff/messages` : '/staff/messages';
+      return options.requestId
+        ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}`
+        : '/staff/messages?mtab=jobs';
     case 'staff_message':
-      return '/staff/messages';
+      return '/staff/messages?mtab=team';
     case 'test':
       return '/';
     default:
@@ -44,7 +46,7 @@ export function resolveNotificationUrl(
 export function resolveNotificationUrlForRole(
   type: PushNotificationType,
   role: PlatformRole | string,
-  options: { guardId?: string; requestId?: string } = {}
+  options: { guardId?: string; requestId?: string; ticketId?: string } = {}
 ): string {
   const isStaff =
     role === 'moderator' ||
@@ -54,15 +56,35 @@ export function resolveNotificationUrlForRole(
 
   switch (type) {
     case 'support_message':
-      if (role === 'client') return '/client/support';
-      if (role === 'guard') return '/guard/support';
-      return '/staff/support';
+      if (role === 'client') {
+        return options.ticketId
+          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/support';
+      }
+      if (role === 'guard') {
+        return options.ticketId
+          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/support';
+      }
+      return options.ticketId
+        ? `/staff/support?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/support';
     case 'job_chat_message':
-      if (role === 'client') return '/client/coverage';
-      if (role === 'guard') return '/guard/my-jobs';
-      return '/staff/messages';
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}&chat=1`
+          : '/client/coverage';
+      }
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}&chat=1`
+          : '/guard/my-jobs';
+      }
+      return options.requestId
+        ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}`
+        : '/staff/messages?mtab=jobs';
     case 'staff_message':
-      return '/staff/messages';
+      return '/staff/messages?mtab=team';
     case 'assignment':
       return '/guard/my-jobs';
     default:
@@ -102,6 +124,7 @@ export function buildNotificationData(
     siteId?: string;
     guardId?: string;
     requestId?: string;
+    ticketId?: string;
     priority?: 'normal' | 'high';
   } = {}
 ): PushNotificationData {
@@ -111,6 +134,7 @@ export function buildNotificationData(
     siteId: options.siteId,
     guardId: options.guardId,
     requestId: options.requestId,
+    ticketId: options.ticketId,
     priority: options.priority ?? (type === 'emergency_alert' ? 'high' : 'normal'),
   };
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   CreateSupportTicketInput,
   SecurityRequest,
@@ -29,6 +29,8 @@ interface SupportScreenProps {
   onCreateTicket: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendMessage: (ticketId: string, body: string) => void | Promise<void>;
   onBack?: () => void;
+  initialTicketId?: string | null;
+  onActiveTicketIdChange?: (ticketId: string | null) => void;
 }
 
 export function SupportScreen({
@@ -38,9 +40,11 @@ export function SupportScreen({
   onCreateTicket,
   onSendMessage,
   onBack,
+  initialTicketId = null,
+  onActiveTicketIdChange,
 }: SupportScreenProps) {
   const [view, setView] = useState<SupportView>('home');
-  const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
+  const [activeTicketId, setActiveTicketId] = useState<string | null>(initialTicketId);
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,8 +57,15 @@ export function SupportScreen({
   const myTickets = useMemo(() => ticketsForUser(tickets, currentUser), [tickets, currentUser]);
   const activeTicket = myTickets.find((t) => t.id === activeTicketId) ?? null;
 
+  useEffect(() => {
+    if (!initialTicketId) return;
+    setActiveTicketId(initialTicketId);
+    setView('thread');
+  }, [initialTicketId]);
+
   const openThread = (ticketId: string) => {
     setActiveTicketId(ticketId);
+    onActiveTicketIdChange?.(ticketId);
     setDraft('');
     setView('thread');
   };
@@ -122,6 +133,7 @@ export function SupportScreen({
         else {
           setView('home');
           setActiveTicketId(null);
+          onActiveTicketIdChange?.(null);
         }
       }}
       className="p-2 -ml-2 text-brand-text"
