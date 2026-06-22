@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS guards (
   hourly_rate_requirement INTEGER,
   is_staff BOOLEAN NOT NULL DEFAULT FALSE,
   staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Owner', 'Director', 'Administrator', 'Moderator')),
-  user_status TEXT NOT NULL DEFAULT 'active' CHECK (user_status IN ('active', 'suspended', 'blocked')),
+  user_status TEXT NOT NULL DEFAULT 'pending' CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   failed_audits INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -48,6 +48,11 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEX
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_id_verification_status_check;
 ALTER TABLE guards ADD CONSTRAINT guards_id_verification_status_check
   CHECK (id_verification_status IN ('not_submitted', 'pending', 'verified', 'rejected'));
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_user_status_check;
+ALTER TABLE guards ADD CONSTRAINT guards_user_status_check
+  CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked'));
+ALTER TABLE guards ALTER COLUMN user_status SET DEFAULT 'pending';
 
 -- ── CLIENTS ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (
