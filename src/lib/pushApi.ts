@@ -1,7 +1,7 @@
 import type { SessionUser } from '../types';
 import type { PushSubscriptionDto } from './push';
 
-async function parseApiResponse<T>(res: Response): Promise<T> {
+export async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   if (!text) {
     throw new Error(res.ok ? 'Empty server response' : `Server error (${res.status})`);
@@ -19,7 +19,7 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
   }
 }
 
-function sessionBody(user: SessionUser, extra: Record<string, unknown> = {}) {
+export function sessionBody(user: SessionUser, extra: Record<string, unknown> = {}) {
   return {
     userId: user.id,
     email: user.email,

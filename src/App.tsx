@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -117,8 +117,11 @@ import {
 import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
+  mergeStaffMessages,
+  appendStaffMessage,
   saveStaffMessagesToStorage,
 } from './lib/staffMessenger';
+import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
 import { listenForPushNavigation, listenForPushSubscriptionChange, syncPushSubscriptionWithServer } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import {
@@ -1129,8 +1132,11 @@ export default function App() {
           body: m.body,
           createdAt: m.created_at,
         }));
-        setStaffMessages(mappedStaffMessages);
-        saveStaffMessagesToStorage(mappedStaffMessages);
+        setStaffMessages((prev) => {
+          const next = mergeStaffMessages(prev, mappedStaffMessages);
+          saveStaffMessagesToStorage(next);
+          return next;
+        });
       }
 
       setIsDbConnected(true);
@@ -1142,6 +1148,66 @@ export default function App() {
       setIsDbConnected(false);
     }
   };
+
+  const mapDbStaffMessageRow = (m: {
+    id: string;
+    sender_id: string;
+    sender_name: string;
+    sender_role: string;
+    body: string;
+    created_at: string;
+  }): StaffMessage => ({
+    id: m.id,
+    senderId: m.sender_id,
+    senderName: m.sender_name,
+    senderRole: m.sender_role as StaffMessage['senderRole'],
+    body: m.body,
+    createdAt: m.created_at,
+  });
+
+  const refreshStaffMessages = useCallback(async () => {
+    if (!currentUser || !isStaffRole(currentUser.role)) return;
+
+    const applyRemote = (remote: StaffMessage[]) => {
+      setStaffMessages((prev) => {
+        const next = mergeStaffMessages(prev, remote);
+        if (
+          next.length === prev.length &&
+          next.every((message, index) => message.id === prev[index]?.id)
+        ) {
+          return prev;
+        }
+        saveStaffMessagesToStorage(next);
+        return next;
+      });
+    };
+
+    if (isDbConnected) {
+      try {
+        const { data, error } = await supabase
+          .from('staff_messages')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && data) {
+          applyRemote(data.map((row: any) => mapDbStaffMessageRow(row)));
+          return;
+        }
+        if (error) console.warn('Staff messages client refresh:', error.message);
+      } catch (err) {
+        console.warn('Staff messages client refresh:', err);
+      }
+    }
+
+    try {
+      const remote = await fetchStaffMessagesFromApi(currentUser);
+      applyRemote(remote);
+    } catch (err) {
+      console.warn('Staff messages API refresh:', err);
+    }
+  }, [currentUser, isDbConnected]);
+
+  const refreshStaffMessagesRef = useRef(refreshStaffMessages);
+  refreshStaffMessagesRef.current = refreshStaffMessages;
 
   // Drop stale session if user no longer exists in DB
   useEffect(() => {
@@ -1177,10 +1243,9 @@ export default function App() {
         });
       },
       onStaffMessage: (message) => {
-        if (shouldSkipRealtimeSync()) return;
         setStaffMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          const next = [...prev, message];
+          const next = appendStaffMessage(prev, message);
+          if (next === prev) return prev;
           saveStaffMessagesToStorage(next);
           return next;
         });
@@ -1227,12 +1292,16 @@ export default function App() {
   useEffect(() => {
     if (!isDbConnected || !isInMessagingView) return;
     const interval = setInterval(() => {
+      if (staffSection === 'messages' && currentUser && isStaffRole(currentUser.role)) {
+        void refreshStaffMessagesRef.current();
+        return;
+      }
       if (!shouldSkipRealtimeSync()) {
         void loadRef.current();
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [isDbConnected, isInMessagingView]);
+  }, [isDbConnected, isInMessagingView, staffSection, currentUser]);
 
   useEffect(() => {
     if (!isDbConnected || !currentUser) return;
@@ -3660,18 +3729,29 @@ export default function App() {
   };
 
   const persistStaffMessageToDb = async (message: StaffMessage) => {
-    if (!isDbConnected) return;
-    try {
-      await supabase.from('staff_messages').upsert({
-        id: message.id,
-        sender_id: message.senderId,
-        sender_name: message.senderName,
-        sender_role: message.senderRole,
-        body: message.body,
-        created_at: message.createdAt,
-      });
-    } catch (e) {
-      console.warn('Staff message DB sync:', e);
+    let persisted = false;
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('staff_messages').upsert({
+          id: message.id,
+          sender_id: message.senderId,
+          sender_name: message.senderName,
+          sender_role: message.senderRole,
+          body: message.body,
+          created_at: message.createdAt,
+        });
+        if (!error) persisted = true;
+        else console.warn('Staff message DB sync:', error);
+      } catch (e) {
+        console.warn('Staff message DB sync:', e);
+      }
+    }
+    if (!persisted && currentUser && isStaffRole(currentUser.role)) {
+      try {
+        await postStaffMessageToApi(currentUser, message);
+      } catch (e) {
+        console.warn('Staff message API sync:', e);
+      }
     }
   };
 
@@ -4236,6 +4316,7 @@ export default function App() {
           jobChatMessages={jobChatMessages}
           staffMessages={staffMessages}
           onSendStaffMessage={handleSendStaffMessage}
+          onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
           onOpenLegal={openLegalPage}
         />

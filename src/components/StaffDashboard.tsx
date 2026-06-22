@@ -145,6 +145,7 @@ interface StaffDashboardProps {
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
+  onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   initialSection?: StaffSection;
@@ -233,6 +234,7 @@ export function StaffDashboard({
   onSendSupportMessage,
   onUpdateSupportStatus,
   onSendStaffMessage,
+  onRefreshStaffMessages,
   onSendJobChat,
   initialSection = 'overview',
   section: controlledSection,
@@ -522,6 +524,7 @@ export function StaffDashboard({
             staffMessages={staffMessages}
             currentUser={currentUser}
             onSendStaffMessage={onSendStaffMessage}
+            onRefreshStaffMessages={onRefreshStaffMessages}
             onSendJobChat={onSendJobChat}
             initialTab={staffMessageTab}
             onTabChange={onStaffMessageTabChange}

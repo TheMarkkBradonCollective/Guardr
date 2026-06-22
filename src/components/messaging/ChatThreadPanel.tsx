@@ -20,6 +20,8 @@ interface ChatThreadPanelProps {
   readOnly?: boolean;
   readOnlyMessage?: string;
   headerNote?: string;
+  /** Staff team channel — show sent/received instead of job-chat staff styling */
+  teamChat?: boolean;
 }
 
 export function ChatThreadPanel({
@@ -30,6 +32,7 @@ export function ChatThreadPanel({
   readOnly = false,
   readOnlyMessage = 'This conversation is closed.',
   headerNote,
+  teamChat = false,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -63,7 +66,7 @@ export function ChatThreadPanel({
         ) : (
           messages.map((msg) => {
             const mine = msg.senderId === currentUserId;
-            const staff = isStaffSender(msg.senderRole);
+            const staff = !teamChat && isStaffSender(msg.senderRole);
             return (
               <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                 <div

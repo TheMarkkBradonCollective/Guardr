@@ -17,6 +17,7 @@ interface StaffMessagesHubProps {
   staffMessages: StaffMessage[];
   currentUser: SessionUser;
   onSendStaffMessage: (body: string) => void | Promise<void>;
+  onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
   initialTab?: 'team' | 'jobs';
   onTabChange?: (tab: 'team' | 'jobs') => void;
@@ -32,6 +33,7 @@ export function StaffMessagesHub({
   staffMessages,
   currentUser,
   onSendStaffMessage,
+  onRefreshStaffMessages,
   onSendJobChat,
   initialTab = 'team',
   onTabChange,
@@ -76,6 +78,7 @@ export function StaffMessagesHub({
             messages={staffMessages}
             currentUser={currentUser}
             onSend={onSendStaffMessage}
+            onRefresh={onRefreshStaffMessages}
           />
         ) : (
           <StaffJobChatsPanel

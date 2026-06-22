@@ -3,6 +3,23 @@ import { isStaffRole } from './permissions';
 
 const STORAGE_KEY = 'guardr_staff_messages';
 
+export function mergeStaffMessages(
+  existing: StaffMessage[],
+  incoming: StaffMessage[]
+): StaffMessage[] {
+  const byId = new Map<string, StaffMessage>();
+  for (const message of existing) byId.set(message.id, message);
+  for (const message of incoming) byId.set(message.id, message);
+  return [...byId.values()].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+}
+
+export function appendStaffMessage(messages: StaffMessage[], message: StaffMessage): StaffMessage[] {
+  if (messages.some((entry) => entry.id === message.id)) return messages;
+  return mergeStaffMessages(messages, [message]);
+}
+
 export function loadStaffMessagesFromStorage(): StaffMessage[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -27,8 +44,12 @@ export function canAccessStaffMessenger(role: PlatformRole): boolean {
 }
 
 export function buildStaffMessage(sender: SessionUser, body: string): StaffMessage {
+  const id =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? `stmsg-${crypto.randomUUID()}`
+      : `stmsg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   return {
-    id: `stmsg-${Date.now()}`,
+    id,
     senderId: sender.id,
     senderName: sender.name,
     senderRole: sender.role,
