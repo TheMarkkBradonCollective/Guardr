@@ -132,7 +132,7 @@ import {
   saveStaffMessagesToStorage,
 } from './lib/staffMessenger';
 import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
-import { listenForPushNavigation, listenForPushSubscriptionChange, syncPushSubscriptionWithServer } from './lib/push';
+import { mapStaffRowToSecurityGuard } from './lib/staffAccounts';
 import { reportPushEvent } from './lib/pushApi';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
@@ -205,7 +205,12 @@ export default function App() {
     saveTheme(mode, currentUser?.id);
     applyThemeToDocument(mode);
     if (isDbConnected && currentUser) {
-      const table = currentUser.role === 'client' ? 'clients' : 'guards';
+      const table =
+        currentUser.role === 'client'
+          ? 'clients'
+          : isStaffRole(currentUser.role)
+            ? 'staff'
+            : 'guards';
       try {
         await supabase.from(table).update({ theme_preference: mode }).eq('id', currentUser.id);
       } catch {
@@ -879,6 +884,8 @@ export default function App() {
   const loadFromSupabase = async () => {
     try {
       const { data: dbGuards, error: guardsErr } = await supabase.from('guards').select('*');
+      const { data: dbStaffRows, error: staffErr } = await supabase.from('staff').select('*');
+      const staffTableAvailable = !staffErr;
       const { data: dbClients, error: clientsErr } = await supabase.from('clients').select('*');
       const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
       const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
@@ -916,7 +923,11 @@ export default function App() {
         return;
       }
 
-      setGuards((dbGuards ?? []).map((g: any) => {
+      if (staffErr && staffErr.code !== '42P01') {
+        console.warn('Staff table load (run migration if missing):', staffErr);
+      }
+
+      const mapGuardRow = (g: any): SecurityGuard => {
         const nameParts = resolvePersonNameParts({
           firstName: g.first_name,
           middleName: g.middle_name,
@@ -971,7 +982,24 @@ export default function App() {
           period: e.period, description: e.description ?? '',
         })),
       };
-      }));
+      };
+
+      const staffFromTable = staffTableAvailable ? (dbStaffRows ?? []).map((row: any) => mapStaffRowToSecurityGuard(row)) : [];
+      const staffMigrated = staffTableAvailable && staffFromTable.length > 0;
+      const fieldGuardRows = (dbGuards ?? []).filter((g: any) => {
+        if (g.migrated_to_staff_at) return false;
+        if (staffMigrated) return !g.is_staff;
+        return !g.is_staff;
+      });
+      const legacyStaffRows = staffMigrated
+        ? []
+        : (dbGuards ?? []).filter((g: any) => g.is_staff && !g.migrated_to_staff_at);
+
+      setGuards([
+        ...fieldGuardRows.map(mapGuardRow),
+        ...staffFromTable,
+        ...legacyStaffRows.map(mapGuardRow),
+      ]);
 
       setClients((dbClients ?? []).map((c: any) => {
         const nameParts = resolvePersonNameParts({
@@ -1425,8 +1453,9 @@ export default function App() {
         )
       );
       if (isDbConnected) {
+        const table = isStaffRole(currentUser.role) ? 'staff' : 'guards';
         await supabase
-          .from('guards')
+          .from(table)
           .update({ password: newPassword, must_change_password: false })
           .eq('id', currentUser.id);
       }
@@ -1839,13 +1868,20 @@ export default function App() {
     );
     if (isDbConnected) {
       beginLocalMutation();
-      const guardUpdate: Record<string, unknown> = {
+      const profileUpdate: Record<string, unknown> = {
           name: payload.name,
           first_name: payload.firstName,
           middle_name: payload.middleName ?? null,
           last_name: payload.lastName,
           phone: payload.phone,
           bio: payload.bio ?? payload.summary ?? '',
+      };
+      if (payload.avatar !== undefined) profileUpdate.avatar = payload.avatar;
+      if (payload.badgeNumber !== undefined) profileUpdate.badge_number = payload.badgeNumber;
+
+      const table = previous.isStaff ? 'staff' : 'guards';
+      if (!previous.isStaff) {
+        Object.assign(profileUpdate, {
           headline: payload.headline ?? '',
           summary: payload.summary ?? '',
           about: payload.about ?? '',
@@ -1856,10 +1892,10 @@ export default function App() {
           years_experience: payload.yearsExperience ?? null,
           availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
-      };
-      if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
-      if (payload.badgeNumber !== undefined) guardUpdate.badge_number = payload.badgeNumber;
-      const { error } = await supabase.from('guards').update(guardUpdate).eq('id', guardId);
+        });
+      }
+
+      const { error } = await supabase.from(table).update(profileUpdate).eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
         console.error('Guard profile update error:', error);
@@ -1932,7 +1968,10 @@ export default function App() {
       }
     }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
-    if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
+    if (isDbConnected) {
+      const table = target.isStaff ? 'staff' : 'guards';
+      await supabase.from(table).update({ user_status: status }).eq('id', guardId);
+    }
   };
 
   const assertEmailAvailable = (email: string) => {
@@ -2127,7 +2166,7 @@ export default function App() {
     setGuards((prev) => [...prev, newStaff]);
     if (isDbConnected) {
       try {
-        await supabase.from('guards').insert({
+        await supabase.from('staff').insert({
           id: newStaff.id,
           name: newStaff.name,
           first_name: newStaff.firstName,
@@ -2138,12 +2177,6 @@ export default function App() {
           avatar: newStaff.avatar,
           phone: newStaff.phone,
           bio: newStaff.bio,
-          is_armed: false,
-          background_checked: true,
-          verified: true,
-          rating: 5.0,
-          jobs_completed: 0,
-          is_staff: true,
           staff_role: staffRole,
           user_status: 'active',
           password,
@@ -2182,7 +2215,7 @@ export default function App() {
     );
     if (isDbConnected) {
       try {
-        await supabase.from('guards').update({ staff_role: staffRole, bio }).eq('id', staffId);
+        await supabase.from('staff').update({ staff_role: staffRole, bio }).eq('id', staffId);
       } catch (e) {
         console.error('Staff role update error:', e);
         throw new Error('Could not update staff role in the database.');
