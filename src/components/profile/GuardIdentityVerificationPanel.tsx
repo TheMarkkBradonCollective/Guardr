@@ -16,6 +16,7 @@ import {
   processIdentitySelfieFile,
 } from '../../lib/idVerificationPhoto';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import { IdVerificationImageModal } from './IdVerificationImageModal';
 import { Camera, IdCard, ImagePlus, Loader2, UserRound } from 'lucide-react';
 
 export interface GuardIdentityVerificationPayload {
@@ -52,6 +53,7 @@ function IdDocumentSlot({
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [viewOpen, setViewOpen] = useState(false);
 
   const handleFile = async (file: File | undefined, processor: (f: File) => Promise<string>) => {
     if (!file || locked) return;
@@ -75,19 +77,34 @@ function IdDocumentSlot({
       {hint && <p className="text-xs text-brand-text-muted leading-relaxed">{hint}</p>}
       {currentUrl ? (
         <div className="relative">
-          <img
-            src={currentUrl}
-            alt={label}
-            className="w-full h-36 object-cover rounded-xl border border-brand-border bg-brand-surface"
-          />
+          <button
+            type="button"
+            onClick={() => setViewOpen(true)}
+            className="block w-full text-left group"
+            aria-label={`View ${label}`}
+          >
+            <img
+              src={currentUrl}
+              alt={label}
+              className="w-full h-36 object-cover rounded-xl border border-brand-border bg-brand-surface group-hover:opacity-90 transition-opacity"
+            />
+            <p className="text-[10px] text-brand-primary mt-1">Tap to view</p>
+          </button>
           {!locked && (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="absolute bottom-2 right-2 app-button-outline !h-7 !px-2 !text-[10px] !w-auto bg-brand-surface/90"
+              className="absolute bottom-8 right-2 app-button-outline !h-7 !px-2 !text-[10px] !w-auto bg-brand-surface/90"
             >
               Replace
             </button>
+          )}
+          {viewOpen && (
+            <IdVerificationImageModal
+              label={label}
+              imageUrl={currentUrl}
+              onClose={() => setViewOpen(false)}
+            />
           )}
         </div>
       ) : (
@@ -135,6 +152,7 @@ function SelfieSlot({
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [viewOpen, setViewOpen] = useState(false);
 
   const handleCapture = async () => {
     if (locked) return;
@@ -176,13 +194,21 @@ function SelfieSlot({
       <p className="text-xs text-brand-text-muted leading-relaxed">{ID_VERIFICATION_SELFIE_HINT}</p>
       {currentUrl ? (
         <div className="relative">
-          <img
-            src={currentUrl}
-            alt="Identity selfie"
-            className="w-full h-44 object-cover rounded-xl border border-brand-border bg-brand-surface"
-          />
+          <button
+            type="button"
+            onClick={() => setViewOpen(true)}
+            className="block w-full text-left group"
+            aria-label="View identity selfie"
+          >
+            <img
+              src={currentUrl}
+              alt="Identity selfie"
+              className="w-full h-44 object-cover rounded-xl border border-brand-border bg-brand-surface group-hover:opacity-90 transition-opacity"
+            />
+            <p className="text-[10px] text-brand-primary mt-1">Tap to view</p>
+          </button>
           {!locked && (
-            <div className="absolute bottom-2 right-2 flex gap-1.5">
+            <div className="absolute bottom-8 right-2 flex gap-1.5">
               <button
                 type="button"
                 onClick={() => void handleCapture()}
@@ -191,6 +217,13 @@ function SelfieSlot({
                 <Camera className="w-3 h-3" /> Retake
               </button>
             </div>
+          )}
+          {viewOpen && (
+            <IdVerificationImageModal
+              label={ID_VERIFICATION_SLOT_LABELS.selfie}
+              imageUrl={currentUrl}
+              onClose={() => setViewOpen(false)}
+            />
           )}
         </div>
       ) : (

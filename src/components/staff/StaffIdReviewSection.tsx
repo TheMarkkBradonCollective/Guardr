@@ -15,6 +15,7 @@ import {
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
 import { getGuardUserStatus } from '../../lib/accountStatus';
+import { IdVerificationImageThumb } from '../profile/IdVerificationImageModal';
 import { WfSectionHeader } from '../ui/wireframe';
 
 interface StaffIdReviewSectionProps {
@@ -22,27 +23,6 @@ interface StaffIdReviewSectionProps {
   onApprove?: (guardId: string) => void | Promise<void>;
   onReject?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
-}
-
-function IdPreview({ label, url }: { label: string; url?: string }) {
-  return (
-    <div className="space-y-1.5 min-w-0">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">{label}</p>
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="block">
-          <img
-            src={url}
-            alt={label}
-            className="w-full h-28 object-cover rounded-lg border border-brand-border bg-brand-bg-sec"
-          />
-        </a>
-      ) : (
-        <div className="h-28 rounded-lg border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center text-xs text-brand-text-muted px-2 text-center">
-          Not uploaded
-        </div>
-      )}
-    </div>
-  );
 }
 
 export function StaffIdReviewSection({
@@ -81,9 +61,21 @@ export function StaffIdReviewSection({
       <WfSectionHeader title="ID verification review" className="mb-0" />
       {status !== 'not_submitted' && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <IdPreview label={ID_VERIFICATION_SLOT_LABELS.front} url={guard.idFrontUrl} />
-          <IdPreview label={ID_VERIFICATION_SLOT_LABELS.back} url={guard.idBackUrl} />
-          <IdPreview label={ID_VERIFICATION_SLOT_LABELS.selfie} url={guard.idSelfieUrl} />
+          <IdVerificationImageThumb
+            label={ID_VERIFICATION_SLOT_LABELS.front}
+            imageUrl={guard.idFrontUrl}
+            guardName={guard.name}
+          />
+          <IdVerificationImageThumb
+            label={ID_VERIFICATION_SLOT_LABELS.back}
+            imageUrl={guard.idBackUrl}
+            guardName={guard.name}
+          />
+          <IdVerificationImageThumb
+            label={ID_VERIFICATION_SLOT_LABELS.selfie}
+            imageUrl={guard.idSelfieUrl}
+            guardName={guard.name}
+          />
         </div>
       )}
       <p className="text-xs text-brand-text-muted leading-relaxed">
