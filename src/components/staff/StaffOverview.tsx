@@ -10,14 +10,24 @@ import {
 } from '../../lib/staffOps';
 import {
   buildDirectorFinancialCells,
-  buildDirectorOperationsLines,
   computeOperationalFinancials,
 } from '../../lib/operationalFinancials';
+import {
+  buildJobPipelineSegments,
+  buildOperationsSnapshotCards,
+  buildPlatformPulseCards,
+  computeWeeklyJobSeries,
+} from '../../lib/overviewVisuals';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
+import {
+  OverviewSegmentBar,
+  OverviewVisualGrid,
+  OverviewWeekChart,
+} from './overview/OverviewCharts';
 import {
   AlertTriangle,
   ArrowRight,
@@ -88,7 +98,6 @@ export function StaffOverview({
   activityFeed,
   actionItems,
   liveJobs,
-  weeklyTrend,
   onNavigate,
   onNavigateApprovals,
   onOpenJob,
@@ -96,17 +105,22 @@ export function StaffOverview({
   staffName,
   showDirectorFinancials = false,
 }: StaffOverviewProps) {
-  const hasWeeklyData = weeklyTrend.some((h) => h > 0);
   const metrics = buildOverviewMetricCells(stats, requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const directorFinancialCells = useMemo(
     () => buildDirectorFinancialCells(financials),
     [financials]
   );
-  const directorOperationsLines = useMemo(
-    () => buildDirectorOperationsLines(stats, financials, guards, clients, requests),
+  const operationsSnapshotCards = useMemo(
+    () => buildOperationsSnapshotCards(stats, financials, guards, clients, requests),
     [stats, financials, guards, clients, requests]
   );
+  const platformPulseCards = useMemo(
+    () => buildPlatformPulseCards(stats, requests, guards, clients, showDirectorFinancials),
+    [stats, requests, guards, clients, showDirectorFinancials]
+  );
+  const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
+  const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
 
   return (
     <div className="staff-overview animate-fade-in space-y-6 pb-6">
@@ -133,36 +147,38 @@ export function StaffOverview({
       </header>
 
       {showDirectorFinancials && (
-        <>
-          <section>
-            <WfSectionHeader
-              title="Company financials"
-              actionLabel="Payments"
-              onAction={() => onNavigate('payments')}
-            />
-            <div className="staff-payment-summary-grid">
-              {directorFinancialCells.map(({ label, value, sub, accent }) => (
-                <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
-              ))}
-            </div>
-          </section>
+        <section>
+          <WfSectionHeader
+            title="Company financials"
+            actionLabel="Payments"
+            onAction={() => onNavigate('payments')}
+          />
+          <div className="staff-payment-summary-grid">
+            {directorFinancialCells.map(({ label, value, sub, accent }) => (
+              <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
+            ))}
+          </div>
+        </section>
+      )}
 
-          <section className="staff-overview-empty-card !items-start">
-            <div className="w-full">
-              <WfSectionHeader title="Operations snapshot" />
-              <ul className="space-y-2.5">
-                {directorOperationsLines.map((line) => (
-                  <li key={line.label} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 text-sm">
-                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-text-muted sm:w-36">
-                      {line.label}
-                    </span>
-                    <span className="text-brand-text leading-snug">{line.value}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        </>
+      <section>
+        <WfSectionHeader
+          title="Platform pulse"
+          actionLabel={showDirectorFinancials ? 'Analytics' : undefined}
+          onAction={showDirectorFinancials ? () => onNavigate('analytics') : undefined}
+        />
+        <OverviewVisualGrid cards={platformPulseCards} columns={showDirectorFinancials ? 3 : 2} />
+      </section>
+
+      {showDirectorFinancials && (
+        <section>
+          <WfSectionHeader
+            title="Operations snapshot"
+            actionLabel="Payments"
+            onAction={() => onNavigate('payments')}
+          />
+          <OverviewVisualGrid cards={operationsSnapshotCards} columns={3} />
+        </section>
       )}
 
       <section>
@@ -312,25 +328,20 @@ export function StaffOverview({
         )}
       </section>
 
-      <div className="staff-overview-lower grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="staff-overview-lower grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="staff-overview-chart-card">
           <WfSectionHeader title="Completed jobs this week" />
-          {hasWeeklyData ? (
-            <div className="flex items-end gap-2 h-28 px-1">
-              {weeklyTrend.map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                  <div
-                    className="w-full bg-brand-primary/80 rounded-t min-h-[4px] transition-all"
-                    style={{ height: `${Math.max(8, Math.min(100, h))}%` }}
-                  />
-                  <span className="text-[10px] text-brand-text-muted">
-                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
-                  </span>
-                </div>
-              ))}
+          <OverviewWeekChart series={weeklySeries} />
+        </section>
+
+        <section className="staff-overview-chart-card">
+          <WfSectionHeader title="Job pipeline mix" />
+          {jobPipelineSegments.length > 0 ? (
+            <div className="mt-3">
+              <OverviewSegmentBar segments={jobPipelineSegments} />
             </div>
           ) : (
-            <p className="text-sm text-brand-text-muted py-6 text-center">No completed jobs this week yet.</p>
+            <p className="text-sm text-brand-text-muted py-6 text-center">No jobs in the pipeline yet.</p>
           )}
         </section>
 
