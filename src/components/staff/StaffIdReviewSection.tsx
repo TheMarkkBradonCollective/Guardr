@@ -85,7 +85,14 @@ export function StaffIdReviewSection({
         />
       ) : (
         status !== 'not_submitted' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <>
+            {(guard.idState || guard.idNumber) && (
+              <p className="text-sm text-brand-text-muted">
+                {guard.idState ? `${guard.idState}` : ''}
+                {guard.idNumber ? ` · #${guard.idNumber}` : ''}
+              </p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <IdVerificationImageThumb
               label={ID_VERIFICATION_SLOT_LABELS.front}
               imageUrl={guard.idFrontUrl}
@@ -101,7 +108,8 @@ export function StaffIdReviewSection({
               imageUrl={guard.idSelfieUrl}
               guardName={guard.name}
             />
-          </div>
+            </div>
+          </>
         )
       )}
 

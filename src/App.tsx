@@ -964,6 +964,8 @@ export default function App() {
         password: g.password ?? undefined,
         mustChangePassword: g.must_change_password ?? false,
         idVerificationStatus: g.id_verification_status ?? 'not_submitted',
+        idState: g.id_state ?? undefined,
+        idNumber: g.id_number ?? undefined,
         idFrontUrl: g.id_front_url ?? undefined,
         idBackUrl: g.id_back_url ?? undefined,
         idSelfieUrl: g.id_selfie_url ?? undefined,
@@ -2285,15 +2287,26 @@ export default function App() {
 
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
-    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+    payload: {
+      idState: string;
+      idNumber: string;
+      idFrontUrl: string;
+      idBackUrl: string;
+      idSelfieUrl: string;
+    }
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
     if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
 
+    const idState = payload.idState.trim().toUpperCase();
+    const idNumber = payload.idNumber.trim();
     const front = payload.idFrontUrl.trim();
     const back = payload.idBackUrl.trim();
     const selfie = payload.idSelfieUrl.trim();
+    if (!idState || !idNumber) {
+      return { ok: false, error: 'Enter the issuing state and ID number before submitting.' };
+    }
     if (!front || !back || !selfie) {
       return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
     }
@@ -2308,6 +2321,8 @@ export default function App() {
         g.id === guardId
           ? {
               ...g,
+              idState,
+              idNumber,
               idFrontUrl: front,
               idBackUrl: back,
               idSelfieUrl: selfie,
@@ -2324,6 +2339,8 @@ export default function App() {
       const { error } = await supabase
         .from('guards')
         .update({
+          id_state: idState,
+          id_number: idNumber,
           id_front_url: front,
           id_back_url: back,
           id_selfie_url: selfie,
@@ -2406,7 +2423,13 @@ export default function App() {
 
   const handleStaffUpdateGuardIdImages = async (
     guardId: string,
-    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+    payload: {
+      idState: string;
+      idNumber: string;
+      idFrontUrl: string;
+      idBackUrl: string;
+      idSelfieUrl: string;
+    }
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
@@ -2415,19 +2438,23 @@ export default function App() {
       return { ok: false, error: 'This application was rejected — account is blocked.' };
     }
 
+    const idState = payload.idState?.trim().toUpperCase() || guard.idState?.trim().toUpperCase() || '';
+    const idNumber = payload.idNumber?.trim() || guard.idNumber?.trim() || '';
     const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
     const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
     const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
-    if (!front && !back && !selfie) {
-      return { ok: false, error: 'Upload at least one ID photo to save.' };
+    if (!front && !back && !selfie && !idState && !idNumber) {
+      return { ok: false, error: 'Enter ID details or upload at least one ID photo to save.' };
     }
 
-    const complete = Boolean(front && back && selfie);
-    const urlsChanged =
+    const complete = Boolean(idState && idNumber && front && back && selfie);
+    const dataChanged =
+      idState !== (guard.idState ?? '').trim().toUpperCase() ||
+      idNumber !== (guard.idNumber ?? '').trim() ||
       front !== (guard.idFrontUrl ?? '').trim() ||
       back !== (guard.idBackUrl ?? '').trim() ||
       selfie !== (guard.idSelfieUrl ?? '').trim();
-    if (!urlsChanged) return { ok: true };
+    if (!dataChanged) return { ok: true };
 
     const previous = { ...guard };
     const now = new Date().toISOString();
@@ -2446,6 +2473,8 @@ export default function App() {
         g.id === guardId
           ? {
               ...g,
+              idState: idState || undefined,
+              idNumber: idNumber || undefined,
               idFrontUrl: front || undefined,
               idBackUrl: back || undefined,
               idSelfieUrl: selfie || undefined,
@@ -2466,6 +2495,8 @@ export default function App() {
       const { error } = await supabase
         .from('guards')
         .update({
+          id_state: idState || null,
+          id_number: idNumber || null,
           id_front_url: front || null,
           id_back_url: back || null,
           id_selfie_url: selfie || null,

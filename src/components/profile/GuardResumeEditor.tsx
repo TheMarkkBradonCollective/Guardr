@@ -12,6 +12,7 @@ import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCardPanel } from './GuardCardPanel';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardIdentityVerificationPanel } from './GuardIdentityVerificationPanel';
+import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 
 export interface GuardResumeSavePayload {
   headline: string;
@@ -42,7 +43,6 @@ interface GuardResumeEditorProps {
   onSubmitIdentityVerification?: (
     payload: import('./GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
-  identityVerificationCompact?: boolean;
   /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
   credentialsEditing?: boolean;
 }
@@ -58,7 +58,6 @@ export function GuardResumeEditor({
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
-  identityVerificationCompact = false,
   credentialsEditing,
 }: GuardResumeEditorProps) {
   const credEditing = credentialsEditing ?? editing;
@@ -228,22 +227,22 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      {!guard.isStaff && onSubmitIdentityVerification && (
-        <GuardIdentityVerificationPanel
-          guard={guard}
-          onSubmit={onSubmitIdentityVerification}
-          compact={identityVerificationCompact}
-        />
-      )}
-
       {!guard.isStaff && (
-        <GuardCardPanel
-          guard={guard}
-          editing={credEditing}
-          onAddCertification={onAddCertification}
-          onDeleteCertification={onDeleteCertification}
-          onAttachCertificationImage={onAttachCertificationImage}
-        />
+        <>
+          <GuardQualificationPanel guard={guard} />
+
+          {onSubmitIdentityVerification && (
+            <GuardIdentityVerificationPanel guard={guard} onSubmit={onSubmitIdentityVerification} />
+          )}
+
+          <GuardCardPanel
+            guard={guard}
+            editing={credEditing}
+            onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
+          />
+        </>
       )}
 
       <GuardCredentialsPanel

@@ -20,7 +20,6 @@ import {
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
 import { CertItemCard } from '../credentials/CertItemCard';
-import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
@@ -206,8 +205,6 @@ export function GuardCredentialsPanel({
 
   return (
     <div className="space-y-4">
-      <GuardQualificationPanel guard={guard} />
-
       {editing && (
         <div className="app-form-section space-y-1">
           <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
