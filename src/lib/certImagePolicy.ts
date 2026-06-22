@@ -46,15 +46,16 @@ export function guardCanDeleteCertification(cert: Pick<Certification, 'imageUrl'
   return !certImageIsLocked(cert);
 }
 
-export function guardCanAttachCertImage(cert: Pick<Certification, 'imageUrl'>): boolean {
+export function guardCanAttachCertImage(cert: Pick<Certification, 'imageUrl' | 'status'>): boolean {
+  if (cert.status === 'rejected') return true;
   return !certImageIsLocked(cert);
 }
 
 export function validateCertImageAttachment(
-  cert: Pick<Certification, 'imageUrl'>,
+  cert: Pick<Certification, 'imageUrl' | 'status'>,
   imageUrl: string | undefined
 ): CertImageMutationResult {
-  if (certImageIsLocked(cert)) {
+  if (cert.status !== 'rejected' && certImageIsLocked(cert)) {
     return { ok: false, error: 'This credential photo cannot be changed after upload.' };
   }
   const trimmed = imageUrl?.trim();

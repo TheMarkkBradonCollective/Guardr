@@ -64,7 +64,7 @@ export async function updateGuardAccountRow(
   action: 'approve' | 'activate'
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { error } = await writeGuardRowWithFallback(
-    (payload) => supabase.from('guards').update(payload).eq('id', guardId),
+    async (payload) => supabase.from('guards').update(payload).eq('id', guardId),
     row
   );
   if (error) {

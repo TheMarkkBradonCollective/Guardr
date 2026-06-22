@@ -23,6 +23,7 @@ import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { showAppToast } from '../ui/AppToast';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -118,7 +119,7 @@ export function RequestSecurityFlow({
   const handleSubmit = () => {
     const scheduleError = validateShiftSchedule(startDate, endDate);
     if (scheduleError) {
-      alert(scheduleError);
+      showAppToast(scheduleError, { tone: 'error' });
       return;
     }
     onSubmit({
@@ -455,7 +456,7 @@ export function RequestSecurityFlow({
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
+      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
         <div className="max-w-lg mx-auto">
           {step < 9 ? (
             <button

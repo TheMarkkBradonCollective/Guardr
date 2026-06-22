@@ -2,6 +2,7 @@ import React from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getGuardCredentialViewSections } from '../../lib/guardCredentialSections';
 import { CertItemCard } from './CertItemCard';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { Award, BookOpen, Shield } from 'lucide-react';
 
 interface GuardCredentialsViewProps {
@@ -13,7 +14,7 @@ interface GuardCredentialsViewProps {
   compact?: boolean;
   editing?: boolean;
   onDeleteCertification?: (certId: string) => void;
-  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<unknown>;
+  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   renderCertActions?: (cert: Certification) => React.ReactNode;
   className?: string;
 }

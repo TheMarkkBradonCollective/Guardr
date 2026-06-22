@@ -61,7 +61,7 @@ export async function insertCertificationRow(
   row: CertRow
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { error } = await writeWithOptionalColumnFallback(
-    (payload) => supabase.from('certifications').insert(payload),
+    async (payload) => supabase.from('certifications').insert(payload),
     row
   );
   if (error) {
@@ -77,7 +77,7 @@ export async function updateCertificationRow(
   row: CertRow
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { error } = await writeWithOptionalColumnFallback(
-    (payload) => supabase.from('certifications').update(payload).eq('id', certId),
+    async (payload) => supabase.from('certifications').update(payload).eq('id', certId),
     row
   );
   if (error) {

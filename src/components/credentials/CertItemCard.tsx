@@ -50,7 +50,10 @@ export function CertItemCard({
   const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;
   const canAttachImage =
-    editing && onAttachImage && guardCanAttachCertImage(cert) && (!useModalEdit || !cert.imageUrl?.trim());
+    editing &&
+    onAttachImage &&
+    guardCanAttachCertImage(cert) &&
+    (!useModalEdit || !cert.imageUrl?.trim() || cert.status === 'rejected');
   const thumbClass = compact
     ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
@@ -91,7 +94,7 @@ export function CertItemCard({
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
           <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
-          {cert.imageUrl && editing && !useModalEdit && (
+          {cert.imageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />
               Photo locked

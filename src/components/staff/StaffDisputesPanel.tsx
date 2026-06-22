@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Scale } from 'lucide-react';
 import { OpsDispute } from '../../lib/staffOps';
+import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 
 interface StaffDisputesPanelProps {
@@ -8,6 +10,25 @@ interface StaffDisputesPanelProps {
 
 export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
+
+  const resolveDispute = (id: string, status: OpsDispute['status'], message: string) => {
+    setStatusMap((m) => ({ ...m, [id]: status }));
+    showAppToast(message, { tone: status === 'resolved' ? 'success' : 'info' });
+  };
+
+  if (disputes.length === 0) {
+    return (
+      <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
+        <div className="app-empty-state py-16">
+          <Scale className="w-10 h-10 text-brand-text-muted mx-auto mb-3" strokeWidth={1.5} />
+          <p className="font-semibold text-sm">No open disputes</p>
+          <p className="text-sm text-brand-text-muted mt-1 max-w-xs mx-auto">
+            Guard vs client conflicts will appear here when they need staff review.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -41,10 +62,34 @@ export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
 
               {status === 'open' && (
                 <div className="flex flex-wrap gap-2 pt-4">
-                  <button type="button" onClick={() => setStatusMap((m) => ({ ...m, [d.id]: 'resolved' }))} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">Approve Payout</button>
-                  <button type="button" onClick={() => setStatusMap((m) => ({ ...m, [d.id]: 'held' }))} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">Hold Funds</button>
-                  <button type="button" onClick={() => alert('Partial payout issued.')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">Partial Payout</button>
-                  <button type="button" onClick={() => alert('Job payout cancelled.')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">Cancel Payout</button>
+                  <button
+                    type="button"
+                    onClick={() => resolveDispute(d.id, 'resolved', 'Payout approved.')}
+                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                  >
+                    Approve Payout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => resolveDispute(d.id, 'held', 'Funds held pending review.')}
+                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  >
+                    Hold Funds
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => showAppToast('Partial payout issued.', { tone: 'info' })}
+                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  >
+                    Partial Payout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => showAppToast('Job payout cancelled.', { tone: 'info' })}
+                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                  >
+                    Cancel Payout
+                  </button>
                 </div>
               )}
             </div>

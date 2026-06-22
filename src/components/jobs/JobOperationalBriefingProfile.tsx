@@ -112,7 +112,7 @@ export function JobOperationalBriefingProfile({
 }: JobOperationalBriefingProfileProps) {
   if (locked) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-200 leading-relaxed flex gap-2">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200 leading-relaxed flex gap-2">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <span>{operationalBriefingLockedMessage({ status: jobStatus })}</span>
       </div>

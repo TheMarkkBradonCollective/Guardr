@@ -23,7 +23,7 @@ export function MoreMenuSheet({
   footer,
 }: MoreMenuSheetProps) {
   return (
-    <AppOverlaySheet open={open} onClose={onClose} ariaLabel={title} className="more-menu-sheet">
+    <AppOverlaySheet open={open} onClose={onClose} ariaLabel={title} panelClassName="more-menu-panel">
       <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border">
         <p className="text-base font-bold tracking-tight">{title}</p>
         <button

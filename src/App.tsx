@@ -1866,7 +1866,7 @@ export default function App() {
           )
         );
         console.error('Cert insert error:', e);
-        return { ok: false, error: certDatabaseErrorMessage(error) };
+        return { ok: false, error: certDatabaseErrorMessage(e instanceof Error ? { message: e.message } : {}) };
       }
     }
     return { ok: true };
@@ -2141,7 +2141,14 @@ export default function App() {
       })
     );
     if (isDbConnected) {
-      await supabase.from('certifications').update({ status: 'verified' }).eq('id', certId);
+      beginLocalMutation();
+      const verifyResult = await updateCertificationRow(supabase, certId, { status: 'verified' });
+      if (verifyResult.ok === false) {
+        setGuards((prev) =>
+          prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+        );
+        throw new Error(verifyResult.error);
+      }
       const after = before
         ? syncGuardCredentialGraceState({
             ...before,
@@ -2156,21 +2163,58 @@ export default function App() {
           JSON.stringify(after.credentialGraceMissing ?? []) !==
             JSON.stringify(before?.credentialGraceMissing ?? []))
       ) {
-        beginLocalMutation();
-        await supabase
-          .from('guards')
-          .update({
+        const graceResult = await updateGuardAccountRow(
+          supabase,
+          guardId,
+          {
             credential_grace_deadline: after.credentialGraceDeadline ?? null,
             credential_grace_missing: after.credentialGraceMissing ?? null,
-          })
-          .eq('id', guardId);
+          },
+          'activate'
+        );
+        if (graceResult.ok === false) {
+          setGuards((prev) =>
+            prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+          );
+          throw new Error(graceResult.error);
+        }
       }
     }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.map(c => c.id === certId ? { ...c, status: 'rejected' as const } : c) } : g));
-    if (isDbConnected) await supabase.from('certifications').update({ status: 'rejected' }).eq('id', certId);
+    const before = guards.find((g) => g.id === guardId);
+    const cert = before?.certifications.find((c) => c.id === certId);
+    if (!cert) throw new Error('Credential not found.');
+
+    const rejectionReason = buildCertImageResubmitReason(cert.name);
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              certifications: g.certifications.map((c) =>
+                c.id === certId
+                  ? { ...c, status: 'rejected' as const, rejectionReason }
+                  : c
+              ),
+            }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      const result = await updateCertificationRow(supabase, certId, {
+        status: 'rejected',
+        rejection_reason: rejectionReason,
+      });
+      if (result.ok === false) {
+        setGuards((prev) =>
+          prev.map((g) => (g.id === guardId && before ? { ...before } : g))
+        );
+        throw new Error(result.error);
+      }
+    }
   };
 
   // ── Guard approval ─────────────────────────────────────────
@@ -2656,7 +2700,7 @@ export default function App() {
         },
         'approve'
       );
-      if (!result.ok) {
+      if (result.ok === false) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
         throw new Error(result.error);
       }
@@ -2700,7 +2744,7 @@ export default function App() {
         },
         'activate'
       );
-      if (!result.ok) {
+      if (result.ok === false) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
         throw new Error(result.error);
       }
@@ -3105,7 +3149,9 @@ export default function App() {
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
     const clientRecord = clients.find((c) => c.id === currentUser?.id);
     if (clientRecord && getClientAccountStatus(clientRecord) !== 'active') {
-      alert('Your client account is pending Guardr approval. You can update your profile, but cannot post jobs yet.');
+      showAppToast('Your client account is pending Guardr approval. You can update your profile, but cannot post jobs yet.', {
+        tone: 'info',
+      });
       return;
     }
 
@@ -3113,7 +3159,7 @@ export default function App() {
     const endDate = newRequest.endDate || new Date(Date.now() + 8 * 3600000).toISOString();
     const scheduleError = validateShiftSchedule(startDate, endDate);
     if (scheduleError) {
-      alert(scheduleError);
+      showAppToast(scheduleError, { tone: 'error' });
       return;
     }
 
@@ -3165,14 +3211,29 @@ export default function App() {
       applicants: [],
     };
 
-    setRequests(prev => [freshJob, ...prev]);
+    setRequests((prev) => [freshJob, ...prev]);
 
     // Increment client's total_requests
     if (currentUser?.id) {
-      setClients(prev => prev.map(c => c.id === currentUser.id ? { ...c, totalRequests: c.totalRequests + 1 } : c));
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === currentUser.id ? { ...c, totalRequests: c.totalRequests + 1 } : c
+        )
+      );
       if (isDbConnected) {
-        const cl = clients.find(c => c.id === currentUser.id);
-        if (cl) await supabase.from('clients').update({ total_requests: cl.totalRequests + 1 }).eq('id', currentUser.id);
+        const { data: clientRow } = await supabase
+          .from('clients')
+          .select('total_requests')
+          .eq('id', currentUser.id)
+          .single();
+        const nextTotal = (clientRow?.total_requests ?? 0) + 1;
+        const { error: clientUpdateError } = await supabase
+          .from('clients')
+          .update({ total_requests: nextTotal })
+          .eq('id', currentUser.id);
+        if (clientUpdateError) {
+          console.error('Client total_requests update error:', clientUpdateError);
+        }
       }
     }
 
@@ -3187,8 +3248,9 @@ export default function App() {
     }
 
     if (isDbConnected) {
+      beginLocalMutation();
       try {
-        await supabase.from('security_requests').insert({
+        const { error } = await supabase.from('security_requests').insert({
           id: freshJob.id, title: freshJob.title, description: freshJob.description,
           client_id: freshJob.clientId, client_name: freshJob.clientName, client_logo: freshJob.clientLogo,
           site_name: freshJob.siteName, address: freshJob.address, state: freshJob.state ?? '',
@@ -3211,8 +3273,25 @@ export default function App() {
           ...listingDetailDbColumns(freshJob),
           operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
-      } catch (e) { console.error('Request insert error:', e); }
+        if (error) throw error;
+      } catch (e) {
+        console.error('Request insert error:', e);
+        setRequests((prev) => prev.filter((r) => r.id !== freshJob.id));
+        if (currentUser?.id) {
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === currentUser.id
+                ? { ...c, totalRequests: Math.max(0, c.totalRequests - 1) }
+                : c
+            )
+          );
+        }
+        showAppToast('Could not post your job. Please try again.', { tone: 'error' });
+        return;
+      }
     }
+
+    showAppToast('Job posted — pending Guardr review.', { tone: 'success' });
   };
 
   const handleStaffCreateJob = async (input: StaffCreateJobInput): Promise<string> => {

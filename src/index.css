@@ -3792,6 +3792,11 @@ html.theme-light .staff-ops-btn-primary:hover {
   box-shadow: inset 3px 0 0 var(--brand-primary);
 }
 
+.app-inbox-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .app-inbox-row-top {
   display: flex;
   align-items: baseline;

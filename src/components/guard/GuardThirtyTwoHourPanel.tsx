@@ -113,7 +113,7 @@ export function GuardThirtyTwoHourPanel({
     if (!entry) return;
 
     const proof = validateCertSubmission(imageUrl);
-    if (!proof.ok) {
+    if (proof.ok === false) {
       setFormError(proof.error);
       return;
     }

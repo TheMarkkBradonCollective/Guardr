@@ -629,7 +629,11 @@ export function StaffGuardDetailPanel({
                 guard={guard}
                 editing={false}
                 staffMode={canManage}
-                onSubmitIdentityVerification={onUpdateGuardIdImages}
+                onSubmitIdentityVerification={
+                  onUpdateGuardIdImages
+                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                    : undefined
+                }
                 onUpdateCertification={onUpdateCertification}
                 staffIdReview={
                   canManage ? (
