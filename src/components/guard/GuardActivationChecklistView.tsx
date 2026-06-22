@@ -72,18 +72,12 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
                 : 'Upload under credentials in profile'
           }
         />
-        <StepRow
-          done={guard.userStatus === 'active'}
-          label="Account activated"
-          detail={
-            guard.userStatus === 'active'
-              ? 'Approved — guard can work jobs with verified credentials'
-              : checklist.canActivate
-                ? 'Staff can approve the guard account now'
-                : 'Complete and verify ID + Guard Card first'
-          }
-        />
       </div>
+      {checklist.canActivate && (
+        <p className="text-xs text-brand-primary font-medium pt-1">
+          All requirements complete — staff can activate your account.
+        </p>
+      )}
     </div>
   );
 }
