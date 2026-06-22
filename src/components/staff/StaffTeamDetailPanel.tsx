@@ -5,7 +5,9 @@ import {
   staffRoleToPlatformRole,
   ROLE_LABELS,
   getAssignableStaffRoles,
-  canModifyStaffMember,
+  canModerateStaffMember,
+  platformStaffRank,
+  staffRoleRank,
 } from '../../lib/permissions';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
@@ -19,6 +21,26 @@ interface StaffTeamDetailPanelProps {
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
   onBack?: () => void;
+}
+
+function staffModerationBlockedReason(
+  currentUserRole: PlatformRole,
+  currentUserId: string,
+  member: SecurityGuard
+): string {
+  if (member.id === currentUserId) {
+    return 'You cannot change your own role or account status.';
+  }
+  const memberRole = member.staffRole ? staffRoleToPlatformRole(member.staffRole) : null;
+  if (memberRole === currentUserRole) {
+    return 'Staff cannot moderate accounts at the same role level.';
+  }
+  const actorRank = platformStaffRank(currentUserRole);
+  const memberRank = member.staffRole ? staffRoleRank(member.staffRole) : null;
+  if (actorRank !== null && memberRank !== null && memberRank > actorRank) {
+    return 'You cannot moderate staff above your role.';
+  }
+  return 'Only staff above this role tier can manage this account.';
 }
 
 export function StaffTeamDetailPanel({
@@ -42,10 +64,11 @@ export function StaffTeamDetailPanel({
     setRoleError('');
   }, [member.id, member.staffRole]);
 
-  const isSelf = member.id === currentUserId;
   const platformRole = staffRoleToPlatformRole(role);
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
-  const canModifyMember = canManageStaff && canModifyStaffMember(currentUserRole, member.staffRole);
+  const canModifyMember =
+    canManageStaff && canModerateStaffMember(currentUserRole, currentUserId, member);
+  const blockedReason = staffModerationBlockedReason(currentUserRole, currentUserId, member);
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
@@ -78,7 +101,7 @@ export function StaffTeamDetailPanel({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-bold text-lg">{member.name}</h2>
-            {isSelf && <WfBadge tone="primary">You</WfBadge>}
+            {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{member.email}</p>
@@ -105,7 +128,6 @@ export function StaffTeamDetailPanel({
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as StaffRole)}
-              disabled={isSelf}
               className="uber-select w-full"
             >
               {assignableRoles.map((staffRole) => (
@@ -114,10 +136,7 @@ export function StaffTeamDetailPanel({
                 </option>
               ))}
             </select>
-            {isSelf && (
-              <p className="text-xs text-brand-text-muted">You cannot change your own role.</p>
-            )}
-            {!isSelf && role !== member.staffRole && (
+            {role !== member.staffRole && (
               <button
                 type="button"
                 onClick={handleRoleSave}
@@ -131,22 +150,15 @@ export function StaffTeamDetailPanel({
             {roleMsg && <p className="text-sm text-brand-primary">{roleMsg}</p>}
           </div>
         ) : (
-          <p className="text-sm text-brand-text-muted">
-            {member.staffRole || 'Staff'} —{' '}
-            {currentUserRole === 'owner'
-              ? 'view only for your own profile.'
-              : currentUserRole === 'director'
-                ? 'Directors manage Moderators and Administrators; Owners manage Directors.'
-                : 'only Directors and Owners can change staff roles.'}
-          </p>
+          <p className="text-sm text-brand-text-muted">{blockedReason}</p>
         )}
       </section>
 
-      {canModifyMember && (
+      {canModifyMember ? (
         <section className="py-4 border-b border-brand-border space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
           <div className="flex flex-wrap gap-2">
-            {!isSelf && accountStatus !== 'suspended' && (
+            {accountStatus !== 'suspended' && (
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'suspended')}
@@ -155,7 +167,7 @@ export function StaffTeamDetailPanel({
                 Suspend
               </button>
             )}
-            {!isSelf && accountStatus !== 'blocked' && (
+            {accountStatus !== 'blocked' && (
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'blocked')}
@@ -164,7 +176,7 @@ export function StaffTeamDetailPanel({
                 Block
               </button>
             )}
-            {!isSelf && accountStatus !== 'active' && (
+            {accountStatus !== 'active' && (
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'active')}
@@ -173,13 +185,15 @@ export function StaffTeamDetailPanel({
                 Restore account
               </button>
             )}
-            {isSelf && (
-              <p className="text-xs text-brand-text-muted">
-                Use another {currentUserRole === 'owner' ? 'Owner' : 'Director or Owner'} account to suspend or change this profile.
-              </p>
-            )}
           </div>
         </section>
+      ) : (
+        canManageStaff && (
+          <section className="py-4 border-b border-brand-border space-y-2">
+            <h3 className="text-sm font-semibold">Account controls</h3>
+            <p className="text-xs text-brand-text-muted">{blockedReason}</p>
+          </section>
+        )
       )}
 
       {member.bio && (

@@ -23,7 +23,7 @@ import {
   JobChatMessage,
   StaffMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModifyStaffMember } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -1393,6 +1393,18 @@ export default function App() {
 
   // ── Staff controls ─────────────────────────────────────────
   const handleUpdateGuardUserStatus = async (guardId: string, status: 'active' | 'suspended' | 'blocked') => {
+    const target = guards.find((g) => g.id === guardId);
+    if (!target) return;
+    if (target.isStaff && currentUser) {
+      if (guardId === currentUser.id) {
+        alert('You cannot change your own account status.');
+        return;
+      }
+      if (!canModerateStaffMember(currentUser.role, currentUser.id, target)) {
+        alert('You cannot moderate staff at the same role level or above your own.');
+        return;
+      }
+    }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
   };
@@ -1632,8 +1644,8 @@ export default function App() {
     if (!member?.isStaff) {
       throw new Error('This account is not a staff profile.');
     }
-    if (!currentUser || !canModifyStaffMember(currentUser.role, member.staffRole)) {
-      throw new Error('You cannot change this staff member\'s role.');
+    if (!currentUser || !canModerateStaffMember(currentUser.role, currentUser.id, member)) {
+      throw new Error('You cannot moderate staff at the same role level or above your own.');
     }
     if (!canAssignStaffRole(currentUser.role, staffRole)) {
       throw new Error('You cannot assign that staff role.');

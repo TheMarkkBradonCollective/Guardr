@@ -54,7 +54,7 @@ export function StaffSettingsPanel({ currentUser, showStaffOnboard, onAddStaffPr
           <div className="pb-6">
             <p className="text-sm text-brand-text-muted mb-4">
               You can also manage staff from the Staff section in the sidebar — add accounts and change roles there.
-              Owners manage all staff tiers; Directors manage Moderators and Administrators.
+              Owners manage staff below their tier; Directors manage Moderators and Administrators.
             </p>
             <StaffAddStaffForm
               assignableRoles={assignableRoles}

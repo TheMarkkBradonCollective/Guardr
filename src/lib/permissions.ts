@@ -149,10 +149,26 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   moderator: 'Operations and support — no financial controls.',
   administrator: 'Platform management and daily operations.',
   director: 'Executive platform operations and unrestricted staff-side access.',
-  owner: 'Platform governance — manages directors and holds ultimate authority.',
+  owner: 'Platform governance — manages staff below the Owner tier.',
 };
 
 export const STAFF_ROLES_ORDERED: StaffRole[] = ['Moderator', 'Administrator', 'Director', 'Owner'];
+
+const STAFF_ROLE_RANK: Record<StaffRole, number> = {
+  Moderator: 1,
+  Administrator: 2,
+  Director: 3,
+  Owner: 4,
+};
+
+export function staffRoleRank(staffRole: StaffRole): number {
+  return STAFF_ROLE_RANK[staffRole];
+}
+
+export function platformStaffRank(role: PlatformRole): number | null {
+  const staffRole = platformRoleToStaffRole(role);
+  return staffRole ? staffRoleRank(staffRole) : null;
+}
 
 export function isStaffRole(role: PlatformRole): role is 'moderator' | 'administrator' | 'director' | 'owner' {
   return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
@@ -207,22 +223,34 @@ export function canManageDirectorAccounts(user: Pick<SessionUser, 'role'>): bool
 }
 
 export function getAssignableStaffRoles(role: PlatformRole): StaffRole[] {
-  if (role === 'owner') return STAFF_ROLES_ORDERED;
-  if (role === 'director') return ['Moderator', 'Administrator'];
-  return [];
+  const actorRank = platformStaffRank(role);
+  if (actorRank === null) return [];
+  return STAFF_ROLES_ORDERED.filter((staffRole) => staffRoleRank(staffRole) < actorRank);
 }
 
 export function canAssignStaffRole(actorRole: PlatformRole, targetRole: StaffRole): boolean {
   return getAssignableStaffRoles(actorRole).includes(targetRole);
 }
 
-/** Whether an actor may change roles or account status for a staff member */
+/**
+ * Staff may only moderate accounts strictly below their own role tier.
+ * Same-role peers and higher tiers are never manageable.
+ */
 export function canModifyStaffMember(actorRole: PlatformRole, memberStaffRole?: StaffRole): boolean {
-  if (actorRole === 'owner') return true;
-  if (actorRole === 'director') {
-    return memberStaffRole === 'Moderator' || memberStaffRole === 'Administrator';
-  }
-  return false;
+  if (!memberStaffRole) return false;
+  const actorRank = platformStaffRank(actorRole);
+  if (actorRank === null) return false;
+  return actorRank > staffRoleRank(memberStaffRole);
+}
+
+export function canModerateStaffMember(
+  actorRole: PlatformRole,
+  actorId: string,
+  member: { id: string; staffRole?: StaffRole }
+): boolean {
+  if (!member.staffRole) return false;
+  if (member.id === actorId) return false;
+  return canModifyStaffMember(actorRole, member.staffRole);
 }
 
 export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
