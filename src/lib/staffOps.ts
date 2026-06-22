@@ -150,10 +150,14 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
+  const pendingGuardAccounts = getPendingGuardAccounts(guards).length;
+  const pendingIdentityVerifications = guards.filter(
+    (g) => !g.isStaff && g.idVerificationStatus === 'pending'
+  ).length;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingApprovals =
-    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs;
+    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs + pendingGuardAccounts + pendingIdentityVerifications;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const activeGuardIds = new Set(

@@ -87,6 +87,12 @@ interface StaffDashboardProps {
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
+  onSubmitGuardIdentityVerification?: (
+    guardId: string,
+    payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onApproveGuardIdentityVerification?: (guardId: string) => Promise<void>;
+  onRejectGuardIdentityVerification?: (guardId: string, reason?: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
@@ -173,6 +179,9 @@ export function StaffDashboard({
   onApproveGuardAccount,
   onDeleteGuardAccount,
   onDeleteClientAccount,
+  onSubmitGuardIdentityVerification,
+  onApproveGuardIdentityVerification,
+  onRejectGuardIdentityVerification,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -344,6 +353,8 @@ export function StaffDashboard({
             onApproveGuardApplication={onApproveGuardApplication}
             onApproveClient={onApproveClient}
             onApproveGuardAccount={onApproveGuardAccount}
+            onApproveIdentityVerification={onApproveGuardIdentityVerification}
+            onRejectIdentityVerification={onRejectGuardIdentityVerification}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -399,6 +410,9 @@ export function StaffDashboard({
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
+            onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
+            onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
+            onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}
             staffEdit={controlledStaffGuardEdit}

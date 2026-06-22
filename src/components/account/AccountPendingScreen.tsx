@@ -16,7 +16,7 @@ export function AccountPendingScreen({ role, onOpenProfile }: AccountPendingScre
         <h2 className="font-black text-lg uppercase">Application pending</h2>
         <p className="text-brand-text-muted text-sm leading-relaxed">
           {isGuard
-            ? 'Your guard profile is waiting for Guardr staff approval. You can complete your profile and upload credentials now, but you cannot browse or accept jobs until approved.'
+            ? 'Your guard profile is waiting for Guardr staff approval. Upload your government ID (front and back) and take an identity selfie in your profile — this is separate from your profile photo. You can also add credentials now, but you cannot browse or accept jobs until approved.'
             : 'Your client account is waiting for Guardr staff approval. You can update your profile now, but you cannot post jobs or hire guards until approved.'}
         </p>
         <button type="button" onClick={onOpenProfile} className="app-button-primary !w-full !h-11 gap-2">

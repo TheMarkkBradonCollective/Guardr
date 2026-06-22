@@ -209,6 +209,14 @@ export interface SecurityGuard {
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
   mustChangePassword?: boolean;
+  /** Government ID verification — separate from profile avatar */
+  idVerificationStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected';
+  idFrontUrl?: string;
+  idBackUrl?: string;
+  idSelfieUrl?: string;
+  idVerificationSubmittedAt?: string;
+  idVerificationReviewedAt?: string;
+  idVerificationRejectionReason?: string;
 }
 
 export interface StaffSpotCheck {

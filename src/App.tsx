@@ -598,6 +598,13 @@ export default function App() {
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         password: g.password ?? undefined,
         mustChangePassword: g.must_change_password ?? false,
+        idVerificationStatus: g.id_verification_status ?? 'not_submitted',
+        idFrontUrl: g.id_front_url ?? undefined,
+        idBackUrl: g.id_back_url ?? undefined,
+        idSelfieUrl: g.id_selfie_url ?? undefined,
+        idVerificationSubmittedAt: g.id_verification_submitted_at ?? undefined,
+        idVerificationReviewedAt: g.id_verification_reviewed_at ?? undefined,
+        idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1692,6 +1699,116 @@ export default function App() {
     );
     if (isDbConnected) {
       await supabase.from('guards').update({ user_status: 'active' }).eq('id', guardId);
+    }
+  };
+
+  const handleSubmitGuardIdentityVerification = async (
+    guardId: string,
+    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) return { ok: false, error: 'Guard profile not found.' };
+    if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
+
+    const front = payload.idFrontUrl.trim();
+    const back = payload.idBackUrl.trim();
+    const selfie = payload.idSelfieUrl.trim();
+    if (!front || !back || !selfie) {
+      return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
+    }
+
+    const previous = { ...guard };
+    const submittedAt = new Date().toISOString();
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idFrontUrl: front,
+              idBackUrl: back,
+              idSelfieUrl: selfie,
+              idVerificationStatus: 'pending' as const,
+              idVerificationSubmittedAt: submittedAt,
+              idVerificationRejectionReason: undefined,
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          id_front_url: front,
+          id_back_url: back,
+          id_selfie_url: selfie,
+          id_verification_status: 'pending',
+          id_verification_submitted_at: submittedAt,
+          id_verification_rejection_reason: null,
+        })
+        .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('ID verification submit error:', error);
+        return { ok: false, error: 'Could not save ID verification. Please try again.' };
+      }
+    }
+    return { ok: true };
+  };
+
+  const handleApproveGuardIdentityVerification = async (guardId: string) => {
+    const reviewedAt = new Date().toISOString();
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idVerificationStatus: 'verified' as const,
+              idVerificationReviewedAt: reviewedAt,
+              idVerificationRejectionReason: undefined,
+            }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      await supabase
+        .from('guards')
+        .update({
+          id_verification_status: 'verified',
+          id_verification_reviewed_at: reviewedAt,
+          id_verification_rejection_reason: null,
+        })
+        .eq('id', guardId);
+    }
+  };
+
+  const handleRejectGuardIdentityVerification = async (guardId: string, reason?: string) => {
+    const reviewedAt = new Date().toISOString();
+    const rejectionReason = reason?.trim() || 'Documents could not be verified. Please resubmit clear photos.';
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idVerificationStatus: 'rejected' as const,
+              idVerificationReviewedAt: reviewedAt,
+              idVerificationRejectionReason: rejectionReason,
+            }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      await supabase
+        .from('guards')
+        .update({
+          id_verification_status: 'rejected',
+          id_verification_reviewed_at: reviewedAt,
+          id_verification_rejection_reason: rejectionReason,
+        })
+        .eq('id', guardId);
     }
   };
 
@@ -3419,6 +3536,9 @@ export default function App() {
           }
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
+          onSubmitIdentityVerification={(payload) =>
+            handleSubmitGuardIdentityVerification(activeGuard.id, payload)
+          }
           onAcceptJob={handleApplyToJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onRecordAuditViolation={handleRecordAuditViolation}
@@ -3549,6 +3669,9 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
+          onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
+          onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
+          onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}

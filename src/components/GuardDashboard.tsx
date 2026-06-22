@@ -64,6 +64,9 @@ interface GuardDashboardProps {
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void;
+  onSubmitIdentityVerification?: (
+    payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
@@ -112,6 +115,7 @@ export function GuardDashboard({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  onSubmitIdentityVerification,
   onAcceptJob,
   onUpdateJobAudit,
   onRecordAuditViolation,
@@ -673,6 +677,7 @@ export function GuardDashboard({
             onAttachCertificationImage={onAttachCertificationImage}
             onAddExperience={onAddExperience}
             onAddEducation={onAddEducation}
+            onSubmitIdentityVerification={onSubmitIdentityVerification}
           />
         </div>
       )}

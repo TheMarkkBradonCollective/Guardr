@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
+import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -38,6 +39,12 @@ interface StaffGuardsPanelProps {
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
+  onSubmitIdentityVerification?: (
+    guardId: string,
+    payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
+  onRejectIdentityVerification?: (guardId: string, reason?: string) => void | Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   staffEdit?: boolean;
@@ -67,6 +74,9 @@ export function StaffGuardsPanel({
   onAddEducation,
   onApproveGuardAccount,
   onDeleteGuard,
+  onSubmitIdentityVerification,
+  onApproveIdentityVerification,
+  onRejectIdentityVerification,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   staffEdit,
@@ -127,6 +137,15 @@ export function StaffGuardsPanel({
         onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
         onApproveGuardAccount,
         onDeleteGuard,
+        onSubmitIdentityVerification: onSubmitIdentityVerification
+          ? (payload) => onSubmitIdentityVerification(selected.id, payload)
+          : undefined,
+        onApproveIdentityVerification: onApproveIdentityVerification
+          ? () => onApproveIdentityVerification(selected.id)
+          : undefined,
+        onRejectIdentityVerification: onRejectIdentityVerification
+          ? (reason) => onRejectIdentityVerification(selected.id, reason)
+          : undefined,
         onOpenJob,
       }
     : null;
@@ -136,6 +155,7 @@ export function StaffGuardsPanel({
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
     const accountStatus = getGuardUserStatus(guard);
+    const idStatus = getGuardIdVerificationStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
 
     return (
@@ -151,6 +171,12 @@ export function StaffGuardsPanel({
             )}
             {accountStatus === 'pending' && (
               <WfBadge tone="warning">Awaiting approval</WfBadge>
+            )}
+            {idStatus === 'pending' && (
+              <WfBadge tone="warning">ID pending</WfBadge>
+            )}
+            {idStatus === 'verified' && (
+              <WfBadge tone="success">ID verified</WfBadge>
             )}
             <span>
               {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_USER_STATUS_LABELS[accountStatus]}
