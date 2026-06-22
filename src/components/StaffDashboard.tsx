@@ -85,6 +85,7 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
+  onApproveAllReadyGuardAccounts?: () => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onSubmitGuardIdentityVerification?: (
@@ -177,6 +178,7 @@ export function StaffDashboard({
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
+  onApproveAllReadyGuardAccounts,
   onDeleteGuardAccount,
   onDeleteClientAccount,
   onSubmitGuardIdentityVerification,
@@ -353,6 +355,7 @@ export function StaffDashboard({
             onApproveGuardApplication={onApproveGuardApplication}
             onApproveClient={onApproveClient}
             onApproveGuardAccount={onApproveGuardAccount}
+            onApproveAllReadyGuardAccounts={onApproveAllReadyGuardAccounts}
             onApproveIdentityVerification={onApproveGuardIdentityVerification}
             onRejectIdentityVerification={onRejectGuardIdentityVerification}
             canEditJobListing={canEditJobListing}

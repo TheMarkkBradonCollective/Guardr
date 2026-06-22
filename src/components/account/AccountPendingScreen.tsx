@@ -1,12 +1,15 @@
 import React from 'react';
+import { SecurityGuard } from '../../types';
 import { Clock, User } from 'lucide-react';
+import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 
 interface AccountPendingScreenProps {
   role: 'guard' | 'client';
+  guard?: SecurityGuard | null;
   onOpenProfile: () => void;
 }
 
-export function AccountPendingScreen({ role, onOpenProfile }: AccountPendingScreenProps) {
+export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPendingScreenProps) {
   const isGuard = role === 'guard';
 
   return (
@@ -16,9 +19,14 @@ export function AccountPendingScreen({ role, onOpenProfile }: AccountPendingScre
         <h2 className="font-black text-lg uppercase">Application pending</h2>
         <p className="text-brand-text-muted text-sm leading-relaxed">
           {isGuard
-            ? 'Your guard profile is waiting for Guardr staff approval. Upload your government ID (front and back) and take an identity selfie in your profile — this is separate from your profile photo. You can also add credentials now, but you cannot browse or accept jobs until approved.'
+            ? 'Before your account can be activated, submit your government ID (front, back, and identity selfie) and upload your BSIS Guard Card. Guardr staff will verify both. After activation you can add more credentials and accept jobs.'
             : 'Your client account is waiting for Guardr staff approval. You can update your profile now, but you cannot post jobs or hire guards until approved.'}
         </p>
+        {isGuard && guard && (
+          <div className="text-left">
+            <GuardActivationChecklistView guard={guard} />
+          </div>
+        )}
         <button type="button" onClick={onOpenProfile} className="app-button-primary !w-full !h-11 gap-2">
           <User className="w-4 h-4" />
           {isGuard ? 'Complete your application' : 'View profile'}

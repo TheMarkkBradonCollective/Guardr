@@ -38,6 +38,7 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
 import { isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+import { getGuardActivationChecklist } from './guardAccountActivation';
 
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
   const userStatus = guard.userStatus || 'active';
@@ -59,7 +60,14 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     return 'Staff accounts cannot work field jobs.';
   }
   if (isGuardAccountPending(guard)) {
-    return 'Your application is pending Guardr approval. Complete your profile and credentials while you wait.';
+    const checklist = getGuardActivationChecklist(guard);
+    if (!checklist.idSubmitted || !checklist.guardCardSubmitted) {
+      return 'Submit your government ID and BSIS Guard Card in your profile. Staff will verify both before activating your account.';
+    }
+    if (!checklist.canActivate) {
+      return 'Your ID and Guard Card are under staff review. You will be notified when your account is activated.';
+    }
+    return 'Your documents are verified — awaiting final account activation by Guardr staff.';
   }
   const userStatus = guard.userStatus || 'active';
   if (userStatus === 'suspended') {

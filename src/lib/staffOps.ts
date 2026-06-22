@@ -150,7 +150,9 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingGuardAccounts = getPendingGuardAccounts(guards).length;
+  const pendingGuardAccounts = guards.filter(
+    (g) => !g.isStaff && (g.userStatus || 'active') === 'pending'
+  ).length;
   const pendingIdentityVerifications = guards.filter(
     (g) => !g.isStaff && g.idVerificationStatus === 'pending'
   ).length;

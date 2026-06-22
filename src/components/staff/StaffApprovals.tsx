@@ -5,8 +5,15 @@ import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
-import { getPendingCertifications, getPendingClientAccounts, getPendingGuardAccounts, getPendingJobApprovals } from '../../lib/staffOps';
+import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import { getPendingIdentityVerifications } from '../../lib/guardIdentityVerification';
+import {
+  getGuardsReadyForAccountActivation,
+  getPendingGuardAccountReviews,
+  getPendingGuardsMissingActivationRequirements,
+  guardCanActivateAccount,
+} from '../../lib/guardAccountActivation';
+import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -24,7 +31,8 @@ interface StaffApprovalsProps {
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onApproveClient?: (clientId: string) => void;
-  onApproveGuardAccount?: (guardId: string) => void;
+  onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onApproveAllReadyGuardAccounts?: () => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onViewGuard?: (guardId: string) => void;
@@ -44,6 +52,7 @@ export function StaffApprovals({
   onApproveGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
+  onApproveAllReadyGuardAccounts,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
   onViewGuard,
@@ -53,7 +62,9 @@ export function StaffApprovals({
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
-  const pendingGuardAccounts = getPendingGuardAccounts(guards);
+  const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
+  const pendingGuardsMissingRequirements = getPendingGuardsMissingActivationRequirements(guards);
+  const readyForActivation = getGuardsReadyForAccountActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
   const pendingIdentityVerifications = getPendingIdentityVerifications(guards);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
@@ -64,14 +75,38 @@ export function StaffApprovals({
     pendingCerts.length === 0 &&
     jobsWithApplications.length === 0 &&
     pendingGuardAccounts.length === 0 &&
+    pendingGuardsMissingRequirements.length === 0 &&
     pendingClientAccounts.length === 0 &&
     pendingIdentityVerifications.length === 0;
 
   return (
     <div className="animate-fade-in space-y-6">
       <p className="text-sm text-brand-text-muted">
-        Approve client job offers before they can pay. Review new guard and client sign-ups, guard applications, and credentials.
+        Approve client job offers before they can pay. Review guard sign-ups after they submit government ID and a BSIS Guard Card — verify both, then activate the account.
       </p>
+
+      {readyForActivation.length > 0 && onApproveAllReadyGuardAccounts && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-brand-primary/30 bg-brand-primary/5">
+          <p className="text-sm">
+            <strong>{readyForActivation.length}</strong> guard{readyForActivation.length === 1 ? '' : 's'} ready for account activation (ID + Guard Card verified).
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              void (async () => {
+                try {
+                  await onApproveAllReadyGuardAccounts();
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Could not activate accounts.');
+                }
+              })();
+            }}
+            className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+          >
+            Activate all ready
+          </button>
+        </div>
+      )}
 
       {queueEmpty ? (
         <p className="staff-empty-state border border-dashed border-brand-border rounded-xl">
@@ -79,31 +114,49 @@ export function StaffApprovals({
         </p>
       ) : (
         <>
-          {(pendingGuardAccounts.length > 0 || pendingClientAccounts.length > 0) && (
+          {(pendingGuardAccounts.length > 0 || pendingGuardsMissingRequirements.length > 0 || pendingClientAccounts.length > 0) && (
             <section>
               <WfSectionHeader
-                title="New account applications"
-                count={pendingGuardAccounts.length + pendingClientAccounts.length}
+                title="Guard account activation"
+                count={pendingGuardAccounts.length + pendingGuardsMissingRequirements.length + pendingClientAccounts.length}
               />
               <p className="text-xs text-brand-text-muted mt-1 mb-3">
-                Self-sign-ups stay pending until staff approves. Applicants can complete profiles and upload credentials meanwhile.
+                Guards must submit ID and Guard Card. Verify both in the queues below, then activate the account.
               </p>
               <AppItemCardStack>
+                {pendingGuardsMissingRequirements.map((guard) => (
+                  <WfListCard
+                    key={guard.id}
+                    avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                    title={guard.name}
+                    subtitle={`Guard · ${guard.email}`}
+                    meta={<GuardActivationChecklistView guard={guard} compact />}
+                    onClick={onViewGuard ? () => onViewGuard(guard.id) : undefined}
+                  />
+                ))}
                 {pendingGuardAccounts.map((guard) => (
                   <WfListCard
                     key={guard.id}
                     avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
                     title={guard.name}
                     subtitle={`Guard · ${guard.email}`}
-                    meta={<WfBadge tone="warning">Pending approval</WfBadge>}
+                    meta={<GuardActivationChecklistView guard={guard} compact />}
                     action={
-                      onApproveGuardAccount ? (
+                      onApproveGuardAccount && guardCanActivateAccount(guard) ? (
                         <button
                           type="button"
-                          onClick={() => onApproveGuardAccount(guard.id)}
+                          onClick={() => {
+                            void (async () => {
+                              try {
+                                await onApproveGuardAccount(guard.id);
+                              } catch (err) {
+                                alert(err instanceof Error ? err.message : 'Could not activate account.');
+                              }
+                            })();
+                          }}
                           className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
                         >
-                          <Check className="w-3 h-3" /> Approve
+                          <Check className="w-3 h-3" /> Activate
                         </button>
                       ) : undefined
                     }

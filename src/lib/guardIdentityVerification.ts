@@ -19,7 +19,7 @@ export const ID_VERIFICATION_SELFIE_HINT =
   'Take a clear headshot with your front camera. Face the camera directly with good lighting. This is for identity verification — not your profile photo.';
 
 export const ID_VERIFICATION_POLICY_HINT =
-  'Upload a government-issued photo ID (front and back) plus a live identity selfie. Once submitted, photos are locked until staff reviews them.';
+  'Required for account activation: upload a government-issued photo ID (front and back) plus a live identity selfie. Once submitted, photos are locked until staff reviews them.';
 
 export function getGuardIdVerificationStatus(
   guard: Pick<SecurityGuard, 'idVerificationStatus'>
