@@ -6,6 +6,7 @@ import { showAppToast } from '../ui/AppToast';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppItemCardStack, AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
@@ -28,7 +29,7 @@ import {
   isJobScheduleLocked,
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
-import { EditRequestForm } from './EditRequestForm';
+import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
 
@@ -83,7 +84,11 @@ export function ClientRequestsList({
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
+  const reviewingRequest = reviewingId ? requests.find((r) => r.id === reviewingId) ?? null : null;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -122,7 +127,7 @@ export function ClientRequestsList({
         <button
           type="button"
           onClick={onRequestNew}
-          className="app-button-primary app-btn-md shrink-0 self-start mt-2"
+          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0 self-start mt-2"
         >
           + Post offer
         </button>
@@ -193,40 +198,25 @@ export function ClientRequestsList({
                 />
 
                 <div className="staff-detail-pane space-y-4">
-                {editingId !== req.id && (
-                  <JobListingProfile
-                    job={req}
-                    showClientHeader={false}
-                    showBadges={false}
-                    payLine={<JobBillingSummaryFromRequest req={req} variant="client" />}
-                  />
-                )}
+                <JobListingProfile
+                  job={req}
+                  showClientHeader={false}
+                  showBadges={false}
+                  payLine={<JobBillingSummaryFromRequest req={req} variant="client" />}
+                />
 
-                {editingId === req.id && (
-                  <JobBillingSummaryFromRequest req={req} variant="client" />
-                )}
-
-                {isJobScheduleLocked(req) && editingId !== req.id && (
+                {isJobScheduleLocked(req) && (
                   <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
                     Schedule is locked after payment. You can still update the job title and location.
                   </p>
                 )}
 
-                {editingId === req.id && canClientEditJobListing(req) && (
-                  <EditRequestForm
-                    request={req}
-                    scheduleLocked={isJobScheduleLocked(req)}
-                    onSave={onEditRequest}
-                    onCancel={() => setEditingId(null)}
-                  />
-                )}
-
-                {canClientEditJobListing(req) && editingId !== req.id && (
-                  <div className="app-action-row--equal">
+                {canClientEditJobListing(req) && (
+                  <div className="flex flex-wrap gap-2 w-full">
                     <button
                       type="button"
                       onClick={() => setEditingId(req.id)}
-                      className="app-button-outline app-btn-sm"
+                      className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                     >
                       <Pencil className="w-3 h-3 inline" /> {isJobScheduleLocked(req) ? 'Edit title & location' : 'Edit'}
                     </button>
@@ -234,7 +224,7 @@ export function ClientRequestsList({
                       <button
                         type="button"
                         onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
-                        className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                        className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
                       >
                         <X className="w-3 h-3 inline" /> Cancel
                       </button>
@@ -264,7 +254,7 @@ export function ClientRequestsList({
                           type="button"
                           onClick={() => handlePayNow(req)}
                           disabled={payingJobId === req.id}
-                          className="app-button-primary app-btn-sm gap-1.5 shrink-0 disabled:opacity-50"
+                          className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 shrink-0 disabled:opacity-50"
                         >
                           {payingJobId === req.id ? (
                             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
@@ -295,7 +285,7 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'accepted' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary app-btn-sm w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary !h-9 !text-xs w-full">
                     <Activity className="w-3.5 h-3.5 inline" /> Start Deployment
                   </button>
                 )}
@@ -309,37 +299,20 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'in-progress' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary app-btn-sm w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary !h-9 !text-xs w-full">
                     <Check className="w-3.5 h-3.5 inline" /> Complete job
                   </button>
                 )}
 
                 {req.status === 'completed' && hiredGuard && !req.ratingGiven && (
-                  <div className="border-t border-brand-border pt-3 space-y-2 w-full">
-                    <p className="uber-label flex items-center gap-1"><Award className="w-3.5 h-3.5" /> Rate guard</p>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <button key={s} type="button" onClick={() => setReviewRating((p) => ({ ...p, [req.id]: s }))}>
-                          <Star className={`w-5 h-5 ${(reviewRating[req.id] || 0) >= s ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'}`} />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Review..."
-                        value={reviewNote[req.id] || ''}
-                        onChange={(e) => setReviewNote((p) => ({ ...p, [req.id]: e.target.value }))}
-                        className="uber-input flex-1"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => onAddReview(req.id, reviewRating[req.id] || 5, reviewNote[req.id] || 'Good work.')}
-                        className="app-button-primary app-btn-sm"
-                      >
-                        Submit
-                      </button>
-                    </div>
+                  <div className="border-t border-brand-border pt-3 w-full">
+                    <button
+                      type="button"
+                      onClick={() => setReviewingId(req.id)}
+                      className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
+                    >
+                      <Award className="w-3.5 h-3.5" /> Rate guard
+                    </button>
                   </div>
                 )}
                 </div>
@@ -349,6 +322,56 @@ export function ClientRequestsList({
         </AppItemCardStack>
       )}
       </AppSection>
+
+      <EditRequestSheet
+        open={!!editingRequest}
+        request={editingRequest}
+        scheduleLocked={editingRequest ? isJobScheduleLocked(editingRequest) : false}
+        onSave={onEditRequest}
+        onClose={() => setEditingId(null)}
+      />
+
+      <AppFormSheet
+        open={!!reviewingRequest}
+        onClose={() => setReviewingId(null)}
+        title="Rate guard"
+        subtitle={reviewingRequest ? `How was ${guards.find((g) => g.id === reviewingRequest.assignedGuardId)?.name ?? 'your guard'} on "${reviewingRequest.title}"?` : undefined}
+      >
+        {reviewingRequest && (
+          <div className="space-y-4">
+            <div className="flex gap-1 justify-center py-2">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button key={s} type="button" onClick={() => setReviewRating((p) => ({ ...p, [reviewingRequest.id]: s }))}>
+                  <Star
+                    className={`w-8 h-8 ${(reviewRating[reviewingRequest.id] || 0) >= s ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'}`}
+                  />
+                </button>
+              ))}
+            </div>
+            <textarea
+              placeholder="Optional review note..."
+              value={reviewNote[reviewingRequest.id] || ''}
+              onChange={(e) => setReviewNote((p) => ({ ...p, [reviewingRequest.id]: e.target.value }))}
+              className="uber-input w-full min-h-[100px] resize-y"
+              rows={3}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onAddReview(
+                  reviewingRequest.id,
+                  reviewRating[reviewingRequest.id] || 5,
+                  reviewNote[reviewingRequest.id] || 'Good work.'
+                );
+                setReviewingId(null);
+              }}
+              className="app-button-primary w-full"
+            >
+              Submit review
+            </button>
+          </div>
+        )}
+      </AppFormSheet>
     </AppScreen>
   );
 }

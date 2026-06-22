@@ -176,9 +176,7 @@ export function AppOverlaySheet({
     };
   }, [open, onClose]);
 
-  if (typeof document === 'undefined') return null;
-
-  return createPortal(
+  const sheet = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -202,19 +200,22 @@ export function AppOverlaySheet({
             onClick={onClose}
           />
           <motion.div
-            className={`absolute inset-x-0 bottom-0 max-h-[85dvh] border-t border-brand-border bg-brand-surface shadow-[var(--shadow-float)] ${panelClassName}`.trim()}
+            className={`absolute inset-x-0 bottom-0 max-h-[85dvh] border-t border-brand-border bg-brand-surface text-brand-text shadow-[var(--shadow-float)] ${panelClassName}`.trim()}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ duration: APP_MOTION_DURATION.sheet, ease: APP_MOTION_EASE }}
+            onClick={(e) => e.stopPropagation()}
           >
             {children}
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return sheet;
+  return createPortal(sheet, document.body);
 }
 
 interface AppDrawerProps {

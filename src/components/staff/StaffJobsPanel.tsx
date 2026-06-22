@@ -8,7 +8,8 @@ import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
-import { EditRequestForm } from '../client/EditRequestForm';
+import { EditRequestSheet } from '../jobs/EditRequestSheet';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
@@ -198,7 +199,6 @@ function JobDetailPanel({
           payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
         />
       )}
-      {editing && <JobBillingSummaryFromRequest req={req} variant="staff" />}
       {scheduleLocked && !editing && (
         <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
           Schedule is locked after payment. Title and location can still be updated.
@@ -220,17 +220,16 @@ function JobDetailPanel({
         spotCheckOpen={spotCheckOpen}
         onToggleSpotCheck={() => setSpotCheckOpen((open) => !open)}
       />
-      {editing && showEdit && (
-        <EditRequestForm
-          request={req}
-          scheduleLocked={scheduleLocked}
-          onSave={async (requestId, updates) => {
-            await onEditJobListing!(requestId, updates);
-            setEditing(false);
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      )}
+      <EditRequestSheet
+        open={editing && showEdit}
+        request={req}
+        scheduleLocked={scheduleLocked}
+        onSave={async (requestId, updates) => {
+          await onEditJobListing!(requestId, updates);
+          setEditing(false);
+        }}
+        onClose={() => setEditing(false)}
+      />
       {rankedApplicants.length > 0 && onApproveGuardApplication && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
@@ -273,12 +272,6 @@ function JobDetailPanel({
           </div>
         </div>
       )}
-      {auditUploadOpen && canUploadAudit && (
-        <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos!} />
-      )}
-      {spotCheckOpen && canAddSpotCheck && (
-        <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck!} />
-      )}
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
@@ -319,6 +312,26 @@ function JobDetailPanel({
           </button>
         )}
       </div>
+      <AppFormSheet
+        open={auditUploadOpen && canUploadAudit}
+        onClose={() => setAuditUploadOpen(false)}
+        title="Upload self-audit photos"
+        subtitle="Add uniform, shoes, and selfie photos for this shift."
+      >
+        {canUploadAudit && onUploadSelfAuditPhotos && (
+          <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos} />
+        )}
+      </AppFormSheet>
+      <AppFormSheet
+        open={spotCheckOpen && canAddSpotCheck}
+        onClose={() => setSpotCheckOpen(false)}
+        title="Spot check photo"
+        subtitle="Upload a spot-check image for this job."
+      >
+        {canAddSpotCheck && onUploadSpotCheck && (
+          <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck} />
+        )}
+      </AppFormSheet>
     </div>
   );
 }

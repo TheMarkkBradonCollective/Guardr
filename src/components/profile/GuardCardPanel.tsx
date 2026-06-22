@@ -7,13 +7,14 @@ import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { WfBadge } from '../ui/wireframe';
-import { ImagePlus, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_DOCUMENT_PHOTO_LABEL, CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
+import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
-import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 interface GuardCardPanelProps {
   guard: SecurityGuard;
@@ -62,19 +63,6 @@ export function GuardCardPanel({
     setShowForm(false);
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      const dataUrl = await processDocumentPhotoFile(file);
-      setImageUrl(dataUrl);
-      setFormError('');
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Could not process image.');
-    }
-  };
-
   const submitGuardCard = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
@@ -83,7 +71,7 @@ export function GuardCardPanel({
     if (!entry) return;
 
     const proof = validateCertSubmission(imageUrl);
-    if (proof.ok === false) {
+    if (!proof.ok) {
       setFormError(proof.error);
       return;
     }
@@ -145,8 +133,8 @@ export function GuardCardPanel({
       ? 'Pending review'
       : 'Not uploaded';
 
-  const uploadForm = showForm && editing && (
-    <form onSubmit={submitGuardCard} className="space-y-3 border-t border-brand-border pt-3">
+  const uploadForm = (
+    <form onSubmit={submitGuardCard} className="space-y-3">
       <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
         {US_STATES.map(({ code, name }) => (
           <option key={code} value={code}>
@@ -175,27 +163,34 @@ export function GuardCardPanel({
         className="uber-input w-full"
         aria-label="Expiry date"
       />
-      <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-        <ImagePlus className="w-4 h-4 shrink-0" />
-        <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-        <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-      </label>
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Guard card preview"
-          className="w-full max-h-40 object-contain rounded-lg border border-brand-border"
-        />
-      )}
+      <DocumentPhotoUploadField
+        imageUrl={imageUrl}
+        onImageUrlChange={(url) => {
+          setImageUrl(url);
+          setFormError('');
+        }}
+        previewAlt="Guard card preview"
+      />
       {formError && <p className="text-xs text-red-400">{formError}</p>}
       <button
         type="submit"
         disabled={!imageUrl?.trim()}
-        className="w-full app-button-primary disabled:opacity-50"
+        className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
       >
         Upload guard card
       </button>
     </form>
+  );
+
+  const uploadSheet = (
+    <AppFormSheet
+      open={showForm && editing}
+      onClose={resetForm}
+      title={items.length ? 'Add another guard card' : 'Upload guard card'}
+      subtitle={`BSIS Guard Card — required before profile approval. ${CERT_IMAGE_POLICY_HINT}`}
+    >
+      {uploadForm}
+    </AppFormSheet>
   );
 
   const cardRows = items.map((cert) => (
@@ -225,20 +220,21 @@ export function GuardCardPanel({
               </p>
               <button
                 type="button"
-                onClick={() => setShowForm((open) => !open)}
-                className="app-button-primary app-btn-sm shrink-0"
+                onClick={() => setShowForm(true)}
+                className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
               >
-                {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
+                {items.length ? 'Add another' : 'Upload'}
               </button>
             </div>
-            {uploadForm}
           </div>
         )}
+        {uploadSheet}
       </>
     );
   }
 
   return (
+    <>
     <section className="app-form-section space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -261,15 +257,13 @@ export function GuardCardPanel({
         {editing && onAddCertification && (
           <button
             type="button"
-            onClick={() => setShowForm((open) => !open)}
-            className="app-button-primary app-btn-sm shrink-0"
+            onClick={() => setShowForm(true)}
+            className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
           >
-            {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
+            {items.length ? 'Add another' : 'Upload'}
           </button>
         )}
       </div>
-
-      {uploadForm}
 
       {items.length === 0 ? (
         <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
@@ -281,5 +275,7 @@ export function GuardCardPanel({
         </div>
       )}
     </section>
+    {uploadSheet}
+    </>
   );
 }

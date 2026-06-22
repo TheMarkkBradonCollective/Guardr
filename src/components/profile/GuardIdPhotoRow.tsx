@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ChevronRight, IdCard } from 'lucide-react';
+import { ChevronRight, IdCard, ImagePlus, Loader2 } from 'lucide-react';
 import {
   captureIdentitySelfie,
   processIdDocumentFile,
@@ -97,18 +97,8 @@ export function GuardIdPhotoRow({
             </div>
           </div>
         )}
-        <div className="app-cert-item-meta">
-          {!locked && (
-            <button
-              type="button"
-              onClick={triggerUpload}
-              disabled={loading}
-              className="text-xs text-brand-primary hover:underline disabled:opacity-50"
-            >
-              {loading ? '…' : currentUrl ? 'Replace' : selfie ? 'Take photo' : 'Upload'}
-            </button>
-          )}
-          {currentUrl && (
+        {currentUrl && (
+          <div className="app-cert-item-meta">
             <button
               type="button"
               onClick={() => setViewOpen(true)}
@@ -117,9 +107,42 @@ export function GuardIdPhotoRow({
             >
               <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
+          </div>
+        )}
+      </div>
+      {!locked && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={triggerUpload}
+            disabled={loading}
+            className="w-full app-button-outline !h-11 !text-sm gap-2 disabled:opacity-50"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ImagePlus className="w-4 h-4" />
+            )}
+            {loading
+              ? 'Processing…'
+              : currentUrl
+                ? 'Replace photo'
+                : selfie
+                  ? 'Take selfie'
+                  : 'Upload photo'}
+          </button>
+          {selfie && !currentUrl && (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={loading}
+              className="w-full app-button-outline !h-10 !text-xs gap-2 disabled:opacity-50"
+            >
+              Upload a photo instead
+            </button>
           )}
         </div>
-      </div>
+      )}
       {error && <p className="text-xs text-red-500 px-1 -mt-1 mb-1">{error}</p>}
       <IdVerificationImageModal open={viewOpen} label={label} imageUrl={currentUrl} onClose={() => setViewOpen(false)} />
       {!selfie ? (
@@ -127,7 +150,7 @@ export function GuardIdPhotoRow({
           ref={inputRef}
           type="file"
           accept="image/*"
-          className="hidden"
+          className="sr-only"
           disabled={locked}
           onChange={(e) => {
             void handleFile(e.target.files?.[0], processIdDocumentFile);
@@ -135,29 +158,18 @@ export function GuardIdPhotoRow({
           }}
         />
       ) : (
-        <>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            className="hidden"
-            disabled={locked}
-            onChange={(e) => {
-              void handleFile(e.target.files?.[0], processIdentitySelfieFile);
-              e.target.value = '';
-            }}
-          />
-          {!locked && !currentUrl && (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="text-[10px] text-brand-text-muted hover:text-brand-primary underline ml-1 mb-2"
-            >
-              Upload a photo instead
-            </button>
-          )}
-        </>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="user"
+          className="sr-only"
+          disabled={locked}
+          onChange={(e) => {
+            void handleFile(e.target.files?.[0], processIdentitySelfieFile);
+            e.target.value = '';
+          }}
+        />
       )}
     </>
   );

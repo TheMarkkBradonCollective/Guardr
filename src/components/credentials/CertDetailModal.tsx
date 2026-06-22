@@ -7,7 +7,7 @@ import { certPhotoIsLockedForEditor } from '../../lib/certImagePolicy';
 import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
-import { AppModal } from '../ui/motion/AppMotion';
+import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 import { CertPhotoRow } from './CertPhotoRow';
 
@@ -174,8 +174,9 @@ export function CertDetailModal({
   };
 
   return (
-    <AppModal open onClose={onClose} ariaLabelledBy="cert-detail-title">
-      <div className="flex items-start justify-between gap-3 p-5 border-b border-brand-border">
+    <AppOverlaySheet open onClose={onClose} ariaLabel={title} panelClassName="rounded-t-2xl">
+      <div className="flex flex-col max-h-[85dvh]">
+      <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
         <div className="min-w-0">
           {guardName && <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>}
           <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -195,7 +196,7 @@ export function CertDetailModal({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="app-button-outline app-btn-sm gap-1.5"
+              className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
             >
               <Pencil className="w-3.5 h-3.5" />
               Edit
@@ -212,8 +213,8 @@ export function CertDetailModal({
         </div>
       </div>
 
-      <div className="p-5 space-y-5 max-h-[min(80vh,40rem)] overflow-y-auto">
-        <div className="app-action-row--equal">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 pb-8 space-y-5">
+        <div className="flex flex-wrap gap-2">
           <CredentialStatusBadges cert={displayCert} />
         </div>
 
@@ -285,12 +286,12 @@ export function CertDetailModal({
 
             {submitError && <p className="text-xs text-red-500">{submitError}</p>}
 
-            <div className="app-action-row--equal pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => void handleSave()}
                 disabled={saving || !draftComplete}
-                className="app-button-primary app-btn-md !text-sm gap-2 disabled:opacity-50"
+                className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-2 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {saving ? 'Saving…' : staffMode ? 'Save credential' : 'Submit for review'}
@@ -299,7 +300,7 @@ export function CertDetailModal({
                 type="button"
                 onClick={handleCancelEdit}
                 disabled={saving}
-                className="app-button-outline app-btn-md"
+                className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
               >
                 Cancel
               </button>
@@ -366,6 +367,7 @@ export function CertDetailModal({
           </>
         )}
       </div>
-    </AppModal>
+      </div>
+    </AppOverlaySheet>
   );
 }

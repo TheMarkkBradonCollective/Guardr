@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ChevronRight, FileImage } from 'lucide-react';
+import { ChevronRight, FileImage, ImagePlus, Loader2 } from 'lucide-react';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 export function CertPhotoRow({
@@ -62,18 +62,8 @@ export function CertPhotoRow({
             </div>
           </div>
         )}
-        <div className="app-cert-item-meta">
-          {!locked && (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={loading}
-              className="text-xs text-brand-primary hover:underline disabled:opacity-50"
-            >
-              {loading ? '…' : currentUrl ? 'Replace' : 'Upload'}
-            </button>
-          )}
-          {currentUrl && (
+        {currentUrl && (
+          <div className="app-cert-item-meta">
             <button
               type="button"
               onClick={() => setViewOpen(true)}
@@ -82,10 +72,21 @@ export function CertPhotoRow({
             >
               <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-      {error && <p className="text-xs text-red-500 px-1 -mt-1 mb-1">{error}</p>}
+      {!locked && (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={loading}
+          className="w-full app-button-outline !h-11 !text-sm gap-2 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+          {loading ? 'Processing…' : currentUrl ? 'Replace photo' : 'Upload photo'}
+        </button>
+      )}
+      {error && <p className="text-xs text-red-500">{error}</p>}
       {viewOpen && currentUrl && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
@@ -105,7 +106,7 @@ export function CertPhotoRow({
         ref={inputRef}
         type="file"
         accept="image/*"
-        className="hidden"
+        className="sr-only"
         disabled={locked}
         onChange={(e) => {
           void handleFile(e.target.files?.[0]);

@@ -4,7 +4,7 @@ import type { ApprovalQueueId } from '../../lib/staffOps';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
-import { EditRequestForm } from '../client/EditRequestForm';
+import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import {
@@ -275,26 +275,10 @@ export function StaffApprovals({
   const renderJobOfferDetail = (req: SecurityRequest) => {
     const showEdit =
       canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
-    const editing = editingJobId === req.id;
-    const scheduleLocked = isJobScheduleLocked(req);
 
     return (
       <div className="staff-detail-pane space-y-3">
-        {editing ? (
-          <>
-            <JobBillingSummaryFromRequest req={req} variant="staff" />
-            <EditRequestForm
-              request={req}
-              scheduleLocked={scheduleLocked}
-              onSave={async (requestId, updates) => {
-                await onEditJobListing!(requestId, updates);
-                setEditingJobId(null);
-              }}
-              onCancel={() => setEditingJobId(null)}
-            />
-          </>
-        ) : (
-          <>
+        <>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
@@ -342,11 +326,13 @@ export function StaffApprovals({
                 <Check className="w-3.5 h-3.5" /> Approve — unlock payment
               </button>
             </div>
-          </>
-        )}
+        </>
       </div>
     );
   };
+
+  const editingJob =
+    editingJobId != null ? pendingJobs.find((r) => r.id === editingJobId) ?? null : null;
 
   const renderQueueList = () => {
     if (!activeQueue) return null;
@@ -790,6 +776,19 @@ export function StaffApprovals({
           cert={viewCert.cert}
           guardName={viewCert.guard.name}
           onClose={() => setViewCert(null)}
+        />
+      )}
+
+      {editingJob && onEditJobListing && (
+        <EditRequestSheet
+          open={editingJobId !== null}
+          request={editingJob}
+          scheduleLocked={isJobScheduleLocked(editingJob)}
+          onSave={async (requestId, updates) => {
+            await onEditJobListing(requestId, updates);
+            setEditingJobId(null);
+          }}
+          onClose={() => setEditingJobId(null)}
         />
       )}
     </div>
