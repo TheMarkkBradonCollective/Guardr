@@ -35,6 +35,18 @@ export const SUPPORT_STATUS_LABEL: Record<SupportTicketStatus, string> = {
   resolved: 'Resolved',
 };
 
+/** Formal reports use review language — not live “open” conversations. */
+export const SUPPORT_REPORT_STATUS_LABEL: Record<SupportTicketStatus, string> = {
+  open: 'Submitted',
+  'in-progress': 'Under review',
+  resolved: 'Closed',
+};
+
+export function supportStatusLabel(ticket: Pick<SupportTicket, 'kind' | 'status'>): string {
+  if (ticket.kind === 'report') return SUPPORT_REPORT_STATUS_LABEL[ticket.status];
+  return SUPPORT_STATUS_LABEL[ticket.status];
+}
+
 export function categoryLabel(category: SupportTicketCategory): string {
   return SUPPORT_CATEGORY_OPTIONS.find((o) => o.id === category)?.label ?? category;
 }

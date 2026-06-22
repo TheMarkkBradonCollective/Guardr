@@ -5,7 +5,6 @@ import {
   SessionUser,
   SupportTicket,
   SupportTicketCategory,
-  SupportTicketKind,
   SupportPriority,
 } from '../../types';
 import {
@@ -14,6 +13,7 @@ import {
   SUPPORT_CATEGORY_OPTIONS,
   SUPPORT_PRIORITY_OPTIONS,
   SUPPORT_STATUS_LABEL,
+  supportStatusLabel,
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
@@ -30,10 +30,10 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { AppPageTransition } from '../ui/motion/AppMotion';
-import { ArrowLeft, ChevronRight, FileText, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ChevronRight, FileText, LifeBuoy } from 'lucide-react';
 
 type SupportView = 'home' | 'report' | 'thread';
-type SupportSection = 'messages' | 'reports';
+type SupportSection = 'support' | 'reports';
 
 interface SupportScreenProps {
   currentUser: SessionUser;
@@ -57,7 +57,7 @@ export function SupportScreen({
   onActiveTicketIdChange,
 }: SupportScreenProps) {
   const [view, setView] = useState<SupportView>('home');
-  const [section, setSection] = useState<SupportSection>('messages');
+  const [section, setSection] = useState<SupportSection>('support');
   const [activeTicketId, setActiveTicketId] = useState<string | null>(initialTicketId);
   const [submitting, setSubmitting] = useState(false);
 
@@ -70,7 +70,6 @@ export function SupportScreen({
   const myTickets = useMemo(() => ticketsForUser(tickets, currentUser), [tickets, currentUser]);
   const chatTickets = useMemo(() => myTickets.filter((t) => t.kind === 'chat'), [myTickets]);
   const reportTickets = useMemo(() => myTickets.filter((t) => t.kind === 'report'), [myTickets]);
-  const sectionTickets = section === 'messages' ? chatTickets : reportTickets;
 
   const activeChatTicket = useMemo(
     () => chatTickets.find((t) => t.status !== 'resolved') ?? null,
@@ -86,7 +85,7 @@ export function SupportScreen({
       setView('home');
       return;
     }
-    setSection(ticket.kind === 'report' ? 'reports' : 'messages');
+    setSection(ticket.kind === 'report' ? 'reports' : 'support');
     setActiveTicketId(initialTicketId);
     setView('thread');
   }, [initialTicketId, myTickets]);
@@ -94,7 +93,7 @@ export function SupportScreen({
   const openThread = (ticketId: string) => {
     const ticket = myTickets.find((t) => t.id === ticketId);
     if (ticket) {
-      setSection(ticket.kind === 'report' ? 'reports' : 'messages');
+      setSection(ticket.kind === 'report' ? 'reports' : 'support');
     }
     setActiveTicketId(ticketId);
     onActiveTicketIdChange?.(ticketId);
@@ -170,7 +169,8 @@ export function SupportScreen({
   );
 
   if (view === 'thread' && activeTicket) {
-    const chatMessages = activeTicket.messages.map((msg) => ({
+    const isReport = activeTicket.kind === 'report';
+    const threadMessages = activeTicket.messages.map((msg) => ({
       id: msg.id,
       senderId: msg.senderId,
       senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
@@ -179,12 +179,16 @@ export function SupportScreen({
       createdAt: msg.createdAt,
     }));
 
+    const threadSubtitle = isReport
+      ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
+      : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
+
     return (
       <AppPageTransition motionKey={`thread-${activeTicket.id}`} className="h-full min-h-0">
         <div className="h-full flex flex-col bg-brand-bg min-h-0">
           <AppChatHeader
             title={activeTicket.subject}
-            subtitle={`${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`}
+            subtitle={threadSubtitle}
             onBack={() => {
               setView('home');
               setActiveTicketId(null);
@@ -193,12 +197,16 @@ export function SupportScreen({
           />
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
-              messages={chatMessages}
+              messages={threadMessages}
               currentUserId={currentUser.id}
               onSend={(body) => onSendMessage(activeTicket.id, body)}
-              placeholder="Type a message to staff…"
-              readOnly={activeTicket.status === 'resolved'}
-              readOnlyMessage="This conversation is resolved. Open a new message if you need more help."
+              placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
+              readOnly={isReport ? activeTicket.status === 'resolved' : activeTicket.status === 'resolved'}
+              readOnlyMessage={
+                isReport
+                  ? 'This report is closed. File a new report if you need further help.'
+                  : 'This conversation is resolved. Contact support again if you need more help.'
+              }
             />
           </div>
         </div>
@@ -300,7 +308,7 @@ export function SupportScreen({
         <div className="px-5 mb-5">
           <AppSegmentedControl
             options={[
-              { id: 'messages', label: 'Messages' },
+              { id: 'support', label: 'Support' },
               { id: 'reports', label: 'Reports' },
             ]}
             value={section}
@@ -308,19 +316,19 @@ export function SupportScreen({
           />
         </div>
 
-        {section === 'messages' ? (
+        {section === 'support' ? (
           <>
-            <AppDashboardZone title="Staff messages">
+            <AppDashboardZone title="Contact support">
               <AppItemCardStack>
                 <AppItemCard onClick={() => !submitting && void startChat()}>
-                  <MessageCircle className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
+                  <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm">
-                      {activeChatTicket ? 'Continue staff chat' : 'Message staff'}
+                      {activeChatTicket ? 'Continue support chat' : 'Contact support'}
                     </p>
                     <p className="text-sm text-brand-text-muted mt-0.5">
                       {activeChatTicket
-                        ? `Resume your open conversation: ${activeChatTicket.subject}`
+                        ? `Resume your conversation: ${activeChatTicket.subject}`
                         : 'Direct line to the Guardr operations team.'}
                     </p>
                   </div>
@@ -329,10 +337,10 @@ export function SupportScreen({
               </AppItemCardStack>
             </AppDashboardZone>
 
-            <AppDashboardZone title="Your messages">
+            <AppDashboardZone title="Your support chats">
               {chatTickets.length === 0 ? (
                 <p className="text-sm text-brand-text-muted text-center py-10">
-                  No staff messages yet. Tap above to start a conversation.
+                  No support chats yet. Tap above to contact the team.
                 </p>
               ) : (
                 <AppInboxList>
@@ -359,7 +367,7 @@ export function SupportScreen({
           </>
         ) : (
           <>
-            <AppDashboardZone title="Formal reports">
+            <AppDashboardZone title="File a report">
               <AppItemCardStack>
                 <AppItemCard onClick={() => void startReport()}>
                   <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
@@ -385,7 +393,7 @@ export function SupportScreen({
                     <AppInboxRow
                       key={ticket.id}
                       title={ticket.subject}
-                      preview={ticket.messages[ticket.messages.length - 1]?.body}
+                      preview={ticket.messages[0]?.body}
                       meta={new Date(ticket.updatedAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -393,7 +401,7 @@ export function SupportScreen({
                       badges={
                         <>
                           <span className="text-[10px] font-bold uppercase tracking-wide text-brand-primary">
-                            {SUPPORT_STATUS_LABEL[ticket.status]}
+                            {supportStatusLabel(ticket)}
                           </span>
                           <span className="text-[10px] text-brand-text-muted">
                             {categoryLabel(ticket.category)}
