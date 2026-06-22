@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, Search } from 'lucide-react';
+import { ArrowLeft, Filter, Search } from 'lucide-react';
 
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`app-screen ${className}`}>{children}</div>;
@@ -9,21 +9,107 @@ export function AppScreenTitle({ children }: { children: React.ReactNode }) {
   return <h1 className="app-screen-title">{children}</h1>;
 }
 
+export function AppPageLead({
+  kicker,
+  subtitle,
+  title,
+}: {
+  kicker?: string;
+  subtitle?: string;
+  title: string;
+}) {
+  return (
+    <div className="app-page-lead">
+      {kicker && <p className="app-page-lead-kicker">{kicker}</p>}
+      {subtitle && <p className="app-page-lead-sub">{subtitle}</p>}
+      <h1 className="app-page-lead-title">{title}</h1>
+    </div>
+  );
+}
+
+export function AppSubScreenHeader({
+  title,
+  onBack,
+  backLabel = 'Back',
+}: {
+  title: string;
+  onBack: () => void;
+  backLabel?: string;
+}) {
+  return (
+    <div className="app-subscreen-header">
+      <button type="button" onClick={onBack} className="app-subscreen-back">
+        <ArrowLeft className="w-4 h-4" />
+        {backLabel}
+      </button>
+      <h1 className="app-subscreen-title truncate">{title}</h1>
+    </div>
+  );
+}
+
+export function AppHeroBand({
+  label,
+  icon,
+  children,
+  footer,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+}) {
+  return (
+    <section className="app-hero-band">
+      <p className="app-hero-band-label">
+        {icon}
+        {label}
+      </p>
+      {children}
+      {footer}
+    </section>
+  );
+}
+
+export function AppStatusBanner({
+  icon,
+  title,
+  children,
+  action,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  children?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="app-status-banner">
+      {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
+      <div className="min-w-0 flex-1 space-y-2">
+        <p className="text-sm font-semibold">{title}</p>
+        {children}
+        {action}
+      </div>
+    </div>
+  );
+}
+
 export function AppSection({
   title,
   actionLabel,
   onAction,
   children,
   bleed = false,
+  className = '',
 }: {
   title: string;
   actionLabel?: string;
   onAction?: () => void;
   children: React.ReactNode;
   bleed?: boolean;
+  className?: string;
 }) {
   return (
-    <section className="app-section">
+    <section className={`app-section ${className}`}>
       <div className="app-section-head">
         <h2>{title}</h2>
         {actionLabel && onAction && (

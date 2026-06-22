@@ -81,10 +81,8 @@ export function RoleAppShell({
         />
       )}
 
-      <main
-        className={`flex-1 min-h-0 min-w-0 overflow-hidden ${fullBleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}
-      >
-        <div className={`h-full max-w-full min-w-0 ${fullBleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>
+      <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
+        <div className={`h-full max-w-full min-w-0 ${fullBleed ? 'overflow-hidden' : 'overflow-hidden'}`}>
           {children}
         </div>
       </main>

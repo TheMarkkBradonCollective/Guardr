@@ -4,7 +4,7 @@ import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirector
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppItemCardStack, AppPageLead, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 import { Star } from 'lucide-react';
@@ -22,32 +22,31 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
   const filtered = useMemo(() => filterGuardsByQuery(browseable, query), [browseable, query]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden client-content-shell">
-      <div className="shrink-0 px-4 pt-4 pb-3 space-y-3">
-        {onBack && (
-          <button type="button" onClick={onBack} className="text-sm font-medium text-brand-primary">
-            ← Back
-          </button>
-        )}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Find a guard</h1>
-          <p className="text-sm text-brand-text-muted mt-1">
-            Read full resumes, licenses, and experience — or post a general job from Home.
-          </p>
-        </div>
+    <AppScreen>
+      {onBack ? (
+        <AppSubScreenHeader title="Find a guard" onBack={onBack} />
+      ) : (
+        <AppPageLead
+          kicker="Guard directory"
+          subtitle="Browse licensed professionals"
+          title="Find a guard"
+        />
+      )}
+
+      <div className="px-5 pb-3 space-y-2 border-b border-brand-border">
         <WfSearchBar
           value={query}
           onChange={setQuery}
           placeholder="Search by name, skills, or experience…"
         />
-        <p className="text-xs text-brand-text-muted">{filtered.length} guard{filtered.length !== 1 ? 's' : ''} available</p>
+        <p className="text-xs text-brand-text-muted">
+          {filtered.length} guard{filtered.length !== 1 ? 's' : ''} available
+        </p>
       </div>
 
-      <div className="guard-scroll-panel flex-1 px-4 pb-8">
+      <AppSection title="Guards">
         {filtered.length === 0 ? (
-          <p className="app-empty-state text-sm">
-            No guards match your search. Try a general security request instead.
-          </p>
+          <p className="app-empty-state">No guards match your search. Try a general security request instead.</p>
         ) : (
           <AppItemCardStack>
             {filtered.map((guard) => (
@@ -85,7 +84,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
             ))}
           </AppItemCardStack>
         )}
-      </div>
-    </div>
+      </AppSection>
+    </AppScreen>
   );
 }
