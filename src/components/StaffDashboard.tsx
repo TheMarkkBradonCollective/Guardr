@@ -168,7 +168,8 @@ interface StaffDashboardProps {
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
   staffApprovalQueue?: ApprovalQueueId | null;
-  onStaffApprovalQueueChange?: (queue: ApprovalQueueId | null) => void;
+  onOpenStaffApprovals?: (queue?: ApprovalQueueId | null) => void;
+  onClearStaffApprovalQueue?: () => void;
 }
 
 export function StaffDashboard({
@@ -251,7 +252,8 @@ export function StaffDashboard({
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
   staffApprovalQueue = null,
-  onStaffApprovalQueueChange,
+  onOpenStaffApprovals,
+  onClearStaffApprovalQueue,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -289,17 +291,17 @@ export function StaffDashboard({
   };
 
   const navigateToApprovals = (queue?: ApprovalQueueId) => {
-    onStaffApprovalQueueChange?.(queue ?? null);
+    onOpenStaffApprovals?.(queue ?? null);
   };
 
   const navigateSection = (next: StaffSection) => {
+    if (next !== 'approvals') onClearStaffApprovalQueue?.();
     if (!isControlled) setInternalSection(next);
     onSectionChange?.(next);
     if (next !== 'guards') setSelectedGuardId(null);
     if (next !== 'team') setSelectedTeamId(null);
     if (next !== 'clients') setSelectedClientId(null);
     if (next !== 'jobs') setSelectedJobId(null);
-    if (next !== 'approvals') onStaffApprovalQueueChange?.(null);
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
@@ -385,7 +387,7 @@ export function StaffDashboard({
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
             initialQueue={staffApprovalQueue}
-            onQueueChange={onStaffApprovalQueueChange}
+            onQueueChange={(queue) => onOpenStaffApprovals?.(queue)}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');

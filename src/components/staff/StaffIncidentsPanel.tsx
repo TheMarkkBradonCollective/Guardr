@@ -18,12 +18,12 @@ export function StaffIncidentsPanel({ incidents }: StaffIncidentsPanelProps) {
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4 max-w-2xl">
-        Incident reports are filed by guards during jobs and delivered to the client. Guardr staff can
+        Incident reports are filed by guards at job checkout and shared with the client. Guardr staff can
         review them here for context only — response and follow-up are handled by the client.
       </p>
 
       {incidents.length === 0 ? (
-        <p className="staff-empty-state border-t border-brand-border">No client incident reports on file.</p>
+        <p className="staff-empty-state border-t border-brand-border">No incident reports on file.</p>
       ) : (
         <AppList>
           {incidents.map((inc) => (

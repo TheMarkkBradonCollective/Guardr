@@ -170,13 +170,25 @@ export function StaffOverview({
           <WfSectionHeader title="Live operations" />
         ) : null}
         <div className="staff-overview-metrics">
-          {metrics.map(({ label, value, sub, accent }) => {
-            if (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) {
+          {metrics.map(({ label, value, sub, accent, navigateTo }) => {
+            const handleMetricClick = () => {
+              if (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) {
+                onNavigateApprovals();
+                return;
+              }
+              if (navigateTo) onNavigate(navigateTo);
+            };
+
+            const isClickable =
+              (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) ||
+              (navigateTo && navigateTo !== 'approvals');
+
+            if (isClickable) {
               return (
                 <button
                   key={label}
                   type="button"
-                  onClick={() => onNavigateApprovals()}
+                  onClick={handleMetricClick}
                   className={`staff-summary-cell text-left ${accent ? 'staff-summary-cell-accent' : ''}`}
                 >
                   <p className="text-[11px] font-medium uppercase tracking-wide text-brand-text-muted">{label}</p>

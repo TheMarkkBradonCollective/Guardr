@@ -94,7 +94,7 @@ export function ClientDashboard({
   supportTicketId = null,
   onSupportTicketIdChange,
 }: ClientDashboardProps) {
-  const [view, setView] = useState<ClientView>(activeView ?? 'map');
+  const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [internalProfileGuardId, setInternalProfileGuardId] = useState<string | null>(null);
   const [internalDirectGuardId, setInternalDirectGuardId] = useState<string | null>(null);
@@ -127,6 +127,12 @@ export function ClientDashboard({
   useEffect(() => {
     if (activeView) setView(activeView);
   }, [activeView]);
+
+  useEffect(() => {
+    if (view === 'direct-request' && !requestTargetGuard) {
+      navigate('guards');
+    }
+  }, [view, requestTargetGuard]);
 
   const navigate = (next: ClientView) => {
     setView(next);

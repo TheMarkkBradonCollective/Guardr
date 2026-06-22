@@ -222,7 +222,7 @@ export default function App() {
 
   const initialRoute = readAppRouteFromWindow();
   const [clientView, setClientViewState] = useState<ClientView>(
-    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'map'
+    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
     () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
@@ -395,17 +395,22 @@ export default function App() {
     if (options?.openChat !== undefined) setOpenJobChatState(options.openChat);
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
+      setStaffSectionState('messages');
+      setStaffMessageTabState('jobs');
+      setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
           staffSection: 'messages',
           staffMessageTab: 'jobs',
           jobChatRequestId: requestId ?? undefined,
+          staffApprovalQueue: undefined,
         })
       );
       return;
     }
     if (role === 'guard') {
+      setGuardTabState('myJobs');
       syncAppRoute(
         buildAppRoute({
           role: 'guard',
@@ -417,6 +422,7 @@ export default function App() {
       return;
     }
     if (role === 'client') {
+      setClientViewState('coverage');
       syncAppRoute(
         buildAppRoute({
           role: 'client',
@@ -432,16 +438,20 @@ export default function App() {
     setSupportTicketIdState(ticketId);
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
+      setStaffSectionState('support');
+      setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
           staffSection: 'support',
           supportTicketId: ticketId ?? undefined,
+          staffApprovalQueue: undefined,
         })
       );
       return;
     }
     if (role === 'guard') {
+      setGuardTabState('support');
       syncAppRoute(
         buildAppRoute({
           role: 'guard',
@@ -452,6 +462,7 @@ export default function App() {
       return;
     }
     if (role === 'client') {
+      setClientViewState('support');
       syncAppRoute(
         buildAppRoute({
           role: 'client',
@@ -484,7 +495,8 @@ export default function App() {
     const nextJobChatId = section === 'messages' ? jobChatRequestId ?? undefined : undefined;
     const nextSupportId = section === 'support' ? supportTicketId ?? undefined : undefined;
     const nextMessageTab = section === 'messages' ? staffMessageTab : undefined;
-    const nextApprovalQueue = section === 'approvals' ? undefined : undefined;
+    const nextApprovalQueue =
+      section === 'approvals' ? staffApprovalQueue ?? undefined : undefined;
     const nextEdit = section === 'guards' && nextGuardId ? staffEdit || undefined : undefined;
     setStaffGuardIdState(nextGuardId ?? null);
     setStaffClientIdState(nextClientId ?? null);
@@ -492,7 +504,7 @@ export default function App() {
     setStaffTeamIdState(nextTeamId ?? null);
     if (section !== 'messages') setJobChatRequestIdState(null);
     if (section !== 'support') setSupportTicketIdState(null);
-    if (section === 'approvals') setStaffApprovalQueueState(null);
+    if (section !== 'approvals') setStaffApprovalQueueState(null);
     if (section !== 'guards') setStaffEditState(false);
     syncAppRoute(
       buildAppRoute({
@@ -511,7 +523,7 @@ export default function App() {
     );
   };
 
-  const setStaffApprovalQueue = (queue: ApprovalQueueId | null) => {
+  const openStaffApprovals = (queue: ApprovalQueueId | null) => {
     setStaffApprovalQueueState(queue);
     setStaffSectionState('approvals');
     syncAppRoute(
@@ -519,8 +531,20 @@ export default function App() {
         role: 'staff',
         staffSection: 'approvals',
         staffApprovalQueue: queue ?? undefined,
+        staffGuardId: undefined,
+        staffClientId: undefined,
+        staffJobId: undefined,
+        staffTeamId: undefined,
+        staffEdit: undefined,
+        jobChatRequestId: undefined,
+        supportTicketId: undefined,
+        staffMessageTab: undefined,
       })
     );
+  };
+
+  const clearStaffApprovalQueue = () => {
+    setStaffApprovalQueueState(null);
   };
 
   const setStaffGuardId = (guardId: string | null) => {
@@ -3933,7 +3957,8 @@ export default function App() {
           selectedJobChatRequestId={jobChatRequestId}
           onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
           staffApprovalQueue={staffApprovalQueue}
-          onStaffApprovalQueueChange={setStaffApprovalQueue}
+          onOpenStaffApprovals={openStaffApprovals}
+          onClearStaffApprovalQueue={clearStaffApprovalQueue}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}

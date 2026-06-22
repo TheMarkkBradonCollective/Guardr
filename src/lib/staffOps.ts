@@ -208,6 +208,8 @@ export interface OverviewMetricCell {
   value: string;
   sub: string;
   accent?: boolean;
+  /** Staff section to open when the metric is tapped */
+  navigateTo?: StaffSection;
 }
 
 export function buildOverviewMetricCells(
@@ -235,6 +237,7 @@ export function buildOverviewMetricCells(
               .filter(Boolean)
               .join(' · ') || `${stats.activeJobs} job${stats.activeJobs === 1 ? '' : 's'} in the pipeline`,
       accent: stats.activeJobs > 0,
+      navigateTo: 'jobs',
     },
     {
       label: 'On site now',
@@ -244,6 +247,7 @@ export function buildOverviewMetricCells(
           ? 'No guards clocked in on site'
           : `${stats.onDutyGuards} job${stats.onDutyGuards === 1 ? '' : 's'} in progress with a guard on site`,
       accent: stats.onDutyGuards > 0,
+      navigateTo: 'map',
     },
     {
       label: 'To verify',
@@ -265,6 +269,7 @@ export function buildOverviewMetricCells(
               .filter(Boolean)
               .join(' · ') + ' in Approvals',
       accent: stats.pendingApprovals > 0,
+      navigateTo: 'approvals',
     },
     {
       label: 'Completed jobs',
@@ -292,6 +297,7 @@ export function buildOverviewMetricCells(
           ? 'No open incident reports from job checkout'
           : `${stats.activeIncidents} checkout report${stats.activeIncidents === 1 ? '' : 's'} need follow-up`,
       accent: stats.activeIncidents > 0,
+      navigateTo: 'incidents',
     },
   ];
 }

@@ -2,8 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildNotificationData,
   platformRoleToPushRole,
+  pushRoleToPlatformRole,
   rolesForNotificationType,
-  resolveNotificationUrl,
+  resolveNotificationUrlForRole,
 } from './routing';
 import { removePushSubscription } from './subscriptions';
 import type { PushNotificationType, PushRole, PushSendPayload } from './types';
@@ -150,6 +151,7 @@ async function deliverToSubscriptions(
     quiet_hours_start?: string | null;
     quiet_hours_end?: string | null;
     user_id?: string;
+    push_role?: string | null;
   }>,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
@@ -174,27 +176,10 @@ async function deliverToSubscriptions(
 
   if (!filtered.length) return { sent: 0, failed: 0 };
 
-  const data = buildNotificationData(payload.type, {
-    url: payload.url ?? resolveNotificationUrl(payload.type, {
-      guardId: payload.guardId,
-      requestId: payload.requestId,
-      ticketId: payload.ticketId,
-    }),
-    siteId: payload.siteId,
+  const urlOptions = {
     guardId: payload.guardId,
     requestId: payload.requestId,
     ticketId: payload.ticketId,
-    priority: payload.priority,
-  });
-
-  const message = {
-    title: payload.title,
-    body: payload.body,
-    url: data.url,
-    eventType: payload.type,
-    data,
-    tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
-    priority: data.priority,
   };
 
   let sent = 0;
@@ -209,6 +194,29 @@ async function deliverToSubscriptions(
     ) {
       continue;
     }
+
+    const platformRole = pushRoleToPlatformRole(sub.push_role);
+    const data = buildNotificationData(payload.type, {
+      url:
+        payload.url ??
+        resolveNotificationUrlForRole(payload.type, platformRole, urlOptions),
+      siteId: payload.siteId,
+      guardId: payload.guardId,
+      requestId: payload.requestId,
+      ticketId: payload.ticketId,
+      priority: payload.priority,
+      role: platformRole,
+    });
+
+    const message = {
+      title: payload.title,
+      body: payload.body,
+      url: data.url,
+      eventType: payload.type,
+      data,
+      tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
+      priority: data.priority,
+    };
 
     const result = await sendToSubscription(sub, message);
     if (result.ok) {
@@ -235,7 +243,7 @@ export async function sendNotificationToUser(
 
   const { data: subscriptions, error } = await db
     .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id')
+    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role')
     .eq('user_id', userId);
 
   if (error) throw new Error(error.message);

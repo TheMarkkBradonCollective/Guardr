@@ -16,6 +16,20 @@ export function platformRoleToPushRole(role: PlatformRole | string): PushRole {
   }
 }
 
+export function pushRoleToPlatformRole(pushRole: string | null | undefined): PlatformRole | string {
+  switch (pushRole) {
+    case 'guard':
+      return 'guard';
+    case 'client':
+      return 'client';
+    case 'dispatch':
+    case 'admin':
+      return 'administrator';
+    default:
+      return 'administrator';
+  }
+}
+
 export function resolveNotificationUrl(
   type: PushNotificationType,
   options: { guardId?: string; requestId?: string; ticketId?: string } = {}
@@ -23,10 +37,20 @@ export function resolveNotificationUrl(
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
-      return '/staff/jobs';
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
     case 'assignment':
-      return options.guardId ? `/guard/${options.guardId}` : '/guard/my-jobs';
+      return options.requestId
+        ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/my-jobs';
     case 'emergency_alert':
+      if (options.requestId) {
+        return `/staff/jobs?j=${encodeURIComponent(options.requestId)}`;
+      }
+      if (options.ticketId) {
+        return `/staff/support?st=${encodeURIComponent(options.ticketId)}`;
+      }
       return '/staff/incidents';
     case 'support_message':
       return options.ticketId ? `/staff/support?st=${encodeURIComponent(options.ticketId)}` : '/staff/support';
@@ -86,7 +110,9 @@ export function resolveNotificationUrlForRole(
     case 'staff_message':
       return '/staff/messages?mtab=team';
     case 'assignment':
-      return '/guard/my-jobs';
+      return options.requestId
+        ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/my-jobs';
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === 'client') return '/client/home';
@@ -126,11 +152,23 @@ export function buildNotificationData(
     requestId?: string;
     ticketId?: string;
     priority?: 'normal' | 'high';
+    role?: PlatformRole | string;
   } = {}
 ): PushNotificationData {
+  const urlOptions = {
+    guardId: options.guardId,
+    requestId: options.requestId,
+    ticketId: options.ticketId,
+  };
+  const url =
+    options.url ??
+    (options.role
+      ? resolveNotificationUrlForRole(type, options.role, urlOptions)
+      : resolveNotificationUrl(type, urlOptions));
+
   return {
     type,
-    url: options.url ?? resolveNotificationUrl(type, options),
+    url,
     siteId: options.siteId,
     guardId: options.guardId,
     requestId: options.requestId,
