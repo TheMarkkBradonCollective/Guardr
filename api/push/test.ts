@@ -1,10 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { dispatchPushNotification } from './_delivery';
 import {
   getSupabaseAdmin,
   isPushConfigured,
   jsonError,
   verifySession,
-} from '../../lib/pushApi/pushShared';
+} from './_shared';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -35,7 +36,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return jsonError(res, 401, 'Unauthorized — sign in again and retry');
     }
 
-    const { dispatchPushNotification } = await import('../../lib/push/delivery');
     const result = await dispatchPushNotification(db, {
       userId: session.userId,
       title: 'Guardr test alert',

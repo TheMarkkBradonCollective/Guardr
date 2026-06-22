@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { dispatchPushNotification } from './_delivery';
 import {
   getSupabaseAdmin,
   isInternalPushAuthorized,
   isPushConfigured,
   jsonError,
-  verifySession,
-} from '../../lib/pushApi/pushShared';
-import type { PushSendPayload } from '../../lib/push/types';
+} from './_shared';
+import type { PushSendPayload } from './_types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -32,7 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return jsonError(res, 503, 'Web Push is not configured on the server');
     }
 
-    const { dispatchPushNotification } = await import('../../lib/push/delivery');
     const result = await dispatchPushNotification(db, body);
     return res.status(200).json({ ok: true, ...result });
   } catch (err: unknown) {

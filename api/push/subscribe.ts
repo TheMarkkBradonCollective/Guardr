@@ -5,7 +5,7 @@ import {
   platformRoleToPushRole,
   upsertPushSubscription,
   verifySession,
-} from '../../lib/pushApi/pushShared';
+} from './_shared';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

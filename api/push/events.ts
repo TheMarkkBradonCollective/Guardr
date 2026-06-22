@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { resolveNotificationUrl } from '../../lib/push/routing';
+import { dispatchPushNotification } from './_delivery';
+import { resolveNotificationUrl } from './_routing';
 import {
   getSupabaseAdmin,
   isPushConfigured,
   jsonError,
   verifySession,
-} from '../../lib/pushApi/pushShared';
-import type { PushSendPayload } from '../../lib/push/types';
+} from './_shared';
+import type { PushSendPayload } from './_types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -118,7 +119,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dispatchPayload.role = 'dispatch';
     }
 
-    const { dispatchPushNotification } = await import('../../lib/push/delivery');
     const result = await dispatchPushNotification(db, dispatchPayload);
     return res.status(200).json({ ok: true, ...result });
   } catch (err: unknown) {
