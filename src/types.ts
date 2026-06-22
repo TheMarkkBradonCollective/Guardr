@@ -241,6 +241,48 @@ export interface StaffSpotCheck {
   clientConfirmedBy?: string;
 }
 
+/** Named point on site — fire extinguishers, med kits, Narcan, etc. */
+export interface JobOperationalLocation {
+  label?: string;
+  details: string;
+}
+
+/** Optional client site briefing — sensitive fields hidden from guards until assigned. */
+export interface JobOperationalDetails {
+  patronHeadCount?: string;
+  postAssignment?: string;
+  doorsOpenTime?: string;
+  doorsCloseTime?: string;
+  curfewTime?: string;
+  smokingAreaDetails?: string;
+  barDetails?: string;
+  barLastCallTime?: string;
+  barCloseTime?: string;
+  accessCodes?: string;
+  keyLocation?: string;
+  accessNotes?: string;
+  emergencyProtocol?: string;
+  radioCodes?: string;
+  radioChannel?: string;
+  cooldownAreaDetails?: string;
+  fireExtinguisherLocations?: JobOperationalLocation[];
+  medkitLocations?: JobOperationalLocation[];
+  narcanLocations?: JobOperationalLocation[];
+  vipAreaDetails?: string;
+  credentialingDetails?: string;
+  medicalEmergencyContacts?: string;
+  nearestHospital?: string;
+  evacuationRallyPoint?: string;
+  lostChildProcedure?: string;
+  intoxicationPolicy?: string;
+  filmingPhotoPolicy?: string;
+  vendorLoadInDetails?: string;
+  guardStationLocation?: string;
+  restroomBreakPolicy?: string;
+  clientSpecialRequests?: string;
+  additionalNotes?: string;
+}
+
 export interface SecurityRequest {
   id: string;
   title: string;
@@ -267,6 +309,8 @@ export interface SecurityRequest {
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
+  /** Client site briefing — hidden from guards until they are approved for the shift */
+  operationalDetails?: JobOperationalDetails;
   startDate: string;
   endDate: string;
   durationHours: number;

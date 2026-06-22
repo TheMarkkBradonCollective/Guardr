@@ -99,7 +99,8 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
             <p className="text-[10px] text-brand-text-muted mt-2">
               {formatThirtyTwoHourCourseProgressCounts(progress, {
                 scopeLabel: 'courses in the 32-hour block',
-              })}
+              })}{' '}
+              · {progress.thirtyTwoHourProgressPercent}%
             </p>
           )}
         </div>

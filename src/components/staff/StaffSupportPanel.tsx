@@ -17,6 +17,8 @@ import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { WfBadge } from '../ui/wireframe';
 import { MessageCircle } from 'lucide-react';
 
+type SupportInboxSection = 'messages' | 'reports';
+
 interface StaffSupportPanelProps {
   tickets: SupportTicket[];
   currentUser: SessionUser;
@@ -36,7 +38,8 @@ export function StaffSupportPanel({
   onSelectedTicketIdChange,
   initialSelectedTicketId = null,
 }: StaffSupportPanelProps) {
-  const [filter, setFilter] = useState<'open' | 'all'>('open');
+  const [section, setSection] = useState<SupportInboxSection>('messages');
+  const [statusFilter, setStatusFilter] = useState<'open' | 'all'>('open');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedTicketId);
 
   const selectedId = controlledSelectedId ?? internalSelectedId;
@@ -48,23 +51,39 @@ export function StaffSupportPanel({
 
   useEffect(() => {
     if (initialSelectedTicketId) {
+      const ticket = tickets.find((t) => t.id === initialSelectedTicketId);
+      if (ticket) {
+        setSection(ticket.kind === 'report' ? 'reports' : 'messages');
+      }
       setSelectedId(initialSelectedTicketId);
     }
-  }, [initialSelectedTicketId]);
+  }, [initialSelectedTicketId, tickets]);
+
+  const sectionTickets = useMemo(
+    () => tickets.filter((t) => (section === 'messages' ? t.kind === 'chat' : t.kind === 'report')),
+    [tickets, section]
+  );
 
   const sorted = useMemo(
-    () => [...tickets].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [tickets]
+    () => [...sectionTickets].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [sectionTickets]
   );
 
   const filtered = useMemo(
-    () => (filter === 'open' ? sorted.filter((t) => t.status !== 'resolved') : sorted),
-    [sorted, filter]
+    () => (statusFilter === 'open' ? sorted.filter((t) => t.status !== 'resolved') : sorted),
+    [sorted, statusFilter]
   );
 
   const selected = selectedId
-    ? filtered.find((t) => t.id === selectedId) ?? tickets.find((t) => t.id === selectedId) ?? null
+    ? filtered.find((t) => t.id === selectedId) ?? sectionTickets.find((t) => t.id === selectedId) ?? null
     : null;
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (!sectionTickets.some((t) => t.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [sectionTickets, selectedId]);
 
   const handleSend = async (body: string) => {
     if (!selected) return;
@@ -74,25 +93,47 @@ export function StaffSupportPanel({
     }
   };
 
+  const openCount = openTicketCount(sectionTickets);
+
   const listView = (
-    <div className="staff-split-pane-list flex flex-col min-h-0">
-      <div className="app-messages-hub-lead">
-        <h2 className="text-base font-bold tracking-tight">Support inbox</h2>
+    <div className="flex flex-col min-h-0 h-full px-4 sm:px-5 py-4">
+      <div className="app-messages-hub-lead mb-4">
+        <h2 className="text-base font-bold tracking-tight">
+          {section === 'messages' ? 'User messages' : 'Formal reports'}
+        </h2>
         <p>
-          {openTicketCount(tickets)} open · {tickets.length} total
+          {openCount} open · {sectionTickets.length} total
         </p>
       </div>
+
       <AppSegmentedControl
         options={[
-          { id: 'open', label: 'Open' },
-          { id: 'all', label: 'All' },
+          { id: 'messages', label: 'Messages' },
+          { id: 'reports', label: 'Reports' },
         ]}
-        value={filter}
-        onChange={(id) => setFilter(id)}
+        value={section}
+        onChange={(id) => {
+          setSection(id as SupportInboxSection);
+          setSelectedId(null);
+        }}
       />
-      <div className="flex-1 min-h-0 overflow-y-auto">
+
+      <div className="mt-3">
+        <AppSegmentedControl
+          options={[
+            { id: 'open', label: 'Open' },
+            { id: 'all', label: 'All' },
+          ]}
+          value={statusFilter}
+          onChange={(id) => setStatusFilter(id as 'open' | 'all')}
+        />
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto mt-4">
         {filtered.length === 0 ? (
-          <p className="staff-empty-state">No tickets in this view.</p>
+          <p className="staff-empty-state">
+            {section === 'messages' ? 'No user messages in this view.' : 'No reports in this view.'}
+          </p>
         ) : (
           <AppInboxList>
             {filtered.map((ticket) => {
@@ -103,7 +144,6 @@ export function StaffSupportPanel({
                   title={ticket.subject}
                   preview={lastMessage?.body}
                   meta={new Date(ticket.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  selected={selectedId === ticket.id}
                   badges={
                     <>
                       <WfBadge tone={ticket.status === 'resolved' ? 'default' : 'primary'}>
@@ -126,11 +166,13 @@ export function StaffSupportPanel({
   );
 
   const threadView = !selected ? (
-    <div className="staff-empty-state flex-1 flex items-center justify-center">
+    <div className="staff-empty-state flex-1 flex items-center justify-center h-full">
       <div className="text-center px-6">
         <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
         <p className="text-sm font-semibold">Select a conversation</p>
-        <p className="text-xs text-brand-text-muted mt-1">Reply to clients and guards from one confident inbox.</p>
+        <p className="text-xs text-brand-text-muted mt-1">
+          Choose a {section === 'messages' ? 'message' : 'report'} from the list to reply.
+        </p>
       </div>
     </div>
   ) : (
@@ -173,15 +215,8 @@ export function StaffSupportPanel({
   );
 
   return (
-    <>
-      <div className="lg:hidden h-full flex flex-col min-h-0">
-        {selected ? threadView : listView}
-      </div>
-
-      <div className="hidden lg:flex staff-split-pane h-full">
-        {listView}
-        <div className="staff-split-pane-detail flex flex-col min-h-0">{threadView}</div>
-      </div>
-    </>
+    <div className="h-full flex flex-col min-h-0">
+      {selected ? threadView : listView}
+    </div>
   );
 }

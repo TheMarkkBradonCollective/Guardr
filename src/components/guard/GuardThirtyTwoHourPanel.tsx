@@ -72,9 +72,7 @@ export function GuardThirtyTwoHourPanel({
     [guard.certifications]
   );
 
-  const progressPct = progress.thirtyTwoHourBlockComplete
-    ? 100
-    : Math.round((progress.uploaded32HourCount / progress.total32HourCourses) * 100);
+  const progressPct = progress.thirtyTwoHourProgressPercent;
 
   const resetForm = () => {
     setAddingCatalogId(null);

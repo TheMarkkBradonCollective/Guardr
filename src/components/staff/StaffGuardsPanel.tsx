@@ -13,6 +13,7 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
+import { guardHasMissingWorkCredentials } from '../../lib/guardMissingCredentials';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -191,6 +192,8 @@ export function StaffGuardsPanel({
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
+    const secondaryMeta =
+      pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
 
     return (
       <WfListCard
@@ -199,18 +202,22 @@ export function StaffGuardsPanel({
         title={guard.name}
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-col items-start gap-1.5 w-full">
             <GuardRosterStatusBadges guard={guard} />
-            {pendingCerts > 0 && (
-              <WfBadge tone="warning">
-                {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
-              </WfBadge>
-            )}
-            <GuardMissingCredentialsBadge guard={guard} />
-            {activeShift && (
-              <WfBadge tone="primary" className="max-w-full truncate">
-                On job: {activeShift.title}
-              </WfBadge>
+            {secondaryMeta && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {pendingCerts > 0 && (
+                  <WfBadge tone="warning">
+                    {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+                  </WfBadge>
+                )}
+                <GuardMissingCredentialsBadge guard={guard} />
+                {activeShift && (
+                  <WfBadge tone="primary" className="max-w-full truncate">
+                    On job: {activeShift.title}
+                  </WfBadge>
+                )}
+              </div>
             )}
           </div>
         }

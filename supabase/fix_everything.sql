@@ -229,6 +229,7 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guards_needed INTEGER DEF
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS uniform_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS equipment_requirements TEXT DEFAULT '';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_instructions TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS operational_details JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_pay INTEGER;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_per_hour INTEGER DEFAULT 5;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_rating NUMERIC(4, 2);

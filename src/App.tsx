@@ -110,6 +110,7 @@ import {
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
+import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -118,7 +119,12 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import {
+  getClientAccountStatus,
+  getGuardUserStatus,
+  isGuardAccountApproved,
+  isGuardAccountPending,
+} from './lib/accountStatus';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
@@ -1071,6 +1077,7 @@ export default function App() {
         uniformRequirements: r.uniform_requirements || undefined,
         equipmentRequirements: r.equipment_requirements || undefined,
         siteInstructions: r.site_instructions || undefined,
+        operationalDetails: normalizeJobOperationalDetails(r.operational_details),
         startDate: r.start_date, endDate: r.end_date,
         durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
         guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
@@ -2227,6 +2234,23 @@ export default function App() {
         return;
       }
     }
+    if (!target.isStaff && status === 'active') {
+      if (isGuardAccountPending(target)) {
+        alert('Approve this guard profile before activating their account.');
+        return;
+      }
+      if (isGuardAccountApproved(target)) {
+        const blockers = guardAccountActivationBlockers(target);
+        if (blockers.length > 0) {
+          alert(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+          return;
+        }
+        alert(
+          'Use Activate account in Approvals to fully activate this guard (guard card on file, optional grace for missing PTA/32-hour).'
+        );
+        return;
+      }
+    }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
     if (isDbConnected) {
       const table = target.isStaff ? 'staff' : 'guards';
@@ -3030,6 +3054,7 @@ export default function App() {
       accessInstructions: newRequest.accessInstructions,
       latitude: newRequest.latitude,
       longitude: newRequest.longitude,
+      operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
@@ -3087,6 +3112,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           ...listingDetailDbColumns(freshJob),
+          operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
       } catch (e) { console.error('Request insert error:', e); }
     }
@@ -3153,6 +3179,7 @@ export default function App() {
       accessInstructions: input.accessInstructions,
       latitude: input.latitude,
       longitude: input.longitude,
+      operationalDetails: normalizeJobOperationalDetails(input.operationalDetails),
       startDate: input.startDate,
       endDate: input.endDate,
       durationHours: input.durationHours,
@@ -3221,6 +3248,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           ...listingDetailDbColumns(freshJob),
+          operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
       } catch (e) {
         console.error('Staff job insert error:', e);
@@ -3699,7 +3727,7 @@ export default function App() {
       alert(workBlocked);
       return;
     }
-    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job));
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
     if (!canAccept) {
       alert(`${guard.name} does not meet the requirements for this job.`);
       return;
@@ -3754,8 +3782,8 @@ export default function App() {
       alert('You already applied for this job. Staff will review your application.');
       return;
     }
-    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job))) {
-      const missing = checkJobRequirements(activeGuard, toGuardJobView(job))
+    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id))) {
+      const missing = checkJobRequirements(activeGuard, toGuardJobView(job, activeGuard.id))
         .checks.filter((c) => !c.met)
         .map((c) => c.label)
         .join(', ');

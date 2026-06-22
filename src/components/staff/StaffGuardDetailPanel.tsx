@@ -464,9 +464,9 @@ export function StaffGuardDetailPanel({
             </div>
           )}
           {!guard.isStaff && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              <GuardRosterStatusBadges guard={guard} />
-              <GuardMissingCredentialsBadge guard={guard} />
+            <div className="flex flex-nowrap items-center gap-2 mt-3 overflow-x-auto">
+              <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+              <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
             </div>
           )}
         </div>
@@ -552,7 +552,7 @@ export function StaffGuardDetailPanel({
                   Flag / Block
                 </button>
               )}
-              {canSuspend && guardAccountStatus !== 'active' && guardAccountStatus !== 'pending' && (
+              {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>
