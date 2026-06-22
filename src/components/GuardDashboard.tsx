@@ -20,6 +20,8 @@ import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
+import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
+import { showAppToast } from './ui/AppToast';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { JobChatPanel } from './messaging/JobChatPanel';
@@ -177,6 +179,7 @@ export function GuardDashboard({
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
   const [showJobChat, setShowJobChat] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
@@ -310,7 +313,7 @@ export function GuardDashboard({
   const handleAcceptJob = (jobId: string) => {
     const workBlocked = guardWorkBlockedMessage(guard);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const jobView = requests.find((r) => r.id === jobId) ?? null;
@@ -318,7 +321,7 @@ export function GuardDashboard({
       const missing = jobView
         ? checkJobRequirements(guard, jobView).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
         : 'job requirements';
-      alert(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`);
+      showAppToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, { tone: 'error' });
       return;
     }
     onAcceptJob(jobId);
@@ -329,12 +332,12 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     updatePhase(activeShiftJob.id, 'arrived');
@@ -344,12 +347,12 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     setShowSelfAudit(true);
@@ -364,11 +367,11 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
       return;
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
@@ -406,11 +409,11 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
       return;
     }
     if (!window.confirm('Skip self audit and clock in? This job will be flagged No Self Audit until staff add photos after the job.')) {
@@ -446,7 +449,7 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const blocked = guardClockOutBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     setShowCheckout(true);
@@ -455,7 +458,7 @@ export function GuardDashboard({
   const handleCheckoutConfirm = () => {
     if (!activeShiftJob) return;
     if (!canGuardClockOut(activeShiftJob)) {
-      alert(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.');
+      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.', { tone: 'error' });
       setShowCheckout(false);
       return;
     }
@@ -494,13 +497,14 @@ export function GuardDashboard({
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to start Stripe onboarding';
       if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
-        alert(
-          'Stripe Connect is not fully activated on the Guardr platform account yet.\n\n' +
-            'Setting up webhooks is not the same as enabling Connect.\n\n' +
-            'In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.'
-        );
+        showAppToast('Stripe Connect not ready', {
+          tone: 'error',
+          body:
+            'Stripe Connect is not fully activated on the Guardr platform account yet. In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.',
+          durationMs: 9000,
+        });
       } else {
-        alert(message);
+        showAppToast(message, { tone: 'error' });
       }
     } finally {
       setConnectPending(false);
@@ -587,27 +591,12 @@ export function GuardDashboard({
           onSkipAudit={handleSkipSelfAudit}
           onIncidentReport={() => {
             void onReportIncident?.(activeShiftJob.id);
-            alert('Incident reported. Client and staff have been notified.');
-          }}
-          onActivityReport={() => {
-            if (!activeShiftJob) return;
-            const report = window.prompt('Log activity for this shift');
-            if (!report?.trim()) return;
-            const stamp = new Date().toISOString();
-            const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report.trim()}`;
-            const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';
-            onUpdateJobAudit(activeShiftJob.id, {
-              checkOutAudit: {
-                checkedAt: activeShiftJob.checkOutAudit?.checkedAt ?? stamp,
-                completed: false,
-                noViolations: activeShiftJob.checkOutAudit?.noViolations ?? true,
-                noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
-                dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
-                incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
-                clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
-              },
+            showAppToast('Incident reported', {
+              body: 'Client and staff have been notified.',
+              tone: 'info',
             });
           }}
+          onActivityReport={() => setShowActivityLog(true)}
           onEndShift={handleEndShift}
           onOpenJobChat={onSendJobChatMessage ? () => setShowJobChat(true) : undefined}
         />
@@ -772,6 +761,30 @@ export function GuardDashboard({
           setRatingJob(null);
         }}
       />
+
+      {activeShiftJob && (
+        <GuardActivityLogModal
+          open={showActivityLog}
+          onClose={() => setShowActivityLog(false)}
+          onSubmit={(report) => {
+            const stamp = new Date().toISOString();
+            const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report}`;
+            const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';
+            onUpdateJobAudit(activeShiftJob.id, {
+              checkOutAudit: {
+                checkedAt: activeShiftJob.checkOutAudit?.checkedAt ?? stamp,
+                completed: false,
+                noViolations: activeShiftJob.checkOutAudit?.noViolations ?? true,
+                noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
+                dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
+                incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
+                clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
+              },
+            });
+            showAppToast('Activity logged', { tone: 'success' });
+          }}
+        />
+      )}
     </>
   );
 

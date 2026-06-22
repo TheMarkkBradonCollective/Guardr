@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
+import { isGuardAccountPending } from '../../lib/accountStatus';
 import { Camera, Save, User, X } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
@@ -187,6 +188,7 @@ export function UserProfileScreen({
   const isGuardLike = currentUser.role === 'guard' || ['owner', 'director', 'administrator', 'moderator'].includes(currentUser.role);
   const isClient = currentUser.role === 'client';
   const canBuildResume = isGuardLike && !!guard;
+  const credentialsEditing = editing || !!(guard && isGuardAccountPending(guard));
 
   return (
     <AppScreen>
@@ -278,6 +280,7 @@ export function UserProfileScreen({
           <GuardResumeEditor
           guard={guard}
           editing={editing}
+          credentialsEditing={credentialsEditing}
           payload={resume}
           onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement }))}
           onAddCertification={onAddCertification}

@@ -90,8 +90,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: { job_id: jobId },
       },
       metadata: { job_id: jobId },
-      success_url: `${base}/?payment=success&job_id=${jobId}`,
-      cancel_url: `${base}/?payment=cancelled&job_id=${jobId}`,
+      success_url: `${base}/client/requests?payment=success&job_id=${jobId}`,
+      cancel_url: `${base}/client/requests?payment=cancelled&job_id=${jobId}`,
     });
 
     if (db) {

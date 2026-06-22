@@ -43,6 +43,8 @@ interface GuardResumeEditorProps {
     payload: import('./GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   identityVerificationCompact?: boolean;
+  /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
+  credentialsEditing?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -57,7 +59,9 @@ export function GuardResumeEditor({
   onAddEducation,
   onSubmitIdentityVerification,
   identityVerificationCompact = false,
+  credentialsEditing,
 }: GuardResumeEditorProps) {
+  const credEditing = credentialsEditing ?? editing;
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
 
@@ -235,7 +239,7 @@ export function GuardResumeEditor({
       {!guard.isStaff && (
         <GuardCardPanel
           guard={guard}
-          editing={editing}
+          editing={credEditing}
           onAddCertification={onAddCertification}
           onDeleteCertification={onDeleteCertification}
           onAttachCertificationImage={onAttachCertificationImage}
@@ -244,7 +248,7 @@ export function GuardResumeEditor({
 
       <GuardCredentialsPanel
         guard={guard}
-        editing={editing}
+        editing={credEditing}
         onAddCertification={onAddCertification}
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}

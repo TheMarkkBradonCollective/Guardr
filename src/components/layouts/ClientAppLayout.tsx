@@ -4,7 +4,7 @@ import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { Home, Map, ClipboardList, Users, LifeBuoy, Radio } from 'lucide-react';
+import { Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -29,6 +29,7 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'coverage', label: 'Coverage', icon: Radio },
+  { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 

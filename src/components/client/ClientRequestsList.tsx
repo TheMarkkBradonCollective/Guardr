@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
+import { showAppToast } from '../ui/AppToast';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
@@ -108,7 +109,7 @@ export function ClientRequestsList({
         window.location.href = url;
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Unable to start checkout');
+      showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
     } finally {
       setPayingJobId(null);
     }

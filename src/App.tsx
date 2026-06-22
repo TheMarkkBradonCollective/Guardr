@@ -154,6 +154,7 @@ import {
 } from './lib/appNavigation';
 import type { LegalPageId } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
+import { showAppToast } from './components/ui/AppToast';
 import type { GuardTab } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { type ApprovalQueueId, type StaffSection } from './lib/staffOps';
@@ -3883,25 +3884,49 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const paymentResult = params.get('payment');
     const jobId = params.get('job_id');
+    const depositResult = params.get('deposit');
+
+    const clearPaymentQuery = () => {
+      const route = readAppRouteFromWindow();
+      if (route) {
+        syncAppRoute(route, true);
+        return;
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    };
+
     if (paymentResult === 'success' && jobId) {
       void loadFromSupabase();
-      window.history.replaceState({}, '', window.location.pathname);
-      alert('Payment received — your job will update shortly.');
-    }
-    if (paymentResult === 'cancelled') {
-      window.history.replaceState({}, '', window.location.pathname);
+      if (currentUser?.role === 'client') {
+        setClientViewState('requests');
+        syncAppRoute({ role: 'client', clientView: 'requests' }, true);
+      }
+      showAppToast('Payment received', {
+        body: 'Your job status will update shortly.',
+        tone: 'success',
+      });
+      clearPaymentQuery();
+    } else if (paymentResult === 'cancelled') {
+      showAppToast('Payment cancelled', { tone: 'info' });
+      clearPaymentQuery();
     }
 
-    const depositResult = params.get('deposit');
     if (depositResult === 'success' && jobId) {
       void loadFromSupabase();
-      window.history.replaceState({}, '', window.location.pathname);
-      alert('Card payment received — Stripe balance will update for this job shortly.');
+      if (currentUser && isStaffRole(currentUser.role)) {
+        setStaffSectionState('payments');
+        syncAppRoute({ role: 'staff', staffSection: 'payments' }, true);
+      }
+      showAppToast('Deposit received', {
+        body: 'Stripe balance will update for this job shortly.',
+        tone: 'success',
+      });
+      clearPaymentQuery();
+    } else if (depositResult === 'cancelled') {
+      showAppToast('Deposit cancelled', { tone: 'info' });
+      clearPaymentQuery();
     }
-    if (depositResult === 'cancelled') {
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+  }, [currentUser]);
 
   // ── Compliance violations ──────────────────────────────────
   const handleRecordAuditViolation = async (guardId: string, reason?: string) => {

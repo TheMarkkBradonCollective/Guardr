@@ -26,6 +26,7 @@ import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { showAppToast } from '../ui/AppToast';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -147,13 +148,13 @@ export function GuardCredentialsPanel({
     if (cert) {
       const allowed = validateCertDeletion(cert);
       if (allowed.ok === false) {
-        window.alert(allowed.error);
+        showAppToast(allowed.error, { tone: 'error' });
         return;
       }
     }
     if (!window.confirm('Remove this credential from your profile?')) return;
     const result = await onDeleteCertification(certId);
-    if (result.ok === false) window.alert(result.error);
+    if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
   const certCardProps = (cert: Certification) => ({
