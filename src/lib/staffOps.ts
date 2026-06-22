@@ -1,7 +1,6 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
 import { isGuardAccountPending } from './accountStatus';
 import {
-  isGuardSubmittedIdentityVerification,
   isSelfSubmittedClientAccount,
   isSelfSubmittedGuardAccount,
   isUserSubmittedPendingCert,
@@ -85,7 +84,6 @@ export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
 
 export type ApprovalQueueId =
   | 'accounts'
-  | 'identity'
   | 'job-offers'
   | 'applications'
   | 'credentials';
@@ -167,13 +165,10 @@ export function computePlatformStats(
   const pendingGuardAccounts = guards.filter(
     (g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g)
   ).length;
-  const pendingIdentityVerifications = guards.filter(
-    (g) => isGuardSubmittedIdentityVerification(g) && g.idVerificationStatus === 'pending'
-  ).length;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingApprovals =
-    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs + pendingGuardAccounts + pendingIdentityVerifications;
+    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs + pendingGuardAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const activeGuardIds = new Set(
@@ -386,21 +381,6 @@ export function buildOverviewActionQueue(
       count: accountQueueCount,
       section: 'approvals',
       approvalQueue: 'accounts',
-      tone: 'urgent',
-    });
-  }
-
-  const pendingIdentityCount = guards.filter(
-    (g) => isGuardSubmittedIdentityVerification(g) && g.idVerificationStatus === 'pending'
-  ).length;
-  if (pendingIdentityCount > 0) {
-    items.push({
-      id: 'pending-identity',
-      title: 'Review ID verification',
-      description: 'Government ID and selfie submissions waiting for staff review',
-      count: pendingIdentityCount,
-      section: 'approvals',
-      approvalQueue: 'identity',
       tone: 'urgent',
     });
   }

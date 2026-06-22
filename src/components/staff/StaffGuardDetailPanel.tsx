@@ -26,10 +26,7 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import {
-  getGuardIdVerificationStatus,
-  ID_VERIFICATION_STATUS_LABELS,
-} from '../../lib/guardIdentityVerification';
+import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
@@ -166,7 +163,6 @@ export function StaffGuardDetailPanel({
   const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
-  const idVerificationStatus = getGuardIdVerificationStatus(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
 
@@ -445,12 +441,6 @@ export function StaffGuardDetailPanel({
               {guard.backgroundChecked && (
                 <WfBadge tone="primary">Background checked</WfBadge>
               )}
-              {idVerificationStatus === 'verified' && (
-                <WfBadge tone="success">{ID_VERIFICATION_STATUS_LABELS.verified}</WfBadge>
-              )}
-              {idVerificationStatus === 'pending' && (
-                <WfBadge tone="warning">{ID_VERIFICATION_STATUS_LABELS.pending}</WfBadge>
-              )}
             </div>
           )}
         </div>
@@ -462,23 +452,6 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          {canManage && !editing && (
-            <div className="staff-detail-section !py-0 !px-0 border-b border-brand-border">
-              <StaffIdReviewSection
-                guard={guard}
-                canManage
-                onApprove={onApproveIdentityVerification}
-                onReject={onRejectIdentityVerification}
-                onRequestResubmit={
-                  onRequestIdentityResubmit
-                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                    : undefined
-                }
-                onUpdateImages={onUpdateGuardIdImages}
-              />
-            </div>
-          )}
-
           {canManage && (
           <section className="staff-detail-section space-y-3">
             <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
@@ -599,6 +572,30 @@ export function StaffGuardDetailPanel({
                 count={pendingCount > 0 ? pendingCount : undefined}
                 className="!px-0 !mb-0"
               />
+              {onUpdateGuardIdImages && (
+                <div className="space-y-3">
+                  <div className="app-cert-item-stack">
+                    <GuardIdItemCard
+                      guard={guard}
+                      canEdit={canManage}
+                      staffMode
+                      guardName={guard.name}
+                      onSubmit={onUpdateGuardIdImages}
+                    />
+                  </div>
+                  <StaffIdReviewSection
+                    guard={guard}
+                    canManage={canManage}
+                    onApprove={onApproveIdentityVerification}
+                    onReject={onRejectIdentityVerification}
+                    onRequestResubmit={
+                      onRequestIdentityResubmit
+                        ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
               <GuardCredentialsView
                 guard={guard}
                 guardName={guard.name}

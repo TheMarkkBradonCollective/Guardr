@@ -242,13 +242,6 @@ export function GuardCredentialsPanel({
         </p>
       )}
 
-      {!guard.isStaff && idStatus === 'pending' && (
-        <p className="text-sm text-amber-400/90">
-          ID submitted {guard.idVerificationSubmittedAt ? new Date(guard.idVerificationSubmittedAt).toLocaleString() : ''} —
-          awaiting staff review.
-        </p>
-      )}
-
       {!guard.isStaff && (
         <div className="app-cert-item-stack">
           {onSubmitIdentityVerification && (

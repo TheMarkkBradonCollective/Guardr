@@ -128,7 +128,6 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffMessageTab === 'team' || staffMessageTab === 'jobs') nested.staffMessageTab = staffMessageTab;
   if (
     staffApprovalQueue === 'accounts' ||
-    staffApprovalQueue === 'identity' ||
     staffApprovalQueue === 'job-offers' ||
     staffApprovalQueue === 'applications' ||
     staffApprovalQueue === 'credentials'

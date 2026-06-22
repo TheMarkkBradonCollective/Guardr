@@ -135,3 +135,30 @@ export function getPendingIdentityVerifications(guards: SecurityGuard[]): Securi
       guardIdVerificationSubmissionReady(g)
   );
 }
+
+/** Credential-style upload label for government ID (matches cert rows). */
+export function getIdCredentialUploadLabel(guard: SecurityGuard): string | null {
+  if (!guardIdVerificationPhotosComplete(guard)) return null;
+  return isIdExpired(guard) ? 'On file · Expired' : 'On file';
+}
+
+export function getIdCredentialUploadBadgeClass(guard: SecurityGuard): string {
+  return isIdExpired(guard)
+    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+    : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+}
+
+/** Credential-style verification label — Guardr verified / Unverified / Rejected. */
+export function getIdCredentialVerificationLabel(guard: SecurityGuard): string {
+  const status = getGuardIdVerificationStatus(guard);
+  if (status === 'rejected') return 'Rejected';
+  if (status === 'verified') return 'Guardr verified';
+  return 'Unverified';
+}
+
+export function getIdCredentialVerificationBadgeClass(guard: SecurityGuard): string {
+  const status = getGuardIdVerificationStatus(guard);
+  if (status === 'rejected') return 'text-red-400 border-red-500/30 bg-red-500/10';
+  if (status === 'verified') return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+  return 'text-brand-text-muted border-brand-border bg-brand-border/20';
+}

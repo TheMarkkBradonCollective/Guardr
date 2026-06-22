@@ -3,12 +3,10 @@ import { ChevronRight, IdCard } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
   formatIdSummaryLine,
-  getGuardIdVerificationStatus,
   guardIdVerificationPhotosComplete,
-  ID_VERIFICATION_STATUS_LABELS,
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
-import { WfBadge } from '../ui/wireframe';
+import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
 import type {
   GuardIdentityVerificationPayload,
@@ -43,11 +41,8 @@ export function GuardIdItemCard({
   onSubmit,
 }: GuardIdItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
-  const status = getGuardIdVerificationStatus(guard);
   const hasOnFile = guardHasIdOnFile(guard);
   const expired = isIdExpired(guard);
-  const statusTone =
-    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
   const openInEditMode = canEdit && !hasOnFile;
 
   return (
@@ -86,7 +81,7 @@ export function GuardIdItemCard({
                 </p>
               </>
             )}
-            {status === 'rejected' && guard.idVerificationRejectionReason && (
+            {guard.idVerificationRejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-2">
                 {guard.idVerificationRejectionReason}
               </p>
@@ -94,7 +89,7 @@ export function GuardIdItemCard({
           </div>
         </button>
         <div className="app-cert-item-meta">
-          <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
+          <IdCredentialStatusBadges guard={guard} />
           {!guardIdVerificationPhotosComplete(guard) && hasOnFile && (
             <span className="text-[10px] text-brand-text-muted">Photos incomplete</span>
           )}

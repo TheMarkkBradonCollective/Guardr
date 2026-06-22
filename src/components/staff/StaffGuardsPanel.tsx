@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
-import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -172,7 +171,6 @@ export function StaffGuardsPanel({
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
     const accountStatus = getGuardUserStatus(guard);
-    const idStatus = getGuardIdVerificationStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
 
     return (
@@ -188,12 +186,6 @@ export function StaffGuardsPanel({
             )}
             {accountStatus === 'pending' && (
               <WfBadge tone="warning">Awaiting approval</WfBadge>
-            )}
-            {idStatus === 'pending' && (
-              <WfBadge tone="warning">ID pending</WfBadge>
-            )}
-            {idStatus === 'verified' && (
-              <WfBadge tone="success">ID verified</WfBadge>
             )}
             {isGuardTrusted(guard) && (
               <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>

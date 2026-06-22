@@ -2,13 +2,10 @@ import React from 'react';
 import { IdCard } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
-  getGuardIdVerificationStatus,
   guardIdVerificationCanEdit,
   ID_VERIFICATION_POLICY_HINT,
-  ID_VERIFICATION_STATUS_LABELS,
 } from '../../lib/guardIdentityVerification';
 import { getGuardUserStatus } from '../../lib/accountStatus';
-import { WfBadge } from '../ui/wireframe';
 import { GuardIdItemCard } from './GuardIdItemCard';
 
 export interface GuardIdentityVerificationPayload {
@@ -39,11 +36,8 @@ export function GuardIdentityVerificationPanel({
   staffMode = false,
   embedded = false,
 }: GuardIdentityVerificationPanelProps) {
-  const status = getGuardIdVerificationStatus(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
   const canEdit = staffMode ? !applicationBlocked : guardIdVerificationCanEdit(guard);
-  const statusTone =
-    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
   const body = (
     <>
@@ -56,28 +50,10 @@ export function GuardIdentityVerificationPanel({
         </p>
       )}
 
-      {!staffMode && status === 'rejected' && guard.idVerificationRejectionReason && (
-        <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2">
-          Staff requested a resubmit — tap your ID card, then Edit to update. {guard.idVerificationRejectionReason}
-        </p>
-      )}
-
-      {staffMode && status === 'rejected' && guard.idVerificationRejectionReason && (
+      {guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
-          Resubmit requested — approval on hold. {guard.idVerificationRejectionReason}
-        </p>
-      )}
-
-      {!staffMode && status === 'pending' && (
-        <p className="text-sm text-amber-400/90">
-          Submitted {guard.idVerificationSubmittedAt ? new Date(guard.idVerificationSubmittedAt).toLocaleString() : ''} —
-          Guardr staff will review your documents.
-        </p>
-      )}
-
-      {status === 'verified' && guard.idVerificationReviewedAt && (
-        <p className="text-sm text-emerald-400/90">
-          Verified {new Date(guard.idVerificationReviewedAt).toLocaleString()}
+          {staffMode ? 'Resubmit requested — approval on hold. ' : 'Staff requested a resubmit — tap your ID card, then Edit to update. '}
+          {guard.idVerificationRejectionReason}
         </p>
       )}
 
@@ -98,20 +74,17 @@ export function GuardIdentityVerificationPanel({
 
   return (
     <section className={`app-form-section space-y-3 ${compact ? '' : ''}`}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      {!staffMode && (
         <div>
           <p className="uber-label flex items-center gap-2">
             <IdCard className="w-4 h-4 text-brand-primary" />
             Government ID
           </p>
-          {!staffMode && (
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Required for account activation. Tap the card to view details — use Edit inside to update your ID.
-            </p>
-          )}
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            Required for account activation. Tap the card to view details — use Edit inside to update your ID.
+          </p>
         </div>
-        <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
-      </div>
+      )}
       {body}
     </section>
   );

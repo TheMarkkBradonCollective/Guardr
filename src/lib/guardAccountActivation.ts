@@ -113,7 +113,7 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   if (checklist.canActivate) return 'Ready to activate';
   const parts: string[] = [];
   if (!checklist.idSubmitted) parts.push('ID missing');
-  else if (!checklist.idVerified) parts.push('ID pending');
+  else if (!checklist.idVerified) parts.push('ID unverified');
   if (!checklist.guardCardSubmitted) parts.push('Guard card missing');
   else if (!checklist.guardCardVerified) parts.push('Guard card pending');
   return parts.join(' · ') || 'Awaiting requirements';

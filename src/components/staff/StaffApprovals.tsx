@@ -7,7 +7,6 @@ import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
-import { getPendingIdentityVerifications } from '../../lib/guardIdentityVerification';
 import {
   getGuardsReadyForAccountActivation,
   getPendingGuardAccountReviews,
@@ -20,7 +19,6 @@ import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
 import { certDisplayName } from '../../lib/certCatalog';
 import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
-import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
@@ -83,11 +81,6 @@ const QUEUE_META: Record<
     description: 'Activate guard and client sign-ups',
     icon: <Shield className="w-4 h-4" />,
   },
-  identity: {
-    title: 'ID verification',
-    description: 'Review government ID submissions',
-    icon: <Shield className="w-4 h-4" />,
-  },
 };
 
 function ApprovalBackBar({
@@ -142,7 +135,6 @@ export function StaffApprovals({
   const pendingGuardsMissingRequirements = getPendingGuardsMissingActivationRequirements(guards);
   const readyForActivation = getGuardsReadyForAccountActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
-  const pendingIdentityVerifications = getPendingIdentityVerifications(guards);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
 
   const [activeQueue, setActiveQueue] = useState<ApprovalQueueId | null>(initialQueue);
@@ -171,7 +163,6 @@ export function StaffApprovals({
         pendingGuardAccounts.length +
         pendingGuardsMissingRequirements.length +
         pendingClientAccounts.length,
-      identity: pendingIdentityVerifications.length,
     }),
     [
       pendingJobs.length,
@@ -180,7 +171,6 @@ export function StaffApprovals({
       pendingGuardAccounts.length,
       pendingGuardsMissingRequirements.length,
       pendingClientAccounts.length,
-      pendingIdentityVerifications.length,
     ]
   );
 
@@ -614,75 +604,6 @@ export function StaffApprovals({
               <AppItemCard key={client.id} onClick={() => setActiveItemId(client.id)} className="flex-col !items-stretch gap-1">
                 <p className="font-semibold text-sm truncate">{client.companyName || client.name}</p>
                 <p className="text-xs text-brand-text-muted">Client sign-up</p>
-              </AppItemCard>
-            ))}
-          </AppItemCardStack>
-        </>
-      );
-    }
-
-    if (activeQueue === 'identity') {
-      if (activeItemId) {
-        const guard = pendingIdentityVerifications.find((g) => g.id === activeItemId);
-        if (!guard) {
-          setActiveItemId(null);
-          return null;
-        }
-        return (
-          <>
-            <ApprovalBackBar title={guard.name} subtitle="Government ID review" onBack={() => setActiveItemId(null)} />
-            <div className="staff-detail-pane space-y-4">
-              <p className="text-sm text-brand-text-muted">{guard.email}</p>
-              <StaffIdReviewSection
-                guard={guard}
-                canManage
-                onApprove={
-                  onApproveIdentityVerification
-                    ? (guardId) => {
-                        onApproveIdentityVerification(guardId);
-                        setActiveItemId(null);
-                      }
-                    : undefined
-                }
-                onReject={
-                  onRejectIdentityVerification
-                    ? (guardId, reason) => {
-                        onRejectIdentityVerification(guardId, reason);
-                        setActiveItemId(null);
-                      }
-                    : undefined
-                }
-                onRequestResubmit={
-                  onRequestIdentityResubmit
-                    ? (guardId, slots, staffNote) => {
-                        onRequestIdentityResubmit(guardId, slots, staffNote);
-                        setActiveItemId(null);
-                      }
-                    : undefined
-                }
-                onUpdateImages={
-                  onUpdateGuardIdImages
-                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                    : undefined
-                }
-              />
-              {onViewGuard && (
-                <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                  Full profile
-                </button>
-              )}
-            </div>
-          </>
-        );
-      }
-      return (
-        <>
-          <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {pendingIdentityVerifications.map((guard) => (
-              <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{guard.name}</p>
-                <p className="text-xs text-brand-text-muted">ID pending review</p>
               </AppItemCard>
             ))}
           </AppItemCardStack>

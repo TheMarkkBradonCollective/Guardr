@@ -43,8 +43,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
   if (compact) {
     return (
       <div className="flex flex-wrap gap-1.5">
-        <WfBadge tone={checklist.idVerified ? 'success' : checklist.idSubmitted ? 'warning' : 'default'}>
-          ID {checklist.idVerified ? 'verified' : checklist.idSubmitted ? 'pending' : 'needed'}
+        <WfBadge tone={checklist.idSubmitted ? 'success' : 'default'}>
+          ID {checklist.idSubmitted ? 'on file' : 'needed'}
         </WfBadge>
         <WfBadge tone={checklist.guardCardVerified ? 'success' : checklist.guardCardSubmitted ? 'warning' : 'default'}>
           Guard card {checklist.guardCardVerified ? 'verified' : checklist.guardCardSubmitted ? 'pending' : 'needed'}
@@ -62,14 +62,12 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       </p>
       <div className="app-checklist-steps">
         <StepRow
-          done={checklist.idVerified}
+          done={checklist.idSubmitted}
           label="Government ID + identity selfie"
           detail={
-            checklist.idVerified
-              ? 'Verified by staff'
-              : checklist.idSubmitted
-                ? 'Submitted — awaiting staff review'
-                : 'Upload in Credentials — tap Government ID'
+            checklist.idSubmitted
+              ? 'On file — tap Government ID in Credentials to view'
+              : 'Upload in Credentials — tap Government ID'
           }
         />
         <StepRow

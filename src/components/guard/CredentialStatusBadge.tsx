@@ -1,5 +1,12 @@
 import React from 'react';
-import { Certification } from '../../types';
+import { Certification, SecurityGuard } from '../../types';
+import {
+  getGuardIdVerificationStatus,
+  getIdCredentialUploadBadgeClass,
+  getIdCredentialUploadLabel,
+  getIdCredentialVerificationBadgeClass,
+  getIdCredentialVerificationLabel,
+} from '../../lib/guardIdentityVerification';
 import {
   getCredentialUploadBadgeClass,
   getCredentialUploadLabel,
@@ -42,6 +49,33 @@ export function CredentialStatusBadges({
     <div className="flex flex-wrap items-center justify-end gap-1.5">
       {showUpload && !verified && <CredentialUploadBadge cert={cert} />}
       {showVerification && <CredentialVerificationBadge cert={cert} />}
+    </div>
+  );
+}
+
+export function IdCredentialStatusBadges({
+  guard,
+  showUpload = true,
+  showVerification = true,
+}: {
+  guard: SecurityGuard;
+  showUpload?: boolean;
+  showVerification?: boolean;
+}) {
+  const uploadLabel = getIdCredentialUploadLabel(guard);
+  const verified = getGuardIdVerificationStatus(guard) === 'verified';
+
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-1.5">
+      {showUpload && uploadLabel && !verified && (
+        <Badge label={uploadLabel} className={getIdCredentialUploadBadgeClass(guard)} />
+      )}
+      {showVerification && (
+        <Badge
+          label={getIdCredentialVerificationLabel(guard)}
+          className={getIdCredentialVerificationBadgeClass(guard)}
+        />
+      )}
     </div>
   );
 }

@@ -9,12 +9,11 @@ import {
   guardIdVerificationSubmissionReady,
   ID_VERIFICATION_SELFIE_HINT,
   ID_VERIFICATION_SLOT_LABELS,
-  ID_VERIFICATION_STATUS_LABELS,
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { AppModal } from '../ui/motion/AppMotion';
-import { WfBadge } from '../ui/wireframe';
+import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { IdVerificationImageThumb } from './IdVerificationImageModal';
 import { GuardIdPhotoRow } from './GuardIdPhotoRow';
 import type {
@@ -90,8 +89,6 @@ export function GuardIdDetailModal({
 
   const expired = isIdExpired(displayGuard);
   const expiryLabel = formatIdExpiryLabel(displayGuard.idExpiryDate);
-  const statusTone =
-    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
   const draftState = idState.trim().toUpperCase();
   const draftNumber = idNumber.trim();
@@ -199,8 +196,7 @@ export function GuardIdDetailModal({
 
       <div className="p-5 space-y-5 max-h-[min(80vh,40rem)] overflow-y-auto">
         <div className="flex flex-wrap gap-2">
-          <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
-          {expired && !editing && <WfBadge tone="danger">Expired</WfBadge>}
+          <IdCredentialStatusBadges guard={displayGuard} />
         </div>
 
         {status === 'rejected' && guard.idVerificationRejectionReason && (
@@ -351,11 +347,6 @@ export function GuardIdDetailModal({
             {guard.idVerificationSubmittedAt && (
               <p className="text-xs text-brand-text-muted">
                 Submitted {new Date(guard.idVerificationSubmittedAt).toLocaleString()}
-              </p>
-            )}
-            {status === 'verified' && guard.idVerificationReviewedAt && (
-              <p className="text-xs text-emerald-400/90">
-                Verified {new Date(guard.idVerificationReviewedAt).toLocaleString()}
               </p>
             )}
           </>
