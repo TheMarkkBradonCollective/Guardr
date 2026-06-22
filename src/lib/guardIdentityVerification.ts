@@ -20,7 +20,7 @@ export const ID_VERIFICATION_SELFIE_HINT =
   'Take a clear headshot with your front camera. Face the camera directly with good lighting. This is for identity verification — not your profile photo.';
 
 export const ID_VERIFICATION_POLICY_HINT =
-  'Required for account activation: enter your ID state, number, and expiration date, then upload front, back, and a live identity selfie. Once submitted, details are locked until staff reviews them.';
+  'Required for account activation: tap your government ID card, then Edit to enter state, number, expiration date, and upload front, back, and a live identity selfie. Once submitted, details are locked until staff reviews them.';
 
 export function isIdExpired(guard: Pick<SecurityGuard, 'idExpiryDate'>): boolean {
   if (!guard.idExpiryDate) return false;

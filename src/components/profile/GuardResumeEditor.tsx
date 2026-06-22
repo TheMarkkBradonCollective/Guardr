@@ -9,9 +9,7 @@ import {
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
-import { GuardCardPanel } from './GuardCardPanel';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
-import { GuardIdentityVerificationPanel } from './GuardIdentityVerificationPanel';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 
 export interface GuardResumeSavePayload {
@@ -227,23 +225,7 @@ export function GuardResumeEditor({
         </div>
       </section>
 
-      {!guard.isStaff && (
-        <>
-          <GuardQualificationPanel guard={guard} />
-
-          {onSubmitIdentityVerification && (
-            <GuardIdentityVerificationPanel guard={guard} onSubmit={onSubmitIdentityVerification} />
-          )}
-
-          <GuardCardPanel
-            guard={guard}
-            editing={credEditing}
-            onAddCertification={onAddCertification}
-            onDeleteCertification={onDeleteCertification}
-            onAttachCertificationImage={onAttachCertificationImage}
-          />
-        </>
-      )}
+      {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
 
       <GuardCredentialsPanel
         guard={guard}
@@ -251,6 +233,7 @@ export function GuardResumeEditor({
         onAddCertification={onAddCertification}
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}
+        onSubmitIdentityVerification={onSubmitIdentityVerification}
       />
 
       <ExperienceSection

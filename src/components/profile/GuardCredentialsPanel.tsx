@@ -21,6 +21,12 @@ import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
+import { GuardCardPanel } from './GuardCardPanel';
+import {
+  GuardIdentityVerificationPanel,
+  type GuardIdentityVerificationPayload,
+  type IdentityVerificationSubmitResult,
+} from './GuardIdentityVerificationPanel';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
@@ -73,6 +79,9 @@ interface GuardCredentialsPanelProps {
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onSubmitIdentityVerification?: (
+    payload: GuardIdentityVerificationPayload
+  ) => Promise<IdentityVerificationSubmitResult>;
 }
 
 export function GuardCredentialsPanel({
@@ -81,6 +90,7 @@ export function GuardCredentialsPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onSubmitIdentityVerification,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -219,9 +229,27 @@ export function GuardCredentialsPanel({
         <div className="app-form-section space-y-1">
           <p className="text-sm font-semibold text-brand-primary">Credentials</p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Licenses and certificates grouped by category. Tap any item to view details and photos.
+            Government ID first, then guard card and other licenses. Tap any item to view details and photos.
           </p>
         </div>
+      )}
+
+      {!guard.isStaff && onSubmitIdentityVerification && (
+        <GuardIdentityVerificationPanel
+          guard={guard}
+          onSubmit={onSubmitIdentityVerification}
+          embedded
+        />
+      )}
+
+      {!guard.isStaff && (
+        <GuardCardPanel
+          guard={guard}
+          editing={editing}
+          onAddCertification={onAddCertification}
+          onDeleteCertification={onDeleteCertification}
+          onAttachCertificationImage={onAttachCertificationImage}
+        />
       )}
 
       {showSection(ptaUofItems.length) && (
