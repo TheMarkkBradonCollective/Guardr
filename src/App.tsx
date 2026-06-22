@@ -94,7 +94,7 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus, isGuardAccountPending } from './lib/accountStatus';
+import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -520,16 +520,6 @@ export default function App() {
       applyThemeToDocument(profile.themePreference);
     }
   }, [currentUser, guards, clients]);
-
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'guard' || loading) return;
-    const matched = findGuardProfileForUser(currentUser, guards);
-    if (!matched || !isGuardAccountPending(matched)) return;
-    if (guardTab === 'map' || guardTab === 'myJobs' || guardTab === 'earnings') {
-      setGuardTabState('profile');
-      syncAppRoute(buildAppRoute({ role: 'guard', guardTab: 'profile' }));
-    }
-  }, [currentUser, guards, loading, guardTab]);
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {

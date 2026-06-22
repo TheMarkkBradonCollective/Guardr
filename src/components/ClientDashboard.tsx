@@ -163,7 +163,7 @@ export function ClientDashboard({
     <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">{node}</div>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'support') {
+  if (accountPending && view !== 'profile' && view !== 'support' && view !== 'home') {
     return wrap(
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
     );
@@ -274,6 +274,8 @@ export function ClientDashboard({
       coverage={coverage}
       requests={requests}
       recentReports={recentReports}
+      accountPending={accountPending}
+      onOpenProfile={() => navigate('profile')}
       onAction={handleHomeAction}
     />
   );

@@ -17,6 +17,7 @@ import {
   Plus,
   ClipboardList,
   Users,
+  Clock,
 } from 'lucide-react';
 
 export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards';
@@ -26,6 +27,8 @@ interface ClientHomeScreenProps {
   coverage: CoverageSummary;
   requests: SecurityRequest[];
   recentReports: ClientReportCard[];
+  accountPending?: boolean;
+  onOpenProfile?: () => void;
   onAction: (action: ClientHomeAction) => void;
 }
 
@@ -48,6 +51,8 @@ export function ClientHomeScreen({
   coverage,
   requests,
   recentReports,
+  accountPending = false,
+  onOpenProfile,
   onAction,
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
@@ -61,6 +66,24 @@ export function ClientHomeScreen({
           <p className="text-sm text-brand-text-muted -mt-2">Welcome back</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
         </div>
+
+        {accountPending && (
+          <div className="app-card-elevated p-4 flex gap-3 items-start border-amber-500/30 bg-amber-500/8">
+            <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="text-sm font-semibold text-brand-text">Account pending approval</p>
+              <p className="text-xs text-brand-text-muted leading-relaxed">
+                You can review your workspace here, but posting jobs and hiring guards unlocks after Guardr staff
+                approves your account.
+              </p>
+              {onOpenProfile && (
+                <button type="button" onClick={onOpenProfile} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                  Review profile
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <section className="app-surface-band overflow-hidden !p-0">
           <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
