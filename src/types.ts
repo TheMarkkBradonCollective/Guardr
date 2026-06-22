@@ -60,6 +60,8 @@ export interface Certification {
   imageUrl?: string;
   /** Staff note when a clearer credential photo is needed */
   rejectionReason?: string;
+  /** Who uploaded this credential for approvals filtering */
+  submittedByRole?: 'guard' | 'staff';
 }
 
 export interface Experience {
@@ -222,6 +224,8 @@ export interface SecurityGuard {
   idVerificationSubmittedAt?: string;
   idVerificationReviewedAt?: string;
   idVerificationRejectionReason?: string;
+  /** Who submitted government ID for approvals filtering */
+  idSubmittedBy?: 'guard' | 'staff';
 }
 
 export interface StaffSpotCheck {

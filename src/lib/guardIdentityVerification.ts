@@ -1,4 +1,5 @@
 import { SecurityGuard } from '../types';
+import { isGuardSubmittedIdentityVerification } from './approvalSubmissions';
 import { getGuardUserStatus } from './accountStatus';
 
 export type GuardIdVerificationStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
@@ -128,6 +129,9 @@ export function staffCanRequestIdResubmit(
 
 export function getPendingIdentityVerifications(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter(
-    (g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending' && guardIdVerificationSubmissionReady(g)
+    (g) =>
+      isGuardSubmittedIdentityVerification(g) &&
+      getGuardIdVerificationStatus(g) === 'pending' &&
+      guardIdVerificationSubmissionReady(g)
   );
 }

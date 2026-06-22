@@ -61,8 +61,8 @@ html.theme-light {
   --brand-surface:       #FFFFFF;
   --brand-elevated:      #F7F9F7;
   --brand-border:        #E2E8E2;
-  --brand-text:          #141414;
-  --brand-text-muted:    #6B7280;
+  --brand-text:          #000000;
+  --brand-text-muted:    #3D3D3D;
   --brand-accent:        #5E7B61;
   --brand-accent-text:   #FFFFFF;
   --brand-overlay:       rgba(255, 255, 255, 0.92);
@@ -343,6 +343,7 @@ html.theme-grey {
 
 .staff-main-content {
   background: var(--brand-bg);
+  color: var(--brand-text);
 }
 
 @media (max-width: 1023px) {
@@ -1663,8 +1664,27 @@ html.theme-light, .theme-light {
   .bg-slate-900  { background-color: var(--brand-text) !important; }
   .bg-slate-50   { background-color: var(--brand-bg-sec) !important; }
   .text-slate-900, .text-neutral-900, .text-black { color: var(--brand-text) !important; }
+  .text-slate-800, .text-neutral-800, .text-slate-700, .text-neutral-700 { color: var(--brand-text) !important; }
   .text-slate-600, .text-slate-500 { color: var(--brand-text-muted) !important; }
+  .text-slate-400, .text-slate-300, .text-slate-200, .text-slate-100 { color: var(--brand-text-muted) !important; }
+  .text-neutral-500, .text-neutral-400 { color: var(--brand-text-muted) !important; }
   .border-slate-200, .border-slate-100 { border-color: var(--brand-border) !important; }
+
+  .text-amber-400, .text-amber-500, .text-amber-600 { color: #92400e !important; }
+  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 { color: var(--brand-primary) !important; }
+  .text-blue-600, .text-blue-700, .text-blue-400 { color: var(--brand-primary) !important; }
+
+  .page-shell,
+  .staff-main-content,
+  .app-screen,
+  .app-card,
+  .app-form-section,
+  .staff-ops-card,
+  .modal-panel,
+  .role-app-shell main,
+  .app-cert-item {
+    color: var(--brand-text);
+  }
 
   .bg-blue-600, .bg-blue-500    { background-color: var(--brand-primary) !important; color: #fff !important; }
   .hover\:bg-blue-700:hover     { background-color: var(--brand-primary-hover) !important; }
@@ -1673,7 +1693,6 @@ html.theme-light, .theme-light {
   .border-blue-200              { border-color: color-mix(in srgb, var(--brand-primary) 30%, #fff) !important; }
 
   .bg-emerald-500, .bg-emerald-600 { background-color: var(--brand-primary) !important; color: #fff !important; }
-  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-800 { color: var(--brand-primary) !important; }
   .bg-emerald-50\/25, .bg-emerald-50 { background-color: color-mix(in srgb, var(--brand-primary) 8%, #fff) !important; }
   .border-emerald-100, .border-emerald-200, .border-emerald-300 { border-color: color-mix(in srgb, var(--brand-primary) 30%, #fff) !important; }
   .hover\:bg-emerald-400:hover, .hover\:bg-emerald-500:hover { background-color: var(--brand-primary-hover) !important; }
@@ -2066,7 +2085,7 @@ body[data-form-factor="desktop"] .staff-ops-root main {
   box-shadow: var(--shadow-card);
   text-align: left;
   font-family: inherit;
-  color: inherit;
+  color: var(--brand-text);
 }
 
 .app-item-card-align-top {

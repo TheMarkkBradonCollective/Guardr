@@ -973,6 +973,7 @@ export default function App() {
         idVerificationSubmittedAt: g.id_verification_submitted_at ?? undefined,
         idVerificationReviewedAt: g.id_verification_reviewed_at ?? undefined,
         idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
+        idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -982,6 +983,10 @@ export default function App() {
           category: c.category ?? undefined,
           imageUrl: c.image_url ?? undefined,
           rejectionReason: c.rejection_reason ?? undefined,
+          submittedByRole:
+            c.submitted_by_role === 'staff' || c.submitted_by_role === 'guard'
+              ? c.submitted_by_role
+              : undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -1642,7 +1647,8 @@ export default function App() {
   // ── Certification CRUD ─────────────────────────────────────
   const handleAddCertification = async (
     guardId: string,
-    newCert: Partial<Certification>
+    newCert: Partial<Certification>,
+    submittedByRole: 'guard' | 'staff' = 'guard'
   ): Promise<AddCertificationResult> => {
     const available = validateCertNumberAvailable(guards, {
       number: newCert.number ?? '',
@@ -1662,6 +1668,7 @@ export default function App() {
       catalogId: newCert.catalogId,
       category: newCert.category,
       imageUrl: newCert.imageUrl,
+      submittedByRole: newCert.submittedByRole ?? submittedByRole,
     };
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
@@ -1675,6 +1682,7 @@ export default function App() {
           catalog_id: certWithId.catalogId ?? null,
           category: certWithId.category ?? null,
           image_url: certWithId.imageUrl ?? null,
+          submitted_by_role: certWithId.submittedByRole ?? null,
         });
         if (error) {
           setGuards(prev =>
@@ -2336,6 +2344,7 @@ export default function App() {
               idVerificationStatus: 'pending' as const,
               idVerificationSubmittedAt: submittedAt,
               idVerificationRejectionReason: undefined,
+              idSubmittedBy: 'guard' as const,
             }
           : g
       )
@@ -2355,6 +2364,7 @@ export default function App() {
           id_verification_status: 'pending',
           id_verification_submitted_at: submittedAt,
           id_verification_rejection_reason: null,
+          id_submitted_by: 'guard',
         })
         .eq('id', guardId);
       if (error) {
@@ -2497,6 +2507,8 @@ export default function App() {
                 nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
               idVerificationRejectionReason:
                 complete && nextStatus !== 'verified' ? undefined : g.idVerificationRejectionReason,
+              idSubmittedBy:
+                complete && nextStatus === 'pending' ? ('staff' as const) : g.idSubmittedBy,
             }
           : g
       )
@@ -2520,6 +2532,7 @@ export default function App() {
             nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
           id_verification_rejection_reason:
             complete && nextStatus !== 'verified' ? null : guard.idVerificationRejectionReason ?? null,
+          id_submitted_by: complete && nextStatus === 'pending' ? 'staff' : guard.idSubmittedBy ?? null,
         })
         .eq('id', guardId);
       if (error) {
@@ -4395,7 +4408,7 @@ export default function App() {
           onTabChange={setGuardTab}
           requests={guardJobs}
           payments={guardPayouts}
-          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
+          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
           onAttachCertificationImage={(certId, imageUrl) =>
             handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
@@ -4621,7 +4634,7 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={handleAddCertification}
+          onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
           onDeleteCertification={handleDeleteCertification}
           onAttachCertificationImage={handleAttachCertificationImage}
           onAddExperience={handleAddExperience}

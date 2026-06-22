@@ -1,5 +1,11 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
-import { getClientAccountStatus, isClientAccountPending, isGuardAccountPending } from './accountStatus';
+import { isGuardAccountPending } from './accountStatus';
+import {
+  isGuardSubmittedIdentityVerification,
+  isSelfSubmittedClientAccount,
+  isSelfSubmittedGuardAccount,
+  isUserSubmittedPendingCert,
+} from './approvalSubmissions';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
@@ -153,14 +159,16 @@ export function computePlatformStats(
 ): PlatformStats {
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
   const pendingCerts = guards.reduce(
-    (n, g) => n + g.certifications.filter((c) => c.status === 'pending').length,
+    (n, g) => n + g.certifications.filter((c) => isUserSubmittedPendingCert(c, g)).length,
     0
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingGuardAccounts = guards.filter((g) => isGuardAccountPending(g)).length;
+  const pendingGuardAccounts = guards.filter(
+    (g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g)
+  ).length;
   const pendingIdentityVerifications = guards.filter(
-    (g) => !g.isStaff && g.idVerificationStatus === 'pending'
+    (g) => isGuardSubmittedIdentityVerification(g) && g.idVerificationStatus === 'pending'
   ).length;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
@@ -365,8 +373,10 @@ export function buildOverviewActionQueue(
     });
   }
 
-  const pendingGuardAccounts = guards.filter((g) => isGuardAccountPending(g)).length;
-  const pendingClientAccounts = clients.filter((c) => isClientAccountPending(c)).length;
+  const pendingGuardAccounts = guards.filter(
+    (g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g)
+  ).length;
+  const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
   const accountQueueCount = pendingGuardAccounts + pendingClientAccounts;
   if (accountQueueCount > 0) {
     items.push({
@@ -381,7 +391,7 @@ export function buildOverviewActionQueue(
   }
 
   const pendingIdentityCount = guards.filter(
-    (g) => !g.isStaff && g.idVerificationStatus === 'pending'
+    (g) => isGuardSubmittedIdentityVerification(g) && g.idVerificationStatus === 'pending'
   ).length;
   if (pendingIdentityCount > 0) {
     items.push({
@@ -709,16 +719,16 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
   const list: { guard: SecurityGuard; cert: SecurityGuard['certifications'][0] }[] = [];
   guards.forEach((g) => {
     g.certifications.forEach((c) => {
-      if (c.status === 'pending') list.push({ guard: g, cert: c });
+      if (isUserSubmittedPendingCert(c, g)) list.push({ guard: g, cert: c });
     });
   });
   return list;
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
-  return guards.filter((g) => isGuardAccountPending(g));
+  return guards.filter((g) => isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g));
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {
-  return clients.filter((c) => getClientAccountStatus(c) === 'pending');
+  return clients.filter((c) => isSelfSubmittedClientAccount(c));
 }

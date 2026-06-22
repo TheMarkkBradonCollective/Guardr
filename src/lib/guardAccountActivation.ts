@@ -1,4 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
+import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { resolveCertCatalogId } from './certCatalog';
 import {
   getGuardIdVerificationStatus,
@@ -85,7 +86,7 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
 /** Pending sign-ups staff can review — must have submitted ID and guard card. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountPending(g)) return false;
+    if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
     const checklist = getGuardActivationChecklist(g);
     return checklist.idSubmitted && checklist.guardCardSubmitted;
   });
@@ -93,13 +94,15 @@ export function getPendingGuardAccountReviews(guards: SecurityGuard[]): Security
 
 /** Pending accounts ready for final activation (ID + guard card both verified). */
 export function getGuardsReadyForAccountActivation(guards: SecurityGuard[]): SecurityGuard[] {
-  return guards.filter((g) => !g.isStaff && isGuardAccountPending(g) && guardCanActivateAccount(g));
+  return guards.filter(
+    (g) => !g.isStaff && isGuardAccountPending(g) && isSelfSubmittedGuardAccount(g) && guardCanActivateAccount(g)
+  );
 }
 
 /** Pending sign-ups still missing ID or guard card uploads. */
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountPending(g)) return false;
+    if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
     const checklist = getGuardActivationChecklist(g);
     return !checklist.idSubmitted || !checklist.guardCardSubmitted;
   });
