@@ -241,19 +241,161 @@ export interface StaffSpotCheck {
   clientConfirmedBy?: string;
 }
 
-/** Named point on site — fire extinguishers, med kits, Narcan, etc. */
+/** Named point on site — fire extinguishers, med kits, Narcan, AED, etc. */
 export interface JobOperationalLocation {
   label?: string;
   details: string;
 }
 
+/** On-site contact for guards — venue, client, emergency, law enforcement. */
+export interface JobOperationalContact {
+  role?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+}
+
+/** Guard post or checkpoint with location and post orders. */
+export interface JobOperationalCheckpoint {
+  label?: string;
+  location?: string;
+  schedule?: string;
+  instructions?: string;
+}
+
+/** Client-defined briefing field — unlimited custom details. */
+export interface JobOperationalCustomField {
+  section?: string;
+  label: string;
+  value: string;
+}
+
 /** Optional client site briefing — sensitive fields hidden from guards until assigned. */
 export interface JobOperationalDetails {
+  // Venue & site layout
+  venueType?: string;
+  venueCapacity?: string;
   patronHeadCount?: string;
+  indoorOutdoorSplit?: string;
+  floorPlanNotes?: string;
+  zoneDefinitions?: string;
+  seatingLayout?: string;
+  stageLocation?: string;
+  mainEntranceDetails?: string;
+  secondaryEntrances?: string;
+  exitDoors?: string;
+  emergencyExits?: string;
+  elevatorLocations?: string;
+  stairwellLocations?: string;
+  roofAccess?: string;
+  basementAccess?: string;
+  loadingDockDetails?: string;
+  dumpsterAreas?: string;
   postAssignment?: string;
+  // Schedule & doors
   doorsOpenTime?: string;
   doorsCloseTime?: string;
   curfewTime?: string;
+  showStartTime?: string;
+  showEndTime?: string;
+  soundcheckSchedule?: string;
+  vendorLoadInDetails?: string;
+  shiftBriefingTime?: string;
+  shiftBriefingLocation?: string;
+  kitchenCloseTime?: string;
+  cleanupProcedure?: string;
+  lockupProcedure?: string;
+  finalWalkthroughChecklist?: string;
+  alarmArmingProcedure?: string;
+  lightsHvacShutdown?: string;
+  // Perimeter & technology
+  perimeterDescription?: string;
+  blindSpots?: string;
+  climbPoints?: string;
+  fenceGates?: string;
+  vehicleBarriers?: string;
+  bollardLocations?: string;
+  securityLighting?: string;
+  cctvCameraLocations?: string;
+  alarmPanelLocation?: string;
+  panicButtonLocations?: string;
+  itServerRoomAccess?: string;
+  cctvMonitoringRoom?: string;
+  // Parking & transport
+  parkingLotLayout?: string;
+  guestParkingZones?: string;
+  staffParking?: string;
+  vipParking?: string;
+  accessibleParking?: string;
+  ridesharePickupZone?: string;
+  taxiStand?: string;
+  busShuttle?: string;
+  tourBusParking?: string;
+  towCompany?: string;
+  parkingEnforcement?: string;
+  oversizeVehiclePolicy?: string;
+  // Screening & weapons
+  bagCheckPolicy?: string;
+  bagCheckLocations?: string;
+  metalDetectorPolicy?: string;
+  metalDetectorLocations?: string;
+  wandSearchPolicy?: string;
+  patDownPolicy?: string;
+  prohibitedItemsList?: string;
+  allowedItemsList?: string;
+  screeningExceptions?: string;
+  weaponPolicy?: string;
+  offDutyLawEnforcementPolicy?: string;
+  // Crowd management
+  queueManagement?: string;
+  lineControlPoints?: string;
+  capacityHoldProcedure?: string;
+  crowdSurgeProtocol?: string;
+  moshpitPitRules?: string;
+  balconyOverlookRules?: string;
+  standingVsSeated?: string;
+  generalAdmissionFlow?: string;
+  seatedSectionFlow?: string;
+  // Credentialing
+  credentialingDetails?: string;
+  wristbandColors?: string;
+  laminateLevels?: string;
+  staffCredentialTypes?: string;
+  artistCredentialRules?: string;
+  vendorCredentialRules?: string;
+  mediaCredentialRules?: string;
+  ageVerificationProcedure?: string;
+  idCheckLocations?: string;
+  minorAccompanimentPolicy?: string;
+  reEntryPolicy?: string;
+  handStampPolicy?: string;
+  credentialConfiscationPolicy?: string;
+  // Talent & production
+  headlinerDetails?: string;
+  openingActs?: string;
+  performanceSchedule?: string;
+  greenRoomLocations?: string;
+  vipAreaDetails?: string;
+  artistEntourageRules?: string;
+  stageDoorPolicy?: string;
+  meetGreetSecurity?: string;
+  autographAreaRules?: string;
+  merchandiseBoothSecurity?: string;
+  // Bar & hospitality
+  barDetails?: string;
+  barLastCallTime?: string;
+  barCloseTime?: string;
+  intoxicationPolicy?: string;
+  kitchenAccess?: string;
+  foodTruckLocations?: string;
+  allergenEmergency?: string;
+  cashHandlingPolicy?: string;
+  atmLocations?: string;
+  cashRoomLocation?: string;
+  safeLocation?: string;
+  armoredCarSchedule?: string;
+  // Smoking & substances
   /** @deprecated Use smokingAreaLocation / smokingAreaRules — kept for legacy JSONB rows */
   smokingAreaDetails?: string;
   smokingAreaLocation?: string;
@@ -261,32 +403,101 @@ export interface JobOperationalDetails {
   smokingAreaCloseTime?: string;
   smokingAreaRules?: string;
   smokingAreaGuardNotes?: string;
-  barDetails?: string;
-  barLastCallTime?: string;
-  barCloseTime?: string;
+  tobaccoPolicyBeyondSmoking?: string;
+  cannabisPolicy?: string;
+  // Access & keys
   accessCodes?: string;
   keyLocation?: string;
   accessNotes?: string;
+  keysReturnProcedure?: string;
+  contractorEscortRules?: string;
+  utilityRoomAccess?: string;
+  // Emergency & medical
   emergencyProtocol?: string;
-  radioCodes?: string;
-  radioChannel?: string;
+  activeShooterProtocol?: string;
+  bombThreatProtocol?: string;
+  severeWeatherShelter?: string;
+  weatherContingencyPlans?: string;
+  earthquakeProtocol?: string;
+  powerOutageProtocol?: string;
+  gasLeakProtocol?: string;
+  hazmatNotes?: string;
+  medicalEmergencyContacts?: string;
+  nearestHospital?: string;
+  emsStagingLocation?: string;
+  triageLocation?: string;
+  evacuationRallyPoint?: string;
+  evacuationRoutes?: string;
+  shelterInPlaceLocation?: string;
+  firePullStationNotes?: string;
   cooldownAreaDetails?: string;
+  poolWaterFeatureRules?: string;
+  strobeLightWarnings?: string;
+  medicalConditionsOnSite?: string;
   fireExtinguisherLocations?: JobOperationalLocation[];
   medkitLocations?: JobOperationalLocation[];
   narcanLocations?: JobOperationalLocation[];
-  vipAreaDetails?: string;
-  credentialingDetails?: string;
-  medicalEmergencyContacts?: string;
-  nearestHospital?: string;
-  evacuationRallyPoint?: string;
-  lostChildProcedure?: string;
-  intoxicationPolicy?: string;
-  filmingPhotoPolicy?: string;
-  vendorLoadInDetails?: string;
+  aedLocations?: JobOperationalLocation[];
+  eyewashStationLocations?: JobOperationalLocation[];
+  spillKitLocations?: JobOperationalLocation[];
+  // Communications & command
+  radioChannel?: string;
+  radioCodes?: string;
+  radioCallSignPolicy?: string;
+  communicationTree?: string;
+  chainOfCommand?: string;
+  clientAuthorizedContacts?: string;
+  escalationTier1?: string;
+  escalationTier2?: string;
+  escalationTier3?: string;
   guardStationLocation?: string;
+  supervisorPostLocation?: string;
+  patrolRouteDetails?: string;
+  patrolIntervalMinutes?: string;
+  fixedPostRoster?: string;
+  roverResponsibilities?: string;
   restroomBreakPolicy?: string;
+  uniformByPost?: string;
+  equipmentByPost?: string;
+  handoffNotesFromPriorShift?: string;
+  guardPosts?: JobOperationalCheckpoint[];
+  contacts?: JobOperationalContact[];
+  // Incidents & enforcement
+  incidentReportProcedure?: string;
+  evidencePreservation?: string;
+  witnessStatementProcedure?: string;
+  bodyCamPolicy?: string;
+  useOfForceReporting?: string;
+  detentionHoldArea?: string;
+  trespassProcedure?: string;
+  ejectionRoutes?: string;
+  ejectionDocumentation?: string;
+  bannedPersonList?: string;
+  knownProblemGuests?: string;
+  lostChildProcedure?: string;
+  lostAndFoundProcedure?: string;
+  theftResponseProcedure?: string;
+  sexualHarassmentResponse?: string;
+  sexualAssaultResponseProtocol?: string;
+  // Policies & compliance
+  filmingPhotoPolicy?: string;
+  socialMediaPolicy?: string;
+  dronePolicy?: string;
+  liquorLicenseCompliance?: string;
+  noiseCurfewCompliance?: string;
+  adaAccessibilityNotes?: string;
+  serviceAnimalPolicy?: string;
+  languageTranslationNeeds?: string;
+  protestUnauthorizedActivity?: string;
+  picketLineProtocol?: string;
+  unionStrikeRules?: string;
+  neighborhoodRelations?: string;
+  lawEnforcementLiaison?: string;
+  fireMarshalContact?: string;
+  // Client notes
   clientSpecialRequests?: string;
   additionalNotes?: string;
+  customBriefingFields?: JobOperationalCustomField[];
 }
 
 export interface SecurityRequest {

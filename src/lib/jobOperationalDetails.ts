@@ -1,4 +1,15 @@
-import { JobOperationalDetails, JobOperationalLocation, SecurityRequest } from '../types';
+import {
+  JobOperationalCheckpoint,
+  JobOperationalContact,
+  JobOperationalCustomField,
+  JobOperationalDetails,
+  JobOperationalLocation,
+  SecurityRequest,
+} from '../types';
+import {
+  OPERATIONAL_LOCATION_LIST_KEYS,
+  OPERATIONAL_SCALAR_KEYS,
+} from './jobOperationalFieldRegistry';
 
 export const EMPTY_JOB_OPERATIONAL_DETAILS: JobOperationalDetails = {};
 
@@ -22,56 +33,108 @@ function normalizeLocationList(raw: unknown): JobOperationalLocation[] | undefin
   return items.length > 0 ? items : undefined;
 }
 
+function normalizeContactList(raw: unknown): JobOperationalContact[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const items = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const source = entry as JobOperationalContact;
+      const role = trimOptional(source.role);
+      const name = trimOptional(source.name);
+      const phone = trimOptional(source.phone);
+      const email = trimOptional(source.email);
+      const notes = trimOptional(source.notes);
+      if (!role && !name && !phone && !email && !notes) return null;
+      return {
+        ...(role ? { role } : {}),
+        ...(name ? { name } : {}),
+        ...(phone ? { phone } : {}),
+        ...(email ? { email } : {}),
+        ...(notes ? { notes } : {}),
+      };
+    })
+    .filter((entry): entry is JobOperationalContact => entry != null);
+  return items.length > 0 ? items : undefined;
+}
+
+function normalizeCheckpointList(raw: unknown): JobOperationalCheckpoint[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const items = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const source = entry as JobOperationalCheckpoint;
+      const label = trimOptional(source.label);
+      const location = trimOptional(source.location);
+      const schedule = trimOptional(source.schedule);
+      const instructions = trimOptional(source.instructions);
+      if (!label && !location && !schedule && !instructions) return null;
+      return {
+        ...(label ? { label } : {}),
+        ...(location ? { location } : {}),
+        ...(schedule ? { schedule } : {}),
+        ...(instructions ? { instructions } : {}),
+      };
+    })
+    .filter((entry): entry is JobOperationalCheckpoint => entry != null);
+  return items.length > 0 ? items : undefined;
+}
+
+function normalizeCustomFieldList(raw: unknown): JobOperationalCustomField[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const items = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null;
+      const source = entry as JobOperationalCustomField;
+      const label = trimOptional(source.label);
+      const value = trimOptional(source.value);
+      if (!label || !value) return null;
+      const section = trimOptional(source.section);
+      return { label, value, ...(section ? { section } : {}) };
+    })
+    .filter((entry): entry is JobOperationalCustomField => entry != null);
+  return items.length > 0 ? items : undefined;
+}
+
 export function normalizeJobOperationalDetails(raw: unknown): JobOperationalDetails | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
 
   const source = raw as Record<string, unknown>;
-  const details: JobOperationalDetails = {
-    patronHeadCount: trimOptional(source.patronHeadCount),
-    postAssignment: trimOptional(source.postAssignment),
-    doorsOpenTime: trimOptional(source.doorsOpenTime),
-    doorsCloseTime: trimOptional(source.doorsCloseTime),
-    curfewTime: trimOptional(source.curfewTime),
-    smokingAreaLocation: trimOptional(source.smokingAreaLocation),
-    smokingAreaOpenTime: trimOptional(source.smokingAreaOpenTime),
-    smokingAreaCloseTime: trimOptional(source.smokingAreaCloseTime),
-    smokingAreaRules:
-      trimOptional(source.smokingAreaRules) ?? trimOptional(source.smokingAreaDetails),
-    smokingAreaGuardNotes: trimOptional(source.smokingAreaGuardNotes),
-    barDetails: trimOptional(source.barDetails),
-    barLastCallTime: trimOptional(source.barLastCallTime),
-    barCloseTime: trimOptional(source.barCloseTime),
-    accessCodes: trimOptional(source.accessCodes),
-    keyLocation: trimOptional(source.keyLocation),
-    accessNotes: trimOptional(source.accessNotes),
-    emergencyProtocol: trimOptional(source.emergencyProtocol),
-    radioCodes: trimOptional(source.radioCodes),
-    radioChannel: trimOptional(source.radioChannel),
-    cooldownAreaDetails: trimOptional(source.cooldownAreaDetails),
-    fireExtinguisherLocations: normalizeLocationList(source.fireExtinguisherLocations),
-    medkitLocations: normalizeLocationList(source.medkitLocations),
-    narcanLocations: normalizeLocationList(source.narcanLocations),
-    vipAreaDetails: trimOptional(source.vipAreaDetails),
-    credentialingDetails: trimOptional(source.credentialingDetails),
-    medicalEmergencyContacts: trimOptional(source.medicalEmergencyContacts),
-    nearestHospital: trimOptional(source.nearestHospital),
-    evacuationRallyPoint: trimOptional(source.evacuationRallyPoint),
-    lostChildProcedure: trimOptional(source.lostChildProcedure),
-    intoxicationPolicy: trimOptional(source.intoxicationPolicy),
-    filmingPhotoPolicy: trimOptional(source.filmingPhotoPolicy),
-    vendorLoadInDetails: trimOptional(source.vendorLoadInDetails),
-    guardStationLocation: trimOptional(source.guardStationLocation),
-    restroomBreakPolicy: trimOptional(source.restroomBreakPolicy),
-    clientSpecialRequests: trimOptional(source.clientSpecialRequests),
-    additionalNotes: trimOptional(source.additionalNotes),
-  };
+  const details: JobOperationalDetails = {};
+
+  for (const key of OPERATIONAL_SCALAR_KEYS) {
+    const value = trimOptional(source[key]);
+    if (value) {
+      (details as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  if (!details.smokingAreaRules) {
+    const legacy = trimOptional(source.smokingAreaDetails);
+    if (legacy) details.smokingAreaRules = legacy;
+  }
+
+  for (const key of OPERATIONAL_LOCATION_LIST_KEYS) {
+    const items = normalizeLocationList(source[key]);
+    if (items) {
+      (details as Record<string, unknown>)[key] = items;
+    }
+  }
+
+  const guardPosts = normalizeCheckpointList(source.guardPosts);
+  if (guardPosts) details.guardPosts = guardPosts;
+
+  const contacts = normalizeContactList(source.contacts);
+  if (contacts) details.contacts = contacts;
+
+  const customBriefingFields = normalizeCustomFieldList(source.customBriefingFields);
+  if (customBriefingFields) details.customBriefingFields = customBriefingFields;
 
   return hasJobOperationalDetails(details) ? details : undefined;
 }
 
 export function hasJobOperationalDetails(details?: JobOperationalDetails | null): boolean {
   if (!details) return false;
-  return Object.entries(details).some(([key, value]) => {
+  return Object.entries(details).some(([, value]) => {
     if (Array.isArray(value)) return value.length > 0;
     return typeof value === 'string' && value.trim().length > 0;
   });
