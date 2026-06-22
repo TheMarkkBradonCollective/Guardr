@@ -25,7 +25,7 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
 import {
   OverviewSegmentBar,
-  OverviewVisualGrid,
+  OverviewVisualCardBody,
   OverviewWeekChart,
 } from './overview/OverviewCharts';
 import {
@@ -167,7 +167,14 @@ export function StaffOverview({
           actionLabel={showDirectorFinancials ? 'Analytics' : undefined}
           onAction={showDirectorFinancials ? () => onNavigate('analytics') : undefined}
         />
-        <OverviewVisualGrid cards={platformPulseCards} columns={showDirectorFinancials ? 3 : 2} />
+        <div className="staff-overview-lower grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {platformPulseCards.map((card) => (
+            <section key={card.id} className="staff-overview-chart-card">
+              <WfSectionHeader title={card.title} />
+              <OverviewVisualCardBody card={card} />
+            </section>
+          ))}
+        </div>
       </section>
 
       {showDirectorFinancials && (
@@ -177,7 +184,14 @@ export function StaffOverview({
             actionLabel="Payments"
             onAction={() => onNavigate('payments')}
           />
-          <OverviewVisualGrid cards={operationsSnapshotCards} columns={3} />
+          <div className="staff-overview-lower grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {operationsSnapshotCards.map((card) => (
+              <section key={card.id} className="staff-overview-chart-card">
+                <WfSectionHeader title={card.title} />
+                <OverviewVisualCardBody card={card} />
+              </section>
+            ))}
+          </div>
         </section>
       )}
 

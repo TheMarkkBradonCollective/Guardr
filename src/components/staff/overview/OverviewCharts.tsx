@@ -116,10 +116,9 @@ export function OverviewWeekChart({ series }: { series: WeeklyJobPoint[] }) {
   );
 }
 
-export function OverviewVisualCardView({ card }: { card: OverviewVisualCard }) {
+export function OverviewVisualCardBody({ card }: { card: OverviewVisualCard }) {
   return (
-    <article className="staff-overview-visual-card">
-      <p className="overview-visual-title">{card.title}</p>
+    <>
       <div className="mt-3">
         {card.kind === 'segments' && card.segments ? <OverviewSegmentBar segments={card.segments} /> : null}
         {card.kind === 'meters' && card.meters
@@ -139,6 +138,15 @@ export function OverviewVisualCardView({ card }: { card: OverviewVisualCard }) {
           {card.footnote}
         </p>
       ) : null}
+    </>
+  );
+}
+
+export function OverviewVisualCardView({ card }: { card: OverviewVisualCard }) {
+  return (
+    <article className="staff-overview-visual-card">
+      <p className="overview-visual-title">{card.title}</p>
+      <OverviewVisualCardBody card={card} />
     </article>
   );
 }
