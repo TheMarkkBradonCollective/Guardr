@@ -2,7 +2,7 @@ import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { WfBadge } from '../ui/wireframe';
-import { Check, Circle } from 'lucide-react';
+import { Check, Circle, Plus } from 'lucide-react';
 
 interface GuardActivationChecklistProps {
   guard: SecurityGuard;
@@ -20,6 +20,18 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
       <div>
         <span className={done ? 'text-brand-text' : 'text-brand-text-muted'}>{label}</span>
         {detail && <p className="text-xs text-brand-text-muted mt-0.5">{detail}</p>}
+      </div>
+    </div>
+  );
+}
+
+function OptionalNote({ label, detail }: { label: string; detail: string }) {
+  return (
+    <div className="flex items-start gap-2 text-sm pt-3 mt-1 border-t border-brand-border">
+      <Plus className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+      <div>
+        <span className="text-brand-text">{label}</span>
+        <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{detail}</p>
       </div>
     </div>
   );
@@ -46,8 +58,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Account activation requirements</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Submit government ID and a BSIS Guard Card. Staff verifies both before activating the account.
-        Additional credentials can be added after activation.
+        Submit government ID and a BSIS Guard Card. Staff verifies both before activating your account.
       </p>
       <div className="app-checklist-steps">
         <StepRow
@@ -71,6 +82,10 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
                 ? 'Uploaded — awaiting staff verification'
                 : 'Upload under credentials in profile'
           }
+        />
+        <OptionalNote
+          label="Add extra credentials (optional)"
+          detail="Firearms permits, medical certs, FEMA, and more can be added in your profile anytime — not required for activation."
         />
       </div>
       {checklist.canActivate && (
