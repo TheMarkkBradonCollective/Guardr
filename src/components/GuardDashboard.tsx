@@ -718,6 +718,8 @@ export function GuardDashboard({
   );
 
   const showPendingGate = accountPending && activeTab !== 'profile' && activeTab !== 'support';
+  const shellFullBleed = !showPendingGate && activeTab === 'map';
+  const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
     <AccountPendingScreen role="guard" guard={guard} onOpenProfile={() => setTab('profile')} />
   ) : (
@@ -753,8 +755,8 @@ export function GuardDashboard({
       activeNavId={activeTab}
       onNavigate={(id) => setTab(id as GuardTab)}
       headerRight={themeToggle}
-      fullBleed={activeTab === 'map'}
-      variant={activeTab === 'map' ? 'dark' : 'default'}
+      fullBleed={shellFullBleed}
+      variant={shellVariant}
     >
       <div className="relative h-full min-h-0">
         {visibleMainPanel}

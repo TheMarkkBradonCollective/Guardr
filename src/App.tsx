@@ -94,7 +94,7 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import { getClientAccountStatus, getGuardUserStatus, isGuardAccountPending } from './lib/accountStatus';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -484,23 +484,52 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.role === 'guard') {
-      setActiveGuardId(currentUser.id);
+      const matched = findGuardProfileForUser(currentUser, guards);
+      setActiveGuardId(matched?.id ?? currentUser.id);
       return;
     }
   }, [currentUser, guards]);
+
+  // Keep session id aligned when the guard row id differs (e.g. after DB reset / staff provisioned account).
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'guard' || loading) return;
+    const matched = findGuardProfileForUser(currentUser, guards);
+    if (!matched || matched.id === currentUser.id) return;
+    const next: SessionUser = {
+      ...currentUser,
+      id: matched.id,
+      name: matched.name,
+      badgeNumber: matched.badgeNumber,
+      avatar: matched.avatar,
+      hourlyRate: matched.hourlyRateRequirement,
+    };
+    localStorage.setItem('guardr_current_user', JSON.stringify(next));
+    setCurrentUser(next);
+    setActiveGuardId(matched.id);
+  }, [currentUser, guards, loading]);
 
   useEffect(() => {
     if (!currentUser) return;
     const profile =
       currentUser.role === 'client'
         ? clients.find((c) => c.id === currentUser.id)
-        : guards.find((g) => g.id === currentUser.id);
+        : findGuardProfileForUser(currentUser, guards);
     if (profile?.themePreference) {
       setThemeMode(profile.themePreference);
       saveTheme(profile.themePreference, currentUser.id);
       applyThemeToDocument(profile.themePreference);
     }
   }, [currentUser, guards, clients]);
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'guard' || loading) return;
+    const matched = findGuardProfileForUser(currentUser, guards);
+    if (!matched || !isGuardAccountPending(matched)) return;
+    if (guardTab === 'map' || guardTab === 'myJobs' || guardTab === 'earnings') {
+      setGuardTabState('profile');
+      syncAppRoute(buildAppRoute({ role: 'guard', guardTab: 'profile' }));
+    }
+  }, [currentUser, guards, loading, guardTab]);
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {
@@ -881,7 +910,11 @@ export default function App() {
   // ── Derived ────────────────────────────────────────────────
   // Only real guards (not clients/auditors/staff-only accounts)
   const verifiedGuards = guards.filter(g => !g.id.startsWith('client-') && !g.id.startsWith('auditor-'));
-  const activeGuard = verifiedGuards.find(g => g.id === activeGuardId) || verifiedGuards[0] || ({} as SecurityGuard);
+  const activeGuard =
+    (currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, verifiedGuards) : undefined) ??
+    verifiedGuards.find((g) => g.id === activeGuardId) ??
+    verifiedGuards[0] ??
+    ({} as SecurityGuard);
 
   // ── Auth ───────────────────────────────────────────────────
   const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {
@@ -3554,9 +3587,14 @@ export default function App() {
   if (currentUser.role === 'guard') {
     if (!activeGuard?.id) {
       return (
-        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center">
-          <p className="text-brand-text-muted text-sm mb-4">Loading your guard profile…</p>
-          <button type="button" onClick={handleSignOut} className="text-sm font-medium text-brand-primary">Sign out</button>
+        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
+          <p className="text-brand-text font-semibold">We could not load your guard profile.</p>
+          <p className="text-brand-text-muted text-sm max-w-sm">
+            Your sign-in may be out of date after a database change. Sign out and sign in again with your guard email.
+          </p>
+          <button type="button" onClick={handleSignOut} className="app-button-primary !w-auto !px-6 !h-11">
+            Sign out
+          </button>
         </div>
       );
     }
