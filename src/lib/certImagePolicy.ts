@@ -1,4 +1,5 @@
 import { Certification } from '../types';
+import { resolveCertCatalogId } from './certCatalog';
 
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
@@ -94,4 +95,28 @@ export function certPhotoIsLockedForEditor(
   if (staffMode) return false;
   if (cert.status === 'rejected') return false;
   return certImageIsLocked(cert);
+}
+
+function isGuardCardCertification(cert: Pick<Certification, 'name' | 'catalogId'>): boolean {
+  const catalogId = resolveCertCatalogId(cert);
+  return catalogId === 'bsis-guard-card' || /guard card|bsis guard/i.test(cert.name);
+}
+
+/** Guard card must have a document photo before staff can verify — listed-only is not enough. */
+export function staffCanVerifyCertification(
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
+): boolean {
+  if (cert.status !== 'pending') return false;
+  if (isGuardCardCertification(cert) && !certHasDocumentProof(cert)) return false;
+  return true;
+}
+
+export function staffVerifyCertificationBlocker(
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
+): string | null {
+  if (cert.status !== 'pending') return null;
+  if (isGuardCardCertification(cert) && !certHasDocumentProof(cert)) {
+    return 'Document photo required — guard card must be on file before staff can verify';
+  }
+  return null;
 }

@@ -83,7 +83,7 @@ import {
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
-import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage } from './lib/certImagePolicy';
+import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage, staffCanVerifyCertification, staffVerifyCertificationBlocker } from './lib/certImagePolicy';
 import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
@@ -2017,6 +2017,14 @@ export default function App() {
 
   const handleApproveCert = async (guardId: string, certId: string) => {
     const before = guards.find((g) => g.id === guardId);
+    const cert = before?.certifications.find((c) => c.id === certId);
+    if (!cert) throw new Error('Credential not found.');
+    const verifyBlocker = staffVerifyCertificationBlocker(cert);
+    if (verifyBlocker) throw new Error(verifyBlocker);
+    if (!staffCanVerifyCertification(cert)) {
+      throw new Error('This credential cannot be verified yet.');
+    }
+
     setGuards((prev) =>
       prev.map((g) => {
         if (g.id !== guardId) return g;

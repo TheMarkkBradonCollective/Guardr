@@ -19,6 +19,7 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { getGuardUserStatus } from '../../lib/accountStatus';
@@ -294,30 +295,47 @@ export function StaffGuardDetailPanel({
 
   const renderStaffCertActions = (cert: Certification) =>
     canManage && cert.status === 'pending' ? (
-      <div className="flex gap-1.5 justify-end flex-wrap">
-        {cert.imageUrl && onRequestCertImageResubmit && (
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex gap-1.5 justify-end flex-wrap">
+          {cert.imageUrl && onRequestCertImageResubmit && (
+            <button
+              type="button"
+              onClick={() => requestCertResubmit(cert)}
+              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+            >
+              Request clearer photo
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => requestCertResubmit(cert)}
-            className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+            onClick={() => onRejectCert(guard.id, cert.id)}
+            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
           >
-            Request clearer photo
+            <X className="w-3 h-3" /> Reject
           </button>
+          <button
+            type="button"
+            disabled={!staffCanVerifyCertification(cert)}
+            title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
+            onClick={() => {
+              void (async () => {
+                try {
+                  await onApproveCert(guard.id, cert.id);
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Could not verify credential.');
+                }
+              })();
+            }}
+            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1 disabled:opacity-50"
+          >
+            <Check className="w-3 h-3" /> Verify
+          </button>
+        </div>
+        {staffVerifyCertificationBlocker(cert) && (
+          <p className="text-xs text-amber-500 text-right max-w-xs leading-relaxed">
+            {staffVerifyCertificationBlocker(cert)}
+          </p>
         )}
-        <button
-          type="button"
-          onClick={() => onRejectCert(guard.id, cert.id)}
-          className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-        >
-          <X className="w-3 h-3" /> Reject
-        </button>
-        <button
-          type="button"
-          onClick={() => onApproveCert(guard.id, cert.id)}
-          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-        >
-          <Check className="w-3 h-3" /> Verify
-        </button>
       </div>
     ) : null;
 
