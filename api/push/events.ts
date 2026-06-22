@@ -1,30 +1,260 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { dispatchPushNotification } from './_delivery';
-import { resolveNotificationUrl } from './_routing';
-import {
-  getSupabaseAdmin,
-  isPushConfigured,
-  jsonError,
-  verifySession,
-} from './_shared';
-import type { PushSendPayload } from './_types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
+type PushNotificationType =
+  | 'missed_checkin'
+  | 'guard_checkin'
+  | 'assignment'
+  | 'emergency_alert'
+  | 'support_message'
+  | 'job_chat_message'
+  | 'staff_message'
+  | 'test';
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+
+interface PushSendPayload {
+  userId?: string;
+  role?: PushRole;
+  title: string;
+  body: string;
+  type: PushNotificationType;
+  url?: string;
+  siteId?: string;
+  guardId?: string;
+  requestId?: string;
+  ticketId?: string;
+  priority?: 'normal' | 'high';
+}
+
+async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+function resolvePlatformRole(input: {
+  isStaff?: boolean;
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  legacyRole?: string;
+}): PlatformRole {
+  if (input.legacyRole === 'client') return 'client';
+  if (input.isStaff && input.staffRole) {
+    switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
+      case 'Director':
+        return 'director';
+      case 'Administrator':
+        return 'administrator';
+      case 'Moderator':
+        return 'moderator';
+    }
+  }
+  if (input.legacyRole === 'auditor') return 'moderator';
+  if (input.legacyRole === 'staff') return 'administrator';
+  return 'guard';
+}
+
+async function verifySession(
+  db: SupabaseClient,
+  credentials: { userId: string; email: string; role: string } | null | undefined
+): Promise<{ userId: string } | null> {
+  if (!credentials?.userId || !credentials?.email || !credentials?.role) return null;
+  const email = credentials.email.trim().toLowerCase();
+  const { userId, role } = credentials;
+
+  if (role === 'client') {
+    const { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
+    if (!data || data.email?.toLowerCase() !== email) return null;
+    return { userId };
+  }
+
+  const { data } = await db
+    .from('guards')
+    .select('id, email, is_staff, staff_role')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!data || data.email?.toLowerCase() !== email) return null;
+  resolvePlatformRole({
+    isStaff: data.is_staff,
+    staffRole: data.staff_role ?? undefined,
+    legacyRole: data.is_staff ? 'staff' : 'guard',
+  });
+  return { userId };
+}
+
+function resolveNotificationUrl(
+  type: PushNotificationType,
+  options: { requestId?: string; ticketId?: string } = {}
+): string {
+  switch (type) {
+    case 'missed_checkin':
+    case 'guard_checkin':
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+    case 'assignment':
+      return options.requestId
+        ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/my-jobs';
+    case 'emergency_alert':
+      if (options.requestId) return `/staff/jobs?j=${encodeURIComponent(options.requestId)}`;
+      if (options.ticketId) return `/staff/support?st=${encodeURIComponent(options.ticketId)}`;
+      return '/staff/incidents';
+    case 'support_message':
+      return options.ticketId
+        ? `/staff/support?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/support';
+    case 'job_chat_message':
+      return options.requestId
+        ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}`
+        : '/staff/messages?mtab=jobs';
+    case 'staff_message':
+      return '/staff/messages?mtab=team';
+    default:
+      return '/';
+  }
+}
+
+function rolesForNotificationType(type: PushNotificationType): PushRole[] {
+  switch (type) {
+    case 'missed_checkin':
+    case 'guard_checkin':
+      return ['dispatch', 'admin'];
+    case 'assignment':
+      return ['guard'];
+    case 'emergency_alert':
+      return ['guard', 'dispatch', 'admin'];
+    case 'support_message':
+      return ['dispatch', 'admin', 'client', 'guard'];
+    case 'job_chat_message':
+      return ['client', 'guard', 'dispatch', 'admin'];
+    case 'staff_message':
+      return ['dispatch', 'admin'];
+    default:
+      return ['guard', 'dispatch'];
+  }
+}
+
+let vapidConfigured = false;
+
+async function sendPushToSubscriptions(
+  subscriptions: Array<{ endpoint: string; p256dh: string; auth: string }>,
+  message: Record<string, unknown>
+): Promise<{ sent: number; failed: number }> {
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  if (!publicKey || !privateKey || !subscriptions.length) {
+    return { sent: 0, failed: subscriptions.length };
+  }
+
+  const mod = await import('web-push');
+  const webpush = ('default' in mod && mod.default ? mod.default : mod) as typeof import('web-push');
+  if (!vapidConfigured) {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT?.trim() || 'mailto:support@guardr.co',
+      publicKey,
+      privateKey
+    );
+    vapidConfigured = true;
+  }
+
+  let sent = 0;
+  let failed = 0;
+  const payload = JSON.stringify(message);
+
+  for (const sub of subscriptions) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload,
+        { TTL: 60 * 60, urgency: message.priority === 'high' ? 'high' : 'normal' }
+      );
+      sent += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { sent, failed };
+}
+
+async function dispatchPushNotification(
+  db: SupabaseClient,
+  payload: PushSendPayload
+): Promise<{ sent: number; failed: number }> {
+  const urlOptions = { requestId: payload.requestId, ticketId: payload.ticketId };
+  const message = {
+    title: payload.title,
+    body: payload.body,
+    url: payload.url ?? resolveNotificationUrl(payload.type, urlOptions),
+    eventType: payload.type,
+    tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
+    priority: payload.priority ?? (payload.type === 'emergency_alert' ? 'high' : 'normal'),
+  };
+
+  if (payload.userId) {
+    const { data, error } = await db
+      .from('push_subscriptions')
+      .select('endpoint, p256dh, auth')
+      .eq('user_id', payload.userId);
+    if (error) throw new Error(error.message);
+    return sendPushToSubscriptions(data ?? [], message);
+  }
+
+  const targetRole = payload.role;
+  const roles = targetRole
+    ? targetRole === 'dispatch'
+      ? ['dispatch', 'admin']
+      : [targetRole]
+    : rolesForNotificationType(payload.type);
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const role of roles) {
+    const { data, error } = await db
+      .from('push_subscriptions')
+      .select('endpoint, p256dh, auth')
+      .in('push_role', role === 'dispatch' ? ['dispatch', 'admin'] : [role]);
+    if (error) throw new Error(error.message);
+    const result = await sendPushToSubscriptions(data ?? [], message);
+    sent += result.sent;
+    failed += result.failed;
+  }
+
+  return { sent, failed };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return jsonError(res, 405, 'Method not allowed');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!process.env.VAPID_PUBLIC_KEY?.trim() || !process.env.VAPID_PRIVATE_KEY?.trim()) {
+    return res.status(503).json({ error: 'Web Push is not configured on the server' });
   }
 
   try {
     const db = await getSupabaseAdmin();
     if (!db) {
-      return jsonError(res, 503, 'Database is not configured');
+      return res.status(503).json({ error: 'Database is not configured' });
     }
 
     const body = (req.body ?? {}) as {
       userId?: string;
       email?: string;
       role?: string;
-      type?: PushSendPayload['type'];
+      type?: PushNotificationType;
       title?: string;
       body?: string;
       guardId?: string;
@@ -42,15 +272,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       role: body.role ?? '',
     });
     if (!session) {
-      return jsonError(res, 401, 'Unauthorized — sign in again and retry');
+      return res.status(401).json({ error: 'Unauthorized — sign in again and retry' });
     }
 
     if (!body.type) {
-      return jsonError(res, 400, 'Notification type is required');
-    }
-
-    if (!isPushConfigured()) {
-      return jsonError(res, 503, 'Web Push is not configured on the server');
+      return res.status(400).json({ error: 'Notification type is required' });
     }
 
     const defaults: Record<string, { title: string; body: string }> = {
@@ -90,18 +316,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     };
 
-    const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
-    const url = resolveNotificationUrl(body.type, {
-      guardId: body.guardId,
-      requestId: body.requestId,
-      ticketId: body.ticketId,
-    });
+    const fallback = defaults[body.type] ?? {
+      title: 'Guardr alert',
+      body: body.body || 'Operational update',
+    };
 
     const dispatchPayload: PushSendPayload = {
       title: body.title ?? fallback.title,
       body: body.body ?? fallback.body,
       type: body.type,
-      url,
+      url: resolveNotificationUrl(body.type, {
+        requestId: body.requestId,
+        ticketId: body.ticketId,
+      }),
       guardId: body.guardId,
       requestId: body.requestId,
       ticketId: body.ticketId,
@@ -124,6 +351,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Push event failed';
     console.error('Push event error:', message, err);
-    return jsonError(res, 500, message);
+    return res.status(500).json({ error: message });
   }
 }
