@@ -181,6 +181,7 @@ export function GuardThirtyTwoHourPanel({
                 key={cert.id}
                 cert={cert}
                 editing={editing}
+                showCategory={false}
                 {...certCardProps(cert)}
               />
             ))}
@@ -230,7 +231,8 @@ export function GuardThirtyTwoHourPanel({
                       cert={cert}
                       editing={editing}
                       compact
-                      {...certCardProps(cert)}
+                      showCategory={false}
+                {...certCardProps(cert)}
                     />
                   ))}
                 </div>

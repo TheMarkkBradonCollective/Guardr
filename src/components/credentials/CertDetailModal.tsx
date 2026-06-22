@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { X, ImageOff } from 'lucide-react';
 import { Certification } from '../../types';
-import { CERT_CATEGORY_LABELS, getCertCatalogEntry } from '../../lib/certCatalog';
+import { certDisplayName, getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
+import { certCategoryLabel, certViewSectionLabel } from '../../lib/guardCredentialSections';
 import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
+import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 
 interface CertDetailModalProps {
   cert: Certification;
@@ -20,9 +22,11 @@ function formatDisplayDate(iso?: string): string {
 }
 
 export function CertDetailModal({ cert, onClose, guardName }: CertDetailModalProps) {
-  const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
-  const title = entry?.name ?? cert.name;
-  const categoryLabel = cert.category ? CERT_CATEGORY_LABELS[cert.category] : undefined;
+  const catalogId = resolveCertCatalogId(cert);
+  const entry = catalogId ? getCertCatalogEntry(catalogId) : undefined;
+  const title = certDisplayName(cert);
+  const sectionLabel = certViewSectionLabel(cert);
+  const categoryLabel = certCategoryLabel(cert);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -46,15 +50,18 @@ export function CertDetailModal({ cert, onClose, guardName }: CertDetailModalPro
       >
         <div className="flex items-start justify-between gap-3 p-5 border-b border-brand-border">
           <div className="min-w-0">
-            {guardName && (
-              <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>
-            )}
+            {guardName && <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <CredentialCategoryBadge cert={cert} />
+              {sectionLabel !== categoryLabel && (
+                <span className="text-[10px] font-medium uppercase tracking-wide text-brand-text-muted">
+                  {categoryLabel}
+                </span>
+              )}
+            </div>
             <h2 id="cert-detail-title" className="font-bold text-lg leading-snug">
               {title}
             </h2>
-            {categoryLabel && (
-              <p className="text-xs text-brand-text-muted mt-1">{categoryLabel}</p>
-            )}
           </div>
           <button
             type="button"
@@ -91,6 +98,14 @@ export function CertDetailModal({ cert, onClose, guardName }: CertDetailModalPro
           )}
 
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-brand-text-muted">Category</dt>
+              <dd className="font-medium mt-0.5">{sectionLabel}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-brand-text-muted">Credential group</dt>
+              <dd className="font-medium mt-0.5">{categoryLabel}</dd>
+            </div>
             <div>
               <dt className="text-xs text-brand-text-muted">Issuing organization</dt>
               <dd className="font-medium mt-0.5">{cert.issuer || '—'}</dd>

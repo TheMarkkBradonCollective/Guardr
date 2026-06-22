@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
-import { getCertCatalogEntry } from '../../lib/certCatalog';
+import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { isCertExpired } from '../../lib/certStatus';
@@ -9,6 +9,7 @@ import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertDetailModal } from './CertDetailModal';
 import { CertImageAttachButton } from './CertImageAttachButton';
+import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 
 interface CertItemCardProps {
   cert: Certification;
@@ -16,6 +17,7 @@ interface CertItemCardProps {
   onDelete?: () => void;
   onAttachImage?: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
   showUploadBadge?: boolean;
+  showCategory?: boolean;
   compact?: boolean;
   guardName?: string;
 }
@@ -27,11 +29,12 @@ export function CertItemCard({
   onDelete,
   onAttachImage,
   showUploadBadge = true,
+  showCategory = true,
   compact = false,
   guardName,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
-  const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
+  const title = certDisplayName(cert);
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
   const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
 
@@ -51,7 +54,12 @@ export function CertItemCard({
             />
           )}
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-snug">{entry?.name ?? cert.name}</p>
+            {showCategory && (
+              <div className="mb-1.5">
+                <CredentialCategoryBadge cert={cert} />
+              </div>
+            )}
+            <p className="font-semibold text-sm leading-snug">{title}</p>
             <p className="text-xs text-brand-text-muted mt-1">
               {cert.state ? `${formatStateName(cert.state)} · ` : ''}
               {cert.issuer} · #{cert.number}
