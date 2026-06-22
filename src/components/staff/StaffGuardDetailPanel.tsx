@@ -27,6 +27,11 @@ import {
   getGuardIdVerificationStatus,
   ID_VERIFICATION_STATUS_LABELS,
 } from '../../lib/guardIdentityVerification';
+import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
+import {
+  getGuardActivationChecklist,
+  guardCanActivateAccount,
+} from '../../lib/guardAccountActivation';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -147,6 +152,7 @@ export function StaffGuardDetailPanel({
 
   const accountStatus = guard.userStatus || 'active';
   const idVerificationStatus = getGuardIdVerificationStatus(guard);
+  const activationChecklist = getGuardActivationChecklist(guard);
   const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
@@ -422,6 +428,12 @@ export function StaffGuardDetailPanel({
         </div>
       </div>
 
+      {!guard.isStaff && guardAccountStatus === 'pending' && (
+        <div className="px-1 pb-4">
+          <GuardActivationChecklistView guard={guard} />
+        </div>
+      )}
+
       {!guard.isStaff && onSubmitIdentityVerification && (
         <GuardIdentityVerificationPanel
           guard={guard}
@@ -477,8 +489,26 @@ export function StaffGuardDetailPanel({
             <WfSectionHeader title="Account controls" className="mb-0" />
             <div className="flex flex-wrap gap-2">
               {guardAccountStatus === 'pending' && onApproveGuardAccount && (
-                <button type="button" onClick={() => onApproveGuardAccount(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
-                  Approve guard account
+                <button
+                  type="button"
+                  onClick={() => {
+                    void (async () => {
+                      try {
+                        await onApproveGuardAccount(guard.id);
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Could not activate account.');
+                      }
+                    })();
+                  }}
+                  disabled={!guardCanActivateAccount(guard)}
+                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  title={
+                    activationChecklist.blockers.length > 0
+                      ? activationChecklist.blockers.join(' · ')
+                      : 'Activate guard account'
+                  }
+                >
+                  Activate guard account
                 </button>
               )}
               {canSuspend && guardAccountStatus === 'pending' && onDeleteGuard && (

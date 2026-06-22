@@ -719,7 +719,7 @@ export function GuardDashboard({
 
   const showPendingGate = accountPending && activeTab !== 'profile' && activeTab !== 'support';
   const visibleMainPanel = showPendingGate ? (
-    <AccountPendingScreen role="guard" onOpenProfile={() => setTab('profile')} />
+    <AccountPendingScreen role="guard" guard={guard} onOpenProfile={() => setTab('profile')} />
   ) : (
     guardMainPanel
   );
