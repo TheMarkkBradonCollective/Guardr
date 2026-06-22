@@ -10,6 +10,7 @@ import { joinTagInput, parseTagInput } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
+import { GuardIdentityVerificationPanel } from './GuardIdentityVerificationPanel';
 
 export interface GuardResumeSavePayload {
   headline: string;
@@ -37,6 +38,10 @@ interface GuardResumeEditorProps {
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+  onSubmitIdentityVerification?: (
+    payload: import('./GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  identityVerificationCompact?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -49,6 +54,8 @@ export function GuardResumeEditor({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  onSubmitIdentityVerification,
+  identityVerificationCompact = false,
 }: GuardResumeEditorProps) {
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
@@ -215,6 +222,14 @@ export function GuardResumeEditor({
           })}
         </div>
       </section>
+
+      {!guard.isStaff && onSubmitIdentityVerification && (
+        <GuardIdentityVerificationPanel
+          guard={guard}
+          onSubmit={onSubmitIdentityVerification}
+          compact={identityVerificationCompact}
+        />
+      )}
 
       <GuardCredentialsPanel
         guard={guard}

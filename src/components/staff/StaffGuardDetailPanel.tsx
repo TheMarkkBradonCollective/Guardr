@@ -433,44 +433,6 @@ export function StaffGuardDetailPanel({
         </div>
       )}
 
-      {!guard.isStaff && onSubmitIdentityVerification && (
-        <GuardIdentityVerificationPanel
-          guard={guard}
-          onSubmit={onSubmitIdentityVerification}
-          compact
-        />
-      )}
-
-      {!guard.isStaff && canManage && idVerificationStatus === 'pending' && (
-        <section className="py-4 border-b border-brand-border space-y-2">
-          <WfSectionHeader title="ID verification review" className="mb-0" />
-          <div className="flex flex-wrap gap-2">
-            {onApproveIdentityVerification && (
-              <button
-                type="button"
-                onClick={() => onApproveIdentityVerification(guard.id)}
-                className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
-              >
-                <Check className="w-3.5 h-3.5" /> Approve ID
-              </button>
-            )}
-            {onRejectIdentityVerification && (
-              <button
-                type="button"
-                onClick={() => {
-                  const reason = window.prompt('Rejection reason (shown to guard):');
-                  if (reason === null) return;
-                  void onRejectIdentityVerification(guard.id, reason);
-                }}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
-              >
-                <X className="w-3.5 h-3.5" /> Reject ID
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-
       {!guard.isStaff && (
         <>
           {!editing && (
@@ -573,6 +535,44 @@ export function StaffGuardDetailPanel({
           </section>
           )}
 
+          {!editing && onSubmitIdentityVerification && (
+            <GuardIdentityVerificationPanel
+              guard={guard}
+              onSubmit={onSubmitIdentityVerification}
+              compact
+            />
+          )}
+
+          {canManage && idVerificationStatus === 'pending' && (
+            <section className="py-4 border-b border-brand-border space-y-2">
+              <WfSectionHeader title="ID verification review" className="mb-0" />
+              <div className="flex flex-wrap gap-2">
+                {onApproveIdentityVerification && (
+                  <button
+                    type="button"
+                    onClick={() => onApproveIdentityVerification(guard.id)}
+                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Approve ID
+                  </button>
+                )}
+                {onRejectIdentityVerification && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reason = window.prompt('Rejection reason (shown to guard):');
+                      if (reason === null) return;
+                      void onRejectIdentityVerification(guard.id, reason);
+                    }}
+                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Reject ID
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
+
           {editing && canEdit && (
             <div className="py-4 border-b border-brand-border">
               <GuardResumeEditor
@@ -591,6 +591,8 @@ export function StaffGuardDetailPanel({
                 onAttachCertificationImage={onAttachCertificationImage}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
+                onSubmitIdentityVerification={onSubmitIdentityVerification}
+                identityVerificationCompact
               />
             </div>
           )}

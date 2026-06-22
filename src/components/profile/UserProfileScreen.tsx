@@ -17,7 +17,6 @@ import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import {
-  GuardIdentityVerificationPanel,
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
@@ -282,15 +281,6 @@ export function UserProfileScreen({
         )}
       </AppFormSection>
 
-      {guard && !guard.isStaff && onSubmitIdentityVerification && (
-        <div className="px-5">
-          <GuardIdentityVerificationPanel
-            guard={guard}
-            onSubmit={onSubmitIdentityVerification}
-          />
-        </div>
-      )}
-
       {canBuildResume && guard && (
         <GuardResumeEditor
           guard={guard}
@@ -302,6 +292,7 @@ export function UserProfileScreen({
           onAttachCertificationImage={onAttachCertificationImage}
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}
+          onSubmitIdentityVerification={onSubmitIdentityVerification}
         />
       )}
 
