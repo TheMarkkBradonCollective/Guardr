@@ -54,7 +54,7 @@ export function BottomNavBar({
               <span className="relative">
                 <Icon className={`w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-2'}`} />
                 {badge != null && badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                  <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}
@@ -77,7 +77,7 @@ export function BottomNavBar({
             <span className="relative">
               <LayoutGrid className={`w-5 h-5 ${moreActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
               {moreBadge > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
                   {moreBadge > 9 ? '9+' : moreBadge}
                 </span>
               )}

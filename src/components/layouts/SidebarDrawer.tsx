@@ -45,7 +45,7 @@ export function SidebarDrawer({ open, onClose, title, subtitle, children, footer
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg border border-brand-border text-brand-text-muted hover:text-brand-text shrink-0"
+            className="p-2 border border-brand-border text-brand-text-muted hover:text-brand-text shrink-0"
             aria-label="Close sidebar"
           >
             <X className="w-4 h-4" />

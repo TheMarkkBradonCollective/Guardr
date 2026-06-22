@@ -54,16 +54,16 @@ export function StaffMessagesHub({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 flex gap-1 p-3 border-b border-brand-border">
+      <div className="shrink-0 flex uber-tab-bar border-b border-brand-border">
         {(['team', 'jobs'] as const).map((id) => (
           <button
             key={id}
             type="button"
             onClick={() => changeTab(id)}
-            className={`flex-1 py-2 text-sm font-medium rounded-full border transition-colors ${
+            className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${
               tab === id
-                ? 'bg-brand-primary text-brand-accent-text border-brand-primary'
-                : 'border-brand-border text-brand-text-muted'
+                ? 'border-brand-primary text-brand-text bg-brand-bg'
+                : 'border-transparent text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec'
             }`}
           >
             {id === 'team' ? 'Staff team chat' : 'Job chats'}

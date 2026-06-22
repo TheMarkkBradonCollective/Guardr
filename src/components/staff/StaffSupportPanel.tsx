@@ -80,16 +80,16 @@ export function StaffSupportPanel({
         <p className="text-xs text-brand-text-muted mt-1">
           {openTicketCount(tickets)} open · {tickets.length} total
         </p>
-        <div className="flex gap-1 mt-3">
+        <div className="flex uber-tab-bar border-b border-brand-border">
           {(['open', 'all'] as const).map((id) => (
             <button
               key={id}
               type="button"
               onClick={() => setFilter(id)}
-              className={`flex-1 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+              className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${
                 filter === id
-                  ? 'bg-brand-primary text-brand-accent-text border-brand-primary'
-                  : 'border-brand-border text-brand-text-muted'
+                  ? 'border-brand-primary text-brand-text'
+                  : 'border-transparent text-brand-text-muted hover:text-brand-text'
               }`}
             >
               {id === 'open' ? 'Open' : 'All'}
@@ -185,7 +185,7 @@ export function StaffSupportPanel({
           return (
             <div key={msg.id} className={`flex ${staff ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                className={`max-w-[85%] px-4 py-2.5 text-sm border ${
                   staff
                     ? 'bg-brand-primary text-brand-accent-text'
                     : 'bg-brand-bg-sec border border-brand-border'

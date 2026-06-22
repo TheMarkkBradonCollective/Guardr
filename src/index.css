@@ -18,10 +18,10 @@
   --color-brand-surface: var(--brand-surface);
   --color-brand-elevated: var(--brand-elevated);
 
-  --radius-app: 1.25rem;
-  --radius-app-lg: 1.5rem;
-  --radius-app-xl: 1.875rem;
-  --radius-pill: 9999px;
+  --radius-app: 0px;
+  --radius-app-lg: 0px;
+  --radius-app-xl: 0px;
+  --radius-pill: 0px;
 
   --color-gray-50:  #f7f7f7;
   --color-gray-100: #eeeeee;
@@ -2697,4 +2697,188 @@ html.theme-light .staff-ops-btn-primary {
   color: var(--brand-text);
   border: 1.5px solid var(--brand-border);
   cursor: pointer;
+}
+
+/* ─── UBER BASE SHARP LAYER (Guardr sage on Uber geometry) ─── */
+/* Inspired by Uber Base Web: flat surfaces, 0px radii, hairline dividers, bold type */
+
+.app-card,
+.app-card-interactive,
+.uber-card,
+.uber-card-flat,
+.uber-panel,
+.client-action-card,
+.client-coverage-card,
+.staff-ops-card,
+.wf-metric-tile,
+.app-card-elevated,
+.app-form-section,
+.app-item-card,
+.wf-list-card {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-card-interactive:hover,
+.client-action-card:hover:not(:disabled),
+button.app-item-card:hover,
+a.app-item-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.app-item-card-stack {
+  gap: 0 !important;
+  border-top: 1px solid var(--brand-border);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-item-card-stack .app-item-card,
+.app-item-card-stack .wf-list-card {
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+}
+
+.app-item-card-stack .app-item-card:last-child,
+.app-item-card-stack .wf-list-card:last-child {
+  border-bottom: none !important;
+}
+
+.app-button-primary,
+.app-button-outline,
+.app-button-danger,
+.uber-button,
+.uber-button-primary,
+.uber-button-sage,
+.uber-button-green,
+.uber-button-outline,
+.staff-ops-btn-primary,
+.staff-ops-btn-outline,
+.staff-ops-btn-danger {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  min-height: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-button-primary:hover,
+.uber-button-primary:hover,
+.staff-ops-btn-primary:hover {
+  transform: none !important;
+}
+
+html.theme-light .app-button-primary,
+html.theme-light .staff-ops-btn-primary {
+  background: #000000;
+  color: #ffffff;
+}
+
+html.theme-light .app-button-primary:hover,
+html.theme-light .staff-ops-btn-primary:hover {
+  background: #1a1a1a;
+}
+
+.uber-input,
+.uber-select,
+.inline-search-input {
+  border-radius: 0 !important;
+  border-width: 1px !important;
+}
+
+.wf-badge,
+.badge-open,
+.badge-assigned,
+.badge-active,
+.badge-done {
+  border-radius: 0 !important;
+}
+
+.segmented-control {
+  border-radius: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  display: flex !important;
+}
+
+.segmented-control button,
+.segmented-control-btn-active {
+  border-radius: 0 !important;
+  flex: 1;
+  border-right: 1px solid var(--brand-border);
+}
+
+.segmented-control button:last-child {
+  border-right: none;
+}
+
+.uber-side-nav-item {
+  position: relative;
+  border-radius: 0 !important;
+}
+
+.uber-side-nav-item-active {
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+.staff-sidebar-brand .uber-side-nav-item-active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+.more-menu-panel {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+.bottom-nav-bar {
+  box-shadow: none !important;
+}
+
+.bottom-nav-item[aria-current='page']::before {
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: 2px !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+}
+
+.role-app-shell main {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.app-screen-title,
+.app-section-head,
+.app-section-body {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.app-form-section,
+.app-empty-state {
+  border-radius: 0 !important;
+}
+
+/* Chat bubbles — minimal square tiles (Uber inbox style) */
+.app-chat-pane [class*='rounded-'] {
+  border-radius: 0 !important;
+}
+
+.auth-hero-curve {
+  border-radius: 0 !important;
+}
+
+/* Avatars stay circular — universal convention */
+.rounded-full[class*='ProfileAvatar'],
+.profile-avatar,
+.bottom-nav-item .rounded-full {
+  border-radius: 9999px !important;
 }

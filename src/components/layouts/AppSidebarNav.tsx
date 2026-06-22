@@ -16,7 +16,7 @@ interface AppSidebarNavProps {
 
 export function AppSidebarNav({ items, activeId, onNavigate }: AppSidebarNavProps) {
   return (
-    <nav aria-label="Main navigation" className="space-y-0.5">
+    <nav aria-label="Main navigation" className="uber-side-nav divide-y divide-brand-border border-y border-brand-border">
       {items.map(({ id, label, icon: Icon, badge }) => {
         const active = activeId === id;
         return (
@@ -24,9 +24,9 @@ export function AppSidebarNav({ items, activeId, onNavigate }: AppSidebarNavProp
             key={id}
             type="button"
             onClick={() => onNavigate(id)}
-            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
+            className={`uber-side-nav-item w-full flex items-center gap-2 px-3 py-3 text-left text-sm font-medium transition-colors ${
               active
-                ? 'bg-brand-primary text-brand-accent-text'
+                ? 'uber-side-nav-item-active bg-brand-primary text-brand-accent-text'
                 : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
             }`}
           >
@@ -34,7 +34,7 @@ export function AppSidebarNav({ items, activeId, onNavigate }: AppSidebarNavProp
             <span className="flex-1 truncate">{label}</span>
             {badge != null && badge > 0 && (
               <span
-                className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
+                className={`text-xs font-bold px-1.5 py-0.5 min-w-[1.25rem] text-center ${
                   active
                     ? 'bg-brand-accent-text/20 text-brand-accent-text'
                     : 'bg-brand-primary/15 text-brand-primary'

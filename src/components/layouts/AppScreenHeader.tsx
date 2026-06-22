@@ -55,7 +55,7 @@ export function AppScreenHeader({
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-lg text-xs font-medium text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20 transition-colors"
+                className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 text-xs font-medium text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20 transition-colors"
                 aria-label="Log out"
               >
                 <LogOut className="w-4 h-4 shrink-0" />
