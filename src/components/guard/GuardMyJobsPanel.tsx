@@ -4,10 +4,10 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
-import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { Calendar, ChevronRight, History, MessageCircle } from 'lucide-react';
+import { Calendar, ChevronRight, MessageCircle } from 'lucide-react';
 
 interface GuardMyJobsPanelProps {
   upcomingJobs: GuardJobView[];
@@ -101,14 +101,10 @@ export function GuardMyJobsPanel({
   }
 
   return (
-    <div className="guard-scroll-panel flex-1 px-4 py-4 space-y-6">
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-brand-primary" />
-          <h2 className="text-sm font-medium text-brand-text-muted">Upcoming</h2>
-        </div>
+    <AppScreen>
+      <AppSection title="Upcoming">
         {upcomingJobs.length === 0 ? (
-          <p className="text-sm text-brand-text-muted py-4">No upcoming jobs.</p>
+          <p className="app-empty-state">No upcoming jobs.</p>
         ) : (
           <AppItemCardStack>
             {upcomingJobs.map((job) => (
@@ -131,15 +127,11 @@ export function GuardMyJobsPanel({
             ))}
           </AppItemCardStack>
         )}
-      </section>
+      </AppSection>
 
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-brand-text-muted" />
-          <h2 className="text-sm font-medium text-brand-text-muted">Past</h2>
-        </div>
+      <AppSection title="Past">
         {pastJobs.length === 0 ? (
-          <p className="text-sm text-brand-text-muted py-4">No completed jobs yet.</p>
+          <p className="app-empty-state">No completed jobs yet.</p>
         ) : (
           <AppItemCardStack>
             {pastJobs.map((job) => (
@@ -155,7 +147,7 @@ export function GuardMyJobsPanel({
             ))}
           </AppItemCardStack>
         )}
-      </section>
-    </div>
+      </AppSection>
+    </AppScreen>
   );
 }

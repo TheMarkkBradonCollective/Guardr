@@ -33,6 +33,7 @@ import {
   getGuardActivationChecklist,
   guardCanActivateAccount,
 } from '../../lib/guardAccountActivation';
+import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -43,8 +44,6 @@ interface StaffGuardDetailPanelProps {
   onResetAuditFailures?: (id: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
-  onApproveGuard?: (guardId: string) => void;
-  onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onUpdateProfile?: (payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
@@ -85,8 +84,6 @@ export function StaffGuardDetailPanel({
   onResetAuditFailures,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onUpdateProfile,
   onAddCertification,
@@ -336,9 +333,9 @@ export function StaffGuardDetailPanel({
   };
 
   return (
-    <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
+    <div className={`staff-detail-pane ${compact ? '' : 'h-full overflow-y-auto'}`}>
       {(onBack || (canEdit && !guard.isStaff)) && (
-        <div className="px-1 pb-4 flex items-center justify-between gap-3">
+        <div className="staff-detail-toolbar">
           {onBack ? (
             <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
               <ArrowLeft className="w-4 h-4" />
@@ -372,7 +369,7 @@ export function StaffGuardDetailPanel({
         </div>
       )}
 
-      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
+      <div className="staff-detail-header">
         <div className="relative shrink-0">
           <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
           {editing && canEdit && (
@@ -440,8 +437,8 @@ export function StaffGuardDetailPanel({
               <WfBadge tone={guardAccountStatus === 'pending' ? 'warning' : guardAccountStatus === 'active' ? 'success' : 'danger'}>
                 Account: {GUARD_USER_STATUS_LABELS[guardAccountStatus]}
               </WfBadge>
-              {guard.verified && (
-                <WfBadge tone="success">Guardr verified</WfBadge>
+              {isGuardTrusted(guard) && (
+                <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
               )}
               {guard.backgroundChecked && (
                 <WfBadge tone="primary">Background checked</WfBadge>
@@ -458,27 +455,32 @@ export function StaffGuardDetailPanel({
       </div>
 
       {!guard.isStaff && guardAccountStatus === 'pending' && (
-        <div className="px-1 pb-4">
-          <GuardActivationChecklistView guard={guard} />
-        </div>
+        <GuardActivationChecklistView guard={guard} />
       )}
 
       {!guard.isStaff && (
         <>
-          {!editing && (
-            <section className="py-4 border-b border-brand-border space-y-2">
-              <WfSectionHeader title="Qualification" className="mb-0" />
-              <p className="text-sm">
-                Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
-              </p>
-              <CertBadgeRow guard={guard} showCaBaseline />
-            </section>
+          {canManage && !editing && (
+            <div className="staff-detail-section !py-0 !px-0 border-b border-brand-border">
+              <StaffIdReviewSection
+                guard={guard}
+                canManage
+                onApprove={onApproveIdentityVerification}
+                onReject={onRejectIdentityVerification}
+                onRequestResubmit={
+                  onRequestIdentityResubmit
+                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                    : undefined
+                }
+                onUpdateImages={onUpdateGuardIdImages}
+              />
+            </div>
           )}
 
           {canManage && (
-          <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Account controls" className="mb-0" />
-            <div className="flex flex-wrap gap-2">
+          <section className="staff-detail-section space-y-3">
+            <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
+            <div className="staff-detail-actions">
               {guardAccountStatus === 'pending' && onApproveGuardAccount && (
                 <button
                   type="button"
@@ -541,16 +543,6 @@ export function StaffGuardDetailPanel({
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
               )}
-              {onApproveGuard && !guard.verified && (
-                <button type="button" onClick={() => onApproveGuard(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
-                  Verify guard profile
-                </button>
-              )}
-              {onRejectGuard && guard.verified && (
-                <button type="button" onClick={() => onRejectGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                  Remove profile verification
-                </button>
-              )}
               {onDeleteGuard && guardAccountStatus !== 'pending' && (
                 <button
                   type="button"
@@ -565,23 +557,18 @@ export function StaffGuardDetailPanel({
           </section>
           )}
 
-          {canManage && !editing && (
-              <StaffIdReviewSection
-                guard={guard}
-                canManage
-                onApprove={onApproveIdentityVerification}
-                onReject={onRejectIdentityVerification}
-                onRequestResubmit={
-                  onRequestIdentityResubmit
-                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                    : undefined
-                }
-                onUpdateImages={onUpdateGuardIdImages}
-              />
-            )}
+          {!editing && (
+            <section className="staff-detail-section space-y-2">
+              <WfSectionHeader title="Qualification" className="!px-0 !mb-0" />
+              <p className="text-sm">
+                Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
+              </p>
+              <CertBadgeRow guard={guard} showCaBaseline />
+            </section>
+          )}
 
           {editing && canEdit && (
-            <div className="py-4 border-b border-brand-border">
+            <section className="staff-detail-section">
               <GuardResumeEditor
                 guard={guard}
                 editing
@@ -601,15 +588,15 @@ export function StaffGuardDetailPanel({
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
                 identityVerificationCompact
               />
-            </div>
+            </section>
           )}
 
           {editing ? renderPendingCertActions() : (
-            <section className="py-4 border-b border-brand-border space-y-3">
+            <section className="staff-detail-section space-y-3">
               <WfSectionHeader
                 title="Credentials"
                 count={pendingCount > 0 ? pendingCount : undefined}
-                className="mb-0"
+                className="!px-0 !mb-0"
               />
               {allCerts.length === 0 ? (
                 <p className="text-sm text-brand-text-muted">No credentials on file.</p>
@@ -652,8 +639,8 @@ export function StaffGuardDetailPanel({
             </section>
           )}
 
-          <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Recent jobs" className="mb-0" />
+          <section className="staff-detail-section space-y-2">
+            <WfSectionHeader title="Recent jobs" className="!px-0 !mb-0" />
             {guardJobs.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No jobs on record.</p>
             ) : (
@@ -673,7 +660,7 @@ export function StaffGuardDetailPanel({
       )}
 
       {guard.isStaff && (
-        <section className="py-4 border-b border-brand-border">
+        <section className="staff-detail-section">
           <p className="text-sm text-brand-text-muted">
             Staff platform account — field credential verification does not apply.
           </p>
@@ -682,8 +669,8 @@ export function StaffGuardDetailPanel({
       )}
 
       {guard.bio && !guard.isStaff && !editing && (
-        <section className="py-4">
-          <WfSectionHeader title="Bio" className="mb-2" />
+        <section className="staff-detail-section">
+          <WfSectionHeader title="Bio" className="!px-0 !mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>
       )}

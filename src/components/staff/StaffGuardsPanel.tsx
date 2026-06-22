@@ -14,6 +14,7 @@ import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -24,8 +25,6 @@ interface StaffGuardsPanelProps {
   onResetAuditFailures?: (id: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
-  onApproveGuard?: (guardId: string) => void;
-  onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onUpdateProfile?: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
@@ -73,8 +72,6 @@ export function StaffGuardsPanel({
   onResetAuditFailures,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onUpdateProfile,
   onAddCertification,
@@ -137,8 +134,6 @@ export function StaffGuardsPanel({
         onResetAuditFailures,
         onApproveCert,
         onRejectCert,
-        onApproveGuard,
-        onRejectGuard,
         onUpdateBackgroundChecked,
         onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(selected.id, payload) : undefined,
         onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(selected.id, cert) : undefined,
@@ -199,6 +194,9 @@ export function StaffGuardsPanel({
             )}
             {idStatus === 'verified' && (
               <WfBadge tone="success">ID verified</WfBadge>
+            )}
+            {isGuardTrusted(guard) && (
+              <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
             )}
             <span>
               {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_USER_STATUS_LABELS[accountStatus]}

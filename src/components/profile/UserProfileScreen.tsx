@@ -197,8 +197,8 @@ export function UserProfileScreen({
   const canBuildResume = isGuardLike && !!guard;
 
   return (
-    <AppScreen className="pb-8">
-      <div className="flex flex-col items-center text-center px-5 pt-4 pb-6">
+    <AppScreen>
+      <section className="flex flex-col items-center text-center px-5 pt-5 pb-6 border-b border-brand-border">
         <div className="relative mb-3">
           <ProfileAvatar src={avatar} name={displayName} size="xl" />
           <label
@@ -227,9 +227,9 @@ export function UserProfileScreen({
         <h2 className="text-xl font-bold">{displayName}</h2>
         <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
         <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>
-      </div>
+      </section>
 
-      <div className="px-5 flex gap-2 mb-2">
+      <div className="px-5 py-4 flex gap-2 border-b border-brand-border">
         <button
           type="button"
           onClick={() => (editing ? void handleSave() : setEditing(true))}
@@ -250,7 +250,7 @@ export function UserProfileScreen({
         )}
       </div>
 
-      <AppFormSection className="space-y-4">
+      <AppFormSection title="Contact & account">
         <PersonNameFields
           firstName={firstName}
           middleName={middleName}
@@ -282,7 +282,8 @@ export function UserProfileScreen({
       </AppFormSection>
 
       {canBuildResume && guard && (
-        <GuardResumeEditor
+        <section className="border-b border-brand-border">
+          <GuardResumeEditor
           guard={guard}
           editing={editing}
           payload={resume}
@@ -294,24 +295,25 @@ export function UserProfileScreen({
           onAddEducation={onAddEducation}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
         />
+        </section>
       )}
 
-      <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
+      <section className="border-b border-brand-border">
+        <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
+      </section>
 
-      <AppFormSection>
-        <p className="uber-label mb-3">Appearance</p>
+      <AppFormSection title="Appearance">
         <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
       </AppFormSection>
 
       {onOpenLegal && (
-        <AppFormSection>
-          <p className="uber-label mb-2">Legal</p>
-          <p className="text-xs text-brand-text-muted leading-relaxed mb-4">{LEGAL_DISCLAIMER_SHORT}</p>
+        <AppFormSection title="Legal">
+          <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-2">{LEGAL_DISCLAIMER_SHORT}</p>
           <LegalInfoCards onOpenLegal={onOpenLegal} />
         </AppFormSection>
       )}
 
-      <div className="px-5 pt-4">
+      <div className="px-5 py-6">
         <button
           type="button"
           onClick={onSignOut}

@@ -108,8 +108,6 @@ interface StaffDashboardProps {
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveGuard: (guardId: string) => void;
-  onRejectGuard: (guardId: string) => void;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -213,8 +211,6 @@ export function StaffDashboard({
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onReleasePayout,
@@ -458,8 +454,6 @@ export function StaffDashboard({
             onResetAuditFailures={onResetAuditFailures}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
-            onApproveGuard={onApproveGuard}
-            onRejectGuard={onRejectGuard}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             onUpdateProfile={canManageGuardAccounts ? onUpdateGuardProfile : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}

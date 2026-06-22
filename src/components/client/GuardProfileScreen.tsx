@@ -14,6 +14,7 @@ import { CertItemCard } from '../credentials/CertItemCard';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 import {
   ArrowLeft,
   Award,
@@ -93,6 +94,12 @@ export function GuardProfileScreen({
                       <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
                   </div>
+                  {isGuardTrusted(guard) && (
+                    <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
+                      <Check className="w-4 h-4" />
+                      {GUARD_TRUSTED_BADGE_LABEL}
+                    </p>
+                  )}
                   {guard.backgroundChecked && (
                     <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
                       <Check className="w-4 h-4" />

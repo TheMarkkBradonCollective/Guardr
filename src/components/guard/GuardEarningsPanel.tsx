@@ -7,7 +7,7 @@ import {
 } from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
-import { AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
+import { AppFormSection, AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
 
 interface GuardEarningsPanelProps {
@@ -57,17 +57,17 @@ export function GuardEarningsPanel({
   const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
 
   return (
-    <AppScreen className="pb-8">
+    <AppScreen>
       <AppScreenTitle>Your pay</AppScreenTitle>
 
-      <div className="px-5 pb-4">
-        <p className="text-sm text-brand-text-muted leading-relaxed">
+      <AppFormSection>
+        <p className="text-sm text-brand-text-muted leading-relaxed -mt-2">
           When you finish a job, your pay shows up here. Send an invoice to Payments for each payout — bank transfer or cash pickup.
         </p>
-      </div>
+      </AppFormSection>
 
       {!stripeReady && onConnectStripe && (
-        <div className="app-inline-banner space-y-3 mx-5 mb-4">
+        <div className="app-inline-banner space-y-3 mx-5 mb-0">
           <div className="flex items-center gap-2">
             <Link2 className="w-4 h-4" />
             <p className="text-sm font-semibold">Connect your bank to get paid online</p>
@@ -94,13 +94,11 @@ export function GuardEarningsPanel({
         </div>
       )}
 
-      <div className="px-5 py-6 border-y border-brand-border">
+      <section className="app-pay-hero">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
           Ready to collect
         </p>
-        <p className="text-4xl font-bold tracking-tight mb-1">
-          ${breakdown.onlineAvailable.toFixed(2)}
-        </p>
+        <p className="app-pay-amount mb-1">${breakdown.onlineAvailable.toFixed(2)}</p>
         <p className="text-sm text-brand-text-muted mb-5">
           From finished jobs you haven&apos;t been paid for yet.
         </p>
@@ -145,7 +143,7 @@ export function GuardEarningsPanel({
         </div>
 
         {(openCashInvoices > 0 || openStripeInvoices > 0) && (
-          <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 rounded-lg px-3 py-2 leading-relaxed">
+          <p className="text-sm text-amber-400/90 mt-4 border border-amber-500/25 px-3 py-2 leading-relaxed">
             {openCashInvoices > 0 && (
               <span>
                 {openCashInvoices} open cash pickup invoice{openCashInvoices === 1 ? '' : 's'} in Payments.
@@ -160,11 +158,11 @@ export function GuardEarningsPanel({
             {' '}You can send another invoice when more jobs are ready to collect.
           </p>
         )}
-      </div>
+      </section>
 
-      <div className="px-5 py-5 border-b border-brand-border">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm text-brand-text-muted">Already paid</span>
+      <AppFormSection title="Already paid">
+        <div className="flex items-baseline justify-between gap-4 -mt-2">
+          <span className="text-sm text-brand-text-muted">Total received</span>
           <span className="text-xl font-bold">${alreadyPaid.toFixed(2)}</span>
         </div>
         <div className="flex gap-6 mt-2 text-sm">
@@ -180,7 +178,7 @@ export function GuardEarningsPanel({
         <p className="text-xs text-brand-text-muted mt-3">
           Total earned from all completed jobs: ${breakdown.totalEarnings.toFixed(2)}
         </p>
-      </div>
+      </AppFormSection>
 
       {stripeConnected && stripeReady && (
         <p className="text-sm text-emerald-400/90 px-5 py-3 border-b border-brand-border">
@@ -188,20 +186,13 @@ export function GuardEarningsPanel({
         </p>
       )}
 
-      <div className="px-5 mt-6 mb-3">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[1.0625rem] font-bold tracking-tight">Completed jobs</h2>
-          <span className="text-sm text-brand-text-muted">{sortedShifts.length}</span>
-        </div>
-        <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">
+      <AppFormSection title={`Completed jobs (${sortedShifts.length})`}>
+        <p className="text-xs text-brand-text-muted -mt-2 mb-4 leading-relaxed">
           Each row shows what you earned and whether you&apos;ve been paid yet.
         </p>
-      </div>
 
       {sortedShifts.length === 0 ? (
-        <p className="text-sm text-brand-text-muted text-center py-10 px-5">
-          Complete jobs to see earnings here.
-        </p>
+        <p className="app-empty-state">Complete jobs to see earnings here.</p>
       ) : (
         <AppList>
           {sortedShifts.map((job) => {
@@ -226,6 +217,7 @@ export function GuardEarningsPanel({
           })}
         </AppList>
       )}
+      </AppFormSection>
     </AppScreen>
   );
 }

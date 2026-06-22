@@ -55,12 +55,12 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-brand-border p-4 surface-inset">
+    <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Account activation requirements</p>
-      <p className="text-xs text-brand-text-muted leading-relaxed">
+      <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
         Submit government ID and a BSIS Guard Card. Staff verifies both before activating your account.
       </p>
-      <div className="space-y-2">
+      <div className="app-checklist-steps">
         <StepRow
           done={checklist.idVerified}
           label="Government ID + identity selfie"
@@ -89,7 +89,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
       </div>
       {checklist.canActivate && (
-        <p className="text-xs text-brand-primary font-medium pt-1">
+        <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
           All requirements complete — staff can activate your account.
         </p>
       )}
