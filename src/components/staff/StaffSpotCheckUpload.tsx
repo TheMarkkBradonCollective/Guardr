@@ -3,19 +3,11 @@ import { SecurityRequest } from '../../types';
 import { canStaffAddSpotCheck, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { ImagePlus, Loader2, MapPin } from 'lucide-react';
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 interface StaffSpotCheckUploadProps {
   request: SecurityRequest;
   onUpload: (requestId: string, imageUrl: string) => void | Promise<void>;
-}
-
-function readImageFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Could not read image'));
-    reader.readAsDataURL(file);
-  });
 }
 
 export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUploadProps) {
@@ -32,7 +24,7 @@ export function StaffSpotCheckUpload({ request, onUpload }: StaffSpotCheckUpload
     if (!file || !file.type.startsWith('image/')) return;
     setLoading(true);
     try {
-      setPending(await readImageFile(file));
+      setPending(await processDocumentPhotoFile(file));
     } finally {
       setLoading(false);
     }

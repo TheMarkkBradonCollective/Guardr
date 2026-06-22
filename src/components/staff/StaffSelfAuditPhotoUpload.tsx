@@ -10,22 +10,7 @@ import {
   SelfAuditPhotoKind,
 } from '../../lib/selfAuditPhotos';
 import { Camera, ImagePlus, Loader2 } from 'lucide-react';
-
-export type StaffSelfAuditPhotoPayload = Partial<Record<SelfAuditPhotoKind, string>>;
-
-interface StaffSelfAuditPhotoUploadProps {
-  request: SecurityRequest;
-  onUpload: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
-}
-
-function readImageFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Could not read image'));
-    reader.readAsDataURL(file);
-  });
-}
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 function PhotoSlot({
   kind,
@@ -43,7 +28,7 @@ function PhotoSlot({
     if (!file || !file.type.startsWith('image/')) return;
     setLoading(true);
     try {
-      onSelect(await readImageFile(file));
+      onSelect(await processDocumentPhotoFile(file));
     } finally {
       setLoading(false);
     }
@@ -94,6 +79,13 @@ function PhotoSlot({
       />
     </div>
   );
+}
+
+export type StaffSelfAuditPhotoPayload = Partial<Record<SelfAuditPhotoKind, string>>;
+
+interface StaffSelfAuditPhotoUploadProps {
+  request: SecurityRequest;
+  onUpload: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
 }
 
 export function StaffSelfAuditPhotoUpload({ request, onUpload }: StaffSelfAuditPhotoUploadProps) {

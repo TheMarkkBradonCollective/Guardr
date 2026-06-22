@@ -51,6 +51,7 @@ import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';
+import { captureIdentitySelfie } from '../lib/idVerificationPhoto';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -289,29 +290,7 @@ export function GuardDashboard({
   }, [guard.id]);
 
   const captureSelfie = useCallback((): Promise<string | null> => {
-    return new Promise((resolve) => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        resolve(null);
-        return;
-      }
-      navigator.mediaDevices
-        .getUserMedia({ video: { facingMode: 'user' }, audio: false })
-        .then((stream) => {
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.playsInline = true;
-          video.onloadeddata = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d')?.drawImage(video, 0, 0);
-            stream.getTracks().forEach((track) => track.stop());
-            resolve(canvas.toDataURL('image/jpeg', 0.85));
-          };
-          void video.play();
-        })
-        .catch(() => resolve(null));
-    });
+    return captureIdentitySelfie();
   }, []);
 
   const handleAcceptJob = (jobId: string) => {

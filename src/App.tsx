@@ -1782,7 +1782,21 @@ export default function App() {
     }
 
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.filter(c => c.id !== certId) } : g));
-    if (isDbConnected) await supabase.from('certifications').delete().eq('id', certId);
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase.from('certifications').delete().eq('id', certId);
+      if (error) {
+        setGuards(prev =>
+          prev.map(g =>
+            g.id === guardId
+              ? { ...g, certifications: [...g.certifications, cert!].sort((a, b) => a.id.localeCompare(b.id)) }
+              : g
+          )
+        );
+        console.error('Cert delete error:', error);
+        return { ok: false, error: 'Could not remove credential. Please try again.' };
+      }
+    }
     return { ok: true };
   };
 
@@ -1823,6 +1837,7 @@ export default function App() {
     );
 
     if (isDbConnected) {
+      beginLocalMutation();
       try {
         const { error } = await supabase
           .from('certifications')
@@ -2161,6 +2176,7 @@ export default function App() {
   };
 
   const handleUpdateClientProfile = async (clientId: string, payload: ProfileSavePayload) => {
+    const previous = clients.find((c) => c.id === clientId);
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId
@@ -2187,7 +2203,15 @@ export default function App() {
         company_name: payload.companyName ?? '',
       };
       if (payload.avatar !== undefined) clientUpdate.avatar = payload.avatar;
-      await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      beginLocalMutation();
+      const { error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      if (error) {
+        if (previous) {
+          setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
+        }
+        console.error('Client profile update error:', error);
+        throw new Error('Could not save profile photo. Please try again.');
+      }
     }
     if (currentUser?.id === clientId) {
       syncSessionUser({
@@ -3778,6 +3802,10 @@ export default function App() {
       ? [...(req?.midShiftAudits || []), payload.midShiftAudit]
       : undefined;
 
+    const previousRequest = req ? (JSON.parse(JSON.stringify(req)) as SecurityRequest) : null;
+    const completedGuardId =
+      payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
+
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
@@ -3797,6 +3825,7 @@ export default function App() {
     }));
 
     if (isDbConnected) {
+      beginLocalMutation();
       const updates: Record<string, unknown> = {};
       if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
@@ -3808,7 +3837,22 @@ export default function App() {
         }
       }
       if (Object.keys(updates).length > 0) {
-        await supabase.from('security_requests').update(updates).eq('id', requestId);
+        const { error } = await supabase.from('security_requests').update(updates).eq('id', requestId);
+        if (error) {
+          console.error('Job audit update error:', error);
+          if (previousRequest) {
+            setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+          }
+          if (completedGuardId) {
+            setGuards((pg) =>
+              pg.map((g) =>
+                g.id === completedGuardId ? { ...g, jobsCompleted: Math.max(0, g.jobsCompleted - 1) } : g
+              )
+            );
+          }
+          alert('Could not save photos or job update. Please try again.');
+          return;
+        }
       }
     }
     if (payload.status === 'completed') {
@@ -3910,9 +3954,19 @@ export default function App() {
       checkInAudit.readyForDuty = true;
     }
 
+    const previousRequest = existing ? (JSON.parse(JSON.stringify(existing)) as SecurityRequest) : null;
+
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+      beginLocalMutation();
+      const { error } = await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+      if (error) {
+        console.error('Staff self-audit upload error:', error);
+        if (previousRequest) {
+          setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+        }
+        alert('Could not save audit photos. Please try again.');
+      }
     }
   };
 
@@ -3941,10 +3995,17 @@ export default function App() {
       uploadedBy: currentUser.name,
     };
     const spotChecks = [...(existing.spotChecks ?? []), spotCheck];
+    const previousRequest = JSON.parse(JSON.stringify(existing)) as SecurityRequest;
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+      beginLocalMutation();
+      const { error } = await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+      if (error) {
+        console.error('Staff spot check upload error:', error);
+        setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+        alert('Could not save spot check photo. Please try again.');
+      }
     }
   };
 

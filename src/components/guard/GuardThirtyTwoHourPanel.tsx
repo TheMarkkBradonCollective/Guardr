@@ -19,6 +19,7 @@ import { CERT_DOCUMENT_PHOTO_LABEL, guardCertificationCanEdit, validateCertDelet
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
@@ -90,12 +91,17 @@ export function GuardThirtyTwoHourPanel({
     setFormError('');
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setImageUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await processDocumentPhotoFile(file);
+      setImageUrl(dataUrl);
+      setFormError('');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not process image.');
+    }
   };
 
   const submitCert = async (e: React.FormEvent) => {

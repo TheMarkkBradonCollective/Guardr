@@ -55,6 +55,7 @@ export function GuardIdDetailModal({
   const [submitError, setSubmitError] = useState('');
 
   React.useEffect(() => {
+    if (editing) return;
     setIdState(guard.idState ?? 'CA');
     setIdNumber(guard.idNumber ?? '');
     setIdExpiryDate(guard.idExpiryDate ?? '');
@@ -75,6 +76,7 @@ export function GuardIdDetailModal({
     guard.idSelfieUrl,
     guard.idVerificationStatus,
     initialEditMode,
+    editing,
   ]);
 
   const displayGuard: SecurityGuard = {
