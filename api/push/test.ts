@@ -126,7 +126,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: 'Push notifications are working. You will receive operational alerts here.',
       url: '/',
       eventType: 'test',
-      tag: 'test',
+      tag: `guardr-test-${session.userId}`,
     });
 
     let sent = 0;

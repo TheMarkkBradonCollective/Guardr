@@ -55,6 +55,10 @@ export function SupportScreen({
   const [relatedRequestId, setRelatedRequestId] = useState('');
 
   const myTickets = useMemo(() => ticketsForUser(tickets, currentUser), [tickets, currentUser]);
+  const activeChatTicket = useMemo(
+    () => myTickets.find((t) => t.kind === 'chat' && t.status !== 'resolved') ?? null,
+    [myTickets]
+  );
   const activeTicket = myTickets.find((t) => t.id === activeTicketId) ?? null;
 
   useEffect(() => {
@@ -88,6 +92,10 @@ export function SupportScreen({
     }
     setSubmitting(true);
     try {
+      if (activeChatTicket) {
+        openThread(activeChatTicket.id);
+        return;
+      }
       const ticketId = await onCreateTicket({
         kind: 'chat',
         subject: defaults?.subject ?? 'Message to Guardr staff',
@@ -296,8 +304,14 @@ export function SupportScreen({
         <AppItemCard onClick={() => !submitting && void startKind('chat')}>
           <MessageCircle className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <div className="flex-1 min-w-0 text-left">
-            <p className="font-semibold text-sm">Message staff</p>
-            <p className="text-sm text-brand-text-muted mt-0.5">Chat with the Guardr operations team.</p>
+            <p className="font-semibold text-sm">
+              {activeChatTicket ? 'Continue staff chat' : 'Message staff'}
+            </p>
+            <p className="text-sm text-brand-text-muted mt-0.5">
+              {activeChatTicket
+                ? `Resume your open conversation: ${activeChatTicket.subject}`
+                : 'Chat with the Guardr operations team.'}
+            </p>
           </div>
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
         </AppItemCard>

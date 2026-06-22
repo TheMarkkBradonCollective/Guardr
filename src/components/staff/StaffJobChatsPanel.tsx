@@ -78,47 +78,63 @@ export function StaffJobChatsPanel({
     ? threadForRequest(threads, selectedRequest.id) ?? null
     : null;
 
-  const list = activeJobs.length > 0 ? activeJobs : archivedJobs;
+
+  const renderJobCard = (job: SecurityRequest) => {
+    const guard = guards.find((g) => g.id === job.assignedGuardId);
+    const thread = threadForRequest(threads, job.id);
+    const count = thread ? messagesForThread(messages, thread.id).length : 0;
+    const active = job.status === 'accepted' || job.status === 'in-progress';
+    return (
+      <AppItemCard
+        key={job.id}
+        selected={selectedRequestId === job.id}
+        onClick={() => setSelectedRequestId(job.id)}
+        className="flex-col !items-stretch gap-1"
+      >
+        <p className="font-semibold text-sm truncate">{job.title}</p>
+        <p className="text-xs text-brand-text-muted truncate">
+          {job.clientName} ↔ {guard?.name ?? 'Guard'}
+        </p>
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          <WfBadge tone={active ? 'primary' : 'default'}>
+            {active ? 'Live' : 'Archived'}
+          </WfBadge>
+          {count > 0 && <WfBadge tone="default">{count} msg{count === 1 ? '' : 's'}</WfBadge>}
+        </div>
+      </AppItemCard>
+    );
+  };
 
   const listView = (
     <div className="staff-split-pane-list">
       <div className="staff-pane-header">
         <h2 className="font-bold text-sm">Job chats</h2>
         <p className="text-xs text-brand-text-muted mt-1">
-          Monitor client ↔ guard conversations during active jobs. Staff can chime in anytime.
+          Each job has its own conversation. Select one to monitor or reply.
         </p>
       </div>
       <div className="staff-pane-body p-3">
-        {list.length === 0 ? (
+        {activeJobs.length === 0 && archivedJobs.length === 0 ? (
           <p className="staff-empty-state">No job chats yet.</p>
         ) : (
-          <AppItemCardStack>
-            {list.map((job) => {
-              const guard = guards.find((g) => g.id === job.assignedGuardId);
-              const thread = threadForRequest(threads, job.id);
-              const count = thread ? messagesForThread(messages, thread.id).length : 0;
-              const active = job.status === 'accepted' || job.status === 'in-progress';
-              return (
-                <AppItemCard
-                  key={job.id}
-                  selected={selectedRequestId === job.id}
-                  onClick={() => setSelectedRequestId(job.id)}
-                  className="flex-col !items-stretch gap-1"
-                >
-                  <p className="font-semibold text-sm truncate">{job.title}</p>
-                  <p className="text-xs text-brand-text-muted truncate">
-                    {job.clientName} ↔ {guard?.name ?? 'Guard'}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    <WfBadge tone={active ? 'primary' : 'default'}>
-                      {active ? 'Live' : 'Archived'}
-                    </WfBadge>
-                    {count > 0 && <WfBadge tone="default">{count} msg{count === 1 ? '' : 's'}</WfBadge>}
-                  </div>
-                </AppItemCard>
-              );
-            })}
-          </AppItemCardStack>
+          <div className="space-y-4">
+            {activeJobs.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2 px-1">
+                  Active jobs
+                </p>
+                <AppItemCardStack>{activeJobs.map(renderJobCard)}</AppItemCardStack>
+              </div>
+            )}
+            {archivedJobs.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2 px-1">
+                  Archived
+                </p>
+                <AppItemCardStack>{archivedJobs.map(renderJobCard)}</AppItemCardStack>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

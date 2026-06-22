@@ -145,16 +145,32 @@ function rolesForNotificationType(type: PushNotificationType): PushRole[] {
   }
 }
 
+function notificationTag(
+  type: PushNotificationType,
+  options: { requestId?: string; ticketId?: string; siteId?: string }
+): string {
+  if (options.requestId) return `guardr-${type}-${options.requestId}`;
+  if (options.ticketId) return `guardr-${type}-${options.ticketId}`;
+  if (options.siteId) return `guardr-${type}-${options.siteId}`;
+  if (type === 'staff_message') return 'guardr-staff-team';
+  return `guardr-${type}`;
+}
+
 let vapidConfigured = false;
 
 async function sendPushToSubscriptions(
-  subscriptions: Array<{ endpoint: string; p256dh: string; auth: string }>,
-  message: Record<string, unknown>
+  subscriptions: Array<{ endpoint: string; p256dh: string; auth: string; user_id?: string }>,
+  message: Record<string, unknown>,
+  excludeUserId?: string
 ): Promise<{ sent: number; failed: number }> {
+  const targets = excludeUserId
+    ? subscriptions.filter((sub) => sub.user_id !== excludeUserId)
+    : subscriptions;
+  if (!targets.length) return { sent: 0, failed: 0 };
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
-  if (!publicKey || !privateKey || !subscriptions.length) {
-    return { sent: 0, failed: subscriptions.length };
+  if (!publicKey || !privateKey) {
+    return { sent: 0, failed: targets.length };
   }
 
   const mod = await import('web-push');
@@ -172,7 +188,7 @@ async function sendPushToSubscriptions(
   let failed = 0;
   const payload = JSON.stringify(message);
 
-  for (const sub of subscriptions) {
+  for (const sub of targets) {
     try {
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -190,7 +206,8 @@ async function sendPushToSubscriptions(
 
 async function dispatchPushNotification(
   db: SupabaseClient,
-  payload: PushSendPayload
+  payload: PushSendPayload,
+  excludeUserId?: string
 ): Promise<{ sent: number; failed: number }> {
   const urlOptions = { requestId: payload.requestId, ticketId: payload.ticketId };
   const message = {
@@ -198,17 +215,24 @@ async function dispatchPushNotification(
     body: payload.body,
     url: payload.url ?? resolveNotificationUrl(payload.type, urlOptions),
     eventType: payload.type,
-    tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
+    tag: notificationTag(payload.type, {
+      requestId: payload.requestId,
+      ticketId: payload.ticketId,
+      siteId: payload.siteId,
+    }),
     priority: payload.priority ?? (payload.type === 'emergency_alert' ? 'high' : 'normal'),
   };
 
   if (payload.userId) {
+    if (excludeUserId && payload.userId === excludeUserId) {
+      return { sent: 0, failed: 0 };
+    }
     const { data, error } = await db
       .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
+      .select('endpoint, p256dh, auth, user_id')
       .eq('user_id', payload.userId);
     if (error) throw new Error(error.message);
-    return sendPushToSubscriptions(data ?? [], message);
+    return sendPushToSubscriptions(data ?? [], message, excludeUserId);
   }
 
   const targetRole = payload.role;
@@ -224,10 +248,10 @@ async function dispatchPushNotification(
   for (const role of roles) {
     const { data, error } = await db
       .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
+      .select('endpoint, p256dh, auth, user_id')
       .in('push_role', role === 'dispatch' ? ['dispatch', 'admin'] : [role]);
     if (error) throw new Error(error.message);
-    const result = await sendPushToSubscriptions(data ?? [], message);
+    const result = await sendPushToSubscriptions(data ?? [], message, excludeUserId);
     sent += result.sent;
     failed += result.failed;
   }
@@ -342,11 +366,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dispatchPayload.userId = body.recipientUserId;
     } else if (body.type === 'job_chat_message' && body.recipientUserId) {
       dispatchPayload.userId = body.recipientUserId;
-    } else if (body.type === 'staff_message') {
+    } else if (
+      body.type === 'staff_message' ||
+      (body.type === 'support_message' && !body.recipientUserId) ||
+      (body.type === 'job_chat_message' && !body.recipientUserId)
+    ) {
       dispatchPayload.role = 'dispatch';
     }
 
-    const result = await dispatchPushNotification(db, dispatchPayload);
+    const result = await dispatchPushNotification(db, dispatchPayload, session.userId);
     return res.status(200).json({ ok: true, ...result });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Push event failed';

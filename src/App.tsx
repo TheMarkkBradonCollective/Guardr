@@ -2970,7 +2970,7 @@ export default function App() {
         .update({ status: 'accepted', assigned_guard_id: guardId, applicants: [...new Set([...job.applicants, guardId])] })
         .eq('id', requestId);
     }
-    if (currentUser) {
+    if (currentUser && guardId !== currentUser.id) {
       void reportPushEvent(currentUser, {
         type: 'assignment',
         guardId,
