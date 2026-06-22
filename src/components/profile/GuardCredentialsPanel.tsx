@@ -32,6 +32,7 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
+import { WfBadge } from '../ui/wireframe';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import {
   CERT_DOCUMENT_PHOTO_LABEL,
@@ -303,9 +304,14 @@ export function GuardCredentialsPanel({
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="uber-label flex items-center gap-2">
+            <p className="uber-label flex items-center gap-2 flex-wrap">
               <BookOpen className="w-4 h-4 text-brand-primary" />
               Power to Arrest &amp; Appropriate Use of Force
+              {staffMode && !ptaUofProgress.ptaUofTraining && (
+                <WfBadge tone="warning" className="!text-[10px]">
+                  Missing
+                </WfBadge>
+              )}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
               Required to work. {PTA_UOF_UPLOAD_GUIDANCE}

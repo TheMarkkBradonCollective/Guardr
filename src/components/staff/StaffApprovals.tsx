@@ -10,9 +10,12 @@ import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprov
 import {
   getGuardActivationChecklist,
   getPendingGuardAccountReviews,
-  guardCanActivateAccount,
+  guardCanStaffApproveProfile,
+  guardActivationSummaryLabel,
 } from '../../lib/guardAccountActivation';
-import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
+import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
+import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
@@ -485,7 +488,7 @@ export function StaffApprovals({
               <ApprovalBackBar title={guard.name} subtitle="Guard profile approval" onBack={() => setActiveItemId(null)} />
               <div className="staff-detail-pane space-y-4">
                 <p className="text-sm text-brand-text-muted">{guard.email}</p>
-                <GuardActivationChecklistView guard={guard} />
+                <StaffGuardActivationChecklistView guard={guard} />
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
                   {onViewGuard && (
                     <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
@@ -495,14 +498,19 @@ export function StaffApprovals({
                   {onApproveGuardAccount && (
                     <button
                       type="button"
-                      disabled={!guardCanActivateAccount(guard)}
+                      disabled={!guardCanStaffApproveProfile(guard)}
                       title={
-                        guardCanActivateAccount(guard)
-                          ? 'Approve guard profile'
-                          : getGuardActivationChecklist(guard).blockers.join(' · ') || 'Complete required-to-work items first'
+                        guardCanStaffApproveProfile(guard)
+                          ? getGuardActivationChecklist(guard).missingWorkCredentials.length > 0
+                            ? `Missing: ${getGuardActivationChecklist(guard).missingWorkCredentials.join(', ')} — can still approve`
+                            : 'Approve guard profile'
+                          : getGuardActivationChecklist(guard).staffApprovalBlockers.join(' · ') ||
+                            'Verified ID and guard card required'
                       }
                       onClick={() => {
                         void (async () => {
+                          if (!guardCanStaffApproveProfile(guard)) return;
+                          if (!promptStaffGuardProfileApproval(guard)) return;
                           try {
                             await onApproveGuardAccount(guard.id);
                             setActiveItemId(null);
@@ -560,8 +568,11 @@ export function StaffApprovals({
           <AppItemCardStack>
             {pendingGuardAccounts.map((guard) => (
               <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{guard.name}</p>
-                <p className="text-xs text-brand-text-muted">Ready for profile approval</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm truncate">{guard.name}</p>
+                  <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                </div>
+                <p className="text-xs text-brand-text-muted">{guardActivationSummaryLabel(guard)}</p>
               </AppItemCard>
             ))}
             {pendingClientAccounts.map((client) => (

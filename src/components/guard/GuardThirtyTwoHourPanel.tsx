@@ -13,6 +13,7 @@ import {
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, ImagePlus, Plus } from 'lucide-react';
+import { WfBadge } from '../ui/wireframe';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_DOCUMENT_PHOTO_LABEL, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
@@ -158,9 +159,14 @@ export function GuardThirtyTwoHourPanel({
   return (
     <section className="app-form-section space-y-4">
       <div>
-        <p className="uber-label flex items-center gap-2">
+        <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
+          {staffMode && !progress.thirtyTwoHourBlockComplete && (
+            <WfBadge tone="warning" className="!text-[10px]">
+              Missing
+            </WfBadge>
+          )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
