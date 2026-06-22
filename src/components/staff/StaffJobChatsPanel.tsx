@@ -8,7 +8,7 @@ import {
 } from '../../types';
 import { messagesForThread, threadForRequest } from '../../lib/jobChat';
 import { JobChatPanel } from '../messaging/JobChatPanel';
-import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { MessageCircle } from 'lucide-react';
 
@@ -79,59 +79,54 @@ export function StaffJobChatsPanel({
     : null;
 
 
-  const renderJobCard = (job: SecurityRequest) => {
+  const renderJobRow = (job: SecurityRequest) => {
     const guard = guards.find((g) => g.id === job.assignedGuardId);
     const thread = threadForRequest(threads, job.id);
     const count = thread ? messagesForThread(messages, thread.id).length : 0;
     const active = job.status === 'accepted' || job.status === 'in-progress';
     return (
-      <AppItemCard
+      <AppInboxRow
         key={job.id}
+        title={job.title}
+        preview={`${job.clientName} ↔ ${guard?.name ?? 'Guard'}`}
+        meta={count > 0 ? `${count} msg${count === 1 ? '' : 's'}` : active ? 'Live' : 'Archived'}
         selected={selectedRequestId === job.id}
+        badges={
+          <>
+            <WfBadge tone={active ? 'primary' : 'default'}>{active ? 'Live' : 'Archived'}</WfBadge>
+            {count > 0 && <WfBadge tone="default">{count} messages</WfBadge>}
+          </>
+        }
         onClick={() => setSelectedRequestId(job.id)}
-        className="flex-col !items-stretch gap-1"
-      >
-        <p className="font-semibold text-sm truncate">{job.title}</p>
-        <p className="text-xs text-brand-text-muted truncate">
-          {job.clientName} ↔ {guard?.name ?? 'Guard'}
-        </p>
-        <div className="flex flex-wrap gap-1 mt-1.5">
-          <WfBadge tone={active ? 'primary' : 'default'}>
-            {active ? 'Live' : 'Archived'}
-          </WfBadge>
-          {count > 0 && <WfBadge tone="default">{count} msg{count === 1 ? '' : 's'}</WfBadge>}
-        </div>
-      </AppItemCard>
+      />
     );
   };
 
   const listView = (
-    <div className="staff-split-pane-list">
-      <div className="staff-pane-header">
-        <h2 className="font-bold text-sm">Job chats</h2>
-        <p className="text-xs text-brand-text-muted mt-1">
-          Each job has its own conversation. Select one to monitor or reply.
-        </p>
+    <div className="staff-split-pane-list flex flex-col min-h-0">
+      <div className="app-messages-hub-lead">
+        <h2 className="text-base font-bold tracking-tight">Job chats</h2>
+        <p>Each active job has its own thread. Monitor or reply in real time.</p>
       </div>
-      <div className="staff-pane-body p-3">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {activeJobs.length === 0 && archivedJobs.length === 0 ? (
           <p className="staff-empty-state">No job chats yet.</p>
         ) : (
           <div className="space-y-4">
             {activeJobs.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2 px-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted px-4 py-2">
                   Active jobs
                 </p>
-                <AppItemCardStack>{activeJobs.map(renderJobCard)}</AppItemCardStack>
+                <AppInboxList>{activeJobs.map(renderJobRow)}</AppInboxList>
               </div>
             )}
             {archivedJobs.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2 px-1">
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted px-4 py-2">
                   Archived
                 </p>
-                <AppItemCardStack>{archivedJobs.map(renderJobCard)}</AppItemCardStack>
+                <AppInboxList>{archivedJobs.map(renderJobRow)}</AppInboxList>
               </div>
             )}
           </div>

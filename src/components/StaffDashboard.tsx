@@ -520,6 +520,7 @@ export function StaffDashboard({
         return onSendSupportMessage && onUpdateSupportStatus ? (
           <StaffSupportPanel
             tickets={supportTickets}
+            currentUser={currentUser}
             onSendMessage={onSendSupportMessage}
             onUpdateStatus={onUpdateSupportStatus}
             selectedTicketId={selectedSupportTicketId}
