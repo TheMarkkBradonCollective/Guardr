@@ -20,7 +20,33 @@ export const ID_VERIFICATION_SELFIE_HINT =
   'Take a clear headshot with your front camera. Face the camera directly with good lighting. This is for identity verification — not your profile photo.';
 
 export const ID_VERIFICATION_POLICY_HINT =
-  'Required for account activation: upload a government-issued photo ID (front and back) plus a live identity selfie. Once submitted, photos are locked until staff reviews them.';
+  'Required for account activation: enter your ID state, number, and expiration date, then upload front, back, and a live identity selfie. Once submitted, details are locked until staff reviews them.';
+
+export function isIdExpired(guard: Pick<SecurityGuard, 'idExpiryDate'>): boolean {
+  if (!guard.idExpiryDate) return false;
+  const expiry = new Date(guard.idExpiryDate);
+  return !Number.isNaN(expiry.getTime()) && expiry < new Date();
+}
+
+export function formatIdExpiryLabel(expiryDate?: string): string | null {
+  if (!expiryDate) return null;
+  const d = new Date(expiryDate);
+  if (Number.isNaN(d.getTime())) return expiryDate;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export function formatIdSummaryLine(
+  guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idExpiryDate'>
+): string {
+  const parts: string[] = [];
+  if (guard.idState?.trim()) parts.push(guard.idState.trim().toUpperCase());
+  if (guard.idNumber?.trim()) parts.push(`#${guard.idNumber.trim()}`);
+  const expiry = formatIdExpiryLabel(guard.idExpiryDate);
+  if (expiry) {
+    parts.push(isIdExpired(guard) ? `Expired ${expiry}` : `Expires ${expiry}`);
+  }
+  return parts.length ? parts.join(' · ') : 'ID on file';
+}
 
 export function getGuardIdVerificationStatus(
   guard: Pick<SecurityGuard, 'idVerificationStatus'>
@@ -35,11 +61,12 @@ export function guardIdVerificationPhotosComplete(
 }
 
 export function guardIdVerificationSubmissionReady(
-  guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+  guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idExpiryDate' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
 ): boolean {
   return Boolean(
     guard.idState?.trim() &&
       guard.idNumber?.trim() &&
+      guard.idExpiryDate?.trim() &&
       guard.idFrontUrl?.trim() &&
       guard.idBackUrl?.trim() &&
       guard.idSelfieUrl?.trim()
@@ -71,7 +98,13 @@ export function guardIdVerificationResubmitPending(
 export function staffCanApproveIdVerification(
   guard: Pick<
     SecurityGuard,
-    'idVerificationStatus' | 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+    | 'idVerificationStatus'
+    | 'idState'
+    | 'idNumber'
+    | 'idExpiryDate'
+    | 'idFrontUrl'
+    | 'idBackUrl'
+    | 'idSelfieUrl'
   >
 ): boolean {
   return getGuardIdVerificationStatus(guard) === 'pending' && guardIdVerificationSubmissionReady(guard);
@@ -81,7 +114,13 @@ export function staffCanApproveIdVerification(
 export function staffCanRequestIdResubmit(
   guard: Pick<
     SecurityGuard,
-    'idVerificationStatus' | 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+    | 'idVerificationStatus'
+    | 'idState'
+    | 'idNumber'
+    | 'idExpiryDate'
+    | 'idFrontUrl'
+    | 'idBackUrl'
+    | 'idSelfieUrl'
   >
 ): boolean {
   return staffCanApproveIdVerification(guard);

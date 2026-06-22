@@ -2,9 +2,11 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
+  formatIdExpiryLabel,
   getGuardIdVerificationStatus,
   ID_VERIFICATION_SLOT_LABELS,
   ID_VERIFICATION_STATUS_LABELS,
+  isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { formatStateName } from '../../lib/states';
 import { AppModal } from '../ui/motion/AppMotion';
@@ -21,6 +23,8 @@ export function GuardIdDetailModal({ guard, onClose, guardName }: GuardIdDetailM
   const status = getGuardIdVerificationStatus(guard);
   const statusTone =
     status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
+  const expired = isIdExpired(guard);
+  const expiryLabel = formatIdExpiryLabel(guard.idExpiryDate);
 
   return (
     <AppModal open onClose={onClose} ariaLabelledBy="guard-id-detail-title">
@@ -47,6 +51,7 @@ export function GuardIdDetailModal({ guard, onClose, guardName }: GuardIdDetailM
       <div className="p-5 space-y-5">
         <div className="flex flex-wrap gap-2">
           <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
+          {expired && <WfBadge tone="danger">Expired</WfBadge>}
         </div>
 
         {status === 'rejected' && guard.idVerificationRejectionReason && (
@@ -63,6 +68,12 @@ export function GuardIdDetailModal({ guard, onClose, guardName }: GuardIdDetailM
           <div>
             <dt className="text-xs text-brand-text-muted">ID number</dt>
             <dd className="font-medium mt-0.5">{guard.idNumber ? `#${guard.idNumber}` : '—'}</dd>
+          </div>
+          <div className="col-span-2">
+            <dt className="text-xs text-brand-text-muted">Expiration date</dt>
+            <dd className={`font-medium mt-0.5 ${expired ? 'text-amber-600' : ''}`}>
+              {expiryLabel ? (expired ? `Expired ${expiryLabel}` : expiryLabel) : '—'}
+            </dd>
           </div>
         </dl>
 

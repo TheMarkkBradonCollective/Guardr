@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ChevronRight, IdCard, Loader2, UserRound } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
+  formatIdSummaryLine,
   getGuardIdVerificationStatus,
   guardIdVerificationCanEdit,
   guardIdVerificationIsLocked,
@@ -11,6 +12,7 @@ import {
   ID_VERIFICATION_SELFIE_HINT,
   ID_VERIFICATION_SLOT_LABELS,
   ID_VERIFICATION_STATUS_LABELS,
+  isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import {
@@ -26,6 +28,7 @@ import { GuardIdDetailModal } from './GuardIdDetailModal';
 export interface GuardIdentityVerificationPayload {
   idState: string;
   idNumber: string;
+  idExpiryDate: string;
   idFrontUrl: string;
   idBackUrl: string;
   idSelfieUrl: string;
@@ -43,7 +46,54 @@ interface GuardIdentityVerificationPanelProps {
   embedded?: boolean;
 }
 
-type IdSlot = 'front' | 'back' | 'selfie';
+function GuardIdSummaryCard({
+  guard,
+  statusTone,
+  statusLabel,
+  onOpen,
+}: {
+  guard: SecurityGuard;
+  statusTone: 'success' | 'warning' | 'danger' | 'default';
+  statusLabel: string;
+  onOpen: () => void;
+}) {
+  const expired = isIdExpired(guard);
+
+  return (
+    <div className="app-cert-item-stack border-t border-brand-border pt-3">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="app-cert-item app-cert-item-interactive w-full text-left"
+      >
+        <div className="app-cert-item-body min-w-0 flex gap-3 flex-1">
+          {guard.idFrontUrl ? (
+            <img
+              src={guard.idFrontUrl}
+              alt=""
+              className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-xl border border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0">
+              <IdCard className="w-5 h-5 text-brand-text-muted" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm leading-snug">Government ID</p>
+            <p className={`text-xs mt-1 ${expired ? 'text-amber-600' : 'text-brand-text-muted'}`}>
+              {formatIdSummaryLine(guard)}
+            </p>
+            <p className="text-[10px] text-brand-primary mt-1">Tap to view all photos</p>
+          </div>
+        </div>
+        <div className="app-cert-item-meta">
+          <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
+          <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0" />
+        </div>
+      </button>
+    </div>
+  );
+}
 
 function IdPhotoCertRow({
   label,
@@ -215,62 +265,89 @@ export function GuardIdentityVerificationPanel({
 
   const [idState, setIdState] = useState(guard.idState ?? 'CA');
   const [idNumber, setIdNumber] = useState(guard.idNumber ?? '');
+  const [idExpiryDate, setIdExpiryDate] = useState(guard.idExpiryDate ?? '');
   const [frontUrl, setFrontUrl] = useState(guard.idFrontUrl ?? '');
   const [backUrl, setBackUrl] = useState(guard.idBackUrl ?? '');
   const [selfieUrl, setSelfieUrl] = useState(guard.idSelfieUrl ?? '');
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
+  const [replacePhotosOpen, setReplacePhotosOpen] = useState(false);
 
   React.useEffect(() => {
     setIdState(guard.idState ?? 'CA');
     setIdNumber(guard.idNumber ?? '');
+    setIdExpiryDate(guard.idExpiryDate ?? '');
     setFrontUrl(guard.idFrontUrl ?? '');
     setBackUrl(guard.idBackUrl ?? '');
     setSelfieUrl(guard.idSelfieUrl ?? '');
     setSubmitError('');
+    setReplacePhotosOpen(false);
   }, [
     guard.id,
     guard.idState,
     guard.idNumber,
+    guard.idExpiryDate,
     guard.idFrontUrl,
     guard.idBackUrl,
     guard.idSelfieUrl,
     guard.idVerificationStatus,
   ]);
 
+  const displayGuard: SecurityGuard = {
+    ...guard,
+    idState: idState.trim().toUpperCase() || guard.idState,
+    idNumber: idNumber.trim() || guard.idNumber,
+    idExpiryDate: idExpiryDate.trim() || guard.idExpiryDate,
+    idFrontUrl: frontUrl.trim() || guard.idFrontUrl,
+    idBackUrl: backUrl.trim() || guard.idBackUrl,
+    idSelfieUrl: selfieUrl.trim() || guard.idSelfieUrl,
+  };
+
   const draftState = idState.trim().toUpperCase();
   const draftNumber = idNumber.trim();
+  const draftExpiry = idExpiryDate.trim();
   const draftFront = frontUrl.trim();
   const draftBack = backUrl.trim();
   const draftSelfie = selfieUrl.trim();
   const draftComplete = guardIdVerificationSubmissionReady({
     idState: draftState,
     idNumber: draftNumber,
+    idExpiryDate: draftExpiry,
     idFrontUrl: draftFront,
     idBackUrl: draftBack,
     idSelfieUrl: draftSelfie,
   });
+  const photosComplete = guardIdVerificationPhotosComplete(displayGuard);
   const hasDraftChanges =
     draftState !== (guard.idState ?? '').trim().toUpperCase() ||
     draftNumber !== (guard.idNumber ?? '').trim() ||
+    draftExpiry !== (guard.idExpiryDate ?? '').trim() ||
     draftFront !== (guard.idFrontUrl ?? '').trim() ||
     draftBack !== (guard.idBackUrl ?? '').trim() ||
     draftSelfie !== (guard.idSelfieUrl ?? '').trim();
   const showSubmit = staffMode
-    ? canEdit && hasDraftChanges && (draftComplete || Boolean(draftFront || draftBack || draftSelfie || draftNumber))
+    ? canEdit && hasDraftChanges && (draftComplete || Boolean(draftFront || draftBack || draftSelfie || draftNumber || draftExpiry))
     : canEdit && draftComplete;
 
   const statusTone =
     status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
-  const hasOnFile = guardIdVerificationPhotosComplete(guard) || Boolean(guard.idState || guard.idNumber);
-  const showSummaryRow = !canEdit && hasOnFile;
+  const hasOnFile =
+    guardIdVerificationPhotosComplete(guard) ||
+    Boolean(guard.idState || guard.idNumber || guard.idExpiryDate);
+  const showCardOnly = !canEdit && hasOnFile;
+  const showCardWithEdit = canEdit && photosComplete && !replacePhotosOpen;
+  const showPhotoRows = canEdit && (!photosComplete || replacePhotosOpen);
 
   const handleSubmit = async () => {
     if (!showSubmit) return;
     if (!draftState || !draftNumber) {
       setSubmitError('Enter the issuing state and ID number.');
+      return;
+    }
+    if (!draftExpiry) {
+      setSubmitError('Enter the ID expiration date.');
       return;
     }
     if (!draftFront || !draftBack || !draftSelfie) {
@@ -283,6 +360,7 @@ export function GuardIdentityVerificationPanel({
       const result = await onSubmit({
         idState: draftState,
         idNumber: draftNumber,
+        idExpiryDate: draftExpiry,
         idFrontUrl: draftFront,
         idBackUrl: draftBack,
         idSelfieUrl: draftSelfie,
@@ -304,8 +382,8 @@ export function GuardIdentityVerificationPanel({
       )}
       {staffMode && (
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          Upload or replace ID photos on behalf of the guard. Enter the issuing state and ID number. Saving a complete set
-          queues the submission for staff review.
+          Upload or replace ID photos on behalf of the guard. Enter the issuing state, ID number, and expiration date.
+          Saving a complete set queues the submission for staff review.
         </p>
       )}
 
@@ -334,40 +412,57 @@ export function GuardIdentityVerificationPanel({
         </p>
       )}
 
-      {showSummaryRow ? (
-        <div className="app-cert-item-stack border-t border-brand-border pt-3">
-          <button
-            type="button"
-            onClick={() => setDetailOpen(true)}
-            className="app-cert-item app-cert-item-interactive w-full text-left"
-          >
-            <div className="app-cert-item-body min-w-0 flex gap-3 flex-1">
-              {guard.idFrontUrl ? (
-                <img
-                  src={guard.idFrontUrl}
-                  alt=""
-                  className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-xl border border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0">
-                  <IdCard className="w-5 h-5 text-brand-text-muted" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-sm leading-snug">Government ID</p>
-                <p className="text-xs text-brand-text-muted mt-1">
-                  {guard.idState ? `${formatStateName(guard.idState)} · ` : ''}
-                  {guard.idNumber ? `#${guard.idNumber}` : 'ID on file'}
-                </p>
-                <p className="text-[10px] text-brand-primary mt-1">Tap to view details and photos</p>
-              </div>
+      {showCardOnly || showCardWithEdit ? (
+        <>
+          {canEdit && (
+            <div className="space-y-3 border-t border-brand-border pt-3">
+              <select
+                value={idState}
+                onChange={(e) => setIdState(e.target.value)}
+                className="uber-select w-full"
+                required
+                aria-label="ID issuing state"
+              >
+                {US_STATES.map(({ code, name }) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="uber-input w-full"
+                placeholder="Government ID number (driver license, state ID, etc.)"
+                value={idNumber}
+                onChange={(e) => setIdNumber(e.target.value)}
+                required
+                aria-label="Government ID number"
+              />
+              <input
+                type="date"
+                value={idExpiryDate}
+                onChange={(e) => setIdExpiryDate(e.target.value)}
+                className="uber-input w-full"
+                required
+                aria-label="ID expiration date"
+              />
             </div>
-            <div className="app-cert-item-meta">
-              <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
-              <ChevronRight className="w-4 h-4 text-brand-text-muted shrink-0" />
-            </div>
-          </button>
-        </div>
+          )}
+          <GuardIdSummaryCard
+            guard={displayGuard}
+            statusTone={statusTone}
+            statusLabel={ID_VERIFICATION_STATUS_LABELS[status]}
+            onOpen={() => setDetailOpen(true)}
+          />
+          {canEdit && photosComplete && (
+            <button
+              type="button"
+              onClick={() => setReplacePhotosOpen((open) => !open)}
+              className="text-xs text-brand-primary hover:underline"
+            >
+              {replacePhotosOpen ? 'Hide photo upload' : 'Replace photos'}
+            </button>
+          )}
+        </>
       ) : (
         <>
           {canEdit && (
@@ -393,10 +488,18 @@ export function GuardIdentityVerificationPanel({
                 required
                 aria-label="Government ID number"
               />
+              <input
+                type="date"
+                value={idExpiryDate}
+                onChange={(e) => setIdExpiryDate(e.target.value)}
+                className="uber-input w-full"
+                required
+                aria-label="ID expiration date"
+              />
             </div>
           )}
 
-          {!canEdit && (guard.idState || guard.idNumber) && (
+          {!canEdit && (guard.idState || guard.idNumber || guard.idExpiryDate) && (
             <dl className="grid grid-cols-2 gap-3 text-sm border-t border-brand-border pt-3">
               <div>
                 <dt className="text-xs text-brand-text-muted">Issuing state</dt>
@@ -406,9 +509,18 @@ export function GuardIdentityVerificationPanel({
                 <dt className="text-xs text-brand-text-muted">ID number</dt>
                 <dd className="font-medium mt-0.5">{guard.idNumber ? `#${guard.idNumber}` : '—'}</dd>
               </div>
+              <div className="col-span-2">
+                <dt className="text-xs text-brand-text-muted">Expiration date</dt>
+                <dd className={`font-medium mt-0.5 ${isIdExpired(guard) ? 'text-amber-600' : ''}`}>
+                  {guard.idExpiryDate || '—'}
+                </dd>
+              </div>
             </dl>
           )}
+        </>
+      )}
 
+      {showPhotoRows && (
           <div className="app-cert-item-stack border-t border-brand-border">
             <IdPhotoCertRow
               label={ID_VERIFICATION_SLOT_LABELS.front}
@@ -434,8 +546,9 @@ export function GuardIdentityVerificationPanel({
               selfie
             />
           </div>
-        </>
       )}
+
+      {detailOpen && <GuardIdDetailModal guard={displayGuard} onClose={() => setDetailOpen(false)} />}
 
       {showSubmit && (
         <div className="space-y-2">
@@ -455,8 +568,6 @@ export function GuardIdentityVerificationPanel({
       {!staffMode && locked && guardIdVerificationPhotosComplete(guard) && status !== 'rejected' && (
         <p className="text-xs text-brand-text-muted">ID details are locked while your submission is on file.</p>
       )}
-
-      {detailOpen && <GuardIdDetailModal guard={guard} onClose={() => setDetailOpen(false)} />}
     </>
   );
 
@@ -474,8 +585,8 @@ export function GuardIdentityVerificationPanel({
           </p>
           {!staffMode && (
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Required for account activation. Enter your ID state and number, then upload front, back, and a selfie.
-              Tap any item to view photos.
+              Required for account activation. Enter your ID state, number, and expiration date, then upload front,
+              back, and a selfie. Tap the card to view all photos.
             </p>
           )}
         </div>
