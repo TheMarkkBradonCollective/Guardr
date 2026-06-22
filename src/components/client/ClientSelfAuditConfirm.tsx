@@ -77,7 +77,7 @@ export function ClientSelfAuditConfirm({ request, onConfirm }: ClientSelfAuditCo
           type="button"
           onClick={() => void handleConfirm()}
           disabled={confirming}
-          className="app-button-primary !h-9 !text-xs w-full gap-1.5"
+          className="app-button-primary app-btn-sm w-full gap-1.5"
         >
           {confirming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
           Confirm self-audit photos

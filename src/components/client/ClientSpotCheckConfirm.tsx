@@ -90,7 +90,7 @@ export function ClientSpotCheckConfirm({ request, onConfirm }: ClientSpotCheckCo
                   type="button"
                   onClick={() => void handleConfirm(check.id)}
                   disabled={confirmingId === check.id}
-                  className="app-button-primary !h-9 !text-xs w-full gap-1.5"
+                  className="app-button-primary app-btn-sm w-full gap-1.5"
                 >
                   {confirmingId === check.id ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

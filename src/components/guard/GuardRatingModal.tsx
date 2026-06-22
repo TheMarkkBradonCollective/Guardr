@@ -39,14 +39,14 @@ export function GuardRatingModal({ open, clientName, onSubmit, onSkip }: GuardRa
         className="uber-input resize-none"
       />
 
-      <div className="flex gap-2">
-        <button type="button" onClick={onSkip} className="flex-1 app-button-outline !h-11 !text-sm">
+      <div className="app-action-row--2">
+        <button type="button" onClick={onSkip} className="app-button-outline">
           Skip
         </button>
         <button
           type="button"
           onClick={() => onSubmit(rating, note || 'Good assignment.')}
-          className="flex-1 app-button-primary !h-11 !text-sm"
+          className="app-button-primary"
         >
           Submit
         </button>

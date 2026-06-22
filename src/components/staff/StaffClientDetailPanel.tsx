@@ -129,19 +129,19 @@ export function StaffClientDetailPanel({
       {canManage && (
         <section className="py-4 border-b border-brand-border space-y-2">
           <WfSectionHeader title="Account controls" className="mb-0" />
-          <div className="flex flex-wrap gap-2">
+          <div className="app-action-row--equal">
             {isPending && (
-              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary app-btn-sm">
                 Approve client account
               </button>
             )}
             {isSuspended && (
-              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary app-btn-sm">
                 Restore client account
               </button>
             )}
             {!isPending && !isSuspended && (
-              <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
+              <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
                 Suspend client account
               </button>
             )}
@@ -150,7 +150,7 @@ export function StaffClientDetailPanel({
                 type="button"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
               >
                 {deleting ? 'Deleting…' : 'Delete account'}
               </button>

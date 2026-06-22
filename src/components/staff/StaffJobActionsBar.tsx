@@ -39,12 +39,12 @@ export function StaffJobActionsBar({
   return (
     <div className="border-t border-brand-border pt-3 space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Staff actions</p>
-      <div className="flex flex-wrap gap-2">
+      <div className="app-action-row--equal">
         {showEdit && !editing && (
           <button
             type="button"
             onClick={onStartEdit}
-            className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+            className="app-button-outline app-btn-sm"
           >
             <Pencil className="w-3 h-3 inline" />
             {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
@@ -54,7 +54,7 @@ export function StaffJobActionsBar({
           <button
             type="button"
             onClick={onToggleAuditUpload}
-            className={`app-button-outline !w-auto !h-9 !px-4 !text-xs ${
+            className={`app-button-outline app-btn-sm ${
               auditFlagged ? 'border-amber-500/50 text-amber-400' : ''
             }`}
           >
@@ -66,7 +66,7 @@ export function StaffJobActionsBar({
           <button
             type="button"
             onClick={onToggleSpotCheck}
-            className={`app-button-outline !w-auto !h-9 !px-4 !text-xs ${
+            className={`app-button-outline app-btn-sm ${
               spotCheckFlagged ? 'border-amber-500/50 text-amber-400' : ''
             }`}
           >

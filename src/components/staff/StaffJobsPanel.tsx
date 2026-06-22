@@ -262,7 +262,7 @@ function JobDetailPanel({
                       type="button"
                       onClick={() => onApproveGuardApplication(req.id, guard.id)}
                       disabled={!meets}
-                      className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="app-button-primary app-btn-sm shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Approve guard
                     </button>
@@ -282,7 +282,7 @@ function JobDetailPanel({
       {canAssign && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">Select guard</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="app-action-row--equal">
             <select
               value={assignGuardId}
               onChange={(e) => setAssignGuardId(e.target.value)}
@@ -299,7 +299,7 @@ function JobDetailPanel({
               type="button"
               onClick={handleAssign}
               disabled={!assignGuardId || assigning}
-              className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-primary app-btn-sm gap-1.5"
             >
               {assigning ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
               Select guard
@@ -307,14 +307,14 @@ function JobDetailPanel({
           </div>
         </div>
       )}
-      <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
+      <div className="app-action-row--equal pt-2 border-t border-brand-border">
         {req.status === 'pending-review' && (
-          <button type="button" onClick={() => onApproveRequest(req.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+          <button type="button" onClick={() => onApproveRequest(req.id)} className="app-button-primary app-btn-sm">
             Approve Job
           </button>
         )}
         {req.status !== 'completed' && req.status !== 'closed' && (
-          <button type="button" onClick={() => onDenyRequest(req.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
+          <button type="button" onClick={() => onDenyRequest(req.id)} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
             <X className="w-3 h-3" /> Cancel
           </button>
         )}
@@ -424,7 +424,7 @@ export function StaffJobsPanel({
       )}
       {!showDetailOnly && (
         <>
-          <div className="flex flex-wrap gap-2">
+          <div className="app-action-row--equal">
             {filters.map((f) => (
               <button
                 key={f.id}

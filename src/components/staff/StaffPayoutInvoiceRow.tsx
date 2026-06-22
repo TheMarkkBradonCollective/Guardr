@@ -77,7 +77,7 @@ export function StaffPayoutInvoiceRow({
                       <button
                         type="button"
                         onClick={() => onMarkGuardPaidCash(line.jobId)}
-                        className="app-button-primary !w-auto !h-8 !px-3 !text-xs"
+                        className="app-button-primary app-btn-sm"
                       >
                         Mark paid cash
                       </button>
@@ -88,7 +88,7 @@ export function StaffPayoutInvoiceRow({
                         type="button"
                         onClick={() => onReleasePayout(line.jobId)}
                         disabled={!guard?.stripeConnectAccountId}
-                        className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
+                        className="app-button-primary app-btn-sm disabled:opacity-40"
                         title={
                           guard?.stripeConnectAccountId
                             ? 'Send payout via Stripe'
@@ -111,7 +111,7 @@ export function StaffPayoutInvoiceRow({
           <button
             type="button"
             onClick={() => onCompleteInvoice(invoice.id)}
-            className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+            className="app-button-outline app-btn-sm"
           >
             Mark invoice completed
           </button>

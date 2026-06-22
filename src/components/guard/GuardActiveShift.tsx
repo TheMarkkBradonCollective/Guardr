@@ -147,7 +147,7 @@ export function GuardActiveShift({
         )}
 
         {phase === 'arrived' && (
-          <div className="space-y-3">
+          <div className="app-button-stack">
             <SlideToConfirm
               label="Slide to start shift"
               confirmedLabel="Starting…"
@@ -159,7 +159,7 @@ export function GuardActiveShift({
               type="button"
               onClick={onSkipAudit}
               disabled={!clockInOpen}
-              className="app-button-outline disabled:opacity-40 text-amber-700 dark:text-amber-400 border-amber-500/40 !h-11 !text-sm"
+              className="app-button-outline app-btn-md disabled:opacity-40 text-amber-700 dark:text-amber-400 border-amber-500/40"
             >
               Skip self audit · clock in
             </button>
@@ -177,18 +177,19 @@ export function GuardActiveShift({
 
         {phase === 'on-duty' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={onIncidentReport} className="app-button-outline !h-12 !text-sm gap-2">
+            <div className="app-action-row--2">
+              <button type="button" onClick={onIncidentReport} className="app-button-outline app-btn-md gap-2">
                 <AlertTriangle className="w-4 h-4" /> Report incident
               </button>
-              <button type="button" onClick={onActivityReport} className="app-button-outline !h-12 !text-sm gap-2">
+              <button type="button" onClick={onActivityReport} className="app-button-outline app-btn-md gap-2">
                 <Activity className="w-4 h-4" /> Activity report
               </button>
               <button
                 type="button"
                 onClick={onOpenJobChat}
                 disabled={!onOpenJobChat}
-                className="app-button-outline !h-12 !text-sm gap-2 col-span-2 disabled:opacity-40"
+                className="app-button-outline app-btn-md gap-2 col-span-2 disabled:opacity-40"
+                style={{ gridColumn: '1 / -1' }}
               >
                 <Phone className="w-4 h-4" /> Message client
               </button>

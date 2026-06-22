@@ -45,7 +45,7 @@ export function StaffIncidentsPanel({ incidents, onOpenJob }: StaffIncidentsPane
                 <button
                   type="button"
                   onClick={() => onOpenJob(inc.requestId)}
-                  className="mt-2 app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  className="mt-2 app-button-outline app-btn-sm"
                 >
                   Open job
                 </button>

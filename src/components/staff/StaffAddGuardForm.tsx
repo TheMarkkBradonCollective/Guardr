@@ -81,7 +81,7 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+        className="app-button-primary app-btn-sm inline-flex items-center gap-2"
       >
         <Plus className="w-4 h-4" />
         Add guard
@@ -174,8 +174,8 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
       {error && <p className="text-sm text-red-400">{error}</p>}
       {msg && <p className="text-sm text-brand-primary">{msg}</p>}
 
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={saving} className="app-button-primary !w-auto !h-10 !px-5">
+      <div className="app-action-row--equal">
+        <button type="submit" disabled={saving} className="app-button-primary app-btn-md">
           {saving ? 'Adding…' : 'Create guard profile'}
         </button>
         <button
@@ -184,7 +184,7 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
             setOpen(false);
             setError('');
           }}
-          className="app-button-outline !w-auto !h-10 !px-5"
+          className="app-button-outline app-btn-md"
         >
           Cancel
         </button>

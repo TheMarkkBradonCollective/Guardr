@@ -122,7 +122,7 @@ export function ClientRequestsList({
         <button
           type="button"
           onClick={onRequestNew}
-          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0 self-start mt-2"
+          className="app-button-primary app-btn-md shrink-0 self-start mt-2"
         >
           + Post offer
         </button>
@@ -222,11 +222,11 @@ export function ClientRequestsList({
                 )}
 
                 {canClientEditJobListing(req) && editingId !== req.id && (
-                  <div className="flex flex-wrap gap-2 w-full">
+                  <div className="app-action-row--equal">
                     <button
                       type="button"
                       onClick={() => setEditingId(req.id)}
-                      className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                      className="app-button-outline app-btn-sm"
                     >
                       <Pencil className="w-3 h-3 inline" /> {isJobScheduleLocked(req) ? 'Edit title & location' : 'Edit'}
                     </button>
@@ -234,7 +234,7 @@ export function ClientRequestsList({
                       <button
                         type="button"
                         onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
-                        className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                        className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                       >
                         <X className="w-3 h-3 inline" /> Cancel
                       </button>
@@ -264,7 +264,7 @@ export function ClientRequestsList({
                           type="button"
                           onClick={() => handlePayNow(req)}
                           disabled={payingJobId === req.id}
-                          className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 shrink-0 disabled:opacity-50"
+                          className="app-button-primary app-btn-sm gap-1.5 shrink-0 disabled:opacity-50"
                         >
                           {payingJobId === req.id ? (
                             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
@@ -295,7 +295,7 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'accepted' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary !h-9 !text-xs w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary app-btn-sm w-full">
                     <Activity className="w-3.5 h-3.5 inline" /> Start Deployment
                   </button>
                 )}
@@ -309,7 +309,7 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'in-progress' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary !h-9 !text-xs w-full">
+                  <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary app-btn-sm w-full">
                     <Check className="w-3.5 h-3.5 inline" /> Complete job
                   </button>
                 )}
@@ -335,7 +335,7 @@ export function ClientRequestsList({
                       <button
                         type="button"
                         onClick={() => onAddReview(req.id, reviewRating[req.id] || 5, reviewNote[req.id] || 'Good work.')}
-                        className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                        className="app-button-primary app-btn-sm"
                       >
                         Submit
                       </button>

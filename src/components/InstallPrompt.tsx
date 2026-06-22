@@ -119,14 +119,14 @@ export function InstallPrompt() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleInstallClick}
-                className="flex-1 app-button-primary !h-10 !text-sm gap-1.5"
+                className="app-button-primary app-btn-md flex-1 gap-1.5"
               >
                 <Download size={14} />
                 <span>{isIOS ? 'Show iOS guide' : 'Download app'}</span>
               </button>
               <button
                 onClick={dismissPrompt}
-                className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
+                className="app-button-outline app-btn-md"
               >
                 Later
               </button>
@@ -192,13 +192,13 @@ export function InstallPrompt() {
                     setShowGuide(false);
                     dismissPrompt();
                   }}
-                  className="flex-1 app-button-primary !h-10 !text-sm"
+                  className="app-button-primary app-btn-md flex-1"
                 >
                   I&apos;ve done it
                 </button>
                 <button
                   onClick={() => setShowGuide(false)}
-                  className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
+                  className="app-button-outline app-btn-md"
                 >
                   Back
                 </button>

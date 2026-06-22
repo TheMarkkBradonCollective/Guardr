@@ -191,7 +191,7 @@ export function GuardCardPanel({
       <button
         type="submit"
         disabled={!imageUrl?.trim()}
-        className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+        className="w-full app-button-primary disabled:opacity-50"
       >
         Upload guard card
       </button>
@@ -226,7 +226,7 @@ export function GuardCardPanel({
               <button
                 type="button"
                 onClick={() => setShowForm((open) => !open)}
-                className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+                className="app-button-primary app-btn-sm shrink-0"
               >
                 {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
               </button>
@@ -262,7 +262,7 @@ export function GuardCardPanel({
           <button
             type="button"
             onClick={() => setShowForm((open) => !open)}
-            className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+            className="app-button-primary app-btn-sm shrink-0"
           >
             {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
           </button>

@@ -191,7 +191,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+        className="app-button-primary app-btn-sm inline-flex items-center gap-2"
       >
         <Plus className="w-4 h-4" />
         Create job for client
@@ -433,8 +433,8 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
       {error && <p className="text-sm text-red-400">{error}</p>}
       {msg && <p className="text-sm text-brand-primary">{msg}</p>}
 
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={saving || !!scheduleError} className="app-button-primary !w-auto !h-10 !px-5">
+      <div className="app-action-row--equal">
+        <button type="submit" disabled={saving || !!scheduleError} className="app-button-primary app-btn-md">
           {saving ? 'Creating…' : assignGuardId ? 'Create & rehire guard' : 'Create open job'}
         </button>
         <button
@@ -443,7 +443,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
             setOpen(false);
             setError('');
           }}
-          className="app-button-outline !w-auto !h-10 !px-5"
+          className="app-button-outline app-btn-md"
         >
           Cancel
         </button>

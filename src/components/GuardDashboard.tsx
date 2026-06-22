@@ -764,7 +764,7 @@ export function GuardDashboard({
           <button
             type="button"
             onClick={() => setShowCheckout(false)}
-            className="app-button-outline !h-11 !text-sm"
+            className="app-button-outline app-btn-md"
           >
             Cancel
           </button>

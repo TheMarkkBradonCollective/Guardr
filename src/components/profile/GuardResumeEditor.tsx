@@ -259,7 +259,7 @@ export function GuardResumeEditor({
             <input className="uber-input w-full" placeholder="Company / site" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
             <input className="uber-input w-full" placeholder="Period (e.g. 2020 – 2024)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
             <textarea className="uber-input w-full resize-none" rows={3} placeholder="What you did, sites, responsibilities…" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} />
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add experience</button>
+            <button type="submit" className="w-full app-button-primary">Add experience</button>
           </form>
         }
       />
@@ -284,7 +284,7 @@ export function GuardResumeEditor({
             <input className="uber-input w-full" placeholder="Field of study" value={eduField} onChange={(e) => setEduField(e.target.value)} />
             <input className="uber-input w-full" placeholder="Years" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
             <textarea className="uber-input w-full resize-none" rows={2} placeholder="Notes (optional)" value={eduDescription} onChange={(e) => setEduDescription(e.target.value)} />
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add education</button>
+            <button type="submit" className="w-full app-button-primary">Add education</button>
           </form>
         }
       />
@@ -368,7 +368,7 @@ function ExperienceSection({
           {title}
         </p>
         {canAdd && (
-          <button type="button" onClick={onAdd} className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1">
+          <button type="button" onClick={onAdd} className="app-button-primary app-btn-sm gap-1">
             <Plus className="w-3 h-3" />
             Add
           </button>

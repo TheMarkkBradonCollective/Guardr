@@ -196,7 +196,7 @@ export function JobLocationPinPicker({
           type="button"
           onClick={handleGeocode}
           disabled={geocoding}
-          className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1.5"
+          className="app-button-outline app-btn-sm gap-1.5"
         >
           Refresh pin
         </button>
@@ -257,7 +257,7 @@ export function JobLocationPinPicker({
           <button
             type="button"
             onClick={applyManualCoords}
-            className="app-button-outline !w-auto !h-8 !px-3 !text-xs"
+            className="app-button-outline app-btn-sm"
           >
             Apply coordinates
           </button>
@@ -273,7 +273,7 @@ export function JobLocationPinPicker({
                 lastGeocodedQueryRef.current = '';
                 onCoordsChange(null);
               }}
-              className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-brand-text-muted"
+              className="app-button-outline app-btn-sm text-brand-text-muted"
             >
               Clear pin
             </button>

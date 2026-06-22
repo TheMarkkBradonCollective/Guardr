@@ -142,13 +142,13 @@ export function JobPaymentRow({
 
       {!readOnly &&
         (canMarkClientCash || canDeposit || canPlatformFeeCash || canStripeRelease || canCashGuard || canRefund) && (
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border w-full">
+        <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canMarkClientCash && (
             <button
               type="button"
               onClick={() => run('client', onMarkClientPaidCash)}
               disabled={busy !== null}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-outline app-btn-sm gap-1.5"
             >
               {busy === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Client paid cash
@@ -160,7 +160,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('deposit', onDepositCashToStripe)}
               disabled={busy !== null}
-              className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-primary app-btn-sm gap-1.5"
             >
               {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
               {stripeDepositLabel(req)}
@@ -172,7 +172,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('platformFee', onMarkPlatformFeePaidCash)}
               disabled={busy !== null}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-outline app-btn-sm gap-1.5"
             >
               {busy === 'platformFee' ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -188,7 +188,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('stripe', onReleasePayout)}
               disabled={busy !== null || !guard?.stripeConnectAccountId}
-              className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-primary app-btn-sm gap-1.5"
               title={guard?.stripeConnectAccountId ? 'Send payout via Stripe Connect' : 'Guard has no Stripe account connected'}
             >
               {busy === 'stripe' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
@@ -201,7 +201,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('guard', onMarkGuardPaidCash)}
               disabled={busy !== null}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5"
+              className="app-button-outline app-btn-sm gap-1.5"
             >
               {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Mark guard paid in cash
@@ -213,7 +213,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('force', onReleasePayout, true)}
               disabled={busy !== null}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-amber-400 border-amber-500/40"
+              className="app-button-outline app-btn-sm text-amber-400 border-amber-500/40"
               title="Director force payout without Connect check"
             >
               {busy === 'force' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
@@ -226,7 +226,7 @@ export function JobPaymentRow({
               type="button"
               onClick={() => run('refund', onRefundPayment)}
               disabled={busy !== null}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1.5 text-red-400 border-red-500/40"
+              className="app-button-outline app-btn-sm gap-1.5 text-red-400 border-red-500/40"
             >
               {busy === 'refund' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
               Refund client

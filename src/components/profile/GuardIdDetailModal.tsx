@@ -179,7 +179,7 @@ export function GuardIdDetailModal({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              className="app-button-outline app-btn-sm gap-1.5"
             >
               <Pencil className="w-3.5 h-3.5" />
               Edit
@@ -197,7 +197,7 @@ export function GuardIdDetailModal({
       </div>
 
       <div className="p-5 space-y-5 max-h-[min(80vh,40rem)] overflow-y-auto">
-        <div className="flex flex-wrap gap-2">
+        <div className="app-action-row--equal">
           <IdCredentialStatusBadges guard={displayGuard} />
         </div>
 
@@ -275,12 +275,12 @@ export function GuardIdDetailModal({
 
             {submitError && <p className="text-xs text-red-500">{submitError}</p>}
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="app-action-row--equal pt-1">
               <button
                 type="button"
                 onClick={() => void handleSave()}
                 disabled={saving || !draftComplete}
-                className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-2 disabled:opacity-50"
+                className="app-button-primary app-btn-md !text-sm gap-2 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {saving ? 'Saving…' : staffMode ? 'Save ID' : 'Submit for review'}
@@ -289,7 +289,7 @@ export function GuardIdDetailModal({
                 type="button"
                 onClick={handleCancelEdit}
                 disabled={saving}
-                className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
+                className="app-button-outline app-btn-md"
               >
                 Cancel
               </button>

@@ -27,7 +27,7 @@ export function GuardCredentialGraceBanner({ guard, onOpenCredentials }: GuardCr
         <button
           type="button"
           onClick={onOpenCredentials}
-          className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+          className="app-button-primary app-btn-sm"
         >
           Open Credentials
         </button>

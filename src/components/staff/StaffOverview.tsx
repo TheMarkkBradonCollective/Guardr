@@ -280,7 +280,7 @@ export function StaffOverview({
                                 e.stopPropagation();
                                 onOpenJob(job.id);
                               }}
-                              className="mt-2 app-button-outline !w-auto !h-8 !px-3 !text-xs"
+                              className="mt-2 app-button-outline app-btn-sm"
                             >
                               Edit / update job
                             </button>

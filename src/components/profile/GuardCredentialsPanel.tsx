@@ -351,7 +351,7 @@ export function GuardCredentialsPanel({
                   setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
                 }
               }}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+              className="app-button-primary app-btn-sm shrink-0"
             >
               {isPtaUofOpen ? 'Cancel' : 'Add'}
             </button>
@@ -405,7 +405,7 @@ export function GuardCredentialsPanel({
             <button
               type="submit"
               disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+              className="w-full app-button-primary disabled:opacity-50"
             >
               Upload credential
             </button>
@@ -453,7 +453,7 @@ export function GuardCredentialsPanel({
                   setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
                 }
               }}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+              className="app-button-primary app-btn-sm shrink-0"
             >
               {isRefresherOpen ? 'Cancel' : 'Add'}
             </button>
@@ -495,7 +495,7 @@ export function GuardCredentialsPanel({
             <button
               type="submit"
               disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+              className="w-full app-button-primary disabled:opacity-50"
             >
               Upload credential
             </button>
@@ -532,7 +532,7 @@ export function GuardCredentialsPanel({
                 setOpenSection(isOtherBsisOpen ? null : 'bsis-training');
                 setSelectedCatalogId(otherBsisCatalogOptions[0]?.id ?? '');
               }}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+              className="app-button-primary app-btn-sm shrink-0"
             >
               {isOtherBsisOpen ? 'Cancel' : 'Add'}
             </button>
@@ -586,7 +586,7 @@ export function GuardCredentialsPanel({
             <button
               type="submit"
               disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+              className="w-full app-button-primary disabled:opacity-50"
             >
               Upload credential
             </button>
@@ -630,7 +630,7 @@ export function GuardCredentialsPanel({
                     setOpenSection(isOpen ? null : category);
                     setSelectedCatalogId(catalogOptions[0]?.id ?? '');
                   }}
-                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+                  className="app-button-primary app-btn-sm shrink-0"
                 >
                   {isOpen ? 'Cancel' : 'Add'}
                 </button>
@@ -700,7 +700,7 @@ export function GuardCredentialsPanel({
                 <button
                   type="submit"
                   disabled={!imageUrl?.trim()}
-                  className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+                  className="w-full app-button-primary disabled:opacity-50"
                 >
                   Upload credential
                 </button>

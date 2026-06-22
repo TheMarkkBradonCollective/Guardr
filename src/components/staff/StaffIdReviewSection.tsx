@@ -69,7 +69,7 @@ export function StaffIdReviewSection({
         <strong className="text-brand-text">Reject application</strong> to deny the entire application; the account is
         blocked.
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className="app-action-row--equal">
         {canApprove && onApprove && (
           <button
             type="button"
@@ -82,7 +82,7 @@ export function StaffIdReviewSection({
                 }
               })();
             }}
-            className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
+            className="app-button-primary app-btn-sm gap-1"
           >
             <Check className="w-3.5 h-3.5" /> Approve ID
           </button>
@@ -92,28 +92,28 @@ export function StaffIdReviewSection({
             <button
               type="button"
               onClick={() => requestSlot('front')}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1"
+              className="app-button-outline app-btn-sm gap-1"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Resubmit ID front
             </button>
             <button
               type="button"
               onClick={() => requestSlot('back')}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1"
+              className="app-button-outline app-btn-sm gap-1"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Resubmit ID back
             </button>
             <button
               type="button"
               onClick={() => requestSlot('selfie')}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1"
+              className="app-button-outline app-btn-sm gap-1"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Resubmit selfie
             </button>
             <button
               type="button"
               onClick={requestAll}
-              className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1 text-amber-500 border-amber-500/40"
+              className="app-button-outline app-btn-sm gap-1 text-amber-500 border-amber-500/40"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Resubmit all ID photos
             </button>
@@ -127,7 +127,7 @@ export function StaffIdReviewSection({
               if (reason === null) return;
               void onReject(guard.id, reason);
             }}
-            className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
           >
             <X className="w-3.5 h-3.5" /> Reject application
           </button>

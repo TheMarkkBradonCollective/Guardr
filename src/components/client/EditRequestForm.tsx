@@ -225,12 +225,12 @@ export function EditRequestForm({
           <JobOperationalDetailsFields value={operational} onChange={setOperational} />
         </>
       )}
-      <div className="flex gap-2 pt-1">
-        <button type="submit" disabled={saving} className="app-button-primary !h-9 !px-4 !text-xs flex-1 gap-1.5">
+      <div className="app-action-row--2 pt-1">
+        <button type="submit" disabled={saving} className="app-button-primary app-btn-sm gap-1.5">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           Save changes
         </button>
-        <button type="button" onClick={onCancel} className="app-button-outline !h-9 !px-4 !text-xs !w-auto">
+        <button type="button" onClick={onCancel} className="app-button-outline app-btn-sm">
           Cancel
         </button>
       </div>

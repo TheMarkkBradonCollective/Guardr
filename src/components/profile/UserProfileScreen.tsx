@@ -233,7 +233,7 @@ export function UserProfileScreen({
           type="button"
           onClick={() => (editing ? void handleSave() : setEditing(true))}
           disabled={saving}
-          className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+          className="app-button-primary disabled:opacity-50"
         >
           {editing ? <Save className="w-4 h-4" /> : <User className="w-4 h-4" />}
           {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
@@ -242,7 +242,7 @@ export function UserProfileScreen({
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="app-button-outline !w-auto !h-11 !px-4 !text-sm"
+            className="app-button-outline app-btn-md"
           >
             Cancel
           </button>

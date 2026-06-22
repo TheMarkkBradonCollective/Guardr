@@ -141,7 +141,7 @@ export function StaffTeamDetailPanel({
                 type="button"
                 onClick={handleRoleSave}
                 disabled={savingRole}
-                className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                className="app-button-primary app-btn-sm"
               >
                 {savingRole ? 'Saving…' : `Save as ${role}`}
               </button>
@@ -157,12 +157,12 @@ export function StaffTeamDetailPanel({
       {canModifyMember ? (
         <section className="py-4 border-b border-brand-border space-y-2">
           <h3 className="text-sm font-semibold">Account controls</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="app-action-row--equal">
             {accountStatus !== 'suspended' && (
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'suspended')}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                className="app-button-outline app-btn-sm"
               >
                 Suspend
               </button>
@@ -171,7 +171,7 @@ export function StaffTeamDetailPanel({
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'blocked')}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
               >
                 Block
               </button>
@@ -180,7 +180,7 @@ export function StaffTeamDetailPanel({
               <button
                 type="button"
                 onClick={() => onUpdateUserStatus(member.id, 'active')}
-                className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                className="app-button-primary app-btn-sm"
               >
                 Restore account
               </button>

@@ -152,7 +152,7 @@ export function StaffSelfAuditPhotoUpload({ request, onUpload }: StaffSelfAuditP
           type="button"
           onClick={() => void handleSave()}
           disabled={saving}
-          className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5"
+          className="app-button-primary app-btn-sm gap-1.5"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           Save audit photos

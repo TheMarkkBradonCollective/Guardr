@@ -76,7 +76,7 @@ export function ClientHomeScreen({
           title="Account pending approval"
           action={
             onOpenProfile ? (
-              <button type="button" onClick={onOpenProfile} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+              <button type="button" onClick={onOpenProfile} className="app-button-outline app-btn-sm">
                 Review profile
               </button>
             ) : undefined

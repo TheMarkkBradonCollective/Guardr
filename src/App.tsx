@@ -4933,7 +4933,7 @@ export default function App() {
           <p className="text-brand-text-muted text-sm max-w-sm">
             Your sign-in may be out of date after a database change. Sign out and sign in again with your guard email.
           </p>
-          <button type="button" onClick={handleSignOut} className="app-button-primary !w-auto !px-6 !h-11">
+          <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
             Sign out
           </button>
         </div>

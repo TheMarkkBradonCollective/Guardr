@@ -61,32 +61,32 @@ export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
               </div>
 
               {status === 'open' && (
-                <div className="flex flex-wrap gap-2 pt-4">
+                <div className="app-action-row--equal pt-4">
                   <button
                     type="button"
                     onClick={() => resolveDispute(d.id, 'resolved', 'Payout approved.')}
-                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                    className="app-button-primary app-btn-sm"
                   >
                     Approve Payout
                   </button>
                   <button
                     type="button"
                     onClick={() => resolveDispute(d.id, 'held', 'Funds held pending review.')}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                    className="app-button-outline app-btn-sm"
                   >
                     Hold Funds
                   </button>
                   <button
                     type="button"
                     onClick={() => showAppToast('Partial payout issued.', { tone: 'info' })}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                    className="app-button-outline app-btn-sm"
                   >
                     Partial Payout
                   </button>
                   <button
                     type="button"
                     onClick={() => showAppToast('Job payout cancelled.', { tone: 'info' })}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                   >
                     Cancel Payout
                   </button>

@@ -158,7 +158,7 @@ export function StaffApprovals({
   const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
     canManageGuardAccounts && cert.status === 'pending' ? (
       <div className="flex flex-col items-end gap-1.5">
-        <div className="flex gap-1.5 justify-end flex-wrap">
+        <div className="app-action-row--equal justify-end">
           {cert.imageUrl && onRequestCertImageResubmit && (
             <button
               type="button"
@@ -167,7 +167,7 @@ export function StaffApprovals({
                 if (note === null) return;
                 onRequestCertImageResubmit(guard.id, cert.id, note);
               }}
-              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+              className="app-button-outline app-btn-sm gap-1"
             >
               Request clearer photo
             </button>
@@ -175,7 +175,7 @@ export function StaffApprovals({
           <button
             type="button"
             onClick={() => onRejectCert(guard.id, cert.id)}
-            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
           >
             <X className="w-3 h-3" /> Reject
           </button>
@@ -192,7 +192,7 @@ export function StaffApprovals({
                 }
               })();
             }}
-            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1 disabled:opacity-50"
+            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
           >
             <Check className="w-3 h-3" /> Verify
           </button>
@@ -317,12 +317,12 @@ export function StaffApprovals({
               )}
             </div>
             <JobBillingSummaryFromRequest req={req} variant="staff" />
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border w-full">
+            <div className="app-action-row--equal pt-2 border-t border-brand-border">
               {showEdit && (
                 <button
                   type="button"
                   onClick={() => setEditingJobId(req.id)}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  className="app-button-outline app-btn-sm"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit job listing
                 </button>
@@ -330,14 +330,14 @@ export function StaffApprovals({
               <button
                 type="button"
                 onClick={() => onDenyRequest(req.id)}
-                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
               >
                 <X className="w-3.5 h-3.5" /> Decline
               </button>
               <button
                 type="button"
                 onClick={() => onApproveRequest(req.id)}
-                className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
+                className="app-button-primary app-btn-sm"
               >
                 <Check className="w-3.5 h-3.5" /> Approve — unlock payment
               </button>
@@ -414,7 +414,7 @@ export function StaffApprovals({
                           type="button"
                           onClick={() => onApproveGuardApplication(req.id, guard.id)}
                           disabled={!meets}
-                          className="app-button-primary !w-auto !h-8 !px-3 !text-xs disabled:opacity-40"
+                          className="app-button-primary app-btn-sm disabled:opacity-40"
                         >
                           Approve guard
                         </button>
@@ -461,11 +461,11 @@ export function StaffApprovals({
                 {certViewSectionLabel(cert)} · {cert.issuer} · #{cert.number}
                 {cert.state ? ` · ${cert.state}` : ''}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="app-action-row--equal">
                 <button
                   type="button"
                   onClick={() => setViewCert({ guard, cert })}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs gap-1"
+                  className="app-button-outline app-btn-sm gap-1"
                 >
                   <Eye className="w-3.5 h-3.5" /> View document
                 </button>
@@ -473,7 +473,7 @@ export function StaffApprovals({
                   <button
                     type="button"
                     onClick={() => onViewGuard(guard.id)}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                    className="app-button-outline app-btn-sm"
                   >
                     Full profile
                   </button>
@@ -487,7 +487,7 @@ export function StaffApprovals({
                       onRequestCertImageResubmit(guard.id, cert.id, note);
                       setActiveItemId(null);
                     }}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                    className="app-button-outline app-btn-sm"
                   >
                     Request clearer photo
                   </button>
@@ -495,7 +495,7 @@ export function StaffApprovals({
                 <button
                   type="button"
                   onClick={() => onRejectCert(guard.id, cert.id)}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                 >
                   <X className="w-3.5 h-3.5" /> Reject
                 </button>
@@ -513,7 +513,7 @@ export function StaffApprovals({
                       }
                     })();
                   }}
-                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  className="app-button-primary app-btn-sm disabled:opacity-50"
                 >
                   <Check className="w-3.5 h-3.5" /> Verify
                 </button>
@@ -628,9 +628,9 @@ export function StaffApprovals({
                   }
                   renderCertActions={(cert) => renderGuardAccountCertActions(guard, cert)}
                 />
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
+                <div className="app-action-row--equal pt-2 border-t border-brand-border">
                   {onViewGuard && (
-                    <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                    <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
                       Full profile
                     </button>
                   )}
@@ -654,7 +654,7 @@ export function StaffApprovals({
                           }
                         })();
                       }}
-                      className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1 disabled:opacity-50"
+                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Approve profile
                     </button>
@@ -685,7 +685,7 @@ export function StaffApprovals({
                           }
                         })();
                       }}
-                      className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1 disabled:opacity-50"
+                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Activate account
                     </button>
@@ -714,7 +714,7 @@ export function StaffApprovals({
                       onApproveClient(client.id);
                       setActiveItemId(null);
                     }}
-                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
+                    className="app-button-primary app-btn-sm gap-1"
                   >
                     <Check className="w-3.5 h-3.5" /> Approve client
                   </button>

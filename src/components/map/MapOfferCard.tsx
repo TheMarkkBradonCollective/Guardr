@@ -107,7 +107,7 @@ export function MapOfferCard({
 
       <div className="map-offer-card-actions">
         {!expanded && onExpand && (
-          <button type="button" onClick={onExpand} className="app-button-outline !h-9 !text-xs flex-1">
+          <button type="button" onClick={onExpand} className="app-button-outline app-btn-sm flex-1">
             View full listing
           </button>
         )}

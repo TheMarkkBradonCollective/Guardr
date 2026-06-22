@@ -309,14 +309,14 @@ export function GuardThirtyTwoHourPanel({
             <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
           )}
           {formError && <p className="text-xs text-red-500">{formError}</p>}
-          <div className="flex gap-2">
-            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
+          <div className="app-action-row--2">
+            <button type="button" onClick={resetForm} className="app-button-outline">
               Cancel
             </button>
             <button
               type="submit"
               disabled={!imageUrl?.trim()}
-              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+              className="app-button-primary disabled:opacity-50"
             >
               Upload credential
             </button>

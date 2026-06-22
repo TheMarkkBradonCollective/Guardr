@@ -34,11 +34,11 @@ export function GuardActivityLogModal({ open, onClose, onSubmit }: GuardActivity
           required
           autoFocus
         />
-        <div className="flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 app-button-outline !h-11 !text-sm">
+        <div className="app-action-row--2">
+          <button type="button" onClick={onClose} className="app-button-outline">
             Cancel
           </button>
-          <button type="submit" disabled={!entry.trim()} className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50">
+          <button type="submit" disabled={!entry.trim()} className="app-button-primary disabled:opacity-50">
             Save entry
           </button>
         </div>

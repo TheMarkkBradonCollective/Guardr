@@ -296,12 +296,12 @@ export function StaffGuardDetailPanel({
   const renderStaffCertActions = (cert: Certification) =>
     canManage && cert.status === 'pending' ? (
       <div className="flex flex-col items-end gap-1.5">
-        <div className="flex gap-1.5 justify-end flex-wrap">
+        <div className="app-action-row--equal justify-end">
           {cert.imageUrl && onRequestCertImageResubmit && (
             <button
               type="button"
               onClick={() => requestCertResubmit(cert)}
-              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+              className="app-button-outline app-btn-sm gap-1"
             >
               Request clearer photo
             </button>
@@ -309,7 +309,7 @@ export function StaffGuardDetailPanel({
           <button
             type="button"
             onClick={() => onRejectCert(guard.id, cert.id)}
-            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
           >
             <X className="w-3 h-3" /> Reject
           </button>
@@ -326,7 +326,7 @@ export function StaffGuardDetailPanel({
                 }
               })();
             }}
-            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1 disabled:opacity-50"
+            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
           >
             <Check className="w-3 h-3" /> Verify
           </button>
@@ -377,12 +377,12 @@ export function StaffGuardDetailPanel({
             <span />
           )}
           {canEdit && !guard.isStaff && (
-            <div className="flex gap-2">
+            <div className="app-action-row" style={{ width: 'auto', flex: '0 1 auto' }}>
               <button
                 type="button"
                 onClick={() => (editing ? void handleSave() : setEditing(true))}
                 disabled={saving}
-                className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5 disabled:opacity-50"
+                className="app-button-primary app-btn-sm gap-1.5 disabled:opacity-50"
               >
                 {editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                 {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
@@ -391,7 +391,7 @@ export function StaffGuardDetailPanel({
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  className="app-button-outline app-btn-sm"
                 >
                   Cancel
                 </button>
@@ -492,7 +492,7 @@ export function StaffGuardDetailPanel({
                     })();
                   }}
                   disabled={!guardCanStaffApproveProfile(guard)}
-                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
@@ -520,7 +520,7 @@ export function StaffGuardDetailPanel({
                     })();
                   }}
                   disabled={!guardCanStaffActivateAccount(guard)}
-                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
                     guardCanStaffActivateAccount(guard)
                       ? activationChecklist.missingGraceCredentials.length > 0
@@ -537,28 +537,28 @@ export function StaffGuardDetailPanel({
                   type="button"
                   onClick={() => void handleDeleteGuard()}
                   disabled={deleting}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                 >
                   {deleting ? 'Deleting…' : 'Delete account'}
                 </button>
               )}
               {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline app-btn-sm">
                   Suspend
                 </button>
               )}
               {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
                   Flag / Block
                 </button>
               )}
               {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary app-btn-sm">
                   Restore account
                 </button>
               )}
               {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="app-button-outline app-btn-sm">
                   Clear violations ({guard.failedAudits}/3)
                 </button>
               )}
@@ -566,7 +566,7 @@ export function StaffGuardDetailPanel({
                 <button
                   type="button"
                   onClick={() => onUpdateBackgroundChecked(guard.id, !guard.backgroundChecked)}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  className="app-button-outline app-btn-sm"
                 >
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
@@ -576,7 +576,7 @@ export function StaffGuardDetailPanel({
                   type="button"
                   onClick={() => void handleDeleteGuard()}
                   disabled={deleting}
-                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                 >
                   {deleting ? 'Deleting…' : 'Delete account'}
                 </button>
