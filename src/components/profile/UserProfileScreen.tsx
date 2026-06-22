@@ -282,15 +282,6 @@ export function UserProfileScreen({
         )}
       </AppFormSection>
 
-      {guard && !guard.isStaff && onSubmitIdentityVerification && (
-        <div className="px-5">
-          <GuardIdentityVerificationPanel
-            guard={guard}
-            onSubmit={onSubmitIdentityVerification}
-          />
-        </div>
-      )}
-
       {canBuildResume && guard && (
         <GuardResumeEditor
           guard={guard}
@@ -311,6 +302,15 @@ export function UserProfileScreen({
         <p className="uber-label mb-3">Appearance</p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
       </AppFormSection>
+
+      {guard && !guard.isStaff && onSubmitIdentityVerification && (
+        <div className="px-5">
+          <GuardIdentityVerificationPanel
+            guard={guard}
+            onSubmit={onSubmitIdentityVerification}
+          />
+        </div>
+      )}
 
       {onOpenLegal && (
         <AppFormSection>
