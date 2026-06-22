@@ -254,7 +254,13 @@ export interface JobOperationalDetails {
   doorsOpenTime?: string;
   doorsCloseTime?: string;
   curfewTime?: string;
+  /** @deprecated Use smokingAreaLocation / smokingAreaRules — kept for legacy JSONB rows */
   smokingAreaDetails?: string;
+  smokingAreaLocation?: string;
+  smokingAreaOpenTime?: string;
+  smokingAreaCloseTime?: string;
+  smokingAreaRules?: string;
+  smokingAreaGuardNotes?: string;
   barDetails?: string;
   barLastCallTime?: string;
   barCloseTime?: string;
