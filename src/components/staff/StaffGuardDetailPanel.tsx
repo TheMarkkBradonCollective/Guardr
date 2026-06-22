@@ -326,7 +326,13 @@ export function StaffGuardDetailPanel({
         <div className="app-cert-item-stack">
           {pendingCerts.map((cert) => (
             <div key={cert.id} className="space-y-2">
-              <CertItemCard cert={cert} guardName={guard.name} />
+              <CertItemCard
+                cert={cert}
+                guardName={guard.name}
+                canEdit={canManage}
+                staffMode={canManage}
+                onUpdate={onUpdateCertification ? (payload) => onUpdateCertification(cert.id, payload) : undefined}
+              />
               {renderStaffCertActions(cert)}
             </div>
           ))}

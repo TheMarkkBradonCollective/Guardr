@@ -38,6 +38,10 @@ function formatDisplayDate(iso?: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function certHasDetailsOnFile(cert: Certification): boolean {
+  return Boolean(cert.issuer?.trim() || cert.number?.trim() || cert.imageUrl?.trim());
+}
+
 export function CertDetailModal({
   cert,
   onClose,
@@ -152,7 +156,7 @@ export function CertDetailModal({
     setExpiryDate(cert.expiryDate ?? '');
     setImageUrl(cert.imageUrl ?? '');
     setSubmitError('');
-    if (initialEditMode && cert.status === 'rejected' && !cert.imageUrl) {
+    if (initialEditMode && !certHasDetailsOnFile(cert)) {
       onClose();
       return;
     }
@@ -177,7 +181,7 @@ export function CertDetailModal({
           </h2>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {canEdit && onSubmit && !editing && !photosLocked && (
+          {canEdit && onSubmit && !editing && (staffMode || !photosLocked) && (
             <button
               type="button"
               onClick={() => setEditing(true)}

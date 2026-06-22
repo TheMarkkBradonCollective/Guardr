@@ -11,6 +11,10 @@ import { CertDetailModal, type CertUpdatePayload, type CertUpdateResult } from '
 import { CertImageAttachButton } from './CertImageAttachButton';
 import { CredentialCategoryBadge } from './CredentialCategoryBadge';
 
+function certHasDetailsOnFile(cert: Certification): boolean {
+  return Boolean(cert.issuer?.trim() || cert.number?.trim() || cert.imageUrl?.trim());
+}
+
 interface CertItemCardProps {
   cert: Certification;
   editing?: boolean;
@@ -42,9 +46,10 @@ export function CertItemCard({
   const [showDetail, setShowDetail] = useState(false);
   const title = certDisplayName(cert);
   const canEditCert = canEdit || staffMode || guardCertificationCanEdit(cert);
-  const openInEditMode = canEditCert && (cert.status === 'rejected' || (!cert.imageUrl && cert.status !== 'verified'));
-  const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
-  const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
+  const useModalEdit = Boolean(onUpdate);
+  const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
+  const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;
+  const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert) && !useModalEdit;
   const thumbClass = compact
     ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
@@ -85,7 +90,7 @@ export function CertItemCard({
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
           <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
-          {cert.imageUrl && editing && (
+          {cert.imageUrl && editing && !useModalEdit && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />
               Photo locked
