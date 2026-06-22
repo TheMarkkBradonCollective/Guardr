@@ -3,6 +3,8 @@ import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { LegalFooterLinks } from '../legal/LegalFooterLinks';
+import type { LegalPageId } from '../../lib/legalContent';
 import { Home, Map, ClipboardList, User, Users, LifeBuoy, Radio, LogOut } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
@@ -16,6 +18,7 @@ interface ClientAppLayoutProps {
   activeView?: ClientView;
   onNavigate?: (view: ClientView) => void;
   accountPending?: boolean;
+  onOpenLegal?: (page: LegalPageId) => void;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -53,6 +56,7 @@ export function ClientAppLayout({
   activeView = 'map',
   onNavigate,
   accountPending = false,
+  onOpenLegal,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
@@ -63,10 +67,13 @@ export function ClientAppLayout({
   const themeToggle = <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />;
 
   const moreFooter = (
-    <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
-      <LogOut className="w-4 h-4" />
-      Sign out
-    </button>
+    <>
+      {onOpenLegal && <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center mb-4" />}
+      <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
+        <LogOut className="w-4 h-4" />
+        Sign out
+      </button>
+    </>
   );
 
   return (

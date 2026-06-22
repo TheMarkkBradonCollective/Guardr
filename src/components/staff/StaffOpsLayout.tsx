@@ -4,6 +4,8 @@ import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { LegalFooterLinks } from '../legal/LegalFooterLinks';
+import type { LegalPageId } from '../../lib/legalContent';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
   AlertTriangle,
@@ -39,6 +41,7 @@ interface StaffOpsLayoutProps {
   isDbConnected: boolean;
   badges?: Partial<Record<StaffSection, number>>;
   fullBleed?: boolean;
+  onOpenLegal?: (page: LegalPageId) => void;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -70,6 +73,7 @@ export function StaffOpsLayout({
   isDbConnected,
   badges = {},
   fullBleed = false,
+  onOpenLegal,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
@@ -118,6 +122,11 @@ export function StaffOpsLayout({
       </div>
       <div className="staff-sidebar-footer">
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
+        {onOpenLegal && (
+          <div className="mt-3">
+            <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
+          </div>
+        )}
         {isDbConnected && (
           <p className="text-[10px] text-brand-primary flex items-center gap-1.5 justify-center mt-3">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />

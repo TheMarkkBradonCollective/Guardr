@@ -4037,6 +4037,7 @@ export default function App() {
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
+          onOpenLegal={openLegalPage}
         />
         {passwordChangeOverlay}
         <InstallPrompt />
@@ -4081,6 +4082,7 @@ export default function App() {
           activeView={clientView}
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
+          onOpenLegal={openLegalPage}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -4090,6 +4092,7 @@ export default function App() {
               onSignOut={handleSignOut}
               client={clientRecord ?? null}
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
+              onOpenLegal={openLegalPage}
             />
           ) : clientView === 'support' ? (
             <SupportScreen
@@ -4234,6 +4237,7 @@ export default function App() {
           staffMessages={staffMessages}
           onSendStaffMessage={handleSendStaffMessage}
           onSendJobChat={handleSendJobChatMessage}
+          onOpenLegal={openLegalPage}
         />
         {passwordChangeOverlay}
         <InstallPrompt />

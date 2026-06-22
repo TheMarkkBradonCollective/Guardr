@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
 import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import { LegalInfoCards } from './legal/LegalInfoCards';
 import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME } from '../lib/siteConfig';
@@ -282,7 +283,19 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
         </div>
       </section>
 
-      <section className="px-5 py-20 border-t border-brand-border bg-brand-bg-sec">
+      <section className="px-5 py-16 border-t border-brand-border bg-brand-bg-sec">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold">Policies &amp; data</h2>
+            <p className="text-sm text-brand-text-muted mt-2 max-w-xl mx-auto">
+              Read how Guardr handles your data and the marketplace rules for clients and guards.
+            </p>
+          </div>
+          <LegalInfoCards onOpenLegal={onOpenLegal} />
+        </div>
+      </section>
+
+      <section className="px-5 py-20 border-t border-brand-border bg-brand-bg">
         <div className="max-w-2xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready when you are</h2>
           <p className="text-brand-text-muted">Choose your path — each experience is tailored to how you use Guardr.</p>

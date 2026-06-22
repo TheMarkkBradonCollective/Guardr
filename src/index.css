@@ -2894,6 +2894,10 @@ html.theme-light .staff-ops-btn-primary:hover {
   color: var(--brand-text) !important;
 }
 
+.legal-info-card {
+  border-radius: 0;
+}
+
 .auth-hero-curve {
   border-radius: 0 !important;
 }

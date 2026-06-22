@@ -171,6 +171,7 @@ interface StaffDashboardProps {
   onOpenStaffApprovals?: (queue?: ApprovalQueueId | null) => void;
   onClearStaffApprovalQueue?: () => void;
   onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
+  onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
 export function StaffDashboard({
@@ -256,6 +257,7 @@ export function StaffDashboard({
   onOpenStaffApprovals,
   onClearStaffApprovalQueue,
   onUpdateStaffApprovalQueue,
+  onOpenLegal,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -580,6 +582,7 @@ export function StaffDashboard({
             onSignOut={onSignOut}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
+            onOpenLegal={onOpenLegal}
           />
         );
       default:
@@ -598,6 +601,7 @@ export function StaffDashboard({
       isDbConnected={isDbConnected}
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
+      onOpenLegal={onOpenLegal}
     >
       {renderSection()}
     </StaffOpsLayout>

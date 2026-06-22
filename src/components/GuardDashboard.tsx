@@ -99,6 +99,7 @@ interface GuardDashboardProps {
   /** Controlled tab — when set, parent owns navigation state (URL sync). */
   tab?: GuardTab;
   onTabChange?: (tab: GuardTab) => void;
+  onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
 export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'support' | 'profile';
@@ -152,6 +153,7 @@ export function GuardDashboard({
   initialTab = 'map',
   tab: controlledTab,
   onTabChange,
+  onOpenLegal,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
   const isControlled = controlledTab !== undefined;
@@ -713,6 +715,7 @@ export function GuardDashboard({
             onAddExperience={onAddExperience}
             onAddEducation={onAddEducation}
             onSubmitIdentityVerification={onSubmitIdentityVerification}
+            onOpenLegal={onOpenLegal}
           />
         </div>
       )}

@@ -28,7 +28,7 @@ export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
           </button>
           <div className="flex items-center gap-2">
             <Logo size={24} className="text-brand-primary" />
-            <span className="font-semibold">{SITE_NAME}</span>
+            <span className="font-semibold text-brand-primary">{SITE_NAME}</span>
           </div>
         </div>
       </header>
@@ -40,7 +40,7 @@ export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
         <h1 className="text-3xl font-bold tracking-tight">{doc.title}</h1>
         <p className="text-sm text-brand-text-muted mt-2">Last updated {doc.updated}</p>
 
-        <div className="mt-6 rounded-2xl border border-brand-primary/25 bg-brand-primary/5 px-4 py-4 text-sm leading-relaxed text-brand-text">
+        <div className="mt-6 border border-brand-primary/25 bg-brand-primary/5 px-4 py-4 text-sm leading-relaxed text-brand-text">
           <strong className="font-semibold">Marketplace notice.</strong> {SITE_NAME} is a technology
           platform operated by {LEGAL_ENTITY_NAME}. We connect clients with independent licensed
           security professionals. We do not provide security services, employ guards, or act as a

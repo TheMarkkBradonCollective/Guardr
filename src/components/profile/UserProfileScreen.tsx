@@ -11,6 +11,9 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { LegalInfoCards } from '../legal/LegalInfoCards';
+import type { LegalPageId } from '../../lib/legalContent';
+import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import {
@@ -52,6 +55,7 @@ interface UserProfileScreenProps {
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
   isDbConnected?: boolean;
+  onOpenLegal?: (page: LegalPageId) => void;
 }
 
 export function UserProfileScreen({
@@ -69,6 +73,7 @@ export function UserProfileScreen({
   onAddEducation,
   onSubmitIdentityVerification,
   isDbConnected = false,
+  onOpenLegal,
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -306,6 +311,14 @@ export function UserProfileScreen({
         <p className="uber-label mb-3">Appearance</p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
       </AppFormSection>
+
+      {onOpenLegal && (
+        <AppFormSection>
+          <p className="uber-label mb-2">Legal</p>
+          <p className="text-xs text-brand-text-muted leading-relaxed mb-4">{LEGAL_DISCLAIMER_SHORT}</p>
+          <LegalInfoCards onOpenLegal={onOpenLegal} />
+        </AppFormSection>
+      )}
 
       <div className="px-5 pt-4">
         <button
