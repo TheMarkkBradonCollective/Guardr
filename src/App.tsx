@@ -2357,6 +2357,83 @@ export default function App() {
     }
   };
 
+  const handleStaffUpdateGuardIdImages = async (
+    guardId: string,
+    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) return { ok: false, error: 'Guard profile not found.' };
+    if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
+    if (getGuardUserStatus(guard) === 'blocked') {
+      return { ok: false, error: 'This application was rejected — account is blocked.' };
+    }
+
+    const front = payload.idFrontUrl.trim();
+    const back = payload.idBackUrl.trim();
+    const selfie = payload.idSelfieUrl.trim();
+    if (!front && !back && !selfie) {
+      return { ok: false, error: 'Upload at least one ID photo to save.' };
+    }
+
+    const complete = Boolean(front && back && selfie);
+    const urlsChanged =
+      front !== (guard.idFrontUrl ?? '').trim() ||
+      back !== (guard.idBackUrl ?? '').trim() ||
+      selfie !== (guard.idSelfieUrl ?? '').trim();
+    if (!urlsChanged) return { ok: true };
+
+    const previous = { ...guard };
+    const now = new Date().toISOString();
+    let nextStatus = guard.idVerificationStatus ?? 'not_submitted';
+
+    if (guard.idVerificationStatus === 'verified') {
+      nextStatus = complete ? 'pending' : 'not_submitted';
+    } else if (complete) {
+      nextStatus = 'pending';
+    } else {
+      nextStatus = 'not_submitted';
+    }
+
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idFrontUrl: front || undefined,
+              idBackUrl: back || undefined,
+              idSelfieUrl: selfie || undefined,
+              idVerificationStatus: nextStatus,
+              idVerificationSubmittedAt: complete ? now : g.idVerificationSubmittedAt,
+              idVerificationReviewedAt: nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
+              idVerificationRejectionReason: complete ? undefined : g.idVerificationRejectionReason,
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          id_front_url: front || null,
+          id_back_url: back || null,
+          id_selfie_url: selfie || null,
+          id_verification_status: nextStatus,
+          id_verification_submitted_at: complete ? now : guard.idVerificationSubmittedAt ?? null,
+          id_verification_reviewed_at: nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
+          id_verification_rejection_reason: complete ? null : guard.idVerificationRejectionReason ?? null,
+        })
+        .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('Staff ID image update error:', error);
+        return { ok: false, error: 'Could not save ID photos. Please try again.' };
+      }
+    }
+    return { ok: true };
+  };
+
   const handleRequestGuardIdResubmit = async (
     guardId: string,
     slots: IdVerificationSlot[],
@@ -4394,6 +4471,7 @@ export default function App() {
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}
           onRequestGuardIdResubmit={handleRequestGuardIdResubmit}
+          onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}

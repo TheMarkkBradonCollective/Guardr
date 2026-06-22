@@ -6,6 +6,7 @@ import {
   guardIdVerificationPhotosComplete,
   guardIdVerificationResubmitPending,
   ID_VERIFICATION_SLOT_LABELS,
+  ID_VERIFICATION_STATUS_LABELS,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
 } from '../../lib/guardIdentityVerification';
@@ -15,21 +16,33 @@ import {
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
 import { getGuardUserStatus } from '../../lib/accountStatus';
+import {
+  GuardIdentityVerificationPanel,
+  type GuardIdentityVerificationPayload,
+  type IdentityVerificationSubmitResult,
+} from '../profile/GuardIdentityVerificationPanel';
 import { IdVerificationImageThumb } from '../profile/IdVerificationImageModal';
-import { WfSectionHeader } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 
 interface StaffIdReviewSectionProps {
   guard: SecurityGuard;
+  canManage?: boolean;
   onApprove?: (guardId: string) => void | Promise<void>;
   onReject?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
+  onUpdateImages?: (
+    guardId: string,
+    payload: GuardIdentityVerificationPayload
+  ) => Promise<IdentityVerificationSubmitResult>;
 }
 
 export function StaffIdReviewSection({
   guard,
+  canManage = false,
   onApprove,
   onReject,
   onRequestResubmit,
+  onUpdateImages,
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
   const hasPhotos = guardIdVerificationPhotosComplete(guard);
@@ -37,8 +50,10 @@ export function StaffIdReviewSection({
   const resubmitPending = guardIdVerificationResubmitPending(guard);
   const canApprove = staffCanApproveIdVerification(guard);
   const canRequestResubmit = staffCanRequestIdResubmit(guard);
+  const statusTone =
+    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
-  if (!hasPhotos && status === 'not_submitted') {
+  if (!canManage && !hasPhotos && status === 'not_submitted') {
     return null;
   }
 
@@ -58,39 +73,56 @@ export function StaffIdReviewSection({
 
   return (
     <section className="py-4 border-b border-brand-border space-y-3">
-      <WfSectionHeader title="ID verification review" className="mb-0" />
-      {status !== 'not_submitted' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <IdVerificationImageThumb
-            label={ID_VERIFICATION_SLOT_LABELS.front}
-            imageUrl={guard.idFrontUrl}
-            guardName={guard.name}
-          />
-          <IdVerificationImageThumb
-            label={ID_VERIFICATION_SLOT_LABELS.back}
-            imageUrl={guard.idBackUrl}
-            guardName={guard.name}
-          />
-          <IdVerificationImageThumb
-            label={ID_VERIFICATION_SLOT_LABELS.selfie}
-            imageUrl={guard.idSelfieUrl}
-            guardName={guard.name}
-          />
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <WfSectionHeader title="ID verification" className="mb-0" />
+        <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
+      </div>
+
+      {canManage && onUpdateImages ? (
+        <GuardIdentityVerificationPanel
+          guard={guard}
+          onSubmit={(payload) => onUpdateImages(guard.id, payload)}
+          staffMode
+          embedded
+          compact
+        />
+      ) : (
+        status !== 'not_submitted' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <IdVerificationImageThumb
+              label={ID_VERIFICATION_SLOT_LABELS.front}
+              imageUrl={guard.idFrontUrl}
+              guardName={guard.name}
+            />
+            <IdVerificationImageThumb
+              label={ID_VERIFICATION_SLOT_LABELS.back}
+              imageUrl={guard.idBackUrl}
+              guardName={guard.name}
+            />
+            <IdVerificationImageThumb
+              label={ID_VERIFICATION_SLOT_LABELS.selfie}
+              imageUrl={guard.idSelfieUrl}
+              guardName={guard.name}
+            />
+          </div>
+        )
       )}
-      <p className="text-xs text-brand-text-muted leading-relaxed">
-        Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and
-        staff can review again. Resubmit requests are not available after ID is approved. Use{' '}
-        <strong className="text-brand-text">Reject application</strong> to deny the entire application; the
-        account is blocked.
-      </p>
+
+      {canManage && (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and
+          staff can review again. Resubmit requests are not available after ID is approved. Use{' '}
+          <strong className="text-brand-text">Reject application</strong> to deny the entire application; the
+          account is blocked.
+        </p>
+      )}
       {resubmitPending && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        {canApprove && onApprove && (
+        {canManage && canApprove && onApprove && (
           <button
             type="button"
             onClick={() => void onApprove(guard.id)}
@@ -99,7 +131,7 @@ export function StaffIdReviewSection({
             <Check className="w-3.5 h-3.5" /> Approve ID
           </button>
         )}
-        {onRequestResubmit && canRequestResubmit && (
+        {canManage && onRequestResubmit && canRequestResubmit && (
           <>
             <button
               type="button"
@@ -131,7 +163,7 @@ export function StaffIdReviewSection({
             </button>
           </>
         )}
-        {onReject && !applicationBlocked && status !== 'verified' && (
+        {canManage && onReject && !applicationBlocked && status !== 'verified' && (
           <button
             type="button"
             onClick={() => {

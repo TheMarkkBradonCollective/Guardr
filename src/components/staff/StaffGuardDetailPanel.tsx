@@ -22,12 +22,10 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
-import { GuardIdentityVerificationPanel } from '../profile/GuardIdentityVerificationPanel';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import {
   getGuardIdVerificationStatus,
-  guardIdVerificationPhotosComplete,
   ID_VERIFICATION_STATUS_LABELS,
 } from '../../lib/guardIdentityVerification';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
@@ -66,6 +64,10 @@ interface StaffGuardDetailPanelProps {
     slots: import('../../lib/staffDocumentReview').IdVerificationSlot[],
     staffNote?: string
   ) => void | Promise<void>;
+  onUpdateGuardIdImages?: (
+    guardId: string,
+    payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
@@ -98,6 +100,7 @@ export function StaffGuardDetailPanel({
   onApproveIdentityVerification,
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
+  onUpdateGuardIdImages,
   onRequestCertImageResubmit,
   onBack,
   onOpenJob,
@@ -562,19 +565,10 @@ export function StaffGuardDetailPanel({
           </section>
           )}
 
-          {!editing && onSubmitIdentityVerification && (
-            <GuardIdentityVerificationPanel
-              guard={guard}
-              onSubmit={onSubmitIdentityVerification}
-              compact
-            />
-          )}
-
-          {canManage &&
-            guardIdVerificationPhotosComplete(guard) &&
-            getGuardIdVerificationStatus(guard) !== 'not_submitted' && (
+          {canManage && !editing && (
               <StaffIdReviewSection
                 guard={guard}
+                canManage
                 onApprove={onApproveIdentityVerification}
                 onReject={onRejectIdentityVerification}
                 onRequestResubmit={
@@ -582,6 +576,7 @@ export function StaffGuardDetailPanel({
                     ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
                     : undefined
                 }
+                onUpdateImages={onUpdateGuardIdImages}
               />
             )}
 

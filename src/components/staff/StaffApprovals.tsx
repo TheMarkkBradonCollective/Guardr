@@ -44,6 +44,10 @@ interface StaffApprovalsProps {
     staffNote?: string
   ) => void;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void;
+  onUpdateGuardIdImages?: (
+    guardId: string,
+    payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onViewGuard?: (guardId: string) => void;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
@@ -121,6 +125,7 @@ export function StaffApprovals({
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
   onRequestCertImageResubmit,
+  onUpdateGuardIdImages,
   onViewGuard,
   canEditJobListing = false,
   onEditJobListing,
@@ -606,6 +611,7 @@ export function StaffApprovals({
               <p className="text-sm text-brand-text-muted">{guard.email}</p>
               <StaffIdReviewSection
                 guard={guard}
+                canManage
                 onApprove={
                   onApproveIdentityVerification
                     ? (guardId) => {
@@ -630,6 +636,7 @@ export function StaffApprovals({
                       }
                     : undefined
                 }
+                onUpdateImages={onUpdateGuardIdImages}
               />
               {onViewGuard && (
                 <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">

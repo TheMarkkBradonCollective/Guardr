@@ -10,6 +10,7 @@ import {
   ID_VERIFICATION_SLOT_LABELS,
   ID_VERIFICATION_STATUS_LABELS,
 } from '../../lib/guardIdentityVerification';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import {
   captureIdentitySelfie,
   processIdDocumentFile,
@@ -31,6 +32,10 @@ interface GuardIdentityVerificationPanelProps {
   guard: SecurityGuard;
   onSubmit: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
   compact?: boolean;
+  /** Staff can upload or replace ID photos regardless of guard lock state. */
+  staffMode?: boolean;
+  /** Render without outer section chrome — for use inside staff review. */
+  embedded?: boolean;
 }
 
 type IdSlot = 'front' | 'back' | 'selfie';
@@ -277,10 +282,13 @@ export function GuardIdentityVerificationPanel({
   guard,
   onSubmit,
   compact = false,
+  staffMode = false,
+  embedded = false,
 }: GuardIdentityVerificationPanelProps) {
   const status = getGuardIdVerificationStatus(guard);
-  const locked = guardIdVerificationIsLocked(guard);
-  const canEdit = guardIdVerificationCanEdit(guard);
+  const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
+  const locked = staffMode ? applicationBlocked : guardIdVerificationIsLocked(guard);
+  const canEdit = staffMode ? !applicationBlocked : guardIdVerificationCanEdit(guard);
 
   const [frontUrl, setFrontUrl] = useState(guard.idFrontUrl ?? '');
   const [backUrl, setBackUrl] = useState(guard.idBackUrl ?? '');
@@ -295,48 +303,66 @@ export function GuardIdentityVerificationPanel({
     setSubmitError('');
   }, [guard.id, guard.idFrontUrl, guard.idBackUrl, guard.idSelfieUrl, guard.idVerificationStatus]);
 
-  const draftComplete = Boolean(frontUrl.trim() && backUrl.trim() && selfieUrl.trim());
-  const showSubmit = canEdit && draftComplete;
+  const draftFront = frontUrl.trim();
+  const draftBack = backUrl.trim();
+  const draftSelfie = selfieUrl.trim();
+  const draftComplete = Boolean(draftFront && draftBack && draftSelfie);
+  const hasDraftChanges =
+    draftFront !== (guard.idFrontUrl ?? '').trim() ||
+    draftBack !== (guard.idBackUrl ?? '').trim() ||
+    draftSelfie !== (guard.idSelfieUrl ?? '').trim();
+  const showSubmit = staffMode
+    ? canEdit && hasDraftChanges && (draftComplete || Boolean(draftFront || draftBack || draftSelfie))
+    : canEdit && draftComplete;
 
   const statusTone =
     status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
   const handleSubmit = async () => {
-    if (!draftComplete) return;
+    if (!showSubmit) return;
     setSaving(true);
     setSubmitError('');
     try {
       const result = await onSubmit({
-        idFrontUrl: frontUrl.trim(),
-        idBackUrl: backUrl.trim(),
-        idSelfieUrl: selfieUrl.trim(),
+        idFrontUrl: draftFront,
+        idBackUrl: draftBack,
+        idSelfieUrl: draftSelfie,
       });
       if (result.ok === false) {
         setSubmitError(result.error);
       }
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not submit ID verification.');
+      setSubmitError(err instanceof Error ? err.message : 'Could not save ID verification.');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <section className={`space-y-4 ${compact ? '' : 'py-4 border-b border-brand-border'}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <WfSectionHeader title="ID verification" className="mb-0" />
-        <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
-      </div>
+  const body = (
+    <>
+      {!staffMode && !embedded && (
+        <p className="text-sm text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
+      )}
+      {staffMode && (
+        <p className="text-sm text-brand-text-muted leading-relaxed">
+          Upload or replace ID photos on behalf of the guard. Saving a complete set queues the submission for
+          staff review.
+        </p>
+      )}
 
-      <p className="text-sm text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
-
-      {status === 'rejected' && guard.idVerificationRejectionReason && (
+      {!staffMode && status === 'rejected' && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2">
           Staff requested a resubmit — approval is on hold until you upload again. {guard.idVerificationRejectionReason}
         </p>
       )}
 
-      {status === 'pending' && (
+      {staffMode && status === 'rejected' && guard.idVerificationRejectionReason && (
+        <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
+          Resubmit requested — approval on hold. {guard.idVerificationRejectionReason}
+        </p>
+      )}
+
+      {!staffMode && status === 'pending' && (
         <p className="text-sm text-amber-400/90">
           Submitted {guard.idVerificationSubmittedAt ? new Date(guard.idVerificationSubmittedAt).toLocaleString() : ''} — Guardr staff will review your documents.
         </p>
@@ -345,6 +371,7 @@ export function GuardIdentityVerificationPanel({
       {status === 'verified' && guard.idVerificationReviewedAt && (
         <p className="text-sm text-emerald-400/90">
           Verified {new Date(guard.idVerificationReviewedAt).toLocaleString()}
+          {staffMode ? ' — replacing photos will require re-approval.' : ''}
         </p>
       )}
 
@@ -377,15 +404,29 @@ export function GuardIdentityVerificationPanel({
             className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-2 disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {saving ? 'Submitting…' : 'Submit for review'}
+            {saving ? 'Saving…' : staffMode ? 'Save ID photos' : 'Submit for review'}
           </button>
           {submitError && <p className="text-xs text-red-500">{submitError}</p>}
         </div>
       )}
 
-      {locked && guardIdVerificationPhotosComplete(guard) && status !== 'rejected' && (
+      {!staffMode && locked && guardIdVerificationPhotosComplete(guard) && status !== 'rejected' && (
         <p className="text-xs text-brand-text-muted">Photos are locked while your submission is on file.</p>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-4">{body}</div>;
+  }
+
+  return (
+    <section className={`space-y-4 ${compact ? '' : 'py-4 border-b border-brand-border'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <WfSectionHeader title={staffMode ? 'ID photos' : 'ID verification'} className="mb-0" />
+        <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
+      </div>
+      {body}
     </section>
   );
 }

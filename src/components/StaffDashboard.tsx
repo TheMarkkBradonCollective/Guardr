@@ -101,6 +101,10 @@ interface StaffDashboardProps {
     staffNote?: string
   ) => Promise<void>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => Promise<void>;
+  onUpdateGuardIdImages?: (
+    guardId: string,
+    payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
@@ -205,6 +209,7 @@ export function StaffDashboard({
   onRejectGuardIdentityVerification,
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
+  onUpdateGuardIdImages,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -406,6 +411,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={onRejectGuardIdentityVerification}
             onRequestIdentityResubmit={onRequestGuardIdResubmit}
             onRequestCertImageResubmit={onRequestCertImageResubmit}
+            onUpdateGuardIdImages={onUpdateGuardIdImages}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -468,6 +474,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
+            onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}
             staffEdit={controlledStaffGuardEdit}
