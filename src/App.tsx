@@ -73,7 +73,7 @@ import {
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
-import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked } from './lib/certImagePolicy';
+import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission } from './lib/certImagePolicy';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
@@ -1657,6 +1657,9 @@ export default function App() {
     });
     if (!available.ok) return available;
 
+    const proof = validateCertSubmission(newCert.imageUrl);
+    if (!proof.ok) return proof;
+
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
       name: newCert.name || 'BSIS Guard Card',
@@ -1836,6 +1839,10 @@ export default function App() {
       return { ok: false, error: 'Enter issuer, number, and expiry date.' };
     }
 
+    const nextImageUrl = imageUrl ?? cert.imageUrl;
+    const proof = validateCertSubmission(nextImageUrl);
+    if (!proof.ok) return proof;
+
     if (submittedByRole === 'guard' && !guardCertificationCanEdit(cert)) {
       return { ok: false, error: 'This credential cannot be edited while under review.' };
     }
@@ -1889,7 +1896,7 @@ export default function App() {
                       number,
                       expiryDate,
                       state,
-                      imageUrl: imageUrl ?? c.imageUrl,
+                      imageUrl: nextImageUrl,
                       status: nextStatus,
                       rejectionReason:
                         nextStatus === 'pending' && cert.status !== 'verified'
@@ -1914,7 +1921,7 @@ export default function App() {
             number,
             expiry_date: expiryDate,
             state: state ?? null,
-            image_url: imageUrl ?? cert.imageUrl ?? null,
+            image_url: nextImageUrl ?? null,
             status: nextStatus,
             rejection_reason:
               nextStatus === 'pending' && cert.status !== 'verified' ? null : cert.rejectionReason ?? null,

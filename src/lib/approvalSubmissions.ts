@@ -1,5 +1,6 @@
 import { Certification, Client, SecurityGuard } from '../types';
 import { getClientAccountStatus } from './accountStatus';
+import { certHasDocumentProof } from './certImagePolicy';
 
 export type SubmissionSource = 'guard' | 'staff' | 'client';
 
@@ -16,6 +17,7 @@ export function isSelfSubmittedClientAccount(client: Client): boolean {
 /** Pending credential uploaded by the guard (not staff on their behalf). */
 export function isUserSubmittedPendingCert(cert: Certification, guard: SecurityGuard): boolean {
   if (cert.status !== 'pending') return false;
+  if (!certHasDocumentProof(cert)) return false;
   if (cert.submittedByRole === 'staff') return false;
   if (cert.submittedByRole === 'guard') return true;
   return isSelfSubmittedGuardAccount(guard);

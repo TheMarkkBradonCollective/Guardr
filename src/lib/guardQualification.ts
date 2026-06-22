@@ -38,6 +38,7 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
 import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+import { certHasDocumentProof } from './certImagePolicy';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
@@ -252,20 +253,13 @@ function matchingCredentials(
   });
 }
 
-/** Uploaded and not rejected — includes expired (for display). */
+/** Uploaded with document proof and not rejected — includes expired (for display). */
 export function guardHasCredentialUploaded(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): boolean {
-  return guard.certifications.some((cert) => {
-    if (cert.status === 'rejected') return false;
-    if (!certMatchesCatalogId(cert, catalogId)) return false;
-    if (catalogId === 'bsis-guard-card' && jobState) {
-      return cert.state?.toUpperCase() === jobState.toUpperCase();
-    }
-    return true;
-  });
+  return matchingCredentials(guard, catalogId, jobState).some((cert) => certHasDocumentProof(cert));
 }
 
 /**
@@ -278,6 +272,7 @@ export function guardHasCredentialOnFile(
   jobState?: string
 ): boolean {
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
+    if (!certHasDocumentProof(cert)) return false;
     if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });
@@ -290,6 +285,7 @@ export function guardHasGuardrVerifiedCredential(
 ): boolean {
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
     if (cert.status !== 'verified') return false;
+    if (!certHasDocumentProof(cert)) return false;
     if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });

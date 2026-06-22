@@ -1,5 +1,6 @@
 import { Certification, SecurityGuard } from '../types';
 import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
+import { certHasDocumentProof } from './certImagePolicy';
 import { resolveCertCatalogId } from './certCatalog';
 import {
   getGuardIdVerificationStatus,
@@ -37,7 +38,7 @@ export function getGuardCardCertifications(guard: SecurityGuard): Certification[
 }
 
 export function guardHasGuardCardSubmitted(guard: SecurityGuard): boolean {
-  return getGuardCardCertifications(guard).length > 0;
+  return getGuardCardCertifications(guard).some((cert) => certHasDocumentProof(cert));
 }
 
 export function guardHasVerifiedGuardCard(guard: SecurityGuard, state = 'CA'): boolean {

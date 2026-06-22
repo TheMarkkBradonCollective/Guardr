@@ -14,7 +14,7 @@ import {
 } from '../../lib/guardQualification';
 import { BookOpen, ImagePlus, Plus } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { guardCertificationCanEdit, validateCertDeletion } from '../../lib/certImagePolicy';
+import { CERT_DOCUMENT_PHOTO_LABEL, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
@@ -103,6 +103,12 @@ export function GuardThirtyTwoHourPanel({
     if (!onAddCertification || !addingCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(addingCatalogId);
     if (!entry) return;
+
+    const proof = validateCertSubmission(imageUrl);
+    if (!proof.ok) {
+      setFormError(proof.error);
+      return;
+    }
 
     const result = await onAddCertification({
       catalogId: entry.id,
@@ -293,8 +299,8 @@ export function GuardThirtyTwoHourPanel({
           />
           <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
             <ImagePlus className="w-4 h-4 shrink-0" />
-            <span>Optional now — add a photo later from the credential list</span>
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+            <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
           </label>
           {imageUrl && (
             <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
@@ -304,7 +310,11 @@ export function GuardThirtyTwoHourPanel({
             <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
               Cancel
             </button>
-            <button type="submit" className="flex-1 app-button-primary !h-11 !text-sm">
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
               Upload credential
             </button>
           </div>

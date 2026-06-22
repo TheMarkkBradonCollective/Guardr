@@ -9,7 +9,7 @@ import { CertItemCard } from '../credentials/CertItemCard';
 import { WfBadge } from '../ui/wireframe';
 import { ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion } from '../../lib/certImagePolicy';
+import { CERT_DOCUMENT_PHOTO_LABEL, CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
 
@@ -74,6 +74,12 @@ export function GuardCardPanel({
     if (!onAddCertification || !issuer.trim() || !number.trim() || !state) return;
     const entry = catalogOptions[0] ?? getCertCatalogEntry('bsis-guard-card');
     if (!entry) return;
+
+    const proof = validateCertSubmission(imageUrl);
+    if (!proof.ok) {
+      setFormError(proof.error);
+      return;
+    }
 
     const result = await onAddCertification({
       catalogId: entry.id,
@@ -164,8 +170,8 @@ export function GuardCardPanel({
       />
       <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
         <ImagePlus className="w-4 h-4 shrink-0" />
-        <span>Photo of guard card — required for staff verification</span>
-        <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+        <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+        <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
       </label>
       {imageUrl && (
         <img
@@ -175,7 +181,11 @@ export function GuardCardPanel({
         />
       )}
       {formError && <p className="text-xs text-red-400">{formError}</p>}
-      <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+      <button
+        type="submit"
+        disabled={!imageUrl?.trim()}
+        className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+      >
         Upload guard card
       </button>
     </form>

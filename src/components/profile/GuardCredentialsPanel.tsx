@@ -34,9 +34,11 @@ import {
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import {
+  CERT_DOCUMENT_PHOTO_LABEL,
   CERT_IMAGE_POLICY_HINT,
   guardCertificationCanEdit,
   validateCertDeletion,
+  validateCertSubmission,
 } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -151,6 +153,12 @@ export function GuardCredentialsPanel({
     if (entry.requiresState && !state) return;
     const isOther = selectedCatalogId === 'other-credential';
     if (isOther && !customCertName.trim()) return;
+
+    const proof = validateCertSubmission(imageUrl);
+    if (!proof.ok) {
+      setFormError(proof.error);
+      return;
+    }
 
     const result = await onAddCertification({
       catalogId: entry.id,
@@ -371,14 +379,18 @@ export function GuardCredentialsPanel({
             />
             <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
               <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>Optional now — add a photo later from the credential list</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
             </label>
             {imageUrl && (
               <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
             )}
             {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
               Upload credential
             </button>
           </form>
@@ -456,14 +468,18 @@ export function GuardCredentialsPanel({
             />
             <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
               <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>Optional now — add a photo later from the credential list</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
             </label>
             {imageUrl && (
               <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
             )}
             {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
               Upload credential
             </button>
           </form>
@@ -543,14 +559,18 @@ export function GuardCredentialsPanel({
             />
             <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
               <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>Optional now — add a photo later from the credential list</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
             </label>
             {imageUrl && (
               <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
             )}
             {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
               Upload credential
             </button>
           </form>
@@ -653,14 +673,18 @@ export function GuardCredentialsPanel({
                 />
                 <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
                   <ImagePlus className="w-4 h-4 shrink-0" />
-                  <span>Optional now — add a photo later from the credential list</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+                  <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
                 </label>
                 {imageUrl && (
                   <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
                 )}
                 {formError && <p className="text-xs text-red-400">{formError}</p>}
-                <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+                <button
+                  type="submit"
+                  disabled={!imageUrl?.trim()}
+                  className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+                >
                   Upload credential
                 </button>
               </form>
