@@ -9,9 +9,9 @@ export function certDatabaseErrorMessage(error: { code?: string; message?: strin
   if (error.code === 'PGRST204' || error.message?.includes('column')) {
     const missing = error.message?.match(/'([^']+)'\s+column/i)?.[1];
     if (missing === 'image_url') {
-      return 'Could not save credential photo — your database is missing the image_url column. In Supabase → SQL Editor, run supabase/migrations/20260703120000_ensure_cert_columns.sql (or migrations through 20260611120000 and 20260701120000), then try again.';
+      return 'Could not save credential photo — database schema is out of date. In Supabase → SQL Editor, run the full script: supabase/fix_everything.sql';
     }
-    return 'Could not save — run the latest database migrations in Supabase SQL Editor (supabase/migrations/20260703120000_ensure_cert_columns.sql), then try again.';
+    return 'Could not save — run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
   }
   if (error.message?.includes('payload') || error.message?.includes('too large')) {
     return 'Photo is too large to save. Try a smaller image or retake the photo.';
