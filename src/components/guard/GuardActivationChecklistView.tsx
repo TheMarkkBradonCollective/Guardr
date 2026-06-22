@@ -3,10 +3,14 @@ import { SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import {
+  formatThirtyTwoHourCourseProgressCounts,
+  getQualificationProgress,
   guardHasVerifiedIdForWork,
   guardHasCredentialListed,
+  guardMeets32HourBlock,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
+  GUARDR_RECOMMENDED_TRAINING_LABEL,
   PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { WfBadge } from '../ui/wireframe';
@@ -48,6 +52,7 @@ function OptionalNote({ label, detail }: { label: string; detail: string }) {
 export function GuardActivationChecklistView({ guard, compact = false }: GuardActivationChecklistProps) {
   const checklist = getGuardActivationChecklist(guard);
   const approved = isGuardAccountApproved(guard);
+  const progress = getQualificationProgress(guard);
 
   if (compact) {
     return (
@@ -61,6 +66,9 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         <WfBadge tone={guardMeetsPtaUofTraining(guard) ? 'success' : 'default'}>
           PTA/UOF {guardMeetsPtaUofTraining(guard) ? 'on file' : 'needed'}
         </WfBadge>
+        <WfBadge tone={guardMeets32HourBlock(guard) ? 'success' : 'default'}>
+          32-hr {guardMeets32HourBlock(guard) ? 'on file' : 'needed'}
+        </WfBadge>
         {approved && <WfBadge tone="primary">Profile approved</WfBadge>}
         {checklist.canActivate && !approved && <WfBadge tone="primary">Ready for approval</WfBadge>}
       </div>
@@ -71,9 +79,9 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">{approved ? 'Awaiting account activation' : 'Your application'}</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Upload your government ID, BSIS Guard Card, and other credentials in your profile — you can add everything at
-        once. Staff reviews in order: verified ID to approve your profile, then your guard card to activate your
-        account.
+        Upload your government ID, BSIS Guard Card, PTA/UOF training, and 32-hour BSIS courses in your profile — you
+        can add everything at once. Staff reviews in order: verified ID to approve your profile, then your guard card
+        to activate your account.
       </p>
       <div className="app-checklist-steps">
         <StepRow
@@ -112,11 +120,24 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsPtaUofTraining(guard)}
-          label="Power to Arrest & Appropriate Use of Force (8 hr)"
+          label="3. Power to Arrest & Appropriate Use of Force (8 hr)"
           detail={
             guardMeetsPtaUofTraining(guard)
               ? 'PTA/UOF training on file'
               : `Required to work field jobs — upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
+          }
+        />
+        <StepRow
+          done={guardMeets32HourBlock(guard)}
+          label={`4. 32-hour BSIS course block — ${GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}`}
+          detail={
+            guardMeets32HourBlock(guard)
+              ? progress.thirtyTwoHourRollup
+                ? '32-hour completion certificate on file'
+                : `All ${progress.total32HourCourses} courses on file`
+              : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0 || progress.listed32HourCount > 0
+                ? `${formatThirtyTwoHourCourseProgressCounts(progress)} — finish in Credentials under 32-Hour BSIS Course Block`
+                : `Upload in Credentials — all 9 individual course certificates or one 32-hour completion certificate. ${GUARDR_RECOMMENDED_TRAINING_LABEL}.`
           }
         />
         <OptionalNote
