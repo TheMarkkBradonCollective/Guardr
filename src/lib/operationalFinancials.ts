@@ -146,7 +146,9 @@ export function buildDirectorFinancialCells(financials: OperationalFinancials): 
         [
           financials.clientOwed > 0 ? `${formatOperationalMoney(financials.clientOwed)} client` : null,
           financials.guardPayoutsDue > 0 ? `${formatOperationalMoney(financials.guardPayoutsDue)} guards` : null,
-          financials.stripeDepositPending > 0 ? `${formatOperationalMoney(financials.stripeDepositPending)} Stripe` : null,
+          financials.stripeDepositPending > 0
+            ? `${formatOperationalMoney(financials.stripeDepositPending)} deposits`
+            : null,
         ]
           .filter(Boolean)
           .join(' · ') || 'All payments current',

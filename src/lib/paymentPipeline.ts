@@ -6,6 +6,7 @@ import {
   isCashAwaitingStripeDeposit,
   isCashClientPayment,
   isCashGuardPayout,
+  isPlatformFeeOnlyDeposit,
   isStripeDepositSatisfied,
 } from './cashPayments';
 import { computeGuardEarnings } from './payments';
@@ -40,9 +41,9 @@ export const PIPELINE_SECTION_META: Record<
     description: 'These jobs are finished. Send pay through Stripe or hand cash to the guard on site.',
   },
   'cash-deposit-pending': {
-    title: 'Stripe deposit pending',
+    title: 'Platform fee / Stripe deposit pending',
     description:
-      'The client paid in cash. Deposit to Stripe when ready — full job amount, or just the platform fee if the guard was paid cash.',
+      'The client paid in cash. If the guard was paid cash, only the platform fee is due — manually deposit it or pay with card. Otherwise deposit the full job amount to fund guard payout on Stripe.',
   },
   'awaiting-client': {
     title: 'Waiting on the client',
@@ -145,8 +146,11 @@ export function paymentAttentionSummary(requests: SecurityRequest[]): {
     );
   }
   if (s.cashDepositPending.length > 0) {
+    const platformFeeOnly = s.cashDepositPending.every((req) => isPlatformFeeOnlyDeposit(req));
     lines.push(
-      `${s.cashDepositPending.length} job${s.cashDepositPending.length === 1 ? '' : 's'}: $${s.cashDepositTotal.toFixed(2)} Stripe card deposit still due`
+      `${s.cashDepositPending.length} job${s.cashDepositPending.length === 1 ? '' : 's'}: $${s.cashDepositTotal.toFixed(2)} ${
+        platformFeeOnly ? 'platform fee' : 'Stripe card deposit'
+      } still due`
     );
   }
   if (s.settled.length > 0) {

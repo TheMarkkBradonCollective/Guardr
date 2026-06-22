@@ -9,6 +9,7 @@ import {
   guardPayoutDisplay,
   isCashClientPayment,
   isCashGuardPayout,
+  isPlatformFeeOnlyDeposit,
   isPlatformFeePaidCash,
   isStripeDepositSatisfied,
   platformFeeLedgerLabel,
@@ -58,7 +59,7 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
     },
   ];
 
-  if (isCashClientPayment(req) && !clientUnpaid) {
+  if (isCashClientPayment(req) && !clientUnpaid && !isPlatformFeeOnlyDeposit(req)) {
     const stripeSatisfied = isStripeDepositSatisfied(req);
     const stripeAmount = stripeSatisfied
       ? getCashDepositedAmount(req) || getRequiredStripeDeposit(req)
@@ -143,13 +144,13 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       };
     case 'cash-deposit-pending': {
       const due = getRemainingStripeDeposit(req);
-      if (isCashGuardPayout(req)) {
+      if (isPlatformFeeOnlyDeposit(req)) {
         return {
           headline: isPlatformFeePaidCash(req)
             ? 'Client paid cash · guard paid cash'
-            : 'Client paid cash · platform fee deposit due',
+            : 'Client paid cash · platform fee due',
           detail: isPlatformFeePaidCash(req)
-            ? `$${due.toFixed(2)} still needs to be deposited to Stripe with card.`
+            ? `$${due.toFixed(2)} still needs to be deposited with card.`
             : `Manually deposit $${getPlatformFeeAmount(req).toFixed(2)} platform fee or pay via card.`,
         };
       }

@@ -27,6 +27,12 @@ export function getRequiredStripeDeposit(req: SecurityRequest): number {
   return req.estimatedPayout;
 }
 
+/** Cash jobs where the Stripe/card deposit is only the platform fee (guard was paid cash). */
+export function isPlatformFeeOnlyDeposit(req: SecurityRequest): boolean {
+  if (!isCashClientPayment(req)) return false;
+  return getRequiredStripeDeposit(req) < req.estimatedPayout;
+}
+
 export function getCashDepositedAmount(req: SecurityRequest): number {
   if (req.cashDepositedAmount != null && req.cashDepositedAmount > 0) {
     return req.cashDepositedAmount;

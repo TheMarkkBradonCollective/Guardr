@@ -1,5 +1,6 @@
 import React from 'react';
 import { paymentPipelineSummary } from '../../lib/paymentPipeline';
+import { isPlatformFeeOnlyDeposit } from '../../lib/cashPayments';
 import { StaffSummaryCell } from './StaffSummaryCell';
 
 interface StaffPaymentSummaryProps {
@@ -7,6 +8,10 @@ interface StaffPaymentSummaryProps {
 }
 
 export function StaffPaymentSummary({ summary }: StaffPaymentSummaryProps) {
+  const platformFeeOnlyDeposits =
+    summary.cashDepositPending.length > 0 &&
+    summary.cashDepositPending.every((req) => isPlatformFeeOnlyDeposit(req));
+
   return (
     <div className="staff-payment-summary-grid">
       <StaffSummaryCell
@@ -30,12 +35,14 @@ export function StaffPaymentSummary({ summary }: StaffPaymentSummaryProps) {
         accent={summary.awaitingGuardPayout.length > 0}
       />
       <StaffSummaryCell
-        label="Stripe deposit still due"
+        label={platformFeeOnlyDeposits ? 'Platform fees still due' : 'Stripe deposit still due'}
         value={`$${summary.cashDepositTotal.toFixed(2)}`}
         sub={
           summary.cashDepositPending.length === 0
-            ? 'No cash jobs need a card deposit'
-            : `${summary.cashDepositPending.length} cash job${summary.cashDepositPending.length === 1 ? '' : 's'} — record in Stripe with your card`
+            ? 'No cash jobs need a deposit'
+            : platformFeeOnlyDeposits
+              ? `${summary.cashDepositPending.length} cash job${summary.cashDepositPending.length === 1 ? '' : 's'} — manually deposit or pay platform fee with card`
+              : `${summary.cashDepositPending.length} cash job${summary.cashDepositPending.length === 1 ? '' : 's'} — record in Stripe with your card`
         }
         accent={summary.cashDepositPending.length > 0}
       />
