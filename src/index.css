@@ -338,6 +338,8 @@ html.theme-grey {
 }
 
 .staff-main-header {
+  position: relative;
+  z-index: 1200;
   background: var(--brand-bg);
 }
 
@@ -1701,10 +1703,12 @@ body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
 }
 
 .app-screen-header {
+  position: relative;
+  z-index: 1200;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ─── DYNAMIC THEME OVERRIDES ──────────────────────────────── */

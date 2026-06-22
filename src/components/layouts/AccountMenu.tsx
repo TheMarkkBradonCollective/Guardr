@@ -1,4 +1,5 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -16,6 +17,33 @@ export interface AccountMenuProps {
   active?: boolean;
 }
 
+function useMenuPosition(open: boolean, triggerRef: React.RefObject<HTMLButtonElement | null>) {
+  const [position, setPosition] = useState({ top: 0, right: 16 });
+
+  const update = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      right: Math.max(16, window.innerWidth - rect.right),
+    });
+  }, [triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open, update]);
+
+  return position;
+}
+
 export function AccountMenu({
   userName,
   userSubtitle,
@@ -27,8 +55,10 @@ export function AccountMenu({
   active = false,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const position = useMenuPosition(open, triggerRef);
 
   useEffect(() => {
     if (!open) return;
@@ -36,7 +66,9 @@ export function AccountMenu({
       if (e.key === 'Escape') setOpen(false);
     };
     const onPointerDown = (e: MouseEvent | TouchEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     };
     window.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onPointerDown);
@@ -60,9 +92,54 @@ export function AccountMenu({
     onSignOut();
   };
 
+  const menuPanel = open ? (
+    <div
+      ref={menuRef}
+      id={menuId}
+      role="menu"
+      className="account-menu-panel fixed z-[3000] w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
+      style={{ top: position.top, right: position.right }}
+    >
+      <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
+        <p className="font-semibold text-sm truncate">{userName}</p>
+        {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
+      </div>
+
+      <div className="p-2 border-b border-brand-border">
+        <button
+          type="button"
+          role="menuitem"
+          onClick={handleProfile}
+          className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
+        >
+          <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+          Profile & settings
+        </button>
+      </div>
+
+      <div className="px-4 py-3 border-b border-brand-border">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Appearance</p>
+        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
+      </div>
+
+      <div className="p-2">
+        <button
+          type="button"
+          role="menuitem"
+          onClick={handleSignOut}
+          className="account-menu-item account-menu-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          Sign out
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div ref={rootRef} className="account-menu relative shrink-0">
+    <div className="account-menu relative shrink-0">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={`account-menu-trigger inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
@@ -80,47 +157,7 @@ export function AccountMenu({
         />
       </button>
 
-      {open && (
-        <div
-          id={menuId}
-          role="menu"
-          className="account-menu-panel absolute right-0 top-[calc(100%+0.5rem)] z-[1200] w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[var(--shadow-float)]"
-        >
-          <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
-            <p className="font-semibold text-sm truncate">{userName}</p>
-            {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
-          </div>
-
-          <div className="p-2 border-b border-brand-border">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={handleProfile}
-              className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
-            >
-              <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-              Profile & settings
-            </button>
-          </div>
-
-          <div className="px-4 py-3 border-b border-brand-border">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Appearance</p>
-            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
-          </div>
-
-          <div className="p-2">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={handleSignOut}
-              className="account-menu-item account-menu-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
-            >
-              <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              Sign out
-            </button>
-          </div>
-        </div>
-      )}
+      {typeof document !== 'undefined' && menuPanel ? createPortal(menuPanel, document.body) : null}
     </div>
   );
 }
