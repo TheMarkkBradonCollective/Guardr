@@ -14,6 +14,20 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import type { GuardDisplayStatus } from '../../lib/guardQualification';
+import type { GuardUserStatus } from '../../lib/accountStatus';
+
+function guardPathwayBadgeTone(status: GuardDisplayStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+  if (status === 'active') return 'success';
+  if (status === 'inactive') return 'default';
+  return 'danger';
+}
+
+function guardAccountBadgeTone(status: GuardUserStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+  if (status === 'active') return 'success';
+  if (status === 'pending') return 'warning';
+  return 'danger';
+}
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -170,6 +184,7 @@ export function StaffGuardsPanel({
     const activeShift = requests.find(
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
+    const pathwayStatus = getGuardDisplayStatus(guard);
     const accountStatus = getGuardUserStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
 
@@ -181,19 +196,21 @@ export function StaffGuardsPanel({
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
           <div className="flex flex-wrap items-center gap-1.5">
+            <WfBadge tone={guardPathwayBadgeTone(pathwayStatus)}>{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
+            <WfBadge tone={guardAccountBadgeTone(accountStatus)}>{GUARD_USER_STATUS_LABELS[accountStatus]}</WfBadge>
             {pendingCerts > 0 && (
-              <WfBadge tone="warning">{pendingCerts} pending</WfBadge>
-            )}
-            {accountStatus === 'pending' && (
-              <WfBadge tone="warning">Awaiting approval</WfBadge>
+              <WfBadge tone="warning">
+                {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+              </WfBadge>
             )}
             {isGuardTrusted(guard) && (
               <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
             )}
-            <span>
-              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_USER_STATUS_LABELS[accountStatus]}
-            </span>
-            {activeShift && <span>On: {activeShift.title}</span>}
+            {activeShift && (
+              <WfBadge tone="primary" className="max-w-full truncate">
+                On job: {activeShift.title}
+              </WfBadge>
+            )}
           </div>
         }
         onClick={() => setSelectedId(guard.id)}
