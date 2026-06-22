@@ -25,8 +25,7 @@ import { SupportScreen } from './support/SupportScreen';
 import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { ThemeToggle } from './ui/ThemeToggle';
-import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -549,7 +548,6 @@ export function GuardDashboard({
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
     { id: 'support', icon: LifeBuoy, label: 'Support' },
-    { id: 'profile', icon: User, label: 'Profile' },
   ];
 
   const guardMainPanel = (
@@ -704,9 +702,6 @@ export function GuardDashboard({
         <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
           <UserProfileScreen
             currentUser={currentUser}
-            themeMode={themeMode as 'dark' | 'light' | 'grey'}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
             guard={guard}
             onSave={onUpdateProfile}
             onAddCertification={onAddCertification}
@@ -787,26 +782,23 @@ export function GuardDashboard({
     );
   }
 
-  const themeToggle = (
-    <ThemeToggle
-      value={themeMode as 'dark' | 'light' | 'grey'}
-      onChange={(m) => onChangeTheme(m)}
-      size="sm"
-    />
-  );
-
   return (
     <RoleAppShell
       title={GUARD_TAB_TITLES[activeTab]}
       locationLabel={guard.name}
-      avatarUrl={guard.avatar}
-      avatarName={guard.name}
-      onAvatarClick={() => setTab('profile')}
-      onSignOut={onSignOut}
+      accountMenu={{
+        userName: guard.name,
+        userSubtitle: currentUser.email,
+        avatarUrl: guard.avatar,
+        themeMode: themeMode as 'dark' | 'light' | 'grey',
+        onChangeTheme,
+        onOpenProfile: () => setTab('profile'),
+        onSignOut,
+        active: activeTab === 'profile',
+      }}
       navItems={NAV_TABS}
-      activeNavId={activeTab}
+      activeNavId={activeTab === 'profile' ? '' : activeTab}
       onNavigate={(id) => setTab(id as GuardTab)}
-      headerRight={themeToggle}
       fullBleed={shellFullBleed}
       variant={shellVariant}
       experience="guard"

@@ -4416,9 +4416,6 @@ export default function App() {
           {clientView === 'profile' ? (
             <UserProfileScreen
               currentUser={currentUser}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              onSignOut={handleSignOut}
               client={clientRecord ?? null}
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
               onOpenLegal={openLegalPage}

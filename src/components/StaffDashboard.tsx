@@ -594,9 +594,6 @@ export function StaffDashboard({
         return (
           <UserProfileScreen
             currentUser={currentUser}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
             onOpenLegal={onOpenLegal}

@@ -1,15 +1,12 @@
 import React from 'react';
-import { LogOut, MapPin } from 'lucide-react';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { MapPin } from 'lucide-react';
+import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 
 interface AppScreenHeaderProps {
   title: string;
   subtitle?: string;
   locationLabel?: string;
-  avatarUrl?: string;
-  avatarName?: string;
-  onAvatarClick?: () => void;
-  onSignOut?: () => void;
+  accountMenu: AccountMenuProps;
   right?: React.ReactNode;
   className?: string;
 }
@@ -18,10 +15,7 @@ export function AppScreenHeader({
   title,
   subtitle,
   locationLabel,
-  avatarUrl,
-  avatarName,
-  onAvatarClick,
-  onSignOut,
+  accountMenu,
   right,
   className = '',
 }: AppScreenHeaderProps) {
@@ -49,31 +43,7 @@ export function AppScreenHeader({
 
       <div className="shrink-0 flex items-center gap-2">
         {right}
-        {(onSignOut || avatarName) && (
-          <div className={`flex items-center gap-1 ${right ? 'pl-2 border-l border-brand-border' : ''}`}>
-            {onSignOut && (
-              <button
-                type="button"
-                onClick={onSignOut}
-                className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 text-xs font-medium text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20 transition-colors"
-                aria-label="Log out"
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline">Log out</span>
-              </button>
-            )}
-            {avatarName && (
-              <button
-                type="button"
-                onClick={onAvatarClick}
-                className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-                aria-label="Open profile"
-              >
-                <ProfileAvatar src={avatarUrl} name={avatarName} size="sm" />
-              </button>
-            )}
-          </div>
-        )}
+        <AccountMenu {...accountMenu} />
       </div>
     </header>
   );

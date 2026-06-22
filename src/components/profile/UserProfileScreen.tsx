@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
-import { Camera, LogOut, Save, User, X } from 'lucide-react';
+import { Camera, Save, User, X } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
-import { ThemeToggle } from '../ui/ThemeToggle';
-import type { ThemeMode } from '../../lib/platform/theme';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 import { LegalInfoCards } from '../legal/LegalInfoCards';
@@ -36,9 +34,6 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
 
 interface UserProfileScreenProps {
   currentUser: SessionUser;
-  themeMode: ThemeMode;
-  onChangeTheme: (mode: ThemeMode) => void;
-  onSignOut: () => void;
   onSave: (payload: ProfileSavePayload) => void | Promise<void>;
   guard?: SecurityGuard | null;
   client?: Client | null;
@@ -59,9 +54,6 @@ interface UserProfileScreenProps {
 
 export function UserProfileScreen({
   currentUser,
-  themeMode,
-  onChangeTheme,
-  onSignOut,
   onSave,
   guard,
   client,
@@ -302,27 +294,12 @@ export function UserProfileScreen({
         <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
       </section>
 
-      <AppFormSection title="Appearance">
-        <ThemeToggle value={themeMode} onChange={onChangeTheme} className="w-full justify-center" />
-      </AppFormSection>
-
       {onOpenLegal && (
         <AppFormSection title="Legal">
           <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-2">{LEGAL_DISCLAIMER_SHORT}</p>
           <LegalInfoCards onOpenLegal={onOpenLegal} />
         </AppFormSection>
       )}
-
-      <div className="px-5 py-6">
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="w-full app-button-outline !text-red-500 !border-red-500/30 hover:!bg-red-500/5"
-        >
-          <LogOut className="w-4 h-4" />
-          Sign out
-        </button>
-      </div>
     </AppScreen>
   );
 }
