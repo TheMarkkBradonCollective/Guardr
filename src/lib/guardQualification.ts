@@ -346,6 +346,44 @@ export function guardMeets32HourBlockListed(guard: SecurityGuard): boolean {
   return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
+/** Individual 32-hour courses listed without a document photo. */
+export function countThirtyTwoHourCoursesListedOnly(guard: SecurityGuard): number {
+  return THIRTY_TWO_HOUR_COURSE_IDS.filter(
+    (id) => guardHasCredentialListed(guard, id) && !guardHasCredentialOnFile(guard, id)
+  ).length;
+}
+
+export function formatThirtyTwoHourCourseProgressCounts(
+  progress: {
+    uploaded32HourCount: number;
+    listed32HourCount: number;
+    total32HourCourses: number;
+  },
+  options?: { scopeLabel?: string }
+): string {
+  const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
+  const scope = options?.scopeLabel ?? 'courses';
+  const base = `${uploaded32HourCount} of ${total32HourCourses} ${scope} on file`;
+  if (listed32HourCount > 0) {
+    return `${base} · ${listed32HourCount} listed`;
+  }
+  return base;
+}
+
+/** On file = full credit; listed-only = half credit toward the 9-course block. */
+export function thirtyTwoHourCourseProgressPercent(progress: {
+  thirtyTwoHourBlockComplete: boolean;
+  uploaded32HourCount: number;
+  listed32HourCount: number;
+  total32HourCourses: number;
+}): number {
+  if (progress.thirtyTwoHourBlockComplete) return 100;
+  const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
+  if (total32HourCourses <= 0) return 0;
+  const weight = uploaded32HourCount + listed32HourCount * 0.5;
+  return Math.round((weight / total32HourCourses) * 100);
+}
+
 /** Combined 8-hr cert, or both parts on file (separate PTA + UOF, or PTA + WMD). */
 export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   if (guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
@@ -416,9 +454,11 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const uploaded32HourCount = THIRTY_TWO_HOUR_COURSE_IDS.filter((id) =>
     guardHasCredentialOnFile(guard, id)
   ).length;
+  const listed32HourCount = countThirtyTwoHourCoursesListedOnly(guard);
   const thirtyTwoHourRollup = THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) =>
     guardHasCredentialOnFile(guard, id)
   );
+  const thirtyTwoHourBlockComplete = guardMeets32HourBlock(guard);
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
@@ -435,9 +475,16 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     legacyUof,
     legacyWmd,
     thirtyTwoHourRollup,
-    thirtyTwoHourBlockComplete: guardMeets32HourBlock(guard),
+    thirtyTwoHourBlockComplete,
     thirtyTwoHourBlockVerified: guardMeets32HourBlockVerified(guard),
     uploaded32HourCount,
+    listed32HourCount,
+    thirtyTwoHourProgressPercent: thirtyTwoHourCourseProgressPercent({
+      thirtyTwoHourBlockComplete,
+      uploaded32HourCount,
+      listed32HourCount,
+      total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
+    }),
     total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     trainingPathwayComplete: guardMeetsLevel2Training(guard),
     /** @deprecated */
