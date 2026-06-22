@@ -7,7 +7,15 @@ import {
   formatShiftTimeRange,
   getUpcomingCoverage,
 } from '../../lib/clientCoverage';
-import { WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { WfMetricTile } from '../ui/wireframe';
+import {
+  AppDashboardHero,
+  AppDashboardZone,
+  AppHeroBand,
+  AppItemCard,
+  AppScreen,
+  AppStatusBanner,
+} from '../ui/app/AppPrimitives';
 import {
   Shield,
   Calendar,
@@ -34,10 +42,10 @@ interface ClientHomeScreenProps {
 
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
   { id: 'request', icon: Plus, label: 'Post job offer', sub: 'Open to any guard', accent: true },
-  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes, licenses & certs' },
-  { id: 'schedule', icon: Calendar, label: 'Schedule coverage', sub: 'Plan ahead' },
-  { id: 'recurring', icon: Building2, label: 'Recurring sites', sub: 'Weekly / monthly' },
-  { id: 'reports', icon: FileText, label: 'View reports', sub: 'Activity & incidents' },
+  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes & licenses' },
+  { id: 'schedule', icon: Calendar, label: 'Schedule', sub: 'Plan ahead' },
+  { id: 'recurring', icon: Building2, label: 'Multi-guard site', sub: 'Construction & events' },
+  { id: 'reports', icon: FileText, label: 'Reports', sub: 'Activity & incidents' },
 ];
 
 const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
@@ -59,183 +67,138 @@ export function ClientHomeScreen({
   const openRequestCount = requests.filter((r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review').length;
 
   return (
-    <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">
-      <div className="max-w-3xl mx-auto w-full min-w-0 px-4 py-6 space-y-6 animate-fade-in pb-8">
-        <div>
-          <p className="experience-badge">Client workspace</p>
-          <p className="text-sm text-brand-text-muted -mt-2">Welcome back</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
-        </div>
+    <AppScreen>
+      <AppDashboardHero kicker="Client workspace" title={companyName} />
 
-        {accountPending && (
-          <div className="app-card-elevated p-4 flex gap-3 items-start border-amber-500/30 bg-amber-500/8">
-            <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-sm font-semibold text-brand-text">Account pending approval</p>
-              <p className="text-xs text-brand-text-muted leading-relaxed">
-                You can review your workspace here, but posting jobs and hiring guards unlocks after Guardr staff
-                approves your account.
-              </p>
-              {onOpenProfile && (
-                <button type="button" onClick={onOpenProfile} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                  Review profile
-                </button>
-              )}
-            </div>
+      {accountPending && (
+        <AppStatusBanner
+          icon={<Clock className="w-5 h-5 text-amber-400" />}
+          title="Account pending approval"
+          action={
+            onOpenProfile ? (
+              <button type="button" onClick={onOpenProfile} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                Review profile
+              </button>
+            ) : undefined
+          }
+        >
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            You can review your workspace here, but posting jobs and hiring guards unlocks after Guardr staff
+            approves your account.
+          </p>
+        </AppStatusBanner>
+      )}
+
+      <AppHeroBand
+        label="Active coverage"
+        icon={<Radio className="w-4 h-4" />}
+        footer={
+          <button type="button" onClick={() => onAction('coverage')} className="app-button-primary !w-full sm:!w-auto">
+            View live coverage
+          </button>
+        }
+      >
+        <div className="app-metric-grid-3">
+          <WfMetricTile label="Active" value={coverage.activeAssignments} accent />
+          <WfMetricTile label="On duty" value={coverage.guardsOnDuty} />
+          <WfMetricTile
+            label={coverage.guardsArriving > 0 && coverage.arrivingTimeLabel ? `Arriving ${coverage.arrivingTimeLabel}` : 'Arriving'}
+            value={coverage.guardsArriving}
+          />
+        </div>
+      </AppHeroBand>
+
+      <AppDashboardZone title="At a glance">
+        <div className="app-tile-grid-2">
+          <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left !p-4">
+            <ClipboardList className="w-5 h-5 text-brand-primary" />
+            <p className="font-semibold text-sm">Open jobs</p>
+            <p className="text-2xl font-bold tracking-tight">{openRequestCount}</p>
+          </button>
+          <button type="button" onClick={() => onAction('schedule')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left !p-4">
+            <Calendar className="w-5 h-5 text-brand-primary" />
+            <p className="font-semibold text-sm">Upcoming</p>
+            <p className="text-2xl font-bold tracking-tight">{upcoming.length}</p>
+          </button>
+        </div>
+      </AppDashboardZone>
+
+      <AppDashboardZone title="Quick actions">
+        <div className="app-section-body-bleed">
+          <div className="app-quick-action-row">
+          {QUICK_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => onAction(action.id)}
+                className={`app-quick-action-tile ${action.accent ? 'app-quick-action-tile-accent' : ''}`}
+              >
+                <div className={`app-quick-action-icon ${action.accent ? '' : ''}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="app-quick-action-label">{action.label}</p>
+                  <p className="app-quick-action-sub">{action.sub}</p>
+                </div>
+              </button>
+            );
+          })}
+          </div>
+        </div>
+      </AppDashboardZone>
+
+      <AppDashboardZone
+        title="Upcoming coverage"
+        actionLabel={upcoming.length > 0 ? 'All jobs' : undefined}
+        onAction={upcoming.length > 0 ? () => onAction('requests') : undefined}
+      >
+        {upcoming.length === 0 ? (
+          <p className="app-empty-state">No upcoming coverage. Post a job offer to get started.</p>
+        ) : (
+          <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
+            {upcoming.map((req) => (
+              <AppItemCard
+                key={req.id}
+                onClick={() => onAction('requests')}
+                className="flex-col !items-stretch gap-2 snap-start shrink-0 w-[min(100%,260px)] !border !border-brand-border"
+              >
+                <div className="flex items-start gap-2">
+                  <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                  <p className="font-semibold text-sm leading-snug">{req.title}</p>
+                </div>
+                <p className="text-sm font-medium text-brand-primary">{formatCoverageDateLabel(req.startDate)}</p>
+                <p className="text-xs text-brand-text-muted">{formatShiftTimeRange(req.startDate, req.endDate)}</p>
+                <p className="text-xs text-brand-text pt-2 border-t border-brand-border">
+                  {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} needed
+                </p>
+              </AppItemCard>
+            ))}
           </div>
         )}
+      </AppDashboardZone>
 
-        <section className="app-surface-band overflow-hidden !p-0">
-          <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
-            <div className="flex items-center gap-2 mb-5">
-              <Radio className="w-5 h-5 text-brand-primary" />
-              <p className="text-sm font-semibold text-brand-primary">Active coverage</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mb-6">
-              <WfMetricTile label="Active" value={coverage.activeAssignments} accent />
-              <WfMetricTile label="On duty" value={coverage.guardsOnDuty} />
-              <WfMetricTile
-                label={coverage.guardsArriving > 0 && coverage.arrivingTimeLabel ? `Arriving ${coverage.arrivingTimeLabel}` : 'Arriving'}
-                value={coverage.guardsArriving}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onAction('coverage')}
-              className="app-button-primary !w-full sm:!w-auto"
-            >
-              View live coverage
-            </button>
+      <AppDashboardZone
+        title="Recent reports"
+        actionLabel={recentReports.length > 0 ? 'View all' : undefined}
+        onAction={recentReports.length > 0 ? () => onAction('reports') : undefined}
+      >
+        {recentReports.length === 0 ? (
+          <p className="app-empty-state">Reports from completed jobs will appear here.</p>
+        ) : (
+          <div className="app-item-card-stack">
+            {recentReports.slice(0, 4).map((report) => (
+              <AppItemCard key={report.id} onClick={() => onAction('reports')} className="flex-col !items-stretch gap-1">
+                <p className="text-xs font-medium text-brand-primary">{REPORT_TYPE_LABEL[report.type]}</p>
+                <p className="font-semibold">{report.title}</p>
+                <p className="text-sm text-brand-text-muted line-clamp-2">{report.summary}</p>
+                <p className="text-xs text-brand-text-muted">{report.siteName}</p>
+              </AppItemCard>
+            ))}
           </div>
-        </section>
-
-        <section>
-          <WfSectionHeader title="Your coverage" className="mb-3" />
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => onAction('coverage')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
-              <Radio className="w-5 h-5 text-brand-primary" />
-              <p className="font-semibold text-sm">Active coverage</p>
-              <WfMetricTile label="Guards on duty" value={coverage.guardsOnDuty} accent className="!p-3" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onAction('schedule')}
-              className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left"
-            >
-              <Calendar className="w-5 h-5 text-brand-primary" />
-              <p className="font-semibold text-sm">Upcoming</p>
-              <WfMetricTile label="Scheduled jobs" value={upcoming.length} className="!p-3" />
-            </button>
-            <button type="button" onClick={() => onAction('reports')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
-              <FileText className="w-5 h-5 text-brand-primary" />
-              <p className="font-semibold text-sm">Recent reports</p>
-              <WfMetricTile label="This month" value={recentReports.length} className="!p-3" />
-            </button>
-            <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left">
-              <ClipboardList className="w-5 h-5 text-brand-primary" />
-              <p className="font-semibold text-sm">Open jobs</p>
-              <WfMetricTile label="Pending" value={openRequestCount} className="!p-3" />
-            </button>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="app-section-title">Quick actions</h2>
-          <div className="app-scroll-row scrollbar-hide pb-1">
-            {QUICK_ACTIONS.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => onAction(action.id)}
-                  className={`w-[11.5rem] text-left rounded-2xl border p-4 min-h-[7.5rem] flex flex-col justify-between transition-all ${
-                    action.accent
-                      ? 'border-brand-primary bg-brand-primary/10 shadow-sm'
-                      : 'border-brand-border bg-brand-surface hover:border-brand-primary/30'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    action.accent ? 'bg-brand-primary text-brand-accent-text' : 'bg-brand-bg-sec text-brand-primary'
-                  }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{action.label}</p>
-                    <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{action.sub}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          <WfSectionHeader title="Upcoming coverage" className="mb-3" />
-          {upcoming.length === 0 ? (
-            <p className="app-empty-state">
-              No upcoming coverage. Tap Post job offer to get started.
-            </p>
-          ) : (
-            <div className="app-scroll-row scrollbar-hide pb-1">
-              {upcoming.map((req) => (
-                <button
-                  key={req.id}
-                  type="button"
-                  onClick={() => onAction('requests')}
-                  className="app-item-card app-item-card-align-top flex-col !items-stretch gap-2 snap-start shrink-0 w-[min(100%,260px)] text-left"
-                >
-                  <div className="flex items-start gap-2">
-                    <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                    <p className="font-semibold text-sm leading-snug">{req.title}</p>
-                  </div>
-                  <p className="text-sm font-medium text-brand-primary">
-                    {formatCoverageDateLabel(req.startDate)}
-                  </p>
-                  <p className="text-xs text-brand-text-muted">
-                    {formatShiftTimeRange(req.startDate, req.endDate)}
-                  </p>
-                  <p className="text-xs text-brand-text pt-2 border-t border-brand-border">
-                    {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} needed
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section>
-          <WfSectionHeader
-            title="Recent reports"
-            actionLabel={recentReports.length > 0 ? 'View all' : undefined}
-            onAction={recentReports.length > 0 ? () => onAction('reports') : undefined}
-            className="mb-3"
-          />
-          {recentReports.length === 0 ? (
-            <p className="app-empty-state">
-              Reports from completed jobs will appear here.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {recentReports.slice(0, 4).map((report) => (
-                <button
-                  key={report.id}
-                  type="button"
-                  onClick={() => onAction('reports')}
-                  className="w-full app-item-card flex-col items-stretch !flex !flex-col gap-1 text-left"
-                >
-                  <p className="text-xs font-medium text-brand-primary">
-                    {REPORT_TYPE_LABEL[report.type]}
-                  </p>
-                  <p className="font-semibold">{report.title}</p>
-                  <p className="text-sm text-brand-text-muted line-clamp-2">{report.summary}</p>
-                  <p className="text-xs text-brand-text-muted">{report.siteName}</p>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-    </div>
+        )}
+      </AppDashboardZone>
+    </AppScreen>
   );
 }

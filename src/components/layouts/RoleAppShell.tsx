@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavBar, BottomNavItem } from './BottomNavBar';
 import { MoreMenuSheet } from './MoreMenuSheet';
+import type { AccountMenuProps } from './AccountMenu';
 
 interface RoleAppShellProps {
   title: string;
   subtitle?: string;
   locationLabel?: string;
-  avatarUrl?: string;
-  avatarName?: string;
-  onAvatarClick?: () => void;
-  onSignOut?: () => void;
+  accountMenu: AccountMenuProps;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
   activeNavId: string;
@@ -30,10 +28,7 @@ export function RoleAppShell({
   title,
   subtitle,
   locationLabel,
-  avatarUrl,
-  avatarName,
-  onAvatarClick,
-  onSignOut,
+  accountMenu,
   navItems,
   overflowNavItems = [],
   activeNavId,
@@ -70,10 +65,7 @@ export function RoleAppShell({
           title={title}
           subtitle={subtitle}
           locationLabel={locationLabel}
-          avatarUrl={avatarUrl}
-          avatarName={avatarName}
-          onAvatarClick={onAvatarClick}
-          onSignOut={onSignOut}
+          accountMenu={accountMenu}
           right={headerRight}
           className={`${isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}${
             experience ? ` role-header-${experience}` : ''
@@ -81,10 +73,8 @@ export function RoleAppShell({
         />
       )}
 
-      <main
-        className={`flex-1 min-h-0 min-w-0 overflow-hidden ${fullBleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}
-      >
-        <div className={`h-full max-w-full min-w-0 ${fullBleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>
+      <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
+        <div className={`h-full max-w-full min-w-0 ${fullBleed ? 'overflow-hidden' : 'overflow-hidden'}`}>
           {children}
         </div>
       </main>

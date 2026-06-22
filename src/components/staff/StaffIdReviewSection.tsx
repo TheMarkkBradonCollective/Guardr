@@ -3,10 +3,8 @@ import { Check, RefreshCw, X } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
   getGuardIdVerificationStatus,
-  guardIdVerificationPhotosComplete,
   guardIdVerificationResubmitPending,
   ID_VERIFICATION_SLOT_LABELS,
-  ID_VERIFICATION_STATUS_LABELS,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
 } from '../../lib/guardIdentityVerification';
@@ -16,13 +14,7 @@ import {
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
 import { getGuardUserStatus } from '../../lib/accountStatus';
-import {
-  GuardIdentityVerificationPanel,
-  type GuardIdentityVerificationPayload,
-  type IdentityVerificationSubmitResult,
-} from '../profile/GuardIdentityVerificationPanel';
-import { IdVerificationImageThumb } from '../profile/IdVerificationImageModal';
-import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import type { GuardIdentityVerificationPayload, IdentityVerificationSubmitResult } from '../profile/GuardIdentityVerificationPanel';
 
 interface StaffIdReviewSectionProps {
   guard: SecurityGuard;
@@ -33,26 +25,22 @@ interface StaffIdReviewSectionProps {
   onUpdateImages?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
 }
 
+/** Staff approve / resubmit actions for government ID — status is shown on the ID credential card. */
 export function StaffIdReviewSection({
   guard,
   canManage = false,
   onApprove,
   onReject,
   onRequestResubmit,
-  onUpdateImages,
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
-  const hasPhotos = guardIdVerificationPhotosComplete(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
   const resubmitPending = guardIdVerificationResubmitPending(guard);
   const canApprove = staffCanApproveIdVerification(guard);
   const canRequestResubmit = staffCanRequestIdResubmit(guard);
-  const statusTone =
-    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
 
-  if (!canManage && !hasPhotos && status === 'not_submitted') {
-    return null;
-  }
+  if (!canManage) return null;
+  if (status === 'not_submitted') return null;
 
   const requestSlot = (slot: IdVerificationSlot) => {
     if (!onRequestResubmit) return;
@@ -69,66 +57,37 @@ export function StaffIdReviewSection({
   };
 
   return (
-    <section className="py-4 border-b border-brand-border space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <WfSectionHeader title="ID verification" className="mb-0" />
-        <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
-      </div>
-
-      {canManage && onUpdateImages ? (
-        <GuardIdentityVerificationPanel
-          guard={guard}
-          onSubmit={(payload) => void onUpdateImages(payload)}
-          staffMode
-          embedded
-          compact
-        />
-      ) : (
-        status !== 'not_submitted' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <IdVerificationImageThumb
-              label={ID_VERIFICATION_SLOT_LABELS.front}
-              imageUrl={guard.idFrontUrl}
-              guardName={guard.name}
-            />
-            <IdVerificationImageThumb
-              label={ID_VERIFICATION_SLOT_LABELS.back}
-              imageUrl={guard.idBackUrl}
-              guardName={guard.name}
-            />
-            <IdVerificationImageThumb
-              label={ID_VERIFICATION_SLOT_LABELS.selfie}
-              imageUrl={guard.idSelfieUrl}
-              guardName={guard.name}
-            />
-          </div>
-        )
-      )}
-
-      {canManage && (
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and
-          staff can review again. Resubmit requests are not available after ID is approved. Use{' '}
-          <strong className="text-brand-text">Reject application</strong> to deny the entire application; the
-          account is blocked.
-        </p>
-      )}
+    <div className="space-y-3">
       {resubmitPending && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
         </p>
       )}
+      <p className="text-xs text-brand-text-muted leading-relaxed">
+        Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and staff can
+        review again. Resubmit requests are not available after ID is approved. Use{' '}
+        <strong className="text-brand-text">Reject application</strong> to deny the entire application; the account is
+        blocked.
+      </p>
       <div className="flex flex-wrap gap-2">
-        {canManage && canApprove && onApprove && (
+        {canApprove && onApprove && (
           <button
             type="button"
-            onClick={() => void onApprove(guard.id)}
+            onClick={() => {
+              void (async () => {
+                try {
+                  await onApprove(guard.id);
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Could not approve ID.');
+                }
+              })();
+            }}
             className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
           >
             <Check className="w-3.5 h-3.5" /> Approve ID
           </button>
         )}
-        {canManage && onRequestResubmit && canRequestResubmit && (
+        {onRequestResubmit && canRequestResubmit && (
           <>
             <button
               type="button"
@@ -160,7 +119,7 @@ export function StaffIdReviewSection({
             </button>
           </>
         )}
-        {canManage && onReject && !applicationBlocked && status !== 'verified' && (
+        {onReject && !applicationBlocked && status !== 'verified' && (
           <button
             type="button"
             onClick={() => {
@@ -174,6 +133,6 @@ export function StaffIdReviewSection({
           </button>
         )}
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { verifyAccountSession } from '../../lib/accountSessionAuth';
 
 type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
@@ -61,34 +62,13 @@ async function verifySession(
   db: SupabaseClient,
   credentials: { userId: string; email: string; role: string } | null | undefined
 ): Promise<{ userId: string; email: string; platformRole: PlatformRole } | null> {
-  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
-    return null;
-  }
-
-  const email = credentials.email.trim().toLowerCase();
-  const { userId, role } = credentials;
-
-  if (role === 'client') {
-    const { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
-    if (!data || data.email?.toLowerCase() !== email) return null;
-    return { userId, email, platformRole: 'client' };
-  }
-
-  const { data } = await db
-    .from('guards')
-    .select('id, email, is_staff, staff_role')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (!data || data.email?.toLowerCase() !== email) return null;
-
-  const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
-    staffRole: data.staff_role ?? undefined,
-    legacyRole: data.is_staff ? 'staff' : 'guard',
-  });
-
-  return { userId, email, platformRole };
+  const session = await verifyAccountSession(db, credentials);
+  if (!session) return null;
+  return {
+    userId: session.userId,
+    email: session.email,
+    platformRole: session.platformRole,
+  };
 }
 
 function subscriptionId(userId: string, endpoint: string): string {

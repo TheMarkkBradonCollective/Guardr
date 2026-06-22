@@ -2,10 +2,9 @@ import React from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
-import { ThemeToggle } from '../ui/ThemeToggle';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { Home, Map, ClipboardList, User, Users, LifeBuoy, Radio, LogOut } from 'lucide-react';
+import { Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -30,8 +29,8 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'coverage', label: 'Coverage', icon: Radio },
+  { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'support', label: 'Support', icon: LifeBuoy },
-  { id: 'profile', label: 'Profile', icon: User },
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
@@ -64,33 +63,30 @@ export function ClientAppLayout({
   const navHighlightView =
     accountPending && !['home', 'profile', 'support'].includes(activeView) ? 'home' : activeView;
 
-  const themeToggle = <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />;
-
-  const moreFooter = (
-    <>
-      {onOpenLegal && <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center mb-4" />}
-      <button type="button" onClick={onSignOut} className="w-full app-button-outline h-11 text-sm mb-4">
-        <LogOut className="w-4 h-4" />
-        Sign out
-      </button>
-    </>
-  );
+  const moreFooter = onOpenLegal ? (
+    <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
+  ) : undefined;
 
   return (
     <RoleAppShell
       title={screenTitle}
       locationLabel={clientLabel}
-      avatarUrl={currentUser.avatar}
-      avatarName={currentUser.name}
-      onAvatarClick={() => onNavigate?.('profile')}
-      onSignOut={onSignOut}
+      accountMenu={{
+        userName: currentUser.name,
+        userSubtitle: currentUser.email,
+        avatarUrl: currentUser.avatar,
+        themeMode,
+        onChangeTheme,
+        onOpenProfile: () => onNavigate?.('profile'),
+        onSignOut,
+        active: activeView === 'profile',
+      }}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
-      headerRight={themeToggle}
       moreMenuFooter={moreFooter}
-      moreMenuTitle="Client menu"
+      moreMenuTitle="More"
       fullBleed={fullBleed}
       variant={activeView === 'map' ? 'dark' : 'default'}
       experience="client"

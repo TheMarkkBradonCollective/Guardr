@@ -38,6 +38,9 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS availability_notes TEXT DEFAULT '';
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_state TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_number TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_expiry_date DATE;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_front_url TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_back_url TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_selfie_url TEXT;
@@ -53,6 +56,41 @@ ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_user_status_check;
 ALTER TABLE guards ADD CONSTRAINT guards_user_status_check
   CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked'));
 ALTER TABLE guards ALTER COLUMN user_status SET DEFAULT 'pending';
+
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
+
+-- ── STAFF (platform ops accounts — separate from field guards) ───────────────
+CREATE TABLE IF NOT EXISTS staff (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  first_name TEXT,
+  middle_name TEXT,
+  last_name TEXT,
+  email TEXT UNIQUE NOT NULL,
+  badge_number TEXT NOT NULL,
+  avatar TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  bio TEXT NOT NULL DEFAULT '',
+  staff_role TEXT NOT NULL
+    CHECK (staff_role IN ('Owner', 'Director', 'Administrator', 'Moderator')),
+  user_status TEXT NOT NULL DEFAULT 'active'
+    CHECK (user_status IN ('active', 'suspended', 'blocked')),
+  password TEXT,
+  must_change_password BOOLEAN NOT NULL DEFAULT false,
+  theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  migrated_from_guards_at TIMESTAMPTZ
+);
+
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "staff_select" ON staff;
+DROP POLICY IF EXISTS "staff_insert" ON staff;
+DROP POLICY IF EXISTS "staff_update" ON staff;
+DROP POLICY IF EXISTS "staff_delete" ON staff;
+CREATE POLICY "staff_select" ON staff FOR SELECT USING (true);
+CREATE POLICY "staff_insert" ON staff FOR INSERT WITH CHECK (true);
+CREATE POLICY "staff_update" ON staff FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "staff_delete" ON staff FOR DELETE USING (true);
 
 -- ── CLIENTS ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (
@@ -89,6 +127,9 @@ CREATE TABLE IF NOT EXISTS certifications (
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS catalog_id TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS submitted_by_role TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_submitted_by TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_certifications_unique_normalized_number
 ON certifications (
@@ -378,7 +419,7 @@ DECLARE
   tbl text;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'guards', 'clients', 'certifications', 'experience', 'education',
+    'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages', 'push_subscriptions'
   ]
@@ -407,7 +448,7 @@ DECLARE
   tbl text;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'guards', 'clients', 'certifications', 'experience', 'education',
+    'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages'
   ]
@@ -428,10 +469,9 @@ END $$;
 
 -- ── OPTIONAL: Owner and Director staff accounts ───────────────────────────────
 -- Passwords are checked in the app (AuthPage.tsx), not stored in the database.
-INSERT INTO guards (
+INSERT INTO staff (
   id, name, email, badge_number, avatar, phone, bio,
-  is_armed, background_checked, verified, rating, jobs_completed,
-  is_staff, staff_role, user_status
+  staff_role, user_status
 ) VALUES
   (
     'staff-owner',
@@ -440,8 +480,7 @@ INSERT INTO guards (
     'OWN-00001',
     '', '',
     'Owner — Platform governance.',
-    false, true, true, 5.0, 0,
-    true, 'Owner', 'active'
+    'Owner', 'active'
   ),
   (
     'staff-director',
@@ -450,8 +489,7 @@ INSERT INTO guards (
     'DIR-00001',
     '', '',
     'Director — Platform operations.',
-    false, true, true, 5.0, 0,
-    true, 'Director', 'active'
+    'Director', 'active'
   ),
   (
     'staff-director-tyrone',
@@ -460,15 +498,40 @@ INSERT INTO guards (
     'DIR-00002',
     '', '',
     'Director — Platform operations.',
-    false, true, true, 5.0, 0,
-    true, 'Director', 'active'
+    'Director', 'active'
   )
 ON CONFLICT (email) DO UPDATE SET
   name = EXCLUDED.name,
   badge_number = EXCLUDED.badge_number,
-  is_staff = true,
   staff_role = EXCLUDED.staff_role,
   user_status = 'active';
+
+-- Migrate any legacy staff rows still on guards into staff (keeps guards rows archived).
+INSERT INTO staff (
+  id, name, first_name, middle_name, last_name, email, badge_number,
+  avatar, phone, bio, staff_role, user_status, password, must_change_password,
+  theme_preference, created_at, migrated_from_guards_at
+)
+SELECT
+  g.id, g.name, g.first_name, g.middle_name, g.last_name, g.email, g.badge_number,
+  g.avatar, g.phone, g.bio, g.staff_role,
+  CASE WHEN g.user_status IN ('active', 'suspended', 'blocked') THEN g.user_status ELSE 'active' END,
+  g.password, COALESCE(g.must_change_password, false), g.theme_preference, g.created_at, now()
+FROM guards g
+WHERE g.is_staff = true AND g.staff_role IS NOT NULL
+ON CONFLICT (id) DO NOTHING;
+
+UPDATE guards g
+SET
+  migrated_to_staff_at = COALESCE(g.migrated_to_staff_at, timezone('utc'::text, now())),
+  is_staff = false,
+  staff_role = NULL,
+  email = CASE
+    WHEN g.email LIKE 'migrated-%@guardr.internal' THEN g.email
+    ELSE 'migrated-' || g.id || '@guardr.internal'
+  END
+WHERE g.is_staff = true
+  AND EXISTS (SELECT 1 FROM staff s WHERE s.id = g.id);
 
 -- ── VERIFY (read-only) ─────────────────────────────────────────────────────
 -- 1) Columns the app writes when editing jobs (missing columns = silent save failures)

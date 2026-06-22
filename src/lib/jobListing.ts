@@ -1,6 +1,7 @@
 import { ClientServiceId } from './clientRequestFlow';
 import { JOB_TYPE_LABELS } from './guardJobs';
-import { SecurityRequest } from '../types';
+import { JobOperationalDetails, SecurityRequest } from '../types';
+import { operationalDetailsDbValue } from './jobOperationalDetails';
 
 /** Shared professional listing fields captured at post time */
 export interface JobListingFields {
@@ -39,6 +40,7 @@ export type JobListingLike = Pick<
   | 'accessInstructions'
   | 'latitude'
   | 'longitude'
+  | 'operationalDetails'
   | 'startDate'
   | 'endDate'
   | 'durationHours'
@@ -218,6 +220,7 @@ export function mergeJobListingUpdates(
     accessInstructions: safe.accessInstructions ?? existing.accessInstructions,
     latitude: safe.latitude ?? existing.latitude,
     longitude: safe.longitude ?? existing.longitude,
+    operationalDetails: safe.operationalDetails ?? existing.operationalDetails,
     type: safe.type ?? existing.type,
     armedRequired: safe.armedRequired ?? existing.armedRequired,
     guardsNeeded: safe.guardsNeeded ?? existing.guardsNeeded,
@@ -247,6 +250,7 @@ export function buildJobListingDbPayload(job: SecurityRequest) {
     estimated_payout: job.estimatedPayout,
     required_certifications: job.requiredCertifications ?? [],
     status: job.status,
+    operational_details: operationalDetailsDbValue(job.operationalDetails),
     ...listingDetailDbColumns(job),
   };
 }

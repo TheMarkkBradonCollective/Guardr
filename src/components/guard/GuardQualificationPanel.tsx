@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import {
+  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   GUARD_INACTIVE_DESCRIPTION,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
@@ -36,6 +37,19 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
 
   const rows = [
     {
+      label: 'Government ID (verified)',
+      met: progress.governmentIdVerified,
+      expired: progress.governmentIdExpired,
+      verified: progress.governmentIdVerified,
+      detail: progress.governmentIdExpired
+        ? 'ID on file but expired — update in Credentials'
+        : progress.governmentId && !progress.governmentIdVerified
+          ? 'Submitted — awaiting Guardr verification'
+          : !progress.governmentId
+            ? 'Upload in Credentials — tap Government ID'
+            : undefined,
+    },
+    {
       label: 'BSIS Guard Card (valid)',
       met: progress.guardCard,
       expired: progress.guardCardExpired,
@@ -43,7 +57,7 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
       detail: progress.guardCardExpired ? 'Guard card on file but expired — upload a valid card' : undefined,
     },
     {
-      label: `8-Hour Power to Arrest & Appropriate Use of Force (2-part) — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
+      label: '8-Hour Power to Arrest & Appropriate Use of Force',
       met: progress.ptaUofTraining,
       verified: progress.ptaUofCombinedVerified,
       detail: ptaUofDetail,
@@ -58,7 +72,7 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
           : `All ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses verified`
         : progress.thirtyTwoHourRollup
           ? '32-hour completion certificate on file'
-          : `${progress.uploaded32HourCount} / ${THIRTY_TWO_HOUR_COURSE_IDS.length} courses on file`,
+          : formatThirtyTwoHourCourseProgressCounts(progress),
     },
   ];
 
@@ -71,8 +85,9 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
             Guard status
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            A valid BSIS Guard Card is required to accept jobs. 8-hour and 32-hour training are{' '}
-            {GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}. Guardr verification is a trust badge for clients.
+            Verified government ID, valid BSIS Guard Card, and 8-hour PTA/UOF training are required to accept jobs.
+            32-hour training is {GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}. Guardr verification is a trust
+            badge for clients.
           </p>
         </div>
         <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${levelBadge}`}>

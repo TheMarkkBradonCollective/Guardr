@@ -21,10 +21,13 @@ import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
+import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
+import { JobOperationalDetails } from '../../types';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 'Post orders', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
@@ -54,6 +57,7 @@ export function DirectGuardRequestFlow({
   const [listing, setListing] = useState<JobListingFields>(() =>
     serviceListingDefaults('standing-guard')
   );
+  const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
@@ -80,12 +84,14 @@ export function DirectGuardRequestFlow({
           listing.uniformRequirements.trim().length > 3 &&
           listing.siteInstructions.trim().length > 3
         );
+      case 7:
+        return true;
       default: return true;
     }
   };
 
   const goNext = () => {
-    if (!canNext() || step >= 7) return;
+    if (!canNext() || step >= 8) return;
     setStep((s) => (s + 1) as FlowStep);
   };
 
@@ -131,6 +137,7 @@ export function DirectGuardRequestFlow({
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
+      operationalDetails: normalizeJobOperationalDetails(operational),
     });
   };
 
@@ -157,7 +164,7 @@ export function DirectGuardRequestFlow({
           </button>
           <div className="flex-1">
             <p className="text-sm text-brand-text-muted">
-              Step {step} of 7 · {STEP_LABELS[step - 1]}
+              Step {step} of 8 · {STEP_LABELS[step - 1]}
             </p>
             <div className="flex gap-1 mt-2">
               {STEP_LABELS.map((_, i) => (
@@ -322,6 +329,13 @@ export function DirectGuardRequestFlow({
 
         {step === 7 && (
           <div className="space-y-4">
+            <h2 className="text-xl font-bold">Site briefing</h2>
+            <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+          </div>
+        )}
+
+        {step === 8 && (
+          <div className="space-y-4">
             <h2 className="text-xl font-bold">Review & send</h2>
             <p className="text-sm text-brand-text-muted">Only {guard.name.split(' ')[0]} will see this listing.</p>
             <JobListingPreview
@@ -353,6 +367,7 @@ export function DirectGuardRequestFlow({
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'direct',
                 status: 'draft',
+                operationalDetails: normalizeJobOperationalDetails(operational),
               }}
             />
             <div className="border-t border-brand-border pt-3">
@@ -370,7 +385,7 @@ export function DirectGuardRequestFlow({
       </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95">
-        {step < 7 ? (
+        {step < 8 ? (
           <button type="button" onClick={goNext} disabled={!canNext()} className="app-button-primary gap-2 disabled:opacity-40">
             Continue <ArrowRight className="w-4 h-4" />
           </button>

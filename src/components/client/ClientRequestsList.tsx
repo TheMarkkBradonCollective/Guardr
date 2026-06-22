@@ -2,10 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
+import { showAppToast } from '../ui/AppToast';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
-import { AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppItemCardStack, AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
@@ -108,36 +109,36 @@ export function ClientRequestsList({
         window.location.href = url;
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Unable to start checkout');
+      showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
     } finally {
       setPayingJobId(null);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fade-in pb-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold">Your jobs</h1>
-          <p className="text-sm text-brand-text-muted mt-1">Job offers and direct guard requests — payments and reviews</p>
-        </div>
+    <AppScreen>
+      <div className="flex items-center justify-between gap-4 px-5 pt-2 pb-4 border-b border-brand-border">
+        <AppPageLead kicker="Jobs" subtitle="Offers, requests, payments & reviews" title="Your jobs" />
         <button
           type="button"
           onClick={onRequestNew}
-          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0"
+          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0 self-start mt-2"
         >
           + Post offer
         </button>
       </div>
 
-      {requests.length > 0 && (
-        <WfSearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search jobs..."
-        />
-      )}
+      <div className="px-5 py-4 border-b border-brand-border">
+        {requests.length > 0 && (
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search jobs..."
+          />
+        )}
+      </div>
 
+      <AppSection title="All jobs">
       {requests.length === 0 ? (
         <div className="app-empty-state">
           <Shield className="w-10 h-10 text-brand-primary/30 mx-auto mb-3" />
@@ -347,6 +348,7 @@ export function ClientRequestsList({
           })}
         </AppItemCardStack>
       )}
-    </div>
+      </AppSection>
+    </AppScreen>
   );
 }

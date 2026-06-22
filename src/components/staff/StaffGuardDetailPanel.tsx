@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
+import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
-  getGuardDisplayStatus,
   getQualificationProgress,
-  GUARD_STATUS_LABELS,
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
@@ -19,20 +19,21 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
-import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import {
-  getGuardIdVerificationStatus,
-  ID_VERIFICATION_STATUS_LABELS,
-} from '../../lib/guardIdentityVerification';
-import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
+import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
-  guardCanActivateAccount,
+  guardCanStaffActivateAccount,
+  guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
+import { promptStaffGuardActivationGrace } from '../../lib/guardMissingCredentials';
+import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
+import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -43,16 +44,22 @@ interface StaffGuardDetailPanelProps {
   onResetAuditFailures?: (id: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
-  onApproveGuard?: (guardId: string) => void;
-  onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onUpdateProfile?: (payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -85,16 +92,16 @@ export function StaffGuardDetailPanel({
   onResetAuditFailures,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onUpdateProfile,
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -165,9 +172,7 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const guardAccountStatus = getGuardUserStatus(guard);
-  const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
-  const idVerificationStatus = getGuardIdVerificationStatus(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
 
@@ -190,8 +195,6 @@ export function StaffGuardDetailPanel({
         return a.name.localeCompare(b.name);
       });
   }, [groupedCerts]);
-
-  const pendingCount = allCerts.filter((c) => c.status === 'pending').length;
 
   const displayName = formatPersonName({ firstName, middleName, lastName });
 
@@ -285,10 +288,56 @@ export function StaffGuardDetailPanel({
 
   const requestCertResubmit = (cert: Certification) => {
     if (!onRequestCertImageResubmit) return;
-    const note = promptStaffResubmitNote(`${cert.name} photo`);
+    const note = promptStaffResubmitNote(`${certDisplayName(cert)} photo`);
     if (note === null) return;
     void onRequestCertImageResubmit(guard.id, cert.id, note);
   };
+
+  const renderStaffCertActions = (cert: Certification) =>
+    canManage && cert.status === 'pending' ? (
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex gap-1.5 justify-end flex-wrap">
+          {cert.imageUrl && onRequestCertImageResubmit && (
+            <button
+              type="button"
+              onClick={() => requestCertResubmit(cert)}
+              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+            >
+              Request clearer photo
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onRejectCert(guard.id, cert.id)}
+            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+          >
+            <X className="w-3 h-3" /> Reject
+          </button>
+          <button
+            type="button"
+            disabled={!staffCanVerifyCertification(cert)}
+            title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
+            onClick={() => {
+              void (async () => {
+                try {
+                  await onApproveCert(guard.id, cert.id);
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Could not verify credential.');
+                }
+              })();
+            }}
+            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1 disabled:opacity-50"
+          >
+            <Check className="w-3 h-3" /> Verify
+          </button>
+        </div>
+        {staffVerifyCertificationBlocker(cert) && (
+          <p className="text-xs text-amber-500 text-right max-w-xs leading-relaxed">
+            {staffVerifyCertificationBlocker(cert)}
+          </p>
+        )}
+      </div>
+    ) : null;
 
   const renderPendingCertActions = () => {
     const pendingCerts = allCerts.filter((c) => c.status === 'pending');
@@ -300,34 +349,14 @@ export function StaffGuardDetailPanel({
         <div className="app-cert-item-stack">
           {pendingCerts.map((cert) => (
             <div key={cert.id} className="space-y-2">
-              <CertItemCard cert={cert} guardName={guard.name} />
-              {canManage && (
-                <div className="flex gap-1.5 justify-end flex-wrap">
-                  {cert.imageUrl && onRequestCertImageResubmit && (
-                    <button
-                      type="button"
-                      onClick={() => requestCertResubmit(cert)}
-                      className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
-                    >
-                      Request clearer photo
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => onRejectCert(guard.id, cert.id)}
-                    className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                  >
-                    <X className="w-3 h-3" /> Reject
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onApproveCert(guard.id, cert.id)}
-                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                  >
-                    <Check className="w-3 h-3" /> Verify
-                  </button>
-                </div>
-              )}
+              <CertItemCard
+                cert={cert}
+                guardName={guard.name}
+                canEdit={canManage}
+                staffMode={canManage}
+                onUpdate={onUpdateCertification ? (payload) => onUpdateCertification(cert.id, payload) : undefined}
+              />
+              {renderStaffCertActions(cert)}
             </div>
           ))}
         </div>
@@ -336,9 +365,9 @@ export function StaffGuardDetailPanel({
   };
 
   return (
-    <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
+    <div className={`staff-detail-pane ${compact ? '' : 'h-full overflow-y-auto'}`}>
       {(onBack || (canEdit && !guard.isStaff)) && (
-        <div className="px-1 pb-4 flex items-center justify-between gap-3">
+        <div className="staff-detail-toolbar">
           {onBack ? (
             <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
               <ArrowLeft className="w-4 h-4" />
@@ -372,7 +401,7 @@ export function StaffGuardDetailPanel({
         </div>
       )}
 
-      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
+      <div className="staff-detail-header">
         <div className="relative shrink-0">
           <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
           {editing && canEdit && (
@@ -435,74 +464,75 @@ export function StaffGuardDetailPanel({
             </div>
           )}
           {!guard.isStaff && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              <WfBadge tone="primary">{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
-              <WfBadge tone={guardAccountStatus === 'pending' ? 'warning' : guardAccountStatus === 'active' ? 'success' : 'danger'}>
-                Account: {GUARD_USER_STATUS_LABELS[guardAccountStatus]}
-              </WfBadge>
-              {guard.verified && (
-                <WfBadge tone="success">Guardr verified</WfBadge>
-              )}
-              {guard.backgroundChecked && (
-                <WfBadge tone="primary">Background checked</WfBadge>
-              )}
-              {idVerificationStatus === 'verified' && (
-                <WfBadge tone="success">{ID_VERIFICATION_STATUS_LABELS.verified}</WfBadge>
-              )}
-              {idVerificationStatus === 'pending' && (
-                <WfBadge tone="warning">{ID_VERIFICATION_STATUS_LABELS.pending}</WfBadge>
-              )}
+            <div className="flex flex-nowrap items-center gap-2 mt-3 overflow-x-auto">
+              <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+              <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
             </div>
           )}
         </div>
       </div>
 
-      {!guard.isStaff && guardAccountStatus === 'pending' && (
-        <div className="px-1 pb-4">
-          <GuardActivationChecklistView guard={guard} />
-        </div>
-      )}
-
       {!guard.isStaff && (
         <>
-          {!editing && (
-            <section className="py-4 border-b border-brand-border space-y-2">
-              <WfSectionHeader title="Qualification" className="mb-0" />
-              <p className="text-sm">
-                Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
-              </p>
-              <CertBadgeRow guard={guard} showCaBaseline />
-            </section>
-          )}
-
           {canManage && (
-          <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Account controls" className="mb-0" />
-            <div className="flex flex-wrap gap-2">
+          <section className="staff-detail-section space-y-3">
+            <WfSectionHeader title="Account controls" className="!px-0 !mb-0" />
+            <div className="staff-detail-actions">
               {guardAccountStatus === 'pending' && onApproveGuardAccount && (
                 <button
                   type="button"
                   onClick={() => {
                     void (async () => {
+                      if (!guardCanStaffApproveProfile(guard)) return;
                       try {
                         await onApproveGuardAccount(guard.id);
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Could not approve profile.');
+                      }
+                    })();
+                  }}
+                  disabled={!guardCanStaffApproveProfile(guard)}
+                  className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
+                  title={
+                    activationChecklist.staffApprovalBlockers.length > 0
+                      ? activationChecklist.staffApprovalBlockers.join(' · ')
+                      : 'Approve guard profile'
+                  }
+                >
+                  Approve profile
+                </button>
+              )}
+              {guardAccountStatus === 'approved' && onActivateGuardAccount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void (async () => {
+                      if (!guardCanStaffActivateAccount(guard)) return;
+                      const graceChoice = promptStaffGuardActivationGrace(guard);
+                      if (!graceChoice.proceed) return;
+                      try {
+                        await onActivateGuardAccount(guard.id, {
+                          graceHours: graceChoice.graceHours,
+                        });
                       } catch (err) {
                         alert(err instanceof Error ? err.message : 'Could not activate account.');
                       }
                     })();
                   }}
-                  disabled={!guardCanActivateAccount(guard)}
+                  disabled={!guardCanStaffActivateAccount(guard)}
                   className="app-button-primary !w-auto !h-9 !px-4 !text-xs disabled:opacity-50"
                   title={
-                    activationChecklist.blockers.length > 0
-                      ? activationChecklist.blockers.join(' · ')
-                      : 'Activate guard account'
+                    guardCanStaffActivateAccount(guard)
+                      ? activationChecklist.missingGraceCredentials.length > 0
+                        ? `Not listed: ${activationChecklist.missingGraceCredentials.join(', ')} — set grace at activation`
+                        : 'Verify guard card and activate account'
+                      : activationChecklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
                   }
                 >
-                  Activate guard account
+                  Activate account
                 </button>
               )}
-              {canSuspend && guardAccountStatus === 'pending' && onDeleteGuard && (
+              {canSuspend && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && onDeleteGuard && (
                 <button
                   type="button"
                   onClick={() => void handleDeleteGuard()}
@@ -522,7 +552,7 @@ export function StaffGuardDetailPanel({
                   Flag / Block
                 </button>
               )}
-              {canSuspend && guardAccountStatus !== 'active' && guardAccountStatus !== 'pending' && (
+              {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>
@@ -541,16 +571,6 @@ export function StaffGuardDetailPanel({
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
               )}
-              {onApproveGuard && !guard.verified && (
-                <button type="button" onClick={() => onApproveGuard(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
-                  Verify guard profile
-                </button>
-              )}
-              {onRejectGuard && guard.verified && (
-                <button type="button" onClick={() => onRejectGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                  Remove profile verification
-                </button>
-              )}
               {onDeleteGuard && guardAccountStatus !== 'pending' && (
                 <button
                   type="button"
@@ -565,26 +585,22 @@ export function StaffGuardDetailPanel({
           </section>
           )}
 
-          {canManage && !editing && (
-              <StaffIdReviewSection
-                guard={guard}
-                canManage
-                onApprove={onApproveIdentityVerification}
-                onReject={onRejectIdentityVerification}
-                onRequestResubmit={
-                  onRequestIdentityResubmit
-                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                    : undefined
-                }
-                onUpdateImages={onUpdateGuardIdImages}
-              />
-            )}
+          {!editing && (
+            <section className="staff-detail-section space-y-2">
+              <WfSectionHeader title="Qualification" className="!px-0 !mb-0" />
+              <p className="text-sm">
+                Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
+              </p>
+              <CertBadgeRow guard={guard} showCaBaseline />
+            </section>
+          )}
 
           {editing && canEdit && (
-            <div className="py-4 border-b border-brand-border">
+            <section className="staff-detail-section">
               <GuardResumeEditor
                 guard={guard}
                 editing
+                staffMode={canManage}
                 payload={resume}
                 onChange={(patch) =>
                   setResume((r) => ({
@@ -596,64 +612,47 @@ export function StaffGuardDetailPanel({
                 onAddCertification={onAddCertification}
                 onDeleteCertification={onDeleteCertification}
                 onAttachCertificationImage={onAttachCertificationImage}
+                onUpdateCertification={onUpdateCertification}
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
-                identityVerificationCompact
               />
-            </div>
-          )}
-
-          {editing ? renderPendingCertActions() : (
-            <section className="py-4 border-b border-brand-border space-y-3">
-              <WfSectionHeader
-                title="Credentials"
-                count={pendingCount > 0 ? pendingCount : undefined}
-                className="mb-0"
-              />
-              {allCerts.length === 0 ? (
-                <p className="text-sm text-brand-text-muted">No credentials on file.</p>
-              ) : (
-                <div className="app-cert-item-stack">
-                  {allCerts.map((cert) => (
-                    <div key={cert.id} className="space-y-2">
-                      <CertItemCard cert={cert} guardName={guard.name} />
-                      {canManage && cert.status === 'pending' && (
-                        <div className="flex gap-1.5 justify-end flex-wrap">
-                          {cert.imageUrl && onRequestCertImageResubmit && (
-                            <button
-                              type="button"
-                              onClick={() => requestCertResubmit(cert)}
-                              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
-                            >
-                              Request clearer photo
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => onRejectCert(guard.id, cert.id)}
-                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                          >
-                            <X className="w-3 h-3" /> Reject
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onApproveCert(guard.id, cert.id)}
-                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                          >
-                            <Check className="w-3 h-3" /> Verify
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </section>
           )}
 
-          <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Recent jobs" className="mb-0" />
+          {editing ? renderPendingCertActions() : (
+            <section className="staff-detail-section space-y-3">
+              {!guard.isStaff && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && (
+                <StaffGuardActivationChecklistView guard={guard} />
+              )}
+              <GuardCredentialsPanel
+                guard={guard}
+                editing={false}
+                staffMode={canManage}
+                onSubmitIdentityVerification={onUpdateGuardIdImages}
+                onUpdateCertification={onUpdateCertification}
+                staffIdReview={
+                  canManage ? (
+                    <StaffIdReviewSection
+                      guard={guard}
+                      canManage={canManage}
+                      onApprove={onApproveIdentityVerification}
+                      onReject={onRejectIdentityVerification}
+                      onRequestResubmit={
+                        onRequestIdentityResubmit
+                          ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                          : undefined
+                      }
+                    />
+                  ) : undefined
+                }
+                renderCertActions={renderStaffCertActions}
+              />
+            </section>
+          )}
+
+          <section className="staff-detail-section space-y-2">
+            <WfSectionHeader title="Recent jobs" className="!px-0 !mb-0" />
             {guardJobs.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No jobs on record.</p>
             ) : (
@@ -673,7 +672,7 @@ export function StaffGuardDetailPanel({
       )}
 
       {guard.isStaff && (
-        <section className="py-4 border-b border-brand-border">
+        <section className="staff-detail-section">
           <p className="text-sm text-brand-text-muted">
             Staff platform account — field credential verification does not apply.
           </p>
@@ -682,8 +681,8 @@ export function StaffGuardDetailPanel({
       )}
 
       {guard.bio && !guard.isStaff && !editing && (
-        <section className="py-4">
-          <WfSectionHeader title="Bio" className="mb-2" />
+        <section className="staff-detail-section">
+          <WfSectionHeader title="Bio" className="!px-0 !mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>
       )}

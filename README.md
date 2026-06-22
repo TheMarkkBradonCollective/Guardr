@@ -90,4 +90,4 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 
 ## Database Migrations
 
-Supabase migrations live in `supabase/migrations/`. Apply in order when connecting to a Supabase project.
+Supabase migrations live in `supabase/migrations/`. For a one-shot catch-up on an existing database, run **`supabase/fix_everything.sql`** in the Supabase SQL Editor (idempotent, safe to re-run).

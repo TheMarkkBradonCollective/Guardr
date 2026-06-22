@@ -64,16 +64,28 @@ import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
-  getGuardsReadyForAccountActivation,
+  getGuardMissingGraceCredentialLabels,
+  type ActivateGuardAccountOptions,
+} from './lib/guardMissingCredentials';
+import {
+  getPendingGuardAccountReviews,
+  guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
 } from './lib/guardAccountActivation';
+import {
+  guardCredentialGracePatchForActivation,
+  processGuardCredentialGraceBatch,
+  syncGuardCredentialGraceState,
+} from './lib/guardCredentialGrace';
 import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
 import {
   AddCertificationResult,
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
-import { validateCertDeletion, validateCertImageAttachment } from './lib/certImagePolicy';
+import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage, staffCanVerifyCertification, staffVerifyCertificationBlocker } from './lib/certImagePolicy';
+import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
+import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
   buildCertImageResubmitReason,
@@ -98,6 +110,7 @@ import {
 } from './lib/guardPayoutInvoiceStorage';
 import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
+import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -106,7 +119,13 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import {
+  getClientAccountStatus,
+  getGuardUserStatus,
+  isGuardAccountApproved,
+  isGuardAccountPending,
+} from './lib/accountStatus';
+import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -132,7 +151,12 @@ import {
   saveStaffMessagesToStorage,
 } from './lib/staffMessenger';
 import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
-import { listenForPushNavigation, listenForPushSubscriptionChange, syncPushSubscriptionWithServer } from './lib/push';
+import { mapStaffRowToSecurityGuard } from './lib/staffAccounts';
+import {
+  listenForPushNavigation,
+  listenForPushSubscriptionChange,
+  syncPushSubscriptionWithServer,
+} from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
@@ -149,6 +173,7 @@ import {
 } from './lib/appNavigation';
 import type { LegalPageId } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
+import { showAppToast } from './components/ui/AppToast';
 import type { GuardTab } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { type ApprovalQueueId, type StaffSection } from './lib/staffOps';
@@ -205,7 +230,12 @@ export default function App() {
     saveTheme(mode, currentUser?.id);
     applyThemeToDocument(mode);
     if (isDbConnected && currentUser) {
-      const table = currentUser.role === 'client' ? 'clients' : 'guards';
+      const table =
+        currentUser.role === 'client'
+          ? 'clients'
+          : isStaffRole(currentUser.role)
+            ? 'staff'
+            : 'guards';
       try {
         await supabase.from(table).update({ theme_preference: mode }).eq('id', currentUser.id);
       } catch {
@@ -879,6 +909,8 @@ export default function App() {
   const loadFromSupabase = async () => {
     try {
       const { data: dbGuards, error: guardsErr } = await supabase.from('guards').select('*');
+      const { data: dbStaffRows, error: staffErr } = await supabase.from('staff').select('*');
+      const staffTableAvailable = !staffErr;
       const { data: dbClients, error: clientsErr } = await supabase.from('clients').select('*');
       const { data: dbCerts, error: certsErr } = await supabase.from('certifications').select('*');
       const { data: dbExps, error: expsErr } = await supabase.from('experience').select('*');
@@ -916,7 +948,11 @@ export default function App() {
         return;
       }
 
-      setGuards((dbGuards ?? []).map((g: any) => {
+      if (staffErr && staffErr.code !== '42P01') {
+        console.warn('Staff table load (run migration if missing):', staffErr);
+      }
+
+      const mapGuardRow = (g: any): SecurityGuard => {
         const nameParts = resolvePersonNameParts({
           firstName: g.first_name,
           middleName: g.middle_name,
@@ -940,19 +976,27 @@ export default function App() {
         hourlyRateRequirement: g.hourly_rate_requirement,
         isStaff: g.is_staff,
         staffRole: g.staff_role,
-        userStatus: g.user_status || (g.is_staff ? 'active' : 'pending'),
+        userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: Boolean(g.is_staff) }),
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         password: g.password ?? undefined,
         mustChangePassword: g.must_change_password ?? false,
         idVerificationStatus: g.id_verification_status ?? 'not_submitted',
+        idState: g.id_state ?? undefined,
+        idNumber: g.id_number ?? undefined,
+        idExpiryDate: g.id_expiry_date ?? undefined,
         idFrontUrl: g.id_front_url ?? undefined,
         idBackUrl: g.id_back_url ?? undefined,
         idSelfieUrl: g.id_selfie_url ?? undefined,
         idVerificationSubmittedAt: g.id_verification_submitted_at ?? undefined,
         idVerificationReviewedAt: g.id_verification_reviewed_at ?? undefined,
         idVerificationRejectionReason: g.id_verification_rejection_reason ?? undefined,
+        idSubmittedBy: g.id_submitted_by === 'staff' || g.id_submitted_by === 'guard' ? g.id_submitted_by : undefined,
+        credentialGraceDeadline: g.credential_grace_deadline ?? undefined,
+        credentialGraceMissing: Array.isArray(g.credential_grace_missing)
+          ? (g.credential_grace_missing as string[])
+          : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -962,6 +1006,10 @@ export default function App() {
           category: c.category ?? undefined,
           imageUrl: c.image_url ?? undefined,
           rejectionReason: c.rejection_reason ?? undefined,
+          submittedByRole:
+            c.submitted_by_role === 'staff' || c.submitted_by_role === 'guard'
+              ? c.submitted_by_role
+              : undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -971,7 +1019,24 @@ export default function App() {
           period: e.period, description: e.description ?? '',
         })),
       };
-      }));
+      };
+
+      const staffFromTable = staffTableAvailable ? (dbStaffRows ?? []).map((row: any) => mapStaffRowToSecurityGuard(row)) : [];
+      const staffMigrated = staffTableAvailable && staffFromTable.length > 0;
+      const fieldGuardRows = (dbGuards ?? []).filter((g: any) => {
+        if (g.migrated_to_staff_at) return false;
+        if (staffMigrated) return !g.is_staff;
+        return !g.is_staff;
+      });
+      const legacyStaffRows = staffMigrated
+        ? []
+        : (dbGuards ?? []).filter((g: any) => g.is_staff && !g.migrated_to_staff_at);
+
+      setGuards([
+        ...fieldGuardRows.map(mapGuardRow),
+        ...staffFromTable,
+        ...legacyStaffRows.map(mapGuardRow),
+      ]);
 
       setClients((dbClients ?? []).map((c: any) => {
         const nameParts = resolvePersonNameParts({
@@ -1012,6 +1077,7 @@ export default function App() {
         uniformRequirements: r.uniform_requirements || undefined,
         equipmentRequirements: r.equipment_requirements || undefined,
         siteInstructions: r.site_instructions || undefined,
+        operationalDetails: normalizeJobOperationalDetails(r.operational_details),
         startDate: r.start_date, endDate: r.end_date,
         durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
         guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
@@ -1243,6 +1309,37 @@ export default function App() {
     void loadRef.current();
   }, isDbConnected);
 
+  useEffect(() => {
+    const tick = () => {
+      setGuards((prev) => {
+        const next = processGuardCredentialGraceBatch(prev);
+        let changed = false;
+        for (let i = 0; i < prev.length; i++) {
+          const before = prev[i];
+          const after = next[i];
+          if (before === after) continue;
+          changed = true;
+          if (isDbConnected) {
+            beginLocalMutation();
+            void supabase
+              .from('guards')
+              .update({
+                user_status: after.userStatus,
+                credential_grace_deadline: after.credentialGraceDeadline ?? null,
+                credential_grace_missing: after.credentialGraceMissing ?? null,
+              })
+              .eq('id', after.id);
+          }
+        }
+        return changed ? next : prev;
+      });
+    };
+
+    tick();
+    const intervalId = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [isDbConnected]);
+
   useMessageRealtimeSync(
     {
       onJobChatMessage: (message) => {
@@ -1425,8 +1522,9 @@ export default function App() {
         )
       );
       if (isDbConnected) {
+        const table = isStaffRole(currentUser.role) ? 'staff' : 'guards';
         await supabase
-          .from('guards')
+          .from(table)
           .update({ password: newPassword, must_change_password: false })
           .eq('id', currentUser.id);
       }
@@ -1604,13 +1702,17 @@ export default function App() {
   // ── Certification CRUD ─────────────────────────────────────
   const handleAddCertification = async (
     guardId: string,
-    newCert: Partial<Certification>
+    newCert: Partial<Certification>,
+    submittedByRole: 'guard' | 'staff' = 'guard'
   ): Promise<AddCertificationResult> => {
     const available = validateCertNumberAvailable(guards, {
       number: newCert.number ?? '',
       guardId,
     });
     if (!available.ok) return available;
+
+    const proof = validateCertSubmission(newCert.imageUrl);
+    if (!proof.ok) return proof;
 
     const certWithId: Certification = {
       id: `cert-${Date.now()}`,
@@ -1624,12 +1726,21 @@ export default function App() {
       catalogId: newCert.catalogId,
       category: newCert.category,
       imageUrl: newCert.imageUrl,
+      submittedByRole: newCert.submittedByRole ?? submittedByRole,
     };
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        return syncGuardCredentialGraceState({
+          ...g,
+          certifications: [...g.certifications, certWithId],
+        });
+      })
+    );
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase.from('certifications').insert({
+        const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
@@ -1637,8 +1748,9 @@ export default function App() {
           catalog_id: certWithId.catalogId ?? null,
           category: certWithId.category ?? null,
           image_url: certWithId.imageUrl ?? null,
+          submitted_by_role: certWithId.submittedByRole ?? null,
         });
-        if (error) {
+        if (!insertResult.ok) {
           setGuards(prev =>
             prev.map(g =>
               g.id === guardId
@@ -1646,15 +1758,7 @@ export default function App() {
                 : g
             )
           );
-          if (error.code === '23505') {
-            return {
-              ok: false,
-              error:
-                'This certificate or license number is already registered. Each number can only be linked to one profile.',
-            };
-          }
-          console.error('Cert insert error:', error);
-          return { ok: false, error: 'Could not save credential. Please try again.' };
+          return insertResult;
         }
       } catch (e) {
         setGuards(prev =>
@@ -1665,7 +1769,7 @@ export default function App() {
           )
         );
         console.error('Cert insert error:', e);
-        return { ok: false, error: 'Could not save credential. Please try again.' };
+        return { ok: false, error: certDatabaseErrorMessage(error) };
       }
     }
     return { ok: true };
@@ -1683,7 +1787,21 @@ export default function App() {
     }
 
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.filter(c => c.id !== certId) } : g));
-    if (isDbConnected) await supabase.from('certifications').delete().eq('id', certId);
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase.from('certifications').delete().eq('id', certId);
+      if (error) {
+        setGuards(prev =>
+          prev.map(g =>
+            g.id === guardId
+              ? { ...g, certifications: [...g.certifications, cert!].sort((a, b) => a.id.localeCompare(b.id)) }
+              : g
+          )
+        );
+        console.error('Cert delete error:', error);
+        return { ok: false, error: 'Could not remove credential. Please try again.' };
+      }
+    }
     return { ok: true };
   };
 
@@ -1724,15 +1842,13 @@ export default function App() {
     );
 
     if (isDbConnected) {
+      beginLocalMutation();
       try {
-        const { error } = await supabase
-          .from('certifications')
-          .update({
+        const updateResult = await updateCertificationRow(supabase, certId, {
             image_url: imageUrl,
             ...(requeueForReview ? { status: 'pending', rejection_reason: null } : {}),
-          })
-          .eq('id', certId);
-        if (error) {
+          });
+        if (!updateResult.ok) {
           setGuards((prev) =>
             prev.map((g) =>
               g.id === guardId
@@ -1745,8 +1861,7 @@ export default function App() {
                 : g
             )
           );
-          console.error('Cert image update error:', error);
-          return { ok: false, error: 'Could not save photo. Please try again.' };
+          return updateResult;
         }
       } catch (e) {
         setGuards((prev) =>
@@ -1769,9 +1884,191 @@ export default function App() {
     return { ok: true };
   };
 
+  const handleUpdateCertification = async (
+    guardId: string,
+    certId: string,
+    payload: CertUpdatePayload,
+    submittedByRole: 'guard' | 'staff' = 'guard'
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const guard = guards.find((g) => g.id === guardId);
+    const cert = guard?.certifications.find((c) => c.id === certId);
+    if (!cert) return { ok: false, error: 'Credential not found.' };
+
+    const issuer = payload.issuer?.trim() || '';
+    const number = payload.number?.trim() || '';
+    const expiryDate = payload.expiryDate?.trim() || '';
+    const state = payload.state?.trim().toUpperCase() || undefined;
+    const imageUrl = payload.imageUrl?.trim() || undefined;
+
+    if (!issuer || !number || !expiryDate) {
+      return { ok: false, error: 'Enter issuer, number, and expiry date.' };
+    }
+
+    const nextImageUrl = imageUrl ?? cert.imageUrl;
+    const proof = validateCertSubmission(nextImageUrl);
+    if (!proof.ok) return proof;
+
+    if (submittedByRole === 'guard' && !guardCertificationCanEdit(cert)) {
+      return { ok: false, error: 'This credential cannot be edited while under review.' };
+    }
+
+    if (
+      submittedByRole === 'guard' &&
+      imageUrl &&
+      imageUrl !== (cert.imageUrl ?? '').trim() &&
+      certImageIsLocked(cert)
+    ) {
+      return { ok: false, error: 'This credential photo cannot be changed after upload.' };
+    }
+
+    if (number !== cert.number.trim()) {
+      const available = validateCertNumberAvailable(guards, { number, guardId });
+      if (!available.ok) return available;
+    }
+
+    const dataChanged =
+      issuer !== cert.issuer.trim() ||
+      number !== cert.number.trim() ||
+      expiryDate !== cert.expiryDate.trim() ||
+      (state ?? '') !== (cert.state ?? '').trim().toUpperCase() ||
+      (imageUrl ?? '') !== (cert.imageUrl ?? '').trim();
+
+    if (!dataChanged) return { ok: true };
+
+    let nextStatus = cert.status;
+    if (cert.status === 'verified') {
+      nextStatus = 'verified';
+    } else if (submittedByRole === 'staff' || cert.status === 'rejected') {
+      nextStatus = 'pending';
+    }
+
+    const previous = { ...cert };
+    const nextSubmittedByRole =
+      submittedByRole === 'staff' && nextStatus === 'pending'
+        ? ('staff' as const)
+        : cert.submittedByRole;
+
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              certifications: g.certifications.map((c) =>
+                c.id === certId
+                  ? {
+                      ...c,
+                      issuer,
+                      number,
+                      expiryDate,
+                      state,
+                      imageUrl: nextImageUrl,
+                      status: nextStatus,
+                      rejectionReason:
+                        nextStatus === 'pending' && cert.status !== 'verified'
+                          ? undefined
+                          : c.rejectionReason,
+                      submittedByRole: nextSubmittedByRole,
+                    }
+                  : c
+              ),
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      try {
+        const updateResult = await updateCertificationRow(supabase, certId, {
+            issuer,
+            number,
+            expiry_date: expiryDate,
+            state: state ?? null,
+            image_url: nextImageUrl ?? null,
+            status: nextStatus,
+            rejection_reason:
+              nextStatus === 'pending' && cert.status !== 'verified' ? null : cert.rejectionReason ?? null,
+            submitted_by_role: nextSubmittedByRole ?? null,
+          });
+        if (!updateResult.ok) {
+          setGuards((prev) =>
+            prev.map((g) =>
+              g.id === guardId
+                ? {
+                    ...g,
+                    certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                  }
+                : g
+            )
+          );
+          return updateResult;
+        }
+      } catch (e) {
+        setGuards((prev) =>
+          prev.map((g) =>
+            g.id === guardId
+              ? {
+                  ...g,
+                  certifications: g.certifications.map((c) => (c.id === certId ? previous : c)),
+                }
+              : g
+          )
+        );
+        console.error('Cert update error:', e);
+        return { ok: false, error: 'Could not save credential. Please try again.' };
+      }
+    }
+
+    return { ok: true };
+  };
+
   const handleApproveCert = async (guardId: string, certId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: g.certifications.map(c => c.id === certId ? { ...c, status: 'verified' as const } : c) } : g));
-    if (isDbConnected) await supabase.from('certifications').update({ status: 'verified' }).eq('id', certId);
+    const before = guards.find((g) => g.id === guardId);
+    const cert = before?.certifications.find((c) => c.id === certId);
+    if (!cert) throw new Error('Credential not found.');
+    const verifyBlocker = staffVerifyCertificationBlocker(cert);
+    if (verifyBlocker) throw new Error(verifyBlocker);
+    if (!staffCanVerifyCertification(cert)) {
+      throw new Error('This credential cannot be verified yet.');
+    }
+
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        return syncGuardCredentialGraceState({
+          ...g,
+          certifications: g.certifications.map((c) =>
+            c.id === certId ? { ...c, status: 'verified' as const } : c
+          ),
+        });
+      })
+    );
+    if (isDbConnected) {
+      await supabase.from('certifications').update({ status: 'verified' }).eq('id', certId);
+      const after = before
+        ? syncGuardCredentialGraceState({
+            ...before,
+            certifications: before.certifications.map((c) =>
+              c.id === certId ? { ...c, status: 'verified' as const } : c
+            ),
+          })
+        : null;
+      if (
+        after &&
+        (after.credentialGraceDeadline !== before?.credentialGraceDeadline ||
+          JSON.stringify(after.credentialGraceMissing ?? []) !==
+            JSON.stringify(before?.credentialGraceMissing ?? []))
+      ) {
+        beginLocalMutation();
+        await supabase
+          .from('guards')
+          .update({
+            credential_grace_deadline: after.credentialGraceDeadline ?? null,
+            credential_grace_missing: after.credentialGraceMissing ?? null,
+          })
+          .eq('id', guardId);
+      }
+    }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
@@ -1780,16 +2077,6 @@ export default function App() {
   };
 
   // ── Guard approval ─────────────────────────────────────────
-  const handleApproveGuard = async (guardId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, verified: true } : g));
-    if (isDbConnected) await supabase.from('guards').update({ verified: true }).eq('id', guardId);
-  };
-
-  const handleRejectGuard = async (guardId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, verified: false } : g));
-    if (isDbConnected) await supabase.from('guards').update({ verified: false }).eq('id', guardId);
-  };
-
   const handleUpdateBackgroundChecked = async (guardId: string, status: boolean) => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, backgroundChecked: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ background_checked: status }).eq('id', guardId);
@@ -1839,13 +2126,20 @@ export default function App() {
     );
     if (isDbConnected) {
       beginLocalMutation();
-      const guardUpdate: Record<string, unknown> = {
+      const profileUpdate: Record<string, unknown> = {
           name: payload.name,
           first_name: payload.firstName,
           middle_name: payload.middleName ?? null,
           last_name: payload.lastName,
           phone: payload.phone,
           bio: payload.bio ?? payload.summary ?? '',
+      };
+      if (payload.avatar !== undefined) profileUpdate.avatar = payload.avatar;
+      if (payload.badgeNumber !== undefined) profileUpdate.badge_number = payload.badgeNumber;
+
+      const table = previous.isStaff ? 'staff' : 'guards';
+      if (!previous.isStaff) {
+        Object.assign(profileUpdate, {
           headline: payload.headline ?? '',
           summary: payload.summary ?? '',
           about: payload.about ?? '',
@@ -1856,10 +2150,10 @@ export default function App() {
           years_experience: payload.yearsExperience ?? null,
           availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
-      };
-      if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
-      if (payload.badgeNumber !== undefined) guardUpdate.badge_number = payload.badgeNumber;
-      const { error } = await supabase.from('guards').update(guardUpdate).eq('id', guardId);
+        });
+      }
+
+      const { error } = await supabase.from(table).update(profileUpdate).eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
         console.error('Guard profile update error:', error);
@@ -1880,6 +2174,7 @@ export default function App() {
   };
 
   const handleUpdateClientProfile = async (clientId: string, payload: ProfileSavePayload) => {
+    const previous = clients.find((c) => c.id === clientId);
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId
@@ -1906,7 +2201,15 @@ export default function App() {
         company_name: payload.companyName ?? '',
       };
       if (payload.avatar !== undefined) clientUpdate.avatar = payload.avatar;
-      await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      beginLocalMutation();
+      const { error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      if (error) {
+        if (previous) {
+          setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
+        }
+        console.error('Client profile update error:', error);
+        throw new Error('Could not save profile photo. Please try again.');
+      }
     }
     if (currentUser?.id === clientId) {
       syncSessionUser({
@@ -1931,8 +2234,28 @@ export default function App() {
         return;
       }
     }
+    if (!target.isStaff && status === 'active') {
+      if (isGuardAccountPending(target)) {
+        alert('Approve this guard profile before activating their account.');
+        return;
+      }
+      if (isGuardAccountApproved(target)) {
+        const blockers = guardAccountActivationBlockers(target);
+        if (blockers.length > 0) {
+          alert(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+          return;
+        }
+        alert(
+          'Use Activate account in Approvals to fully activate this guard (guard card on file, optional grace for missing PTA/32-hour).'
+        );
+        return;
+      }
+    }
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, userStatus: status } : g));
-    if (isDbConnected) await supabase.from('guards').update({ user_status: status }).eq('id', guardId);
+    if (isDbConnected) {
+      const table = target.isStaff ? 'staff' : 'guards';
+      await supabase.from(table).update({ user_status: status }).eq('id', guardId);
+    }
   };
 
   const assertEmailAvailable = (email: string) => {
@@ -2127,7 +2450,7 @@ export default function App() {
     setGuards((prev) => [...prev, newStaff]);
     if (isDbConnected) {
       try {
-        await supabase.from('guards').insert({
+        await supabase.from('staff').insert({
           id: newStaff.id,
           name: newStaff.name,
           first_name: newStaff.firstName,
@@ -2138,12 +2461,6 @@ export default function App() {
           avatar: newStaff.avatar,
           phone: newStaff.phone,
           bio: newStaff.bio,
-          is_armed: false,
-          background_checked: true,
-          verified: true,
-          rating: 5.0,
-          jobs_completed: 0,
-          is_staff: true,
           staff_role: staffRole,
           user_status: 'active',
           password,
@@ -2182,7 +2499,7 @@ export default function App() {
     );
     if (isDbConnected) {
       try {
-        await supabase.from('guards').update({ staff_role: staffRole, bio }).eq('id', staffId);
+        await supabase.from('staff').update({ staff_role: staffRole, bio }).eq('id', staffId);
       } catch (e) {
         console.error('Staff role update error:', e);
         throw new Error('Could not update staff role in the database.');
@@ -2215,53 +2532,111 @@ export default function App() {
   const handleApproveGuardAccount = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
+    const blockers = guardAccountApprovalBlockers(guard);
+    if (blockers.length > 0) {
+      throw new Error(`Cannot approve profile yet:\n• ${blockers.join('\n• ')}`);
+    }
+
+    const approvedGuard: SecurityGuard = {
+      ...guard,
+      userStatus: 'approved',
+      verified: true,
+      credentialGraceDeadline: undefined,
+      credentialGraceMissing: undefined,
+    };
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
+          user_status: 'approved',
+          verified: true,
+          credential_grace_deadline: null,
+          credential_grace_missing: null,
+        },
+        'approve'
+      );
+      if (!result.ok) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
+        throw new Error(result.error);
+      }
+    }
+  };
+
+  const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountActivationBlockers(guard);
     if (blockers.length > 0) {
       throw new Error(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
     }
 
-    setGuards((prev) =>
-      prev.map((g) => (g.id === guardId ? { ...g, userStatus: 'active' as const } : g))
-    );
+    const missingGrace = getGuardMissingGraceCredentialLabels(guard);
+    if (missingGrace.length > 0 && (!options?.graceHours || options.graceHours <= 0)) {
+      throw new Error(
+        `Cannot activate — ${missingGrace.join(', ')} not listed or on file. Set a grace period when activating.`
+      );
+    }
+
+    const gracePatch = guardCredentialGracePatchForActivation(guard, 'CA', options?.graceHours);
+    const activeGuard: SecurityGuard = {
+      ...guard,
+      userStatus: 'active',
+      verified: true,
+      ...gracePatch,
+    };
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase.from('guards').update({ user_status: 'active' }).eq('id', guardId);
-      if (error) {
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
+          user_status: 'active',
+          verified: true,
+          credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
+          credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
+        },
+        'activate'
+      );
+      if (!result.ok) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not activate guard account. Please try again.');
+        throw new Error(result.error);
       }
-    }
-  };
-
-  const handleApproveAllReadyGuardAccounts = async () => {
-    const ready = getGuardsReadyForAccountActivation(guards);
-    if (ready.length === 0) {
-      throw new Error('No guard accounts are ready. Each guard needs verified ID and a verified Guard Card.');
-    }
-    const errors: string[] = [];
-    for (const guard of ready) {
-      try {
-        await handleApproveGuardAccount(guard.id);
-      } catch (err) {
-        errors.push(`${guard.name}: ${err instanceof Error ? err.message : 'Failed'}`);
-      }
-    }
-    if (errors.length > 0) {
-      throw new Error(errors.join('\n'));
     }
   };
 
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
-    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+    payload: {
+      idState: string;
+      idNumber: string;
+      idExpiryDate: string;
+      idFrontUrl: string;
+      idBackUrl: string;
+      idSelfieUrl: string;
+    }
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
     if (guard.isStaff) return { ok: false, error: 'Staff accounts do not require ID verification.' };
 
+    const idState = payload.idState.trim().toUpperCase();
+    const idNumber = payload.idNumber.trim();
+    const idExpiryDate = payload.idExpiryDate.trim();
     const front = payload.idFrontUrl.trim();
     const back = payload.idBackUrl.trim();
     const selfie = payload.idSelfieUrl.trim();
+    if (!idState || !idNumber) {
+      return { ok: false, error: 'Enter the issuing state and ID number before submitting.' };
+    }
+    if (!idExpiryDate) {
+      return { ok: false, error: 'Enter the ID expiration date before submitting.' };
+    }
     if (!front || !back || !selfie) {
       return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
     }
@@ -2276,12 +2651,16 @@ export default function App() {
         g.id === guardId
           ? {
               ...g,
+              idState,
+              idNumber,
+              idExpiryDate,
               idFrontUrl: front,
               idBackUrl: back,
               idSelfieUrl: selfie,
               idVerificationStatus: 'pending' as const,
               idVerificationSubmittedAt: submittedAt,
               idVerificationRejectionReason: undefined,
+              idSubmittedBy: 'guard' as const,
             }
           : g
       )
@@ -2292,12 +2671,16 @@ export default function App() {
       const { error } = await supabase
         .from('guards')
         .update({
+          id_state: idState,
+          id_number: idNumber,
+          id_expiry_date: idExpiryDate,
           id_front_url: front,
           id_back_url: back,
           id_selfie_url: selfie,
           id_verification_status: 'pending',
           id_verification_submitted_at: submittedAt,
           id_verification_rejection_reason: null,
+          id_submitted_by: 'guard',
         })
         .eq('id', guardId);
       if (error) {
@@ -2311,9 +2694,13 @@ export default function App() {
 
   const handleApproveGuardIdentityVerification = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
-    if (!guard || !staffCanApproveIdVerification(guard)) return;
+    if (!guard) throw new Error('Guard not found.');
+    if (!staffCanApproveIdVerification(guard)) {
+      throw new Error('Cannot approve ID yet — ensure state, number, expiration, and all photos are on file.');
+    }
 
     const reviewedAt = new Date().toISOString();
+    const previous = { ...guard };
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
@@ -2328,7 +2715,7 @@ export default function App() {
     );
     if (isDbConnected) {
       beginLocalMutation();
-      await supabase
+      const { error } = await supabase
         .from('guards')
         .update({
           id_verification_status: 'verified',
@@ -2336,6 +2723,11 @@ export default function App() {
           id_verification_rejection_reason: null,
         })
         .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('ID verification approve error:', error);
+        throw new Error('Could not approve government ID. Please try again.');
+      }
     }
   };
 
@@ -2374,7 +2766,14 @@ export default function App() {
 
   const handleStaffUpdateGuardIdImages = async (
     guardId: string,
-    payload: { idFrontUrl: string; idBackUrl: string; idSelfieUrl: string }
+    payload: {
+      idState: string;
+      idNumber: string;
+      idExpiryDate: string;
+      idFrontUrl: string;
+      idBackUrl: string;
+      idSelfieUrl: string;
+    }
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return { ok: false, error: 'Guard profile not found.' };
@@ -2383,19 +2782,25 @@ export default function App() {
       return { ok: false, error: 'This application was rejected — account is blocked.' };
     }
 
+    const idState = payload.idState?.trim().toUpperCase() || guard.idState?.trim().toUpperCase() || '';
+    const idNumber = payload.idNumber?.trim() || guard.idNumber?.trim() || '';
+    const idExpiryDate = payload.idExpiryDate?.trim() || guard.idExpiryDate?.trim() || '';
     const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
     const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
     const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
-    if (!front && !back && !selfie) {
-      return { ok: false, error: 'Upload at least one ID photo to save.' };
+    if (!front && !back && !selfie && !idState && !idNumber && !idExpiryDate) {
+      return { ok: false, error: 'Enter ID details or upload at least one ID photo to save.' };
     }
 
-    const complete = Boolean(front && back && selfie);
-    const urlsChanged =
+    const complete = Boolean(idState && idNumber && idExpiryDate && front && back && selfie);
+    const dataChanged =
+      idState !== (guard.idState ?? '').trim().toUpperCase() ||
+      idNumber !== (guard.idNumber ?? '').trim() ||
+      idExpiryDate !== (guard.idExpiryDate ?? '').trim() ||
       front !== (guard.idFrontUrl ?? '').trim() ||
       back !== (guard.idBackUrl ?? '').trim() ||
       selfie !== (guard.idSelfieUrl ?? '').trim();
-    if (!urlsChanged) return { ok: true };
+    if (!dataChanged) return { ok: true };
 
     const previous = { ...guard };
     const now = new Date().toISOString();
@@ -2414,6 +2819,9 @@ export default function App() {
         g.id === guardId
           ? {
               ...g,
+              idState: idState || undefined,
+              idNumber: idNumber || undefined,
+              idExpiryDate: idExpiryDate || undefined,
               idFrontUrl: front || undefined,
               idBackUrl: back || undefined,
               idSelfieUrl: selfie || undefined,
@@ -2424,6 +2832,8 @@ export default function App() {
                 nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
               idVerificationRejectionReason:
                 complete && nextStatus !== 'verified' ? undefined : g.idVerificationRejectionReason,
+              idSubmittedBy:
+                complete && nextStatus === 'pending' ? ('staff' as const) : g.idSubmittedBy,
             }
           : g
       )
@@ -2434,6 +2844,9 @@ export default function App() {
       const { error } = await supabase
         .from('guards')
         .update({
+          id_state: idState || null,
+          id_number: idNumber || null,
+          id_expiry_date: idExpiryDate || null,
           id_front_url: front || null,
           id_back_url: back || null,
           id_selfie_url: selfie || null,
@@ -2444,6 +2857,7 @@ export default function App() {
             nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
           id_verification_rejection_reason:
             complete && nextStatus !== 'verified' ? null : guard.idVerificationRejectionReason ?? null,
+          id_submitted_by: complete && nextStatus === 'pending' ? 'staff' : guard.idSubmittedBy ?? null,
         })
         .eq('id', guardId);
       if (error) {
@@ -2640,6 +3054,7 @@ export default function App() {
       accessInstructions: newRequest.accessInstructions,
       latitude: newRequest.latitude,
       longitude: newRequest.longitude,
+      operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour: PLATFORM_FEE_PER_HOUR,
       estimatedPayout,
@@ -2697,6 +3112,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           ...listingDetailDbColumns(freshJob),
+          operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
       } catch (e) { console.error('Request insert error:', e); }
     }
@@ -2763,6 +3179,7 @@ export default function App() {
       accessInstructions: input.accessInstructions,
       latitude: input.latitude,
       longitude: input.longitude,
+      operationalDetails: normalizeJobOperationalDetails(input.operationalDetails),
       startDate: input.startDate,
       endDate: input.endDate,
       durationHours: input.durationHours,
@@ -2831,6 +3248,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           ...listingDetailDbColumns(freshJob),
+          operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
       } catch (e) {
         console.error('Staff job insert error:', e);
@@ -3309,7 +3727,7 @@ export default function App() {
       alert(workBlocked);
       return;
     }
-    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job));
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
     if (!canAccept) {
       alert(`${guard.name} does not meet the requirements for this job.`);
       return;
@@ -3364,8 +3782,8 @@ export default function App() {
       alert('You already applied for this job. Staff will review your application.');
       return;
     }
-    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job))) {
-      const missing = checkJobRequirements(activeGuard, toGuardJobView(job))
+    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id))) {
+      const missing = checkJobRequirements(activeGuard, toGuardJobView(job, activeGuard.id))
         .checks.filter((c) => !c.met)
         .map((c) => c.label)
         .join(', ');
@@ -3423,6 +3841,10 @@ export default function App() {
       ? [...(req?.midShiftAudits || []), payload.midShiftAudit]
       : undefined;
 
+    const previousRequest = req ? (JSON.parse(JSON.stringify(req)) as SecurityRequest) : null;
+    const completedGuardId =
+      payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
+
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
@@ -3442,6 +3864,7 @@ export default function App() {
     }));
 
     if (isDbConnected) {
+      beginLocalMutation();
       const updates: Record<string, unknown> = {};
       if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
@@ -3453,7 +3876,22 @@ export default function App() {
         }
       }
       if (Object.keys(updates).length > 0) {
-        await supabase.from('security_requests').update(updates).eq('id', requestId);
+        const { error } = await supabase.from('security_requests').update(updates).eq('id', requestId);
+        if (error) {
+          console.error('Job audit update error:', error);
+          if (previousRequest) {
+            setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+          }
+          if (completedGuardId) {
+            setGuards((pg) =>
+              pg.map((g) =>
+                g.id === completedGuardId ? { ...g, jobsCompleted: Math.max(0, g.jobsCompleted - 1) } : g
+              )
+            );
+          }
+          alert('Could not save photos or job update. Please try again.');
+          return;
+        }
       }
     }
     if (payload.status === 'completed') {
@@ -3555,9 +3993,19 @@ export default function App() {
       checkInAudit.readyForDuty = true;
     }
 
+    const previousRequest = existing ? (JSON.parse(JSON.stringify(existing)) as SecurityRequest) : null;
+
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+      beginLocalMutation();
+      const { error } = await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+      if (error) {
+        console.error('Staff self-audit upload error:', error);
+        if (previousRequest) {
+          setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+        }
+        alert('Could not save audit photos. Please try again.');
+      }
     }
   };
 
@@ -3586,10 +4034,17 @@ export default function App() {
       uploadedBy: currentUser.name,
     };
     const spotChecks = [...(existing.spotChecks ?? []), spotCheck];
+    const previousRequest = JSON.parse(JSON.stringify(existing)) as SecurityRequest;
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+      beginLocalMutation();
+      const { error } = await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
+      if (error) {
+        console.error('Staff spot check upload error:', error);
+        setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+        alert('Could not save spot check photo. Please try again.');
+      }
     }
   };
 
@@ -3852,25 +4307,49 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const paymentResult = params.get('payment');
     const jobId = params.get('job_id');
+    const depositResult = params.get('deposit');
+
+    const clearPaymentQuery = () => {
+      const route = readAppRouteFromWindow();
+      if (route) {
+        syncAppRoute(route, true);
+        return;
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    };
+
     if (paymentResult === 'success' && jobId) {
       void loadFromSupabase();
-      window.history.replaceState({}, '', window.location.pathname);
-      alert('Payment received — your job will update shortly.');
-    }
-    if (paymentResult === 'cancelled') {
-      window.history.replaceState({}, '', window.location.pathname);
+      if (currentUser?.role === 'client') {
+        setClientViewState('requests');
+        syncAppRoute({ role: 'client', clientView: 'requests' }, true);
+      }
+      showAppToast('Payment received', {
+        body: 'Your job status will update shortly.',
+        tone: 'success',
+      });
+      clearPaymentQuery();
+    } else if (paymentResult === 'cancelled') {
+      showAppToast('Payment cancelled', { tone: 'info' });
+      clearPaymentQuery();
     }
 
-    const depositResult = params.get('deposit');
     if (depositResult === 'success' && jobId) {
       void loadFromSupabase();
-      window.history.replaceState({}, '', window.location.pathname);
-      alert('Card payment received — Stripe balance will update for this job shortly.');
+      if (currentUser && isStaffRole(currentUser.role)) {
+        setStaffSectionState('payments');
+        syncAppRoute({ role: 'staff', staffSection: 'payments' }, true);
+      }
+      showAppToast('Deposit received', {
+        body: 'Stripe balance will update for this job shortly.',
+        tone: 'success',
+      });
+      clearPaymentQuery();
+    } else if (depositResult === 'cancelled') {
+      showAppToast('Deposit cancelled', { tone: 'info' });
+      clearPaymentQuery();
     }
-    if (depositResult === 'cancelled') {
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+  }, [currentUser]);
 
   // ── Compliance violations ──────────────────────────────────
   const handleRecordAuditViolation = async (guardId: string, reason?: string) => {
@@ -4295,10 +4774,13 @@ export default function App() {
           onTabChange={setGuardTab}
           requests={guardJobs}
           payments={guardPayouts}
-          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert)}
+          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
           onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
           onAttachCertificationImage={(certId, imageUrl) =>
             handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
+          }
+          onUpdateCertification={(certId, payload) =>
+            handleUpdateCertification(activeGuard.id, certId, payload, 'guard')
           }
           onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
           onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
@@ -4385,9 +4867,6 @@ export default function App() {
           {clientView === 'profile' ? (
             <UserProfileScreen
               currentUser={currentUser}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              onSignOut={handleSignOut}
               client={clientRecord ?? null}
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
               onOpenLegal={openLegalPage}
@@ -4487,7 +4966,7 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
-          onApproveAllReadyGuardAccounts={handleApproveAllReadyGuardAccounts}
+          onActivateGuardAccount={handleActivateGuardAccount}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}
@@ -4498,8 +4977,6 @@ export default function App() {
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
-          onApproveGuard={handleApproveGuard}
-          onRejectGuard={handleRejectGuard}
           onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
           onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
@@ -4526,9 +5003,12 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={handleAddCertification}
+          onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
           onDeleteCertification={handleDeleteCertification}
           onAttachCertificationImage={handleAttachCertificationImage}
+          onUpdateCertification={(guardId, certId, payload) =>
+            handleUpdateCertification(guardId, certId, payload, 'staff')
+          }
           onAddExperience={handleAddExperience}
           onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}

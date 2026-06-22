@@ -7,23 +7,20 @@ import {
   getGuardDisplayHeadline,
   getGuardDisplaySummary,
 } from '../../lib/guardResume';
-import { groupGuardCertsByCategory } from '../../lib/certMatching';
-import { CERT_CATEGORY_LABELS, CertCategory } from '../../lib/certCatalog';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { CertItemCard } from '../credentials/CertItemCard';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
+import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
+import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 import {
   ArrowLeft,
-  Award,
   BookOpen,
   Briefcase,
   Check,
   Clock,
   GraduationCap,
   MapPin,
-  Shield,
 } from 'lucide-react';
 
 interface GuardProfileScreenProps {
@@ -56,18 +53,7 @@ export function GuardProfileScreen({
     [guard.id, clientId, requests]
   );
 
-  const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const aboutText = guard.about?.trim() || guard.bio?.trim();
-
-  const credentialSections: CertCategory[] = [
-    'guard-card',
-    'bsis-training',
-    'bsis-permit',
-    'medical',
-    'fema',
-    'security-advanced',
-    'industry',
-  ];
 
   return (
     <div className="h-full flex flex-col overflow-hidden client-content-shell">
@@ -93,6 +79,12 @@ export function GuardProfileScreen({
                       <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
                   </div>
+                  {isGuardTrusted(guard) && (
+                    <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
+                      <Check className="w-4 h-4" />
+                      {GUARD_TRUSTED_BADGE_LABEL}
+                    </p>
+                  )}
                   {guard.backgroundChecked && (
                     <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
                       <Check className="w-4 h-4" />
@@ -142,23 +134,10 @@ export function GuardProfileScreen({
             </section>
           )}
 
-          {credentialSections.map((category) => {
-            const items = (groupedCerts[category] ?? []).filter((c) => c.status !== 'rejected');
-            if (items.length === 0) return null;
-            return (
-              <section key={category}>
-                <div className="flex items-center gap-2 mb-2">
-                  {category === 'guard-card' ? <Shield className="w-4 h-4 text-brand-text-muted" /> : <Award className="w-4 h-4 text-brand-text-muted" />}
-                  <h2 className="app-section-title mb-0">{CERT_CATEGORY_LABELS[category]}</h2>
-                </div>
-                <div className="app-cert-item-stack !pt-0">
-                  {items.map((cert) => (
-                    <CertItemCard key={cert.id} cert={cert} guardName={guard.name} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+          <section>
+            <WfSectionHeader title="Credentials" className="mb-3" />
+            <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected />
+          </section>
 
           {guard.experience.length > 0 && (
             <section>

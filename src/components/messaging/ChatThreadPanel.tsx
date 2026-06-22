@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { PlatformRole } from '../../types';
 import { isStaffSender, senderLabel } from '../../lib/jobChat';
-import { Send } from 'lucide-react';
+import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
+import type { AppChatBubbleTone } from '../ui/app/AppPrimitives';
 
 export interface ChatBubbleMessage {
   id: string;
@@ -22,6 +23,29 @@ interface ChatThreadPanelProps {
   headerNote?: string;
   /** Staff team channel — show sent/received instead of job-chat staff styling */
   teamChat?: boolean;
+}
+
+function formatChatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  if (sameDay) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function bubbleTone(
+  msg: ChatBubbleMessage,
+  currentUserId: string,
+  teamChat: boolean
+): AppChatBubbleTone {
+  const mine = msg.senderId === currentUserId;
+  const staff = !teamChat && isStaffSender(msg.senderRole);
+  if (staff) return 'staff';
+  if (mine) return 'outgoing';
+  return 'incoming';
 }
 
 export function ChatThreadPanel({
@@ -54,60 +78,50 @@ export function ChatThreadPanel({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col h-full min-h-0 bg-brand-bg">
       {headerNote && (
-        <p className="shrink-0 text-xs text-brand-text-muted px-4 py-2 border-b border-brand-border bg-brand-bg-sec">
+        <p className="shrink-0 text-xs font-medium text-brand-text-muted px-4 py-2.5 border-b border-brand-border bg-brand-surface">
           {headerNote}
         </p>
       )}
-      <div className="app-chat-pane flex-1 min-h-0 space-y-3">
+      <div className="app-chat-pane">
         {messages.length === 0 ? (
-          <p className="text-sm text-brand-text-muted text-center py-8">No messages yet. Say hello to get started.</p>
+          <div className="app-chat-bubble app-chat-bubble-system mx-auto">
+            <p>No messages yet. Say hello to get started.</p>
+          </div>
         ) : (
-          messages.map((msg) => {
-            const mine = msg.senderId === currentUserId;
-            const staff = !teamChat && isStaffSender(msg.senderRole);
-            return (
-              <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+          <div className="app-chat-thread">
+            {messages.map((msg) => {
+              const tone = bubbleTone(msg, currentUserId, teamChat);
+              const mine = msg.senderId === currentUserId;
+              return (
                 <div
-                  className={`chat-bubble max-w-[85%] px-4 py-2.5 text-sm border ${
-                    staff
-                      ? 'chat-bubble-staff bg-amber-500/15 border-amber-500/30 text-brand-text'
-                      : mine
-                        ? 'chat-bubble-outgoing bg-brand-primary text-brand-accent-text border-brand-primary'
-                        : 'chat-bubble-incoming bg-brand-surface text-brand-text border-brand-border'
-                  }`}
+                  key={msg.id}
+                  className={`app-chat-row ${mine ? 'app-chat-row-outgoing' : 'app-chat-row-incoming'}`}
                 >
-                  <p className="text-xs opacity-70 mb-1">{senderLabel(msg.senderRole, msg.senderName)}</p>
-                  <p className="whitespace-pre-wrap">{msg.body}</p>
-                  <p className="text-xs opacity-60 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
+                  <AppChatBubble
+                    tone={tone}
+                    senderLabel={senderLabel(msg.senderRole, msg.senderName)}
+                    body={msg.body}
+                    timestamp={formatChatTime(msg.createdAt)}
+                  />
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
         <div ref={bottomRef} />
       </div>
       {!readOnly ? (
-        <div className="shrink-0 flex gap-2 p-3 border-t border-brand-border">
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void handleSend()}
-            placeholder={placeholder}
-            className="uber-input flex-1"
-          />
-          <button
-            type="button"
-            onClick={() => void handleSend()}
-            disabled={submitting || !draft.trim()}
-            className="app-button-primary !w-auto !h-11 !px-4 shrink-0 disabled:opacity-50"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
+        <AppChatComposer
+          value={draft}
+          onChange={setDraft}
+          onSend={handleSend}
+          placeholder={placeholder}
+          submitting={submitting}
+        />
       ) : (
-        <p className="shrink-0 text-sm text-brand-text-muted text-center p-4 border-t border-brand-border">
+        <p className="shrink-0 text-sm text-brand-text-muted text-center p-4 border-t border-brand-border bg-brand-surface">
           {readOnlyMessage}
         </p>
       )}

@@ -4,5 +4,11 @@ import { JobListingProfile } from './JobListingProfile';
 
 /** Compact flat review used at end of posting flows */
 export function JobListingPreview({ job }: { job: JobListingLike }) {
-  return <JobListingProfile job={job} showBadges={false} />;
+  return (
+    <JobListingProfile
+      job={job}
+      showBadges={false}
+      operationalDetails={job.operationalDetails}
+    />
+  );
 }

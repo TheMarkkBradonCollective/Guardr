@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
-
-type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+import {
+  resolvePlatformRole,
+  type PlatformRole,
+} from '../../lib/accountSessionAuth';
 
 interface StaffMessageRow {
   id: string;
@@ -26,29 +28,6 @@ async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
   });
 }
 
-function resolvePlatformRole(input: {
-  isStaff?: boolean;
-  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
-  legacyRole?: string;
-}): PlatformRole {
-  if (input.legacyRole === 'client') return 'client';
-  if (input.isStaff && input.staffRole) {
-    switch (input.staffRole) {
-      case 'Owner':
-        return 'owner';
-      case 'Director':
-        return 'director';
-      case 'Administrator':
-        return 'administrator';
-      case 'Moderator':
-        return 'moderator';
-    }
-  }
-  if (input.legacyRole === 'auditor') return 'moderator';
-  if (input.legacyRole === 'staff') return 'administrator';
-  return 'guard';
-}
-
 function isStaffPlatformRole(role: PlatformRole): boolean {
   return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
 }
@@ -64,25 +43,41 @@ async function verifyStaffSession(
   const email = credentials.email.trim().toLowerCase();
   const { userId } = credentials;
 
-  let { data } = await db
-    .from('guards')
-    .select('id, email, is_staff, staff_role')
+  let { data, error } = await db
+    .from('staff')
+    .select('id, email, staff_role')
     .eq('id', userId)
     .maybeSingle();
 
-  if (!data) {
+  if (!data && !error) {
     const byEmail = await db
-      .from('guards')
-      .select('id, email, is_staff, staff_role')
+      .from('staff')
+      .select('id, email, staff_role')
       .eq('email', email)
       .maybeSingle();
     data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
   }
 
-  if (!data || data.email?.toLowerCase() !== email || !data.is_staff) return null;
+  if (!data && error?.code === '42P01') {
+    const legacy = await db
+      .from('guards')
+      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .eq('id', userId)
+      .maybeSingle();
+    if (legacy.data && !legacy.data.migrated_to_staff_at && legacy.data.is_staff) {
+      data = {
+        id: legacy.data.id,
+        email: legacy.data.email,
+        staff_role: legacy.data.staff_role,
+      };
+    }
+  }
+
+  if (!data || data.email?.toLowerCase() !== email) return null;
 
   const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
+    isStaff: true,
     staffRole: data.staff_role ?? undefined,
     legacyRole: 'staff',
   });

@@ -47,6 +47,7 @@ import {
   type ApprovalQueueId,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
+import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
@@ -86,7 +87,10 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
-  onApproveAllReadyGuardAccounts?: () => Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onSubmitGuardIdentityVerification?: (
@@ -108,8 +112,6 @@ interface StaffDashboardProps {
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
-  onApproveGuard: (guardId: string) => void;
-  onRejectGuard: (guardId: string) => void;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -150,6 +152,11 @@ interface StaffDashboardProps {
     certId: string,
     imageUrl: string
   ) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    guardId: string,
+    certId: string,
+    payload: import('./credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('./credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
@@ -201,7 +208,7 @@ export function StaffDashboard({
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
-  onApproveAllReadyGuardAccounts,
+  onActivateGuardAccount,
   onDeleteGuardAccount,
   onDeleteClientAccount,
   onSubmitGuardIdentityVerification,
@@ -213,8 +220,6 @@ export function StaffDashboard({
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onReleasePayout,
@@ -242,6 +247,7 @@ export function StaffDashboard({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSendSupportMessage,
@@ -405,13 +411,14 @@ export function StaffDashboard({
             onRejectCert={onRejectCert}
             onApproveGuardApplication={onApproveGuardApplication}
             onApproveClient={onApproveClient}
-            onApproveGuardAccount={onApproveGuardAccount}
-            onApproveAllReadyGuardAccounts={onApproveAllReadyGuardAccounts}
-            onApproveIdentityVerification={onApproveGuardIdentityVerification}
-            onRejectIdentityVerification={onRejectGuardIdentityVerification}
-            onRequestIdentityResubmit={onRequestGuardIdResubmit}
-            onRequestCertImageResubmit={onRequestCertImageResubmit}
-            onUpdateGuardIdImages={onUpdateGuardIdImages}
+            onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
+            onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
+            onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
+            onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
+            onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
+            onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
+            canManageGuardAccounts={canManageGuardAccounts}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -458,16 +465,16 @@ export function StaffDashboard({
             onResetAuditFailures={onResetAuditFailures}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
-            onApproveGuard={onApproveGuard}
-            onRejectGuard={onRejectGuard}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
             onUpdateProfile={canManageGuardAccounts ? onUpdateGuardProfile : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
+            onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
@@ -526,6 +533,7 @@ export function StaffDashboard({
         return onSendSupportMessage && onUpdateSupportStatus ? (
           <StaffSupportPanel
             tickets={supportTickets}
+            currentUser={currentUser}
             onSendMessage={onSendSupportMessage}
             onUpdateStatus={onUpdateSupportStatus}
             selectedTicketId={selectedSupportTicketId}
@@ -599,9 +607,6 @@ export function StaffDashboard({
         return (
           <UserProfileScreen
             currentUser={currentUser}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
             onOpenLegal={onOpenLegal}
@@ -625,7 +630,9 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
     >
-      {renderSection()}
+      <AppPageTransition motionKey={section} className="h-full min-h-0">
+        {renderSection()}
+      </AppPageTransition>
     </StaffOpsLayout>
   );
 }

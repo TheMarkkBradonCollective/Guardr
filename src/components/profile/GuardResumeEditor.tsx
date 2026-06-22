@@ -10,7 +10,7 @@ import { joinTagInput, parseTagInput } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
-import { GuardIdentityVerificationPanel } from './GuardIdentityVerificationPanel';
+import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 
 export interface GuardResumeSavePayload {
   headline: string;
@@ -36,12 +36,19 @@ interface GuardResumeEditorProps {
     certId: string,
     imageUrl: string
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
+  onUpdateCertification?: (
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('./GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
-  identityVerificationCompact?: boolean;
+  /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
+  credentialsEditing?: boolean;
+  /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
+  staffMode?: boolean;
 }
 
 export function GuardResumeEditor({
@@ -52,11 +59,14 @@ export function GuardResumeEditor({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
-  identityVerificationCompact = false,
+  credentialsEditing,
+  staffMode = false,
 }: GuardResumeEditorProps) {
+  const credEditing = credentialsEditing ?? editing;
   const [showAddExp, setShowAddExp] = useState(false);
   const [showAddEdu, setShowAddEdu] = useState(false);
 
@@ -121,6 +131,19 @@ export function GuardResumeEditor({
 
   return (
     <div className="space-y-5">
+      {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
+
+      <GuardCredentialsPanel
+        guard={guard}
+        editing={credEditing}
+        staffMode={staffMode}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
+        onUpdateCertification={onUpdateCertification}
+        onSubmitIdentityVerification={onSubmitIdentityVerification}
+      />
+
       <section className="app-form-section space-y-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
@@ -222,22 +245,6 @@ export function GuardResumeEditor({
           })}
         </div>
       </section>
-
-      {!guard.isStaff && onSubmitIdentityVerification && (
-        <GuardIdentityVerificationPanel
-          guard={guard}
-          onSubmit={onSubmitIdentityVerification}
-          compact={identityVerificationCompact}
-        />
-      )}
-
-      <GuardCredentialsPanel
-        guard={guard}
-        editing={editing}
-        onAddCertification={onAddCertification}
-        onDeleteCertification={onDeleteCertification}
-        onAttachCertificationImage={onAttachCertificationImage}
-      />
 
       <ExperienceSection
         title="Work experience"

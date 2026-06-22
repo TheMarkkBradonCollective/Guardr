@@ -538,7 +538,7 @@ export function AuthPage({
                 <div className="space-y-4 pt-4 border-t border-brand-border">
                   <p className="uber-label">Guard details</p>
                   <p className="text-xs text-brand-text-muted">
-                    Add your guard card and credentials from your profile after signing up.
+                    Add your guard card and other credentials from your profile after signing up — each has its own section.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>

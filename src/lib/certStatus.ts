@@ -1,14 +1,19 @@
 import { Certification, SecurityGuard } from '../types';
 import { resolveCertCatalogId } from './certCatalog';
-import { guardHasCredentialUploaded, isCertExpired } from './guardQualification';
+import { certHasDocumentProof } from './certImagePolicy';
+import { guardHasCredentialListed, guardHasCredentialUploaded, isCertExpired } from './guardQualification';
 
 export { isCertExpired };
 
 export function getCredentialUploadLabel(cert: Certification): string {
+  if (!certHasDocumentProof(cert)) return 'Listed';
   return isCertExpired(cert) ? 'On file · Expired' : 'On file';
 }
 
 export function getCredentialUploadBadgeClass(cert: Certification): string {
+  if (!certHasDocumentProof(cert)) {
+    return 'text-brand-text-muted border-brand-border bg-brand-border/20';
+  }
   return isCertExpired(cert)
     ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
     : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
@@ -36,9 +41,9 @@ export function getCredentialStatusBadgeClass(cert: Certification): string {
   return getCredentialUploadBadgeClass(cert);
 }
 
-export type CourseUploadStatus = 'missing' | 'on-file' | 'expired';
+export type CourseUploadStatus = 'missing' | 'listed' | 'on-file' | 'expired';
 
-function matchingUploadedCerts(
+function matchingListedCerts(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
@@ -61,9 +66,12 @@ export function getCourseUploadStatus(
   catalogId: string,
   jobState?: string
 ): CourseUploadStatus {
-  if (!guardHasCredentialUploaded(guard, catalogId, jobState)) return 'missing';
+  if (!guardHasCredentialListed(guard, catalogId, jobState)) return 'missing';
+  if (!guardHasCredentialUploaded(guard, catalogId, jobState)) return 'listed';
 
-  const certs = matchingUploadedCerts(guard, catalogId, jobState);
+  const certs = matchingListedCerts(guard, catalogId, jobState).filter((cert) =>
+    certHasDocumentProof(cert)
+  );
   const allExpired = certs.length > 0 && certs.every(isCertExpired);
 
   if (allExpired) return 'expired';
@@ -74,6 +82,8 @@ export function getCourseUploadStatusLabel(status: CourseUploadStatus): string {
   switch (status) {
     case 'on-file':
       return 'On file';
+    case 'listed':
+      return 'Listed';
     case 'expired':
       return 'On file · Expired';
     default:
@@ -85,6 +95,8 @@ export function getCourseUploadStatusBadgeClass(status: CourseUploadStatus): str
   switch (status) {
     case 'on-file':
       return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+    case 'listed':
+      return 'text-brand-text-muted border-brand-border bg-brand-border/20';
     case 'expired':
       return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
     default:

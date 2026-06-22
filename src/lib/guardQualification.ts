@@ -20,13 +20,13 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 };
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: 'Valid BSIS Guard Card on file — Active and eligible to work jobs',
+  pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
   active:
     'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
-  'No valid BSIS Guard Card on file — upload a guard card to become Active and work jobs';
+  'Verified government ID and valid BSIS Guard Card required — complete both in Credentials to become Active and work jobs';
 
 /** Shown on training credentials and job checklists — not a work blocker. */
 export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
@@ -37,37 +37,76 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 /** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
-import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+import { getGuardUserStatus, isGuardAccountActive, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
+import { certHasDocumentProof } from './certImagePolicy';
+import {
+  guardCredentialGraceExpired,
+  guardCredentialGraceMsRemaining,
+  guardHasActiveCredentialGrace,
+  formatCredentialGraceTimeRemaining,
+} from './guardCredentialGrace';
 import { getGuardActivationChecklist } from './guardAccountActivation';
+import {
+  getGuardIdVerificationStatus,
+  guardIdVerificationPhotosComplete,
+  isIdExpired,
+} from './guardIdentityVerification';
 
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
   const userStatus = getGuardUserStatus(guard);
-  if (userStatus === 'pending') return 'inactive';
+  if (userStatus === 'pending' || userStatus === 'approved') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
-  return guardMeetsLevel1(guard, state) ? 'active' : 'inactive';
+  return guardCanWorkFieldJobs(guard, state) ? 'active' : 'inactive';
 }
 
-/** Active account + valid BSIS guard card — required to accept, be hired, or work jobs */
+/** Active account + verified ID, valid guard card, and PTA/UOF (or active staff grace). */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountActive(guard)) return false;
-  return guardMeetsLevel1(guard, state);
+  if (!guardHasVerifiedIdForWork(guard)) return false;
+  if (!guardMeetsLevel1(guard, state)) return false;
+  if (guardMeetsPtaUofTraining(guard)) return true;
+  return guardHasActiveCredentialGrace(guard);
+}
+
+export function guardHasIdOnFile(guard: SecurityGuard): boolean {
+  const status = getGuardIdVerificationStatus(guard);
+  return guardIdVerificationPhotosComplete(guard) || status === 'verified';
+}
+
+export function guardHasVerifiedIdForWork(guard: SecurityGuard): boolean {
+  return getGuardIdVerificationStatus(guard) === 'verified' && !isIdExpired(guard);
+}
+
+export function guardHasExpiredIdOnFile(guard: SecurityGuard): boolean {
+  return guardHasIdOnFile(guard) && isIdExpired(guard);
+}
+
+export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): boolean {
+  return (
+    guardHasVerifiedIdForWork(guard) &&
+    guardMeetsLevel1(guard, state) &&
+    guardMeetsPtaUofTraining(guard)
+  );
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
   if (guard.isStaff) {
     return 'Staff accounts cannot work field jobs.';
   }
-  if (isGuardAccountPending(guard)) {
+  if (isGuardAccountPreActive(guard)) {
     const checklist = getGuardActivationChecklist(guard);
     if (!checklist.idSubmitted || !checklist.guardCardSubmitted) {
-      return 'Submit your government ID and BSIS Guard Card in your profile. Staff will verify both before activating your account.';
+      return 'Submit your government ID and BSIS Guard Card in your profile (ID verification and Guard Card sections). Staff will verify both before approving your profile.';
+    }
+    if (isGuardAccountApproved(guard)) {
+      return 'Your profile is approved — Guardr staff will activate your account so you can work jobs.';
     }
     if (!checklist.canActivate) {
-      return 'Your ID and Guard Card are under staff review. You will be notified when your account is activated.';
+      return 'Your ID and Guard Card are under staff review. You will be notified when your profile is approved.';
     }
-    return 'Your documents are verified — awaiting final account activation by Guardr staff.';
+    return 'Your documents meet work requirements — awaiting final profile approval by Guardr staff.';
   }
   const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'suspended') {
@@ -76,9 +115,32 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (userStatus === 'blocked') {
     return 'Your account is blocked. Contact Guardr support.';
   }
+  if (!guardHasVerifiedIdForWork(guard)) {
+    const idStatus = getGuardIdVerificationStatus(guard);
+    if (idStatus === 'rejected') {
+      return 'Your government ID needs to be resubmitted — tap Government ID in Credentials to update.';
+    }
+    if (idStatus === 'pending' || (guardHasIdOnFile(guard) && idStatus !== 'verified')) {
+      return 'Your government ID must be verified by Guardr staff before you can work jobs.';
+    }
+    if (guardHasExpiredIdOnFile(guard)) {
+      return 'Your government ID has expired — update it in Credentials before working jobs.';
+    }
+    return 'Submit and verify your government ID in Credentials before working jobs.';
+  }
   if (!guardMeetsLevel1(guard, state)) {
     const jobState = state || 'CA';
     return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
+  }
+  if (!guardMeetsPtaUofTraining(guard)) {
+    if (guardHasActiveCredentialGrace(guard)) {
+      const remaining = formatCredentialGraceTimeRemaining(guardCredentialGraceMsRemaining(guard));
+      return `Upload 8-hour PTA/UOF training in Credentials within ${remaining} or your account will be deactivated. ${PTA_UOF_UPLOAD_GUIDANCE}`;
+    }
+    if (guardCredentialGraceExpired(guard)) {
+      return 'Your credential grace period has expired — upload PTA/UOF training in Credentials to work again.';
+    }
+    return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   return null;
 }
@@ -210,20 +272,22 @@ function matchingCredentials(
   });
 }
 
-/** Uploaded and not rejected — includes expired (for display). */
+/** Credential record exists (non-rejected) — may be listed without a document photo. */
+export function guardHasCredentialListed(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): boolean {
+  return matchingCredentials(guard, catalogId, jobState).length > 0;
+}
+
+/** Uploaded with document proof and not rejected — includes expired (for display). */
 export function guardHasCredentialUploaded(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): boolean {
-  return guard.certifications.some((cert) => {
-    if (cert.status === 'rejected') return false;
-    if (!certMatchesCatalogId(cert, catalogId)) return false;
-    if (catalogId === 'bsis-guard-card' && jobState) {
-      return cert.state?.toUpperCase() === jobState.toUpperCase();
-    }
-    return true;
-  });
+  return matchingCredentials(guard, catalogId, jobState).some((cert) => certHasDocumentProof(cert));
 }
 
 /**
@@ -236,6 +300,7 @@ export function guardHasCredentialOnFile(
   jobState?: string
 ): boolean {
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
+    if (!certHasDocumentProof(cert)) return false;
     if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });
@@ -248,6 +313,7 @@ export function guardHasGuardrVerifiedCredential(
 ): boolean {
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
     if (cert.status !== 'verified') return false;
+    if (!certHasDocumentProof(cert)) return false;
     if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
     return true;
   });
@@ -260,6 +326,62 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
     guardHasCredentialUploaded(guard, 'bsis-guard-card', state) &&
     !guardHasCredentialOnFile(guard, 'bsis-guard-card', state)
   );
+}
+
+/** Combined 8-hr cert listed, or both parts listed (separate PTA + UOF, or PTA + WMD). */
+export function guardMeetsPtaUofTrainingListed(guard: SecurityGuard): boolean {
+  if (guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  const hasPta = guardHasCredentialListed(guard, LEGACY_PTA_ID);
+  if (!hasPta) return false;
+  return (
+    guardHasCredentialListed(guard, LEGACY_UOF_ID) ||
+    guardHasCredentialListed(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
+export function guardMeets32HourBlockListed(guard: SecurityGuard): boolean {
+  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialListed(guard, id))) {
+    return true;
+  }
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
+}
+
+/** Individual 32-hour courses listed without a document photo. */
+export function countThirtyTwoHourCoursesListedOnly(guard: SecurityGuard): number {
+  return THIRTY_TWO_HOUR_COURSE_IDS.filter(
+    (id) => guardHasCredentialListed(guard, id) && !guardHasCredentialOnFile(guard, id)
+  ).length;
+}
+
+export function formatThirtyTwoHourCourseProgressCounts(
+  progress: {
+    uploaded32HourCount: number;
+    listed32HourCount: number;
+    total32HourCourses: number;
+  },
+  options?: { scopeLabel?: string }
+): string {
+  const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
+  const scope = options?.scopeLabel ?? 'courses';
+  const base = `${uploaded32HourCount} of ${total32HourCourses} ${scope} on file`;
+  if (listed32HourCount > 0) {
+    return `${base} · ${listed32HourCount} listed`;
+  }
+  return base;
+}
+
+/** On file = full credit; listed-only = half credit toward the 9-course block. */
+export function thirtyTwoHourCourseProgressPercent(progress: {
+  thirtyTwoHourBlockComplete: boolean;
+  uploaded32HourCount: number;
+  listed32HourCount: number;
+  total32HourCourses: number;
+}): number {
+  if (progress.thirtyTwoHourBlockComplete) return 100;
+  const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
+  if (total32HourCourses <= 0) return 0;
+  const weight = uploaded32HourCount + listed32HourCount * 0.5;
+  return Math.round((weight / total32HourCourses) * 100);
 }
 
 /** Combined 8-hr cert, or both parts on file (separate PTA + UOF, or PTA + WMD). */
@@ -314,13 +436,13 @@ export function getGuardQualificationLevel(guard: SecurityGuard, state = 'CA'): 
   return 'active';
 }
 
-/** Client job preference — only a valid guard card is required to work. */
+/** Client job preference — verified government ID and valid guard card required to work. */
 export function guardMeetsQualificationLevel(
   guard: SecurityGuard,
   _minLevel: 'pending' | 'active',
   state = 'CA'
 ): boolean {
-  return guardMeetsLevel1(guard, state);
+  return guardMeetsWorkRequirements(guard, state);
 }
 
 export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
@@ -332,12 +454,17 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const uploaded32HourCount = THIRTY_TWO_HOUR_COURSE_IDS.filter((id) =>
     guardHasCredentialOnFile(guard, id)
   ).length;
+  const listed32HourCount = countThirtyTwoHourCoursesListedOnly(guard);
   const thirtyTwoHourRollup = THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) =>
     guardHasCredentialOnFile(guard, id)
   );
+  const thirtyTwoHourBlockComplete = guardMeets32HourBlock(guard);
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
+    governmentId: guardHasIdOnFile(guard),
+    governmentIdExpired: guardHasExpiredIdOnFile(guard),
+    governmentIdVerified: guardHasVerifiedIdForWork(guard),
     guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     guardCardExpired: guardHasExpiredGuardCard(guard, jobState),
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', jobState),
@@ -348,9 +475,16 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     legacyUof,
     legacyWmd,
     thirtyTwoHourRollup,
-    thirtyTwoHourBlockComplete: guardMeets32HourBlock(guard),
+    thirtyTwoHourBlockComplete,
     thirtyTwoHourBlockVerified: guardMeets32HourBlockVerified(guard),
     uploaded32HourCount,
+    listed32HourCount,
+    thirtyTwoHourProgressPercent: thirtyTwoHourCourseProgressPercent({
+      thirtyTwoHourBlockComplete,
+      uploaded32HourCount,
+      listed32HourCount,
+      total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
+    }),
     total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     trainingPathwayComplete: guardMeetsLevel2Training(guard),
     /** @deprecated */

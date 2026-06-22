@@ -7,24 +7,32 @@ import {
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import {
+  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, ImagePlus, Plus } from 'lucide-react';
+import { WfBadge } from '../ui/wireframe';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { validateCertDeletion } from '../../lib/certImagePolicy';
+import { CERT_DOCUMENT_PHOTO_LABEL, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { showAppToast } from '../ui/AppToast';
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
 interface GuardThirtyTwoHourPanelProps {
   guard: SecurityGuard;
   editing: boolean;
+  staffMode?: boolean;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
+  renderCertActions?: (cert: Certification) => React.ReactNode;
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -37,9 +45,12 @@ function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certificati
 export function GuardThirtyTwoHourPanel({
   guard,
   editing,
+  staffMode = false,
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
+  renderCertActions,
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
@@ -61,9 +72,7 @@ export function GuardThirtyTwoHourPanel({
     [guard.certifications]
   );
 
-  const progressPct = progress.thirtyTwoHourBlockComplete
-    ? 100
-    : Math.round((progress.uploaded32HourCount / progress.total32HourCourses) * 100);
+  const progressPct = progress.thirtyTwoHourProgressPercent;
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -83,12 +92,17 @@ export function GuardThirtyTwoHourPanel({
     setFormError('');
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setImageUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await processDocumentPhotoFile(file);
+      setImageUrl(dataUrl);
+      setFormError('');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not process image.');
+    }
   };
 
   const submitCert = async (e: React.FormEvent) => {
@@ -97,6 +111,12 @@ export function GuardThirtyTwoHourPanel({
     if (!onAddCertification || !addingCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(addingCatalogId);
     if (!entry) return;
+
+    const proof = validateCertSubmission(imageUrl);
+    if (!proof.ok) {
+      setFormError(proof.error);
+      return;
+    }
 
     const result = await onAddCertification({
       catalogId: entry.id,
@@ -121,13 +141,13 @@ export function GuardThirtyTwoHourPanel({
     if (cert) {
       const allowed = validateCertDeletion(cert);
       if (allowed.ok === false) {
-        window.alert(allowed.error);
+        showAppToast(allowed.error, { tone: 'error' });
         return;
       }
     }
     if (!window.confirm('Remove this credential from your profile?')) return;
     const result = await onDeleteCertification(certId);
-    if (result.ok === false) window.alert(result.error);
+    if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
   const certCardProps = (cert: Certification) => ({
@@ -135,14 +155,32 @@ export function GuardThirtyTwoHourPanel({
     onAttachImage: onAttachCertificationImage
       ? (imageUrl: string) => onAttachCertificationImage(cert.id, imageUrl)
       : undefined,
+    canEdit: staffMode || guardCertificationCanEdit(cert),
+    staffMode,
+    onUpdate: onUpdateCertification
+      ? (payload: CertUpdatePayload) => onUpdateCertification(cert.id, payload)
+      : undefined,
+    guardName: guard.name,
   });
+
+  const renderCertRow = (cert: Certification) => (
+    <div key={cert.id} className="space-y-2">
+      <CertItemCard cert={cert} editing={editing} compact showCategory={false} {...certCardProps(cert)} />
+      {renderCertActions?.(cert)}
+    </div>
+  );
 
   return (
     <section className="app-form-section space-y-4">
       <div>
-        <p className="uber-label flex items-center gap-2">
+        <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
+          {staffMode && !progress.thirtyTwoHourBlockComplete && (
+            <WfBadge tone="warning" className="!text-[10px]">
+              Missing
+            </WfBadge>
+          )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
@@ -161,7 +199,7 @@ export function GuardThirtyTwoHourPanel({
                 : progress.thirtyTwoHourRollup
                   ? '32-hour block complete (rollup cert on file)'
                   : '32-hour block complete (all 9 courses on file)'
-              : `${progress.uploaded32HourCount} of ${progress.total32HourCourses} courses on file`}
+              : formatThirtyTwoHourCourseProgressCounts(progress)}
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
@@ -176,14 +214,7 @@ export function GuardThirtyTwoHourPanel({
         </p>
         {rollupCerts.length > 0 ? (
           <div className="app-cert-item-stack !pt-0">
-            {rollupCerts.map((cert) => (
-              <CertItemCard
-                key={cert.id}
-                cert={cert}
-                editing={editing}
-                {...certCardProps(cert)}
-              />
-            ))}
+            {rollupCerts.map((cert) => renderCertRow(cert))}
           </div>
         ) : (
           <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
@@ -224,15 +255,7 @@ export function GuardThirtyTwoHourPanel({
 
               {uploaded.length > 0 && (
                 <div className="app-cert-item-stack !pt-0">
-                  {uploaded.map((cert) => (
-                    <CertItemCard
-                      key={cert.id}
-                      cert={cert}
-                      editing={editing}
-                      compact
-                      {...certCardProps(cert)}
-                    />
-                  ))}
+                  {uploaded.map((cert) => renderCertRow(cert))}
                 </div>
               )}
 
@@ -279,7 +302,7 @@ export function GuardThirtyTwoHourPanel({
           />
           <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
             <ImagePlus className="w-4 h-4 shrink-0" />
-            <span>Optional now — add a photo later from the credential list</span>
+            <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
             <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
           </label>
           {imageUrl && (
@@ -290,7 +313,11 @@ export function GuardThirtyTwoHourPanel({
             <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
               Cancel
             </button>
-            <button type="submit" className="flex-1 app-button-primary !h-11 !text-sm">
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
               Upload credential
             </button>
           </div>

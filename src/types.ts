@@ -60,6 +60,8 @@ export interface Certification {
   imageUrl?: string;
   /** Staff note when a clearer credential photo is needed */
   rejectionReason?: string;
+  /** Who uploaded this credential for approvals filtering */
+  submittedByRole?: 'guard' | 'staff';
 }
 
 export interface Experience {
@@ -204,7 +206,7 @@ export interface SecurityGuard {
   hourlyRateRequirement?: number;
   isStaff?: boolean;
   staffRole?: StaffRole;
-  userStatus?: 'pending' | 'active' | 'suspended' | 'blocked';
+  userStatus?: 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
   themePreference?: 'dark' | 'light' | 'grey';
   stripeConnectAccountId?: string;
@@ -213,12 +215,21 @@ export interface SecurityGuard {
   mustChangePassword?: boolean;
   /** Government ID verification — separate from profile avatar */
   idVerificationStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected';
+  idState?: string;
+  idNumber?: string;
+  idExpiryDate?: string;
   idFrontUrl?: string;
   idBackUrl?: string;
   idSelfieUrl?: string;
   idVerificationSubmittedAt?: string;
   idVerificationReviewedAt?: string;
   idVerificationRejectionReason?: string;
+  /** Who submitted government ID for approvals filtering */
+  idSubmittedBy?: 'guard' | 'staff';
+  /** Staff-granted deadline to upload optional credentials before account deactivation */
+  credentialGraceDeadline?: string;
+  /** Credential labels missing when grace period started */
+  credentialGraceMissing?: string[];
 }
 
 export interface StaffSpotCheck {
@@ -228,6 +239,48 @@ export interface StaffSpotCheck {
   uploadedBy: string;
   clientConfirmedAt?: string;
   clientConfirmedBy?: string;
+}
+
+/** Named point on site — fire extinguishers, med kits, Narcan, etc. */
+export interface JobOperationalLocation {
+  label?: string;
+  details: string;
+}
+
+/** Optional client site briefing — sensitive fields hidden from guards until assigned. */
+export interface JobOperationalDetails {
+  patronHeadCount?: string;
+  postAssignment?: string;
+  doorsOpenTime?: string;
+  doorsCloseTime?: string;
+  curfewTime?: string;
+  smokingAreaDetails?: string;
+  barDetails?: string;
+  barLastCallTime?: string;
+  barCloseTime?: string;
+  accessCodes?: string;
+  keyLocation?: string;
+  accessNotes?: string;
+  emergencyProtocol?: string;
+  radioCodes?: string;
+  radioChannel?: string;
+  cooldownAreaDetails?: string;
+  fireExtinguisherLocations?: JobOperationalLocation[];
+  medkitLocations?: JobOperationalLocation[];
+  narcanLocations?: JobOperationalLocation[];
+  vipAreaDetails?: string;
+  credentialingDetails?: string;
+  medicalEmergencyContacts?: string;
+  nearestHospital?: string;
+  evacuationRallyPoint?: string;
+  lostChildProcedure?: string;
+  intoxicationPolicy?: string;
+  filmingPhotoPolicy?: string;
+  vendorLoadInDetails?: string;
+  guardStationLocation?: string;
+  restroomBreakPolicy?: string;
+  clientSpecialRequests?: string;
+  additionalNotes?: string;
 }
 
 export interface SecurityRequest {
@@ -256,6 +309,8 @@ export interface SecurityRequest {
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
+  /** Client site briefing — hidden from guards until they are approved for the shift */
+  operationalDetails?: JobOperationalDetails;
   startDate: string;
   endDate: string;
   durationHours: number;

@@ -457,8 +457,8 @@ export function registerStripeRoutes(app: Express) {
           metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
         },
         metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
-        success_url: `${base}/?deposit=success&job_id=${jobId}`,
-        cancel_url: `${base}/?deposit=cancelled&job_id=${jobId}`,
+        success_url: `${base}/staff/payments?deposit=success&job_id=${jobId}`,
+        cancel_url: `${base}/staff/payments?deposit=cancelled&job_id=${jobId}`,
       });
 
       const db = getSupabaseAdmin();
@@ -541,8 +541,8 @@ export function registerStripeRoutes(app: Express) {
           metadata: { job_id: jobId },
         },
         metadata: { job_id: jobId },
-        success_url: `${base}/?payment=success&job_id=${jobId}`,
-        cancel_url: `${base}/?payment=cancelled&job_id=${jobId}`,
+        success_url: `${base}/client/requests?payment=success&job_id=${jobId}`,
+        cancel_url: `${base}/client/requests?payment=cancelled&job_id=${jobId}`,
       });
 
       if (db) {

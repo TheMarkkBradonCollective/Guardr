@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, Search } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Filter, Search, Send } from 'lucide-react';
 
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`app-screen ${className}`}>{children}</div>;
@@ -9,21 +9,107 @@ export function AppScreenTitle({ children }: { children: React.ReactNode }) {
   return <h1 className="app-screen-title">{children}</h1>;
 }
 
+export function AppPageLead({
+  kicker,
+  subtitle,
+  title,
+}: {
+  kicker?: string;
+  subtitle?: string;
+  title: string;
+}) {
+  return (
+    <div className="app-page-lead">
+      {kicker && <p className="app-page-lead-kicker">{kicker}</p>}
+      {subtitle && <p className="app-page-lead-sub">{subtitle}</p>}
+      <h1 className="app-page-lead-title">{title}</h1>
+    </div>
+  );
+}
+
+export function AppSubScreenHeader({
+  title,
+  onBack,
+  backLabel = 'Back',
+}: {
+  title: string;
+  onBack: () => void;
+  backLabel?: string;
+}) {
+  return (
+    <div className="app-subscreen-header">
+      <button type="button" onClick={onBack} className="app-subscreen-back">
+        <ArrowLeft className="w-4 h-4" />
+        {backLabel}
+      </button>
+      <h1 className="app-subscreen-title truncate">{title}</h1>
+    </div>
+  );
+}
+
+export function AppHeroBand({
+  label,
+  icon,
+  children,
+  footer,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+}) {
+  return (
+    <section className="app-hero-band">
+      <p className="app-hero-band-label">
+        {icon}
+        {label}
+      </p>
+      {children}
+      {footer}
+    </section>
+  );
+}
+
+export function AppStatusBanner({
+  icon,
+  title,
+  children,
+  action,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  children?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="app-status-banner">
+      {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
+      <div className="min-w-0 flex-1 space-y-2">
+        <p className="text-sm font-semibold">{title}</p>
+        {children}
+        {action}
+      </div>
+    </div>
+  );
+}
+
 export function AppSection({
   title,
   actionLabel,
   onAction,
   children,
   bleed = false,
+  className = '',
 }: {
   title: string;
   actionLabel?: string;
   onAction?: () => void;
   children: React.ReactNode;
   bleed?: boolean;
+  className?: string;
 }) {
   return (
-    <section className="app-section">
+    <section className={`app-section ${className}`}>
       <div className="app-section-head">
         <h2>{title}</h2>
         {actionLabel && onAction && (
@@ -146,6 +232,239 @@ export function AvatarPlaceholder({ name, size = 'md' }: { name: string; size?: 
   return (
     <div className={`app-avatar-placeholder ${size === 'sm' ? 'app-avatar-sm' : 'app-avatar-md'}`}>
       {name.charAt(0)}
+    </div>
+  );
+}
+
+/** Confident dashboard hero — greeting + optional status pill */
+export function AppDashboardHero({
+  kicker,
+  title,
+  status,
+}: {
+  kicker?: string;
+  title: string;
+  status?: React.ReactNode;
+}) {
+  return (
+    <header className="app-dashboard-hero">
+      <div className="min-w-0">
+        {kicker && <p className="app-page-lead-kicker">{kicker}</p>}
+        <h1 className="app-dashboard-hero-title">{title}</h1>
+      </div>
+      {status}
+    </header>
+  );
+}
+
+/** Grouped overview zone with optional action link */
+export function AppDashboardZone({
+  title,
+  actionLabel,
+  onAction,
+  children,
+  className = '',
+}: {
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`app-dashboard-zone ${className}`}>
+      <div className="app-dashboard-zone-head">
+        <h2 className="app-dashboard-zone-title">{title}</h2>
+        {actionLabel && onAction && (
+          <button type="button" onClick={onAction} className="app-section-link">
+            {actionLabel}
+          </button>
+        )}
+      </div>
+      <div className="app-dashboard-zone-body">{children}</div>
+    </section>
+  );
+}
+
+export function AppMetricStrip({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`app-metric-strip ${className}`}>{children}</div>;
+}
+
+export function AppMetricCell({
+  label,
+  value,
+  sub,
+  onClick,
+  accent = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  onClick?: () => void;
+  accent?: boolean;
+}) {
+  const Tag = onClick ? 'button' : 'div';
+  return (
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={`app-metric-cell ${accent ? 'app-metric-cell-accent' : ''} ${onClick ? 'app-metric-cell-clickable' : ''}`}
+    >
+      <p className="app-metric-cell-label">{label}</p>
+      <p className="app-metric-cell-value">{value}</p>
+      {sub && <p className="app-metric-cell-sub">{sub}</p>}
+    </Tag>
+  );
+}
+
+export function AppSegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <div className="app-segmented-control" role="tablist">
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          role="tab"
+          aria-selected={value === opt.id}
+          onClick={() => onChange(opt.id)}
+          className={`app-segmented-control-item ${value === opt.id ? 'app-segmented-control-item-active' : ''}`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function AppInboxList({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`app-inbox-list ${className}`}>{children}</div>;
+}
+
+export function AppInboxRow({
+  title,
+  preview,
+  meta,
+  badges,
+  selected = false,
+  onClick,
+}: {
+  title: string;
+  preview?: string;
+  meta?: string;
+  badges?: React.ReactNode;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`app-inbox-row ${selected ? 'app-inbox-row-selected' : ''}`}
+    >
+      <div className="app-inbox-row-main">
+        <div className="app-inbox-row-top">
+          <p className="app-inbox-row-title">{title}</p>
+          {meta && <span className="app-inbox-row-meta">{meta}</span>}
+        </div>
+        {preview && <p className="app-inbox-row-preview">{preview}</p>}
+        {badges && <div className="app-inbox-row-badges">{badges}</div>}
+      </div>
+      <ChevronRight className="w-4 h-4 shrink-0 text-brand-text-muted app-inbox-row-chevron" strokeWidth={1.75} />
+    </button>
+  );
+}
+
+export function AppChatHeader({
+  title,
+  subtitle,
+  onBack,
+  trailing,
+}: {
+  title: string;
+  subtitle?: string;
+  onBack?: () => void;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <div className="app-chat-header">
+      {onBack && (
+        <button type="button" onClick={onBack} className="app-chat-header-back" aria-label="Back">
+          <ArrowLeft className="w-5 h-5" strokeWidth={1.75} />
+        </button>
+      )}
+      <div className="app-chat-header-copy min-w-0 flex-1">
+        <p className="app-chat-header-title">{title}</p>
+        {subtitle && <p className="app-chat-header-sub">{subtitle}</p>}
+      </div>
+      {trailing}
+    </div>
+  );
+}
+
+export type AppChatBubbleTone = 'outgoing' | 'incoming' | 'staff' | 'system';
+
+export function AppChatBubble({
+  senderLabel,
+  body,
+  timestamp,
+  tone,
+}: {
+  senderLabel?: string;
+  body: string;
+  timestamp?: string;
+  tone: AppChatBubbleTone;
+}) {
+  return (
+    <div className={`app-chat-bubble app-chat-bubble-${tone}`}>
+      {senderLabel && <p className="app-chat-bubble-sender">{senderLabel}</p>}
+      <p className="app-chat-bubble-body whitespace-pre-wrap">{body}</p>
+      {timestamp && <p className="app-chat-bubble-time">{timestamp}</p>}
+    </div>
+  );
+}
+
+export function AppChatComposer({
+  value,
+  onChange,
+  onSend,
+  placeholder = 'Type a message…',
+  disabled = false,
+  submitting = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSend: () => void | Promise<void>;
+  placeholder?: string;
+  disabled?: boolean;
+  submitting?: boolean;
+}) {
+  return (
+    <div className="app-chat-composer">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void onSend()}
+        placeholder={placeholder}
+        disabled={disabled || submitting}
+        className="app-chat-composer-input"
+      />
+      <button
+        type="button"
+        onClick={() => void onSend()}
+        disabled={disabled || submitting || !value.trim()}
+        className="app-chat-composer-send"
+        aria-label="Send message"
+      >
+        <Send className="w-4 h-4" />
+      </button>
     </div>
   );
 }

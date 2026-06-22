@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
-import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
-import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
-import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
+import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -14,6 +12,8 @@ import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
+import { guardHasMissingWorkCredentials } from '../../lib/guardMissingCredentials';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -24,8 +24,6 @@ interface StaffGuardsPanelProps {
   onResetAuditFailures?: (id: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
-  onApproveGuard?: (guardId: string) => void;
-  onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onUpdateProfile?: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
@@ -35,9 +33,18 @@ interface StaffGuardsPanelProps {
     certId: string,
     imageUrl: string
   ) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    guardId: string,
+    certId: string,
+    payload: import('../credentials/CertDetailModal').CertUpdatePayload
+  ) => Promise<import('../credentials/CertDetailModal').CertUpdateResult>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,
@@ -73,16 +80,16 @@ export function StaffGuardsPanel({
   onResetAuditFailures,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onUpdateProfile,
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  onUpdateCertification,
   onAddExperience,
   onAddEducation,
   onApproveGuardAccount,
+  onActivateGuardAccount,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -117,12 +124,18 @@ export function StaffGuardsPanel({
 
   const roster = guards.filter((g) => !g.isStaff);
 
-  const filtered = roster.filter(
-    (g) =>
-      g.name.toLowerCase().includes(search.toLowerCase()) ||
-      g.email.toLowerCase().includes(search.toLowerCase()) ||
-      g.badgeNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = roster
+    .filter(
+      (g) =>
+        g.name.toLowerCase().includes(search.toLowerCase()) ||
+        g.email.toLowerCase().includes(search.toLowerCase()) ||
+        g.badgeNumber.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const rank = guardRosterSortRank(a) - guardRosterSortRank(b);
+      if (rank !== 0) return rank;
+      return a.name.localeCompare(b.name);
+    });
 
   const selected = filtered.find((g) => g.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
   const showDetailOnly = Boolean(selected && !splitView);
@@ -137,8 +150,6 @@ export function StaffGuardsPanel({
         onResetAuditFailures,
         onApproveCert,
         onRejectCert,
-        onApproveGuard,
-        onRejectGuard,
         onUpdateBackgroundChecked,
         onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(selected.id, payload) : undefined,
         onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(selected.id, cert) : undefined,
@@ -146,9 +157,13 @@ export function StaffGuardsPanel({
         onAttachCertificationImage: onAttachCertificationImage
           ? (certId: string, imageUrl: string) => onAttachCertificationImage(selected.id, certId, imageUrl)
           : undefined,
+        onUpdateCertification: onUpdateCertification
+          ? (certId, payload) => onUpdateCertification(selected.id, certId, payload)
+          : undefined,
         onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
         onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
         onApproveGuardAccount,
+        onActivateGuardAccount,
         onDeleteGuard,
         onSubmitIdentityVerification: onSubmitIdentityVerification
           ? (payload) => onSubmitIdentityVerification(selected.id, payload)
@@ -176,9 +191,9 @@ export function StaffGuardsPanel({
     const activeShift = requests.find(
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
-    const accountStatus = getGuardUserStatus(guard);
-    const idStatus = getGuardIdVerificationStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
+    const secondaryMeta =
+      pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
 
     return (
       <WfListCard
@@ -187,23 +202,23 @@ export function StaffGuardsPanel({
         title={guard.name}
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
-          <div className="flex flex-wrap items-center gap-1.5">
-            {pendingCerts > 0 && (
-              <WfBadge tone="warning">{pendingCerts} pending</WfBadge>
+          <div className="flex flex-col items-start gap-1.5 w-full">
+            <GuardRosterStatusBadges guard={guard} />
+            {secondaryMeta && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {pendingCerts > 0 && (
+                  <WfBadge tone="warning">
+                    {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+                  </WfBadge>
+                )}
+                <GuardMissingCredentialsBadge guard={guard} />
+                {activeShift && (
+                  <WfBadge tone="primary" className="max-w-full truncate">
+                    On job: {activeShift.title}
+                  </WfBadge>
+                )}
+              </div>
             )}
-            {accountStatus === 'pending' && (
-              <WfBadge tone="warning">Awaiting approval</WfBadge>
-            )}
-            {idStatus === 'pending' && (
-              <WfBadge tone="warning">ID pending</WfBadge>
-            )}
-            {idStatus === 'verified' && (
-              <WfBadge tone="success">ID verified</WfBadge>
-            )}
-            <span>
-              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_USER_STATUS_LABELS[accountStatus]}
-            </span>
-            {activeShift && <span>On: {activeShift.title}</span>}
           </div>
         }
         onClick={() => setSelectedId(guard.id)}

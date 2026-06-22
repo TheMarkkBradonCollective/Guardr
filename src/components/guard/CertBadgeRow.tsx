@@ -1,7 +1,11 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
-import { getQualificationProgress, guardPathwayStatusLabel } from '../../lib/guardQualification';
+import {
+  formatThirtyTwoHourCourseProgressCounts,
+  getQualificationProgress,
+  guardPathwayStatusLabel,
+} from '../../lib/guardQualification';
 import { getVerifiedLicensedStates } from '../../lib/guardLicenses';
 import { formatStateName } from '../../lib/states';
 import { Check, Shield } from 'lucide-react';
@@ -18,6 +22,13 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
   const progress = getQualificationProgress(guard, jobState);
 
   const requiredRows = [
+    {
+      id: 'government-id',
+      label: 'Government ID',
+      onFile: progress.governmentId,
+      expired: progress.governmentIdExpired,
+      verified: progress.governmentIdVerified,
+    },
     {
       id: 'bsis-guard-card',
       label: 'Guard Card',
@@ -86,7 +97,10 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
           </div>
           {progress.level === 'pending' && progress.ptaUofTraining && !progress.thirtyTwoHourBlockComplete && (
             <p className="text-[10px] text-brand-text-muted mt-2">
-              {progress.uploaded32HourCount} of {progress.total32HourCourses} courses in the 32-hour block on file
+              {formatThirtyTwoHourCourseProgressCounts(progress, {
+                scopeLabel: 'courses in the 32-hour block',
+              })}{' '}
+              · {progress.thirtyTwoHourProgressPercent}%
             </p>
           )}
         </div>

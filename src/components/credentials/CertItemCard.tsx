@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import { ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
-import { getCertCatalogEntry } from '../../lib/certCatalog';
-import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
+import { certDisplayName } from '../../lib/certCatalog';
+import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
-import { CertDetailModal } from './CertDetailModal';
+import { CertDetailModal, type CertUpdatePayload, type CertUpdateResult } from './CertDetailModal';
 import { CertImageAttachButton } from './CertImageAttachButton';
+import { CredentialCategoryBadge } from './CredentialCategoryBadge';
+
+function certHasDetailsOnFile(cert: Certification): boolean {
+  return Boolean(cert.issuer?.trim() || cert.number?.trim() || cert.imageUrl?.trim());
+}
 
 interface CertItemCardProps {
   cert: Certification;
   editing?: boolean;
   onDelete?: () => void;
   onAttachImage?: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
+  canEdit?: boolean;
+  staffMode?: boolean;
+  onUpdate?: (payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   showUploadBadge?: boolean;
+  showCategory?: boolean;
   compact?: boolean;
   guardName?: string;
 }
@@ -26,14 +35,25 @@ export function CertItemCard({
   editing = false,
   onDelete,
   onAttachImage,
+  canEdit = false,
+  staffMode = false,
+  onUpdate,
   showUploadBadge = true,
+  showCategory = true,
   compact = false,
   guardName,
 }: CertItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
-  const entry = cert.catalogId ? getCertCatalogEntry(cert.catalogId) : undefined;
-  const canDelete = editing && onDelete && guardCanDeleteCertification(cert);
-  const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert);
+  const title = certDisplayName(cert);
+  const canEditCert = canEdit || staffMode || guardCertificationCanEdit(cert);
+  const useModalEdit = Boolean(onUpdate);
+  const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
+  const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;
+  const canAttachImage =
+    editing && onAttachImage && guardCanAttachCertImage(cert) && (!useModalEdit || !cert.imageUrl?.trim());
+  const thumbClass = compact
+    ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
+    : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
 
   return (
     <>
@@ -41,17 +61,16 @@ export function CertItemCard({
         <button
           type="button"
           onClick={() => setShowDetail(true)}
-          className="app-cert-item-interactive app-cert-item-body min-w-0 flex gap-3 flex-1 text-left"
+          className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${cert.imageUrl ? ' flex gap-3' : ''}`}
         >
-          {cert.imageUrl && !compact && (
-            <img
-              src={cert.imageUrl}
-              alt=""
-              className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
-            />
-          )}
+          {cert.imageUrl && <img src={cert.imageUrl} alt="" className={thumbClass} />}
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-snug">{entry?.name ?? cert.name}</p>
+            {showCategory && (
+              <div className="mb-1.5">
+                <CredentialCategoryBadge cert={cert} />
+              </div>
+            )}
+            <p className="font-semibold text-sm leading-snug">{title}</p>
             <p className="text-xs text-brand-text-muted mt-1">
               {cert.state ? `${formatStateName(cert.state)} · ` : ''}
               {cert.issuer} · #{cert.number}
@@ -64,18 +83,15 @@ export function CertItemCard({
             {cert.status === 'rejected' && cert.rejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
             )}
-            {cert.imageUrl && compact && (
-              <p className="text-[10px] text-brand-primary mt-1">Tap to view photo</p>
-            )}
-            {!cert.imageUrl && !compact && editing && (
-              <p className="text-[10px] text-brand-text-muted mt-1">No photo on file</p>
-            )}
+            <p className="text-[10px] text-brand-primary mt-1">
+              {cert.imageUrl ? 'Tap to view details' : editing ? 'Tap to view · add photo' : 'Tap to view details'}
+            </p>
           </div>
         </button>
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
           <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
-          {cert.imageUrl && editing && (
+          {cert.imageUrl && editing && !useModalEdit && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />
               Photo locked
@@ -104,7 +120,15 @@ export function CertItemCard({
       </div>
 
       {showDetail && (
-        <CertDetailModal cert={cert} guardName={guardName} onClose={() => setShowDetail(false)} />
+        <CertDetailModal
+          cert={cert}
+          guardName={guardName}
+          canEdit={canEditCert && !!onUpdate}
+          staffMode={staffMode}
+          initialEditMode={openInEditMode}
+          onSubmit={onUpdate}
+          onClose={() => setShowDetail(false)}
+        />
       )}
     </>
   );
