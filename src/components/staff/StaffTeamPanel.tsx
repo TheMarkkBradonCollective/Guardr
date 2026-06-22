@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
 import { useDevice } from '../../lib/platform';
@@ -21,6 +21,8 @@ interface StaffTeamPanelProps {
     staffRole: StaffRole;
   }) => Promise<string>;
   onUpdateStaffRole?: (staffId: string, role: StaffRole) => Promise<void>;
+  selectedId?: string | null;
+  onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
 }
 
@@ -32,10 +34,24 @@ export function StaffTeamPanel({
   onUpdateUserStatus,
   onAddStaff,
   onUpdateStaffRole,
+  selectedId: controlledSelectedId,
+  onSelectedIdChange,
   initialSelectedId = null,
 }: StaffTeamPanelProps) {
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
+  const isControlled = controlledSelectedId !== undefined;
+  const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
+
+  const setSelectedId = (id: string | null) => {
+    if (!isControlled) setInternalSelectedId(id);
+    onSelectedIdChange?.(id);
+  };
+
+  useEffect(() => {
+    if (isControlled) return;
+    setInternalSelectedId(initialSelectedId);
+  }, [initialSelectedId, isControlled]);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 

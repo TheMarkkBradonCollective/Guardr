@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { useDevice } from '../../lib/platform';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
@@ -16,6 +16,8 @@ interface StaffClientsPanelProps {
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onDeleteClient?: (id: string) => void | Promise<void>;
+  selectedId?: string | null;
+  onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
   onAddClient?: (input: StaffAddClientInput) => Promise<string>;
@@ -28,12 +30,26 @@ export function StaffClientsPanel({
   onApproveClient,
   onRejectClient,
   onDeleteClient,
+  selectedId: controlledSelectedId,
+  onSelectedIdChange,
   initialSelectedId = null,
   onOpenJob,
   onAddClient,
 }: StaffClientsPanelProps) {
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
+  const isControlled = controlledSelectedId !== undefined;
+  const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
+
+  const setSelectedId = (id: string | null) => {
+    if (!isControlled) setInternalSelectedId(id);
+    onSelectedIdChange?.(id);
+  };
+
+  useEffect(() => {
+    if (isControlled) return;
+    setInternalSelectedId(initialSelectedId);
+  }, [initialSelectedId, isControlled]);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 

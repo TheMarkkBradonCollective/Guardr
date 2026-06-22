@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
@@ -38,6 +38,10 @@ interface StaffGuardsPanelProps {
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
+  selectedId?: string | null;
+  onSelectedIdChange?: (id: string | null) => void;
+  staffEdit?: boolean;
+  onStaffEditChange?: (editing: boolean) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
@@ -63,12 +67,28 @@ export function StaffGuardsPanel({
   onAddEducation,
   onApproveGuardAccount,
   onDeleteGuard,
+  selectedId: controlledSelectedId,
+  onSelectedIdChange,
+  staffEdit,
+  onStaffEditChange,
   initialSelectedId = null,
   onOpenJob,
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
+  const isControlled = controlledSelectedId !== undefined;
+  const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
+
+  const setSelectedId = (id: string | null) => {
+    if (!isControlled) setInternalSelectedId(id);
+    onSelectedIdChange?.(id);
+  };
+
+  useEffect(() => {
+    if (isControlled) return;
+    setInternalSelectedId(initialSelectedId);
+  }, [initialSelectedId, isControlled]);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
@@ -178,7 +198,12 @@ export function StaffGuardsPanel({
             : 'No field guards match your search.'}
         </p>
       ) : showDetailOnly && detailProps ? (
-        <StaffGuardDetailPanel {...detailProps} onBack={() => setSelectedId(null)} />
+        <StaffGuardDetailPanel
+          {...detailProps}
+          editing={staffEdit}
+          onEditingChange={onStaffEditChange}
+          onBack={() => setSelectedId(null)}
+        />
       ) : splitView ? (
         <div className="tablet-split-panel">
           <div className="max-h-[75vh] overflow-y-auto pr-1">
@@ -186,7 +211,13 @@ export function StaffGuardsPanel({
               {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
             </AppItemCardStack>
           </div>
-          {detailProps && <StaffGuardDetailPanel {...detailProps} />}
+          {detailProps && (
+            <StaffGuardDetailPanel
+              {...detailProps}
+              editing={staffEdit}
+              onEditingChange={onStaffEditChange}
+            />
+          )}
         </div>
       ) : (
         <AppItemCardStack>
