@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, IdCard } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
   formatIdSummaryLine,
@@ -51,18 +51,14 @@ export function GuardIdItemCard({
         <button
           type="button"
           onClick={() => setShowDetail(true)}
-          className="app-cert-item-interactive app-cert-item-body min-w-0 flex gap-3 flex-1 text-left"
+          className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${guard.idFrontUrl ? ' flex gap-3' : ''}`}
         >
-          {guard.idFrontUrl ? (
+          {guard.idFrontUrl && (
             <img
               src={guard.idFrontUrl}
               alt=""
               className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
             />
-          ) : (
-            <div className="w-14 h-14 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0">
-              <IdCard className="w-5 h-5 text-brand-text-muted" />
-            </div>
           )}
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm leading-snug">Government ID</p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, ChevronRight, Lock, Trash2 } from 'lucide-react';
+import { ChevronRight, Lock, Trash2 } from 'lucide-react';
 import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification } from '../../lib/certImagePolicy';
@@ -40,9 +40,6 @@ export function CertItemCard({
   const thumbClass = compact
     ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';
-  const placeholderClass = compact
-    ? 'w-12 h-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0'
-    : 'w-14 h-14 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0';
 
   return (
     <>
@@ -50,15 +47,9 @@ export function CertItemCard({
         <button
           type="button"
           onClick={() => setShowDetail(true)}
-          className="app-cert-item-interactive app-cert-item-body min-w-0 flex gap-3 flex-1 text-left"
+          className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${cert.imageUrl ? ' flex gap-3' : ''}`}
         >
-          {cert.imageUrl ? (
-            <img src={cert.imageUrl} alt="" className={thumbClass} />
-          ) : (
-            <div className={placeholderClass} aria-hidden>
-              <Award className="w-5 h-5 text-brand-text-muted" />
-            </div>
-          )}
+          {cert.imageUrl && <img src={cert.imageUrl} alt="" className={thumbClass} />}
           <div className="min-w-0 flex-1">
             {showCategory && (
               <div className="mb-1.5">
