@@ -13,6 +13,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_DOCUMENT_PHOTO_LABEL, CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 interface GuardCardPanelProps {
   guard: SecurityGuard;
@@ -61,12 +62,17 @@ export function GuardCardPanel({
     setShowForm(false);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setImageUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await processDocumentPhotoFile(file);
+      setImageUrl(dataUrl);
+      setFormError('');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not process image.');
+    }
   };
 
   const submitGuardCard = async (e: React.FormEvent) => {

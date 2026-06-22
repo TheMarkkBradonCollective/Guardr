@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ChevronRight, FileImage } from 'lucide-react';
+import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 
 export function CertPhotoRow({
   label,
@@ -22,12 +23,7 @@ export function CertPhotoRow({
     setError('');
     setLoading(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Could not read image file.'));
-        reader.readAsDataURL(file);
-      });
+      const dataUrl = await processDocumentPhotoFile(file);
       onSelect(dataUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not process image.');

@@ -70,6 +70,7 @@ export function CertDetailModal({
   const photosLocked = certPhotoIsLockedForEditor(cert, staffMode);
 
   React.useEffect(() => {
+    if (editing) return;
     setIssuer(cert.issuer ?? '');
     setNumber(cert.number ?? '');
     setState(cert.state ?? 'CA');
@@ -89,6 +90,7 @@ export function CertDetailModal({
     cert.status,
     cert.rejectionReason,
     initialEditMode,
+    editing,
   ]);
 
   const displayCert: Certification = {
