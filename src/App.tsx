@@ -78,6 +78,7 @@ import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
   buildCertImageResubmitReason,
   buildIdResubmitReason,
+  GUARD_APPLICATION_REJECT_DEFAULT_REASON,
   type IdVerificationSlot,
 } from './lib/staffDocumentReview';
 import { computeDurationHours } from './lib/dates';
@@ -2245,6 +2246,9 @@ export default function App() {
     if (!front || !back || !selfie) {
       return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
     }
+    if (getGuardUserStatus(guard) === 'blocked') {
+      return { ok: false, error: 'Your application was not approved. Contact Guardr support.' };
+    }
 
     const previous = { ...guard };
     const submittedAt = new Date().toISOString();
@@ -2314,13 +2318,17 @@ export default function App() {
   };
 
   const handleRejectGuardIdentityVerification = async (guardId: string, reason?: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard || guard.isStaff) return;
+
     const reviewedAt = new Date().toISOString();
-    const rejectionReason = reason?.trim() || 'Documents could not be verified. Please resubmit clear photos.';
+    const rejectionReason = reason?.trim() || GUARD_APPLICATION_REJECT_DEFAULT_REASON;
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
           ? {
               ...g,
+              userStatus: 'blocked' as const,
               idVerificationStatus: 'rejected' as const,
               idVerificationReviewedAt: reviewedAt,
               idVerificationRejectionReason: rejectionReason,
@@ -2333,6 +2341,7 @@ export default function App() {
       await supabase
         .from('guards')
         .update({
+          user_status: 'blocked',
           id_verification_status: 'rejected',
           id_verification_reviewed_at: reviewedAt,
           id_verification_rejection_reason: rejectionReason,

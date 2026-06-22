@@ -29,6 +29,24 @@ export function buildCertImageResubmitReason(certName: string, staffNote?: strin
   return `Please upload a clearer photo for ${certName}. Make sure the document is fully visible, in focus, and easy to read.`;
 }
 
+export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
+  'Your guard application was not approved. Contact Guardr support if you have questions.';
+
+/** Full application rejection — blocks the guard account. Returns null if cancelled. */
+export function promptRejectGuardApplicationNote(): string | null {
+  const confirmed = window.confirm(
+    'Reject this guard\'s application?\n\nThey will be blocked from the platform and cannot resubmit ID documents or activate their account.'
+  );
+  if (!confirmed) return null;
+
+  const reason = window.prompt(
+    'Rejection reason (shown to guard):',
+    GUARD_APPLICATION_REJECT_DEFAULT_REASON
+  );
+  if (reason === null) return null;
+  return reason.trim();
+}
+
 /** Returns null if cancelled; otherwise trimmed note (may be empty). */
 export function promptStaffResubmitNote(itemLabel: string): string | null {
   const reason = window.prompt(

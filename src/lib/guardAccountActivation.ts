@@ -5,7 +5,7 @@ import {
   guardIdVerificationPhotosComplete,
 } from './guardIdentityVerification';
 import { guardHasGuardrVerifiedCredential } from './guardQualification';
-import { isGuardAccountPending } from './accountStatus';
+import { getGuardUserStatus, isGuardAccountPending } from './accountStatus';
 
 export interface GuardActivationChecklist {
   idSubmitted: boolean;
@@ -47,7 +47,9 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
   const guardCardVerified = guardHasVerifiedGuardCard(guard, state);
 
   const blockers: string[] = [];
-  if (!idSubmitted) {
+  if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') {
+    blockers.push('Guard application rejected — account blocked');
+  } else if (!idSubmitted) {
     blockers.push('Government ID and identity selfie not submitted');
   } else if (idStatus === 'rejected') {
     blockers.push('ID verification rejected — guard must resubmit');

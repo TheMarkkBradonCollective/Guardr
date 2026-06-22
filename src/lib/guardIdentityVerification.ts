@@ -1,4 +1,5 @@
 import { SecurityGuard } from '../types';
+import { getGuardUserStatus } from './accountStatus';
 
 export type GuardIdVerificationStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
 
@@ -41,8 +42,9 @@ export function guardIdVerificationIsLocked(
 }
 
 export function guardIdVerificationCanEdit(
-  guard: Pick<SecurityGuard, 'idVerificationStatus'>
+  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'userStatus' | 'isStaff'>
 ): boolean {
+  if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') return false;
   const status = getGuardIdVerificationStatus(guard);
   return status === 'not_submitted' || status === 'rejected';
 }

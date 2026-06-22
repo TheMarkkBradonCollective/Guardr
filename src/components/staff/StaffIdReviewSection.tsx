@@ -8,8 +8,10 @@ import {
 } from '../../lib/guardIdentityVerification';
 import {
   IdVerificationSlot,
+  promptRejectGuardApplicationNote,
   promptStaffResubmitNote,
 } from '../../lib/staffDocumentReview';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import { WfSectionHeader } from '../ui/wireframe';
 
 interface StaffIdReviewSectionProps {
@@ -48,6 +50,7 @@ export function StaffIdReviewSection({
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
   const hasPhotos = guardIdVerificationPhotosComplete(guard);
+  const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
 
   if (!hasPhotos && status === 'not_submitted') {
     return null;
@@ -119,17 +122,17 @@ export function StaffIdReviewSection({
             </button>
           </>
         )}
-        {onReject && (
+        {onReject && !applicationBlocked && (
           <button
             type="button"
             onClick={() => {
-              const reason = window.prompt('Rejection reason (shown to guard):');
+              const reason = promptRejectGuardApplicationNote();
               if (reason === null) return;
               void onReject(guard.id, reason);
             }}
             className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
           >
-            <X className="w-3.5 h-3.5" /> Reject ID
+            <X className="w-3.5 h-3.5" /> Reject application
           </button>
         )}
       </div>
