@@ -485,9 +485,9 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : activationChecklist.missingWorkCredentials.length > 0
-                        ? `Missing: ${activationChecklist.missingWorkCredentials.join(', ')} — can still approve`
-                        : 'Approve guard profile'
+                      : activationChecklist.missingGraceCredentials.length > 0
+                        ? `Missing: ${activationChecklist.missingGraceCredentials.join(', ')} — 48h grace`
+                        : 'Activate guard profile'
                   }
                 >
                   Approve guard profile

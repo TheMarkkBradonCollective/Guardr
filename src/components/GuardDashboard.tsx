@@ -47,6 +47,7 @@ import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPending } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
+import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';
@@ -559,7 +560,11 @@ export function GuardDashboard({
   ];
 
   const guardMainPanel = (
-    <div className={`h-full min-h-0 relative overflow-hidden ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
+    <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
+      {!accountPending && activeTab !== 'profile' && (
+        <GuardCredentialGraceBanner guard={guard} onOpenCredentials={() => setTab('profile')} />
+      )}
+      <div className="relative flex-1 min-h-0">
       {activeTab === 'map' && workBlockedMessage && (
         <div className="absolute top-0 left-0 right-0 z-[1002] px-4 py-3 bg-amber-500/15 border-b border-amber-500/30 text-sm text-brand-text">
           {workBlockedMessage}
@@ -712,6 +717,7 @@ export function GuardDashboard({
           )}
         </AppPageTransition>
       )}
+      </div>
     </div>
   );
 
