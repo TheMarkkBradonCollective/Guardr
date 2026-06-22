@@ -11,7 +11,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "generate:logos": "node scripts/generate-logo-assets.mjs",
-    "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs"
+    "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
+    "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",

@@ -1,5 +1,6 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v2';
+const CACHE_NAME = 'guardr-cache-v3';
+const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
 const OFFLINE_URLS = [
   '/',
   '/index.html',
@@ -8,6 +9,7 @@ const OFFLINE_URLS = [
   '/icon-192.png',
   '/icon-512.png',
   '/manifest.json',
+  WALKIE_CHIRP_SOUND,
 ];
 
 self.addEventListener('install', (event) => {
@@ -193,6 +195,7 @@ self.addEventListener('push', (event) => {
     requireInteraction: payload.priority === 'high' || payload.data?.priority === 'high',
     renotify: true,
     silent: false,
+    sound: WALKIE_CHIRP_SOUND,
     vibrate:
       payload.priority === 'high' || payload.data?.priority === 'high' ? [200, 100, 200, 100, 200] : undefined,
   };
