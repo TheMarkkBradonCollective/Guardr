@@ -1780,16 +1780,6 @@ export default function App() {
   };
 
   // ── Guard approval ─────────────────────────────────────────
-  const handleApproveGuard = async (guardId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, verified: true } : g));
-    if (isDbConnected) await supabase.from('guards').update({ verified: true }).eq('id', guardId);
-  };
-
-  const handleRejectGuard = async (guardId: string) => {
-    setGuards(prev => prev.map(g => g.id === guardId ? { ...g, verified: false } : g));
-    if (isDbConnected) await supabase.from('guards').update({ verified: false }).eq('id', guardId);
-  };
-
   const handleUpdateBackgroundChecked = async (guardId: string, status: boolean) => {
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, backgroundChecked: status } : g));
     if (isDbConnected) await supabase.from('guards').update({ background_checked: status }).eq('id', guardId);
@@ -2221,11 +2211,14 @@ export default function App() {
     }
 
     setGuards((prev) =>
-      prev.map((g) => (g.id === guardId ? { ...g, userStatus: 'active' as const } : g))
+      prev.map((g) => (g.id === guardId ? { ...g, userStatus: 'active' as const, verified: true } : g))
     );
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase.from('guards').update({ user_status: 'active' }).eq('id', guardId);
+      const { error } = await supabase
+        .from('guards')
+        .update({ user_status: 'active', verified: true })
+        .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
         throw new Error('Could not activate guard account. Please try again.');
@@ -4498,8 +4491,6 @@ export default function App() {
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
-          onApproveGuard={handleApproveGuard}
-          onRejectGuard={handleRejectGuard}
           onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
           onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
