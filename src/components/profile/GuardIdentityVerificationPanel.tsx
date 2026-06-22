@@ -81,7 +81,7 @@ export function GuardIdentityVerificationPanel({
         </p>
       )}
 
-      <div className="app-cert-item-stack border-t border-brand-border pt-3">
+      <div className="app-cert-item-stack">
         <GuardIdItemCard
           guard={guard}
           canEdit={canEdit}
