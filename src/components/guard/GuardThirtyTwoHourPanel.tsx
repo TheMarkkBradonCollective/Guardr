@@ -312,7 +312,7 @@ export function GuardThirtyTwoHourPanel({
           <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
             <ImagePlus className="w-4 h-4 shrink-0" />
             <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} required />
+            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
           </label>
           {imageUrl && (
             <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />

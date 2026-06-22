@@ -2,6 +2,19 @@ import { Certification } from '../types';
 
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
+export function certDatabaseErrorMessage(error: { code?: string; message?: string }): string {
+  if (error.code === '23505') {
+    return 'This certificate or license number is already registered. Each number can only be linked to one profile.';
+  }
+  if (error.code === 'PGRST204' || error.message?.includes('column')) {
+    return 'Could not save — run the latest database migrations (image_url, submitted_by_role), then try again.';
+  }
+  if (error.message?.includes('payload') || error.message?.includes('too large')) {
+    return 'Photo is too large to save. Try a smaller image or retake the photo.';
+  }
+  return 'Could not save credential. Please try again.';
+}
+
 export const CERT_IMAGE_POLICY_HINT =
   'Upload a photo or scan of the credential document — required for staff verification. Once uploaded, the photo cannot be changed or removed.';
 

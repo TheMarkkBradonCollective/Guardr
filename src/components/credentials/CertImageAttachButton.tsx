@@ -26,8 +26,8 @@ export function CertImageAttachButton({ onAttach, compact = false }: CertImageAt
       if (result.ok === false) {
         setError(result.error);
       }
-    } catch {
-      setError('Could not read image file. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read image file. Please try again.');
     } finally {
       setUploading(false);
     }

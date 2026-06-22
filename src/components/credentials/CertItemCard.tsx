@@ -49,7 +49,8 @@ export function CertItemCard({
   const useModalEdit = Boolean(onUpdate);
   const openInEditMode = useModalEdit && canEditCert && !certHasDetailsOnFile(cert);
   const canDelete = editing && onDelete && guardCanDeleteCertification(cert) && !useModalEdit;
-  const canAttachImage = editing && onAttachImage && guardCanAttachCertImage(cert) && !useModalEdit;
+  const canAttachImage =
+    editing && onAttachImage && guardCanAttachCertImage(cert) && (!useModalEdit || !cert.imageUrl?.trim());
   const thumbClass = compact
     ? 'w-12 h-12 rounded-xl object-cover shrink-0 border border-brand-border'
     : 'w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border';

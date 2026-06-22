@@ -79,7 +79,7 @@ import {
   normalizeCertNumber,
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
-import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission } from './lib/certImagePolicy';
+import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage } from './lib/certImagePolicy';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
@@ -1748,12 +1748,11 @@ export default function App() {
           if (error.code === '23505') {
             return {
               ok: false,
-              error:
-                'This certificate or license number is already registered. Each number can only be linked to one profile.',
+              error: certDatabaseErrorMessage(error),
             };
           }
           console.error('Cert insert error:', error);
-          return { ok: false, error: 'Could not save credential. Please try again.' };
+          return { ok: false, error: certDatabaseErrorMessage(error) };
         }
       } catch (e) {
         setGuards(prev =>
@@ -1764,7 +1763,7 @@ export default function App() {
           )
         );
         console.error('Cert insert error:', e);
-        return { ok: false, error: 'Could not save credential. Please try again.' };
+        return { ok: false, error: certDatabaseErrorMessage(error) };
       }
     }
     return { ok: true };
@@ -1860,7 +1859,7 @@ export default function App() {
             )
           );
           console.error('Cert image update error:', error);
-          return { ok: false, error: 'Could not save photo. Please try again.' };
+          return { ok: false, error: certDatabaseErrorMessage(error) };
         }
       } catch (e) {
         setGuards((prev) =>
@@ -2004,14 +2003,10 @@ export default function App() {
             )
           );
           if (error.code === '23505') {
-            return {
-              ok: false,
-              error:
-                'This certificate or license number is already registered. Each number can only be linked to one profile.',
-            };
+            return { ok: false, error: certDatabaseErrorMessage(error) };
           }
           console.error('Cert update error:', error);
-          return { ok: false, error: 'Could not save credential. Please try again.' };
+          return { ok: false, error: certDatabaseErrorMessage(error) };
         }
       } catch (e) {
         setGuards((prev) =>
