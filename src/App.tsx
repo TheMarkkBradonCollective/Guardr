@@ -55,7 +55,7 @@ import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
-import { Logo } from './components/Logo';
+import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { ClientDashboard } from './components/ClientDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -3923,12 +3923,7 @@ export default function App() {
   ) : null;
 
   if (loading) {
-    return (
-      <div className="page-shell min-h-screen flex flex-col justify-center items-center gap-4">
-        <Logo className="text-brand-primary animate-pulse" size={48} />
-        <p className="text-sm text-brand-text-muted">Loading Guardr…</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (legalPage) {
