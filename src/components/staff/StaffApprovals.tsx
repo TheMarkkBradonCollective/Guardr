@@ -1,3 +1,5 @@
+import { showAppToast } from '../ui/AppToast';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
@@ -188,7 +190,7 @@ export function StaffApprovals({
                 try {
                   await onApproveCert(guard.id, cert.id);
                 } catch (err) {
-                  alert(err instanceof Error ? err.message : 'Could not verify credential.');
+                  showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
                 }
               })();
             }}
@@ -318,13 +320,12 @@ export function StaffApprovals({
               >
                 <X className="w-3.5 h-3.5" /> Decline
               </button>
-              <button
-                type="button"
-                onClick={() => onApproveRequest(req.id)}
-                className="app-button-primary app-btn-sm"
-              >
-                <Check className="w-3.5 h-3.5" /> Approve — unlock payment
-              </button>
+              <SlideToConfirm
+                label="Slide to approve job"
+                confirmedLabel="Approved"
+                tone="success"
+                onConfirm={() => onApproveRequest(req.id)}
+              />
             </div>
         </>
       </div>
@@ -495,7 +496,7 @@ export function StaffApprovals({
                         await onApproveCert(guard.id, cert.id);
                         setActiveItemId(null);
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Could not verify credential.');
+                        showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
                       }
                     })();
                   }}
@@ -621,29 +622,25 @@ export function StaffApprovals({
                     </button>
                   )}
                   {!isApprovedGuard && canManageGuardAccounts && onApproveGuardAccount && (
-                    <button
-                      type="button"
+                    <SlideToConfirm
+                      compact
+                      label="Slide to approve profile"
+                      confirmedLabel="Approved"
+                      tone="success"
                       disabled={!canTakeAction}
-                      title={
-                        canTakeAction
-                          ? 'Verify government ID and approve profile'
-                          : approvalBlockers.join(' · ') || 'Verified government ID required'
-                      }
-                      onClick={() => {
+                      disabledHint={approvalBlockers.join(' · ') || 'Verified government ID required'}
+                      onConfirm={() => {
                         void (async () => {
                           if (!canTakeAction) return;
                           try {
                             await onApproveGuardAccount(guard.id);
                             setActiveItemId(null);
                           } catch (err) {
-                            alert(err instanceof Error ? err.message : 'Could not approve profile.');
+                            showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
                           }
                         })();
                       }}
-                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
-                    >
-                      <Check className="w-3.5 h-3.5" /> Approve profile
-                    </button>
+                    />
                   )}
                   {isApprovedGuard && canManageGuardAccounts && onActivateGuardAccount && (
                     <button
@@ -667,7 +664,7 @@ export function StaffApprovals({
                             });
                             setActiveItemId(null);
                           } catch (err) {
-                            alert(err instanceof Error ? err.message : 'Could not activate account.');
+                            showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
                           }
                         })();
                       }}

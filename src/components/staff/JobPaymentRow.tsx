@@ -16,6 +16,7 @@ import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../
 import { getPaymentPipelineStage } from '../../lib/paymentPipeline';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import { WfBadge } from '../ui/wireframe';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {
   paid: 'text-emerald-400',
@@ -184,16 +185,17 @@ export function JobPaymentRow({
           )}
 
           {canStripeRelease && (
-            <button
-              type="button"
-              onClick={() => run('stripe', onReleasePayout)}
+            <SlideToConfirm
+              compact
+              label={`Slide to pay guard $${guardAmount.toFixed(0)}`}
+              confirmedLabel="Sending…"
+              tone="success"
               disabled={busy !== null || !guard?.stripeConnectAccountId}
-              className="app-button-primary app-btn-sm gap-1.5"
-              title={guard?.stripeConnectAccountId ? 'Send payout via Stripe Connect' : 'Guard has no Stripe account connected'}
-            >
-              {busy === 'stripe' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-              Send ${guardAmount.toFixed(0)} to guard (Stripe)
-            </button>
+              disabledHint={
+                !guard?.stripeConnectAccountId ? 'Guard has no Stripe account connected' : undefined
+              }
+              onConfirm={() => run('stripe', onReleasePayout)}
+            />
           )}
 
           {canCashGuard && (

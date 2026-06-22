@@ -1,3 +1,4 @@
+import { showAppToast } from '../components/ui/AppToast';
 import { SecurityGuard } from '../types';
 import {
   guardHasExpiredGuardCard,
@@ -78,7 +79,7 @@ export function promptStaffGuardActivationGrace(
 
   const graceHours = Number.parseInt(hoursInput.trim(), 10);
   if (!Number.isFinite(graceHours) || graceHours <= 0) {
-    window.alert('Enter a valid number of hours (e.g. 24, 48, 72).');
+    showAppToast('Enter a valid number of hours (e.g. 24, 48, 72).', { tone: 'error' });
     return { proceed: false, missingLabels: missing };
   }
 

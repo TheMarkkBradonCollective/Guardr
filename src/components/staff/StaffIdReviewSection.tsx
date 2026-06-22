@@ -1,3 +1,4 @@
+import { showAppToast } from '../ui/AppToast';
 import React from 'react';
 import { Check, RefreshCw, X } from 'lucide-react';
 import { SecurityGuard } from '../../types';
@@ -78,7 +79,7 @@ export function StaffIdReviewSection({
                 try {
                   await onApprove(guard.id);
                 } catch (err) {
-                  alert(err instanceof Error ? err.message : 'Could not approve ID.');
+                  showAppToast(err instanceof Error ? err.message : 'Could not approve ID.', { tone: 'error' });
                 }
               })();
             }}

@@ -23,6 +23,7 @@ import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -469,13 +470,11 @@ export function RequestSecurityFlow({
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="app-button-primary"
-            >
-              Post job offer
-            </button>
+            <SlideToConfirm
+              label="Slide to post job offer"
+              confirmedLabel="Posted"
+              onConfirm={handleSubmit}
+            />
           )}
         </div>
       </div>

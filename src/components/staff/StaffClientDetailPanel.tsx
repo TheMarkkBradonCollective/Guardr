@@ -1,3 +1,4 @@
+import { showAppToast } from '../ui/AppToast';
 import React, { useMemo, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
@@ -56,7 +57,7 @@ export function StaffClientDetailPanel({
     try {
       await onDeleteClient(client.id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Could not delete client account.');
+      showAppToast(err instanceof Error ? err.message : 'Could not delete client account.', { tone: 'error' });
     } finally {
       setDeleting(false);
     }

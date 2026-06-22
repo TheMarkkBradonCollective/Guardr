@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, Camera, Loader2 } from 'lucide-react';
 import { SELF_AUDIT_PHOTO_LABELS, SelfAuditPhotoKind } from '../../lib/selfAuditPhotos';
 import { AppModal } from '../ui/motion/AppMotion';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 interface GuardSelfAuditModalProps {
   open: boolean;
@@ -115,9 +116,13 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
           ))}
         </div>
 
-        <button type="button" onClick={handleSubmit} disabled={!photos.self} className="app-button-primary disabled:opacity-40">
-          Submit and start job
-        </button>
+        <SlideToConfirm
+          label="Slide to start shift"
+          confirmedLabel="Clocking in…"
+          onConfirm={handleSubmit}
+          disabled={!photos.self}
+          disabledHint="Capture your selfie before clocking in."
+        />
       </div>
     </AppModal>
   );

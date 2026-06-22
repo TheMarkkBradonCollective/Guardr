@@ -1,3 +1,4 @@
+import { showAppToast } from '../ui/AppToast';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
@@ -237,7 +238,7 @@ export function StaffGuardDetailPanel({
     try {
       await onDeleteGuard(guard.id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Could not delete guard account.');
+      showAppToast(err instanceof Error ? err.message : 'Could not delete guard account.', { tone: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -322,7 +323,7 @@ export function StaffGuardDetailPanel({
                 try {
                   await onApproveCert(guard.id, cert.id);
                 } catch (err) {
-                  alert(err instanceof Error ? err.message : 'Could not verify credential.');
+                  showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
                 }
               })();
             }}
@@ -487,7 +488,7 @@ export function StaffGuardDetailPanel({
                       try {
                         await onApproveGuardAccount(guard.id);
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Could not approve profile.');
+                        showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
                       }
                     })();
                   }}
@@ -515,7 +516,7 @@ export function StaffGuardDetailPanel({
                           graceHours: graceChoice.graceHours,
                         });
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Could not activate account.');
+                        showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
                       }
                     })();
                   }}

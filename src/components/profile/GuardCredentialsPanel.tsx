@@ -150,7 +150,7 @@ export function GuardCredentialsPanel({
     if (isOther && !customCertName.trim()) return;
 
     const proof = validateCertSubmission(imageUrl);
-    if (!proof.ok) {
+    if (proof.ok === false) {
       setFormError(proof.error);
       return;
     }

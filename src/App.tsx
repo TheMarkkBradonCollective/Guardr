@@ -176,6 +176,10 @@ import {
 import type { LegalPageId } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
 import { showAppToast } from './components/ui/AppToast';
+
+function appToast(message: string, tone: 'success' | 'error' | 'info' = 'error') {
+  showAppToast(message, { tone });
+}
 import type { GuardTab, GuardSupportMode } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { type ApprovalQueueId, resolveStaffSection, type StaffSection } from './lib/staffOps';
@@ -2367,28 +2371,28 @@ export default function App() {
     if (!target) return;
     if (target.isStaff && currentUser) {
       if (guardId === currentUser.id) {
-        alert('You cannot change your own account status.');
+        appToast('You cannot change your own account status.', 'error');
         return;
       }
       if (!canModerateStaffMember(currentUser.role, currentUser.id, target)) {
-        alert('You cannot moderate staff at the same role level or above your own.');
+        appToast('You cannot moderate staff at the same role level or above your own.', 'error');
         return;
       }
     }
     if (!target.isStaff && status === 'active') {
       if (isGuardAccountPending(target)) {
-        alert('Approve this guard profile before activating their account.');
+        appToast('Approve this guard profile before activating their account.', 'error');
         return;
       }
       if (isGuardAccountApproved(target)) {
         const blockers = guardAccountActivationBlockers(target);
         if (blockers.length > 0) {
-          alert(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+          appToast(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`, 'error');
           return;
         }
-        alert(
+        appToast(
           'Use Activate account in Approvals to fully activate this guard (guard card on file, optional grace for missing PTA/32-hour).'
-        );
+        , 'error');
         return;
       }
     }
@@ -3436,27 +3440,27 @@ export default function App() {
 
   const handleStaffAssignGuard = async (requestId: string, guardId: string) => {
     if (!currentUser || !canManageCompanyOperations(currentUser)) {
-      alert('Only directors can select guards for jobs.');
+      appToast('Only directors can select guards for jobs.', 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
     if (!job || !guard) return;
     if (job.assignedGuardId) {
-      alert('A guard has already picked up this job.');
+      appToast('A guard has already picked up this job.', 'error');
       return;
     }
     if (!['open', 'pending-review'].includes(job.status)) {
-      alert('Guards can only be placed on open jobs awaiting a guard.');
+      appToast('Guards can only be placed on open jobs awaiting a guard.', 'error');
       return;
     }
     const userStatus = getGuardUserStatus(guard);
     if (userStatus === 'pending') {
-      alert(`${guard.name} cannot pick up this job — account is pending approval.`);
+      appToast(`${guard.name} cannot pick up this job — account is pending approval.`, 'error');
       return;
     }
     if (userStatus === 'suspended' || userStatus === 'blocked') {
-      alert(`${guard.name} cannot pick up this job — account is ${userStatus}.`);
+      appToast(`${guard.name} cannot pick up this job — account is ${userStatus}.`, 'error');
       return;
     }
 
@@ -3476,21 +3480,21 @@ export default function App() {
       const assigned = guards.find((g) => g.id === req.assignedGuardId);
       const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Guard on job not found.';
       if (workBlocked) {
-        alert(workBlocked);
+        appToast(workBlocked, 'error');
         return;
       }
     }
     if (req && status === 'in-progress') {
       const blocked = guardClockInBlockedMessage(req);
       if (blocked) {
-        alert(blocked);
+        appToast(blocked, 'error');
         return;
       }
     }
     if (req && status === 'completed') {
       const blocked = guardClockOutBlockedMessage(req);
       if (blocked) {
-        alert(blocked);
+        appToast(blocked, 'error');
         return;
       }
     }
@@ -3524,12 +3528,12 @@ export default function App() {
 
   const handleMarkClientPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only Directors and Owners can record cash client payments.');
+      appToast('Only Directors and Owners can record cash client payments.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkClientPaidCash(req)) {
-      alert('This job cannot be marked as paid in cash.');
+      appToast('This job cannot be marked as paid in cash.', 'error');
       return;
     }
     if (!window.confirm(`Record client cash payment of $${req.estimatedPayout} for "${req.title}"?`)) return;
@@ -3601,12 +3605,12 @@ export default function App() {
 
   const handleMarkGuardPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only Directors and Owners can record cash guard payouts.');
+      appToast('Only Directors and Owners can record cash guard payouts.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkGuardPaidCash(req)) {
-      alert('This job is not ready for a cash guard payout.');
+      appToast('This job is not ready for a cash guard payout.', 'error');
       return;
     }
     const amount = guardPayoutAmount(req);
@@ -3675,17 +3679,17 @@ export default function App() {
       }
     }
     await syncOpenPayoutInvoices(nextRequests);
-    alert(`Recorded $${amount} cash payout to guard.`);
+    appToast(`Recorded $${amount} cash payout to guard.`, 'success');
   };
 
   const handleMarkPlatformFeePaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only Directors and Owners can manually deposit platform fees.');
+      appToast('Only Directors and Owners can manually deposit platform fees.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkPlatformFeePaidCash(req)) {
-      alert('This job does not have a platform fee ready to manually deposit.');
+      appToast('This job does not have a platform fee ready to manually deposit.', 'error');
       return;
     }
     const feeAmount = getPlatformFeeAmount(req);
@@ -3744,23 +3748,23 @@ export default function App() {
       ]);
     }
 
-    alert(`Manually deposited $${feeAmount.toFixed(2)} platform fee.`);
+    appToast(`Manually deposited $${feeAmount.toFixed(2)} platform fee.`, 'success');
   };
 
   const handleDepositCashToStripe = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      alert('Only Directors and Owners can pay client cash into Stripe.');
+      appToast('Only Directors and Owners can pay client cash into Stripe.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorDepositCashToStripe(req)) {
-      alert('This job does not need a card payment into Stripe right now.');
+      appToast('This job does not need a card payment into Stripe right now.', 'error');
       return;
     }
     const depositAmount = getRemainingStripeDeposit(req);
     const amountCents = Math.round(depositAmount * 100);
     if (amountCents < 50) {
-      alert('Deposit amount is too small to charge.');
+      appToast('Deposit amount is too small to charge.', 'error');
       return;
     }
 
@@ -3775,7 +3779,7 @@ export default function App() {
         window.location.href = url;
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Unable to start card checkout');
+      appToast(e instanceof Error ? e.message : 'Unable to start card checkout', 'error');
     }
   };
 
@@ -3808,7 +3812,7 @@ export default function App() {
   const handleCancelRequest = async (requestId: string) => {
     const existing = requests.find((r) => r.id === requestId);
     if (existing && !canClientEditRequest(existing)) {
-      alert('Paid or in-progress jobs cannot be cancelled from here. Contact staff for help.');
+      appToast('Paid or in-progress jobs cannot be cancelled from here. Contact staff for help.', 'error');
       return;
     }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
@@ -3846,7 +3850,7 @@ export default function App() {
         .eq('id', requestId);
       if (error) {
         console.error('Job listing update error:', error);
-        alert(`Could not save job changes: ${error.message}`);
+        appToast(`Could not save job changes: ${error.message}`, 'error');
         throw new Error(error.message);
       }
     }
@@ -3857,7 +3861,7 @@ export default function App() {
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canClientEditJobListing(existing)) {
-      alert(existing ? jobEditBlockedReason(existing) ?? 'This job cannot be edited.' : 'Job not found.');
+      appToast(existing ? jobEditBlockedReason(existing) ?? 'This job cannot be edited.' : 'Job not found.', 'error');
       return;
     }
     if (!isJobPaid(existing)) {
@@ -3865,7 +3869,7 @@ export default function App() {
       const endDate = updates.endDate || existing.endDate;
       const scheduleError = validateShiftSchedule(startDate, endDate);
       if (scheduleError) {
-        alert(scheduleError);
+        appToast(scheduleError, 'error');
         return;
       }
     }
@@ -3874,12 +3878,12 @@ export default function App() {
 
   const handleStaffEditJobListing = async (requestId: string, updates: Partial<SecurityRequest>) => {
     if (!currentUser || !canEditJobListingDetails(currentUser)) {
-      alert('Only directors and administrators can edit job listings.');
+      appToast('Only directors and administrators can edit job listings.', 'error');
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canStaffEditJobTitleAndLocation(existing, currentUser.role)) {
-      alert(existing ? 'This job cannot be edited in its current status.' : 'Job not found.');
+      appToast(existing ? 'This job cannot be edited in its current status.' : 'Job not found.', 'error');
       return;
     }
     if (!isJobPaid(existing)) {
@@ -3887,7 +3891,7 @@ export default function App() {
       const endDate = updates.endDate || existing.endDate;
       const scheduleError = validateShiftSchedule(startDate, endDate);
       if (scheduleError) {
-        alert(scheduleError);
+        appToast(scheduleError, 'error');
         return;
       }
     }
@@ -3900,12 +3904,12 @@ export default function App() {
     if (!job || !guard) return;
     const workBlocked = guardWorkBlockedMessage(guard, job.state);
     if (workBlocked) {
-      alert(workBlocked);
+      appToast(workBlocked, 'error');
       return;
     }
     const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
     if (!canAccept) {
-      alert(`${guard.name} does not meet the requirements for this job.`);
+      appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
       return;
     }
     setRequests((prev) =>
@@ -3936,26 +3940,26 @@ export default function App() {
   // ── Guard applies to open job offer (staff approves best fit) ──
   const handleApplyToJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
-      alert('Staff accounts cannot apply to field jobs. Sign in with a guard account to work jobs.');
+      appToast('Staff accounts cannot apply to field jobs. Sign in with a guard account to work jobs.', 'error');
       return;
     }
     const workBlocked = guardWorkBlockedMessage(activeGuard);
     if (workBlocked) {
-      alert(workBlocked);
+      appToast(workBlocked, 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
     if (job.status !== 'open') {
-      alert('This job is no longer open for applications.');
+      appToast('This job is no longer open for applications.', 'error');
       return;
     }
     if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== activeGuardId) {
-      alert('This request was sent to another guard from their profile.');
+      appToast('This request was sent to another guard from their profile.', 'error');
       return;
     }
     if (guardHasApplied(job, activeGuardId)) {
-      alert('You already applied for this job. Staff will review your application.');
+      appToast('You already applied for this job. Staff will review your application.', 'error');
       return;
     }
     if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id))) {
@@ -3963,7 +3967,7 @@ export default function App() {
         .checks.filter((c) => !c.met)
         .map((c) => c.label)
         .join(', ');
-      alert(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`);
+      appToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, 'error');
       return;
     }
     const nextApplicants = [...job.applicants, activeGuardId];
@@ -3973,21 +3977,21 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
     }
-    alert('Application submitted. Guardr staff will review applicants and approve the best fit.');
+    appToast('Application submitted. Guardr staff will review applicants and approve the best fit.', 'success');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
     if (!currentUser || !isStaffRole(currentUser.role)) {
-      alert('Only staff can approve guard applications.');
+      appToast('Only staff can approve guard applications.', 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
     if (!job || job.status !== 'open') {
-      alert('This job is not open for guard applications.');
+      appToast('This job is not open for guard applications.', 'error');
       return;
     }
     if (!job.applicants.includes(guardId)) {
-      alert('This guard has not applied for the job.');
+      appToast('This guard has not applied for the job.', 'error');
       return;
     }
     await assignGuardToJob(requestId, guardId);
@@ -3999,17 +4003,17 @@ export default function App() {
     if (req && payload.status === 'in-progress' && payload.checkInAudit) {
       const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
       if (workBlocked) {
-        alert(workBlocked);
+        appToast(workBlocked, 'error');
         return;
       }
       if (!canGuardClockIn(req)) {
-        alert(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.');
+        appToast(guardClockInBlockedMessage(req) ?? 'Clock-in is not open yet.', 'error');
         return;
       }
     }
     if (req && payload.status === 'completed') {
       if (!canGuardClockOut(req)) {
-        alert(guardClockOutBlockedMessage(req) ?? 'Clock-out is not available right now.');
+        appToast(guardClockOutBlockedMessage(req) ?? 'Clock-out is not available right now.', 'error');
         return;
       }
     }
@@ -4065,7 +4069,7 @@ export default function App() {
               )
             );
           }
-          alert('Could not save photos or job update. Please try again.');
+          appToast('Could not save photos or job update. Please try again.', 'error');
           return;
         }
       }
@@ -4117,12 +4121,12 @@ export default function App() {
 
   const handleStaffUploadSelfAuditPhotos = async (requestId: string, photos: StaffSelfAuditPhotoPayload) => {
     if (!currentUser || !canUploadJobSelfAuditPhotos(currentUser)) {
-      alert('Only staff can upload audit photos on behalf of guards.');
+      appToast('Only staff can upload audit photos on behalf of guards.', 'error');
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canStaffUploadSelfAuditPhotos(existing, currentUser.role)) {
-      alert(
+      appToast(
         existing?.status === 'completed'
           ? currentUser.role === 'director' || currentUser.role === 'owner'
             ? 'Completed jobs only accept audit photos when photos are missing or flagged No Self Audit.'
@@ -4130,7 +4134,7 @@ export default function App() {
           : existing?.assignedGuardId
             ? 'Audit photos cannot be added for this job right now.'
             : 'Assign a guard before uploading audit photos.'
-      );
+      , 'error');
       return;
     }
     if (Object.keys(photos).length === 0) return;
@@ -4180,25 +4184,25 @@ export default function App() {
         if (previousRequest) {
           setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
         }
-        alert('Could not save audit photos. Please try again.');
+        appToast('Could not save audit photos. Please try again.', 'error');
       }
     }
   };
 
   const handleStaffUploadSpotCheck = async (requestId: string, imageUrl: string) => {
     if (!currentUser || !canUploadJobSpotCheck(currentUser)) {
-      alert('Only staff can upload spot checks.');
+      appToast('Only staff can upload spot checks.', 'error');
       return;
     }
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canStaffAddSpotCheck(existing)) {
-      alert(
+      appToast(
         hasSpotChecks(existing ?? { spotChecks: [] })
           ? 'This job already has a spot check. Only one spot check is allowed per job.'
           : existing?.assignedGuardId
             ? 'Spot checks can only be added while a guard is assigned to an active or completed job.'
             : 'Assign a guard before uploading a spot check.'
-      );
+      , 'error');
       return;
     }
     if (!imageUrl) return;
@@ -4219,7 +4223,7 @@ export default function App() {
       if (error) {
         console.error('Staff spot check upload error:', error);
         setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
-        alert('Could not save spot check photo. Please try again.');
+        appToast('Could not save spot check photo. Please try again.', 'error');
       }
     }
   };
@@ -4228,7 +4232,7 @@ export default function App() {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
     if (!existing) {
-      alert('Job not found.');
+      appToast('Job not found.', 'error');
       return;
     }
     const ownsJob =
@@ -4236,15 +4240,15 @@ export default function App() {
       existing.clientName === currentUser.clientName ||
       existing.clientName === currentUser.name;
     if (!ownsJob) {
-      alert('You can only confirm audits on your own jobs.');
+      appToast('You can only confirm audits on your own jobs.', 'error');
       return;
     }
     if (!canClientConfirmSelfAudit(existing)) {
-      alert(
+      appToast(
         existing.checkInAudit?.clientConfirmedAt
           ? 'Self-audit photos are already confirmed.'
           : 'All three self-audit photos must be on file before you can confirm.'
-      );
+      , 'error');
       return;
     }
 
@@ -4264,7 +4268,7 @@ export default function App() {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
     if (!existing) {
-      alert('Job not found.');
+      appToast('Job not found.', 'error');
       return;
     }
     const ownsJob =
@@ -4272,11 +4276,11 @@ export default function App() {
       existing.clientName === currentUser.clientName ||
       existing.clientName === currentUser.name;
     if (!ownsJob) {
-      alert('You can only confirm spot checks on your own jobs.');
+      appToast('You can only confirm spot checks on your own jobs.', 'error');
       return;
     }
     if (!canClientConfirmSpotCheck(existing, spotCheckId)) {
-      alert('This spot check cannot be confirmed right now.');
+      appToast('This spot check cannot be confirmed right now.', 'error');
       return;
     }
 
@@ -4372,7 +4376,7 @@ export default function App() {
       return;
     }
     await appendGuardPayoutInvoice(draft);
-    alert(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`);
+    appToast(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`, 'success');
   };
 
   const handleGuardRequestCashPayout = async (guardId: string) => {
@@ -4380,7 +4384,7 @@ export default function App() {
     if (!guard) return;
     const eligible = getGuardPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      alert('No completed jobs are available for a cash payout invoice.');
+      appToast('No completed jobs are available for a cash payout invoice.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'cash', eligible);
@@ -4391,7 +4395,7 @@ export default function App() {
     if (!guard) return;
     const eligible = getGuardPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      alert('No earnings are available for a bank payout invoice right now.');
+      appToast('No earnings are available for a bank payout invoice right now.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'stripe', eligible);
@@ -4400,16 +4404,16 @@ export default function App() {
   const handleReleasePayout = async (requestId: string, force = false) => {
     const req = requests.find(r => r.id === requestId);
     if (!req?.assignedGuardId) {
-      alert('No guard has picked up this job yet.');
+      appToast('No guard has picked up this job yet.', 'error');
       return;
     }
     if (req.guardPayoutMethod === 'cash') {
-      alert('This guard was already paid in cash for this job.');
+      appToast('This guard was already paid in cash for this job.', 'error');
       return;
     }
     const guard = guards.find(g => g.id === req.assignedGuardId);
     if (!guard?.stripeConnectAccountId) {
-      alert('Guard has not connected a Stripe account.');
+      appToast('Guard has not connected a Stripe account.', 'error');
       return;
     }
     try {
@@ -4446,16 +4450,16 @@ export default function App() {
         }
       }
       await syncOpenPayoutInvoices(nextRequests);
-      alert(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`);
+      appToast(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`, 'success');
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Payout failed');
+      appToast(e instanceof Error ? e.message : 'Payout failed', 'error');
     }
   };
 
   const handleRefundPayment = async (requestId: string) => {
     const req = requests.find(r => r.id === requestId);
     if (!req?.stripePaymentIntentId) {
-      alert('No payment to refund for this job.');
+      appToast('No payment to refund for this job.', 'error');
       return;
     }
     try {
@@ -4464,9 +4468,9 @@ export default function App() {
       setPayments(prev => prev.map(p =>
         p.jobId === requestId ? { ...p, status: 'refunded' } : p
       ));
-      alert('Payment refunded successfully.');
+      appToast('Payment refunded successfully.', 'success');
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Refund failed');
+      appToast(e instanceof Error ? e.message : 'Refund failed', 'error');
     }
   };
 
@@ -4537,9 +4541,9 @@ export default function App() {
       return { ...g, failedAudits: fails, userStatus: fails >= 3 ? 'suspended' : getGuardUserStatus(g) };
     }));
     if (autoSuspend) {
-      alert('🚨 AUTOMATED ACTION: 3 compliance violations logged. Account automatically suspended.');
+      appToast('🚨 AUTOMATED ACTION: 3 compliance violations logged. Account automatically suspended.', 'success');
     } else {
-      alert(`⚠ Compliance warning recorded: ${reason || 'Failed audit'}`);
+      appToast(`⚠ Compliance warning recorded: ${reason || 'Failed audit'}`, 'info');
     }
     if (isDbConnected) {
       const g = guards.find(x => x.id === guardId);
@@ -4564,7 +4568,7 @@ export default function App() {
         .update({ failed_audits: 0, user_status: 'active' })
         .eq('id', guardId);
     }
-    alert('✓ Compliance record cleared. Account reinstated.');
+    appToast('✓ Compliance record cleared. Account reinstated.', 'success');
   };
 
   const persistJobChatThreadToDb = async (thread: JobChatThread) => {

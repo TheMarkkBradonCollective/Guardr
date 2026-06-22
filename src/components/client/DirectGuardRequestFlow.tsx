@@ -1,3 +1,4 @@
+import { showAppToast } from '../ui/AppToast';
 import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import {
@@ -24,6 +25,7 @@ import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -101,7 +103,7 @@ export function DirectGuardRequestFlow({
   const handleSubmit = () => {
     const scheduleError = validateShiftSchedule(startDate, endDate);
     if (scheduleError) {
-      alert(scheduleError);
+      showAppToast(scheduleError, { tone: 'error' });
       return;
     }
     onSubmit({
@@ -377,9 +379,11 @@ export function DirectGuardRequestFlow({
             Continue <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button type="button" onClick={handleSubmit} className="app-button-primary">
-            Send to {guard.name.split(' ')[0]}
-          </button>
+          <SlideToConfirm
+            label={`Slide to send request to ${guard.name.split(' ')[0]}`}
+            confirmedLabel="Sent"
+            onConfirm={handleSubmit}
+          />
         )}
       </div>
     </div>
