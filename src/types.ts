@@ -111,6 +111,8 @@ export interface Client {
   avatar: string;
   totalRequests: number;
   approved?: boolean;
+  /** Account lifecycle — pending sign-ups need staff approval before posting jobs */
+  accountStatus?: 'pending' | 'active' | 'suspended';
   rating?: number;
   createdAt?: string;
   themePreference?: 'dark' | 'light' | 'grey';
@@ -200,7 +202,7 @@ export interface SecurityGuard {
   hourlyRateRequirement?: number;
   isStaff?: boolean;
   staffRole?: StaffRole;
-  userStatus?: 'active' | 'suspended' | 'blocked';
+  userStatus?: 'pending' | 'active' | 'suspended' | 'blocked';
   failedAudits?: number; // Automatic rule: 3 failed uniform audits = suspension
   themePreference?: 'dark' | 'light' | 'grey';
   stripeConnectAccountId?: string;

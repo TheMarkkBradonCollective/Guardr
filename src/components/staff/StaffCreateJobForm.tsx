@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
+import { getClientAccountStatus } from '../../lib/accountStatus';
 import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
@@ -77,7 +78,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
   const [saving, setSaving] = useState(false);
 
   const approvedClients = useMemo(
-    () => [...clients].filter((c) => c.approved !== false).sort((a, b) => a.companyName.localeCompare(b.companyName)),
+    () => [...clients].filter((c) => getClientAccountStatus(c) === 'active').sort((a, b) => a.companyName.localeCompare(b.companyName)),
     [clients]
   );
 

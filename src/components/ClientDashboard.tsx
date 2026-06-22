@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
 } from '../lib/clientCoverage';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
+import { isClientAccountPending } from '../lib/accountStatus';
+import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { LiveCoverageScreen } from './client/LiveCoverageScreen';
@@ -32,6 +34,8 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
+  accountStatus?: Client['accountStatus'];
+  approved?: boolean;
   avatarUrl?: string;
   activeView?: ClientView;
   onViewChange?: (view: ClientView) => void;
@@ -54,6 +58,8 @@ export function ClientDashboard({
   requests,
   guards,
   clientEmail,
+  accountStatus,
+  approved,
   activeView,
   onViewChange,
   onPostRequest,
@@ -72,6 +78,7 @@ export function ClientDashboard({
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
   const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
+  const accountPending = isClientAccountPending({ accountStatus, approved });
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -123,6 +130,12 @@ export function ClientDashboard({
   const wrap = (node: React.ReactNode) => (
     <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">{node}</div>
   );
+
+  if (accountPending && view !== 'profile' && view !== 'support') {
+    return wrap(
+      <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
+    );
+  }
 
   if (view === 'map') {
     return <ClientMapScreen requests={requests} />;

@@ -21,6 +21,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
+import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -40,6 +41,8 @@ interface StaffGuardDetailPanelProps {
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+  onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   compact?: boolean;
@@ -63,6 +66,8 @@ export function StaffGuardDetailPanel({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  onApproveGuardAccount,
+  onDeleteGuard,
   onBack,
   onOpenJob,
   compact = false,
@@ -70,6 +75,7 @@ export function StaffGuardDetailPanel({
   const canEdit = canManage && !!onUpdateProfile;
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const initialName = resolvePersonNameParts(guard);
@@ -117,6 +123,7 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const accountStatus = guard.userStatus || 'active';
+  const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
@@ -169,6 +176,21 @@ export function StaffGuardDetailPanel({
       setEditing(false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteGuard = async () => {
+    if (!onDeleteGuard) return;
+    if (!window.confirm(`Delete guard account for ${guard.name}? This cannot be undone.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await onDeleteGuard(guard.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not delete guard account.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -351,7 +373,9 @@ export function StaffGuardDetailPanel({
           {!guard.isStaff && (
             <div className="flex flex-wrap gap-2 mt-3">
               <WfBadge tone="primary">{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
-              <WfBadge>Account: {GUARD_STATUS_LABELS[accountStatus]}</WfBadge>
+              <WfBadge tone={guardAccountStatus === 'pending' ? 'warning' : guardAccountStatus === 'active' ? 'success' : 'danger'}>
+                Account: {GUARD_USER_STATUS_LABELS[guardAccountStatus]}
+              </WfBadge>
               {guard.verified && (
                 <WfBadge tone="success">Guardr verified</WfBadge>
               )}
@@ -379,17 +403,32 @@ export function StaffGuardDetailPanel({
           <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Account controls" className="mb-0" />
             <div className="flex flex-wrap gap-2">
-              {canSuspend && accountStatus !== 'suspended' && (
+              {guardAccountStatus === 'pending' && onApproveGuardAccount && (
+                <button type="button" onClick={() => onApproveGuardAccount(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+                  Approve guard account
+                </button>
+              )}
+              {canSuspend && guardAccountStatus === 'pending' && onDeleteGuard && (
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteGuard()}
+                  disabled={deleting}
+                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                >
+                  {deleting ? 'Deleting…' : 'Delete account'}
+                </button>
+              )}
+              {canSuspend && accountStatus !== 'suspended' && guardAccountStatus === 'active' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Suspend
                 </button>
               )}
-              {canSuspend && accountStatus !== 'blocked' && (
+              {canSuspend && accountStatus !== 'blocked' && guardAccountStatus === 'active' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
                   Flag / Block
                 </button>
               )}
-              {canSuspend && accountStatus !== 'active' && (
+              {canSuspend && accountStatus !== 'active' && guardAccountStatus !== 'pending' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>
@@ -416,6 +455,16 @@ export function StaffGuardDetailPanel({
               {onRejectGuard && guard.verified && (
                 <button type="button" onClick={() => onRejectGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Remove profile verification
+                </button>
+              )}
+              {onDeleteGuard && guardAccountStatus !== 'pending' && (
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteGuard()}
+                  disabled={deleting}
+                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+                >
+                  {deleting ? 'Deleting…' : 'Delete account'}
                 </button>
               )}
             </div>

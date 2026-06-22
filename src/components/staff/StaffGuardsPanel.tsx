@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
+import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -35,6 +36,8 @@ interface StaffGuardsPanelProps {
   ) => Promise<CertImageMutationResult>;
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+  onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onDeleteGuard?: (guardId: string) => void | Promise<void>;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
   onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
@@ -58,6 +61,8 @@ export function StaffGuardsPanel({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  onApproveGuardAccount,
+  onDeleteGuard,
   initialSelectedId = null,
   onOpenJob,
   onAddGuard,
@@ -100,6 +105,8 @@ export function StaffGuardsPanel({
           : undefined,
         onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
         onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
+        onApproveGuardAccount,
+        onDeleteGuard,
         onOpenJob,
       }
     : null;
@@ -108,7 +115,7 @@ export function StaffGuardsPanel({
     const activeShift = requests.find(
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
-    const accountStatus = guard.userStatus || 'active';
+    const accountStatus = getGuardUserStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
 
     return (
@@ -122,8 +129,11 @@ export function StaffGuardsPanel({
             {pendingCerts > 0 && (
               <WfBadge tone="warning">{pendingCerts} pending</WfBadge>
             )}
+            {accountStatus === 'pending' && (
+              <WfBadge tone="warning">Awaiting approval</WfBadge>
+            )}
             <span>
-              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_STATUS_LABELS[accountStatus]}
+              {GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]} · {GUARD_USER_STATUS_LABELS[accountStatus]}
             </span>
             {activeShift && <span>On: {activeShift.title}</span>}
           </div>

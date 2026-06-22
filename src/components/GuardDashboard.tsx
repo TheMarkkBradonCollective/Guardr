@@ -43,6 +43,8 @@ import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
+import { isGuardAccountPending } from '../lib/accountStatus';
+import { AccountPendingScreen } from './account/AccountPendingScreen';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import {
@@ -509,6 +511,7 @@ export function GuardDashboard({
   };
 
   const userStatus = guard.userStatus || 'active';
+  const accountPending = isGuardAccountPending(guard);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-bg p-6">
@@ -709,10 +712,17 @@ export function GuardDashboard({
     </>
   );
 
+  const showPendingGate = accountPending && activeTab !== 'profile' && activeTab !== 'support';
+  const visibleMainPanel = showPendingGate ? (
+    <AccountPendingScreen role="guard" onOpenProfile={() => setTab('profile')} />
+  ) : (
+    guardMainPanel
+  );
+
   if (isEmbedded) {
     return (
       <div className="h-full min-h-0 flex flex-col overflow-hidden guard-staff-embedded">
-        {guardMainPanel}
+        {visibleMainPanel}
         {guardModals}
       </div>
     );
@@ -742,7 +752,7 @@ export function GuardDashboard({
       variant={activeTab === 'map' ? 'dark' : 'default'}
     >
       <div className="relative h-full min-h-0">
-        {guardMainPanel}
+        {visibleMainPanel}
         {guardModals}
       </div>
     </RoleAppShell>

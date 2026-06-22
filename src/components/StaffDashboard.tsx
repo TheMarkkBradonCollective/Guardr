@@ -84,6 +84,9 @@ interface StaffDashboardProps {
   onDenyRequest: (requestId: string) => Promise<void>;
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
+  onApproveGuardAccount?: (guardId: string) => Promise<void>;
+  onDeleteGuardAccount?: (guardId: string) => Promise<void>;
+  onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
@@ -157,6 +160,9 @@ export function StaffDashboard({
   onDenyRequest,
   onApproveClient,
   onRejectClient,
+  onApproveGuardAccount,
+  onDeleteGuardAccount,
+  onDeleteClientAccount,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -288,11 +294,14 @@ export function StaffDashboard({
           <StaffApprovals
             requests={requests}
             guards={guards}
+            clients={clients}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onApproveGuardApplication={onApproveGuardApplication}
+            onApproveClient={onApproveClient}
+            onApproveGuardAccount={onApproveGuardAccount}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -344,6 +353,8 @@ export function StaffDashboard({
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
+            onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
+            onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
@@ -375,6 +386,7 @@ export function StaffDashboard({
             canManage={canManageClientAccounts}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
+            onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
             initialSelectedId={selectedClientId}
             onOpenJob={openJob}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}

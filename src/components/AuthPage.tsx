@@ -127,6 +127,15 @@ export function AuthPage({
         return;
       }
 
+      const emailLower = email.trim().toLowerCase();
+      if (
+        clientsList.some((c) => c.email.toLowerCase() === emailLower) ||
+        guardsList.some((g) => g.email.toLowerCase() === emailLower)
+      ) {
+        setErrorMsg('An account with this email already exists. Sign in instead.');
+        return;
+      }
+
       const normalized = personNameFromPayload({
         firstName: firstName.trim(),
         middleName: middleName.trim(),
@@ -147,9 +156,15 @@ export function AuthPage({
           phone: phone || '',
           avatar: '',
           totalRequests: 0,
-          approved: true,
+          approved: false,
+          accountStatus: 'pending',
         };
-        await onSignUp(clientProfile, 'client', password);
+        try {
+          await onSignUp(clientProfile, 'client', password);
+        } catch (err) {
+          setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+          return;
+        }
         onSignIn(
           {
             id: randomId,
@@ -183,10 +198,15 @@ export function AuthPage({
         certifications: [],
         experience: [],
         hourlyRateRequirement: parseInt(hourlyRate) || 35,
-        userStatus: 'active',
+        userStatus: 'pending',
       };
 
-      await onSignUp(newGuardProfile, 'guard', password);
+      try {
+        await onSignUp(newGuardProfile, 'guard', password);
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+        return;
+      }
       onSignIn(
         {
           id: randomId,
