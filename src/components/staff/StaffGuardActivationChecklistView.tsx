@@ -1,12 +1,12 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
-import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
-import { CREDENTIAL_GRACE_PERIOD_HOURS } from '../../lib/guardCredentialGrace';
+import { getGuardActivationChecklist, guardHasVerifiedGuardCard } from '../../lib/guardAccountActivation';
 import { getGuardMissingGraceCredentialLabels } from '../../lib/guardMissingCredentials';
 import {
   guardHasVerifiedIdForWork,
   guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
+  guardMeetsPtaUofTrainingListed,
+  guardMeets32HourBlockListed,
 } from '../../lib/guardQualification';
 import { isGuardAccountActive, isGuardAccountApproved } from '../../lib/accountStatus';
 import { WfBadge } from '../ui/wireframe';
@@ -32,49 +32,52 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
   );
 }
 
-/** Staff: approve on verified ID, activate on guard card (guard may upload everything upfront). */
+/** Staff: approve on verified ID on file, activate on verified guard card on file. */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
   const missingGrace = getGuardMissingGraceCredentialLabels(guard);
   const approved = isGuardAccountApproved(guard);
   const active = isGuardAccountActive(guard);
+  const guardCardReady = guardMeetsLevel1(guard) && guardHasVerifiedGuardCard(guard);
 
   return (
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Profile approval & activation (staff)</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Guards can upload ID, guard card, and other credentials all at once. Review in order: approve when
-        government ID is verified, then activate when a valid guard card is on file. PTA/UOF and 32-hour may be
-        missing at activation — {CREDENTIAL_GRACE_PERIOD_HOURS}-hour grace applies.
+        ID must be fully on file (photos + details) and verified before profile approval. Guard card must be fully
+        on file (document photo) and staff-verified before activation. PTA/UOF and 32-hour count if listed or on
+        file — if not listed at all, staff sets a grace period when activating.
       </p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || active}
-          label="1. Approve profile — verified government ID"
+          label="1. Approve profile — government ID fully on file"
           detail={
             approved || active
               ? 'Profile approved'
               : guardHasVerifiedIdForWork(guard)
                 ? 'ID verified — ready to approve'
                 : checklist.idSubmitted
-                  ? 'ID submitted — review and approve below'
-                  : 'ID not submitted'
+                  ? 'ID on file — review and approve below'
+                  : 'ID not fully on file'
           }
         />
         <StepRow
           done={active}
-          label="2. Activate account — valid BSIS Guard Card"
+          label="2. Activate account — BSIS Guard Card on file"
           detail={
             active
               ? 'Account active'
               : approved
-                ? guardMeetsLevel1(guard)
+                ? guardCardReady
                   ? missingGrace.length > 0
-                    ? `Guard card on file — activate with ${CREDENTIAL_GRACE_PERIOD_HOURS}h grace`
-                    : 'Guard card on file — ready to activate'
+                    ? 'Guard card verified — optional creds not listed (set grace at activation)'
+                    : 'Guard card verified — ready to fully activate'
                   : checklist.guardCardSubmitted
-                    ? 'Guard card submitted — confirm valid'
-                    : 'Guard card not on file yet'
+                    ? 'Guard card on file — staff verification required'
+                    : checklist.staffActivationBlockers.find((b) => b.includes('listed'))
+                      ? 'Guard card listed — document photo required'
+                      : 'Guard card not on file yet'
                 : 'Approve profile first'
           }
         />
@@ -84,12 +87,12 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
         <div className="mt-3 pt-3 border-t border-brand-border space-y-2">
           <p className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-            Optional at activation
+            Not listed — grace required at activation
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {!guardMeetsPtaUofTraining(guard) && <WfBadge tone="warning">PTA/UOF missing</WfBadge>}
-            {missingGrace.includes('32-hour BSIS training') && (
-              <WfBadge tone="warning">32-hour block missing</WfBadge>
+            {!guardMeetsPtaUofTrainingListed(guard) && <WfBadge tone="warning">PTA/UOF not listed</WfBadge>}
+            {!guardMeets32HourBlockListed(guard) && (
+              <WfBadge tone="warning">32-hour block not listed</WfBadge>
             )}
           </div>
         </div>

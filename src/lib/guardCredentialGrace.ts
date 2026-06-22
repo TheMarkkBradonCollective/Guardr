@@ -44,7 +44,15 @@ export function formatCredentialGraceTimeRemaining(ms: number): string {
 }
 
 export function buildCredentialGraceDeadline(fromMs = Date.now()): string {
-  return new Date(fromMs + CREDENTIAL_GRACE_PERIOD_MS).toISOString();
+  return buildCredentialGraceDeadlineFromHours(CREDENTIAL_GRACE_PERIOD_HOURS, fromMs);
+}
+
+export function buildCredentialGraceDeadlineFromHours(
+  hours: number,
+  fromMs = Date.now()
+): string {
+  const safeHours = Number.isFinite(hours) && hours > 0 ? hours : CREDENTIAL_GRACE_PERIOD_HOURS;
+  return new Date(fromMs + safeHours * 60 * 60 * 1000).toISOString();
 }
 
 export function guardCredentialGraceFieldsCleared(): Pick<
@@ -89,12 +97,15 @@ export function processGuardCredentialGraceBatch(
 
 export function guardCredentialGracePatchForActivation(
   guard: SecurityGuard,
-  state = 'CA'
+  state = 'CA',
+  graceHours?: number
 ): Pick<SecurityGuard, 'credentialGraceDeadline' | 'credentialGraceMissing'> {
   const missing = getGuardMissingGraceCredentialLabels(guard, state);
   if (missing.length === 0) return guardCredentialGraceFieldsCleared();
   return {
-    credentialGraceDeadline: buildCredentialGraceDeadline(),
+    credentialGraceDeadline: buildCredentialGraceDeadlineFromHours(
+      graceHours ?? CREDENTIAL_GRACE_PERIOD_HOURS
+    ),
     credentialGraceMissing: missing,
   };
 }

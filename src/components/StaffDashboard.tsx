@@ -87,7 +87,10 @@ interface StaffDashboardProps {
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
-  onActivateGuardAccount?: (guardId: string) => Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onSubmitGuardIdentityVerification?: (

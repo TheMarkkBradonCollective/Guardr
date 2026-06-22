@@ -1,6 +1,6 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
-import { CREDENTIAL_GRACE_PERIOD_HOURS, guardCredentialGraceNotice } from '../../lib/guardCredentialGrace';
+import { guardCredentialGraceNotice } from '../../lib/guardCredentialGrace';
 import { AlertTriangle } from 'lucide-react';
 
 interface GuardCredentialGraceBannerProps {
@@ -20,8 +20,8 @@ export function GuardCredentialGraceBanner({ guard, onOpenCredentials }: GuardCr
       </p>
       <p className="text-xs text-brand-text-muted leading-relaxed">
         Your account was activated without: <strong className="text-brand-text">{notice.missing.join(', ')}</strong>.
-        Add them in Credentials within <strong className="text-brand-text">{notice.timeRemainingLabel}</strong> (
-        {CREDENTIAL_GRACE_PERIOD_HOURS}-hour grace) or your account will be deactivated.
+        Add them in Credentials within <strong className="text-brand-text">{notice.timeRemainingLabel}</strong>
+        {' '}or your account will be deactivated.
       </p>
       {onOpenCredentials && (
         <button

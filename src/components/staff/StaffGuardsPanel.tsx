@@ -40,7 +40,10 @@ interface StaffGuardsPanelProps {
   onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,

@@ -272,6 +272,15 @@ function matchingCredentials(
   });
 }
 
+/** Credential record exists (non-rejected) — may be listed without a document photo. */
+export function guardHasCredentialListed(
+  guard: SecurityGuard,
+  catalogId: string,
+  jobState?: string
+): boolean {
+  return matchingCredentials(guard, catalogId, jobState).length > 0;
+}
+
 /** Uploaded with document proof and not rejected — includes expired (for display). */
 export function guardHasCredentialUploaded(
   guard: SecurityGuard,
@@ -317,6 +326,24 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
     guardHasCredentialUploaded(guard, 'bsis-guard-card', state) &&
     !guardHasCredentialOnFile(guard, 'bsis-guard-card', state)
   );
+}
+
+/** Combined 8-hr cert listed, or both parts listed (separate PTA + UOF, or PTA + WMD). */
+export function guardMeetsPtaUofTrainingListed(guard: SecurityGuard): boolean {
+  if (guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  const hasPta = guardHasCredentialListed(guard, LEGACY_PTA_ID);
+  if (!hasPta) return false;
+  return (
+    guardHasCredentialListed(guard, LEGACY_UOF_ID) ||
+    guardHasCredentialListed(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
+export function guardMeets32HourBlockListed(guard: SecurityGuard): boolean {
+  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialListed(guard, id))) {
+    return true;
+  }
+  return THIRTY_TWO_HOUR_COURSE_IDS.every((id) => guardHasCredentialListed(guard, id));
 }
 
 /** Combined 8-hr cert, or both parts on file (separate PTA + UOF, or PTA + WMD). */

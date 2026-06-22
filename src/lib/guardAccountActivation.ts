@@ -4,18 +4,20 @@ import { certHasDocumentProof } from './certImagePolicy';
 import { resolveCertCatalogId } from './certCatalog';
 import { getGuardMissingGraceCredentialLabels, getGuardMissingWorkCredentialLabels } from './guardMissingCredentials';
 import {
-  getGuardIdVerificationStatus,
-  guardIdVerificationPhotosComplete,
-} from './guardIdentityVerification';
-import {
   guardHasExpiredGuardCard,
   guardHasExpiredIdOnFile,
   guardHasGuardrVerifiedCredential,
+  guardHasCredentialListed,
+  guardHasCredentialOnFile,
   guardHasIdOnFile,
   guardHasVerifiedIdForWork,
   guardMeetsLevel1,
   guardMeetsWorkRequirements,
 } from './guardQualification';
+import {
+  getGuardIdVerificationStatus,
+  guardIdVerificationSubmissionReady,
+} from './guardIdentityVerification';
 import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPending } from './accountStatus';
 
 export interface GuardActivationChecklist {
@@ -70,8 +72,8 @@ function buildIdBlockers(guard: SecurityGuard): string[] {
     blockers.push('Guard application rejected — account blocked');
   } else if (idStatus === 'rejected') {
     blockers.push('ID resubmit requested — profile approval on hold until guard re-uploads');
-  } else if (!guardIdVerificationPhotosComplete(guard) && idStatus !== 'verified' && !guardHasIdOnFile(guard)) {
-    blockers.push('Government ID and identity selfie not submitted');
+  } else if (!guardIdVerificationSubmissionReady(guard) && idStatus !== 'verified') {
+    blockers.push('Government ID not fully on file — state, number, expiration, and all photos required');
   } else if (guardHasExpiredIdOnFile(guard)) {
     blockers.push('Government ID has expired — guard must upload a valid ID');
   } else if (!guardHasVerifiedIdForWork(guard)) {
@@ -82,17 +84,19 @@ function buildIdBlockers(guard: SecurityGuard): string[] {
 }
 
 function buildGuardCardBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  const guardCardSubmitted = guardHasGuardCardSubmitted(guard);
+  const jobState = state || 'CA';
   const blockers: string[] = [];
 
-  if (!guardMeetsLevel1(guard, state)) {
-    if (guardHasExpiredGuardCard(guard, state)) {
-      blockers.push('BSIS Guard Card has expired — guard must upload a valid card');
-    } else if (!guardCardSubmitted) {
-      blockers.push('BSIS Guard Card not uploaded — required to activate');
+  if (guardHasExpiredGuardCard(guard, jobState)) {
+    blockers.push('BSIS Guard Card has expired — guard must upload a valid card');
+  } else if (!guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState)) {
+    if (guardHasCredentialListed(guard, 'bsis-guard-card', jobState)) {
+      blockers.push('BSIS Guard Card listed — document photo required to activate');
     } else {
-      blockers.push('Valid BSIS Guard Card required to activate');
+      blockers.push('BSIS Guard Card not on file — required to activate');
     }
+  } else if (!guardHasVerifiedGuardCard(guard, jobState)) {
+    blockers.push('BSIS Guard Card awaiting staff verification');
   }
 
   return blockers;
@@ -108,7 +112,8 @@ function buildStaffActivationBlockers(guard: SecurityGuard, state = 'CA'): strin
 
 export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'): GuardActivationChecklist {
   const idStatus = getGuardIdVerificationStatus(guard);
-  const idSubmitted = guardIdVerificationPhotosComplete(guard) || idStatus === 'verified' || guardHasIdOnFile(guard);
+  const idSubmitted =
+    guardIdVerificationSubmissionReady(guard) || idStatus === 'verified' || guardHasIdOnFile(guard);
   const idVerified = guardIdIsVerified(guard);
   const guardCardSubmitted = guardHasGuardCardSubmitted(guard);
   const guardCardVerified = guardHasVerifiedGuardCard(guard, state);
@@ -195,7 +200,7 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
       return 'Approved — awaiting guard card';
     }
     return checklist.missingGraceCredentials.length > 0
-      ? `Approved — activate (${checklist.missingGraceCredentials.join(', ')} missing)`
+      ? `Approved — activate (${checklist.missingGraceCredentials.join(', ')} not listed)`
       : 'Approved — ready to activate';
   }
   if (checklist.canStaffApprove) return 'ID verified — ready to approve';

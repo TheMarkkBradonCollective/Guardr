@@ -15,7 +15,7 @@ import {
   guardCanStaffApproveProfile,
   guardActivationSummaryLabel,
 } from '../../lib/guardAccountActivation';
-import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { promptStaffGuardActivationGrace } from '../../lib/guardMissingCredentials';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -43,7 +43,10 @@ interface StaffApprovalsProps {
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onRequestIdentityResubmit?: (
@@ -628,16 +631,19 @@ export function StaffApprovals({
                       title={
                         canTakeAction
                           ? checklist.missingGraceCredentials.length > 0
-                            ? `Missing: ${checklist.missingGraceCredentials.join(', ')} — 48h grace`
+                            ? `Not listed: ${checklist.missingGraceCredentials.join(', ')} — set grace period at activation`
                             : 'Verify guard card and activate account'
                           : approvalBlockers.join(' · ') || 'Valid guard card required'
                       }
                       onClick={() => {
                         void (async () => {
                           if (!canTakeAction) return;
-                          if (!promptStaffGuardProfileApproval(guard)) return;
+                          const graceChoice = promptStaffGuardActivationGrace(guard);
+                          if (!graceChoice.proceed) return;
                           try {
-                            await onActivateGuardAccount(guard.id);
+                            await onActivateGuardAccount(guard.id, {
+                              graceHours: graceChoice.graceHours,
+                            });
                             setActiveItemId(null);
                           } catch (err) {
                             alert(err instanceof Error ? err.message : 'Could not activate account.');
