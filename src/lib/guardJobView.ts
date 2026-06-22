@@ -1,6 +1,7 @@
-import { Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
+import { JobOperationalDetails, Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
 import { computeGuardPay, computeGuardEarnings } from './payments';
 import { guardCanViewJob } from './guardJobs';
+import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
 
 /** Guard-safe payout state — no internal payment pipeline details */
 export type GuardPayoutStatus = 'pending' | 'processing' | 'paid';
@@ -30,6 +31,8 @@ export interface GuardJobView {
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
+  operationalDetails?: JobOperationalDetails;
+  operationalBriefingLocked?: boolean;
   startDate: string;
   endDate: string;
   durationHours: number;
@@ -88,6 +91,19 @@ function formatPayDate(iso?: string): string | undefined {
   });
 }
 
+function jobHasSensitiveBriefing(req: SecurityRequest): boolean {
+  return (
+    hasJobOperationalDetails(req.operationalDetails) ||
+    Boolean(
+      req.contactName?.trim() ||
+        req.contactPhone?.trim() ||
+        req.parkingInstructions?.trim() ||
+        req.accessInstructions?.trim() ||
+        req.siteInstructions?.trim()
+    )
+  );
+}
+
 /** Guard-facing pay line for a completed job — one place for shift vs payout wording */
 export function getShiftPayDisplay(
   job: GuardJobView,
@@ -125,8 +141,11 @@ export function getShiftPayDisplay(
 }
 
 /** Strip client billing and platform payment fields before data reaches guard UI */
-export function toGuardJobView(req: SecurityRequest): GuardJobView {
+export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJobView {
   const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate);
+  const canViewBriefing = guardId ? guardCanViewOperationalBriefing(guardId, req) : false;
+  const sensitiveBriefingExists = jobHasSensitiveBriefing(req);
+
   return {
     id: req.id,
     title: req.title,
@@ -140,17 +159,19 @@ export function toGuardJobView(req: SecurityRequest): GuardJobView {
     state: req.state,
     latitude: req.latitude,
     longitude: req.longitude,
-    contactName: req.contactName,
-    contactPhone: req.contactPhone,
-    parkingInstructions: req.parkingInstructions,
-    accessInstructions: req.accessInstructions,
+    contactName: canViewBriefing ? req.contactName : undefined,
+    contactPhone: canViewBriefing ? req.contactPhone : undefined,
+    parkingInstructions: canViewBriefing ? req.parkingInstructions : undefined,
+    accessInstructions: canViewBriefing ? req.accessInstructions : undefined,
     location: req.location,
     type: req.type,
     armedRequired: req.armedRequired,
     guardsNeeded: req.guardsNeeded,
     uniformRequirements: req.uniformRequirements,
     equipmentRequirements: req.equipmentRequirements,
-    siteInstructions: req.siteInstructions,
+    siteInstructions: canViewBriefing ? req.siteInstructions : undefined,
+    operationalDetails: canViewBriefing ? req.operationalDetails : undefined,
+    operationalBriefingLocked: !canViewBriefing && sensitiveBriefingExists,
     startDate: req.startDate,
     endDate: req.endDate,
     durationHours: req.durationHours,
@@ -179,7 +200,7 @@ export function toGuardJobView(req: SecurityRequest): GuardJobView {
 export function getGuardVisibleJobs(guard: SecurityGuard, requests: SecurityRequest[]): GuardJobView[] {
   return requests
     .filter((r) => r.assignedGuardId === guard.id || guardCanViewJob(guard, r))
-    .map(toGuardJobView);
+    .map((req) => toGuardJobView(req, guard.id));
 }
 
 export function getGuardShiftEarnings(job: Pick<GuardJobView, 'guardPay' | 'durationHours'>): number {

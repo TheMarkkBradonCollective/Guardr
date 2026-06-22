@@ -20,8 +20,11 @@ import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { buildMarketplaceDescription, JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
+import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
+import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
+import { JobOperationalDetails } from '../../types';
 
-type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
@@ -31,7 +34,7 @@ interface RequestSecurityFlowProps {
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
 
-const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Review'];
+const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
 
 export function RequestSecurityFlow({
   preset = 'default',
@@ -67,6 +70,7 @@ export function RequestSecurityFlow({
   const [listing, setListing] = useState<JobListingFields>(() =>
     serviceListingDefaults('standing-guard')
   );
+  const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
 
@@ -97,13 +101,15 @@ export function RequestSecurityFlow({
           listing.uniformRequirements.trim().length > 3 &&
           listing.siteInstructions.trim().length > 3
         );
+      case 8:
+        return true;
       default: return true;
     }
   };
 
   const goNext = () => {
     if (!canNext()) return;
-    if (step < 8) setStep((s) => (s + 1) as FlowStep);
+    if (step < 9) setStep((s) => (s + 1) as FlowStep);
   };
 
   const goBack = () => {
@@ -145,6 +151,7 @@ export function RequestSecurityFlow({
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
+      operationalDetails: normalizeJobOperationalDetails(operational),
     });
     onBack();
   };
@@ -157,7 +164,7 @@ export function RequestSecurityFlow({
         </button>
         <div className="flex-1">
           <p className="text-sm text-brand-text-muted">
-            Step {step} of 8 · {STEP_LABELS[step - 1]}
+            Step {step} of 9 · {STEP_LABELS[step - 1]}
           </p>
           <div className="flex gap-1 mt-2">
             {STEP_LABELS.map((_, i) => (
@@ -405,6 +412,13 @@ export function RequestSecurityFlow({
 
         {step === 8 && (
           <div className="space-y-4">
+            <h2 className="text-xl font-bold">Site briefing</h2>
+            <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+          </div>
+        )}
+
+        {step === 9 && (
+          <div className="space-y-4">
             <h2 className="text-xl font-bold">Review your listing</h2>
             <JobListingPreview
               job={{
@@ -435,6 +449,7 @@ export function RequestSecurityFlow({
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'marketplace',
                 status: 'draft',
+                operationalDetails: normalizeJobOperationalDetails(operational),
               }}
             />
             <div className="border-t border-brand-border pt-4">
@@ -453,7 +468,7 @@ export function RequestSecurityFlow({
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
         <div className="max-w-lg mx-auto">
-          {step < 8 ? (
+          {step < 9 ? (
             <button
               type="button"
               onClick={goNext}

@@ -21,6 +21,9 @@ import { US_STATES } from '../../lib/states';
 import { JobListingFields, serviceListingDefaults } from '../../lib/jobListing';
 import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
+import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
+import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
+import { JobOperationalDetails } from '../../types';
 
 export interface StaffCreateJobInput {
   clientId: string;
@@ -47,6 +50,7 @@ export interface StaffCreateJobInput {
   accessInstructions?: string;
   latitude?: number;
   longitude?: number;
+  operationalDetails?: JobOperationalDetails;
 }
 
 interface StaffCreateJobFormProps {
@@ -71,6 +75,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
   const [guardsNeeded, setGuardsNeeded] = useState(1);
   const [assignGuardId, setAssignGuardId] = useState('');
   const [listing, setListing] = useState<JobListingFields>(() => serviceListingDefaults('standing-guard'));
+  const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [error, setError] = useState('');
@@ -109,6 +114,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
     setGuardsNeeded(1);
     setAssignGuardId('');
     setListing(serviceListingDefaults('standing-guard'));
+    setOperational(EMPTY_JOB_OPERATIONAL_DETAILS);
     setLatitude(undefined);
     setLongitude(undefined);
     setError('');
@@ -162,6 +168,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
         accessInstructions: listing.accessInstructions.trim() || undefined,
         latitude,
         longitude,
+        operationalDetails: normalizeJobOperationalDetails(operational),
       });
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
@@ -421,6 +428,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
 
         <div className="sm:col-span-2 border-t border-brand-border pt-4">
           <JobPostOrdersFields value={listing} onChange={setListing} />
+          <JobOperationalDetailsFields value={operational} onChange={setOperational} />
         </div>
       </div>
 

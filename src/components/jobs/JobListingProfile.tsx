@@ -22,6 +22,9 @@ import {
   JOB_TYPE_LABELS,
 } from '../../lib/guardJobs';
 import { JobListingLike, jobTypeLabel } from '../../lib/jobListing';
+import { JobOperationalBriefingProfile } from './JobOperationalBriefingProfile';
+import { JobOperationalDetails } from '../../types';
+import { SecurityRequest } from '../../types';
 import { WfBadge } from '../ui/wireframe';
 
 function DetailField({
@@ -52,6 +55,9 @@ interface JobListingProfileProps {
   distanceMiles?: number;
   payLine?: React.ReactNode;
   footer?: React.ReactNode;
+  operationalDetails?: JobOperationalDetails;
+  operationalBriefingLocked?: boolean;
+  jobStatus?: SecurityRequest['status'];
 }
 
 export function JobListingProfile({
@@ -61,6 +67,9 @@ export function JobListingProfile({
   distanceMiles,
   payLine,
   footer,
+  operationalDetails,
+  operationalBriefingLocked = false,
+  jobStatus,
 }: JobListingProfileProps) {
   const credentialLabels = getJobRequiredCredentialLabels(job);
   const typeLabel = JOB_TYPE_LABELS[job.type] || jobTypeLabel(job);
@@ -164,18 +173,18 @@ export function JobListingProfile({
         </DetailField>
 
         <DetailField icon={<FileText className="w-3.5 h-3.5" />} title="Site instructions">
-          {job.siteInstructions}
+          {!operationalBriefingLocked ? job.siteInstructions : null}
         </DetailField>
 
         <DetailField icon={<Car className="w-3.5 h-3.5" />} title="Parking & arrival">
-          {job.parkingInstructions}
+          {!operationalBriefingLocked ? job.parkingInstructions : null}
         </DetailField>
 
         <DetailField icon={<DoorOpen className="w-3.5 h-3.5" />} title="Access & check-in">
-          {job.accessInstructions}
+          {!operationalBriefingLocked ? job.accessInstructions : null}
         </DetailField>
 
-        {(job.contactName || job.contactPhone) && (
+        {!operationalBriefingLocked && (job.contactName || job.contactPhone) && (
           <DetailField icon={<User className="w-3.5 h-3.5" />} title="On-site contact">
             <>
               {job.contactName}
@@ -189,6 +198,12 @@ export function JobListingProfile({
           </DetailField>
         )}
       </div>
+
+      <JobOperationalBriefingProfile
+        details={operationalDetails}
+        locked={operationalBriefingLocked}
+        jobStatus={jobStatus ?? job.status}
+      />
 
       {footer}
     </div>

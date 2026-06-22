@@ -7,6 +7,9 @@ import { US_STATES } from '../../lib/states';
 import { listingFieldsFromJob } from '../../lib/jobListing';
 import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
+import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
+import { operationalDetailsFromJob, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
+import { JobOperationalDetails } from '../../types';
 import { Loader2 } from 'lucide-react';
 
 interface EditRequestFormProps {
@@ -31,6 +34,7 @@ export function EditRequestForm({
   const [guardsNeeded, setGuardsNeeded] = useState(request.guardsNeeded ?? 1);
   const [hourlyRate, setHourlyRate] = useState(request.hourlyRate);
   const [listing, setListing] = useState(() => listingFieldsFromJob(request));
+  const [operational, setOperational] = useState<JobOperationalDetails>(() => operationalDetailsFromJob(request));
   const [latitude, setLatitude] = useState(request.latitude);
   const [longitude, setLongitude] = useState(request.longitude);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +104,7 @@ export function EditRequestForm({
           accessInstructions: listing.accessInstructions.trim() || undefined,
           latitude,
           longitude,
+          operationalDetails: normalizeJobOperationalDetails(operational),
         });
       }
       onCancel();
@@ -217,6 +222,7 @@ export function EditRequestForm({
             </div>
           </div>
           <JobPostOrdersFields value={listing} onChange={setListing} />
+          <JobOperationalDetailsFields value={operational} onChange={setOperational} />
         </>
       )}
       <div className="flex gap-2 pt-1">

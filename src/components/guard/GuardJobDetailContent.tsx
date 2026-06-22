@@ -60,6 +60,9 @@ export function GuardJobDetailContent({
         showBadges={false}
         distanceMiles={distance}
         payLine={<JobBillingSummaryFromGuardJob job={job} />}
+        operationalDetails={job.operationalDetails}
+        operationalBriefingLocked={job.operationalBriefingLocked}
+        jobStatus={job.status}
         footer={
           <div className="space-y-3">
             <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
