@@ -292,7 +292,6 @@ export function GuardCredentialsPanel({
 
       {staffIdReview}
 
-      {showSection(ptaUofItems.length) && (
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -301,7 +300,7 @@ export function GuardCredentialsPanel({
               Power to Arrest &amp; Appropriate Use of Force
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Highly recommended by Guardr. {PTA_UOF_UPLOAD_GUIDANCE}
+              Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
             </p>
             <p
               className={`text-xs font-semibold mt-2 ${
@@ -386,16 +385,13 @@ export function GuardCredentialsPanel({
         )}
 
         {ptaUofItems.length === 0 ? (
-          editing ? (
           <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
-          ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
             {ptaUofItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
-      )}
       <GuardThirtyTwoHourPanel
         guard={guard}
         editing={editing}

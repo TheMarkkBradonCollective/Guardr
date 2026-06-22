@@ -12,6 +12,7 @@ import {
   guardHasIdOnFile,
   guardHasVerifiedIdForWork,
   guardMeetsLevel1,
+  guardMeetsPtaUofTraining,
   guardMeetsWorkRequirements,
 } from './guardQualification';
 import { getGuardUserStatus, isGuardAccountPending } from './accountStatus';
@@ -74,6 +75,8 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
     } else {
       blockers.push('Valid BSIS Guard Card required to work');
     }
+  } else if (!guardMeetsPtaUofTraining(guard)) {
+    blockers.push('8-hour Power to Arrest & Appropriate Use of Force training not on file');
   }
 
   const canActivate = blockers.length === 0 && guardMeetsWorkRequirements(guard, state);
@@ -124,5 +127,6 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
   if (!checklist.guardCardSubmitted) parts.push('Guard card missing');
   else if (!guardMeetsLevel1(guard)) parts.push('Guard card invalid');
+  if (!guardMeetsPtaUofTraining(guard)) parts.push('PTA/UOF missing');
   return parts.join(' · ') || 'Awaiting requirements';
 }

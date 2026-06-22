@@ -1,7 +1,12 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
-import { guardHasVerifiedIdForWork, guardMeetsLevel1 } from '../../lib/guardQualification';
+import {
+  guardHasVerifiedIdForWork,
+  guardMeetsLevel1,
+  guardMeetsPtaUofTraining,
+  PTA_UOF_UPLOAD_GUIDANCE,
+} from '../../lib/guardQualification';
 import { WfBadge } from '../ui/wireframe';
 import { Check, Circle, Plus } from 'lucide-react';
 
@@ -50,6 +55,9 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         <WfBadge tone={checklist.guardCardVerified ? 'success' : checklist.guardCardSubmitted ? 'warning' : 'default'}>
           Guard card {checklist.guardCardVerified ? 'verified' : checklist.guardCardSubmitted ? 'pending' : 'needed'}
         </WfBadge>
+        <WfBadge tone={guardMeetsPtaUofTraining(guard) ? 'success' : 'default'}>
+          PTA/UOF {guardMeetsPtaUofTraining(guard) ? 'on file' : 'needed'}
+        </WfBadge>
         {checklist.canActivate && <WfBadge tone="primary">Ready to approve</WfBadge>}
       </div>
     );
@@ -59,7 +67,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Required to work</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Verified government ID and a valid BSIS Guard Card must be on file before staff can approve your profile.
+        Verified government ID, valid BSIS Guard Card, and 8-hour PTA/UOF training must be on file before staff can
+        approve your profile.
       </p>
       <div className="app-checklist-steps">
         <StepRow
@@ -84,6 +93,15 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               : checklist.guardCardSubmitted
                 ? 'On file — must be current and valid to work'
                 : 'Upload in the Guard Card section of your profile'
+          }
+        />
+        <StepRow
+          done={guardMeetsPtaUofTraining(guard)}
+          label="Power to Arrest & Appropriate Use of Force (8 hr)"
+          detail={
+            guardMeetsPtaUofTraining(guard)
+              ? 'PTA/UOF training on file'
+              : `Upload in Credentials — ${PTA_UOF_UPLOAD_GUIDANCE}`
           }
         />
         <OptionalNote

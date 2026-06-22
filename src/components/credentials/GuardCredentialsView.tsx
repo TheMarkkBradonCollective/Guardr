@@ -63,24 +63,28 @@ export function GuardCredentialsView({
               <span className="credential-view-section-count">{section.certs.length}</span>
             </div>
             <div className="app-cert-item-stack !pt-0">
-              {section.certs.map((cert) => (
-                <div key={cert.id} className="space-y-2">
-                  <CertItemCard
-                    cert={cert}
-                    guardName={displayName}
-                    compact={compact}
-                    editing={editing}
-                    showCategory={showCategoryOnCards}
-                    onDelete={onDeleteCertification ? () => onDeleteCertification(cert.id) : undefined}
-                    onAttachImage={
-                      onAttachCertificationImage
-                        ? (imageUrl) => onAttachCertificationImage(cert.id, imageUrl)
-                        : undefined
-                    }
-                  />
-                  {renderCertActions?.(cert)}
-                </div>
-              ))}
+              {section.certs.length > 0 ? (
+                section.certs.map((cert) => (
+                  <div key={cert.id} className="space-y-2">
+                    <CertItemCard
+                      cert={cert}
+                      guardName={displayName}
+                      compact={compact}
+                      editing={editing}
+                      showCategory={showCategoryOnCards}
+                      onDelete={onDeleteCertification ? () => onDeleteCertification(cert.id) : undefined}
+                      onAttachImage={
+                        onAttachCertificationImage
+                          ? (imageUrl) => onAttachCertificationImage(cert.id, imageUrl)
+                          : undefined
+                      }
+                    />
+                    {renderCertActions?.(cert)}
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-brand-text-muted py-2">Nothing on file yet.</p>
+              )}
             </div>
           </section>
         );

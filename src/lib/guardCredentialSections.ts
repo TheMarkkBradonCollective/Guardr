@@ -42,6 +42,13 @@ const SECTION_ORDER: CredentialViewSectionId[] = [
   'industry',
 ];
 
+/** Credential sections shown even when the guard has no uploads yet. */
+export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
+  'guard-card',
+  'bsis-pta-uof',
+  'bsis-32-hour',
+];
+
 const SECTION_META: Record<
   CredentialViewSectionId,
   Pick<CredentialViewSection, 'title' | 'subtitle' | 'category'>
@@ -53,7 +60,7 @@ const SECTION_META: Record<
   },
   'bsis-pta-uof': {
     title: 'Power to Arrest & Appropriate Use of Force',
-    subtitle: 'Highly recommended by Guardr — combined 8-hr cert or separate PTA & UOF uploads.',
+    subtitle: 'Required to work — combined 8-hr cert or separate PTA & UOF uploads.',
     category: 'bsis-training',
   },
   'bsis-32-hour': {
@@ -174,7 +181,12 @@ export function getGuardCredentialViewSections(
     id,
     ...SECTION_META[id],
     certs: certsBySection[id],
-  })).filter((section) => !hideEmpty || section.certs.length > 0);
+  })).filter(
+    (section) =>
+      ALWAYS_VISIBLE_CREDENTIAL_SECTIONS.includes(section.id) ||
+      !hideEmpty ||
+      section.certs.length > 0
+  );
 }
 
 /** Group pending approval rows by view section while keeping guard context. */

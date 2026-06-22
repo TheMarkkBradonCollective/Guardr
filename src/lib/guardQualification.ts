@@ -53,7 +53,7 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   return guardMeetsWorkRequirements(guard, state) ? 'active' : 'inactive';
 }
 
-/** Active account + verified government ID + valid BSIS guard card — required to accept, be hired, or work jobs */
+/** Active account + verified ID, valid guard card, and PTA/UOF — required to accept, be hired, or work jobs */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountActive(guard)) return false;
@@ -74,7 +74,11 @@ export function guardHasExpiredIdOnFile(guard: SecurityGuard): boolean {
 }
 
 export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): boolean {
-  return guardHasVerifiedIdForWork(guard) && guardMeetsLevel1(guard, state);
+  return (
+    guardHasVerifiedIdForWork(guard) &&
+    guardMeetsLevel1(guard, state) &&
+    guardMeetsPtaUofTraining(guard)
+  );
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
@@ -114,6 +118,9 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (!guardMeetsLevel1(guard, state)) {
     const jobState = state || 'CA';
     return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
+  }
+  if (!guardMeetsPtaUofTraining(guard)) {
+    return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   return null;
 }
