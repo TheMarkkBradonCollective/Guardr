@@ -2387,7 +2387,7 @@ export default function App() {
     let nextStatus = guard.idVerificationStatus ?? 'not_submitted';
 
     if (guard.idVerificationStatus === 'verified') {
-      nextStatus = complete ? 'pending' : 'not_submitted';
+      nextStatus = 'verified';
     } else if (complete) {
       nextStatus = 'pending';
     } else {
@@ -2403,9 +2403,12 @@ export default function App() {
               idBackUrl: back || undefined,
               idSelfieUrl: selfie || undefined,
               idVerificationStatus: nextStatus,
-              idVerificationSubmittedAt: complete ? now : g.idVerificationSubmittedAt,
-              idVerificationReviewedAt: nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
-              idVerificationRejectionReason: complete ? undefined : g.idVerificationRejectionReason,
+              idVerificationSubmittedAt:
+                complete && nextStatus !== 'verified' ? now : g.idVerificationSubmittedAt,
+              idVerificationReviewedAt:
+                nextStatus === 'pending' ? undefined : g.idVerificationReviewedAt,
+              idVerificationRejectionReason:
+                complete && nextStatus !== 'verified' ? undefined : g.idVerificationRejectionReason,
             }
           : g
       )
@@ -2420,9 +2423,12 @@ export default function App() {
           id_back_url: back || null,
           id_selfie_url: selfie || null,
           id_verification_status: nextStatus,
-          id_verification_submitted_at: complete ? now : guard.idVerificationSubmittedAt ?? null,
-          id_verification_reviewed_at: nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
-          id_verification_rejection_reason: complete ? null : guard.idVerificationRejectionReason ?? null,
+          id_verification_submitted_at:
+            complete && nextStatus !== 'verified' ? now : guard.idVerificationSubmittedAt ?? null,
+          id_verification_reviewed_at:
+            nextStatus === 'pending' ? null : guard.idVerificationReviewedAt ?? null,
+          id_verification_rejection_reason:
+            complete && nextStatus !== 'verified' ? null : guard.idVerificationRejectionReason ?? null,
         })
         .eq('id', guardId);
       if (error) {

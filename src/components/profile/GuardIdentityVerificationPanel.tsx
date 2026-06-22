@@ -371,7 +371,6 @@ export function GuardIdentityVerificationPanel({
       {status === 'verified' && guard.idVerificationReviewedAt && (
         <p className="text-sm text-emerald-400/90">
           Verified {new Date(guard.idVerificationReviewedAt).toLocaleString()}
-          {staffMode ? ' — replacing photos will require re-approval.' : ''}
         </p>
       )}
 
