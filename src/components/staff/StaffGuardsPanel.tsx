@@ -13,6 +13,7 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
+import { guardHasMissingWorkCredentials } from '../../lib/guardMissingCredentials';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -191,28 +192,36 @@ export function StaffGuardsPanel({
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
+    const secondaryMeta =
+      pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
 
     return (
       <WfListCard
         key={guard.id}
         avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-        title={guard.name}
+        title={
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate">{guard.name}</span>
+            <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+          </div>
+        }
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
-          <div className="flex flex-wrap items-center gap-1.5">
-            <GuardRosterStatusBadges guard={guard} />
-            {pendingCerts > 0 && (
-              <WfBadge tone="warning">
-                {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
-              </WfBadge>
-            )}
-            <GuardMissingCredentialsBadge guard={guard} />
-            {activeShift && (
-              <WfBadge tone="primary" className="max-w-full truncate">
-                On job: {activeShift.title}
-              </WfBadge>
-            )}
-          </div>
+          secondaryMeta ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {pendingCerts > 0 && (
+                <WfBadge tone="warning">
+                  {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+                </WfBadge>
+              )}
+              <GuardMissingCredentialsBadge guard={guard} />
+              {activeShift && (
+                <WfBadge tone="primary" className="max-w-full truncate">
+                  On job: {activeShift.title}
+                </WfBadge>
+              )}
+            </div>
+          ) : undefined
         }
         onClick={() => setSelectedId(guard.id)}
         className={isActive ? 'app-item-card-selected' : ''}
