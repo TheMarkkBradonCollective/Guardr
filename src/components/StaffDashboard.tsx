@@ -32,6 +32,8 @@ import {
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
+import type { AddCertificationResult } from '../lib/certUniqueness';
+import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import {
   buildDisputes,
   buildIncidents,
@@ -129,6 +131,15 @@ interface StaffDashboardProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onDeleteCertification?: (guardId: string, certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (
+    guardId: string,
+    certId: string,
+    imageUrl: string
+  ) => Promise<CertImageMutationResult>;
+  onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
@@ -184,6 +195,11 @@ export function StaffDashboard({
   onChangeTheme,
   onSignOut,
   onUpdateGuardProfile,
+  onAddCertification,
+  onDeleteCertification,
+  onAttachCertificationImage,
+  onAddExperience,
+  onAddEducation,
   onSendSupportMessage,
   onUpdateSupportStatus,
   onSendStaffMessage,
@@ -331,6 +347,12 @@ export function StaffDashboard({
             onApproveGuard={onApproveGuard}
             onRejectGuard={onRejectGuard}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
+            onUpdateProfile={canManageGuardAccounts ? onUpdateGuardProfile : undefined}
+            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
+            onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
+            onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
+            onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
+            onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}

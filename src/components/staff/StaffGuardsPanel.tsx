@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
@@ -7,6 +7,9 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
+import { ProfileSavePayload } from '../profile/UserProfileScreen';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -20,6 +23,16 @@ interface StaffGuardsPanelProps {
   onApproveGuard?: (guardId: string) => void;
   onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
+  onUpdateProfile?: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onDeleteCertification?: (guardId: string, certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (
+    guardId: string,
+    certId: string,
+    imageUrl: string
+  ) => Promise<CertImageMutationResult>;
+  onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
   onAddGuard?: (input: {
@@ -43,6 +56,12 @@ export function StaffGuardsPanel({
   onApproveGuard,
   onRejectGuard,
   onUpdateBackgroundChecked,
+  onUpdateProfile,
+  onAddCertification,
+  onDeleteCertification,
+  onAttachCertificationImage,
+  onAddExperience,
+  onAddEducation,
   initialSelectedId = null,
   onOpenJob,
   onAddGuard,
@@ -77,6 +96,14 @@ export function StaffGuardsPanel({
         onApproveGuard,
         onRejectGuard,
         onUpdateBackgroundChecked,
+        onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(selected.id, payload) : undefined,
+        onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(selected.id, cert) : undefined,
+        onDeleteCertification: onDeleteCertification ? (certId: string) => onDeleteCertification(selected.id, certId) : undefined,
+        onAttachCertificationImage: onAttachCertificationImage
+          ? (certId: string, imageUrl: string) => onAttachCertificationImage(selected.id, certId, imageUrl)
+          : undefined,
+        onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
+        onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
         onOpenJob,
       }
     : null;
@@ -117,7 +144,7 @@ export function StaffGuardsPanel({
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept jobs — staff can add profiles, verify credentials, and manage accounts.
+              Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
             </p>
             {canManage && onAddGuard && (
               <StaffAddGuardForm

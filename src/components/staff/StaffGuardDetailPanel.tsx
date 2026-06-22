@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
   getGuardDisplayStatus,
@@ -13,7 +13,12 @@ import { CertItemCard } from '../credentials/CertItemCard';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Save, User, X } from 'lucide-react';
+import { GuardResumeEditor, GuardResumeSavePayload } from '../profile/GuardResumeEditor';
+import { ProfileSavePayload } from '../profile/UserProfileScreen';
+import { processProfilePhotoFile } from '../../lib/profilePhoto';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -27,6 +32,12 @@ interface StaffGuardDetailPanelProps {
   onApproveGuard?: (guardId: string) => void;
   onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
+  onUpdateProfile?: (payload: ProfileSavePayload) => void | Promise<void>;
+  onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   compact?: boolean;
@@ -44,10 +55,59 @@ export function StaffGuardDetailPanel({
   onApproveGuard,
   onRejectGuard,
   onUpdateBackgroundChecked,
+  onUpdateProfile,
+  onAddCertification,
+  onDeleteCertification,
+  onAttachCertificationImage,
+  onAddExperience,
+  onAddEducation,
   onBack,
   onOpenJob,
   compact = false,
 }: StaffGuardDetailPanelProps) {
+  const canEdit = canManage && !!onUpdateProfile;
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [photoSaving, setPhotoSaving] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [name, setName] = useState(guard.name);
+  const [phone, setPhone] = useState(guard.phone ?? '');
+  const [badgeNumber, setBadgeNumber] = useState(guard.badgeNumber);
+  const [hourlyRate, setHourlyRate] = useState(String(guard.hourlyRateRequirement ?? ''));
+  const [avatar, setAvatar] = useState(guard.avatar ?? '');
+  const [resume, setResume] = useState<GuardResumeSavePayload>({
+    headline: guard.headline ?? '',
+    summary: guard.summary ?? guard.bio ?? '',
+    about: guard.about ?? '',
+    skills: guard.skills ?? [],
+    languages: guard.languages ?? [],
+    serviceAreas: guard.serviceAreas ?? [],
+    specialties: guard.specialties ?? [],
+    yearsExperience: guard.yearsExperience,
+    availabilityNotes: guard.availabilityNotes ?? '',
+    hourlyRateRequirement: guard.hourlyRateRequirement,
+  });
+
+  useEffect(() => {
+    setName(guard.name);
+    setPhone(guard.phone ?? '');
+    setBadgeNumber(guard.badgeNumber);
+    setHourlyRate(String(guard.hourlyRateRequirement ?? ''));
+    setAvatar(guard.avatar ?? '');
+    setResume({
+      headline: guard.headline ?? '',
+      summary: guard.summary ?? guard.bio ?? '',
+      about: guard.about ?? '',
+      skills: guard.skills ?? [],
+      languages: guard.languages ?? [],
+      serviceAreas: guard.serviceAreas ?? [],
+      specialties: guard.specialties ?? [],
+      yearsExperience: guard.yearsExperience,
+      availabilityNotes: guard.availabilityNotes ?? '',
+      hourlyRateRequirement: guard.hourlyRateRequirement,
+    });
+  }, [guard]);
+
   const accountStatus = guard.userStatus || 'active';
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
@@ -63,7 +123,7 @@ export function StaffGuardDetailPanel({
   );
 
   const allCerts = useMemo(() => {
-    const flat = Object.values(groupedCerts).flat();
+    const flat: Certification[] = Object.values(groupedCerts).flat();
     return flat
       .filter((c) => c.status !== 'rejected')
       .sort((a, b) => {
@@ -75,41 +135,199 @@ export function StaffGuardDetailPanel({
 
   const pendingCount = allCerts.filter((c) => c.status === 'pending').length;
 
+  const buildPayload = (avatarOverride?: string): ProfileSavePayload => ({
+    name: name.trim(),
+    phone: phone.trim(),
+    badgeNumber: badgeNumber.trim(),
+    hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
+    avatar: avatarOverride ?? avatar,
+    ...resume,
+    summary: resume.summary.trim(),
+    about: resume.about.trim(),
+    headline: resume.headline.trim(),
+    bio: resume.summary.trim(),
+  });
+
+  const handleSave = async () => {
+    if (!onUpdateProfile) return;
+    setSaving(true);
+    try {
+      await onUpdateProfile(buildPayload());
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setName(guard.name);
+    setPhone(guard.phone ?? '');
+    setBadgeNumber(guard.badgeNumber);
+    setHourlyRate(String(guard.hourlyRateRequirement ?? ''));
+    setAvatar(guard.avatar ?? '');
+    setResume({
+      headline: guard.headline ?? '',
+      summary: guard.summary ?? guard.bio ?? '',
+      about: guard.about ?? '',
+      skills: guard.skills ?? [],
+      languages: guard.languages ?? [],
+      serviceAreas: guard.serviceAreas ?? [],
+      specialties: guard.specialties ?? [],
+      yearsExperience: guard.yearsExperience,
+      availabilityNotes: guard.availabilityNotes ?? '',
+      hourlyRateRequirement: guard.hourlyRateRequirement,
+    });
+    setPhotoError('');
+    setEditing(false);
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !onUpdateProfile) return;
+    setPhotoError('');
+    setPhotoSaving(true);
+    try {
+      const dataUrl = await processProfilePhotoFile(file);
+      setAvatar(dataUrl);
+      await onUpdateProfile(buildPayload(dataUrl));
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Could not upload photo.');
+    } finally {
+      setPhotoSaving(false);
+    }
+  };
+
+  const renderPendingCertActions = () => {
+    const pendingCerts = allCerts.filter((c) => c.status === 'pending');
+    if (pendingCerts.length === 0) return null;
+
+    return (
+      <section className="py-4 border-b border-brand-border space-y-3">
+        <WfSectionHeader title="Pending credentials" count={pendingCerts.length} className="mb-0" />
+        <div className="app-cert-item-stack">
+          {pendingCerts.map((cert) => (
+            <div key={cert.id} className="space-y-2">
+              <CertItemCard cert={cert} guardName={guard.name} />
+              {canManage && (
+                <div className="flex gap-1.5 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => onRejectCert(guard.id, cert.id)}
+                    className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+                  >
+                    <X className="w-3 h-3" /> Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onApproveCert(guard.id, cert.id)}
+                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                  >
+                    <Check className="w-3 h-3" /> Verify
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
-      {onBack && (
-        <div className="px-1 pb-4">
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
-            <ArrowLeft className="w-4 h-4" />
-            Back to list
-          </button>
+      {(onBack || (canEdit && !guard.isStaff)) && (
+        <div className="px-1 pb-4 flex items-center justify-between gap-3">
+          {onBack ? (
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm text-brand-primary">
+              <ArrowLeft className="w-4 h-4" />
+              Back to list
+            </button>
+          ) : (
+            <span />
+          )}
+          {canEdit && !guard.isStaff && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => (editing ? void handleSave() : setEditing(true))}
+                disabled={saving}
+                className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1.5 disabled:opacity-50"
+              >
+                {editing ? <Save className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                {editing ? (saving ? 'Saving…' : 'Save profile') : 'Edit profile'}
+              </button>
+              {editing && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
-        <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />
+        <div className="relative shrink-0">
+          <ProfileAvatar src={editing ? avatar : guard.avatar} name={guard.name} size="lg" rounded="xl" />
+          {editing && canEdit && (
+            <label
+              className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg ${
+                photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer'
+              }`}
+              title="Change profile photo"
+            >
+              <Camera className="w-4 h-4" />
+              <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoSelect} disabled={photoSaving} />
+            </label>
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-lg">{guard.name}</h2>
+            {editing ? (
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="uber-input font-bold text-lg w-full"
+                placeholder="Full name"
+              />
+            ) : (
+              <h2 className="font-bold text-lg">{guard.name}</h2>
+            )}
             {guard.isStaff && (
               <WfBadge tone="primary">{guard.staffRole || 'Staff'}</WfBadge>
             )}
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{guard.email}</p>
-          <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
-            <div>
-              <p className="wf-metric-label">Badge</p>
-              <p className="wf-metric-value">{guard.badgeNumber}</p>
+          {photoError && <p className="text-xs text-red-500 mt-1">{photoError}</p>}
+          {photoSaving && <p className="text-xs text-brand-text-muted mt-1">Saving photo…</p>}
+          {editing ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <EditField label="Badge number" value={badgeNumber} onChange={setBadgeNumber} />
+              <EditField label="Phone" value={phone} onChange={setPhone} type="tel" />
+              <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" />
             </div>
-            <div>
-              <p className="wf-metric-label">Rating</p>
-              <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
+              <div>
+                <p className="wf-metric-label">Badge</p>
+                <p className="wf-metric-value">{guard.badgeNumber}</p>
+              </div>
+              <div>
+                <p className="wf-metric-label">Rating</p>
+                <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
+              </div>
+              <div>
+                <p className="wf-metric-label">Jobs</p>
+                <p className="wf-metric-value">{guard.jobsCompleted}</p>
+              </div>
             </div>
-            <div>
-              <p className="wf-metric-label">Jobs</p>
-              <p className="wf-metric-value">{guard.jobsCompleted}</p>
-            </div>
-          </div>
+          )}
           {!guard.isStaff && (
             <div className="flex flex-wrap gap-2 mt-3">
               <WfBadge tone="primary">{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
@@ -127,13 +345,15 @@ export function StaffGuardDetailPanel({
 
       {!guard.isStaff && (
         <>
-          <section className="py-4 border-b border-brand-border space-y-2">
-            <WfSectionHeader title="Qualification" className="mb-0" />
-            <p className="text-sm">
-              Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
-            </p>
-            <CertBadgeRow guard={guard} showCaBaseline />
-          </section>
+          {!editing && (
+            <section className="py-4 border-b border-brand-border space-y-2">
+              <WfSectionHeader title="Qualification" className="mb-0" />
+              <p className="text-sm">
+                Pathway: <strong>{guardPathwayStatusLabel(progress.level)}</strong>
+              </p>
+              <CertBadgeRow guard={guard} showCaBaseline />
+            </section>
+          )}
 
           {canManage && (
           <section className="py-4 border-b border-brand-border space-y-2">
@@ -182,42 +402,66 @@ export function StaffGuardDetailPanel({
           </section>
           )}
 
-          <section className="py-4 border-b border-brand-border space-y-3">
-            <WfSectionHeader
-              title="Credentials"
-              count={pendingCount > 0 ? pendingCount : undefined}
-              className="mb-0"
-            />
-            {allCerts.length === 0 ? (
-              <p className="text-sm text-brand-text-muted">No credentials on file.</p>
-            ) : (
-              <div className="app-cert-item-stack max-h-72 overflow-y-auto pr-1">
-                {allCerts.map((cert) => (
-                  <div key={cert.id} className="space-y-2">
-                    <CertItemCard cert={cert} guardName={guard.name} />
-                    {canManage && cert.status === 'pending' && (
-                      <div className="flex gap-1.5 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => onRejectCert(guard.id, cert.id)}
-                          className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                        >
-                          <X className="w-3 h-3" /> Reject
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onApproveCert(guard.id, cert.id)}
-                          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                        >
-                          <Check className="w-3 h-3" /> Verify
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          {editing && canEdit && (
+            <div className="py-4 border-b border-brand-border">
+              <GuardResumeEditor
+                guard={guard}
+                editing
+                payload={resume}
+                onChange={(patch) =>
+                  setResume((r) => ({
+                    ...r,
+                    ...patch,
+                    hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement,
+                  }))
+                }
+                onAddCertification={onAddCertification}
+                onDeleteCertification={onDeleteCertification}
+                onAttachCertificationImage={onAttachCertificationImage}
+                onAddExperience={onAddExperience}
+                onAddEducation={onAddEducation}
+              />
+            </div>
+          )}
+
+          {editing ? renderPendingCertActions() : (
+            <section className="py-4 border-b border-brand-border space-y-3">
+              <WfSectionHeader
+                title="Credentials"
+                count={pendingCount > 0 ? pendingCount : undefined}
+                className="mb-0"
+              />
+              {allCerts.length === 0 ? (
+                <p className="text-sm text-brand-text-muted">No credentials on file.</p>
+              ) : (
+                <div className="app-cert-item-stack max-h-72 overflow-y-auto pr-1">
+                  {allCerts.map((cert) => (
+                    <div key={cert.id} className="space-y-2">
+                      <CertItemCard cert={cert} guardName={guard.name} />
+                      {canManage && cert.status === 'pending' && (
+                        <div className="flex gap-1.5 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => onRejectCert(guard.id, cert.id)}
+                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+                          >
+                            <X className="w-3 h-3" /> Reject
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onApproveCert(guard.id, cert.id)}
+                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                          >
+                            <Check className="w-3 h-3" /> Verify
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="py-4 border-b border-brand-border space-y-2">
             <WfSectionHeader title="Recent jobs" className="mb-0" />
@@ -248,12 +492,36 @@ export function StaffGuardDetailPanel({
         </section>
       )}
 
-      {guard.bio && !guard.isStaff && (
+      {guard.bio && !guard.isStaff && !editing && (
         <section className="py-4">
           <WfSectionHeader title="Bio" className="mb-2" />
           <p className="text-sm text-brand-text-muted leading-relaxed">{guard.bio}</p>
         </section>
       )}
+    </div>
+  );
+}
+
+function EditField({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="wf-metric-label">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="uber-input w-full mt-1 text-sm"
+      />
     </div>
   );
 }

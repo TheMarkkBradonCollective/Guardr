@@ -19,6 +19,7 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   companyName?: string;
   hourlyRateRequirement?: number;
   avatar?: string;
+  badgeNumber?: string;
 }
 
 interface UserProfileScreenProps {

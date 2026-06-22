@@ -1050,6 +1050,7 @@ export default function App() {
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
+              badgeNumber: payload.badgeNumber ?? g.badgeNumber,
             }
           : g
       )
@@ -1071,6 +1072,7 @@ export default function App() {
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
       };
       if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
+      if (payload.badgeNumber !== undefined) guardUpdate.badge_number = payload.badgeNumber;
       await supabase.from('guards').update(guardUpdate).eq('id', guardId);
     }
     if (currentUser?.id === guardId) {
@@ -3158,6 +3160,11 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
+          onAddCertification={handleAddCertification}
+          onDeleteCertification={handleDeleteCertification}
+          onAttachCertificationImage={handleAttachCertificationImage}
+          onAddExperience={handleAddExperience}
+          onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
           jobChatThreads={jobChatThreads}
