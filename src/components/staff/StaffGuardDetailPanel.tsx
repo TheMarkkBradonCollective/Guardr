@@ -22,6 +22,11 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
+import { GuardIdentityVerificationPanel } from '../profile/GuardIdentityVerificationPanel';
+import {
+  getGuardIdVerificationStatus,
+  ID_VERIFICATION_STATUS_LABELS,
+} from '../../lib/guardIdentityVerification';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -43,6 +48,11 @@ interface StaffGuardDetailPanelProps {
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
+  onSubmitIdentityVerification?: (
+    payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
+  ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
+  onRejectIdentityVerification?: (guardId: string, reason?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   editing?: boolean;
@@ -70,6 +80,9 @@ export function StaffGuardDetailPanel({
   onAddEducation,
   onApproveGuardAccount,
   onDeleteGuard,
+  onSubmitIdentityVerification,
+  onApproveIdentityVerification,
+  onRejectIdentityVerification,
   onBack,
   onOpenJob,
   editing: controlledEditing,
@@ -133,6 +146,7 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const accountStatus = guard.userStatus || 'active';
+  const idVerificationStatus = getGuardIdVerificationStatus(guard);
   const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
@@ -397,10 +411,54 @@ export function StaffGuardDetailPanel({
               {guard.backgroundChecked && (
                 <WfBadge tone="primary">Background checked</WfBadge>
               )}
+              {idVerificationStatus === 'verified' && (
+                <WfBadge tone="success">{ID_VERIFICATION_STATUS_LABELS.verified}</WfBadge>
+              )}
+              {idVerificationStatus === 'pending' && (
+                <WfBadge tone="warning">{ID_VERIFICATION_STATUS_LABELS.pending}</WfBadge>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {!guard.isStaff && onSubmitIdentityVerification && (
+        <GuardIdentityVerificationPanel
+          guard={guard}
+          onSubmit={onSubmitIdentityVerification}
+          compact
+        />
+      )}
+
+      {!guard.isStaff && canManage && idVerificationStatus === 'pending' && (
+        <section className="py-4 border-b border-brand-border space-y-2">
+          <WfSectionHeader title="ID verification review" className="mb-0" />
+          <div className="flex flex-wrap gap-2">
+            {onApproveIdentityVerification && (
+              <button
+                type="button"
+                onClick={() => onApproveIdentityVerification(guard.id)}
+                className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
+              >
+                <Check className="w-3.5 h-3.5" /> Approve ID
+              </button>
+            )}
+            {onRejectIdentityVerification && (
+              <button
+                type="button"
+                onClick={() => {
+                  const reason = window.prompt('Rejection reason (shown to guard):');
+                  if (reason === null) return;
+                  void onRejectIdentityVerification(guard.id, reason);
+                }}
+                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
+              >
+                <X className="w-3.5 h-3.5" /> Reject ID
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {!guard.isStaff && (
         <>

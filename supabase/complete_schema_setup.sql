@@ -37,6 +37,17 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS years_experience INTEGER;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS availability_notes TEXT DEFAULT '';
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_front_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_back_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_selfie_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_submitted_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_id_verification_status_check;
+ALTER TABLE guards ADD CONSTRAINT guards_id_verification_status_check
+  CHECK (id_verification_status IN ('not_submitted', 'pending', 'verified', 'rejected'));
 
 -- ── CLIENTS ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (

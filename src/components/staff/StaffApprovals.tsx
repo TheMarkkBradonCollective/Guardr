@@ -6,6 +6,7 @@ import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingClientAccounts, getPendingGuardAccounts, getPendingJobApprovals } from '../../lib/staffOps';
+import { getPendingIdentityVerifications } from '../../lib/guardIdentityVerification';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -24,6 +25,8 @@ interface StaffApprovalsProps {
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void;
+  onApproveIdentityVerification?: (guardId: string) => void;
+  onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onViewGuard?: (guardId: string) => void;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
@@ -41,6 +44,8 @@ export function StaffApprovals({
   onApproveGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
+  onApproveIdentityVerification,
+  onRejectIdentityVerification,
   onViewGuard,
   canEditJobListing = false,
   onEditJobListing,
@@ -50,6 +55,7 @@ export function StaffApprovals({
   const pendingCerts = getPendingCertifications(guards);
   const pendingGuardAccounts = getPendingGuardAccounts(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
+  const pendingIdentityVerifications = getPendingIdentityVerifications(guards);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
@@ -58,7 +64,8 @@ export function StaffApprovals({
     pendingCerts.length === 0 &&
     jobsWithApplications.length === 0 &&
     pendingGuardAccounts.length === 0 &&
-    pendingClientAccounts.length === 0;
+    pendingClientAccounts.length === 0 &&
+    pendingIdentityVerifications.length === 0;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -121,6 +128,53 @@ export function StaffApprovals({
                         </button>
                       ) : undefined
                     }
+                  />
+                ))}
+              </AppItemCardStack>
+            </section>
+          )}
+
+          {pendingIdentityVerifications.length > 0 && (
+            <section>
+              <WfSectionHeader title="ID verification" count={pendingIdentityVerifications.length} />
+              <p className="text-xs text-brand-text-muted mt-1 mb-3">
+                Review government ID (front and back) and the identity selfie. Selfies are verification headshots — not profile photos.
+              </p>
+              <AppItemCardStack>
+                {pendingIdentityVerifications.map((guard) => (
+                  <WfListCard
+                    key={guard.id}
+                    avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                    title={guard.name}
+                    subtitle={`Guard · ${guard.email}`}
+                    meta={<WfBadge tone="warning">ID pending review</WfBadge>}
+                    action={
+                      <div className="flex gap-1.5">
+                        {onApproveIdentityVerification && (
+                          <button
+                            type="button"
+                            onClick={() => onApproveIdentityVerification(guard.id)}
+                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                          >
+                            <Check className="w-3 h-3" /> Approve
+                          </button>
+                        )}
+                        {onRejectIdentityVerification && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const reason = window.prompt('Rejection reason (shown to guard):');
+                              if (reason === null) return;
+                              onRejectIdentityVerification(guard.id, reason);
+                            }}
+                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+                          >
+                            <X className="w-3 h-3" /> Reject
+                          </button>
+                        )}
+                      </div>
+                    }
+                    onClick={onViewGuard ? () => onViewGuard(guard.id) : undefined}
                   />
                 ))}
               </AppItemCardStack>

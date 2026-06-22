@@ -13,6 +13,11 @@ import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
+import {
+  GuardIdentityVerificationPanel,
+  type GuardIdentityVerificationPayload,
+  type IdentityVerificationSubmitResult,
+} from './GuardIdentityVerificationPanel';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -43,6 +48,9 @@ interface UserProfileScreenProps {
   ) => Promise<import('../../lib/certImagePolicy').CertImageMutationResult>;
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
+  onSubmitIdentityVerification?: (
+    payload: GuardIdentityVerificationPayload
+  ) => Promise<IdentityVerificationSubmitResult>;
   isDbConnected?: boolean;
 }
 
@@ -59,6 +67,7 @@ export function UserProfileScreen({
   onAttachCertificationImage,
   onAddExperience,
   onAddEducation,
+  onSubmitIdentityVerification,
   isDbConnected = false,
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
@@ -267,6 +276,15 @@ export function UserProfileScreen({
           </div>
         )}
       </AppFormSection>
+
+      {guard && !guard.isStaff && onSubmitIdentityVerification && (
+        <div className="px-5">
+          <GuardIdentityVerificationPanel
+            guard={guard}
+            onSubmit={onSubmitIdentityVerification}
+          />
+        </div>
+      )}
 
       {canBuildResume && guard && (
         <GuardResumeEditor
