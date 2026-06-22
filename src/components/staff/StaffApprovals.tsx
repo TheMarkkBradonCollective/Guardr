@@ -21,6 +21,7 @@ import { StaffGuardActivationChecklistView } from './StaffGuardActivationCheckli
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
+import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
@@ -733,8 +734,11 @@ export function StaffApprovals({
           <AppItemCardStack>
             {pendingGuardAccounts.map((guard) => (
               <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-sm truncate">{guard.name}</p>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">{guard.name}</p>
+                    <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+                  </div>
                   <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
                 </div>
                 <p className="text-xs text-brand-text-muted">Profile approval · {guardActivationSummaryLabel(guard)}</p>
@@ -742,8 +746,11 @@ export function StaffApprovals({
             ))}
             {approvedGuardsAwaitingActivation.map((guard) => (
               <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-sm truncate">{guard.name}</p>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">{guard.name}</p>
+                    <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+                  </div>
                   <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
                 </div>
                 <p className="text-xs text-brand-text-muted">Account activation · {guardActivationSummaryLabel(guard)}</p>

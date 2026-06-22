@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 
 interface WfListCardProps {
   avatar?: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   meta?: React.ReactNode;
   action?: React.ReactNode;
@@ -32,7 +32,11 @@ export function WfListCard({
     >
       {avatar && <div className="shrink-0">{avatar}</div>}
       <div className="min-w-0 flex-1 text-left">
-        <p className="font-semibold text-[0.9375rem] leading-snug truncate">{title}</p>
+        {typeof title === 'string' ? (
+          <p className="font-semibold text-[0.9375rem] leading-snug truncate">{title}</p>
+        ) : (
+          <div className="font-semibold text-[0.9375rem] leading-snug min-w-0">{title}</div>
+        )}
         {subtitle && (
           <p className="text-sm text-brand-text-muted mt-0.5 leading-snug line-clamp-2">{subtitle}</p>
         )}
