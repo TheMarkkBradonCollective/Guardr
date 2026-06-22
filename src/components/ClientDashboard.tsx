@@ -15,6 +15,7 @@ import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
 import { ClientMapScreen } from './client/ClientMapScreen';
+import { AppPageTransition } from './ui/motion/AppMotion';
 
 export type ClientView =
   | 'map'
@@ -186,8 +187,15 @@ export function ClientDashboard({
     <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">{node}</div>
   );
 
+  const page = (key: string, node: React.ReactNode) => (
+    <AppPageTransition motionKey={key} className="h-full min-h-0">
+      {wrap(node)}
+    </AppPageTransition>
+  );
+
   if (accountPending && view !== 'profile' && view !== 'support' && view !== 'home') {
-    return wrap(
+    return page(
+      'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
     );
   }
@@ -197,7 +205,8 @@ export function ClientDashboard({
   }
 
   if (view === 'request') {
-    return wrap(
+    return page(
+      'request',
       <RequestSecurityFlow
         preset={flowPreset}
         onBack={() => navigate('home')}
@@ -210,7 +219,8 @@ export function ClientDashboard({
   }
 
   if (view === 'direct-request' && requestTargetGuard) {
-    return (
+    return page(
+      `direct-request-${requestTargetGuard.id}`,
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
         onBack={() => {
@@ -228,7 +238,8 @@ export function ClientDashboard({
 
   if (view === 'guards') {
     if (selectedGuard) {
-      return (
+      return page(
+        `guards-${selectedGuard.id}`,
         <GuardProfileScreen
           guard={selectedGuard}
           clientId={clientId}
@@ -238,16 +249,15 @@ export function ClientDashboard({
         />
       );
     }
-    return (
-      <GuardDirectoryScreen
-        guards={guards}
-        onSelectGuard={setSelectedGuard}
-      />
+    return page(
+      'guards',
+      <GuardDirectoryScreen guards={guards} onSelectGuard={setSelectedGuard} />
     );
   }
 
   if (view === 'coverage') {
-    return wrap(
+    return page(
+      'coverage',
       <LiveCoverageScreen
         requests={requests}
         guards={guards}
@@ -267,7 +277,8 @@ export function ClientDashboard({
   }
 
   if (view === 'reports') {
-    return wrap(
+    return page(
+      'reports',
       <ClientReportsScreen
         reports={recentReports}
         onBack={() => navigate('home')}
@@ -276,7 +287,8 @@ export function ClientDashboard({
   }
 
   if (view === 'requests') {
-    return wrap(
+    return page(
+      'requests',
       <ClientRequestsList
         requests={requests}
         guards={guards}
@@ -295,7 +307,8 @@ export function ClientDashboard({
     );
   }
 
-  return wrap(
+  return page(
+    'home',
     <ClientHomeScreen
       companyName={companyName}
       coverage={coverage}

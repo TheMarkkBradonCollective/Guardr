@@ -20,13 +20,15 @@ import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
+import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
+import { showAppToast } from './ui/AppToast';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { ThemeToggle } from './ui/ThemeToggle';
-import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
+import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
+import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -177,6 +179,7 @@ export function GuardDashboard({
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
   const [showJobChat, setShowJobChat] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
@@ -310,7 +313,7 @@ export function GuardDashboard({
   const handleAcceptJob = (jobId: string) => {
     const workBlocked = guardWorkBlockedMessage(guard);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const jobView = requests.find((r) => r.id === jobId) ?? null;
@@ -318,7 +321,7 @@ export function GuardDashboard({
       const missing = jobView
         ? checkJobRequirements(guard, jobView).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
         : 'job requirements';
-      alert(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`);
+      showAppToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, { tone: 'error' });
       return;
     }
     onAcceptJob(jobId);
@@ -329,12 +332,12 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     updatePhase(activeShiftJob.id, 'arrived');
@@ -344,12 +347,12 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     setShowSelfAudit(true);
@@ -364,11 +367,11 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
       return;
     }
     const failed = !payload.uniform.uniformPresent || !payload.uniform.blackShoes;
@@ -406,11 +409,11 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
-      alert(workBlocked);
+      showAppToast(workBlocked, { tone: 'error' });
       return;
     }
     if (!canGuardClockIn(activeShiftJob)) {
-      alert(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.');
+      showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
       return;
     }
     if (!window.confirm('Skip self audit and clock in? This job will be flagged No Self Audit until staff add photos after the job.')) {
@@ -446,7 +449,7 @@ export function GuardDashboard({
     if (!activeShiftJob) return;
     const blocked = guardClockOutBlockedMessage(activeShiftJob);
     if (blocked) {
-      alert(blocked);
+      showAppToast(blocked, { tone: 'error' });
       return;
     }
     setShowCheckout(true);
@@ -455,7 +458,7 @@ export function GuardDashboard({
   const handleCheckoutConfirm = () => {
     if (!activeShiftJob) return;
     if (!canGuardClockOut(activeShiftJob)) {
-      alert(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.');
+      showAppToast(guardClockOutBlockedMessage(activeShiftJob) ?? 'Clock-out is not available right now.', { tone: 'error' });
       setShowCheckout(false);
       return;
     }
@@ -494,13 +497,14 @@ export function GuardDashboard({
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to start Stripe onboarding';
       if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
-        alert(
-          'Stripe Connect is not fully activated on the Guardr platform account yet.\n\n' +
-            'Setting up webhooks is not the same as enabling Connect.\n\n' +
-            'In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.'
-        );
+        showAppToast('Stripe Connect not ready', {
+          tone: 'error',
+          body:
+            'Stripe Connect is not fully activated on the Guardr platform account yet. In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.',
+          durationMs: 9000,
+        });
       } else {
-        alert(message);
+        showAppToast(message, { tone: 'error' });
       }
     } finally {
       setConnectPending(false);
@@ -549,7 +553,6 @@ export function GuardDashboard({
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
     { id: 'support', icon: LifeBuoy, label: 'Support' },
-    { id: 'profile', icon: User, label: 'Profile' },
   ];
 
   const guardMainPanel = (
@@ -588,27 +591,12 @@ export function GuardDashboard({
           onSkipAudit={handleSkipSelfAudit}
           onIncidentReport={() => {
             void onReportIncident?.(activeShiftJob.id);
-            alert('Incident reported. Client and staff have been notified.');
-          }}
-          onActivityReport={() => {
-            if (!activeShiftJob) return;
-            const report = window.prompt('Log activity for this shift');
-            if (!report?.trim()) return;
-            const stamp = new Date().toISOString();
-            const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report.trim()}`;
-            const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';
-            onUpdateJobAudit(activeShiftJob.id, {
-              checkOutAudit: {
-                checkedAt: activeShiftJob.checkOutAudit?.checkedAt ?? stamp,
-                completed: false,
-                noViolations: activeShiftJob.checkOutAudit?.noViolations ?? true,
-                noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
-                dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
-                incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
-                clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
-              },
+            showAppToast('Incident reported', {
+              body: 'Client and staff have been notified.',
+              tone: 'info',
             });
           }}
+          onActivityReport={() => setShowActivityLog(true)}
           onEndShift={handleEndShift}
           onOpenJobChat={onSendJobChatMessage ? () => setShowJobChat(true) : undefined}
         />
@@ -646,123 +634,154 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'earnings' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <div className="guard-scroll-panel flex-1">
-            <GuardEarningsPanel
-              breakdown={earningsBreakdown}
-              completedJobs={completedJobs}
-              stripeConnected={!!guard.stripeConnectAccountId}
-              stripeReady={connectReady}
-              connectPending={connectPending}
-              onConnectStripe={handleConnectStripe}
-              onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
-              onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
-              cashRequestPending={cashRequestPending}
-              stripeRequestPending={stripeRequestPending}
-              openCashInvoices={openCashInvoices}
-              openStripeInvoices={openStripeInvoices}
-              payments={payments}
-            />
-          </div>
-        </div>
-      )}
+      {activeTab !== 'map' && (
+        <AppPageTransition motionKey={activeTab} className="absolute inset-0">
+          {activeTab === 'earnings' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="guard-scroll-panel flex-1">
+                <GuardEarningsPanel
+                  breakdown={earningsBreakdown}
+                  completedJobs={completedJobs}
+                  stripeConnected={!!guard.stripeConnectAccountId}
+                  stripeReady={connectReady}
+                  connectPending={connectPending}
+                  onConnectStripe={handleConnectStripe}
+                  onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
+                  onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
+                  cashRequestPending={cashRequestPending}
+                  stripeRequestPending={stripeRequestPending}
+                  openCashInvoices={openCashInvoices}
+                  openStripeInvoices={openStripeInvoices}
+                  payments={payments}
+                />
+              </div>
+            </div>
+          )}
 
-      {activeTab === 'myJobs' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <GuardMyJobsPanel
-            upcomingJobs={upcomingMyJobs}
-            pastJobs={pastMyJobs}
-            guard={guard}
-            currentUser={currentUser}
-            jobChatThreads={jobChatThreads}
-            jobChatMessages={jobChatMessages}
-            onSendJobChatMessage={onSendJobChatMessage}
-            initialSelectedJobId={jobChatRequestId}
-            initialChatOpen={openJobChat}
-            onSelectedJobIdChange={onJobChatRequestIdChange}
-            onChatOpenChange={onJobChatOpenChange}
-          />
-        </div>
-      )}
+          {activeTab === 'myJobs' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <GuardMyJobsPanel
+                upcomingJobs={upcomingMyJobs}
+                pastJobs={pastMyJobs}
+                guard={guard}
+                currentUser={currentUser}
+                jobChatThreads={jobChatThreads}
+                jobChatMessages={jobChatMessages}
+                onSendJobChatMessage={onSendJobChatMessage}
+                initialSelectedJobId={jobChatRequestId}
+                initialChatOpen={openJobChat}
+                onSelectedJobIdChange={onJobChatRequestIdChange}
+                onChatOpenChange={onJobChatOpenChange}
+              />
+            </div>
+          )}
 
-      {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <SupportScreen
-            currentUser={currentUser}
-            tickets={supportTickets}
-            relatedRequests={relatedRequests}
-            onCreateTicket={onCreateSupportTicket}
-            onSendMessage={onSendSupportMessage}
-            initialTicketId={supportTicketId}
-            onActiveTicketIdChange={onSupportTicketIdChange}
-          />
-        </div>
-      )}
+          {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <SupportScreen
+                currentUser={currentUser}
+                tickets={supportTickets}
+                relatedRequests={relatedRequests}
+                onCreateTicket={onCreateSupportTicket}
+                onSendMessage={onSendSupportMessage}
+                initialTicketId={supportTicketId}
+                onActiveTicketIdChange={onSupportTicketIdChange}
+              />
+            </div>
+          )}
 
-      {activeTab === 'profile' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <UserProfileScreen
-            currentUser={currentUser}
-            themeMode={themeMode as 'dark' | 'light' | 'grey'}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
-            guard={guard}
-            onSave={onUpdateProfile}
-            onAddCertification={onAddCertification}
-            onDeleteCertification={onDeleteCertification}
-            onAttachCertificationImage={onAttachCertificationImage}
-            onAddExperience={onAddExperience}
-            onAddEducation={onAddEducation}
-            onSubmitIdentityVerification={onSubmitIdentityVerification}
-            onOpenLegal={onOpenLegal}
-          />
-        </div>
+          {activeTab === 'profile' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <UserProfileScreen
+                currentUser={currentUser}
+                guard={guard}
+                onSave={onUpdateProfile}
+                onAddCertification={onAddCertification}
+                onDeleteCertification={onDeleteCertification}
+                onAttachCertificationImage={onAttachCertificationImage}
+                onAddExperience={onAddExperience}
+                onAddEducation={onAddEducation}
+                onSubmitIdentityVerification={onSubmitIdentityVerification}
+                onOpenLegal={onOpenLegal}
+              />
+            </div>
+          )}
+        </AppPageTransition>
       )}
     </div>
   );
 
   const guardModals = (
     <>
-      {showSelfAudit && (
-        <GuardSelfAuditModal
-          onClose={() => setShowSelfAudit(false)}
-          onTriggerCamera={captureSelfie}
-          onSubmit={handleSelfAuditSubmit}
-        />
-      )}
+      <GuardSelfAuditModal
+        open={showSelfAudit}
+        onClose={() => setShowSelfAudit(false)}
+        onTriggerCamera={captureSelfie}
+        onSubmit={handleSelfAuditSubmit}
+      />
 
-      {showCheckout && activeShiftJob && (
-        <div className="absolute inset-0 z-[1003] modal-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-sm modal-panel p-6 space-y-4">
-            <h3 className="font-bold text-lg">Complete job?</h3>
-            <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">Cancel</button>
-              <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">Confirm</button>
-            </div>
+        <AppModal
+          open={showCheckout && !!activeShiftJob}
+          align="center"
+          position="absolute"
+          zIndex={1003}
+          onClose={() => setShowCheckout(false)}
+          panelClassName="p-6 space-y-4"
+        >
+          <h3 className="font-bold text-lg">Complete job?</h3>
+          <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">
+              Cancel
+            </button>
+            <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">
+              Confirm
+            </button>
           </div>
-        </div>
-      )}
+        </AppModal>
 
-      {ratingJob && (
-        <GuardRatingModal
-          clientName={ratingJob.clientName}
-          onSkip={() => setRatingJob(null)}
-          onSubmit={(rating, note) => {
-            const existing = ratingJob.checkOutAudit;
-            onUpdateJobAudit(ratingJob.id, {
+      <GuardRatingModal
+        open={!!ratingJob}
+        clientName={ratingJob?.clientName ?? ''}
+        onSkip={() => setRatingJob(null)}
+        onSubmit={(rating, note) => {
+          if (!ratingJob) return;
+          const existing = ratingJob.checkOutAudit;
+          onUpdateJobAudit(ratingJob.id, {
+            checkOutAudit: {
+              checkedAt: existing?.checkedAt ?? new Date().toISOString(),
+              completed: existing?.completed ?? true,
+              noViolations: existing?.noViolations ?? true,
+              noEquipmentIssues: existing?.noEquipmentIssues ?? true,
+              dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
+              incidentReport: existing?.incidentReport ?? { hasIncident: false },
+              clientNotes: `Guard rated client ${rating}/5: ${note}`,
+            },
+          });
+          setRatingJob(null);
+        }}
+      />
+
+      {activeShiftJob && (
+        <GuardActivityLogModal
+          open={showActivityLog}
+          onClose={() => setShowActivityLog(false)}
+          onSubmit={(report) => {
+            const stamp = new Date().toISOString();
+            const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report}`;
+            const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';
+            onUpdateJobAudit(activeShiftJob.id, {
               checkOutAudit: {
-                checkedAt: existing?.checkedAt ?? new Date().toISOString(),
-                completed: existing?.completed ?? true,
-                noViolations: existing?.noViolations ?? true,
-                noEquipmentIssues: existing?.noEquipmentIssues ?? true,
-                dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
-                incidentReport: existing?.incidentReport ?? { hasIncident: false },
-                clientNotes: `Guard rated client ${rating}/5: ${note}`,
+                checkedAt: activeShiftJob.checkOutAudit?.checkedAt ?? stamp,
+                completed: false,
+                noViolations: activeShiftJob.checkOutAudit?.noViolations ?? true,
+                noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
+                dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
+                incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
+                clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
               },
             });
-            setRatingJob(null);
+            showAppToast('Activity logged', { tone: 'success' });
           }}
         />
       )}
@@ -787,26 +806,23 @@ export function GuardDashboard({
     );
   }
 
-  const themeToggle = (
-    <ThemeToggle
-      value={themeMode as 'dark' | 'light' | 'grey'}
-      onChange={(m) => onChangeTheme(m)}
-      size="sm"
-    />
-  );
-
   return (
     <RoleAppShell
       title={GUARD_TAB_TITLES[activeTab]}
       locationLabel={guard.name}
-      avatarUrl={guard.avatar}
-      avatarName={guard.name}
-      onAvatarClick={() => setTab('profile')}
-      onSignOut={onSignOut}
+      accountMenu={{
+        userName: guard.name,
+        userSubtitle: currentUser.email,
+        avatarUrl: guard.avatar,
+        themeMode: themeMode as 'dark' | 'light' | 'grey',
+        onChangeTheme,
+        onOpenProfile: () => setTab('profile'),
+        onSignOut,
+        active: activeTab === 'profile',
+      }}
       navItems={NAV_TABS}
-      activeNavId={activeTab}
+      activeNavId={activeTab === 'profile' ? '' : activeTab}
       onNavigate={(id) => setTab(id as GuardTab)}
-      headerRight={themeToggle}
       fullBleed={shellFullBleed}
       variant={shellVariant}
       experience="guard"

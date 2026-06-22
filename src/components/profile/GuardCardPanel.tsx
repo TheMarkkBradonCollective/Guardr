@@ -10,6 +10,7 @@ import { ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { showAppToast } from '../ui/AppToast';
 
 interface GuardCardPanelProps {
   guard: SecurityGuard;
@@ -87,13 +88,13 @@ export function GuardCardPanel({
     if (cert) {
       const allowed = validateCertDeletion(cert);
       if (allowed.ok === false) {
-        window.alert(allowed.error);
+        showAppToast(allowed.error, { tone: 'error' });
         return;
       }
     }
     if (!window.confirm('Remove this guard card from your profile?')) return;
     const result = await onDeleteCertification(certId);
-    if (result.ok === false) window.alert(result.error);
+    if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
   const certCardProps = (cert: Certification) => ({

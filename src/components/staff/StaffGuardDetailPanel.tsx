@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
+import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
   getGuardDisplayStatus,
@@ -8,8 +9,9 @@ import {
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
@@ -282,7 +284,7 @@ export function StaffGuardDetailPanel({
 
   const requestCertResubmit = (cert: Certification) => {
     if (!onRequestCertImageResubmit) return;
-    const note = promptStaffResubmitNote(`${cert.name} photo`);
+    const note = promptStaffResubmitNote(`${certDisplayName(cert)} photo`);
     if (note === null) return;
     void onRequestCertImageResubmit(guard.id, cert.id, note);
   };
@@ -598,44 +600,44 @@ export function StaffGuardDetailPanel({
                 count={pendingCount > 0 ? pendingCount : undefined}
                 className="!px-0 !mb-0"
               />
-              {allCerts.length === 0 ? (
-                <p className="text-sm text-brand-text-muted">No credentials on file.</p>
-              ) : (
-                <div className="app-cert-item-stack">
-                  {allCerts.map((cert) => (
-                    <div key={cert.id} className="space-y-2">
-                      <CertItemCard cert={cert} guardName={guard.name} />
-                      {canManage && cert.status === 'pending' && (
-                        <div className="flex gap-1.5 justify-end flex-wrap">
-                          {cert.imageUrl && onRequestCertImageResubmit && (
+              <GuardCredentialsView
+                guard={guard}
+                guardName={guard.name}
+                hideEmpty
+                excludeRejected={false}
+                renderCertActions={
+                  canManage
+                    ? (cert) =>
+                        cert.status === 'pending' ? (
+                          <div className="flex gap-1.5 justify-end flex-wrap">
+                            {cert.imageUrl && onRequestCertImageResubmit && (
+                              <button
+                                type="button"
+                                onClick={() => requestCertResubmit(cert)}
+                                className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+                              >
+                                Request clearer photo
+                              </button>
+                            )}
                             <button
                               type="button"
-                              onClick={() => requestCertResubmit(cert)}
-                              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+                              onClick={() => onRejectCert(guard.id, cert.id)}
+                              className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
                             >
-                              Request clearer photo
+                              <X className="w-3 h-3" /> Reject
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => onRejectCert(guard.id, cert.id)}
-                            className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                          >
-                            <X className="w-3 h-3" /> Reject
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onApproveCert(guard.id, cert.id)}
-                            className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                          >
-                            <Check className="w-3 h-3" /> Verify
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                            <button
+                              type="button"
+                              onClick={() => onApproveCert(guard.id, cert.id)}
+                              className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                            >
+                              <Check className="w-3 h-3" /> Verify
+                            </button>
+                          </div>
+                        ) : null
+                    : undefined
+                }
+              />
             </section>
           )}
 

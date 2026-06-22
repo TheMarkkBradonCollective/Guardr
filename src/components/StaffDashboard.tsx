@@ -47,6 +47,7 @@ import {
   type ApprovalQueueId,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
+import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
@@ -594,9 +595,6 @@ export function StaffDashboard({
         return (
           <UserProfileScreen
             currentUser={currentUser}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
             onOpenLegal={onOpenLegal}
@@ -620,7 +618,9 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
     >
-      {renderSection()}
+      <AppPageTransition motionKey={section} className="h-full min-h-0">
+        {renderSection()}
+      </AppPageTransition>
     </StaffOpsLayout>
   );
 }

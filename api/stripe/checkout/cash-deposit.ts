@@ -70,8 +70,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
       },
       metadata: { job_id: jobId, checkout_type: 'cash_deposit' },
-      success_url: `${base}/?deposit=success&job_id=${jobId}`,
-      cancel_url: `${base}/?deposit=cancelled&job_id=${jobId}`,
+      success_url: `${base}/staff/payments?deposit=success&job_id=${jobId}`,
+      cancel_url: `${base}/staff/payments?deposit=cancelled&job_id=${jobId}`,
     });
 
     const db = await getSupabaseAdmin();

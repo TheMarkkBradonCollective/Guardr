@@ -104,13 +104,12 @@ function IdDocumentSlot({
               Replace
             </button>
           )}
-          {viewOpen && (
-            <IdVerificationImageModal
-              label={label}
-              imageUrl={currentUrl}
-              onClose={() => setViewOpen(false)}
-            />
-          )}
+          <IdVerificationImageModal
+            open={viewOpen}
+            label={label}
+            imageUrl={currentUrl}
+            onClose={() => setViewOpen(false)}
+          />
         </div>
       ) : (
         <button
@@ -223,13 +222,12 @@ function SelfieSlot({
               </button>
             </div>
           )}
-          {viewOpen && (
-            <IdVerificationImageModal
-              label={ID_VERIFICATION_SLOT_LABELS.selfie}
-              imageUrl={currentUrl}
-              onClose={() => setViewOpen(false)}
-            />
-          )}
+          <IdVerificationImageModal
+            open={viewOpen}
+            label={ID_VERIFICATION_SLOT_LABELS.selfie}
+            imageUrl={currentUrl}
+            onClose={() => setViewOpen(false)}
+          />
         </div>
       ) : (
         <div className="space-y-2">

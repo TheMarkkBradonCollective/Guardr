@@ -26,6 +26,7 @@ import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { showAppToast } from '../ui/AppToast';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -147,13 +148,13 @@ export function GuardCredentialsPanel({
     if (cert) {
       const allowed = validateCertDeletion(cert);
       if (allowed.ok === false) {
-        window.alert(allowed.error);
+        showAppToast(allowed.error, { tone: 'error' });
         return;
       }
     }
     if (!window.confirm('Remove this credential from your profile?')) return;
     const result = await onDeleteCertification(certId);
-    if (result.ok === false) window.alert(result.error);
+    if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
 
   const certCardProps = (cert: Certification) => ({
@@ -201,19 +202,32 @@ export function GuardCredentialsPanel({
   const isPtaUofOpen = openSection === 'bsis-pta-uof';
   const isRefresherOpen = openSection === 'bsis-refresher';
   const isOtherBsisOpen = openSection === 'bsis-training';
+  const showSection = (count: number) => editing || count > 0;
 
   return (
     <div className="space-y-4">
       <GuardQualificationPanel guard={guard} />
 
-      <div className="app-form-section space-y-1">
-        <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Add permits, medical certs, BSIS training, and other credentials you hold. Guardr verification is a trust badge
-          for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
-        </p>
-      </div>
+      {editing && (
+        <div className="app-form-section space-y-1">
+          <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            Add permits, medical certs, BSIS training, and other credentials you hold. Guardr verification is a trust badge
+            for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
+          </p>
+        </div>
+      )}
 
+      {!editing && (
+        <div className="app-form-section space-y-1">
+          <p className="text-sm font-semibold text-brand-primary">Credentials</p>
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            Licenses and certificates grouped by category. Tap any item to view details and photos.
+          </p>
+        </div>
+      )}
+
+      {showSection(ptaUofItems.length) && (
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -307,7 +321,9 @@ export function GuardCredentialsPanel({
         )}
 
         {ptaUofItems.length === 0 ? (
+          editing ? (
           <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
+          ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
             {ptaUofItems.map((cert) => (
@@ -315,12 +331,14 @@ export function GuardCredentialsPanel({
                 key={cert.id}
                 cert={cert}
                 editing={editing}
+                showCategory={false}
                 {...certCardProps(cert)}
               />
             ))}
           </div>
         )}
       </section>
+      )}
       <GuardThirtyTwoHourPanel
         guard={guard}
         editing={editing}
@@ -328,6 +346,7 @@ export function GuardCredentialsPanel({
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}
       />
+      {showSection(refresherItems.length) && (
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -396,7 +415,9 @@ export function GuardCredentialsPanel({
         )}
 
         {refresherItems.length === 0 ? (
-          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No refresher course on file.</p>
+          editing ? (
+            <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No refresher course on file.</p>
+          ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
             {refresherItems.map((cert) => (
@@ -404,12 +425,15 @@ export function GuardCredentialsPanel({
                 key={cert.id}
                 cert={cert}
                 editing={editing}
+                showCategory={false}
                 {...certCardProps(cert)}
               />
             ))}
           </div>
         )}
       </section>
+      )}
+      {showSection(otherBsisItems.length) && (
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -486,9 +510,11 @@ export function GuardCredentialsPanel({
         )}
 
         {otherBsisItems.length === 0 ? (
-          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
-            No other BSIS training on file.
-          </p>
+          editing ? (
+            <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+              No other BSIS training on file.
+            </p>
+          ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
             {otherBsisItems.map((cert) => (
@@ -496,15 +522,18 @@ export function GuardCredentialsPanel({
                 key={cert.id}
                 cert={cert}
                 editing={editing}
+                showCategory={false}
                 {...certCardProps(cert)}
               />
             ))}
           </div>
         )}
       </section>
+      )}
 
       {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
         const items = grouped[category] ?? [];
+        if (!showSection(items.length)) return null;
         const catalogOptions = getCertsByCategory(category);
         const isOpen = openSection === category;
 
@@ -599,9 +628,11 @@ export function GuardCredentialsPanel({
             )}
 
             {items.length === 0 ? (
+              editing ? (
               <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
                 No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
               </p>
+              ) : null
             ) : (
               <div className="app-cert-item-stack border-t border-brand-border">
                 {items.map((cert) => (
@@ -609,6 +640,7 @@ export function GuardCredentialsPanel({
                     key={cert.id}
                     cert={cert}
                     editing={editing}
+                    showCategory={false}
                     {...certCardProps(cert)}
                   />
                 ))}
