@@ -1,5 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
-import { getClientAccountStatus, isGuardAccountPending } from './accountStatus';
+import { getClientAccountStatus, isClientAccountPending, isGuardAccountPending } from './accountStatus';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
@@ -77,6 +77,13 @@ export interface OpsActivityItem {
 
 export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
 
+export type ApprovalQueueId =
+  | 'accounts'
+  | 'identity'
+  | 'job-offers'
+  | 'applications'
+  | 'credentials';
+
 export interface OverviewActionItem {
   id: string;
   title: string;
@@ -84,6 +91,7 @@ export interface OverviewActionItem {
   count: number;
   section: StaffSection;
   tone: OverviewActionTone;
+  approvalQueue?: ApprovalQueueId;
 }
 
 export interface OverviewLiveJob {
@@ -309,7 +317,9 @@ export function buildOverviewActionQueue(
   stats: PlatformStats,
   requests: SecurityRequest[],
   incidents: OpsIncident[],
-  supportCount: number
+  supportCount: number,
+  guards: SecurityGuard[] = [],
+  clients: Client[] = []
 ): OverviewActionItem[] {
   const items: OverviewActionItem[] = [];
 
@@ -320,6 +330,7 @@ export function buildOverviewActionQueue(
       description: `${stats.pendingJobApprovals} client job offer${stats.pendingJobApprovals === 1 ? '' : 's'} waiting — client cannot pay until approved`,
       count: stats.pendingJobApprovals,
       section: 'approvals',
+      approvalQueue: 'job-offers',
       tone: 'urgent',
     });
   }
@@ -331,6 +342,7 @@ export function buildOverviewActionQueue(
       description: 'Licenses and certs uploaded — review before guards can work',
       count: stats.pendingCertApprovals,
       section: 'approvals',
+      approvalQueue: 'credentials',
       tone: 'urgent',
     });
   }
@@ -342,6 +354,37 @@ export function buildOverviewActionQueue(
       description: `${stats.pendingGuardApplications} application${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} open job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
       count: stats.pendingGuardApplications,
       section: 'approvals',
+      approvalQueue: 'applications',
+      tone: 'urgent',
+    });
+  }
+
+  const pendingGuardAccounts = guards.filter((g) => isGuardAccountPending(g)).length;
+  const pendingClientAccounts = clients.filter((c) => isClientAccountPending(c)).length;
+  const accountQueueCount = pendingGuardAccounts + pendingClientAccounts;
+  if (accountQueueCount > 0) {
+    items.push({
+      id: 'pending-accounts',
+      title: 'Activate guard and client accounts',
+      description: 'Review sign-ups and activate accounts after requirements are met',
+      count: accountQueueCount,
+      section: 'approvals',
+      approvalQueue: 'accounts',
+      tone: 'urgent',
+    });
+  }
+
+  const pendingIdentityCount = guards.filter(
+    (g) => !g.isStaff && g.idVerificationStatus === 'pending'
+  ).length;
+  if (pendingIdentityCount > 0) {
+    items.push({
+      id: 'pending-identity',
+      title: 'Review ID verification',
+      description: 'Government ID and selfie submissions waiting for staff review',
+      count: pendingIdentityCount,
+      section: 'approvals',
+      approvalQueue: 'identity',
       tone: 'urgent',
     });
   }

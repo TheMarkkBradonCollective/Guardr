@@ -44,6 +44,7 @@ import {
   computeWeeklyCompletedJobs,
   isStaffOpsMapSection,
   StaffSection,
+  type ApprovalQueueId,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { StaffOverview } from './staff/StaffOverview';
@@ -166,6 +167,8 @@ interface StaffDashboardProps {
   onStaffMessageTabChange?: (tab: 'team' | 'jobs') => void;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
+  staffApprovalQueue?: ApprovalQueueId | null;
+  onStaffApprovalQueueChange?: (queue: ApprovalQueueId | null) => void;
 }
 
 export function StaffDashboard({
@@ -247,6 +250,8 @@ export function StaffDashboard({
   onStaffMessageTabChange,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
+  staffApprovalQueue = null,
+  onStaffApprovalQueueChange,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -283,6 +288,10 @@ export function StaffDashboard({
     navigateSection('jobs');
   };
 
+  const navigateToApprovals = (queue?: ApprovalQueueId) => {
+    onStaffApprovalQueueChange?.(queue ?? null);
+  };
+
   const navigateSection = (next: StaffSection) => {
     if (!isControlled) setInternalSection(next);
     onSectionChange?.(next);
@@ -290,6 +299,7 @@ export function StaffDashboard({
     if (next !== 'team') setSelectedTeamId(null);
     if (next !== 'clients') setSelectedClientId(null);
     if (next !== 'jobs') setSelectedJobId(null);
+    if (next !== 'approvals') onStaffApprovalQueueChange?.(null);
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
@@ -308,8 +318,8 @@ export function StaffDashboard({
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
   const overviewActions = useMemo(
-    () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets)),
-    [stats, requests, incidents, supportTickets]
+    () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
+    [stats, requests, incidents, supportTickets, guards, clients]
   );
   const overviewLiveJobs = useMemo(() => buildOverviewLiveJobs(guards, requests), [guards, requests]);
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
@@ -346,6 +356,7 @@ export function StaffDashboard({
             liveJobs={overviewLiveJobs}
             weeklyTrend={overviewWeeklyTrend}
             onNavigate={navigateSection}
+            onNavigateApprovals={navigateToApprovals}
             onOpenJob={openJob}
             canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
@@ -373,6 +384,8 @@ export function StaffDashboard({
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
+            initialQueue={staffApprovalQueue}
+            onQueueChange={onStaffApprovalQueueChange}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');

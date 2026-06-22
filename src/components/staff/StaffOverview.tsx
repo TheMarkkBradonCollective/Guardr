@@ -14,6 +14,7 @@ import {
   computeOperationalFinancials,
 } from '../../lib/operationalFinancials';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
+import type { ApprovalQueueId } from '../../lib/staffOps';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
@@ -39,6 +40,7 @@ interface StaffOverviewProps {
   liveJobs: OverviewLiveJob[];
   weeklyTrend: number[];
   onNavigate: (section: StaffSection) => void;
+  onNavigateApprovals?: (queue?: ApprovalQueueId) => void;
   onOpenJob?: (jobId: string) => void;
   canUpdateJobs?: boolean;
   staffName: string;
@@ -55,6 +57,8 @@ const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> =
   payments: <Shield className="w-4 h-4" />,
   support: <LifeBuoy className="w-4 h-4" />,
   'live-jobs': <MapPin className="w-4 h-4" />,
+  'pending-identity': <Shield className="w-4 h-4" />,
+  'pending-accounts': <UserCheck className="w-4 h-4" />,
 };
 
 function formatOverviewDate(): string {
@@ -86,6 +90,7 @@ export function StaffOverview({
   liveJobs,
   weeklyTrend,
   onNavigate,
+  onNavigateApprovals,
   onOpenJob,
   canUpdateJobs = false,
   staffName,
@@ -165,9 +170,23 @@ export function StaffOverview({
           <WfSectionHeader title="Live operations" />
         ) : null}
         <div className="staff-overview-metrics">
-          {metrics.map(({ label, value, sub, accent }) => (
-            <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
-          ))}
+          {metrics.map(({ label, value, sub, accent }) => {
+            if (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) {
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => onNavigateApprovals()}
+                  className={`staff-summary-cell text-left ${accent ? 'staff-summary-cell-accent' : ''}`}
+                >
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-brand-text-muted">{label}</p>
+                  <p className="text-lg font-bold mt-1">{value}</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{sub}</p>
+                </button>
+              );
+            }
+            return <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />;
+          })}
         </div>
       </section>
 
@@ -186,7 +205,14 @@ export function StaffOverview({
         ) : (
           <AppItemCardStack>
             {actionItems.map((item) => (
-                <AppItemCard key={item.id} onClick={() => onNavigate(item.section)}>
+                <AppItemCard
+                  key={item.id}
+                  onClick={() =>
+                    item.section === 'approvals' && item.approvalQueue && onNavigateApprovals
+                      ? onNavigateApprovals(item.approvalQueue)
+                      : onNavigate(item.section)
+                  }
+                >
                 <div className="flex items-start gap-3 w-full text-left">
                   <span
                     className={`staff-overview-action-icon ${

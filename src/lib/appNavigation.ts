@@ -1,6 +1,6 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
-import { normalizeStaffSection, type StaffSection } from './staffOps';
+import { normalizeStaffSection, type ApprovalQueueId, type StaffSection } from './staffOps';
 
 export type AppRole = 'staff' | 'guard' | 'client';
 
@@ -33,6 +33,8 @@ export interface AppRoute {
   supportTicketId?: string;
   /** Staff messages hub tab */
   staffMessageTab?: 'team' | 'jobs';
+  /** Staff approvals queue — opens a specific review list */
+  staffApprovalQueue?: ApprovalQueueId;
   /** Open job chat UI immediately (guard/client) */
   openJobChat?: boolean;
   /** Unauthenticated auth screen */
@@ -108,6 +110,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const jobChatRequestId = searchParams.get('jc');
   const supportTicketId = searchParams.get('st');
   const staffMessageTab = searchParams.get('mtab');
+  const staffApprovalQueue = searchParams.get('aq');
   const openJobChat = searchParams.get('chat');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
@@ -122,6 +125,15 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (jobChatRequestId) nested.jobChatRequestId = jobChatRequestId;
   if (supportTicketId) nested.supportTicketId = supportTicketId;
   if (staffMessageTab === 'team' || staffMessageTab === 'jobs') nested.staffMessageTab = staffMessageTab;
+  if (
+    staffApprovalQueue === 'accounts' ||
+    staffApprovalQueue === 'identity' ||
+    staffApprovalQueue === 'job-offers' ||
+    staffApprovalQueue === 'applications' ||
+    staffApprovalQueue === 'credentials'
+  ) {
+    nested.staffApprovalQueue = staffApprovalQueue;
+  }
   if (openJobChat === '1' || openJobChat === 'true') nested.openJobChat = true;
   if (authView === 'sign-in' || authView === 'sign-up') nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client') nested.authRole = authRole;
@@ -141,6 +153,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.jobChatRequestId) params.set('jc', route.jobChatRequestId);
   if (route.supportTicketId) params.set('st', route.supportTicketId);
   if (route.staffMessageTab) params.set('mtab', route.staffMessageTab);
+  if (route.staffApprovalQueue) params.set('aq', route.staffApprovalQueue);
   if (route.openJobChat) params.set('chat', '1');
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
@@ -265,6 +278,7 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     jobChatRequestId: undefined,
     supportTicketId: undefined,
     staffMessageTab: undefined,
+    staffApprovalQueue: undefined,
     openJobChat: undefined,
   };
 }
