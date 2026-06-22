@@ -36,6 +36,19 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
 
   const rows = [
     {
+      label: 'Government ID (verified)',
+      met: progress.governmentIdVerified,
+      expired: progress.governmentIdExpired,
+      verified: progress.governmentIdVerified,
+      detail: progress.governmentIdExpired
+        ? 'ID on file but expired — update in Credentials'
+        : progress.governmentId && !progress.governmentIdVerified
+          ? 'Submitted — awaiting Guardr verification'
+          : !progress.governmentId
+            ? 'Upload in Credentials — tap Government ID'
+            : undefined,
+    },
+    {
       label: 'BSIS Guard Card (valid)',
       met: progress.guardCard,
       expired: progress.guardCardExpired,
@@ -71,8 +84,8 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
             Guard status
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            A valid BSIS Guard Card is required to accept jobs. 8-hour and 32-hour training are{' '}
-            {GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}. Guardr verification is a trust badge for clients.
+            Verified government ID and a valid BSIS Guard Card are required to accept jobs. 8-hour and 32-hour training
+            are {GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}. Guardr verification is a trust badge for clients.
           </p>
         </div>
         <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${levelBadge}`}>

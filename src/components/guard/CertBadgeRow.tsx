@@ -19,6 +19,13 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
 
   const requiredRows = [
     {
+      id: 'government-id',
+      label: 'Government ID',
+      onFile: progress.governmentId,
+      expired: progress.governmentIdExpired,
+      verified: progress.governmentIdVerified,
+    },
+    {
       id: 'bsis-guard-card',
       label: 'Guard Card',
       onFile: progress.guardCard,

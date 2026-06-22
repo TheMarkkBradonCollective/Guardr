@@ -20,13 +20,13 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 };
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
-  pending: 'Valid BSIS Guard Card on file — Active and eligible to work jobs',
+  pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
   active:
     'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
-  'No valid BSIS Guard Card on file — upload a guard card to become Active and work jobs';
+  'Verified government ID and valid BSIS Guard Card required — complete both in Credentials to become Active and work jobs';
 
 /** Shown on training credentials and job checklists — not a work blocker. */
 export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
@@ -39,20 +39,42 @@ export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTION
 
 import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
 import { getGuardActivationChecklist } from './guardAccountActivation';
+import {
+  getGuardIdVerificationStatus,
+  guardIdVerificationPhotosComplete,
+  isIdExpired,
+} from './guardIdentityVerification';
 
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
   const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'pending') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
-  return guardMeetsLevel1(guard, state) ? 'active' : 'inactive';
+  return guardMeetsWorkRequirements(guard, state) ? 'active' : 'inactive';
 }
 
-/** Active account + valid BSIS guard card — required to accept, be hired, or work jobs */
+/** Active account + verified government ID + valid BSIS guard card — required to accept, be hired, or work jobs */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountActive(guard)) return false;
-  return guardMeetsLevel1(guard, state);
+  return guardMeetsWorkRequirements(guard, state);
+}
+
+export function guardHasIdOnFile(guard: SecurityGuard): boolean {
+  const status = getGuardIdVerificationStatus(guard);
+  return guardIdVerificationPhotosComplete(guard) || status === 'verified';
+}
+
+export function guardHasVerifiedIdForWork(guard: SecurityGuard): boolean {
+  return getGuardIdVerificationStatus(guard) === 'verified' && !isIdExpired(guard);
+}
+
+export function guardHasExpiredIdOnFile(guard: SecurityGuard): boolean {
+  return guardHasIdOnFile(guard) && isIdExpired(guard);
+}
+
+export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): boolean {
+  return guardHasVerifiedIdForWork(guard) && guardMeetsLevel1(guard, state);
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
@@ -75,6 +97,19 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   }
   if (userStatus === 'blocked') {
     return 'Your account is blocked. Contact Guardr support.';
+  }
+  if (!guardHasVerifiedIdForWork(guard)) {
+    const idStatus = getGuardIdVerificationStatus(guard);
+    if (idStatus === 'rejected') {
+      return 'Your government ID needs to be resubmitted — tap Government ID in Credentials to update.';
+    }
+    if (idStatus === 'pending' || (guardHasIdOnFile(guard) && idStatus !== 'verified')) {
+      return 'Your government ID must be verified by Guardr staff before you can work jobs.';
+    }
+    if (guardHasExpiredIdOnFile(guard)) {
+      return 'Your government ID has expired — update it in Credentials before working jobs.';
+    }
+    return 'Submit and verify your government ID in Credentials before working jobs.';
   }
   if (!guardMeetsLevel1(guard, state)) {
     const jobState = state || 'CA';
@@ -314,13 +349,13 @@ export function getGuardQualificationLevel(guard: SecurityGuard, state = 'CA'): 
   return 'active';
 }
 
-/** Client job preference — only a valid guard card is required to work. */
+/** Client job preference — verified government ID and valid guard card required to work. */
 export function guardMeetsQualificationLevel(
   guard: SecurityGuard,
   _minLevel: 'pending' | 'active',
   state = 'CA'
 ): boolean {
-  return guardMeetsLevel1(guard, state);
+  return guardMeetsWorkRequirements(guard, state);
 }
 
 export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
@@ -338,6 +373,9 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
+    governmentId: guardHasIdOnFile(guard),
+    governmentIdExpired: guardHasExpiredIdOnFile(guard),
+    governmentIdVerified: guardHasVerifiedIdForWork(guard),
     guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
     guardCardExpired: guardHasExpiredGuardCard(guard, jobState),
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', jobState),
