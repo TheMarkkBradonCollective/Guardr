@@ -3,6 +3,7 @@ import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { getGuardLicenses } from '../../lib/guardResume';
+import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { CertItemCard } from '../credentials/CertItemCard';
@@ -201,6 +202,14 @@ export function GuardCardPanel({
   if (nested) {
     return (
       <>
+        {staffMode && !editing && items.length === 0 && (
+          <div className="flex items-center justify-between gap-2 py-2 border-b border-brand-border">
+            <p className="text-xs text-brand-text-muted">BSIS Guard Card</p>
+            <WfBadge tone="warning" className="!text-[10px]">
+              Missing
+            </WfBadge>
+          </div>
+        )}
         {cardRows}
         {editing && onAddCertification && (
           <div className="pt-2 space-y-2">
@@ -227,9 +236,14 @@ export function GuardCardPanel({
     <section className="app-form-section space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="uber-label flex items-center gap-2">
+          <p className="uber-label flex items-center gap-2 flex-wrap">
             <Shield className="w-4 h-4 text-brand-primary" />
             BSIS Guard Card
+            {staffMode && !guardMeetsLevel1(guard) && (
+              <WfBadge tone="warning" className="!text-[10px]">
+                Missing
+              </WfBadge>
+            )}
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
             Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
