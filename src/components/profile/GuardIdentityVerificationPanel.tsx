@@ -324,9 +324,9 @@ export function GuardIdentityVerificationPanel({
     setSubmitError('');
     try {
       const result = await onSubmit({
-        idFrontUrl: draftFront,
-        idBackUrl: draftBack,
-        idSelfieUrl: draftSelfie,
+        idFrontUrl: draftFront || guard.idFrontUrl?.trim() || '',
+        idBackUrl: draftBack || guard.idBackUrl?.trim() || '',
+        idSelfieUrl: draftSelfie || guard.idSelfieUrl?.trim() || '',
       });
       if (result.ok === false) {
         setSubmitError(result.error);

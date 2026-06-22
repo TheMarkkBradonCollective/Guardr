@@ -2368,9 +2368,9 @@ export default function App() {
       return { ok: false, error: 'This application was rejected — account is blocked.' };
     }
 
-    const front = payload.idFrontUrl.trim();
-    const back = payload.idBackUrl.trim();
-    const selfie = payload.idSelfieUrl.trim();
+    const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
+    const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
+    const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
     if (!front && !back && !selfie) {
       return { ok: false, error: 'Upload at least one ID photo to save.' };
     }

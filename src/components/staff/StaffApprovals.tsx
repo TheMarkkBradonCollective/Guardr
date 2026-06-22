@@ -636,7 +636,11 @@ export function StaffApprovals({
                       }
                     : undefined
                 }
-                onUpdateImages={onUpdateGuardIdImages}
+                onUpdateImages={
+                  onUpdateGuardIdImages
+                    ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                    : undefined
+                }
               />
               {onViewGuard && (
                 <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">

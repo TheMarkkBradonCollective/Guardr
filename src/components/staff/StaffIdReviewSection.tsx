@@ -30,10 +30,7 @@ interface StaffIdReviewSectionProps {
   onApprove?: (guardId: string) => void | Promise<void>;
   onReject?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestResubmit?: (guardId: string, slots: IdVerificationSlot[], staffNote?: string) => void | Promise<void>;
-  onUpdateImages?: (
-    guardId: string,
-    payload: GuardIdentityVerificationPayload
-  ) => Promise<IdentityVerificationSubmitResult>;
+  onUpdateImages?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
 }
 
 export function StaffIdReviewSection({
@@ -81,7 +78,7 @@ export function StaffIdReviewSection({
       {canManage && onUpdateImages ? (
         <GuardIdentityVerificationPanel
           guard={guard}
-          onSubmit={(payload) => onUpdateImages(guard.id, payload)}
+          onSubmit={(payload) => void onUpdateImages(payload)}
           staffMode
           embedded
           compact
