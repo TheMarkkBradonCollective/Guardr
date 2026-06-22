@@ -284,12 +284,15 @@ export function GuardCredentialsPanel({
       {!guard.isStaff && (
         <div className="app-cert-item-stack">
           {onSubmitIdentityVerification && (
-            <GuardIdItemCard
-              guard={guard}
-              canEdit={staffMode || canEditId}
-              staffMode={staffMode}
-              onSubmit={onSubmitIdentityVerification}
-            />
+            <div className="space-y-3">
+              <GuardIdItemCard
+                guard={guard}
+                canEdit={staffMode || canEditId}
+                staffMode={staffMode}
+                onSubmit={onSubmitIdentityVerification}
+              />
+              {staffIdReview}
+            </div>
           )}
           <GuardCardPanel
             guard={guard}
@@ -304,8 +307,6 @@ export function GuardCredentialsPanel({
           />
         </div>
       )}
-
-      {staffIdReview}
 
       <section className="app-form-section space-y-3">
         <div className="flex items-start justify-between gap-2">
