@@ -58,6 +58,8 @@ export interface Certification {
   category?: CertCategory;
   /** Optional scan/photo of the credential document */
   imageUrl?: string;
+  /** Staff note when a clearer credential photo is needed */
+  rejectionReason?: string;
 }
 
 export interface Experience {

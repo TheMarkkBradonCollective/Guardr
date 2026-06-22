@@ -17,6 +17,8 @@ import {
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
+import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
@@ -36,6 +38,12 @@ interface StaffApprovalsProps {
   onApproveAllReadyGuardAccounts?: () => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
+  onRequestIdentityResubmit?: (
+    guardId: string,
+    slots: import('../../lib/staffDocumentReview').IdVerificationSlot[],
+    staffNote?: string
+  ) => void;
+  onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void;
   onViewGuard?: (guardId: string) => void;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
@@ -111,6 +119,8 @@ export function StaffApprovals({
   onApproveAllReadyGuardAccounts,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
+  onRequestIdentityResubmit,
+  onRequestCertImageResubmit,
   onViewGuard,
   canEditJobListing = false,
   onEditJobListing,
@@ -430,6 +440,20 @@ export function StaffApprovals({
                     Full profile
                   </button>
                 )}
+                {cert.imageUrl && onRequestCertImageResubmit && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const note = promptStaffResubmitNote(`${cert.name} photo`);
+                      if (note === null) return;
+                      onRequestCertImageResubmit(guard.id, cert.id, note);
+                      setActiveItemId(null);
+                    }}
+                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                  >
+                    Request clearer photo
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => onRejectCert(guard.id, cert.id)}
@@ -580,43 +604,38 @@ export function StaffApprovals({
             <ApprovalBackBar title={guard.name} subtitle="Government ID review" onBack={() => setActiveItemId(null)} />
             <div className="staff-detail-pane space-y-4">
               <p className="text-sm text-brand-text-muted">{guard.email}</p>
-              <p className="text-xs text-brand-text-muted">
-                Review government ID (front and back) and the identity selfie. Selfies are verification headshots — not
-                profile photos.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
-                {onViewGuard && (
-                  <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                    View ID documents
-                  </button>
-                )}
-                {onRejectIdentityVerification && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const reason = window.prompt('Rejection reason (shown to guard):');
-                      if (reason === null) return;
-                      onRejectIdentityVerification(guard.id, reason);
-                      setActiveItemId(null);
-                    }}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" /> Reject
-                  </button>
-                )}
-                {onApproveIdentityVerification && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApproveIdentityVerification(guard.id);
-                      setActiveItemId(null);
-                    }}
-                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Approve ID
-                  </button>
-                )}
-              </div>
+              <StaffIdReviewSection
+                guard={guard}
+                onApprove={
+                  onApproveIdentityVerification
+                    ? (guardId) => {
+                        onApproveIdentityVerification(guardId);
+                        setActiveItemId(null);
+                      }
+                    : undefined
+                }
+                onReject={
+                  onRejectIdentityVerification
+                    ? (guardId, reason) => {
+                        onRejectIdentityVerification(guardId, reason);
+                        setActiveItemId(null);
+                      }
+                    : undefined
+                }
+                onRequestResubmit={
+                  onRequestIdentityResubmit
+                    ? (guardId, slots, staffNote) => {
+                        onRequestIdentityResubmit(guardId, slots, staffNote);
+                        setActiveItemId(null);
+                      }
+                    : undefined
+                }
+              />
+              {onViewGuard && (
+                <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
+                  Full profile
+                </button>
+              )}
             </div>
           </>
         );

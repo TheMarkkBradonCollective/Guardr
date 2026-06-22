@@ -61,6 +61,9 @@ export function CertItemCard({
                 {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
               </p>
             )}
+            {cert.status === 'rejected' && cert.rejectionReason && (
+              <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
+            )}
             {cert.imageUrl && compact && (
               <p className="text-[10px] text-brand-primary mt-1">Tap to view photo</p>
             )}

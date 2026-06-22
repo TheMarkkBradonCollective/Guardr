@@ -95,6 +95,12 @@ interface StaffDashboardProps {
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onApproveGuardIdentityVerification?: (guardId: string) => Promise<void>;
   onRejectGuardIdentityVerification?: (guardId: string, reason?: string) => Promise<void>;
+  onRequestGuardIdResubmit?: (
+    guardId: string,
+    slots: import('../lib/staffDocumentReview').IdVerificationSlot[],
+    staffNote?: string
+  ) => Promise<void>;
+  onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
@@ -197,6 +203,8 @@ export function StaffDashboard({
   onSubmitGuardIdentityVerification,
   onApproveGuardIdentityVerification,
   onRejectGuardIdentityVerification,
+  onRequestGuardIdResubmit,
+  onRequestCertImageResubmit,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -396,6 +404,8 @@ export function StaffDashboard({
             onApproveAllReadyGuardAccounts={onApproveAllReadyGuardAccounts}
             onApproveIdentityVerification={onApproveGuardIdentityVerification}
             onRejectIdentityVerification={onRejectGuardIdentityVerification}
+            onRequestIdentityResubmit={onRequestGuardIdResubmit}
+            onRequestCertImageResubmit={onRequestCertImageResubmit}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -456,6 +466,8 @@ export function StaffDashboard({
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
+            onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
+            onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}
             staffEdit={controlledStaffGuardEdit}

@@ -75,6 +75,11 @@ import {
 } from './lib/certUniqueness';
 import { validateCertDeletion, validateCertImageAttachment } from './lib/certImagePolicy';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
+import {
+  buildCertImageResubmitReason,
+  buildIdResubmitReason,
+  type IdVerificationSlot,
+} from './lib/staffDocumentReview';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
@@ -950,6 +955,7 @@ export default function App() {
           catalogId: c.catalog_id?.trim() || undefined,
           category: c.category ?? undefined,
           imageUrl: c.image_url ?? undefined,
+          rejectionReason: c.rejection_reason ?? undefined,
         })),
         experience: (dbExps ?? []).filter((e: any) => e.guard_id === g.id).map((e: any) => ({
           id: e.id, title: e.title, company: e.company, period: e.period, description: e.description,
@@ -1675,13 +1681,22 @@ export default function App() {
     const valid = validateCertImageAttachment(cert, imageUrl);
     if (!valid.ok) return valid;
 
+    const requeueForReview = cert.status === 'rejected';
+
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
           ? {
               ...g,
               certifications: g.certifications.map((c) =>
-                c.id === certId ? { ...c, imageUrl } : c
+                c.id === certId
+                  ? {
+                      ...c,
+                      imageUrl,
+                      status: requeueForReview ? ('pending' as const) : c.status,
+                      rejectionReason: requeueForReview ? undefined : c.rejectionReason,
+                    }
+                  : c
               ),
             }
           : g
@@ -1692,7 +1707,10 @@ export default function App() {
       try {
         const { error } = await supabase
           .from('certifications')
-          .update({ image_url: imageUrl })
+          .update({
+            image_url: imageUrl,
+            ...(requeueForReview ? { status: 'pending', rejection_reason: null } : {}),
+          })
           .eq('id', certId);
         if (error) {
           setGuards((prev) =>
@@ -2320,6 +2338,92 @@ export default function App() {
           id_verification_rejection_reason: rejectionReason,
         })
         .eq('id', guardId);
+    }
+  };
+
+  const handleRequestGuardIdResubmit = async (
+    guardId: string,
+    slots: IdVerificationSlot[],
+    staffNote?: string
+  ) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard || slots.length === 0) return;
+
+    const slotSet = new Set(slots);
+    const rejectionReason = buildIdResubmitReason(slots, staffNote);
+    const reviewedAt = new Date().toISOString();
+    const nextFront = slotSet.has('front') ? undefined : guard.idFrontUrl;
+    const nextBack = slotSet.has('back') ? undefined : guard.idBackUrl;
+    const nextSelfie = slotSet.has('selfie') ? undefined : guard.idSelfieUrl;
+
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idFrontUrl: nextFront,
+              idBackUrl: nextBack,
+              idSelfieUrl: nextSelfie,
+              idVerificationStatus: 'rejected' as const,
+              idVerificationReviewedAt: reviewedAt,
+              idVerificationRejectionReason: rejectionReason,
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      await supabase
+        .from('guards')
+        .update({
+          id_front_url: nextFront ?? null,
+          id_back_url: nextBack ?? null,
+          id_selfie_url: nextSelfie ?? null,
+          id_verification_status: 'rejected',
+          id_verification_reviewed_at: reviewedAt,
+          id_verification_rejection_reason: rejectionReason,
+        })
+        .eq('id', guardId);
+    }
+  };
+
+  const handleRequestCertImageResubmit = async (guardId: string, certId: string, staffNote?: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    const cert = guard?.certifications.find((c) => c.id === certId);
+    if (!cert) return;
+
+    const rejectionReason = buildCertImageResubmitReason(cert.name, staffNote);
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              certifications: g.certifications.map((c) =>
+                c.id === certId
+                  ? {
+                      ...c,
+                      status: 'rejected' as const,
+                      imageUrl: undefined,
+                      rejectionReason,
+                    }
+                  : c
+              ),
+            }
+          : g
+      )
+    );
+
+    if (isDbConnected) {
+      beginLocalMutation();
+      await supabase
+        .from('certifications')
+        .update({
+          status: 'rejected',
+          image_url: null,
+          rejection_reason: rejectionReason,
+        })
+        .eq('id', certId);
     }
   };
 
@@ -4273,6 +4377,8 @@ export default function App() {
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}
+          onRequestGuardIdResubmit={handleRequestGuardIdResubmit}
+          onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}

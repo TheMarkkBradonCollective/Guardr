@@ -23,8 +23,11 @@ import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { GuardIdentityVerificationPanel } from '../profile/GuardIdentityVerificationPanel';
+import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import {
   getGuardIdVerificationStatus,
+  guardIdVerificationPhotosComplete,
   ID_VERIFICATION_STATUS_LABELS,
 } from '../../lib/guardIdentityVerification';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
@@ -58,6 +61,12 @@ interface StaffGuardDetailPanelProps {
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void | Promise<void>;
+  onRequestIdentityResubmit?: (
+    guardId: string,
+    slots: import('../../lib/staffDocumentReview').IdVerificationSlot[],
+    staffNote?: string
+  ) => void | Promise<void>;
+  onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   editing?: boolean;
@@ -88,6 +97,8 @@ export function StaffGuardDetailPanel({
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
+  onRequestIdentityResubmit,
+  onRequestCertImageResubmit,
   onBack,
   onOpenJob,
   editing: controlledEditing,
@@ -269,6 +280,13 @@ export function StaffGuardDetailPanel({
     }
   };
 
+  const requestCertResubmit = (cert: Certification) => {
+    if (!onRequestCertImageResubmit) return;
+    const note = promptStaffResubmitNote(`${cert.name} photo`);
+    if (note === null) return;
+    void onRequestCertImageResubmit(guard.id, cert.id, note);
+  };
+
   const renderPendingCertActions = () => {
     const pendingCerts = allCerts.filter((c) => c.status === 'pending');
     if (pendingCerts.length === 0) return null;
@@ -281,7 +299,16 @@ export function StaffGuardDetailPanel({
             <div key={cert.id} className="space-y-2">
               <CertItemCard cert={cert} guardName={guard.name} />
               {canManage && (
-                <div className="flex gap-1.5 justify-end">
+                <div className="flex gap-1.5 justify-end flex-wrap">
+                  {cert.imageUrl && onRequestCertImageResubmit && (
+                    <button
+                      type="button"
+                      onClick={() => requestCertResubmit(cert)}
+                      className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+                    >
+                      Request clearer photo
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => onRejectCert(guard.id, cert.id)}
@@ -543,35 +570,20 @@ export function StaffGuardDetailPanel({
             />
           )}
 
-          {canManage && idVerificationStatus === 'pending' && (
-            <section className="py-4 border-b border-brand-border space-y-2">
-              <WfSectionHeader title="ID verification review" className="mb-0" />
-              <div className="flex flex-wrap gap-2">
-                {onApproveIdentityVerification && (
-                  <button
-                    type="button"
-                    onClick={() => onApproveIdentityVerification(guard.id)}
-                    className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Approve ID
-                  </button>
-                )}
-                {onRejectIdentityVerification && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const reason = window.prompt('Rejection reason (shown to guard):');
-                      if (reason === null) return;
-                      void onRejectIdentityVerification(guard.id, reason);
-                    }}
-                    className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40 gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" /> Reject ID
-                  </button>
-                )}
-              </div>
-            </section>
-          )}
+          {canManage &&
+            guardIdVerificationPhotosComplete(guard) &&
+            getGuardIdVerificationStatus(guard) !== 'not_submitted' && (
+              <StaffIdReviewSection
+                guard={guard}
+                onApprove={onApproveIdentityVerification}
+                onReject={onRejectIdentityVerification}
+                onRequestResubmit={
+                  onRequestIdentityResubmit
+                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                    : undefined
+                }
+              />
+            )}
 
           {editing && canEdit && (
             <div className="py-4 border-b border-brand-border">
@@ -612,7 +624,16 @@ export function StaffGuardDetailPanel({
                     <div key={cert.id} className="space-y-2">
                       <CertItemCard cert={cert} guardName={guard.name} />
                       {canManage && cert.status === 'pending' && (
-                        <div className="flex gap-1.5 justify-end">
+                        <div className="flex gap-1.5 justify-end flex-wrap">
+                          {cert.imageUrl && onRequestCertImageResubmit && (
+                            <button
+                              type="button"
+                              onClick={() => requestCertResubmit(cert)}
+                              className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+                            >
+                              Request clearer photo
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => onRejectCert(guard.id, cert.id)}

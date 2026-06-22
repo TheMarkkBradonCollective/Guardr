@@ -45,6 +45,12 @@ interface StaffGuardsPanelProps {
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void | Promise<void>;
+  onRequestIdentityResubmit?: (
+    guardId: string,
+    slots: import('../../lib/staffDocumentReview').IdVerificationSlot[],
+    staffNote?: string
+  ) => void | Promise<void>;
+  onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   staffEdit?: boolean;
@@ -77,6 +83,8 @@ export function StaffGuardsPanel({
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
+  onRequestIdentityResubmit,
+  onRequestCertImageResubmit,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   staffEdit,
@@ -145,6 +153,12 @@ export function StaffGuardsPanel({
           : undefined,
         onRejectIdentityVerification: onRejectIdentityVerification
           ? (reason) => onRejectIdentityVerification(selected.id, reason)
+          : undefined,
+        onRequestIdentityResubmit: onRequestIdentityResubmit
+          ? (slots, staffNote) => onRequestIdentityResubmit(selected.id, slots, staffNote)
+          : undefined,
+        onRequestCertImageResubmit: onRequestCertImageResubmit
+          ? (certId, staffNote) => onRequestCertImageResubmit(selected.id, certId, staffNote)
           : undefined,
         onOpenJob,
       }
