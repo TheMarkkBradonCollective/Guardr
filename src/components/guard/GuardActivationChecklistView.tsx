@@ -80,7 +80,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               ? 'Verified by staff'
               : checklist.guardCardSubmitted
                 ? 'Uploaded — awaiting staff verification'
-                : 'Upload under credentials in profile'
+                : 'Upload in the Guard Card section of your profile'
           }
         />
         <OptionalNote

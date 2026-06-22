@@ -9,6 +9,7 @@ import {
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
+import { GuardCardPanel } from './GuardCardPanel';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardIdentityVerificationPanel } from './GuardIdentityVerificationPanel';
 
@@ -228,6 +229,16 @@ export function GuardResumeEditor({
           guard={guard}
           onSubmit={onSubmitIdentityVerification}
           compact={identityVerificationCompact}
+        />
+      )}
+
+      {!guard.isStaff && (
+        <GuardCardPanel
+          guard={guard}
+          editing={editing}
+          onAddCertification={onAddCertification}
+          onDeleteCertification={onDeleteCertification}
+          onAttachCertificationImage={onAttachCertificationImage}
         />
       )}
 

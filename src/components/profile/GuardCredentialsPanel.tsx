@@ -34,12 +34,6 @@ const CREDENTIAL_SECTIONS: {
   icon: typeof Shield;
 }[] = [
   {
-    category: 'guard-card',
-    title: 'BSIS Guard Card',
-    subtitle: 'State license — upload a valid card to become Active and work jobs. Guardr verification is a trust badge for clients.',
-    icon: Shield,
-  },
-  {
     category: 'bsis-permit',
     title: 'BSIS Permits (Weapons)',
     subtitle: 'Required only when applicable — firearm (armed jobs), baton, pepper spray.',
@@ -215,10 +209,299 @@ export function GuardCredentialsPanel({
       <div className="app-form-section space-y-1">
         <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Upload your guard card to become Active, then add any other credentials you hold — permits, medical, extra training,
-          and more. Guardr verification is a trust badge for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
+          Add permits, medical certs, BSIS training, and other credentials you hold. Guardr verification is a trust badge
+          for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
         </p>
       </div>
+
+      <section className="app-form-section space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="uber-label flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-brand-primary" />
+              Power to Arrest &amp; Appropriate Use of Force
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              Highly recommended by Guardr. {PTA_UOF_UPLOAD_GUIDANCE}
+            </p>
+            <p
+              className={`text-xs font-semibold mt-2 ${
+                ptaUofProgress.ptaUofTraining ? 'text-brand-primary' : 'text-brand-text-muted'
+              }`}
+            >
+              {ptaUofProgress.ptaUofTraining
+                ? ptaUofProgress.ptaUofCombined
+                  ? 'Combined 8-hr certificate on file'
+                  : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
+                    ? 'PTA & WMD certs on file'
+                    : 'Separate PTA & UOF certificates on file'
+                : 'Not yet on file'}
+            </p>
+          </div>
+          {editing && onAddCertification && (
+            <button
+              type="button"
+              onClick={() => {
+                if (isPtaUofOpen) {
+                  resetForm();
+                } else {
+                  setOpenSection('bsis-pta-uof');
+                  setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
+                }
+              }}
+              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+            >
+              {isPtaUofOpen ? 'Cancel' : 'Add'}
+            </button>
+          )}
+        </div>
+
+        {isPtaUofOpen && editing && (
+          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+            <select
+              value={selectedCatalogId}
+              onChange={(e) => setSelectedCatalogId(e.target.value)}
+              className="uber-select w-full text-sm"
+              required
+            >
+              {ptaUofCatalogOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
+            <input
+              className="uber-input w-full"
+              placeholder="Issuing organization (e.g. BSIS, training provider)"
+              value={issuer}
+              onChange={(e) => setIssuer(e.target.value)}
+              required
+            />
+            <input
+              className="uber-input w-full"
+              placeholder="Certificate number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              required
+            />
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="uber-input w-full"
+              aria-label="Expiry date"
+            />
+            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+              <ImagePlus className="w-4 h-4 shrink-0" />
+              <span>Optional now — add a photo later from the credential list</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+            </label>
+            {imageUrl && (
+              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+            )}
+            {formError && <p className="text-xs text-red-400">{formError}</p>}
+            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+              Upload credential
+            </button>
+          </form>
+        )}
+
+        {ptaUofItems.length === 0 ? (
+          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
+        ) : (
+          <div className="app-cert-item-stack border-t border-brand-border">
+            {ptaUofItems.map((cert) => (
+              <CertItemCard
+                key={cert.id}
+                cert={cert}
+                editing={editing}
+                {...certCardProps(cert)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+      <GuardThirtyTwoHourPanel
+        guard={guard}
+        editing={editing}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
+      />
+      <section className="app-form-section space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="uber-label flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-brand-primary" />
+              {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1">
+              {refresherEntry?.description ?? 'Upload when applicable for guard card renewals.'}
+            </p>
+          </div>
+          {editing && onAddCertification && (
+            <button
+              type="button"
+              onClick={() => {
+                if (isRefresherOpen) {
+                  resetForm();
+                } else {
+                  setOpenSection('bsis-refresher');
+                  setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
+                }
+              }}
+              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+            >
+              {isRefresherOpen ? 'Cancel' : 'Add'}
+            </button>
+          )}
+        </div>
+
+        {isRefresherOpen && editing && (
+          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+            <input
+              className="uber-input w-full"
+              placeholder="Issuing organization (e.g. BSIS, training provider)"
+              value={issuer}
+              onChange={(e) => setIssuer(e.target.value)}
+              required
+            />
+            <input
+              className="uber-input w-full"
+              placeholder="Certificate number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              required
+            />
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="uber-input w-full"
+              aria-label="Expiry date"
+            />
+            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+              <ImagePlus className="w-4 h-4 shrink-0" />
+              <span>Optional now — add a photo later from the credential list</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+            </label>
+            {imageUrl && (
+              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+            )}
+            {formError && <p className="text-xs text-red-400">{formError}</p>}
+            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+              Upload credential
+            </button>
+          </form>
+        )}
+
+        {refresherItems.length === 0 ? (
+          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No refresher course on file.</p>
+        ) : (
+          <div className="app-cert-item-stack border-t border-brand-border">
+            {refresherItems.map((cert) => (
+              <CertItemCard
+                key={cert.id}
+                cert={cert}
+                editing={editing}
+                {...certCardProps(cert)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="app-form-section space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="uber-label flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-brand-primary" />
+              Other BSIS Training
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1">
+              Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
+            </p>
+          </div>
+          {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpenSection(isOtherBsisOpen ? null : 'bsis-training');
+                setSelectedCatalogId(otherBsisCatalogOptions[0]?.id ?? '');
+              }}
+              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+            >
+              {isOtherBsisOpen ? 'Cancel' : 'Add'}
+            </button>
+          )}
+        </div>
+
+        {isOtherBsisOpen && editing && (
+          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
+            <select
+              value={selectedCatalogId}
+              onChange={(e) => setSelectedCatalogId(e.target.value)}
+              className="uber-select w-full text-sm"
+              required
+            >
+              {otherBsisCatalogOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
+            <input
+              className="uber-input w-full"
+              placeholder="Issuing organization (e.g. BSIS, training provider)"
+              value={issuer}
+              onChange={(e) => setIssuer(e.target.value)}
+              required
+            />
+            <input
+              className="uber-input w-full"
+              placeholder="Certificate / license / permit number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              required
+            />
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="uber-input w-full"
+              aria-label="Expiry date"
+            />
+            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+              <ImagePlus className="w-4 h-4 shrink-0" />
+              <span>Optional now — add a photo later from the credential list</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+            </label>
+            {imageUrl && (
+              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
+            )}
+            {formError && <p className="text-xs text-red-400">{formError}</p>}
+            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+              Upload credential
+            </button>
+          </form>
+        )}
+
+        {otherBsisItems.length === 0 ? (
+          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+            No other BSIS training on file.
+          </p>
+        ) : (
+          <div className="app-cert-item-stack border-t border-brand-border">
+            {otherBsisItems.map((cert) => (
+              <CertItemCard
+                key={cert.id}
+                cert={cert}
+                editing={editing}
+                {...certCardProps(cert)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {CREDENTIAL_SECTIONS.map(({ category, title, subtitle, icon: Icon }) => {
         const items = grouped[category] ?? [];
@@ -333,302 +616,7 @@ export function GuardCredentialsPanel({
             )}
           </section>
         );
-
-        if (category !== 'guard-card') return sectionCard;
-
-        return (
-          <React.Fragment key="guard-and-bsis-training">
-            {sectionCard}
-            <section className="app-form-section space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="uber-label flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-brand-primary" />
-                    Power to Arrest &amp; Appropriate Use of Force
-                  </p>
-                  <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                    Highly recommended by Guardr. {PTA_UOF_UPLOAD_GUIDANCE}
-                  </p>
-                  <p
-                    className={`text-xs font-semibold mt-2 ${
-                      ptaUofProgress.ptaUofTraining ? 'text-brand-primary' : 'text-brand-text-muted'
-                    }`}
-                  >
-                    {ptaUofProgress.ptaUofTraining
-                      ? ptaUofProgress.ptaUofCombined
-                        ? 'Combined 8-hr certificate on file'
-                        : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
-                          ? 'PTA & WMD certs on file'
-                          : 'Separate PTA & UOF certificates on file'
-                      : 'Not yet on file'}
-                  </p>
-                </div>
-                {editing && onAddCertification && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isPtaUofOpen) {
-                        resetForm();
-                      } else {
-                        setOpenSection('bsis-pta-uof');
-                        setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
-                      }
-                    }}
-                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-                  >
-                    {isPtaUofOpen ? 'Cancel' : 'Add'}
-                  </button>
-                )}
-              </div>
-
-              {isPtaUofOpen && editing && (
-                <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-                  <select
-                    value={selectedCatalogId}
-                    onChange={(e) => setSelectedCatalogId(e.target.value)}
-                    className="uber-select w-full text-sm"
-                    required
-                  >
-                    {ptaUofCatalogOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Issuing organization (e.g. BSIS, training provider)"
-                    value={issuer}
-                    onChange={(e) => setIssuer(e.target.value)}
-                    required
-                  />
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Certificate number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="uber-input w-full"
-                    aria-label="Expiry date"
-                  />
-                  <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-                    <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional now — add a photo later from the credential list</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-                  </label>
-                  {imageUrl && (
-                    <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-                  )}
-                  {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
-                    Upload credential
-                  </button>
-                </form>
-              )}
-
-              {ptaUofItems.length === 0 ? (
-                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
-              ) : (
-                <div className="app-cert-item-stack border-t border-brand-border">
-                  {ptaUofItems.map((cert) => (
-                    <CertItemCard
-                      key={cert.id}
-                      cert={cert}
-                      editing={editing}
-                      {...certCardProps(cert)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-            <GuardThirtyTwoHourPanel
-              guard={guard}
-              editing={editing}
-              onAddCertification={onAddCertification}
-              onDeleteCertification={onDeleteCertification}
-              onAttachCertificationImage={onAttachCertificationImage}
-            />
-            <section className="app-form-section space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="uber-label flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-brand-primary" />
-                    {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
-                  </p>
-                  <p className="text-xs text-brand-text-muted mt-1">
-                    {refresherEntry?.description ?? 'Upload when applicable for guard card renewals.'}
-                  </p>
-                </div>
-                {editing && onAddCertification && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isRefresherOpen) {
-                        resetForm();
-                      } else {
-                        setOpenSection('bsis-refresher');
-                        setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
-                      }
-                    }}
-                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-                  >
-                    {isRefresherOpen ? 'Cancel' : 'Add'}
-                  </button>
-                )}
-              </div>
-
-              {isRefresherOpen && editing && (
-                <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Issuing organization (e.g. BSIS, training provider)"
-                    value={issuer}
-                    onChange={(e) => setIssuer(e.target.value)}
-                    required
-                  />
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Certificate number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="uber-input w-full"
-                    aria-label="Expiry date"
-                  />
-                  <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-                    <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional now — add a photo later from the credential list</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-                  </label>
-                  {imageUrl && (
-                    <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-                  )}
-                  {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
-                    Upload credential
-                  </button>
-                </form>
-              )}
-
-              {refresherItems.length === 0 ? (
-                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No refresher course on file.</p>
-              ) : (
-                <div className="app-cert-item-stack border-t border-brand-border">
-                  {refresherItems.map((cert) => (
-                    <CertItemCard
-                      key={cert.id}
-                      cert={cert}
-                      editing={editing}
-                      {...certCardProps(cert)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-            <section className="app-form-section space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="uber-label flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-brand-primary" />
-                    Other BSIS Training
-                  </p>
-                  <p className="text-xs text-brand-text-muted mt-1">
-                    Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
-                  </p>
-                </div>
-                {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpenSection(isOtherBsisOpen ? null : 'bsis-training');
-                      setSelectedCatalogId(otherBsisCatalogOptions[0]?.id ?? '');
-                    }}
-                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-                  >
-                    {isOtherBsisOpen ? 'Cancel' : 'Add'}
-                  </button>
-                )}
-              </div>
-
-              {isOtherBsisOpen && editing && (
-                <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-                  <select
-                    value={selectedCatalogId}
-                    onChange={(e) => setSelectedCatalogId(e.target.value)}
-                    className="uber-select w-full text-sm"
-                    required
-                  >
-                    {otherBsisCatalogOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Issuing organization (e.g. BSIS, training provider)"
-                    value={issuer}
-                    onChange={(e) => setIssuer(e.target.value)}
-                    required
-                  />
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Certificate / license / permit number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="uber-input w-full"
-                    aria-label="Expiry date"
-                  />
-                  <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-                    <ImagePlus className="w-4 h-4 shrink-0" />
-                    <span>Optional now — add a photo later from the credential list</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-                  </label>
-                  {imageUrl && (
-                    <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-                  )}
-                  {formError && <p className="text-xs text-red-400">{formError}</p>}
-                  <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
-                    Upload credential
-                  </button>
-                </form>
-              )}
-
-              {otherBsisItems.length === 0 ? (
-                <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
-                  No other BSIS training on file.
-                </p>
-              ) : (
-                <div className="app-cert-item-stack border-t border-brand-border">
-                  {otherBsisItems.map((cert) => (
-                    <CertItemCard
-                      key={cert.id}
-                      cert={cert}
-                      editing={editing}
-                      {...certCardProps(cert)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </React.Fragment>
-        );
+        return sectionCard;
       })}
     </div>
   );
