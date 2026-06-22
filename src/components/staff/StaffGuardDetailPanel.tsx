@@ -45,6 +45,8 @@ interface StaffGuardDetailPanelProps {
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
   compact?: boolean;
 }
 
@@ -70,11 +72,19 @@ export function StaffGuardDetailPanel({
   onDeleteGuard,
   onBack,
   onOpenJob,
+  editing: controlledEditing,
+  onEditingChange,
   compact = false,
 }: StaffGuardDetailPanelProps) {
   const canEdit = canManage && !!onUpdateProfile;
-  const [editing, setEditing] = useState(false);
+  const [internalEditing, setInternalEditing] = useState(false);
+  const editing = controlledEditing ?? internalEditing;
+  const setEditing = (next: boolean) => {
+    if (controlledEditing === undefined) setInternalEditing(next);
+    onEditingChange?.(next);
+  };
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
@@ -171,9 +181,12 @@ export function StaffGuardDetailPanel({
   const handleSave = async () => {
     if (!onUpdateProfile) return;
     setSaving(true);
+    setSaveError('');
     try {
       await onUpdateProfile(buildPayload());
       setEditing(false);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save profile.');
     } finally {
       setSaving(false);
     }
@@ -216,6 +229,7 @@ export function StaffGuardDetailPanel({
       hourlyRateRequirement: guard.hourlyRateRequirement,
     });
     setPhotoError('');
+    setSaveError('');
     setEditing(false);
   };
 
@@ -346,6 +360,7 @@ export function StaffGuardDetailPanel({
             )}
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{guard.email}</p>
+          {saveError && <p className="text-xs text-red-500 mt-1">{saveError}</p>}
           {photoError && <p className="text-xs text-red-500 mt-1">{photoError}</p>}
           {photoSaving && <p className="text-xs text-brand-text-muted mt-1">Saving photo…</p>}
           {editing ? (

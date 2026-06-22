@@ -39,6 +39,10 @@ interface ClientDashboardProps {
   avatarUrl?: string;
   activeView?: ClientView;
   onViewChange?: (view: ClientView) => void;
+  profileGuardId?: string | null;
+  onProfileGuardIdChange?: (guardId: string | null) => void;
+  directRequestGuardId?: string | null;
+  onDirectRequestGuardIdChange?: (guardId: string | null) => void;
   onPostRequest: (req: Partial<SecurityRequest>) => void;
   onEditRequest: (requestId: string, req: Partial<SecurityRequest>) => void;
   onCancelRequest: (requestId: string) => void;
@@ -62,6 +66,10 @@ export function ClientDashboard({
   approved,
   activeView,
   onViewChange,
+  profileGuardId,
+  onProfileGuardIdChange,
+  directRequestGuardId,
+  onDirectRequestGuardIdChange,
   onPostRequest,
   onEditRequest,
   onCancelRequest,
@@ -76,8 +84,32 @@ export function ClientDashboard({
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'map');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
-  const [selectedGuard, setSelectedGuard] = useState<SecurityGuard | null>(null);
-  const [requestTargetGuard, setRequestTargetGuard] = useState<SecurityGuard | null>(null);
+  const [internalProfileGuardId, setInternalProfileGuardId] = useState<string | null>(null);
+  const [internalDirectGuardId, setInternalDirectGuardId] = useState<string | null>(null);
+
+  const effectiveProfileGuardId =
+    profileGuardId !== undefined ? profileGuardId : internalProfileGuardId;
+  const effectiveDirectGuardId =
+    directRequestGuardId !== undefined ? directRequestGuardId : internalDirectGuardId;
+
+  const selectedGuard = useMemo(
+    () => (effectiveProfileGuardId ? guards.find((g) => g.id === effectiveProfileGuardId) ?? null : null),
+    [guards, effectiveProfileGuardId]
+  );
+  const requestTargetGuard = useMemo(
+    () => (effectiveDirectGuardId ? guards.find((g) => g.id === effectiveDirectGuardId) ?? null : null),
+    [guards, effectiveDirectGuardId]
+  );
+
+  const setSelectedGuard = (guard: SecurityGuard | null) => {
+    if (profileGuardId === undefined) setInternalProfileGuardId(guard?.id ?? null);
+    onProfileGuardIdChange?.(guard?.id ?? null);
+  };
+
+  const setRequestTargetGuard = (guard: SecurityGuard | null) => {
+    if (directRequestGuardId === undefined) setInternalDirectGuardId(guard?.id ?? null);
+    onDirectRequestGuardIdChange?.(guard?.id ?? null);
+  };
   const accountPending = isClientAccountPending({ accountStatus, approved });
 
   useEffect(() => {

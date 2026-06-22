@@ -143,6 +143,16 @@ interface StaffDashboardProps {
   /** Controlled section — when set, parent owns navigation state (URL sync). */
   section?: StaffSection;
   onSectionChange?: (section: StaffSection) => void;
+  selectedGuardId?: string | null;
+  onSelectedGuardIdChange?: (id: string | null) => void;
+  selectedClientId?: string | null;
+  onSelectedClientIdChange?: (id: string | null) => void;
+  selectedJobId?: string | null;
+  onSelectedJobIdChange?: (id: string | null) => void;
+  selectedTeamId?: string | null;
+  onSelectedTeamIdChange?: (id: string | null) => void;
+  staffGuardEdit?: boolean;
+  onStaffGuardEditChange?: (editing: boolean) => void;
 }
 
 export function StaffDashboard({
@@ -204,14 +214,46 @@ export function StaffDashboard({
   initialSection = 'overview',
   section: controlledSection,
   onSectionChange,
+  selectedGuardId: controlledGuardId,
+  onSelectedGuardIdChange,
+  selectedClientId: controlledClientId,
+  onSelectedClientIdChange,
+  selectedJobId: controlledJobId,
+  onSelectedJobIdChange,
+  selectedTeamId: controlledTeamId,
+  onSelectedTeamIdChange,
+  staffGuardEdit: controlledStaffGuardEdit,
+  onStaffGuardEditChange,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
   const section = isControlled ? controlledSection : internalSection;
-  const [selectedGuardId, setSelectedGuardId] = useState<string | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [internalGuardId, setInternalGuardId] = useState<string | null>(null);
+  const [internalClientId, setInternalClientId] = useState<string | null>(null);
+  const [internalJobId, setInternalJobId] = useState<string | null>(null);
+  const [internalTeamId, setInternalTeamId] = useState<string | null>(null);
+
+  const selectedGuardId = controlledGuardId !== undefined ? controlledGuardId : internalGuardId;
+  const selectedClientId = controlledClientId !== undefined ? controlledClientId : internalClientId;
+  const selectedJobId = controlledJobId !== undefined ? controlledJobId : internalJobId;
+  const selectedTeamId = controlledTeamId !== undefined ? controlledTeamId : internalTeamId;
+
+  const setSelectedGuardId = (id: string | null) => {
+    if (controlledGuardId === undefined) setInternalGuardId(id);
+    onSelectedGuardIdChange?.(id);
+  };
+  const setSelectedClientId = (id: string | null) => {
+    if (controlledClientId === undefined) setInternalClientId(id);
+    onSelectedClientIdChange?.(id);
+  };
+  const setSelectedJobId = (id: string | null) => {
+    if (controlledJobId === undefined) setInternalJobId(id);
+    onSelectedJobIdChange?.(id);
+  };
+  const setSelectedTeamId = (id: string | null) => {
+    if (controlledTeamId === undefined) setInternalTeamId(id);
+    onSelectedTeamIdChange?.(id);
+  };
 
   const openJob = (jobId: string) => {
     setSelectedJobId(jobId);
@@ -329,6 +371,8 @@ export function StaffDashboard({
             onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
+            selectedId={selectedJobId}
+            onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
           />
@@ -355,6 +399,10 @@ export function StaffDashboard({
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
+            selectedId={selectedGuardId}
+            onSelectedIdChange={setSelectedGuardId}
+            staffEdit={controlledStaffGuardEdit}
+            onStaffEditChange={onStaffGuardEditChange}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
@@ -375,6 +423,8 @@ export function StaffDashboard({
                 : undefined
             }
             onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
+            selectedId={selectedTeamId}
+            onSelectedIdChange={setSelectedTeamId}
             initialSelectedId={selectedTeamId}
           />
         );
@@ -387,6 +437,8 @@ export function StaffDashboard({
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
+            selectedId={selectedClientId}
+            onSelectedIdChange={setSelectedClientId}
             initialSelectedId={selectedClientId}
             onOpenJob={openJob}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}

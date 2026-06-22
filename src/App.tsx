@@ -57,9 +57,11 @@ import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { Logo } from './components/Logo';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
+import { ClientDashboard } from './components/ClientDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
+import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
 import {
   AddCertificationResult,
   normalizeCertNumber,
@@ -119,8 +121,11 @@ import {
   syncAppRoute,
   type AppRole,
   type AppRoute,
+  type AuthViewMode,
+  type AuthViewRole,
 } from './lib/appNavigation';
 import type { GuardTab } from './components/GuardDashboard';
+import type { ClientView } from './components/ClientDashboard';
 import { type StaffSection } from './lib/staffOps';
 import {
   buildLocationLabel,
@@ -158,9 +163,13 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
-  const [isAuthView, setIsAuthView]       = useState(false);
-  const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>('client');
-  const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+  const [isAuthView, setIsAuthView]       = useState(() => !!readAppRouteFromWindow()?.authView);
+  const [initialAuthRole, setInitialAuthRole] = useState<'guard' | 'client'>(
+    () => readAppRouteFromWindow()?.authRole ?? 'client'
+  );
+  const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
+    () => readAppRouteFromWindow()?.authView ?? 'sign-in'
+  );
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -181,46 +190,6 @@ export default function App() {
   useEffect(() => {
     applyThemeToDocument(themeMode);
   }, [themeMode]);
-
-  useEffect(() => {
-    const applyDeepLink = (url: string) => {
-      const route = parseAppRoute(url);
-      if (!route) return;
-      applyAppRoute(route);
-      syncAppRoute(route, true);
-    };
-
-    applyDeepLink(window.location.pathname + window.location.search);
-
-    const onPopState = () => {
-      const route = readAppRouteFromWindow();
-      if (route) applyAppRoute(route);
-    };
-    window.addEventListener('popstate', onPopState);
-
-    const unsubscribe = listenForPushNavigation(applyDeepLink);
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const role = appRoleForUser(currentUser);
-    if (!role) return;
-
-    const route = readAppRouteFromWindow();
-    if (route && routeMatchesUser(route, currentUser)) {
-      applyAppRoute(route);
-      syncAppRoute(route, true);
-      return;
-    }
-
-    const fallback = defaultRouteForRole(role);
-    applyAppRoute(fallback);
-    syncAppRoute(fallback, true);
-  }, [currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -256,27 +225,253 @@ export default function App() {
   const [staffSection, setStaffSectionState] = useState<StaffSection>(
     () => (initialRoute?.role === 'staff' ? initialRoute.staffSection : undefined) ?? 'overview'
   );
+  const [staffGuardId, setStaffGuardIdState] = useState<string | null>(
+    () => initialRoute?.staffGuardId ?? null
+  );
+  const [staffClientId, setStaffClientIdState] = useState<string | null>(
+    () => initialRoute?.staffClientId ?? null
+  );
+  const [staffJobId, setStaffJobIdState] = useState<string | null>(
+    () => initialRoute?.staffJobId ?? null
+  );
+  const [staffTeamId, setStaffTeamIdState] = useState<string | null>(
+    () => initialRoute?.staffTeamId ?? null
+  );
+  const [staffEdit, setStaffEditState] = useState(
+    () => initialRoute?.staffEdit ?? false
+  );
+  const [clientGuardId, setClientGuardIdState] = useState<string | null>(
+    () => initialRoute?.clientGuardId ?? null
+  );
+  const [clientDirectGuardId, setClientDirectGuardIdState] = useState<string | null>(
+    () => initialRoute?.clientDirectGuardId ?? null
+  );
 
-  const setClientView = (view: ClientView) => {
-    setClientViewState(view);
-    syncAppRoute({ role: 'client', clientView: view });
-  };
-
-  const setGuardTab = (tab: GuardTab) => {
-    setGuardTabState(tab);
-    syncAppRoute({ role: 'guard', guardTab: tab });
-  };
-
-  const setStaffSection = (section: StaffSection) => {
-    setStaffSectionState(section);
-    syncAppRoute({ role: 'staff', staffSection: section });
+  const buildAppRoute = (overrides: Partial<AppRoute> = {}): AppRoute => {
+    const role = currentUser ? appRoleForUser(currentUser) ?? 'client' : 'client';
+    const base: AppRoute = {
+      role,
+      staffSection,
+      guardTab,
+      clientView,
+      staffGuardId: staffGuardId ?? undefined,
+      staffClientId: staffClientId ?? undefined,
+      staffJobId: staffJobId ?? undefined,
+      staffTeamId: staffTeamId ?? undefined,
+      staffEdit: staffEdit || undefined,
+      clientGuardId: clientGuardId ?? undefined,
+      clientDirectGuardId: clientDirectGuardId ?? undefined,
+      authView: !currentUser && isAuthView ? initialAuthMode : undefined,
+      authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
+    };
+    return { ...base, ...overrides };
   };
 
   const applyAppRoute = (route: AppRoute) => {
     if (route.clientView) setClientViewState(route.clientView);
     if (route.guardTab) setGuardTabState(route.guardTab);
     if (route.staffSection) setStaffSectionState(route.staffSection);
+    setStaffGuardIdState(route.staffGuardId ?? null);
+    setStaffClientIdState(route.staffClientId ?? null);
+    setStaffJobIdState(route.staffJobId ?? null);
+    setStaffTeamIdState(route.staffTeamId ?? null);
+    setStaffEditState(route.staffEdit ?? false);
+    setClientGuardIdState(route.clientGuardId ?? null);
+    setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
+    if (route.authView) {
+      setIsAuthView(true);
+      setInitialAuthMode(route.authView);
+      if (route.authRole) setInitialAuthRole(route.authRole);
+    } else if (!currentUser) {
+      setIsAuthView(false);
+    }
   };
+
+  const setClientView = (view: ClientView) => {
+    setClientViewState(view);
+    const nextGuardId = view === 'guards' ? clientGuardId ?? undefined : undefined;
+    const nextDirectId = view === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
+    setClientGuardIdState(nextGuardId ?? null);
+    setClientDirectGuardIdState(nextDirectId ?? null);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: view,
+        clientGuardId: nextGuardId,
+        clientDirectGuardId: nextDirectId,
+      })
+    );
+  };
+
+  const setClientGuardId = (guardId: string | null) => {
+    setClientGuardIdState(guardId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: 'guards',
+        clientGuardId: guardId ?? undefined,
+      })
+    );
+  };
+
+  const setClientDirectGuardId = (guardId: string | null) => {
+    setClientDirectGuardIdState(guardId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: guardId ? 'direct-request' : 'guards',
+        clientDirectGuardId: guardId ?? undefined,
+        clientGuardId: guardId ? undefined : clientGuardId ?? undefined,
+      })
+    );
+  };
+
+  const setGuardTab = (tab: GuardTab) => {
+    setGuardTabState(tab);
+    syncAppRoute(buildAppRoute({ role: 'guard', guardTab: tab }));
+  };
+
+  const setStaffSection = (section: StaffSection) => {
+    setStaffSectionState(section);
+    const nextGuardId = section === 'guards' ? staffGuardId ?? undefined : undefined;
+    const nextClientId = section === 'clients' ? staffClientId ?? undefined : undefined;
+    const nextJobId = section === 'jobs' ? staffJobId ?? undefined : undefined;
+    const nextTeamId = section === 'team' ? staffTeamId ?? undefined : undefined;
+    const nextEdit = section === 'guards' && nextGuardId ? staffEdit || undefined : undefined;
+    setStaffGuardIdState(nextGuardId ?? null);
+    setStaffClientIdState(nextClientId ?? null);
+    setStaffJobIdState(nextJobId ?? null);
+    setStaffTeamIdState(nextTeamId ?? null);
+    if (section !== 'guards') setStaffEditState(false);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: section,
+        staffGuardId: nextGuardId,
+        staffClientId: nextClientId,
+        staffJobId: nextJobId,
+        staffTeamId: nextTeamId,
+        staffEdit: nextEdit,
+      })
+    );
+  };
+
+  const setStaffGuardId = (guardId: string | null) => {
+    setStaffGuardIdState(guardId);
+    if (!guardId) setStaffEditState(false);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'guards',
+        staffGuardId: guardId ?? undefined,
+        staffEdit: guardId && staffEdit ? true : undefined,
+      })
+    );
+  };
+
+  const setStaffClientId = (clientId: string | null) => {
+    setStaffClientIdState(clientId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'clients',
+        staffClientId: clientId ?? undefined,
+      })
+    );
+  };
+
+  const setStaffJobId = (jobId: string | null) => {
+    setStaffJobIdState(jobId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'jobs',
+        staffJobId: jobId ?? undefined,
+      })
+    );
+  };
+
+  const setStaffTeamId = (teamId: string | null) => {
+    setStaffTeamIdState(teamId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'team',
+        staffTeamId: teamId ?? undefined,
+      })
+    );
+  };
+
+  const setStaffEdit = (editing: boolean) => {
+    setStaffEditState(editing);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'guards',
+        staffGuardId: staffGuardId ?? undefined,
+        staffEdit: editing || undefined,
+      })
+    );
+  };
+
+  const openAuthView = (role: AuthViewRole, mode: AuthViewMode) => {
+    setInitialAuthRole(role);
+    setInitialAuthMode(mode);
+    setIsAuthView(true);
+    syncAppRoute({ role: 'client', authView: mode, authRole: role });
+  };
+
+  const closeAuthView = () => {
+    setIsAuthView(false);
+    syncAppRoute({ role: 'client' }, true);
+  };
+
+  const applyAppRouteRef = useRef(applyAppRoute);
+  applyAppRouteRef.current = applyAppRoute;
+
+  useNativeBackButtonBootstrap(!!currentUser);
+
+  useEffect(() => {
+    const applyDeepLink = (url: string) => {
+      const route = parseAppRoute(url);
+      if (!route) return;
+      applyAppRouteRef.current(route);
+      syncAppRoute(route, true);
+    };
+
+    applyDeepLink(window.location.pathname + window.location.search);
+
+    const onPopState = (event: PopStateEvent) => {
+      const route =
+        (event.state?.appRoute as AppRoute | undefined) ?? readAppRouteFromWindow();
+      if (route) applyAppRouteRef.current(route);
+    };
+    window.addEventListener('popstate', onPopState);
+
+    const unsubscribe = listenForPushNavigation(applyDeepLink);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const role = appRoleForUser(currentUser);
+    if (!role) return;
+
+    const route = readAppRouteFromWindow();
+    if (route && routeMatchesUser(route, currentUser)) {
+      applyAppRouteRef.current(route);
+      syncAppRoute(route, true);
+      return;
+    }
+
+    const fallback = defaultRouteForRole(role);
+    applyAppRouteRef.current(fallback);
+    syncAppRoute(fallback, true);
+  }, [currentUser?.id, currentUser?.role]);
+
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -624,7 +819,10 @@ export default function App() {
   // Live sync — any DB change propagates to all open sessions without a manual refresh
   const loadRef = useRef(loadFromSupabase);
   loadRef.current = loadFromSupabase;
-  useSupabaseRealtimeSync(() => loadRef.current(), isDbConnected);
+  useSupabaseRealtimeSync(() => {
+    if (shouldSkipRealtimeSync()) return;
+    void loadRef.current();
+  }, isDbConnected);
 
   useEffect(() => {
     if (!isDbConnected || !currentUser) return;
@@ -660,7 +858,9 @@ export default function App() {
   useEffect(() => {
     if (!isDbConnected) return;
     const onVisible = () => {
-      if (document.visibilityState === 'visible') void loadRef.current();
+      if (document.visibilityState === 'visible' && !shouldSkipRealtimeSync()) {
+        void loadRef.current();
+      }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
@@ -913,6 +1113,7 @@ export default function App() {
     };
     setGuards(prev => prev.map(g => g.id === guardId ? { ...g, certifications: [...g.certifications, certWithId] } : g));
     if (isDbConnected) {
+      beginLocalMutation();
       try {
         const { error } = await supabase.from('certifications').insert({
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
@@ -1078,6 +1279,11 @@ export default function App() {
   };
 
   const handleUpdateGuardProfile = async (guardId: string, payload: ProfileSavePayload) => {
+    const previous = guards.find((g) => g.id === guardId);
+    if (!previous) {
+      throw new Error('Guard profile not found.');
+    }
+
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
@@ -1106,6 +1312,7 @@ export default function App() {
       )
     );
     if (isDbConnected) {
+      beginLocalMutation();
       const guardUpdate: Record<string, unknown> = {
           name: payload.name,
           first_name: payload.firstName,
@@ -1126,7 +1333,16 @@ export default function App() {
       };
       if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
       if (payload.badgeNumber !== undefined) guardUpdate.badge_number = payload.badgeNumber;
-      await supabase.from('guards').update(guardUpdate).eq('id', guardId);
+      const { error } = await supabase.from('guards').update(guardUpdate).eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('Guard profile update error:', error);
+        const message =
+          error.code === 'PGRST204' || error.message?.includes('column')
+            ? 'Profile could not be saved. Run the latest database migrations, then try again.'
+            : error.message || 'Could not save profile. Please try again.';
+        throw new Error(message);
+      }
     }
     if (currentUser?.id === guardId) {
       syncSessionUser({
@@ -3140,7 +3356,7 @@ export default function App() {
             onSignUp={handleSignUp}
             guardsList={guards}
             clientsList={clients}
-            onBackToHome={() => setIsAuthView(false)}
+            onBackToHome={closeAuthView}
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
             themeMode={themeMode}
@@ -3155,9 +3371,7 @@ export default function App() {
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onNavigateToAuth={(role, mode) => {
-            setInitialAuthRole(role ?? 'client');
-            setInitialAuthMode(mode ?? 'sign-in');
-            setIsAuthView(true);
+            openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
         />
         <InstallPrompt />
@@ -3270,6 +3484,10 @@ export default function App() {
               avatarUrl={currentUser.avatar}
               activeView={clientView}
               onViewChange={setClientView}
+              profileGuardId={clientGuardId}
+              onProfileGuardIdChange={setClientGuardId}
+              directRequestGuardId={clientDirectGuardId}
+              onDirectRequestGuardIdChange={setClientDirectGuardId}
               onPostRequest={handlePostRequest}
               onEditRequest={handleEditRequest}
               onUpdateStatus={handleUpdateStatus}
@@ -3297,6 +3515,16 @@ export default function App() {
         <StaffDashboard
           section={staffSection}
           onSectionChange={setStaffSection}
+          selectedGuardId={staffGuardId}
+          onSelectedGuardIdChange={setStaffGuardId}
+          selectedClientId={staffClientId}
+          onSelectedClientIdChange={setStaffClientId}
+          selectedJobId={staffJobId}
+          onSelectedJobIdChange={setStaffJobId}
+          selectedTeamId={staffTeamId}
+          onSelectedTeamIdChange={setStaffTeamId}
+          staffGuardEdit={staffEdit}
+          onStaffGuardEditChange={setStaffEdit}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}
@@ -3316,6 +3544,7 @@ export default function App() {
           onApproveGuard={handleApproveGuard}
           onRejectGuard={handleRejectGuard}
           onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
+          onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}

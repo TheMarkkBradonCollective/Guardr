@@ -44,6 +44,8 @@ interface StaffJobsPanelProps {
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  selectedId?: string | null;
+  onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
   staffRole?: PlatformRole;
 }
@@ -336,12 +338,26 @@ export function StaffJobsPanel({
   onEditJobListing,
   canEditJobListing = false,
   onApproveGuardApplication,
+  selectedId: controlledSelectedId,
+  onSelectedIdChange,
   initialSelectedId = null,
   staffRole,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
+  const isControlled = controlledSelectedId !== undefined;
+  const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
+
+  const setSelectedId = (id: string | null) => {
+    if (!isControlled) setInternalSelectedId(id);
+    onSelectedIdChange?.(id);
+  };
+
+  useEffect(() => {
+    if (isControlled) return;
+    setInternalSelectedId(initialSelectedId);
+  }, [initialSelectedId, isControlled]);
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
