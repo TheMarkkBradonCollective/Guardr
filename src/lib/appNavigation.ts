@@ -1,7 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
 import type { LegalPageId } from './legalContent';
-import { normalizeStaffSection, type ApprovalQueueId, type StaffSection } from './staffOps';
+import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
 
 export type AppRole = 'staff' | 'guard' | 'client';
 
@@ -195,13 +195,17 @@ export function parseAppRoute(url: string): AppRoute | null {
   }
 
   if (pathname === '/staff/messages') {
-    return { role: 'staff', staffSection: 'messages', ...nested };
+    const section = staffSectionFromMessageTab(nested.staffMessageTab ?? null);
+    return { role: 'staff', staffSection: section, ...nested, staffMessageTab: undefined };
   }
 
   const staffMatch = pathname.match(/^\/staff\/([^/]+)$/);
   if (staffMatch) {
-    const section = normalizeStaffSection(staffMatch[1]);
-    if (section) return { role: 'staff', staffSection: section, ...nested };
+    const section = resolveStaffSection(
+      normalizeStaffSection(staffMatch[1]) ?? (staffMatch[1] === 'messages' ? 'messages' : undefined),
+      nested.staffMessageTab ?? null
+    );
+    if (section) return { role: 'staff', staffSection: section, ...nested, staffMessageTab: undefined };
   }
 
   if (pathname === '/guard') {

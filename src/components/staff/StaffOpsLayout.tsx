@@ -17,7 +17,7 @@ import {
   LifeBuoy,
   Map,
   Menu,
-  MessageSquare,
+  MessageCircle,
   Scale,
   Settings,
   Shield,
@@ -51,7 +51,8 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   clients: 'Clients',
   incidents: 'Client incidents',
   support: 'Support inbox',
-  messages: 'Messages',
+  'team-chat': 'Team chat',
+  'job-chats': 'Job chats',
   payments: 'Payments',
   disputes: 'Disputes',
   analytics: 'Analytics',
@@ -78,7 +79,8 @@ export function StaffOpsLayout({
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
     activeSection === 'support' ||
-    activeSection === 'messages';
+    activeSection === 'team-chat' ||
+    activeSection === 'job-chats';
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -89,7 +91,8 @@ export function StaffOpsLayout({
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'team', label: 'Staff', icon: Users },
     { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
-    { id: 'messages', label: 'Messages', icon: MessageSquare, badge: badges.messages },
+    { id: 'team-chat', label: 'Team chat', icon: Users, badge: badges['team-chat'] },
+    { id: 'job-chats', label: 'Job chats', icon: MessageCircle, badge: badges['job-chats'] },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },

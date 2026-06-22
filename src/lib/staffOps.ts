@@ -21,7 +21,8 @@ export type StaffSection =
   | 'clients'
   | 'incidents'
   | 'support'
-  | 'messages'
+  | 'team-chat'
+  | 'job-chats'
   | 'payments'
   | 'disputes'
   | 'analytics'
@@ -36,11 +37,26 @@ export function isStaffOpsMapSection(section: StaffSection): boolean {
 export function normalizeStaffSection(section?: string): StaffSection | undefined {
   if (!section) return undefined;
   if (section === 'live-jobs') return 'jobs';
+  if (section === 'messages') return 'team-chat';
   const valid: StaffSection[] = [
     'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'clients',
-    'incidents', 'support', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'profile',
+    'incidents', 'support', 'team-chat', 'job-chats', 'payments', 'disputes', 'analytics', 'settings', 'profile',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
+}
+
+/** Legacy /staff/messages and ?mtab= deep links */
+export function staffSectionFromMessageTab(tab?: 'team' | 'jobs' | null): StaffSection {
+  return tab === 'jobs' ? 'job-chats' : 'team-chat';
+}
+
+export function resolveStaffSection(
+  section?: StaffSection | 'messages',
+  messageTab?: 'team' | 'jobs' | null
+): StaffSection | undefined {
+  if (!section) return undefined;
+  if (section === 'messages') return staffSectionFromMessageTab(messageTab);
+  return section;
 }
 
 export type LiveJobStatus =

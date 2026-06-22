@@ -19,7 +19,7 @@ interface StaffSidebarNavProps {
 
 const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
 const OPERATIONS_IDS: StaffSection[] = ['jobs', 'approvals', 'payments'];
-const PEOPLE_IDS: StaffSection[] = ['clients', 'guards', 'team', 'messages', 'support', 'incidents', 'disputes', 'analytics'];
+const PEOPLE_IDS: StaffSection[] = ['clients', 'guards', 'team', 'team-chat', 'job-chats', 'support', 'incidents', 'disputes', 'analytics'];
 const PLATFORM_IDS: StaffSection[] = ['settings'];
 
 function NavGroup({

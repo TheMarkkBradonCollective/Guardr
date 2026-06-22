@@ -59,7 +59,8 @@ import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffSupportPanel } from './staff/StaffSupportPanel';
-import { StaffMessagesHub } from './staff/StaffMessagesHub';
+import { StaffJobChatsPanel } from './staff/StaffJobChatsPanel';
+import { StaffMessengerPanel } from './staff/StaffMessengerPanel';
 import { openTicketCount } from '../lib/support';
 import { activeJobChatCount } from '../lib/jobChat';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
@@ -181,8 +182,6 @@ interface StaffDashboardProps {
   onStaffGuardEditChange?: (editing: boolean) => void;
   selectedSupportTicketId?: string | null;
   onSelectedSupportTicketIdChange?: (id: string | null) => void;
-  staffMessageTab?: 'team' | 'jobs';
-  onStaffMessageTabChange?: (tab: 'team' | 'jobs') => void;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
   staffApprovalQueue?: ApprovalQueueId | null;
@@ -270,8 +269,6 @@ export function StaffDashboard({
   onStaffGuardEditChange,
   selectedSupportTicketId,
   onSelectedSupportTicketIdChange,
-  staffMessageTab = 'team',
-  onStaffMessageTabChange,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
   staffApprovalQueue = null,
@@ -370,7 +367,8 @@ export function StaffDashboard({
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
-      messages: activeJobChatCount(jobChatThreads),
+      'team-chat': undefined,
+      'job-chats': activeJobChatCount(jobChatThreads),
       payments: openPayoutInvoices,
     }),
     [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
@@ -541,23 +539,32 @@ export function StaffDashboard({
             initialSelectedTicketId={selectedSupportTicketId}
           />
         ) : null;
-      case 'messages':
-        return onSendStaffMessage && onSendJobChat ? (
-          <StaffMessagesHub
-            requests={requests}
-            guards={guards}
-            jobChatThreads={jobChatThreads}
-            jobChatMessages={jobChatMessages}
-            staffMessages={staffMessages}
-            currentUser={currentUser}
-            onSendStaffMessage={onSendStaffMessage}
-            onRefreshStaffMessages={onRefreshStaffMessages}
-            onSendJobChat={onSendJobChat}
-            initialTab={staffMessageTab}
-            onTabChange={onStaffMessageTabChange}
-            selectedJobChatRequestId={selectedJobChatRequestId}
-            onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
-          />
+      case 'team-chat':
+        return onSendStaffMessage ? (
+          <div className="app-messages-hub h-full min-h-0">
+            <StaffMessengerPanel
+              messages={staffMessages}
+              currentUser={currentUser}
+              onSend={onSendStaffMessage}
+              onRefresh={onRefreshStaffMessages}
+            />
+          </div>
+        ) : null;
+      case 'job-chats':
+        return onSendJobChat ? (
+          <div className="app-messages-hub h-full min-h-0">
+            <StaffJobChatsPanel
+              requests={requests}
+              guards={guards}
+              threads={jobChatThreads}
+              messages={jobChatMessages}
+              currentUser={currentUser}
+              onSendJobChat={onSendJobChat}
+              selectedRequestId={selectedJobChatRequestId}
+              onSelectedRequestIdChange={onSelectedJobChatRequestIdChange}
+              initialSelectedRequestId={selectedJobChatRequestId}
+            />
+          </div>
         ) : null;
       case 'payments':
         return showFinance ? (
