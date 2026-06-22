@@ -215,6 +215,7 @@ export interface SecurityGuard {
   idVerificationStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected';
   idState?: string;
   idNumber?: string;
+  idExpiryDate?: string;
   idFrontUrl?: string;
   idBackUrl?: string;
   idSelfieUrl?: string;

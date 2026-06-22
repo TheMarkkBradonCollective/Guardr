@@ -86,10 +86,11 @@ export function StaffIdReviewSection({
       ) : (
         status !== 'not_submitted' && (
           <>
-            {(guard.idState || guard.idNumber) && (
+            {(guard.idState || guard.idNumber || guard.idExpiryDate) && (
               <p className="text-sm text-brand-text-muted">
                 {guard.idState ? `${guard.idState}` : ''}
                 {guard.idNumber ? ` · #${guard.idNumber}` : ''}
+                {guard.idExpiryDate ? ` · exp ${guard.idExpiryDate}` : ''}
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

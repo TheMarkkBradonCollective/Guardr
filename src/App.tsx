@@ -966,6 +966,7 @@ export default function App() {
         idVerificationStatus: g.id_verification_status ?? 'not_submitted',
         idState: g.id_state ?? undefined,
         idNumber: g.id_number ?? undefined,
+        idExpiryDate: g.id_expiry_date ?? undefined,
         idFrontUrl: g.id_front_url ?? undefined,
         idBackUrl: g.id_back_url ?? undefined,
         idSelfieUrl: g.id_selfie_url ?? undefined,
@@ -2290,6 +2291,7 @@ export default function App() {
     payload: {
       idState: string;
       idNumber: string;
+      idExpiryDate: string;
       idFrontUrl: string;
       idBackUrl: string;
       idSelfieUrl: string;
@@ -2301,11 +2303,15 @@ export default function App() {
 
     const idState = payload.idState.trim().toUpperCase();
     const idNumber = payload.idNumber.trim();
+    const idExpiryDate = payload.idExpiryDate.trim();
     const front = payload.idFrontUrl.trim();
     const back = payload.idBackUrl.trim();
     const selfie = payload.idSelfieUrl.trim();
     if (!idState || !idNumber) {
       return { ok: false, error: 'Enter the issuing state and ID number before submitting.' };
+    }
+    if (!idExpiryDate) {
+      return { ok: false, error: 'Enter the ID expiration date before submitting.' };
     }
     if (!front || !back || !selfie) {
       return { ok: false, error: 'Upload ID front, ID back, and an identity selfie before submitting.' };
@@ -2323,6 +2329,7 @@ export default function App() {
               ...g,
               idState,
               idNumber,
+              idExpiryDate,
               idFrontUrl: front,
               idBackUrl: back,
               idSelfieUrl: selfie,
@@ -2341,6 +2348,7 @@ export default function App() {
         .update({
           id_state: idState,
           id_number: idNumber,
+          id_expiry_date: idExpiryDate,
           id_front_url: front,
           id_back_url: back,
           id_selfie_url: selfie,
@@ -2426,6 +2434,7 @@ export default function App() {
     payload: {
       idState: string;
       idNumber: string;
+      idExpiryDate: string;
       idFrontUrl: string;
       idBackUrl: string;
       idSelfieUrl: string;
@@ -2440,17 +2449,19 @@ export default function App() {
 
     const idState = payload.idState?.trim().toUpperCase() || guard.idState?.trim().toUpperCase() || '';
     const idNumber = payload.idNumber?.trim() || guard.idNumber?.trim() || '';
+    const idExpiryDate = payload.idExpiryDate?.trim() || guard.idExpiryDate?.trim() || '';
     const front = payload.idFrontUrl?.trim() || guard.idFrontUrl?.trim() || '';
     const back = payload.idBackUrl?.trim() || guard.idBackUrl?.trim() || '';
     const selfie = payload.idSelfieUrl?.trim() || guard.idSelfieUrl?.trim() || '';
-    if (!front && !back && !selfie && !idState && !idNumber) {
+    if (!front && !back && !selfie && !idState && !idNumber && !idExpiryDate) {
       return { ok: false, error: 'Enter ID details or upload at least one ID photo to save.' };
     }
 
-    const complete = Boolean(idState && idNumber && front && back && selfie);
+    const complete = Boolean(idState && idNumber && idExpiryDate && front && back && selfie);
     const dataChanged =
       idState !== (guard.idState ?? '').trim().toUpperCase() ||
       idNumber !== (guard.idNumber ?? '').trim() ||
+      idExpiryDate !== (guard.idExpiryDate ?? '').trim() ||
       front !== (guard.idFrontUrl ?? '').trim() ||
       back !== (guard.idBackUrl ?? '').trim() ||
       selfie !== (guard.idSelfieUrl ?? '').trim();
@@ -2475,6 +2486,7 @@ export default function App() {
               ...g,
               idState: idState || undefined,
               idNumber: idNumber || undefined,
+              idExpiryDate: idExpiryDate || undefined,
               idFrontUrl: front || undefined,
               idBackUrl: back || undefined,
               idSelfieUrl: selfie || undefined,
@@ -2497,6 +2509,7 @@ export default function App() {
         .update({
           id_state: idState || null,
           id_number: idNumber || null,
+          id_expiry_date: idExpiryDate || null,
           id_front_url: front || null,
           id_back_url: back || null,
           id_selfie_url: selfie || null,
