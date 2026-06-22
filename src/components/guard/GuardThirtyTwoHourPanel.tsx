@@ -31,6 +31,7 @@ interface GuardThirtyTwoHourPanelProps {
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
+  renderCertActions?: (cert: Certification) => React.ReactNode;
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -48,6 +49,7 @@ export function GuardThirtyTwoHourPanel({
   onDeleteCertification,
   onAttachCertificationImage,
   onUpdateCertification,
+  renderCertActions,
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
@@ -162,6 +164,13 @@ export function GuardThirtyTwoHourPanel({
     guardName: guard.name,
   });
 
+  const renderCertRow = (cert: Certification) => (
+    <div key={cert.id} className="space-y-2">
+      <CertItemCard cert={cert} editing={editing} compact showCategory={false} {...certCardProps(cert)} />
+      {renderCertActions?.(cert)}
+    </div>
+  );
+
   return (
     <section className="app-form-section space-y-4">
       <div>
@@ -206,15 +215,7 @@ export function GuardThirtyTwoHourPanel({
         </p>
         {rollupCerts.length > 0 ? (
           <div className="app-cert-item-stack !pt-0">
-            {rollupCerts.map((cert) => (
-              <CertItemCard
-                key={cert.id}
-                cert={cert}
-                editing={editing}
-                showCategory={false}
-                {...certCardProps(cert)}
-              />
-            ))}
+            {rollupCerts.map((cert) => renderCertRow(cert))}
           </div>
         ) : (
           <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
@@ -255,16 +256,7 @@ export function GuardThirtyTwoHourPanel({
 
               {uploaded.length > 0 && (
                 <div className="app-cert-item-stack !pt-0">
-                  {uploaded.map((cert) => (
-                    <CertItemCard
-                      key={cert.id}
-                      cert={cert}
-                      editing={editing}
-                      compact
-                      showCategory={false}
-                {...certCardProps(cert)}
-                    />
-                  ))}
+                  {uploaded.map((cert) => renderCertRow(cert))}
                 </div>
               )}
 

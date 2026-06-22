@@ -428,6 +428,7 @@ export function GuardCredentialsPanel({
         onDeleteCertification={onDeleteCertification}
         onAttachCertificationImage={onAttachCertificationImage}
         onUpdateCertification={onUpdateCertification}
+        renderCertActions={renderCertActions}
       />
       {showSection(refresherItems.length) && (
       <section className="app-form-section space-y-3">
