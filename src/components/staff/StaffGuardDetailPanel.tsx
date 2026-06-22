@@ -33,6 +33,7 @@ import {
   getGuardActivationChecklist,
   guardCanActivateAccount,
 } from '../../lib/guardAccountActivation';
+import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -43,8 +44,6 @@ interface StaffGuardDetailPanelProps {
   onResetAuditFailures?: (id: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
-  onApproveGuard?: (guardId: string) => void;
-  onRejectGuard?: (guardId: string) => void;
   onUpdateBackgroundChecked?: (guardId: string, checked: boolean) => void;
   onUpdateProfile?: (payload: ProfileSavePayload) => void | Promise<void>;
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
@@ -85,8 +84,6 @@ export function StaffGuardDetailPanel({
   onResetAuditFailures,
   onApproveCert,
   onRejectCert,
-  onApproveGuard,
-  onRejectGuard,
   onUpdateBackgroundChecked,
   onUpdateProfile,
   onAddCertification,
@@ -440,8 +437,8 @@ export function StaffGuardDetailPanel({
               <WfBadge tone={guardAccountStatus === 'pending' ? 'warning' : guardAccountStatus === 'active' ? 'success' : 'danger'}>
                 Account: {GUARD_USER_STATUS_LABELS[guardAccountStatus]}
               </WfBadge>
-              {guard.verified && (
-                <WfBadge tone="success">Guardr verified</WfBadge>
+              {isGuardTrusted(guard) && (
+                <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
               )}
               {guard.backgroundChecked && (
                 <WfBadge tone="primary">Background checked</WfBadge>
@@ -539,16 +536,6 @@ export function StaffGuardDetailPanel({
                   className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                 >
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
-                </button>
-              )}
-              {onApproveGuard && !guard.verified && (
-                <button type="button" onClick={() => onApproveGuard(guard.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
-                  Verify guard profile
-                </button>
-              )}
-              {onRejectGuard && guard.verified && (
-                <button type="button" onClick={() => onRejectGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
-                  Remove profile verification
                 </button>
               )}
               {onDeleteGuard && guardAccountStatus !== 'pending' && (
