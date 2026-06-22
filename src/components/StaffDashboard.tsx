@@ -47,6 +47,7 @@ import {
   type ApprovalQueueId,
 } from '../lib/staffOps';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
+import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
@@ -620,7 +621,9 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
     >
-      {renderSection()}
+      <AppPageTransition motionKey={section} className="h-full min-h-0">
+        {renderSection()}
+      </AppPageTransition>
     </StaffOpsLayout>
   );
 }

@@ -28,6 +28,7 @@ import {
   AppScreen,
 } from '../ui/app/AppPrimitives';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { AppPageTransition } from '../ui/motion/AppMotion';
 import { ArrowLeft, ChevronRight, FileText, MessageCircle } from 'lucide-react';
 
 type SupportView = 'home' | 'chat' | 'report' | 'thread';
@@ -165,7 +166,8 @@ export function SupportScreen({
     }));
 
     return (
-      <div className="h-full flex flex-col bg-brand-bg min-h-0">
+      <AppPageTransition motionKey={`thread-${activeTicket.id}`} className="h-full min-h-0">
+        <div className="h-full flex flex-col bg-brand-bg min-h-0">
         <AppChatHeader
           title={activeTicket.subject}
           subtitle={`${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`}
@@ -186,11 +188,13 @@ export function SupportScreen({
           />
         </div>
       </div>
+      </AppPageTransition>
     );
   }
 
   if (view === 'report') {
     return (
+      <AppPageTransition motionKey="report" className="h-full min-h-0">
       <AppScreen className="pb-8">
         <div className="flex items-center gap-2 px-3 pt-2 mb-2">
           {backButton()}
@@ -262,10 +266,12 @@ export function SupportScreen({
           </button>
         </form>
       </AppScreen>
+      </AppPageTransition>
     );
   }
 
   return (
+    <AppPageTransition motionKey="home" className="h-full min-h-0">
     <AppScreen className="pb-8">
       <AppDashboardHero kicker="Help center" title="Support" />
 
@@ -326,5 +332,6 @@ export function SupportScreen({
         )}
       </AppDashboardZone>
     </AppScreen>
+    </AppPageTransition>
   );
 }

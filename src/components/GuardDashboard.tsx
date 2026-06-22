@@ -25,6 +25,7 @@ import { SupportScreen } from './support/SupportScreen';
 import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
+import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AlertTriangle, Map, DollarSign, Briefcase, User, LifeBuoy } from 'lucide-react';
 import {
@@ -646,126 +647,136 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'earnings' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <div className="guard-scroll-panel flex-1">
-            <GuardEarningsPanel
-              breakdown={earningsBreakdown}
-              completedJobs={completedJobs}
-              stripeConnected={!!guard.stripeConnectAccountId}
-              stripeReady={connectReady}
-              connectPending={connectPending}
-              onConnectStripe={handleConnectStripe}
-              onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
-              onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
-              cashRequestPending={cashRequestPending}
-              stripeRequestPending={stripeRequestPending}
-              openCashInvoices={openCashInvoices}
-              openStripeInvoices={openStripeInvoices}
-              payments={payments}
-            />
-          </div>
-        </div>
-      )}
+      {activeTab !== 'map' && (
+        <AppPageTransition motionKey={activeTab} className="absolute inset-0">
+          {activeTab === 'earnings' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="guard-scroll-panel flex-1">
+                <GuardEarningsPanel
+                  breakdown={earningsBreakdown}
+                  completedJobs={completedJobs}
+                  stripeConnected={!!guard.stripeConnectAccountId}
+                  stripeReady={connectReady}
+                  connectPending={connectPending}
+                  onConnectStripe={handleConnectStripe}
+                  onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
+                  onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
+                  cashRequestPending={cashRequestPending}
+                  stripeRequestPending={stripeRequestPending}
+                  openCashInvoices={openCashInvoices}
+                  openStripeInvoices={openStripeInvoices}
+                  payments={payments}
+                />
+              </div>
+            </div>
+          )}
 
-      {activeTab === 'myJobs' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <GuardMyJobsPanel
-            upcomingJobs={upcomingMyJobs}
-            pastJobs={pastMyJobs}
-            guard={guard}
-            currentUser={currentUser}
-            jobChatThreads={jobChatThreads}
-            jobChatMessages={jobChatMessages}
-            onSendJobChatMessage={onSendJobChatMessage}
-            initialSelectedJobId={jobChatRequestId}
-            initialChatOpen={openJobChat}
-            onSelectedJobIdChange={onJobChatRequestIdChange}
-            onChatOpenChange={onJobChatOpenChange}
-          />
-        </div>
-      )}
+          {activeTab === 'myJobs' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <GuardMyJobsPanel
+                upcomingJobs={upcomingMyJobs}
+                pastJobs={pastMyJobs}
+                guard={guard}
+                currentUser={currentUser}
+                jobChatThreads={jobChatThreads}
+                jobChatMessages={jobChatMessages}
+                onSendJobChatMessage={onSendJobChatMessage}
+                initialSelectedJobId={jobChatRequestId}
+                initialChatOpen={openJobChat}
+                onSelectedJobIdChange={onJobChatRequestIdChange}
+                onChatOpenChange={onJobChatOpenChange}
+              />
+            </div>
+          )}
 
-      {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <SupportScreen
-            currentUser={currentUser}
-            tickets={supportTickets}
-            relatedRequests={relatedRequests}
-            onCreateTicket={onCreateSupportTicket}
-            onSendMessage={onSendSupportMessage}
-            initialTicketId={supportTicketId}
-            onActiveTicketIdChange={onSupportTicketIdChange}
-          />
-        </div>
-      )}
+          {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <SupportScreen
+                currentUser={currentUser}
+                tickets={supportTickets}
+                relatedRequests={relatedRequests}
+                onCreateTicket={onCreateSupportTicket}
+                onSendMessage={onSendSupportMessage}
+                initialTicketId={supportTicketId}
+                onActiveTicketIdChange={onSupportTicketIdChange}
+              />
+            </div>
+          )}
 
-      {activeTab === 'profile' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <UserProfileScreen
-            currentUser={currentUser}
-            themeMode={themeMode as 'dark' | 'light' | 'grey'}
-            onChangeTheme={onChangeTheme}
-            onSignOut={onSignOut}
-            guard={guard}
-            onSave={onUpdateProfile}
-            onAddCertification={onAddCertification}
-            onDeleteCertification={onDeleteCertification}
-            onAttachCertificationImage={onAttachCertificationImage}
-            onAddExperience={onAddExperience}
-            onAddEducation={onAddEducation}
-            onSubmitIdentityVerification={onSubmitIdentityVerification}
-            onOpenLegal={onOpenLegal}
-          />
-        </div>
+          {activeTab === 'profile' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <UserProfileScreen
+                currentUser={currentUser}
+                themeMode={themeMode as 'dark' | 'light' | 'grey'}
+                onChangeTheme={onChangeTheme}
+                onSignOut={onSignOut}
+                guard={guard}
+                onSave={onUpdateProfile}
+                onAddCertification={onAddCertification}
+                onDeleteCertification={onDeleteCertification}
+                onAttachCertificationImage={onAttachCertificationImage}
+                onAddExperience={onAddExperience}
+                onAddEducation={onAddEducation}
+                onSubmitIdentityVerification={onSubmitIdentityVerification}
+                onOpenLegal={onOpenLegal}
+              />
+            </div>
+          )}
+        </AppPageTransition>
       )}
     </div>
   );
 
   const guardModals = (
     <>
-      {showSelfAudit && (
-        <GuardSelfAuditModal
-          onClose={() => setShowSelfAudit(false)}
-          onTriggerCamera={captureSelfie}
-          onSubmit={handleSelfAuditSubmit}
-        />
-      )}
+      <GuardSelfAuditModal
+        open={showSelfAudit}
+        onClose={() => setShowSelfAudit(false)}
+        onTriggerCamera={captureSelfie}
+        onSubmit={handleSelfAuditSubmit}
+      />
 
-      {showCheckout && activeShiftJob && (
-        <div className="absolute inset-0 z-[1003] modal-overlay flex items-center justify-center p-4">
-          <div className="w-full max-w-sm modal-panel p-6 space-y-4">
-            <h3 className="font-bold text-lg">Complete job?</h3>
-            <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">Cancel</button>
-              <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">Confirm</button>
-            </div>
+        <AppModal
+          open={showCheckout && !!activeShiftJob}
+          align="center"
+          position="absolute"
+          zIndex={1003}
+          onClose={() => setShowCheckout(false)}
+          panelClassName="p-6 space-y-4"
+        >
+          <h3 className="font-bold text-lg">Complete job?</h3>
+          <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">
+              Cancel
+            </button>
+            <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">
+              Confirm
+            </button>
           </div>
-        </div>
-      )}
+        </AppModal>
 
-      {ratingJob && (
-        <GuardRatingModal
-          clientName={ratingJob.clientName}
-          onSkip={() => setRatingJob(null)}
-          onSubmit={(rating, note) => {
-            const existing = ratingJob.checkOutAudit;
-            onUpdateJobAudit(ratingJob.id, {
-              checkOutAudit: {
-                checkedAt: existing?.checkedAt ?? new Date().toISOString(),
-                completed: existing?.completed ?? true,
-                noViolations: existing?.noViolations ?? true,
-                noEquipmentIssues: existing?.noEquipmentIssues ?? true,
-                dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
-                incidentReport: existing?.incidentReport ?? { hasIncident: false },
-                clientNotes: `Guard rated client ${rating}/5: ${note}`,
-              },
-            });
-            setRatingJob(null);
-          }}
-        />
-      )}
+      <GuardRatingModal
+        open={!!ratingJob}
+        clientName={ratingJob?.clientName ?? ''}
+        onSkip={() => setRatingJob(null)}
+        onSubmit={(rating, note) => {
+          if (!ratingJob) return;
+          const existing = ratingJob.checkOutAudit;
+          onUpdateJobAudit(ratingJob.id, {
+            checkOutAudit: {
+              checkedAt: existing?.checkedAt ?? new Date().toISOString(),
+              completed: existing?.completed ?? true,
+              noViolations: existing?.noViolations ?? true,
+              noEquipmentIssues: existing?.noEquipmentIssues ?? true,
+              dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
+              incidentReport: existing?.incidentReport ?? { hasIncident: false },
+              clientNotes: `Guard rated client ${rating}/5: ${note}`,
+            },
+          });
+          setRatingJob(null);
+        }}
+      />
     </>
   );
 
