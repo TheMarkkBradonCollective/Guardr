@@ -84,6 +84,7 @@ import {
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
 import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage } from './lib/certImagePolicy';
+import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
@@ -117,7 +118,8 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus, guardAccountDatabaseErrorMessage } from './lib/accountStatus';
+import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -1731,7 +1733,7 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase.from('certifications').insert({
+        const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
@@ -1741,7 +1743,7 @@ export default function App() {
           image_url: certWithId.imageUrl ?? null,
           submitted_by_role: certWithId.submittedByRole ?? null,
         });
-        if (error) {
+        if (!insertResult.ok) {
           setGuards(prev =>
             prev.map(g =>
               g.id === guardId
@@ -1749,14 +1751,7 @@ export default function App() {
                 : g
             )
           );
-          if (error.code === '23505') {
-            return {
-              ok: false,
-              error: certDatabaseErrorMessage(error),
-            };
-          }
-          console.error('Cert insert error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return insertResult;
         }
       } catch (e) {
         setGuards(prev =>
@@ -1842,14 +1837,11 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase
-          .from('certifications')
-          .update({
+        const updateResult = await updateCertificationRow(supabase, certId, {
             image_url: imageUrl,
             ...(requeueForReview ? { status: 'pending', rejection_reason: null } : {}),
-          })
-          .eq('id', certId);
-        if (error) {
+          });
+        if (!updateResult.ok) {
           setGuards((prev) =>
             prev.map((g) =>
               g.id === guardId
@@ -1862,8 +1854,7 @@ export default function App() {
                 : g
             )
           );
-          console.error('Cert image update error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return updateResult;
         }
       } catch (e) {
         setGuards((prev) =>
@@ -1981,9 +1972,7 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase
-          .from('certifications')
-          .update({
+        const updateResult = await updateCertificationRow(supabase, certId, {
             issuer,
             number,
             expiry_date: expiryDate,
@@ -1993,9 +1982,8 @@ export default function App() {
             rejection_reason:
               nextStatus === 'pending' && cert.status !== 'verified' ? null : cert.rejectionReason ?? null,
             submitted_by_role: nextSubmittedByRole ?? null,
-          })
-          .eq('id', certId);
-        if (error) {
+          });
+        if (!updateResult.ok) {
           setGuards((prev) =>
             prev.map((g) =>
               g.id === guardId
@@ -2006,11 +1994,7 @@ export default function App() {
                 : g
             )
           );
-          if (error.code === '23505') {
-            return { ok: false, error: certDatabaseErrorMessage(error) };
-          }
-          console.error('Cert update error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return updateResult;
         }
       } catch (e) {
         setGuards((prev) =>
@@ -2532,18 +2516,20 @@ export default function App() {
     setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase
-        .from('guards')
-        .update({
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
           user_status: 'approved',
           verified: true,
           credential_grace_deadline: null,
           credential_grace_missing: null,
-        })
-        .eq('id', guardId);
-      if (error) {
+        },
+        'approve'
+      );
+      if (!result.ok) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error(guardAccountDatabaseErrorMessage(error, 'approve'));
+        throw new Error(result.error);
       }
     }
   };
@@ -2574,18 +2560,20 @@ export default function App() {
     setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase
-        .from('guards')
-        .update({
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
           user_status: 'active',
           verified: true,
           credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
           credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
-        })
-        .eq('id', guardId);
-      if (error) {
+        },
+        'activate'
+      );
+      if (!result.ok) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error(guardAccountDatabaseErrorMessage(error, 'activate'));
+        throw new Error(result.error);
       }
     }
   };

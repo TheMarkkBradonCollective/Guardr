@@ -1,7 +1,8 @@
 -- =============================================================================
--- Guardr — complete schema alignment (run once in Supabase SQL Editor)
+-- Guardr — FIX EVERYTHING (run once in Supabase SQL Editor)
 -- Idempotent: safe to re-run. Does NOT delete your data.
--- Fixes client job posts not saving when columns / policies are missing.
+-- Adds all missing tables, columns, constraints, RLS policies, and realtime.
+-- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
 
 -- ── GUARDS ──────────────────────────────────────────────────────────────────
@@ -54,9 +55,17 @@ ALTER TABLE guards ADD CONSTRAINT guards_id_verification_status_check
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_user_status_check;
 ALTER TABLE guards ADD CONSTRAINT guards_user_status_check
-  CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked'));
+  CHECK (user_status IN ('pending', 'approved', 'active', 'suspended', 'blocked'));
 ALTER TABLE guards ALTER COLUMN user_status SET DEFAULT 'pending';
 
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS middle_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_deadline TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_missing JSONB;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_submitted_by TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
 
 -- ── STAFF (platform ops accounts — separate from field guards) ───────────────
@@ -107,8 +116,26 @@ CREATE TABLE IF NOT EXISTS clients (
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS rating NUMERIC(4, 2);
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS theme_preference TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS middle_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS account_status TEXT;
 
 UPDATE clients SET approved = TRUE WHERE approved IS NULL;
+UPDATE clients
+SET account_status = CASE
+  WHEN approved = FALSE THEN 'suspended'
+  ELSE 'active'
+END
+WHERE account_status IS NULL;
+ALTER TABLE clients ALTER COLUMN account_status SET DEFAULT 'pending';
+UPDATE clients SET account_status = 'active' WHERE account_status IS NULL;
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_status_check;
+ALTER TABLE clients ADD CONSTRAINT clients_account_status_check
+  CHECK (account_status IN ('pending', 'active', 'suspended'));
 
 -- ── CERTIFICATIONS ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS certifications (
@@ -385,6 +412,53 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ── MESSAGING (job chat + staff channel + notification prefs) ───────────────
+CREATE TABLE IF NOT EXISTS job_chat_threads (
+  id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL UNIQUE,
+  client_id TEXT NOT NULL,
+  guard_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  archived_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS job_chat_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES job_chat_threads(id) ON DELETE CASCADE,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS staff_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id TEXT PRIMARY KEY,
+  assignment BOOLEAN NOT NULL DEFAULT true,
+  guard_checkin BOOLEAN NOT NULL DEFAULT true,
+  missed_checkin BOOLEAN NOT NULL DEFAULT true,
+  emergency_alert BOOLEAN NOT NULL DEFAULT true,
+  support_message BOOLEAN NOT NULL DEFAULT true,
+  job_chat_message BOOLEAN NOT NULL DEFAULT true,
+  staff_message BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(request_id);
+CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);
+CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);
+CREATE INDEX IF NOT EXISTS staff_messages_created_at_idx ON staff_messages(created_at);
+
 -- ── INDEXES ─────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_guards_email ON guards(email);
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
@@ -413,6 +487,10 @@ ALTER TABLE guard_payout_invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_chat_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE
@@ -421,7 +499,8 @@ BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
-    'support_tickets', 'support_messages', 'push_subscriptions'
+    'support_tickets', 'support_messages', 'push_subscriptions',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'notification_preferences'
   ]
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', tbl || '_select', tbl);
@@ -450,7 +529,8 @@ BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
-    'support_tickets', 'support_messages'
+    'support_tickets', 'support_messages',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
@@ -533,8 +613,49 @@ SET
 WHERE g.is_staff = true
   AND EXISTS (SELECT 1 FROM staff s WHERE s.id = g.id);
 
+-- Legacy data: guards marked active before approved→active split
+UPDATE guards g
+SET user_status = 'approved'
+WHERE NOT g.is_staff
+  AND g.user_status = 'active'
+  AND g.verified = true
+  AND g.id_verification_status = 'verified'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM certifications c
+    WHERE c.guard_id = g.id
+      AND c.status = 'verified'
+      AND (
+        c.catalog_id = 'bsis-guard-card'
+        OR c.name ILIKE '%guard card%'
+        OR c.name ILIKE '%bsis guard%'
+      )
+  );
+
+-- Refresh PostgREST schema cache (required after adding columns)
+NOTIFY pgrst, 'reload schema';
+
 -- ── VERIFY (read-only) ─────────────────────────────────────────────────────
--- 1) Columns the app writes when editing jobs (missing columns = silent save failures)
+-- 1) Credential columns the app writes (missing = photo / save failures)
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'certifications'
+  AND column_name IN ('image_url', 'submitted_by_role', 'rejection_reason', 'catalog_id', 'category')
+ORDER BY column_name;
+
+-- 2) Guard approval / grace columns
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN (
+    'user_status', 'credential_grace_deadline', 'credential_grace_missing',
+    'id_submitted_by', 'id_verification_status', 'id_state', 'id_number', 'id_expiry_date'
+  )
+ORDER BY column_name;
+
+-- 3) Columns the app writes when editing jobs (missing columns = silent save failures)
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
@@ -547,13 +668,13 @@ WHERE table_schema = 'public'
   )
 ORDER BY column_name;
 
--- 2) RLS policies on security_requests (need UPDATE policy or edits fail)
+-- 4) RLS policies on security_requests (need UPDATE policy or edits fail)
 SELECT policyname, cmd
 FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'security_requests'
 ORDER BY policyname;
 
--- 3) All public tables
+-- 5) All public tables
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
