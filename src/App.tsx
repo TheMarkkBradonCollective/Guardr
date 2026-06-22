@@ -64,6 +64,10 @@ import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
+  getGuardMissingGraceCredentialLabels,
+  type ActivateGuardAccountOptions,
+} from './lib/guardMissingCredentials';
+import {
   getPendingGuardAccountReviews,
   guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
@@ -2544,7 +2548,7 @@ export default function App() {
     }
   };
 
-  const handleActivateGuardAccount = async (guardId: string) => {
+  const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountActivationBlockers(guard);
@@ -2552,7 +2556,14 @@ export default function App() {
       throw new Error(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
     }
 
-    const gracePatch = guardCredentialGracePatchForActivation(guard);
+    const missingGrace = getGuardMissingGraceCredentialLabels(guard);
+    if (missingGrace.length > 0 && (!options?.graceHours || options.graceHours <= 0)) {
+      throw new Error(
+        `Cannot activate — ${missingGrace.join(', ')} not listed or on file. Set a grace period when activating.`
+      );
+    }
+
+    const gracePatch = guardCredentialGracePatchForActivation(guard, 'CA', options?.graceHours);
     const activeGuard: SecurityGuard = {
       ...guard,
       userStatus: 'active',

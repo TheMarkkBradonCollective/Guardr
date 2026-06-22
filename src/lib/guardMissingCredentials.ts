@@ -1,16 +1,30 @@
 import { SecurityGuard } from '../types';
-import { CREDENTIAL_GRACE_PERIOD_HOURS } from './guardCredentialGrace';
-import { guardHasExpiredGuardCard, guardMeets32HourBlock, guardMeetsLevel1, guardMeetsPtaUofTraining } from './guardQualification';
+import {
+  guardHasExpiredGuardCard,
+  guardMeets32HourBlockListed,
+  guardMeetsLevel1,
+  guardMeetsPtaUofTrainingListed,
+} from './guardQualification';
 
 export const GUARD_MISSING_CREDENTIALS_BADGE_LABEL = 'Missing credentials';
 
-/** Optional credentials that may be waived temporarily with a staff-granted grace period. */
+export interface StaffActivationGraceChoice {
+  proceed: boolean;
+  graceHours?: number;
+  missingLabels: string[];
+}
+
+export interface ActivateGuardAccountOptions {
+  graceHours?: number;
+}
+
+/** Optional credentials completely absent — not listed and not on file. */
 export function getGuardMissingGraceCredentialLabels(guard: SecurityGuard, _state = 'CA'): string[] {
   const missing: string[] = [];
-  if (!guardMeetsPtaUofTraining(guard)) {
+  if (!guardMeetsPtaUofTrainingListed(guard)) {
     missing.push('PTA/UOF training');
   }
-  if (!guardMeets32HourBlock(guard)) {
+  if (!guardMeets32HourBlockListed(guard)) {
     missing.push('32-hour BSIS training');
   }
   return missing;
@@ -34,23 +48,51 @@ export function getGuardMissingWorkCredentialLabels(guard: SecurityGuard, state 
   return missing;
 }
 
-export function guardHasMissingWorkCredentials(guard: SecurityGuard, state = 'CA'): boolean {
-  return getGuardMissingWorkCredentialLabels(guard, state).length > 0;
-}
-
 function formatMissingCredentialList(missing: string[]): string {
   if (missing.length === 1) return missing[0];
   if (missing.length === 2) return `${missing[0]} and ${missing[1]}`;
   return `${missing.slice(0, -1).join(', ')}, and ${missing[missing.length - 1]}`;
 }
 
-/** Staff-only confirm when activating without optional credentials (guard card is mandatory). */
-export function promptStaffGuardProfileApproval(guard: SecurityGuard, state = 'CA'): boolean {
+export function guardHasMissingWorkCredentials(guard: SecurityGuard, state = 'CA'): boolean {
+  return getGuardMissingWorkCredentialLabels(guard, state).length > 0;
+}
+
+/** Staff sets grace hours when activating without optional credentials listed on profile. */
+export function promptStaffGuardActivationGrace(
+  guard: SecurityGuard,
+  state = 'CA'
+): StaffActivationGraceChoice {
   const missing = getGuardMissingGraceCredentialLabels(guard, state);
-  if (missing.length === 0) return true;
+  if (missing.length === 0) {
+    return { proceed: true, missingLabels: [] };
+  }
 
   const list = formatMissingCredentialList(missing);
-  return window.confirm(
-    `This guard is missing ${list}.\n\nThey can work for ${CREDENTIAL_GRACE_PERIOD_HOURS} hours, but must upload these credentials or their account will be deactivated.\n\nStill activate?`
+  const hoursInput = window.prompt(
+    `${list} is not listed or on file for this guard.\n\nEnter grace period in hours (time to upload before deactivation), or Cancel to abort:`
   );
+  if (hoursInput === null) {
+    return { proceed: false, missingLabels: missing };
+  }
+
+  const graceHours = Number.parseInt(hoursInput.trim(), 10);
+  if (!Number.isFinite(graceHours) || graceHours <= 0) {
+    window.alert('Enter a valid number of hours (e.g. 24, 48, 72).');
+    return { proceed: false, missingLabels: missing };
+  }
+
+  const confirmed = window.confirm(
+    `Activate with ${graceHours} hour${graceHours === 1 ? '' : 's'} for the guard to upload ${list}?`
+  );
+  return {
+    proceed: confirmed,
+    graceHours: confirmed ? graceHours : undefined,
+    missingLabels: missing,
+  };
+}
+
+/** @deprecated Use promptStaffGuardActivationGrace */
+export function promptStaffGuardProfileApproval(guard: SecurityGuard, state = 'CA'): boolean {
+  return promptStaffGuardActivationGrace(guard, state).proceed;
 }

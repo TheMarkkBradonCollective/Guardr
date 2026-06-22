@@ -12,6 +12,7 @@ import {
   getPtaUofCatalogEntries,
   getQualificationProgress,
   guardHasCredentialUploaded,
+  guardMeetsPtaUofTrainingListed,
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
   BSIS_PTA_UOF_COMBINED_ID,
@@ -313,9 +314,9 @@ export function GuardCredentialsPanel({
             <p className="uber-label flex items-center gap-2 flex-wrap">
               <BookOpen className="w-4 h-4 text-brand-primary" />
               Power to Arrest &amp; Appropriate Use of Force
-              {staffMode && !ptaUofProgress.ptaUofTraining && (
+              {staffMode && !guardMeetsPtaUofTrainingListed(guard) && (
                 <WfBadge tone="warning" className="!text-[10px]">
-                  Missing
+                  Not listed
                 </WfBadge>
               )}
             </p>
@@ -333,7 +334,9 @@ export function GuardCredentialsPanel({
                   : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
                     ? 'PTA & WMD certs on file'
                     : 'Separate PTA & UOF certificates on file'
-                : 'Not yet on file'}
+                : guardMeetsPtaUofTrainingListed(guard)
+                  ? 'Listed — document photos optional for activation'
+                  : 'Not listed'}
             </p>
           </div>
           {editing && onAddCertification && (

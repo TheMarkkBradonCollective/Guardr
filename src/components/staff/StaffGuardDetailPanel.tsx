@@ -30,7 +30,7 @@ import {
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
-import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { promptStaffGuardActivationGrace } from '../../lib/guardMissingCredentials';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 
@@ -55,7 +55,10 @@ interface StaffGuardDetailPanelProps {
   onAddExperience?: (exp: Omit<Experience, 'id'>) => void | Promise<void>;
   onAddEducation?: (edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
+  onActivateGuardAccount?: (
+    guardId: string,
+    options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
+  ) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -487,9 +490,12 @@ export function StaffGuardDetailPanel({
                   onClick={() => {
                     void (async () => {
                       if (!guardCanStaffActivateAccount(guard)) return;
-                      if (!promptStaffGuardProfileApproval(guard)) return;
+                      const graceChoice = promptStaffGuardActivationGrace(guard);
+                      if (!graceChoice.proceed) return;
                       try {
-                        await onActivateGuardAccount(guard.id);
+                        await onActivateGuardAccount(guard.id, {
+                          graceHours: graceChoice.graceHours,
+                        });
                       } catch (err) {
                         alert(err instanceof Error ? err.message : 'Could not activate account.');
                       }
@@ -500,7 +506,7 @@ export function StaffGuardDetailPanel({
                   title={
                     guardCanStaffActivateAccount(guard)
                       ? activationChecklist.missingGraceCredentials.length > 0
-                        ? `Missing: ${activationChecklist.missingGraceCredentials.join(', ')} — 48h grace`
+                        ? `Not listed: ${activationChecklist.missingGraceCredentials.join(', ')} — set grace at activation`
                         : 'Verify guard card and activate account'
                       : activationChecklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
                   }
