@@ -11,6 +11,7 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
 } from '../../lib/push';
+import { primeWalkieChirpSound } from '../../lib/walkieChirpSound';
 import { sendTestPush, subscribePush, unsubscribePush } from '../../lib/pushApi';
 import {
   defaultNotificationPreferences,
@@ -148,6 +149,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         setServerSynced(true);
         setPermission('granted');
         setMessage('Push notifications enabled.');
+        primeWalkieChirpSound();
         if (!isDbConnected) {
           await persistPrefs(defaultNotificationPreferences(currentUser.id));
         }
@@ -162,6 +164,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   const handleTest = async () => {
     setBusy(true);
     setMessage(null);
+    primeWalkieChirpSound();
     try {
       const result = await sendTestPush(currentUser, siteId.trim() || undefined);
       if (result.sent === 0) {

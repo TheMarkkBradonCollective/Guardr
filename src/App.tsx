@@ -134,6 +134,7 @@ import {
 import { fetchStaffMessagesFromApi, postStaffMessageToApi } from './lib/staffMessagesApi';
 import { listenForPushNavigation, listenForPushSubscriptionChange, syncPushSubscriptionWithServer } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
+import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
   defaultRouteForRole,
   parseAppRoute,
@@ -1246,23 +1247,33 @@ export default function App() {
     {
       onJobChatMessage: (message) => {
         if (shouldSkipRealtimeSync()) return;
+        const fromSelf = message.senderId === currentUser?.id;
+        let isNew = false;
         setJobChatMessages((prev) => {
           if (prev.some((m) => m.id === message.id)) return prev;
+          isNew = true;
           const next = [...prev, message];
           saveJobChatMessagesToStorage(next);
           return next;
         });
+        if (isNew && !fromSelf) void playWalkieChirpSound();
       },
       onStaffMessage: (message) => {
+        const fromSelf = message.senderId === currentUser?.id;
+        let isNew = false;
         setStaffMessages((prev) => {
           const next = appendStaffMessage(prev, message);
           if (next === prev) return prev;
+          isNew = true;
           saveStaffMessagesToStorage(next);
           return next;
         });
+        if (isNew && !fromSelf) void playWalkieChirpSound();
       },
       onSupportMessage: (message) => {
         if (shouldSkipRealtimeSync()) return;
+        const fromSelf = message.senderId === currentUser?.id;
+        let played = false;
         setSupportTickets((prev) => {
           let changed = false;
           const next = prev.map((ticket) => {
@@ -1277,9 +1288,13 @@ export default function App() {
               ),
             };
           });
-          if (changed) saveSupportTicketsToStorage(next);
+          if (changed) {
+            saveSupportTicketsToStorage(next);
+            played = !fromSelf;
+          }
           return changed ? next : prev;
         });
+        if (played) void playWalkieChirpSound();
       },
     },
     isDbConnected
