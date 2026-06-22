@@ -605,7 +605,7 @@ export function StaffGuardDetailPanel({
               {allCerts.length === 0 ? (
                 <p className="text-sm text-brand-text-muted">No credentials on file.</p>
               ) : (
-                <div className="app-cert-item-stack max-h-72 overflow-y-auto pr-1">
+                <div className="app-cert-item-stack">
                   {allCerts.map((cert) => (
                     <div key={cert.id} className="space-y-2">
                       <CertItemCard cert={cert} guardName={guard.name} />
