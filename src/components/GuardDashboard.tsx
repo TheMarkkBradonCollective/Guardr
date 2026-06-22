@@ -299,8 +299,7 @@ export function GuardDashboard({
       alert(workBlocked);
       return;
     }
-    const job = requests.find((r) => r.id === jobId);
-    const jobView = job ? toGuardJobView(job) : null;
+    const jobView = requests.find((r) => r.id === jobId) ?? null;
     if (!jobView || !guardCanApplyToJob(guard, jobView)) {
       const missing = jobView
         ? checkJobRequirements(guard, jobView).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
@@ -757,6 +756,7 @@ export function GuardDashboard({
       headerRight={themeToggle}
       fullBleed={shellFullBleed}
       variant={shellVariant}
+      experience="guard"
     >
       <div className="relative h-full min-h-0">
         {visibleMainPanel}

@@ -57,7 +57,8 @@ export function ClientHomeScreen({
     <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">
       <div className="max-w-3xl mx-auto w-full min-w-0 px-4 py-6 space-y-6 animate-fade-in pb-8">
         <div>
-          <p className="text-sm text-brand-text-muted">Welcome back</p>
+          <p className="experience-badge">Client workspace</p>
+          <p className="text-sm text-brand-text-muted -mt-2">Welcome back</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">{companyName}</h1>
         </div>
 

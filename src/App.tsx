@@ -1064,7 +1064,7 @@ export default function App() {
             number: cert.number,
             guardId: guard.id,
           });
-          if (!available.ok) throw new Error(available.error);
+          if (available.ok === false) throw new Error(available.error);
         }
         await supabase.from('certifications').insert(
           guard.certifications.map((cert) => ({

@@ -140,7 +140,7 @@ export function GuardCredentialsPanel({
       status: 'pending',
       imageUrl,
     });
-    if (!result.ok) {
+    if (result.ok === false) {
       setFormError(result.error);
       return;
     }
@@ -152,14 +152,14 @@ export function GuardCredentialsPanel({
     const cert = guard.certifications.find((c) => c.id === certId);
     if (cert) {
       const allowed = validateCertDeletion(cert);
-      if (!allowed.ok) {
+      if (allowed.ok === false) {
         window.alert(allowed.error);
         return;
       }
     }
     if (!window.confirm('Remove this credential from your profile?')) return;
     const result = await onDeleteCertification(certId);
-    if (!result.ok) window.alert(result.error);
+    if (result.ok === false) window.alert(result.error);
   };
 
   const certCardProps = (cert: Certification) => ({

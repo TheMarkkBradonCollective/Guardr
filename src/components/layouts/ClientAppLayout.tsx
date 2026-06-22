@@ -82,6 +82,7 @@ export function ClientAppLayout({
       moreMenuTitle="Client menu"
       fullBleed={fullBleed}
       variant={activeView === 'map' ? 'dark' : 'default'}
+      experience="client"
     >
       {children}
     </RoleAppShell>

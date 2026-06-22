@@ -23,6 +23,7 @@ interface RoleAppShellProps {
   hideHeader?: boolean;
   flatNav?: boolean;
   variant?: 'default' | 'dark';
+  experience?: 'client' | 'guard';
 }
 
 export function RoleAppShell({
@@ -45,6 +46,7 @@ export function RoleAppShell({
   hideHeader = false,
   flatNav = false,
   variant = 'default',
+  experience,
 }: RoleAppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMapMode = variant === 'dark';
@@ -58,7 +60,11 @@ export function RoleAppShell({
   };
 
   return (
-    <div className="role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
+    <div
+      className={`role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text${
+        experience ? ` role-experience-${experience}` : ''
+      }`}
+    >
       {!hideHeader && (
         <AppScreenHeader
           title={title}
@@ -69,7 +75,9 @@ export function RoleAppShell({
           onAvatarClick={onAvatarClick}
           onSignOut={onSignOut}
           right={headerRight}
-          className={isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}
+          className={`${isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}${
+            experience ? ` role-header-${experience}` : ''
+          }`}
         />
       )}
 

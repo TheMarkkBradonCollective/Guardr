@@ -87,7 +87,9 @@ export function guardCanWorkInState(guard: SecurityGuard, stateCode: string, arm
   return hasGuardCardForState(guard, stateCode, false);
 }
 
-export function stateLicenseRequirementLabel(job: SecurityRequest): string {
+export function stateLicenseRequirementLabel(
+  job: Pick<SecurityRequest, 'state' | 'armedRequired'>
+): string {
   if (!job.state) return 'BSIS Guard Card';
   const stateName = formatStateName(job.state);
   return job.armedRequired ? `${stateName} Guard Card + Firearm Permit` : `${stateName} BSIS Guard Card`;

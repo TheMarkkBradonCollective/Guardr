@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, Send } from 'lucide-react';
-import type { SessionUser } from '../../types';
+import type { NotificationPreferences, SessionUser } from '../../types';
 import {
   getExistingSubscription,
   getPushPermission,
@@ -19,7 +19,6 @@ import {
   prefsToDbRow,
   roleCategory,
   saveNotificationPreferencesToStorage,
-  type NotificationPreferences,
 } from '../../lib/notificationPreferences';
 import { supabase } from '../../lib/supabase';
 import { AppFormSection } from '../ui/app/AppPrimitives';

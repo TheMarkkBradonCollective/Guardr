@@ -33,7 +33,7 @@ async function isTypeEnabledForUser(
     .maybeSingle();
 
   if (error || !data) return true;
-  return (data as Record<string, boolean>)[column] !== false;
+  return (data as unknown as Record<string, boolean>)[column] !== false;
 }
 
 const MAX_RETRIES = 2;
@@ -44,9 +44,10 @@ let webPushModule: typeof import('web-push') | null = null;
 
 async function getWebPush() {
   if (!webPushModule) {
-    webPushModule = await import('web-push');
+    const mod = await import('web-push');
+    webPushModule = ('default' in mod && mod.default ? mod.default : mod) as typeof import('web-push');
   }
-  return webPushModule.default;
+  return webPushModule;
 }
 
 import { isPushConfigured } from './config';

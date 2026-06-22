@@ -27,7 +27,7 @@ export function CertImageAttachButton({ onAttach, compact = false }: CertImageAt
         reader.readAsDataURL(file);
       });
       const result = await onAttach(dataUrl);
-      if (!result.ok) {
+      if (result.ok === false) {
         setError(result.error);
       }
     } catch {

@@ -377,20 +377,23 @@ export function AuthPage({
   ];
 
   return (
-    <div className="page-shell min-h-screen flex flex-col" id="guardr-auth-root">
-      <div className="auth-hero relative h-36 sm:h-44 shrink-0 bg-gradient-to-br from-brand-primary/25 via-brand-primary/10 to-brand-bg overflow-hidden">
-        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-8 bg-brand-bg rounded-t-[2rem]" />
+    <div
+      className={`page-shell min-h-screen flex flex-col auth-experience-${role}`}
+      id="guardr-auth-root"
+    >
+      <div className="auth-hero relative h-40 sm:h-48 shrink-0 overflow-hidden">
+        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-10 bg-brand-bg rounded-t-[2.5rem]" />
         <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={onBackToHome}
-            className="flex items-center gap-2 text-brand-text-muted hover:text-brand-text transition-colors text-sm font-medium"
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="flex items-center gap-2">
-            <Logo size={26} className="text-brand-primary" />
+          <div className="flex items-center gap-2 text-white">
+            <Logo size={26} className="text-white" />
             <span className="font-semibold text-base">Guardr</span>
           </div>
           <div className="w-14" />
@@ -400,11 +403,24 @@ export function AuthPage({
       <div className="flex flex-1 items-start justify-center px-5 py-6 sm:py-10">
         <div className="w-full max-w-md animate-fade-in">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">
-              {isSignUp ? 'Create account' : 'Sign in'}
+            <p className="experience-badge">
+              {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {isSignUp
+                ? role === 'guard'
+                  ? 'Create your guard account'
+                  : 'Create your client account'
+                : 'Sign in'}
             </h1>
-            <p className="text-brand-text-muted text-sm mt-1.5">
-              {isSignUp ? 'Join the Guardr marketplace' : 'Welcome back to your dashboard'}
+            <p className="text-brand-text-muted text-sm mt-2 leading-relaxed">
+              {isSignUp
+                ? role === 'guard'
+                  ? 'Independent contractors manage credentials, jobs, and pay here.'
+                  : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+                : role === 'guard'
+                  ? 'Welcome back — your jobs and earnings are ready.'
+                  : 'Welcome back — your requests and coverage are ready.'}
             </p>
           </div>
 
@@ -442,10 +458,8 @@ export function AuthPage({
                       key={id}
                       type="button"
                       onClick={() => { setRole(id); setErrorMsg(''); }}
-                      className={`text-left rounded-xl border p-4 transition-all ${
-                        role === id
-                          ? 'border-brand-primary bg-brand-primary/10 ring-2 ring-brand-primary/20'
-                          : 'border-brand-border hover:border-brand-primary/40 bg-brand-bg-sec'
+                      className={`auth-role-card text-left w-full ${
+                        role === id ? 'auth-role-card-active' : 'hover:border-brand-primary/30'
                       }`}
                     >
                       <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />

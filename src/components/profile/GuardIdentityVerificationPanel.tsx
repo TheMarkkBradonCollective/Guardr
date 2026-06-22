@@ -278,7 +278,7 @@ export function GuardIdentityVerificationPanel({
         idBackUrl: backUrl.trim(),
         idSelfieUrl: selfieUrl.trim(),
       });
-      if (!result.ok) {
+      if (result.ok === false) {
         setSubmitError(result.error);
       }
     } catch (err) {

@@ -2279,3 +2279,203 @@ button.app-cert-item-interactive:hover {
   color: var(--brand-text-muted);
   line-height: 1.5;
 }
+
+/* ─── ROLE EXPERIENCES (client vs guard) ───────────────────── */
+.role-experience-client {
+  --experience-accent: #141414;
+  --experience-accent-soft: color-mix(in srgb, #141414 8%, var(--brand-bg));
+}
+
+.role-experience-guard {
+  --experience-accent: var(--brand-primary);
+  --experience-accent-soft: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg));
+}
+
+html.theme-dark .role-experience-client {
+  --experience-accent: #ffffff;
+  --experience-accent-soft: color-mix(in srgb, #ffffff 6%, var(--brand-bg));
+}
+
+.role-experience-client .bottom-nav-item[aria-current="page"]::before,
+.role-experience-guard .bottom-nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2rem;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--experience-accent);
+}
+
+.role-experience-client .bottom-nav-item,
+.role-experience-guard .bottom-nav-item {
+  position: relative;
+}
+
+.role-experience-client .bottom-nav-item[aria-current="page"],
+.role-experience-guard .bottom-nav-item[aria-current="page"] {
+  color: var(--brand-text);
+}
+
+.app-screen-header.role-header-guard {
+  background: color-mix(in srgb, var(--brand-bg) 94%, var(--brand-primary));
+}
+
+/* ─── LANDING / MARKETING ─────────────────────────────────── */
+.landing-hero-dark {
+  background: linear-gradient(165deg, #0a0a0a 0%, #1a1f1a 45%, #0f0f0f 100%);
+  color: #ffffff;
+}
+
+.landing-path-card {
+  border-radius: 1.5rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: left;
+}
+
+.landing-path-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+}
+
+.landing-path-card-client {
+  border-top: 3px solid #141414;
+}
+
+html.theme-dark .landing-path-card-client {
+  border-top-color: #ffffff;
+}
+
+.landing-path-card-guard {
+  border-top: 3px solid var(--brand-primary);
+}
+
+.landing-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.landing-hero-dark .landing-stat-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── AUTH EXPERIENCE ─────────────────────────────────────── */
+.auth-experience-client .auth-hero {
+  background: linear-gradient(135deg, #141414 0%, #2a2f2a 100%);
+}
+
+.auth-experience-guard .auth-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 45%, #0f0f0f) 0%, #0f0f0f 100%);
+}
+
+.auth-experience-client .auth-hero-curve,
+.auth-experience-guard .auth-hero-curve {
+  background: var(--brand-bg);
+}
+
+.auth-role-card {
+  border-radius: 1.25rem;
+  border: 1.5px solid var(--brand-border);
+  padding: 1rem 1.125rem;
+  transition: all 0.2s ease;
+}
+
+.auth-role-card-active {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg));
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}
+
+.auth-experience-client .auth-role-card-active {
+  border-color: var(--experience-accent);
+  background: color-mix(in srgb, var(--experience-accent) 6%, var(--brand-bg));
+}
+
+.experience-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.experience-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--experience-accent, var(--brand-primary));
+}
+
+.app-cta-dark {
+  height: 3.5rem;
+  padding: 0 1.75rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius-pill);
+  background: #141414;
+  color: #ffffff;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+html.theme-dark .app-cta-dark {
+  background: #ffffff;
+  color: #141414;
+}
+
+.app-cta-dark:hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.app-cta-outline-dark {
+  height: 3.5rem;
+  padding: 0 1.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-text);
+  border: 2px solid var(--brand-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.app-cta-outline-dark:hover {
+  border-color: var(--brand-text);
+  background: color-mix(in srgb, var(--brand-text) 4%, transparent);
+}

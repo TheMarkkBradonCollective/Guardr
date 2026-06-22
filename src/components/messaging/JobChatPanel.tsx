@@ -9,7 +9,7 @@ import { ChatThreadPanel } from './ChatThreadPanel';
 import { ArrowLeft } from 'lucide-react';
 
 interface JobChatPanelProps {
-  request: SecurityRequest;
+  request: Pick<SecurityRequest, 'id' | 'status' | 'clientId' | 'assignedGuardId' | 'title' | 'siteName' | 'location'>;
   thread: JobChatThread | null;
   messages: JobChatMessage[];
   currentUser: SessionUser;

@@ -52,11 +52,6 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
 
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   home: 'home',
-  message: 'message',
-  appointment: 'appointment',
-  medication: 'medication',
-  tracker: 'tracker',
-  search: 'search',
   profile: 'profile',
   support: 'support',
   map: 'map',
@@ -70,11 +65,6 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
 
 const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   home: 'home',
-  message: 'message',
-  appointment: 'appointment',
-  medication: 'medication',
-  tracker: 'tracker',
-  search: 'search',
   profile: 'profile',
   support: 'support',
   map: 'map',

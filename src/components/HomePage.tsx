@@ -1,7 +1,7 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Building2, Shield, MapPin, Clock, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
 import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
@@ -12,112 +12,35 @@ interface HomePageProps {
   onChangeTheme: (mode: ThemeMode) => void;
 }
 
-const CLIENT_STEPS = [
-  {
-    title: 'Create a request',
-    body: 'Open your client dashboard and post a security job offer.',
-  },
-  {
-    title: 'Submit job details',
-    body: 'Specify date, time, location, and desired hourly rate.',
-  },
-  {
-    title: 'Staff reviews and approves',
-    body: 'Guardr staff verifies and approves the offer before payment unlocks.',
-  },
-  {
-    title: 'Qualified guards apply',
-    body: 'Licensed independent security professionals apply for the job.',
-  },
-  {
-    title: 'Coverage begins',
-    body: 'Staff approves the best fit — check-ins and audits keep everyone visible.',
-    highlight: true,
-  },
+const CLIENT_FEATURES = [
+  { icon: MapPin, title: 'Post by site', body: 'Set location, hours, and coverage type in minutes.' },
+  { icon: Shield, title: 'Verified guards', body: 'Licensed independent professionals apply to your job.' },
+  { icon: Clock, title: 'Live visibility', body: 'Track check-ins, audits, and support from one dashboard.' },
 ];
 
-const GUARD_STEPS = [
-  {
-    title: 'Sign up as an independent contractor',
-    body: 'Register your local license details on the platform.',
-  },
-  {
-    title: 'Upload certifications and credentials',
-    body: 'Present guard cards, weapons permits, and training files.',
-  },
-  {
-    title: 'Get access to available jobs',
-    body: 'View matching coverage demands in real time.',
-  },
-  {
-    title: 'Accept jobs that match your schedule',
-    body: 'No quotas. Work whenever you decide is appropriate.',
-    accent: true,
-  },
-  {
-    title: 'Work and get paid directly',
-    body: 'Get paid upon job completion through the platform.',
-    highlight: true,
-  },
+const GUARD_FEATURES = [
+  { icon: MapPin, title: 'Jobs near you', body: 'Browse open posts on the map — you choose what fits.' },
+  { icon: Shield, title: 'Your credentials', body: 'Your license, certs, and profile — owned by you.' },
+  { icon: CheckCircle2, title: 'Direct pay', body: 'Complete shifts and get paid through the platform.' },
 ];
 
-const FLEXIBILITY_TAGS = [
-  'Event Security',
-  'Construction Sites',
-  'Retail Protection',
-  'Nightlife & Events',
-  'Short & Recurring',
+const COVERAGE_TYPES = [
+  'Event security',
+  'Construction sites',
+  'Retail protection',
+  'Nightlife & venues',
+  'Short & recurring posts',
 ];
-
-const PLATFORM_MANDATES = [
-  'Guardr does not employ guards.',
-  'Guardr does not guarantee placement.',
-  'Guardr provides the system that makes connection possible.',
-];
-
-function StepList({
-  steps,
-}: {
-  steps: Array<{ title: string; body: string; highlight?: boolean; accent?: boolean }>;
-}) {
-  return (
-    <ol className="space-y-4">
-      {steps.map((step, index) => (
-        <li key={step.title} className="flex items-start gap-3">
-          <span
-            className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5 ${
-              step.highlight
-                ? 'bg-brand-primary text-brand-bg'
-                : 'border border-brand-border text-brand-text'
-            }`}
-          >
-            {index + 1}
-          </span>
-          <div>
-            <h4
-              className={`text-sm font-semibold ${
-                step.highlight ? 'text-brand-primary' : step.accent ? 'text-brand-primary' : 'text-brand-text'
-              }`}
-            >
-              {step.title}
-            </h4>
-            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{step.body}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
 
 export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePageProps) {
   return (
     <div className="page-shell min-h-screen">
-      <header className="sticky top-0 z-50 border-b border-brand-border bg-brand-bg/90 backdrop-blur-xl">
-        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-bg/95 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 min-w-0">
             <Logo size={30} className="text-brand-primary shrink-0" />
             <div className="min-w-0">
-              <span className="font-bold text-lg block leading-tight">Guardr</span>
+              <span className="font-bold text-lg block leading-tight tracking-tight">Guardr</span>
               <span className="text-[10px] uppercase tracking-[0.18em] text-brand-text-muted hidden sm:block truncate">
                 by{' '}
                 <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors" />
@@ -129,251 +52,247 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             <button
               type="button"
               onClick={() => onNavigateToAuth('client', 'sign-in')}
-              className="text-xs sm:text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors hidden md:block"
+              className="text-xs sm:text-sm font-semibold text-brand-text-muted hover:text-brand-text transition-colors hidden md:block"
             >
               Client sign in
             </button>
             <button
               type="button"
               onClick={() => onNavigateToAuth('guard', 'sign-in')}
-              className="text-xs sm:text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors hidden md:block"
+              className="text-xs sm:text-sm font-semibold text-brand-text-muted hover:text-brand-text transition-colors hidden md:block"
             >
               Guard sign in
             </button>
             <button
               type="button"
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="text-sm font-medium text-brand-text-muted hover:text-brand-text transition-colors sm:hidden"
+              className="text-sm font-semibold text-brand-text-muted hover:text-brand-text transition-colors sm:hidden"
             >
               Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth(undefined, 'sign-up')}
-              className="uber-button-sage text-sm h-9 px-4"
-            >
-              Sign up
             </button>
           </div>
         </div>
       </header>
 
-      <section className="relative">
-        <div className="onboarding-hero relative h-[min(48vh,20rem)] bg-gradient-to-br from-brand-primary/30 via-brand-primary/12 to-brand-bg flex items-center justify-center overflow-hidden">
+      <section className="landing-hero-dark relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div
-            className="hero-glow absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(100%,480px)] h-56 rounded-full pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(ellipse at center, color-mix(in srgb, var(--brand-primary) 22%, transparent) 0%, transparent 70%)',
-            }}
+            className="absolute top-0 right-0 w-[min(80vw,520px)] h-[min(80vw,520px)] rounded-full blur-3xl"
+            style={{ background: 'radial-gradient(circle, rgba(94,123,97,0.35) 0%, transparent 70%)' }}
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.55 }}
-            className="relative z-10 pb-6"
-          >
-            <Logo size={112} className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-md" />
-          </motion.div>
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-brand-bg rounded-t-[2.5rem]" />
         </div>
 
-        <div className="relative px-5 pt-8 pb-10 max-w-3xl mx-auto text-center">
+        <div className="relative max-w-6xl mx-auto px-5 pt-14 pb-20 sm:pt-20 sm:pb-28">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary text-[11px] font-semibold uppercase tracking-wide mb-6"
+            className="landing-stat-pill mb-8"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-            Verified contractor marketplace
+            Independent security marketplace
           </motion.div>
 
-          <motion.div
+          <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-4"
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] max-w-3xl text-white"
           >
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-none">Guardr</h1>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-brand-text-muted mt-3">
-              by{' '}
-              <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-[0.22em]" />
-            </p>
-          </motion.div>
+            Security coverage, on your terms.
+          </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-lg sm:text-2xl font-semibold text-brand-primary tracking-wide"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-6 text-lg sm:text-xl text-white/75 max-w-2xl leading-relaxed"
           >
-            Independent Security Staffing. On Demand.
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.12 }}
-            className="text-base sm:text-lg text-brand-text-muted leading-relaxed max-w-2xl mx-auto mt-5"
-          >
-            Guardr connects clients with verified independent security professionals ready for assignment.
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.16 }}
-            className="text-sm font-medium text-brand-text mt-6 px-4 py-3 rounded-xl border border-brand-border bg-brand-bg-sec max-w-md mx-auto"
-          >
-            Anytime. Anywhere. Security, when you need it.
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-sm text-brand-text-muted max-w-xl mx-auto mt-5 leading-relaxed"
-          >
-            We are an <span className="text-brand-text font-medium">independent contractor marketplace</span> that
-            connects licensed security professionals directly with clients who need coverage — fast, flexible, and
-            transparent.
+            Clients post jobs. Licensed guards choose assignments. Guardr connects both sides with maps,
+            messaging, and support — without acting as the employer.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.24 }}
-            className="mt-8 flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto"
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl"
           >
             <button
               type="button"
               onClick={() => onNavigateToAuth('client', 'sign-up')}
-              className="app-button-primary flex-1"
+              className="landing-path-card landing-path-card-client group w-full"
             >
-              Get started
-              <ArrowRight className="w-4 h-4" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-left">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-brand-text-muted mb-2">
+                    For businesses & sites
+                  </p>
+                  <p className="text-xl font-bold text-brand-text">I need security</p>
+                  <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+                    Post coverage by time and location. Review qualified guards. Manage live shifts.
+                  </p>
+                </div>
+                <Building2 className="w-8 h-8 text-brand-text shrink-0 opacity-80 group-hover:scale-105 transition-transform" />
+              </div>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-brand-text">
+                Get started <ArrowRight className="w-4 h-4" />
+              </span>
             </button>
+
             <button
               type="button"
               onClick={() => onNavigateToAuth('guard', 'sign-up')}
-              className="app-button-outline flex-1"
+              className="landing-path-card landing-path-card-guard group w-full"
             >
-              Sign up as a guard
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-left">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-brand-primary mb-2">
+                    Independent contractor
+                  </p>
+                  <p className="text-xl font-bold text-brand-text">I&apos;m a licensed guard</p>
+                  <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+                    Browse jobs on the map, set your rate, and work when you want — you run your business.
+                  </p>
+                </div>
+                <Shield className="w-8 h-8 text-brand-primary shrink-0 group-hover:scale-105 transition-transform" />
+              </div>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-brand-primary">
+                Create guard account <ArrowRight className="w-4 h-4" />
+              </span>
             </button>
           </motion.div>
 
-          <button
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
             type="button"
             onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="mt-4 text-sm font-semibold text-brand-primary hover:underline"
+            className="mt-6 text-sm font-semibold text-white/70 hover:text-white underline-offset-4 hover:underline"
           >
             I already have an account
-          </button>
+          </motion.button>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 border-t border-brand-border bg-brand-bg">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+            <div>
+              <p className="experience-badge">Client workspace</p>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+                Request coverage at your site
+              </h2>
+              <p className="text-brand-text-muted leading-relaxed mb-8">
+                Your dashboard is built for posting jobs, reviewing guards, and monitoring active coverage —
+                separate from the guard experience, with dedicated support when you need it.
+              </p>
+              <ul className="space-y-5">
+                {CLIENT_FEATURES.map(({ icon: Icon, title, body }) => (
+                  <li key={title} className="flex gap-4">
+                    <span className="w-10 h-10 rounded-xl bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-brand-text" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-brand-text">{title}</p>
+                      <p className="text-sm text-brand-text-muted mt-0.5">{body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => onNavigateToAuth('client', 'sign-up')}
+                className="app-cta-dark mt-8 w-full sm:w-auto"
+              >
+                Open client dashboard
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <p className="experience-badge">Guard workspace</p>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+                Work independently, get paid directly
+              </h2>
+              <p className="text-brand-text-muted leading-relaxed mb-8">
+                Guards use their own app shell — map-first job discovery, earnings, credentials, and shift tools.
+                You are not an employee of Guardr or the client; you contract per assignment.
+              </p>
+              <ul className="space-y-5">
+                {GUARD_FEATURES.map(({ icon: Icon, title, body }) => (
+                  <li key={title} className="flex gap-4">
+                    <span className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-brand-primary" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-brand-text">{title}</p>
+                      <p className="text-sm text-brand-text-muted mt-0.5">{body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => onNavigateToAuth('guard', 'sign-up')}
+                className="uber-button-sage mt-8 w-full sm:w-auto"
+              >
+                Open guard dashboard
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 bg-brand-bg-sec border-t border-brand-border">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6">Built for real-world coverage</h2>
+          <div className="flex flex-wrap justify-center gap-2">
+            {COVERAGE_TYPES.map((tag) => (
+              <span
+                key={tag}
+                className="px-4 py-2 rounded-full text-sm font-semibold bg-brand-bg border border-brand-border text-brand-text"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="px-5 py-16 border-t border-brand-border">
-        <div className="max-w-4xl mx-auto app-card p-8 sm:p-10 space-y-5">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-brand-primary">Direct assignment</p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Get Security Coverage When You Need It</h2>
-          <p className="text-base sm:text-lg text-brand-text-muted italic">
-            Post a request. Get qualified guards. Confirm coverage.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-brand-border bg-brand-bg-sec px-4 py-3 text-sm font-medium text-brand-primary">
-              No long hiring cycles.
-            </div>
-            <div className="rounded-xl border border-brand-border bg-brand-bg-sec px-4 py-3 text-sm font-medium text-brand-primary">
-              No staffing middlemen.
-            </div>
-          </div>
+        <div className="max-w-3xl mx-auto app-card-elevated p-8 sm:p-10 text-center space-y-4">
+          <h2 className="text-xl font-bold">Transparent marketplace rules</h2>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Guardr lets you request security personnel by time, location, and job type — then independent contractors
-            choose the jobs that fit them.
+            Guardr does not employ guards or guarantee placement. We provide the system that connects
+            clients and independent licensed professionals — with staff oversight, payments, and support.
           </p>
-        </div>
-      </section>
-
-      <section className="px-5 py-20 bg-brand-bg-sec border-t border-brand-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-brand-primary">Transparent system</p>
-            <h2 className="text-2xl sm:text-3xl font-bold">How It Works</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="app-card p-6 sm:p-8 space-y-5">
-              <div className="border-b border-brand-border pb-4">
-                <p className="text-[11px] uppercase tracking-wide text-brand-text-muted mb-1">For clients</p>
-                <h3 className="text-lg font-semibold">Request coverage</h3>
-              </div>
-              <StepList steps={CLIENT_STEPS} />
-            </div>
-            <div className="app-card p-6 sm:p-8 space-y-5">
-              <div className="border-b border-brand-border pb-4">
-                <p className="text-[11px] uppercase tracking-wide text-brand-text-muted mb-1">Independent contractor</p>
-                <h3 className="text-lg font-semibold">For guards</h3>
-              </div>
-              <StepList steps={GUARD_STEPS} />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-brand-text-muted">
+            <div className="rounded-xl border border-brand-border px-3 py-3">Clients hire per job</div>
+            <div className="rounded-xl border border-brand-border px-3 py-3">Guards choose assignments</div>
+            <div className="rounded-xl border border-brand-border px-3 py-3">Staff + support on platform</div>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-16 border-t border-brand-border">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-brand-primary">Operational diversity</p>
-            <h2 className="text-2xl sm:text-3xl font-bold">Built for Flexibility</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {FLEXIBILITY_TAGS.map((tag) => (
-              <div key={tag} className="app-card p-4 text-center">
-                <span className="text-xs font-semibold text-brand-primary">{tag}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-sm text-brand-text-muted max-w-xl mx-auto app-card px-4 py-3">
-            Guardr is designed for real-world coverage needs that change by the hour, not by the month.
-          </p>
-        </div>
-      </section>
-
-      <section className="px-5 py-16 border-t border-brand-border bg-brand-bg-sec">
-        <div className="max-w-3xl mx-auto app-card p-8 sm:p-10 text-center space-y-5">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-brand-primary">Platform mandates</p>
-          <h2 className="text-xl sm:text-2xl font-bold">Independent. Transparent. Fast.</h2>
-          <p className="text-sm text-brand-text-muted leading-relaxed max-w-xl mx-auto">
-            Every assignment is a direct agreement between clients and independent contractors.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 text-sm">
-            {PLATFORM_MANDATES.map((line, index) => (
-              <div key={line} className="rounded-xl border border-brand-border bg-brand-bg px-3 py-3 text-brand-text-muted">
-                {index < 2 ? `✖ ${line}` : `✔ ${line}`}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-24 border-t border-brand-border">
-        <div className="max-w-2xl mx-auto text-center space-y-5">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Start Using Guardr</h2>
-          <p className="text-lg font-semibold text-brand-primary">Need coverage? Or ready to take jobs?</p>
-          <p className="text-sm text-brand-text-muted">Join Guardr today and stay ready.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 max-w-md mx-auto">
-            <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="uber-button-sage flex-1">
-              Get started
+      <section className="px-5 py-20 border-t border-brand-border bg-brand-bg-sec">
+        <div className="max-w-2xl mx-auto text-center space-y-6">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready when you are</h2>
+          <p className="text-brand-text-muted">Choose your path — each experience is tailored to how you use Guardr.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark flex-1">
+              I need security
             </button>
-            <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="uber-button-outline flex-1">
-              Sign up as a guard
+            <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark flex-1">
+              I&apos;m a guard
             </button>
           </div>
         </div>
       </section>
 
       <footer className="border-t border-brand-border px-5 py-10">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div className="flex items-center gap-2">
             <Logo size={24} className="text-brand-primary" />
             <div>
@@ -385,13 +304,9 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             </div>
           </div>
           <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-          <div className="text-xs text-brand-text-muted max-w-xs space-y-1">
-            <p>© {new Date().getFullYear()} Guardr — all data handled according to state license laws.</p>
-            <p className="uppercase tracking-wide text-[10px]">
-              Powered by{' '}
-              <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-wide" />
-            </p>
-          </div>
+          <p className="text-xs text-brand-text-muted max-w-xs">
+            © {new Date().getFullYear()} Guardr — independent contractor marketplace. Data handled per state license requirements.
+          </p>
         </div>
       </footer>
     </div>

@@ -434,6 +434,7 @@ export function RequestSecurityFlow({
                 minGuardQualification,
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'marketplace',
+                status: 'draft',
               }}
             />
             <div className="border-t border-brand-border pt-4">

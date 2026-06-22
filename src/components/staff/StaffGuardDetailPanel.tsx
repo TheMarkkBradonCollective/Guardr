@@ -153,6 +153,8 @@ export function StaffGuardDetailPanel({
   const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
+  const idVerificationStatus = getGuardIdVerificationStatus(guard);
+  const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
 
   const guardJobs = useMemo(
@@ -165,7 +167,7 @@ export function StaffGuardDetailPanel({
   );
 
   const allCerts = useMemo(() => {
-    const flat: Certification[] = Object.values(groupedCerts).flat();
+    const flat: Certification[] = (Object.values(groupedCerts) as Certification[][]).flat();
     return flat
       .filter((c) => c.status !== 'rejected')
       .sort((a, b) => {

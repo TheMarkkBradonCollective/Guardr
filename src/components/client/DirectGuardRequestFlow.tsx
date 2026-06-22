@@ -352,6 +352,7 @@ export function DirectGuardRequestFlow({
                 minGuardQualification,
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'direct',
+                status: 'draft',
               }}
             />
             <div className="border-t border-brand-border pt-3">
