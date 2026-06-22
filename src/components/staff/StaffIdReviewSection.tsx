@@ -73,7 +73,15 @@ export function StaffIdReviewSection({
         {canApprove && onApprove && (
           <button
             type="button"
-            onClick={() => void onApprove(guard.id)}
+            onClick={() => {
+              void (async () => {
+                try {
+                  await onApprove(guard.id);
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : 'Could not approve ID.');
+                }
+              })();
+            }}
             className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
           >
             <Check className="w-3.5 h-3.5" /> Approve ID

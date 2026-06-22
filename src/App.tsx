@@ -113,7 +113,7 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import { getClientAccountStatus, getGuardUserStatus, guardAccountDatabaseErrorMessage } from './lib/accountStatus';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -2539,7 +2539,7 @@ export default function App() {
         .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not approve guard profile. Please try again.');
+        throw new Error(guardAccountDatabaseErrorMessage(error, 'approve'));
       }
     }
   };
@@ -2574,7 +2574,7 @@ export default function App() {
         .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not activate guard account. Please try again.');
+        throw new Error(guardAccountDatabaseErrorMessage(error, 'activate'));
       }
     }
   };
@@ -2663,9 +2663,13 @@ export default function App() {
 
   const handleApproveGuardIdentityVerification = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
-    if (!guard || !staffCanApproveIdVerification(guard)) return;
+    if (!guard) throw new Error('Guard not found.');
+    if (!staffCanApproveIdVerification(guard)) {
+      throw new Error('Cannot approve ID yet — ensure state, number, expiration, and all photos are on file.');
+    }
 
     const reviewedAt = new Date().toISOString();
+    const previous = { ...guard };
     setGuards((prev) =>
       prev.map((g) =>
         g.id === guardId
@@ -2680,7 +2684,7 @@ export default function App() {
     );
     if (isDbConnected) {
       beginLocalMutation();
-      await supabase
+      const { error } = await supabase
         .from('guards')
         .update({
           id_verification_status: 'verified',
@@ -2688,6 +2692,11 @@ export default function App() {
           id_verification_rejection_reason: null,
         })
         .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('ID verification approve error:', error);
+        throw new Error('Could not approve government ID. Please try again.');
+      }
     }
   };
 

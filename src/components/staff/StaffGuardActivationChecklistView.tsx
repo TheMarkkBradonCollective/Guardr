@@ -57,7 +57,7 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
               : guardHasVerifiedIdForWork(guard)
                 ? 'ID verified — ready to approve'
                 : checklist.idSubmitted
-                  ? 'ID submitted — verify in Credentials'
+                  ? 'ID submitted — review and approve below'
                   : 'ID not submitted'
           }
         />

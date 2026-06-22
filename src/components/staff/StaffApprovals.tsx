@@ -18,6 +18,8 @@ import {
 import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
+import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
@@ -42,7 +44,7 @@ interface StaffApprovalsProps {
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onActivateGuardAccount?: (guardId: string) => void | Promise<void>;
-  onApproveIdentityVerification?: (guardId: string) => void;
+  onApproveIdentityVerification?: (guardId: string) => void | Promise<void>;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onRequestIdentityResubmit?: (
     guardId: string,
@@ -55,6 +57,7 @@ interface StaffApprovalsProps {
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onViewGuard?: (guardId: string) => void;
+  canManageGuardAccounts?: boolean;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   staffRole?: PlatformRole;
@@ -128,6 +131,7 @@ export function StaffApprovals({
   onRequestCertImageResubmit,
   onUpdateGuardIdImages,
   onViewGuard,
+  canManageGuardAccounts = false,
   canEditJobListing = false,
   onEditJobListing,
   staffRole,
@@ -145,6 +149,39 @@ export function StaffApprovals({
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
+
+  const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
+    canManageGuardAccounts && cert.status === 'pending' ? (
+      <div className="flex gap-1.5 justify-end flex-wrap">
+        {cert.imageUrl && onRequestCertImageResubmit && (
+          <button
+            type="button"
+            onClick={() => {
+              const note = promptStaffResubmitNote(`${cert.name} photo`);
+              if (note === null) return;
+              onRequestCertImageResubmit(guard.id, cert.id, note);
+            }}
+            className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+          >
+            Request clearer photo
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onRejectCert(guard.id, cert.id)}
+          className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+        >
+          <X className="w-3 h-3" /> Reject
+        </button>
+        <button
+          type="button"
+          onClick={() => onApproveCert(guard.id, cert.id)}
+          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+        >
+          <Check className="w-3 h-3" /> Verify
+        </button>
+      </div>
+    ) : null;
 
   useEffect(() => {
     setActiveQueue(initialQueue);
@@ -498,6 +535,10 @@ export function StaffApprovals({
         if (guard) {
           const checklist = getGuardActivationChecklist(guard);
           const isApprovedGuard = isGuardAccountApproved(guard);
+          const approvalBlockers = isApprovedGuard ? checklist.staffActivationBlockers : checklist.staffApprovalBlockers;
+          const canTakeAction = isApprovedGuard
+            ? guardCanStaffActivateAccount(guard)
+            : guardCanStaffApproveProfile(guard);
 
           return (
             <>
@@ -509,24 +550,64 @@ export function StaffApprovals({
               <div className="staff-detail-pane space-y-4">
                 <p className="text-sm text-brand-text-muted">{guard.email}</p>
                 <StaffGuardActivationChecklistView guard={guard} />
+                {approvalBlockers.length > 0 && (
+                  <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
+                    <p className="font-semibold">Before you can {isApprovedGuard ? 'activate' : 'approve'}:</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5">
+                      {approvalBlockers.map((blocker) => (
+                        <li key={blocker}>{blocker}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <GuardCredentialsPanel
+                  guard={guard}
+                  editing={false}
+                  staffMode={canManageGuardAccounts}
+                  onSubmitIdentityVerification={
+                    canManageGuardAccounts && onUpdateGuardIdImages
+                      ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                      : undefined
+                  }
+                  staffIdReview={
+                    canManageGuardAccounts ? (
+                      <StaffIdReviewSection
+                        guard={guard}
+                        canManage={canManageGuardAccounts}
+                        onApprove={onApproveIdentityVerification}
+                        onReject={
+                          onRejectIdentityVerification
+                            ? (guardId, reason) => onRejectIdentityVerification(guardId, reason)
+                            : undefined
+                        }
+                        onRequestResubmit={
+                          onRequestIdentityResubmit
+                            ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                            : undefined
+                        }
+                      />
+                    ) : undefined
+                  }
+                  renderCertActions={(cert) => renderGuardAccountCertActions(guard, cert)}
+                />
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
                   {onViewGuard && (
                     <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                       Full profile
                     </button>
                   )}
-                  {!isApprovedGuard && onApproveGuardAccount && (
+                  {!isApprovedGuard && canManageGuardAccounts && onApproveGuardAccount && (
                     <button
                       type="button"
-                      disabled={!guardCanStaffApproveProfile(guard)}
+                      disabled={!canTakeAction}
                       title={
-                        guardCanStaffApproveProfile(guard)
+                        canTakeAction
                           ? 'Verify government ID and approve profile'
-                          : checklist.staffApprovalBlockers.join(' · ') || 'Verified government ID required'
+                          : approvalBlockers.join(' · ') || 'Verified government ID required'
                       }
                       onClick={() => {
                         void (async () => {
-                          if (!guardCanStaffApproveProfile(guard)) return;
+                          if (!canTakeAction) return;
                           try {
                             await onApproveGuardAccount(guard.id);
                             setActiveItemId(null);
@@ -540,20 +621,20 @@ export function StaffApprovals({
                       <Check className="w-3.5 h-3.5" /> Approve profile
                     </button>
                   )}
-                  {isApprovedGuard && onActivateGuardAccount && (
+                  {isApprovedGuard && canManageGuardAccounts && onActivateGuardAccount && (
                     <button
                       type="button"
-                      disabled={!guardCanStaffActivateAccount(guard)}
+                      disabled={!canTakeAction}
                       title={
-                        guardCanStaffActivateAccount(guard)
+                        canTakeAction
                           ? checklist.missingGraceCredentials.length > 0
                             ? `Missing: ${checklist.missingGraceCredentials.join(', ')} — 48h grace`
                             : 'Verify guard card and activate account'
-                          : checklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
+                          : approvalBlockers.join(' · ') || 'Valid guard card required'
                       }
                       onClick={() => {
                         void (async () => {
-                          if (!guardCanStaffActivateAccount(guard)) return;
+                          if (!canTakeAction) return;
                           if (!promptStaffGuardProfileApproval(guard)) return;
                           try {
                             await onActivateGuardAccount(guard.id);

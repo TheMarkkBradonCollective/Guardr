@@ -87,3 +87,19 @@ export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
   suspended: 'Suspended',
   blocked: 'Blocked',
 };
+
+export function guardAccountDatabaseErrorMessage(
+  error: { code?: string; message?: string },
+  action: 'approve' | 'activate'
+): string {
+  const msg = error.message ?? '';
+  if (msg.includes('user_status') || msg.includes('guards_user_status_check')) {
+    return 'Could not save — run the latest database migration (guard approved status), then try again.';
+  }
+  if (error.code === 'PGRST204' || msg.includes('column')) {
+    return 'Could not save — run the latest database migrations, then try again.';
+  }
+  return action === 'approve'
+    ? 'Could not approve guard profile. Please try again.'
+    : 'Could not activate guard account. Please try again.';
+}
