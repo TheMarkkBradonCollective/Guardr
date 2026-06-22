@@ -2872,6 +2872,28 @@ html.theme-light .staff-ops-btn-primary:hover {
   border-radius: 0 !important;
 }
 
+.chat-bubble {
+  border-radius: 0;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--brand-text) 6%, transparent);
+}
+
+.chat-bubble-incoming {
+  background: var(--brand-surface) !important;
+  color: var(--brand-text) !important;
+  border-color: var(--brand-border) !important;
+}
+
+.chat-bubble-outgoing {
+  background: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+.chat-bubble-staff {
+  background: color-mix(in srgb, #f59e0b 14%, var(--brand-surface)) !important;
+  color: var(--brand-text) !important;
+}
+
 .auth-hero-curve {
   border-radius: 0 !important;
 }

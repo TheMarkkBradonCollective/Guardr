@@ -185,10 +185,10 @@ export function StaffSupportPanel({
           return (
             <div key={msg.id} className={`flex ${staff ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[85%] px-4 py-2.5 text-sm border ${
+                className={`chat-bubble max-w-[85%] px-4 py-2.5 text-sm border ${
                   staff
-                    ? 'bg-brand-primary text-brand-accent-text'
-                    : 'bg-brand-bg-sec border border-brand-border'
+                    ? 'chat-bubble-outgoing bg-brand-primary text-brand-accent-text border-brand-primary'
+                    : 'chat-bubble-incoming bg-brand-surface text-brand-text border-brand-border'
                 }`}
               >
                 <p className="text-xs opacity-70 mb-1">{msg.senderName}</p>

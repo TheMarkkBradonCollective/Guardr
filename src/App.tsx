@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -61,6 +61,7 @@ import { ClientDashboard } from './components/ClientDashboard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
+import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
   getGuardsReadyForAccountActivation,
@@ -1057,79 +1058,79 @@ export default function App() {
         );
       }
 
-      if (!supportTicketsErr && !supportMessagesErr && dbSupportTickets) {
-        setSupportTickets(
-          dbSupportTickets.map((t: any) => ({
-            id: t.id,
-            userId: t.user_id,
-            userName: t.user_name,
-            userEmail: t.user_email,
-            userRole: t.user_role,
-            kind: t.kind,
-            subject: t.subject,
-            category: t.category,
-            priority: t.priority,
-            status: t.status,
-            relatedRequestId: t.related_request_id ?? undefined,
-            createdAt: t.created_at,
-            updatedAt: t.updated_at,
-            messages: (dbSupportMessages ?? [])
-              .filter((m: any) => m.ticket_id === t.id)
-              .map((m: any) => ({
-                id: m.id,
-                ticketId: m.ticket_id,
-                senderId: m.sender_id,
-                senderName: m.sender_name,
-                senderRole: m.sender_role,
-                body: m.body,
-                createdAt: m.created_at,
-              }))
-              .sort((a: { createdAt: string }, b: { createdAt: string }) =>
-                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-              ),
-          }))
-        );
+      if (!supportTicketsErr && !supportMessagesErr && dbSupportTickets != null) {
+        const mappedTickets = dbSupportTickets.map((t: any) => ({
+          id: t.id,
+          userId: t.user_id,
+          userName: t.user_name,
+          userEmail: t.user_email,
+          userRole: t.user_role,
+          kind: t.kind,
+          subject: t.subject,
+          category: t.category,
+          priority: t.priority,
+          status: t.status,
+          relatedRequestId: t.related_request_id ?? undefined,
+          createdAt: t.created_at,
+          updatedAt: t.updated_at,
+          messages: (dbSupportMessages ?? [])
+            .filter((m: any) => m.ticket_id === t.id)
+            .map((m: any) => ({
+              id: m.id,
+              ticketId: m.ticket_id,
+              senderId: m.sender_id,
+              senderName: m.sender_name,
+              senderRole: m.sender_role,
+              body: m.body,
+              createdAt: m.created_at,
+            }))
+            .sort((a: { createdAt: string }, b: { createdAt: string }) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            ),
+        }));
+        setSupportTickets(mappedTickets);
+        saveSupportTicketsToStorage(mappedTickets);
       }
 
-      if (!jobChatThreadsErr && dbJobChatThreads) {
-        setJobChatThreads(
-          dbJobChatThreads.map((t: any) => ({
-            id: t.id,
-            requestId: t.request_id,
-            clientId: t.client_id,
-            guardId: t.guard_id,
-            status: t.status,
-            createdAt: t.created_at,
-            archivedAt: t.archived_at ?? undefined,
-          }))
-        );
+      if (!jobChatThreadsErr && dbJobChatThreads != null) {
+        const mappedThreads = dbJobChatThreads.map((t: any) => ({
+          id: t.id,
+          requestId: t.request_id,
+          clientId: t.client_id,
+          guardId: t.guard_id,
+          status: t.status,
+          createdAt: t.created_at,
+          archivedAt: t.archived_at ?? undefined,
+        }));
+        setJobChatThreads(mappedThreads);
+        saveJobChatThreadsToStorage(mappedThreads);
       }
 
-      if (!jobChatMessagesErr && dbJobChatMessages) {
-        setJobChatMessages(
-          dbJobChatMessages.map((m: any) => ({
-            id: m.id,
-            threadId: m.thread_id,
-            senderId: m.sender_id,
-            senderName: m.sender_name,
-            senderRole: m.sender_role,
-            body: m.body,
-            createdAt: m.created_at,
-          }))
-        );
+      if (!jobChatMessagesErr && dbJobChatMessages != null) {
+        const mappedMessages = dbJobChatMessages.map((m: any) => ({
+          id: m.id,
+          threadId: m.thread_id,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderRole: m.sender_role,
+          body: m.body,
+          createdAt: m.created_at,
+        }));
+        setJobChatMessages(mappedMessages);
+        saveJobChatMessagesToStorage(mappedMessages);
       }
 
-      if (!staffMessagesErr && dbStaffMessages) {
-        setStaffMessages(
-          dbStaffMessages.map((m: any) => ({
-            id: m.id,
-            senderId: m.sender_id,
-            senderName: m.sender_name,
-            senderRole: m.sender_role,
-            body: m.body,
-            createdAt: m.created_at,
-          }))
-        );
+      if (!staffMessagesErr && dbStaffMessages != null) {
+        const mappedStaffMessages = dbStaffMessages.map((m: any) => ({
+          id: m.id,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderRole: m.sender_role,
+          body: m.body,
+          createdAt: m.created_at,
+        }));
+        setStaffMessages(mappedStaffMessages);
+        saveStaffMessagesToStorage(mappedStaffMessages);
       }
 
       setIsDbConnected(true);
@@ -1163,6 +1164,75 @@ export default function App() {
     if (shouldSkipRealtimeSync()) return;
     void loadRef.current();
   }, isDbConnected);
+
+  useMessageRealtimeSync(
+    {
+      onJobChatMessage: (message) => {
+        if (shouldSkipRealtimeSync()) return;
+        setJobChatMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          const next = [...prev, message];
+          saveJobChatMessagesToStorage(next);
+          return next;
+        });
+      },
+      onStaffMessage: (message) => {
+        if (shouldSkipRealtimeSync()) return;
+        setStaffMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          const next = [...prev, message];
+          saveStaffMessagesToStorage(next);
+          return next;
+        });
+      },
+      onSupportMessage: (message) => {
+        if (shouldSkipRealtimeSync()) return;
+        setSupportTickets((prev) => {
+          let changed = false;
+          const next = prev.map((ticket) => {
+            if (ticket.id !== message.ticketId) return ticket;
+            if (ticket.messages.some((m) => m.id === message.id)) return ticket;
+            changed = true;
+            return {
+              ...ticket,
+              updatedAt: message.createdAt,
+              messages: [...ticket.messages, message].sort(
+                (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              ),
+            };
+          });
+          if (changed) saveSupportTicketsToStorage(next);
+          return changed ? next : prev;
+        });
+      },
+    },
+    isDbConnected
+  );
+
+  const isInMessagingView = useMemo(() => {
+    if (!currentUser) return false;
+    const role = appRoleForUser(currentUser);
+    if (role === 'client') {
+      return clientView === 'support' || (clientView === 'coverage' && openJobChat);
+    }
+    if (role === 'guard') {
+      return guardTab === 'myJobs' && openJobChat;
+    }
+    if (role === 'staff') {
+      return staffSection === 'messages' || staffSection === 'support';
+    }
+    return false;
+  }, [currentUser, clientView, guardTab, staffSection, openJobChat]);
+
+  useEffect(() => {
+    if (!isDbConnected || !isInMessagingView) return;
+    const interval = setInterval(() => {
+      if (!shouldSkipRealtimeSync()) {
+        void loadRef.current();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isDbConnected, isInMessagingView]);
 
   useEffect(() => {
     if (!isDbConnected || !currentUser) return;
@@ -3683,6 +3753,7 @@ export default function App() {
     if (!thread) return;
 
     const message = buildJobChatMessage(thread, currentUser, body);
+    beginLocalMutation();
     setJobChatMessages((prev) => {
       const next = [...prev, message];
       saveJobChatMessagesToStorage(next);
@@ -3695,6 +3766,7 @@ export default function App() {
   const handleSendStaffMessage = async (body: string) => {
     if (!currentUser || !body.trim() || !isStaffRole(currentUser.role)) return;
     const message = buildStaffMessage(currentUser, body);
+    beginLocalMutation();
     setStaffMessages((prev) => {
       const next = [...prev, message];
       saveStaffMessagesToStorage(next);
@@ -3792,6 +3864,7 @@ export default function App() {
   const handleCreateSupportTicket = async (input: CreateSupportTicketInput): Promise<string> => {
     if (!currentUser) return '';
     const ticket = buildNewTicket(currentUser, input);
+    beginLocalMutation();
     setSupportTickets((prev) => {
       const next = [ticket, ...prev];
       saveSupportTicketsToStorage(next);
@@ -3808,6 +3881,7 @@ export default function App() {
   const handleSendSupportMessage = async (ticketId: string, body: string) => {
     if (!currentUser || !body.trim()) return;
     let updated: SupportTicket | null = null;
+    beginLocalMutation();
     setSupportTickets((prev) => {
       const next = prev.map((t) => {
         if (t.id !== ticketId) return t;
