@@ -701,14 +701,10 @@ export function GuardDashboard({
             </div>
           )}
 
-<<<<<<< HEAD
           {activeTab === 'profile' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <UserProfileScreen
                 currentUser={currentUser}
-                themeMode={themeMode as 'dark' | 'light' | 'grey'}
-                onChangeTheme={onChangeTheme}
-                onSignOut={onSignOut}
                 guard={guard}
                 onSave={onUpdateProfile}
                 onAddCertification={onAddCertification}
@@ -722,23 +718,6 @@ export function GuardDashboard({
             </div>
           )}
         </AppPageTransition>
-=======
-      {activeTab === 'profile' && (
-        <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-          <UserProfileScreen
-            currentUser={currentUser}
-            guard={guard}
-            onSave={onUpdateProfile}
-            onAddCertification={onAddCertification}
-            onDeleteCertification={onDeleteCertification}
-            onAttachCertificationImage={onAttachCertificationImage}
-            onAddExperience={onAddExperience}
-            onAddEducation={onAddEducation}
-            onSubmitIdentityVerification={onSubmitIdentityVerification}
-            onOpenLegal={onOpenLegal}
-          />
-        </div>
->>>>>>> origin/cursor/account-controls-placement-1d8b
       )}
     </div>
   );

@@ -17,6 +17,9 @@ import {
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
+import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
+import { certDisplayName } from '../../lib/certCatalog';
+import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -422,10 +425,11 @@ export function StaffApprovals({
         const { guard, cert } = entry;
         return (
           <>
-            <ApprovalBackBar title={`${guard.name} — ${cert.name}`} subtitle="Credential review" onBack={() => setActiveItemId(null)} />
+            <ApprovalBackBar title={`${guard.name} — ${certDisplayName(cert)}`} subtitle="Credential review" onBack={() => setActiveItemId(null)} />
             <div className="staff-detail-pane space-y-4">
+              <CredentialCategoryBadge cert={cert} />
               <p className="text-sm text-brand-text-muted">
-                {cert.issuer} · #{cert.number}
+                {certViewSectionLabel(cert)} · {cert.issuer} · #{cert.number}
                 {cert.state ? ` · ${cert.state}` : ''}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -478,17 +482,37 @@ export function StaffApprovals({
           </>
         );
       }
+      const pendingSections = groupPendingCertsByViewSection(pendingCerts, { hideEmpty: true });
       return (
         <>
           <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {pendingCerts.map(({ guard, cert }) => (
-              <AppItemCard key={cert.id} onClick={() => setActiveItemId(cert.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{guard.name} — {cert.name}</p>
-                <p className="text-xs text-brand-text-muted truncate">{cert.issuer}</p>
-              </AppItemCard>
+          <div className="space-y-5">
+            {pendingSections.map((section) => (
+              <section key={section.id} className="credential-view-section space-y-2">
+                <div className="credential-view-section-header">
+                  <div>
+                    <h3 className="text-sm font-semibold">{section.title}</h3>
+                    {section.subtitle && (
+                      <p className="text-xs text-brand-text-muted mt-1">{section.subtitle}</p>
+                    )}
+                  </div>
+                  <span className="credential-view-section-count">{section.entries.length}</span>
+                </div>
+                <AppItemCardStack>
+                  {section.entries.map(({ guard, cert }) => (
+                    <AppItemCard key={cert.id} onClick={() => setActiveItemId(cert.id)} className="flex-col !items-stretch gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-sm truncate">{guard.name}</p>
+                        <CredentialCategoryBadge cert={cert} variant="category" className="shrink-0" />
+                      </div>
+                      <p className="text-sm font-medium truncate">{certDisplayName(cert)}</p>
+                      <p className="text-xs text-brand-text-muted truncate">{cert.issuer} · #{cert.number}</p>
+                    </AppItemCard>
+                  ))}
+                </AppItemCardStack>
+              </section>
             ))}
-          </AppItemCardStack>
+          </div>
         </>
       );
     }
