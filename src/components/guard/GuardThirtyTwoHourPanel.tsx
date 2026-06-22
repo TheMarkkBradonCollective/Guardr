@@ -21,6 +21,7 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
 
@@ -274,55 +275,59 @@ export function GuardThirtyTwoHourPanel({
         })}
       </div>
 
-      {addingCatalogId && editing && (
-        <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-          <p className="text-sm font-semibold">
-            Upload: {getCertCatalogEntry(addingCatalogId)?.name}
-          </p>
-          <input
-            className="uber-input w-full"
-            placeholder="Issuing organization (e.g. BSIS, training provider)"
-            value={issuer}
-            onChange={(e) => setIssuer(e.target.value)}
-            required
-          />
-          <input
-            className="uber-input w-full"
-            placeholder="Certificate number"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            className="uber-input w-full"
-            aria-label="Expiry date"
-          />
-          <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-            <ImagePlus className="w-4 h-4 shrink-0" />
-            <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-          </label>
-          {imageUrl && (
-            <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
-          )}
-          {formError && <p className="text-xs text-red-500">{formError}</p>}
-          <div className="flex gap-2">
-            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Upload credential
-            </button>
-          </div>
-        </form>
-      )}
+      <AppFormSheet
+        open={Boolean(addingCatalogId && editing)}
+        onClose={resetForm}
+        title="Upload course certificate"
+        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+      >
+        {addingCatalogId && (
+          <form onSubmit={submitCert} className="space-y-3">
+            <input
+              className="uber-input w-full"
+              placeholder="Issuing organization (e.g. BSIS, training provider)"
+              value={issuer}
+              onChange={(e) => setIssuer(e.target.value)}
+              required
+            />
+            <input
+              className="uber-input w-full"
+              placeholder="Certificate number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              required
+            />
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="uber-input w-full"
+              aria-label="Expiry date"
+            />
+            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+              <ImagePlus className="w-4 h-4 shrink-0" />
+              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+            </label>
+            {imageUrl && (
+              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
+            )}
+            {formError && <p className="text-xs text-red-500">{formError}</p>}
+            <div className="flex gap-2">
+              <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!imageUrl?.trim()}
+                className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+              >
+                Upload credential
+              </button>
+            </div>
+          </form>
+        )}
+      </AppFormSheet>
     </section>
   );
 }

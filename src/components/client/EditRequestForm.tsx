@@ -17,6 +17,8 @@ interface EditRequestFormProps {
   scheduleLocked?: boolean;
   onSave: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onCancel: () => void;
+  /** Render inside AppFormSheet — hides duplicate header chrome */
+  sheet?: boolean;
 }
 
 export function EditRequestForm({
@@ -24,6 +26,7 @@ export function EditRequestForm({
   scheduleLocked = false,
   onSave,
   onCancel,
+  sheet = false,
 }: EditRequestFormProps) {
   const [title, setTitle] = useState(request.title);
   const [siteName, setSiteName] = useState(request.siteName || '');
@@ -117,17 +120,22 @@ export function EditRequestForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border-t border-brand-border pt-4">
-      <div>
-        <p className="text-sm font-semibold text-brand-primary">
-          {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
-        </p>
-        {scheduleLocked && (
-          <p className="text-xs text-brand-text-muted mt-1">
-            Schedule is locked after payment. Title and location can still be updated.
+    <form
+      onSubmit={handleSubmit}
+      className={sheet ? 'space-y-4' : 'space-y-4 border-t border-brand-border pt-4'}
+    >
+      {!sheet && (
+        <div>
+          <p className="text-sm font-semibold text-brand-primary">
+            {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
           </p>
-        )}
-      </div>
+          {scheduleLocked && (
+            <p className="text-xs text-brand-text-muted mt-1">
+              Schedule is locked after payment. Title and location can still be updated.
+            </p>
+          )}
+        </div>
+      )}
       {error && (
         <p className="text-xs text-red-400 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>
       )}

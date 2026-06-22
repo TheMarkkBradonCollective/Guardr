@@ -14,6 +14,7 @@ import { CERT_DOCUMENT_PHOTO_LABEL, CERT_IMAGE_POLICY_HINT, guardCertificationCa
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 interface GuardCardPanelProps {
   guard: SecurityGuard;
@@ -145,8 +146,8 @@ export function GuardCardPanel({
       ? 'Pending review'
       : 'Not uploaded';
 
-  const uploadForm = showForm && editing && (
-    <form onSubmit={submitGuardCard} className="space-y-3 border-t border-brand-border pt-3">
+  const uploadForm = (
+    <form onSubmit={submitGuardCard} className="space-y-3">
       <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
         {US_STATES.map(({ code, name }) => (
           <option key={code} value={code}>
@@ -198,6 +199,17 @@ export function GuardCardPanel({
     </form>
   );
 
+  const uploadSheet = (
+    <AppFormSheet
+      open={showForm && editing}
+      onClose={resetForm}
+      title={items.length ? 'Add another guard card' : 'Upload guard card'}
+      subtitle={`BSIS Guard Card — required before profile approval. ${CERT_IMAGE_POLICY_HINT}`}
+    >
+      {uploadForm}
+    </AppFormSheet>
+  );
+
   const cardRows = items.map((cert) => (
     <div key={cert.id} className="space-y-2">
       <CertItemCard key={cert.id} cert={cert} editing={editing} showCategory={false} {...certCardProps(cert)} />
@@ -225,20 +237,21 @@ export function GuardCardPanel({
               </p>
               <button
                 type="button"
-                onClick={() => setShowForm((open) => !open)}
+                onClick={() => setShowForm(true)}
                 className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
               >
-                {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
+                {items.length ? 'Add another' : 'Upload'}
               </button>
             </div>
-            {uploadForm}
           </div>
         )}
+        {uploadSheet}
       </>
     );
   }
 
   return (
+    <>
     <section className="app-form-section space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -261,15 +274,13 @@ export function GuardCardPanel({
         {editing && onAddCertification && (
           <button
             type="button"
-            onClick={() => setShowForm((open) => !open)}
+            onClick={() => setShowForm(true)}
             className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
           >
-            {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
+            {items.length ? 'Add another' : 'Upload'}
           </button>
         )}
       </div>
-
-      {uploadForm}
 
       {items.length === 0 ? (
         <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
@@ -281,5 +292,7 @@ export function GuardCardPanel({
         </div>
       )}
     </section>
+    {uploadSheet}
+    </>
   );
 }

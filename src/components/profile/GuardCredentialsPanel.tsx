@@ -46,6 +46,7 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -256,12 +257,142 @@ export function GuardCredentialsPanel({
       ),
     []
   );
-  const isPtaUofOpen = openSection === 'bsis-pta-uof';
-  const isRefresherOpen = openSection === 'bsis-refresher';
-  const isOtherBsisOpen = openSection === 'bsis-training';
   const showSection = (count: number) => editing || count > 0;
   const idStatus = getGuardIdVerificationStatus(guard);
   const canEditId = !guard.isStaff && guardIdVerificationCanEdit(guard);
+
+  const credentialAddSheetMeta = (() => {
+    if (!openSection) return { title: 'Upload credential' };
+    if (openSection === 'bsis-pta-uof') {
+      return { title: 'Add PTA & UOF training', subtitle: PTA_UOF_UPLOAD_GUIDANCE };
+    }
+    if (openSection === 'bsis-refresher') {
+      return {
+        title: refresherEntry?.name ?? '8-Hour BSIS Refresher',
+        subtitle: refresherEntry?.description ?? 'Upload when applicable for guard card renewals.',
+      };
+    }
+    if (openSection === 'bsis-training') {
+      return {
+        title: 'Add BSIS training',
+        subtitle: 'Supplemental BSIS courses — not part of the Active pathway or 32-hour block.',
+      };
+    }
+    const sectionMeta = CREDENTIAL_SECTIONS.find((s) => s.category === openSection);
+    return {
+      title: sectionMeta ? `Add ${sectionMeta.title}` : 'Upload credential',
+      subtitle: sectionMeta?.subtitle,
+    };
+  })();
+
+  const renderCredentialAddForm = () => {
+    if (!openSection) return null;
+    const showCatalogSelect =
+      openSection === 'bsis-pta-uof' ||
+      openSection === 'bsis-training' ||
+      (openSection !== 'bsis-refresher' && CREDENTIAL_SECTIONS.some((s) => s.category === openSection));
+
+    const catalogOptions =
+      openSection === 'bsis-pta-uof'
+        ? ptaUofCatalogOptions
+        : openSection === 'bsis-training'
+          ? otherBsisCatalogOptions
+          : openSection !== 'bsis-refresher'
+            ? getCertsByCategory(openSection as CertCategory)
+            : [];
+
+    return (
+      <form onSubmit={submitCert} className="space-y-3">
+        {showCatalogSelect && catalogOptions.length > 0 && (
+          <select
+            value={selectedCatalogId}
+            onChange={(e) => setSelectedCatalogId(e.target.value)}
+            className="uber-select w-full text-sm"
+            required
+          >
+            {catalogOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </select>
+        )}
+        {selectedCatalogId === 'other-credential' && (
+          <input
+            className="uber-input w-full"
+            placeholder="Certificate or license name"
+            value={customCertName}
+            onChange={(e) => setCustomCertName(e.target.value)}
+            required
+          />
+        )}
+        {getCertCatalogEntry(selectedCatalogId)?.requiresState && (
+          <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
+            {US_STATES.map(({ code, name }) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+        <input
+          className="uber-input w-full"
+          placeholder="Issuing organization (e.g. BSIS, training provider)"
+          value={issuer}
+          onChange={(e) => setIssuer(e.target.value)}
+          required
+        />
+        <input
+          className="uber-input w-full"
+          placeholder={
+            openSection === 'bsis-refresher' ? 'Certificate number' : 'Certificate / license / permit number'
+          }
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          required
+        />
+        <input
+          type="date"
+          value={expiryDate}
+          onChange={(e) => setExpiryDate(e.target.value)}
+          className="uber-input w-full"
+          aria-label="Expiry date"
+        />
+        <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+          <ImagePlus className="w-4 h-4 shrink-0" />
+          <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
+          <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+        </label>
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt="Credential preview"
+            className="w-full max-h-40 object-contain rounded-lg border border-brand-border"
+          />
+        )}
+        {formError && <p className="text-xs text-red-400">{formError}</p>}
+        <button
+          type="submit"
+          disabled={!imageUrl?.trim()}
+          className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
+        >
+          Upload credential
+        </button>
+      </form>
+    );
+  };
+
+  const openCredentialAddSheet = (section: CredentialOpenSection, catalogId?: string) => {
+    setOpenSection(section);
+    if (catalogId) setSelectedCatalogId(catalogId);
+    setIssuer('');
+    setNumber('');
+    setState('CA');
+    setExpiryDate('');
+    setImageUrl(undefined);
+    setCustomCertName('');
+    setFormError('');
+  };
 
   return (
     <section className="app-form-section space-y-4">
@@ -343,74 +474,13 @@ export function GuardCredentialsPanel({
           {editing && onAddCertification && (
             <button
               type="button"
-              onClick={() => {
-                if (isPtaUofOpen) {
-                  resetForm();
-                } else {
-                  setOpenSection('bsis-pta-uof');
-                  setSelectedCatalogId(BSIS_PTA_UOF_COMBINED_ID);
-                }
-              }}
+              onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
               className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
             >
-              {isPtaUofOpen ? 'Cancel' : 'Add'}
+              Add
             </button>
           )}
         </div>
-
-        {isPtaUofOpen && editing && (
-          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-            <select
-              value={selectedCatalogId}
-              onChange={(e) => setSelectedCatalogId(e.target.value)}
-              className="uber-select w-full text-sm"
-              required
-            >
-              {ptaUofCatalogOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className="uber-input w-full"
-              placeholder="Issuing organization (e.g. BSIS, training provider)"
-              value={issuer}
-              onChange={(e) => setIssuer(e.target.value)}
-              required
-            />
-            <input
-              className="uber-input w-full"
-              placeholder="Certificate number"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              required
-            />
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="uber-input w-full"
-              aria-label="Expiry date"
-            />
-            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-              <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-            </label>
-            {imageUrl && (
-              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-            )}
-            {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Upload credential
-            </button>
-          </form>
-        )}
 
         {ptaUofItems.length === 0 ? (
           <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">No PTA/UOF training on file.</p>
@@ -445,62 +515,13 @@ export function GuardCredentialsPanel({
           {editing && onAddCertification && (
             <button
               type="button"
-              onClick={() => {
-                if (isRefresherOpen) {
-                  resetForm();
-                } else {
-                  setOpenSection('bsis-refresher');
-                  setSelectedCatalogId(BSIS_REFRESHER_CATALOG_ID);
-                }
-              }}
+              onClick={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
               className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
             >
-              {isRefresherOpen ? 'Cancel' : 'Add'}
+              Add
             </button>
           )}
         </div>
-
-        {isRefresherOpen && editing && (
-          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-            <input
-              className="uber-input w-full"
-              placeholder="Issuing organization (e.g. BSIS, training provider)"
-              value={issuer}
-              onChange={(e) => setIssuer(e.target.value)}
-              required
-            />
-            <input
-              className="uber-input w-full"
-              placeholder="Certificate number"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              required
-            />
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="uber-input w-full"
-              aria-label="Expiry date"
-            />
-            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-              <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-            </label>
-            {imageUrl && (
-              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-            )}
-            {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Upload credential
-            </button>
-          </form>
-        )}
 
         {refresherItems.length === 0 ? (
           editing ? (
@@ -528,70 +549,13 @@ export function GuardCredentialsPanel({
           {editing && onAddCertification && otherBsisCatalogOptions.length > 0 && (
             <button
               type="button"
-              onClick={() => {
-                setOpenSection(isOtherBsisOpen ? null : 'bsis-training');
-                setSelectedCatalogId(otherBsisCatalogOptions[0]?.id ?? '');
-              }}
+              onClick={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
               className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
             >
-              {isOtherBsisOpen ? 'Cancel' : 'Add'}
+              Add
             </button>
           )}
         </div>
-
-        {isOtherBsisOpen && editing && (
-          <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-            <select
-              value={selectedCatalogId}
-              onChange={(e) => setSelectedCatalogId(e.target.value)}
-              className="uber-select w-full text-sm"
-              required
-            >
-              {otherBsisCatalogOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className="uber-input w-full"
-              placeholder="Issuing organization (e.g. BSIS, training provider)"
-              value={issuer}
-              onChange={(e) => setIssuer(e.target.value)}
-              required
-            />
-            <input
-              className="uber-input w-full"
-              placeholder="Certificate / license / permit number"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              required
-            />
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="uber-input w-full"
-              aria-label="Expiry date"
-            />
-            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-              <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-            </label>
-            {imageUrl && (
-              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-            )}
-            {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Upload credential
-            </button>
-          </form>
-        )}
 
         {otherBsisItems.length === 0 ? (
           editing ? (
@@ -611,7 +575,6 @@ export function GuardCredentialsPanel({
         const items = grouped[category] ?? [];
         if (!showSection(items.length)) return null;
         const catalogOptions = getCertsByCategory(category);
-        const isOpen = openSection === category;
 
         const sectionCard = (
           <section key={category} className="app-form-section space-y-3">
@@ -626,86 +589,13 @@ export function GuardCredentialsPanel({
               {editing && onAddCertification && catalogOptions.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setOpenSection(isOpen ? null : category);
-                    setSelectedCatalogId(catalogOptions[0]?.id ?? '');
-                  }}
+                  onClick={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
                   className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
                 >
-                  {isOpen ? 'Cancel' : 'Add'}
+                  Add
                 </button>
               )}
             </div>
-
-            {isOpen && editing && (
-              <form onSubmit={submitCert} className="space-y-3 border-t border-brand-border pt-3">
-                <select
-                  value={selectedCatalogId}
-                  onChange={(e) => setSelectedCatalogId(e.target.value)}
-                  className="uber-select w-full text-sm"
-                  required
-                >
-                  {catalogOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedCatalogId === 'other-credential' && (
-                  <input
-                    className="uber-input w-full"
-                    placeholder="Certificate or license name"
-                    value={customCertName}
-                    onChange={(e) => setCustomCertName(e.target.value)}
-                    required
-                  />
-                )}
-                {getCertCatalogEntry(selectedCatalogId)?.requiresState && (
-                  <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
-                    {US_STATES.map(({ code, name }) => (
-                      <option key={code} value={code}>{name}</option>
-                    ))}
-                  </select>
-                )}
-                <input
-                  className="uber-input w-full"
-                  placeholder="Issuing organization (e.g. BSIS, training provider)"
-                  value={issuer}
-                  onChange={(e) => setIssuer(e.target.value)}
-                  required
-                />
-                <input
-                  className="uber-input w-full"
-                  placeholder="Certificate / license / permit number"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                  required
-                />
-                <input
-                  type="date"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  className="uber-input w-full"
-                  aria-label="Expiry date"
-                />
-                <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-                  <ImagePlus className="w-4 h-4 shrink-0" />
-                  <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-                </label>
-                {imageUrl && (
-                  <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg border border-brand-border" />
-                )}
-                {formError && <p className="text-xs text-red-400">{formError}</p>}
-                <button
-                  type="submit"
-                  disabled={!imageUrl?.trim()}
-                  className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
-                >
-                  Upload credential
-                </button>
-              </form>
-            )}
 
             {items.length === 0 ? (
               editing ? (
@@ -722,6 +612,15 @@ export function GuardCredentialsPanel({
         );
         return sectionCard;
       })}
+
+      <AppFormSheet
+        open={Boolean(openSection && editing)}
+        onClose={resetForm}
+        title={credentialAddSheetMeta.title}
+        subtitle={credentialAddSheetMeta.subtitle}
+      >
+        {renderCredentialAddForm()}
+      </AppFormSheet>
     </section>
   );
 }

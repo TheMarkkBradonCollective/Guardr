@@ -11,6 +11,7 @@ import { US_STATES } from '../../lib/states';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface GuardResumeSavePayload {
   headline: string;
@@ -251,17 +252,7 @@ export function GuardResumeEditor({
         icon={Briefcase}
         items={guard.experience}
         canAdd={editing && !!onAddExperience}
-        onAdd={() => setShowAddExp((v) => !v)}
-        showForm={showAddExp}
-        form={
-          <form onSubmit={submitExperience} className="space-y-3 border-t border-brand-border pt-3">
-            <input className="uber-input w-full" placeholder="Job title" value={expTitle} onChange={(e) => setExpTitle(e.target.value)} required />
-            <input className="uber-input w-full" placeholder="Company / site" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
-            <input className="uber-input w-full" placeholder="Period (e.g. 2020 – 2024)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
-            <textarea className="uber-input w-full resize-none" rows={3} placeholder="What you did, sites, responsibilities…" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} />
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add experience</button>
-          </form>
-        }
+        onAdd={() => setShowAddExp(true)}
       />
 
       <ExperienceSection
@@ -275,19 +266,39 @@ export function GuardResumeEditor({
           description: e.description ?? '',
         }))}
         canAdd={editing && !!onAddEducation}
-        onAdd={() => setShowAddEdu((v) => !v)}
-        showForm={showAddEdu}
-        form={
-          <form onSubmit={submitEducation} className="space-y-3 border-t border-brand-border pt-3">
-            <input className="uber-input w-full" placeholder="School / academy" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} required />
-            <input className="uber-input w-full" placeholder="Degree or program" value={eduDegree} onChange={(e) => setEduDegree(e.target.value)} />
-            <input className="uber-input w-full" placeholder="Field of study" value={eduField} onChange={(e) => setEduField(e.target.value)} />
-            <input className="uber-input w-full" placeholder="Years" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
-            <textarea className="uber-input w-full resize-none" rows={2} placeholder="Notes (optional)" value={eduDescription} onChange={(e) => setEduDescription(e.target.value)} />
-            <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add education</button>
-          </form>
-        }
+        onAdd={() => setShowAddEdu(true)}
       />
+
+      <AppFormSheet
+        open={showAddExp}
+        onClose={() => setShowAddExp(false)}
+        title="Add work experience"
+        subtitle="Build your resume with past security roles and relevant work history."
+      >
+        <form onSubmit={submitExperience} className="space-y-3">
+          <input className="uber-input w-full" placeholder="Job title" value={expTitle} onChange={(e) => setExpTitle(e.target.value)} required />
+          <input className="uber-input w-full" placeholder="Company / site" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
+          <input className="uber-input w-full" placeholder="Period (e.g. 2020 – 2024)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
+          <textarea className="uber-input w-full resize-none" rows={3} placeholder="What you did, sites, responsibilities…" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} />
+          <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add experience</button>
+        </form>
+      </AppFormSheet>
+
+      <AppFormSheet
+        open={showAddEdu}
+        onClose={() => setShowAddEdu(false)}
+        title="Add education"
+        subtitle="Schools, academies, and training programs."
+      >
+        <form onSubmit={submitEducation} className="space-y-3">
+          <input className="uber-input w-full" placeholder="School / academy" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} required />
+          <input className="uber-input w-full" placeholder="Degree or program" value={eduDegree} onChange={(e) => setEduDegree(e.target.value)} />
+          <input className="uber-input w-full" placeholder="Field of study" value={eduField} onChange={(e) => setEduField(e.target.value)} />
+          <input className="uber-input w-full" placeholder="Years" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
+          <textarea className="uber-input w-full resize-none" rows={2} placeholder="Notes (optional)" value={eduDescription} onChange={(e) => setEduDescription(e.target.value)} />
+          <button type="submit" className="w-full app-button-primary !h-11 !text-sm">Add education</button>
+        </form>
+      </AppFormSheet>
     </div>
   );
 }
@@ -349,16 +360,12 @@ function ExperienceSection({
   items,
   canAdd,
   onAdd,
-  showForm,
-  form,
 }: {
   title: string;
   icon: typeof Briefcase;
   items: Experience[];
   canAdd: boolean;
   onAdd: () => void;
-  showForm: boolean;
-  form: React.ReactNode;
 }) {
   return (
     <section className="app-form-section space-y-3">
@@ -374,7 +381,6 @@ function ExperienceSection({
           </button>
         )}
       </div>
-      {showForm && form}
       <div className="space-y-2">
         {items.length === 0 ? (
           <p className="text-xs text-brand-text-muted text-center py-4">None listed yet — add to build your resume.</p>

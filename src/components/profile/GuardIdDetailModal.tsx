@@ -12,7 +12,7 @@ import {
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { formatStateName, US_STATES } from '../../lib/states';
-import { AppModal } from '../ui/motion/AppMotion';
+import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { IdVerificationImageThumb } from './IdVerificationImageModal';
 import { GuardIdPhotoRow } from './GuardIdPhotoRow';
@@ -163,8 +163,9 @@ export function GuardIdDetailModal({
   };
 
   return (
-    <AppModal open onClose={onClose} ariaLabelledBy="guard-id-detail-title">
-      <div className="flex items-start justify-between gap-3 p-5 border-b border-brand-border">
+    <AppOverlaySheet open onClose={onClose} ariaLabel="Government ID" panelClassName="rounded-t-2xl">
+      <div className="flex flex-col max-h-[85dvh]">
+      <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
         <div className="min-w-0">
           {guardName && <p className="text-xs text-brand-text-muted mb-1">{guardName}</p>}
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
@@ -196,7 +197,7 @@ export function GuardIdDetailModal({
         </div>
       </div>
 
-      <div className="p-5 space-y-5 max-h-[min(80vh,40rem)] overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 pb-8 space-y-5">
         <div className="flex flex-wrap gap-2">
           <IdCredentialStatusBadges guard={displayGuard} />
         </div>
@@ -354,6 +355,7 @@ export function GuardIdDetailModal({
           </>
         )}
       </div>
-    </AppModal>
+      </div>
+    </AppOverlaySheet>
   );
 }

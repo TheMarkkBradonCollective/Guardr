@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { StaffRole } from '../../types';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface StaffAddStaffInput {
   name: string;
@@ -37,6 +38,12 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
     setEmail('');
     setBadge('');
     setRole(assignableRoles[0] ?? 'Moderator');
+    setError('');
+    setMsg('');
+  };
+
+  const closeForm = () => {
+    setOpen(false);
     setError('');
     setMsg('');
   };
@@ -75,8 +82,8 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
     }
   };
 
-  if (!open) {
-    return (
+  return (
+    <>
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -85,104 +92,76 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
         <Plus className="w-4 h-4" />
         Add staff
       </button>
-    );
-  }
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="staff-onboard-form border border-brand-border rounded-xl p-4 space-y-4 bg-brand-bg-sec/40"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">Add platform staff</h3>
-          <p className="text-xs text-brand-text-muted mt-1">
-            Staff manage the platform only — they cannot accept field jobs. Default sign-in password:{' '}
-            <span className="font-mono text-brand-text">{STAFF_PROVISIONED_DEFAULT_PASSWORD}</span>
-            {' '}— they will be prompted to change it on first login.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(false);
-            setError('');
-            setMsg('');
-          }}
-          className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20"
-          aria-label="Close form"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      <PersonNameFields
-        firstName={firstName}
-        middleName={middleName}
-        lastName={lastName}
-        onFirstNameChange={setFirstName}
-        onMiddleNameChange={setMiddleName}
-        onLastNameChange={setLastName}
-        editing
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="uber-label block mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="uber-input w-full"
-            placeholder="staff@example.com"
-            required
+      <AppFormSheet
+        open={open}
+        onClose={closeForm}
+        title="Add platform staff"
+        subtitle={`Staff manage the platform only — they cannot accept field jobs. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <PersonNameFields
+            firstName={firstName}
+            middleName={middleName}
+            lastName={lastName}
+            onFirstNameChange={setFirstName}
+            onMiddleNameChange={setMiddleName}
+            onLastNameChange={setLastName}
+            editing
           />
-        </div>
-        <div>
-          <label className="uber-label block mb-1">Badge number</label>
-          <input
-            type="text"
-            value={badge}
-            onChange={(e) => setBadge(e.target.value)}
-            className="uber-input w-full"
-            placeholder="STF-00001"
-            required
-          />
-        </div>
-        <div>
-          <label className="uber-label block mb-1">Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as StaffRole)}
-            className="uber-select w-full"
-          >
-            {assignableRoles.map((staffRole) => (
-              <option key={staffRole} value={staffRole}>
-                {staffRole}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      {msg && <p className="text-sm text-brand-primary">{msg}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="uber-label block mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="uber-input w-full"
+                placeholder="staff@example.com"
+                required
+              />
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Badge number</label>
+              <input
+                type="text"
+                value={badge}
+                onChange={(e) => setBadge(e.target.value)}
+                className="uber-input w-full"
+                placeholder="STF-00001"
+                required
+              />
+            </div>
+            <div>
+              <label className="uber-label block mb-1">Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as StaffRole)}
+                className="uber-select w-full"
+              >
+                {assignableRoles.map((staffRole) => (
+                  <option key={staffRole} value={staffRole}>
+                    {staffRole}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={saving} className="app-button-primary !w-auto !h-10 !px-5">
-          {saving ? 'Adding…' : 'Create staff account'}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(false);
-            setError('');
-          }}
-          className="app-button-outline !w-auto !h-10 !px-5"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          {msg && <p className="text-sm text-brand-primary">{msg}</p>}
+
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" disabled={saving} className="app-button-primary !w-auto !h-10 !px-5">
+              {saving ? 'Adding…' : 'Create staff account'}
+            </button>
+            <button type="button" onClick={closeForm} className="app-button-outline !w-auto !h-10 !px-5">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </AppFormSheet>
+    </>
   );
 }

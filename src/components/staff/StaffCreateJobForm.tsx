@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import { getClientAccountStatus } from '../../lib/accountStatus';
@@ -24,6 +24,7 @@ import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface StaffCreateJobInput {
   clientId: string;
@@ -186,8 +187,14 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
     }
   };
 
-  if (!open) {
-    return (
+  const closeForm = () => {
+    setOpen(false);
+    setError('');
+    setMsg('');
+  };
+
+  return (
+    <>
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -196,36 +203,15 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
         <Plus className="w-4 h-4" />
         Create job for client
       </button>
-    );
-  }
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="staff-onboard-form border border-brand-border rounded-xl p-4 space-y-4 bg-brand-bg-sec/40"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">Create job for client</h3>
-          <p className="text-xs text-brand-text-muted mt-1">
-            Post a job on behalf of a client. Rehire a guard the client has worked with before to skip Guardr applicant review — otherwise leave open for guards to apply (Guardr approves the best fit).
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(false);
-            setError('');
-            setMsg('');
-          }}
-          className="p-1.5 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20"
-          aria-label="Close form"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <AppFormSheet
+        open={open}
+        onClose={closeForm}
+        title="Create job for client"
+        subtitle="Post a job on behalf of a client. Rehire a prior guard to skip applicant review — otherwise leave open for guards to apply."
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
           <label className="uber-label block mb-1">Client</label>
           <select
@@ -439,15 +425,14 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
         </button>
         <button
           type="button"
-          onClick={() => {
-            setOpen(false);
-            setError('');
-          }}
+          onClick={closeForm}
           className="app-button-outline !w-auto !h-10 !px-5"
         >
           Cancel
         </button>
       </div>
-    </form>
+        </form>
+      </AppFormSheet>
+    </>
   );
 }
