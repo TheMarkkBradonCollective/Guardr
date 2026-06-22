@@ -2971,8 +2971,8 @@ html.theme-light .staff-ops-btn-primary:hover {
   width: 5.5rem;
   height: 5.5rem;
   margin-bottom: 0.35rem;
-  border: 1px solid var(--brand-border);
-  background: var(--brand-surface);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
   box-shadow: var(--shadow-card);
   animation: guardr-loading-float 2.8s ease-in-out infinite;
 }
@@ -2987,6 +2987,7 @@ html.theme-light .staff-ops-btn-primary:hover {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.2;
+  color: var(--brand-primary);
 }
 
 .guardr-loading-caption {
