@@ -115,6 +115,7 @@ import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } fr
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
 import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
+import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -2511,18 +2512,20 @@ export default function App() {
     setGuards((prev) => prev.map((g) => (g.id === guardId ? approvedGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase
-        .from('guards')
-        .update({
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
           user_status: 'approved',
           verified: true,
           credential_grace_deadline: null,
           credential_grace_missing: null,
-        })
-        .eq('id', guardId);
-      if (error) {
+        },
+        'approve'
+      );
+      if (!result.ok) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not approve guard profile. Please try again.');
+        throw new Error(result.error);
       }
     }
   };
@@ -2546,18 +2549,20 @@ export default function App() {
     setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
     if (isDbConnected) {
       beginLocalMutation();
-      const { error } = await supabase
-        .from('guards')
-        .update({
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
           user_status: 'active',
           verified: true,
           credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
           credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
-        })
-        .eq('id', guardId);
-      if (error) {
+        },
+        'activate'
+      );
+      if (!result.ok) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not activate guard account. Please try again.');
+        throw new Error(result.error);
       }
     }
   };

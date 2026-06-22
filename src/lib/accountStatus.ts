@@ -87,3 +87,25 @@ export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
   suspended: 'Suspended',
   blocked: 'Blocked',
 };
+
+export function guardAccountDatabaseErrorMessage(
+  error: { code?: string; message?: string },
+  action: 'approve' | 'activate'
+): string {
+  const msg = error.message ?? '';
+  if (msg.includes('user_status') || msg.includes('guards_user_status_check')) {
+    return 'Database is missing the approved account status. Run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
+  }
+  if (error.code === 'PGRST204' || msg.toLowerCase().includes('column')) {
+    return 'Database schema is out of date. Run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
+  }
+  const detail = msg.trim();
+  if (detail) {
+    return action === 'approve'
+      ? `Could not approve guard profile: ${detail}`
+      : `Could not activate guard account: ${detail}`;
+  }
+  return action === 'approve'
+    ? 'Could not approve guard profile. Please try again.'
+    : 'Could not activate guard account. Please try again.';
+}
