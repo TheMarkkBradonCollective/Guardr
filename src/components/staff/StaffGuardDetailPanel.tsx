@@ -19,6 +19,8 @@ import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { PersonNameFields } from '../profile/PersonNameFields';
+import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -70,7 +72,10 @@ export function StaffGuardDetailPanel({
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
-  const [name, setName] = useState(guard.name);
+  const initialName = resolvePersonNameParts(guard);
+  const [firstName, setFirstName] = useState(initialName.firstName);
+  const [middleName, setMiddleName] = useState(initialName.middleName ?? '');
+  const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard.phone ?? '');
   const [badgeNumber, setBadgeNumber] = useState(guard.badgeNumber);
   const [hourlyRate, setHourlyRate] = useState(String(guard.hourlyRateRequirement ?? ''));
@@ -89,7 +94,10 @@ export function StaffGuardDetailPanel({
   });
 
   useEffect(() => {
-    setName(guard.name);
+    const resolved = resolvePersonNameParts(guard);
+    setFirstName(resolved.firstName);
+    setMiddleName(resolved.middleName ?? '');
+    setLastName(resolved.lastName);
     setPhone(guard.phone ?? '');
     setBadgeNumber(guard.badgeNumber);
     setHourlyRate(String(guard.hourlyRateRequirement ?? ''));
@@ -135,18 +143,23 @@ export function StaffGuardDetailPanel({
 
   const pendingCount = allCerts.filter((c) => c.status === 'pending').length;
 
-  const buildPayload = (avatarOverride?: string): ProfileSavePayload => ({
-    name: name.trim(),
-    phone: phone.trim(),
-    badgeNumber: badgeNumber.trim(),
-    hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
-    avatar: avatarOverride ?? avatar,
-    ...resume,
-    summary: resume.summary.trim(),
-    about: resume.about.trim(),
-    headline: resume.headline.trim(),
-    bio: resume.summary.trim(),
-  });
+  const displayName = formatPersonName({ firstName, middleName, lastName });
+
+  const buildPayload = (avatarOverride?: string): ProfileSavePayload => {
+    const normalized = personNameFromPayload({ firstName, middleName, lastName });
+    return {
+      ...normalized,
+      phone: phone.trim(),
+      badgeNumber: badgeNumber.trim(),
+      hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
+      avatar: avatarOverride ?? avatar,
+      ...resume,
+      summary: resume.summary.trim(),
+      about: resume.about.trim(),
+      headline: resume.headline.trim(),
+      bio: resume.summary.trim(),
+    };
+  };
 
   const handleSave = async () => {
     if (!onUpdateProfile) return;
@@ -160,7 +173,10 @@ export function StaffGuardDetailPanel({
   };
 
   const handleCancelEdit = () => {
-    setName(guard.name);
+    const resolved = resolvePersonNameParts(guard);
+    setFirstName(resolved.firstName);
+    setMiddleName(resolved.middleName ?? '');
+    setLastName(resolved.lastName);
     setPhone(guard.phone ?? '');
     setBadgeNumber(guard.badgeNumber);
     setHourlyRate(String(guard.hourlyRateRequirement ?? ''));
@@ -273,7 +289,7 @@ export function StaffGuardDetailPanel({
 
       <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
         <div className="relative shrink-0">
-          <ProfileAvatar src={editing ? avatar : guard.avatar} name={guard.name} size="lg" rounded="xl" />
+          <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
           {editing && canEdit && (
             <label
               className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg ${
@@ -289,13 +305,17 @@ export function StaffGuardDetailPanel({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {editing ? (
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="uber-input font-bold text-lg w-full"
-                placeholder="Full name"
-              />
+              <div className="w-full">
+                <PersonNameFields
+                  firstName={firstName}
+                  middleName={middleName}
+                  lastName={lastName}
+                  onFirstNameChange={setFirstName}
+                  onMiddleNameChange={setMiddleName}
+                  onLastNameChange={setLastName}
+                  editing
+                />
+              </div>
             ) : (
               <h2 className="font-bold text-lg">{guard.name}</h2>
             )}

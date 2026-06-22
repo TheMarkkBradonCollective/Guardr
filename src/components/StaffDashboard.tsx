@@ -50,6 +50,8 @@ import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
+import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
+import type { StaffAddClientInput } from './staff/StaffAddClientForm';
 import { StaffTeamPanel } from './staff/StaffTeamPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
@@ -109,19 +111,8 @@ interface StaffDashboardProps {
     staffId: string,
     staffRole: StaffRole
   ) => Promise<void>;
-  onAddGuardProfile: (input: {
-    name: string;
-    email: string;
-    phone?: string;
-    badgeNumber?: string;
-    hourlyRate?: number;
-  }) => Promise<string>;
-  onAddClientProfile: (input: {
-    name: string;
-    email: string;
-    companyName?: string;
-    phone?: string;
-  }) => Promise<string>;
+  onAddGuardProfile: (input: StaffAddGuardInput) => Promise<string>;
+  onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;

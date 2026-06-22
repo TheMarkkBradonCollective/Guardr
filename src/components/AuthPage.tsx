@@ -10,6 +10,8 @@ import {
   User,
   Building2,
 } from 'lucide-react';
+import { PersonNameFields } from './profile/PersonNameFields';
+import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 import {
@@ -90,7 +92,9 @@ export function AuthPage({
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
@@ -118,18 +122,26 @@ export function AuthPage({
     }
 
     if (isSignUp) {
-      if (!fullName) {
-        setErrorMsg('Please enter your full name.');
+      if (!firstName.trim() || !lastName.trim()) {
+        setErrorMsg('Please enter your first and last name.');
         return;
       }
 
+      const normalized = personNameFromPayload({
+        firstName: firstName.trim(),
+        middleName: middleName.trim(),
+        lastName: lastName.trim(),
+      });
       const randomId = `${role}-${Date.now()}`;
 
       if (role === 'client') {
         const company = clientCompanyName.trim();
         const clientProfile: Client = {
           id: randomId,
-          name: fullName,
+          name: normalized.name,
+          firstName: normalized.firstName,
+          middleName: normalized.middleName,
+          lastName: normalized.lastName,
           email,
           companyName: company,
           phone: phone || '',
@@ -141,10 +153,10 @@ export function AuthPage({
         onSignIn(
           {
             id: randomId,
-            name: fullName,
+            name: normalized.name,
             email,
             role: 'client',
-            clientName: company || fullName,
+            clientName: company || normalized.name,
             avatar: '',
           },
           signInOptionsForPassword(password)
@@ -154,7 +166,10 @@ export function AuthPage({
 
       const newGuardProfile: SecurityGuard = {
         id: randomId,
-        name: fullName,
+        name: normalized.name,
+        firstName: normalized.firstName,
+        middleName: normalized.middleName,
+        lastName: normalized.lastName,
         email,
         badgeNumber: `GR-${Math.floor(10000 + Math.random() * 90000)}`,
         avatar: '',
@@ -175,7 +190,7 @@ export function AuthPage({
       onSignIn(
         {
           id: randomId,
-          name: fullName,
+          name: normalized.name,
           email,
           role: 'guard',
           badgeNumber: newGuardProfile.badgeNumber,
@@ -424,20 +439,15 @@ export function AuthPage({
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {isSignUp && (
-                <div>
-                  <label className="uber-label block mb-2">Full name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-                    <input
-                      type="text"
-                      required
-                      placeholder={role === 'client' ? 'Your name' : 'Officer full name'}
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="uber-input pl-10"
-                    />
-                  </div>
-                </div>
+                <PersonNameFields
+                  firstName={firstName}
+                  middleName={middleName}
+                  lastName={lastName}
+                  onFirstNameChange={setFirstName}
+                  onMiddleNameChange={setMiddleName}
+                  onLastNameChange={setLastName}
+                  editing
+                />
               )}
 
               <div>

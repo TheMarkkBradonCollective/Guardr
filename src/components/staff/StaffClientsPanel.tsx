@@ -6,6 +6,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddClientForm } from './StaffAddClientForm';
+import type { StaffAddClientInput } from './StaffAddClientForm';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -15,12 +16,7 @@ interface StaffClientsPanelProps {
   onRejectClient: (id: string) => void;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
-  onAddClient?: (input: {
-    name: string;
-    email: string;
-    companyName?: string;
-    phone?: string;
-  }) => Promise<string>;
+  onAddClient?: (input: StaffAddClientInput) => Promise<string>;
 }
 
 export function StaffClientsPanel({

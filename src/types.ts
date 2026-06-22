@@ -102,6 +102,9 @@ export type GuardSpecialty = (typeof GUARD_SPECIALTY_OPTIONS)[number];
 export interface Client {
   id: string;
   name: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   email: string;
   companyName: string;
   phone: string;
@@ -164,6 +167,9 @@ export interface GuardPayoutInvoice {
 export interface SecurityGuard {
   id: string;
   name: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   email: string;
   badgeNumber: string;
   avatar: string;

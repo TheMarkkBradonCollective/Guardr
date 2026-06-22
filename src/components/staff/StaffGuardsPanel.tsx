@@ -7,6 +7,8 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
+import type { StaffAddGuardInput } from './StaffAddGuardForm';
+import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
@@ -35,13 +37,7 @@ interface StaffGuardsPanelProps {
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
-  onAddGuard?: (input: {
-    name: string;
-    email: string;
-    phone?: string;
-    badgeNumber?: string;
-    hourlyRate?: number;
-  }) => Promise<string>;
+  onAddGuard?: (input: StaffAddGuardInput) => Promise<string>;
 }
 
 export function StaffGuardsPanel({

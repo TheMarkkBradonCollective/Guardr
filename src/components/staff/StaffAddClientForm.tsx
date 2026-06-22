@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
+import { PersonNameFields } from '../profile/PersonNameFields';
+import { personNameFromPayload } from '../../lib/personName';
 
 export interface StaffAddClientInput {
-  name: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   email: string;
   companyName: string;
   phone: string;
@@ -16,7 +20,9 @@ interface StaffAddClientFormProps {
 
 export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [phone, setPhone] = useState('');
@@ -25,7 +31,9 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
-    setName('');
+    setFirstName('');
+    setMiddleName('');
+    setLastName('');
     setEmail('');
     setCompanyName('');
     setPhone('');
@@ -37,20 +45,27 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
     e.preventDefault();
     setError('');
     setMsg('');
-    if (!name.trim() || !email.trim()) {
-      setError('Contact name and email are required.');
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setError('First name, last name, and email are required.');
       return;
     }
     setSaving(true);
     try {
       const clientId = await onAdd({
-        name: name.trim(),
+        firstName: firstName.trim(),
+        middleName: middleName.trim() || undefined,
+        lastName: lastName.trim(),
         email: email.trim(),
         companyName: companyName.trim(),
         phone: phone.trim(),
       });
+      const displayName = personNameFromPayload({
+        firstName: firstName.trim(),
+        middleName: middleName.trim(),
+        lastName: lastName.trim(),
+      }).name;
       setMsg(
-        `${companyName.trim() || name.trim()} added. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+        `${companyName.trim() || displayName} added. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
       );
       reset();
       if (clientId) onCreated?.(clientId);
@@ -103,18 +118,17 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
         </button>
       </div>
 
+      <PersonNameFields
+        firstName={firstName}
+        middleName={middleName}
+        lastName={lastName}
+        onFirstNameChange={setFirstName}
+        onMiddleNameChange={setMiddleName}
+        onLastNameChange={setLastName}
+        editing
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="uber-label block mb-1">Contact name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="uber-input w-full"
-            placeholder="Alex Rivera"
-            required
-          />
-        </div>
         <div>
           <label className="uber-label block mb-1">Email</label>
           <input

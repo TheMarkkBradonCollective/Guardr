@@ -86,6 +86,7 @@ import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient }
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
+import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
   appendMessage,
@@ -370,8 +371,15 @@ export default function App() {
         return;
       }
 
-      setGuards((dbGuards ?? []).map((g: any) => ({
-        id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
+      setGuards((dbGuards ?? []).map((g: any) => {
+        const nameParts = resolvePersonNameParts({
+          firstName: g.first_name,
+          middleName: g.middle_name,
+          lastName: g.last_name,
+          name: g.name,
+        });
+        return {
+        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email, badgeNumber: g.badge_number,
         avatar: g.avatar, phone: g.phone, bio: g.bio,
         headline: g.headline || undefined,
         summary: g.summary || undefined,
@@ -409,10 +417,18 @@ export default function App() {
           id: e.id, school: e.school, degree: e.degree, field: e.field,
           period: e.period, description: e.description ?? '',
         })),
-      })));
+      };
+      }));
 
-      setClients((dbClients ?? []).map((c: any) => ({
-        id: c.id, name: c.name, email: c.email,
+      setClients((dbClients ?? []).map((c: any) => {
+        const nameParts = resolvePersonNameParts({
+          firstName: c.first_name,
+          middleName: c.middle_name,
+          lastName: c.last_name,
+          name: c.name,
+        });
+        return {
+        id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email,
         companyName: c.company_name, phone: c.phone, avatar: c.avatar,
         totalRequests: c.total_requests || 0,
         approved: c.approved ?? true,
@@ -420,7 +436,8 @@ export default function App() {
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
         password: c.password ?? undefined,
         mustChangePassword: c.must_change_password ?? false,
-      })));
+      };
+      }));
 
       setRequests((dbRequests ?? []).map((r: any) => ({
         id: r.id, title: r.title, description: r.description,
@@ -734,7 +751,7 @@ export default function App() {
       if (isDbConnected) {
         try {
           await supabase.from('clients').insert({
-            id: client.id, name: client.name, email: client.email,
+            id: client.id, name: client.name, first_name: client.firstName, middle_name: client.middleName ?? null, last_name: client.lastName, email: client.email,
             company_name: client.companyName, phone: client.phone,
             avatar: client.avatar, total_requests: 0, approved: true,
             password,
@@ -749,7 +766,7 @@ export default function App() {
       if (isDbConnected) {
         try {
           await supabase.from('guards').insert({
-            id: guard.id, name: guard.name, email: guard.email,
+            id: guard.id, name: guard.name, first_name: guard.firstName, middle_name: guard.middleName ?? null, last_name: guard.lastName, email: guard.email,
             badge_number: guard.badgeNumber, avatar: guard.avatar,
             phone: guard.phone, bio: guard.bio,
             is_armed: guard.isArmed, background_checked: guard.backgroundChecked,
@@ -1037,6 +1054,9 @@ export default function App() {
           ? {
               ...g,
               name: payload.name,
+              firstName: payload.firstName,
+              middleName: payload.middleName,
+              lastName: payload.lastName,
               phone: payload.phone,
               bio: payload.bio ?? payload.summary ?? g.bio,
               headline: payload.headline ?? g.headline,
@@ -1058,6 +1078,9 @@ export default function App() {
     if (isDbConnected) {
       const guardUpdate: Record<string, unknown> = {
           name: payload.name,
+          first_name: payload.firstName,
+          middle_name: payload.middleName ?? null,
+          last_name: payload.lastName,
           phone: payload.phone,
           bio: payload.bio ?? payload.summary ?? '',
           headline: payload.headline ?? '',
@@ -1091,6 +1114,9 @@ export default function App() {
           ? {
               ...c,
               name: payload.name,
+              firstName: payload.firstName,
+              middleName: payload.middleName,
+              lastName: payload.lastName,
               phone: payload.phone,
               companyName: payload.companyName ?? c.companyName,
               avatar: payload.avatar !== undefined ? payload.avatar : c.avatar,
@@ -1101,6 +1127,9 @@ export default function App() {
     if (isDbConnected) {
       const clientUpdate: Record<string, unknown> = {
         name: payload.name,
+        first_name: payload.firstName,
+        middle_name: payload.middleName ?? null,
+        last_name: payload.lastName,
         phone: payload.phone,
         company_name: payload.companyName ?? '',
       };
@@ -1134,7 +1163,10 @@ export default function App() {
   };
 
   const handleAddGuardProfile = async (input: {
-    name: string;
+    name?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
     email: string;
     phone?: string;
     badgeNumber?: string;
@@ -1142,9 +1174,19 @@ export default function App() {
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = input.firstName
+      ? personNameFromPayload({
+          firstName: input.firstName,
+          middleName: input.middleName,
+          lastName: input.lastName ?? '',
+        })
+      : personNameFromPayload(resolvePersonNameParts({ name: input.name ?? '' }));
     const newGuard: SecurityGuard = {
       id: `guard-${Date.now()}`,
-      name: input.name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: input.email.trim(),
       badgeNumber: input.badgeNumber?.trim() || `GR-${Math.floor(10000 + Math.random() * 90000)}`,
       avatar: '',
@@ -1169,6 +1211,9 @@ export default function App() {
         await supabase.from('guards').insert({
           id: newGuard.id,
           name: newGuard.name,
+          first_name: newGuard.firstName,
+          middle_name: newGuard.middleName ?? null,
+          last_name: newGuard.lastName,
           email: emailLower,
           badge_number: newGuard.badgeNumber,
           avatar: newGuard.avatar,
@@ -1196,18 +1241,31 @@ export default function App() {
   };
 
   const handleAddClientProfile = async (input: {
-    name: string;
+    name?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
     email: string;
     companyName?: string;
     phone?: string;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = input.firstName
+      ? personNameFromPayload({
+          firstName: input.firstName,
+          middleName: input.middleName,
+          lastName: input.lastName ?? '',
+        })
+      : personNameFromPayload(resolvePersonNameParts({ name: input.name ?? '' }));
     const newClient: Client = {
       id: `client-${Date.now()}`,
-      name: input.name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: input.email.trim(),
-      companyName: input.companyName?.trim() || input.name.trim(),
+      companyName: input.companyName?.trim() || normalized.name,
       phone: input.phone?.trim() || '',
       avatar: '',
       totalRequests: 0,
@@ -1221,6 +1279,9 @@ export default function App() {
         await supabase.from('clients').insert({
           id: newClient.id,
           name: newClient.name,
+          first_name: newClient.firstName,
+          middle_name: newClient.middleName ?? null,
+          last_name: newClient.lastName,
           email: emailLower,
           company_name: newClient.companyName,
           phone: newClient.phone,
@@ -1251,9 +1312,13 @@ export default function App() {
     }
     const emailLower = assertEmailAvailable(email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = personNameFromPayload(resolvePersonNameParts({ name }));
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
-      name: name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: email.trim(),
       badgeNumber: badgeNumber.trim(),
       avatar: '',
@@ -1279,6 +1344,9 @@ export default function App() {
         await supabase.from('guards').insert({
           id: newStaff.id,
           name: newStaff.name,
+          first_name: newStaff.firstName,
+          middle_name: newStaff.middleName ?? null,
+          last_name: newStaff.lastName,
           email: emailLower,
           badge_number: newStaff.badgeNumber,
           avatar: newStaff.avatar,

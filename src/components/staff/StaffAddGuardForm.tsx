@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
+import { PersonNameFields } from '../profile/PersonNameFields';
+import { personNameFromPayload } from '../../lib/personName';
 
 export interface StaffAddGuardInput {
-  name: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   email: string;
   phone: string;
   badgeNumber: string;
@@ -17,7 +21,9 @@ interface StaffAddGuardFormProps {
 
 export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [badgeNumber, setBadgeNumber] = useState('');
@@ -27,7 +33,9 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
-    setName('');
+    setFirstName('');
+    setMiddleName('');
+    setLastName('');
     setEmail('');
     setPhone('');
     setBadgeNumber('');
@@ -40,21 +48,23 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
     e.preventDefault();
     setError('');
     setMsg('');
-    if (!name.trim() || !email.trim()) {
-      setError('Name and email are required.');
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setError('First name, last name, and email are required.');
       return;
     }
     setSaving(true);
     try {
       const guardId = await onAdd({
-        name: name.trim(),
+        firstName: firstName.trim(),
+        middleName: middleName.trim() || undefined,
+        lastName: lastName.trim(),
         email: email.trim(),
         phone: phone.trim(),
         badgeNumber: badgeNumber.trim(),
         hourlyRate: parseInt(hourlyRate, 10) || 35,
       });
       setMsg(
-        `${name.trim()} added. They sign in with this email and the default password ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+        `${personNameFromPayload({ firstName: firstName.trim(), middleName: middleName.trim(), lastName: lastName.trim() }).name} added. They sign in with this email and the default password ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
       );
       reset();
       if (guardId) onCreated?.(guardId);
@@ -107,18 +117,17 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
         </button>
       </div>
 
+      <PersonNameFields
+        firstName={firstName}
+        middleName={middleName}
+        lastName={lastName}
+        onFirstNameChange={setFirstName}
+        onMiddleNameChange={setMiddleName}
+        onLastNameChange={setLastName}
+        editing
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="uber-label block mb-1">Full name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="uber-input w-full"
-            placeholder="Jane Smith"
-            required
-          />
-        </div>
         <div>
           <label className="uber-label block mb-1">Email</label>
           <input

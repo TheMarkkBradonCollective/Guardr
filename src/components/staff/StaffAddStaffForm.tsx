@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { StaffRole } from '../../types';
 import { Plus, X } from 'lucide-react';
 import { STAFF_PROVISIONED_DEFAULT_PASSWORD } from '../../lib/accountPasswords';
+import { PersonNameFields } from '../profile/PersonNameFields';
+import { personNameFromPayload } from '../../lib/personName';
 
 export interface StaffAddStaffInput {
   name: string;
@@ -18,7 +20,9 @@ interface StaffAddStaffFormProps {
 
 export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAddStaffFormProps) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [badge, setBadge] = useState('');
   const [role, setRole] = useState<StaffRole>(assignableRoles[0] ?? 'Moderator');
@@ -27,7 +31,9 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
-    setName('');
+    setFirstName('');
+    setMiddleName('');
+    setLastName('');
     setEmail('');
     setBadge('');
     setRole(assignableRoles[0] ?? 'Moderator');
@@ -39,20 +45,25 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
     e.preventDefault();
     setError('');
     setMsg('');
-    if (!name.trim() || !email.trim() || !badge.trim()) {
-      setError('Name, email, and badge number are required.');
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !badge.trim()) {
+      setError('First name, last name, email, and badge number are required.');
       return;
     }
     setSaving(true);
     try {
+      const displayName = personNameFromPayload({
+        firstName: firstName.trim(),
+        middleName: middleName.trim(),
+        lastName: lastName.trim(),
+      }).name;
       const staffId = await onAdd({
-        name: name.trim(),
+        name: displayName,
         email: email.trim(),
         badgeNumber: badge.trim(),
         staffRole: role,
       });
       setMsg(
-        `${name.trim()} added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
+        `${displayName} added as ${role}. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`
       );
       reset();
       if (staffId) onCreated?.(staffId);
@@ -105,18 +116,17 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
         </button>
       </div>
 
+      <PersonNameFields
+        firstName={firstName}
+        middleName={middleName}
+        lastName={lastName}
+        onFirstNameChange={setFirstName}
+        onMiddleNameChange={setMiddleName}
+        onLastNameChange={setLastName}
+        editing
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="uber-label block mb-1">Full name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="uber-input w-full"
-            placeholder="Full name"
-            required
-          />
-        </div>
         <div>
           <label className="uber-label block mb-1">Email</label>
           <input
