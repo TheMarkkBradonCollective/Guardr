@@ -64,7 +64,7 @@ import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { beginLocalMutation, shouldSkipRealtimeSync } from './lib/dbMutationGuard';
 import {
-  getGuardsReadyForAccountActivation,
+  getPendingGuardAccountReviews,
   guardAccountActivationBlockers,
 } from './lib/guardAccountActivation';
 import { useNativeBackButtonBootstrap } from './lib/useNativeBackButton';
@@ -2403,7 +2403,7 @@ export default function App() {
     if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountActivationBlockers(guard);
     if (blockers.length > 0) {
-      throw new Error(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
+      throw new Error(`Cannot approve profile yet:\n• ${blockers.join('\n• ')}`);
     }
 
     setGuards((prev) =>
@@ -2417,26 +2417,8 @@ export default function App() {
         .eq('id', guardId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
-        throw new Error('Could not activate guard account. Please try again.');
+        throw new Error('Could not approve guard profile. Please try again.');
       }
-    }
-  };
-
-  const handleApproveAllReadyGuardAccounts = async () => {
-    const ready = getGuardsReadyForAccountActivation(guards);
-    if (ready.length === 0) {
-      throw new Error('No guard accounts are ready. Each guard needs verified ID and a verified Guard Card.');
-    }
-    const errors: string[] = [];
-    for (const guard of ready) {
-      try {
-        await handleApproveGuardAccount(guard.id);
-      } catch (err) {
-        errors.push(`${guard.name}: ${err instanceof Error ? err.message : 'Failed'}`);
-      }
-    }
-    if (errors.length > 0) {
-      throw new Error(errors.join('\n'));
     }
   };
 
@@ -4746,7 +4728,6 @@ export default function App() {
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
-          onApproveAllReadyGuardAccounts={handleApproveAllReadyGuardAccounts}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}

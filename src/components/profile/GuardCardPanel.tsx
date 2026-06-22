@@ -196,7 +196,7 @@ export function GuardCardPanel({
           <div className="pt-2 space-y-2">
             <div className="flex items-center justify-between gap-2 px-1">
               <p className="text-xs text-brand-text-muted">
-                BSIS Guard Card — required for activation. {CERT_IMAGE_POLICY_HINT}
+                BSIS Guard Card — required before profile approval. {CERT_IMAGE_POLICY_HINT}
               </p>
               <button
                 type="button"
@@ -222,7 +222,7 @@ export function GuardCardPanel({
             BSIS Guard Card
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Your state guard license — required for account activation and to work jobs. {CERT_IMAGE_POLICY_HINT}
+            Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
           </p>
           <div className="mt-2">
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>

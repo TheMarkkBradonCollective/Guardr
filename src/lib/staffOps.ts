@@ -371,8 +371,8 @@ export function buildOverviewActionQueue(
   if (accountQueueCount > 0) {
     items.push({
       id: 'pending-accounts',
-      title: 'Activate guard and client accounts',
-      description: 'Review sign-ups and activate accounts after requirements are met',
+      title: 'Approve guard and client profiles',
+      description: 'Review sign-ups after required-to-work items are complete',
       count: accountQueueCount,
       section: 'approvals',
       approvalQueue: 'accounts',

@@ -81,7 +81,7 @@ export function GuardIdentityVerificationPanel({
             Government ID
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Required for account activation. Tap the card to view details — use Edit inside to update your ID.
+            Required before profile approval. Tap the card to view details — use Edit inside to update your ID.
           </p>
         </div>
       )}

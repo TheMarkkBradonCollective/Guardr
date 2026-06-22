@@ -23,7 +23,7 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
         />
         <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left">
           {isGuard
-            ? 'Submit your government ID and BSIS Guard Card under Credentials in your profile. Guardr staff verifies both before activating your account. After activation you can add other credentials and accept jobs.'
+            ? 'Submit your government ID and BSIS Guard Card under Credentials in your profile. Guardr staff verifies both before approving your profile. After approval you can add other credentials and accept jobs.'
             : 'Your client account is waiting for Guardr staff approval. You can update your profile now, but posting jobs and hiring guards unlocks after approval.'}
         </p>
       </div>

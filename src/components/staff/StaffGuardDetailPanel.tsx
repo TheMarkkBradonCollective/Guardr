@@ -471,7 +471,7 @@ export function StaffGuardDetailPanel({
                       try {
                         await onApproveGuardAccount(guard.id);
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Could not activate account.');
+                        alert(err instanceof Error ? err.message : 'Could not approve profile.');
                       }
                     })();
                   }}
@@ -480,10 +480,10 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.blockers.length > 0
                       ? activationChecklist.blockers.join(' · ')
-                      : 'Activate guard account'
+                      : 'Approve guard profile'
                   }
                 >
-                  Activate guard account
+                  Approve guard profile
                 </button>
               )}
               {canSuspend && guardAccountStatus === 'pending' && onDeleteGuard && (

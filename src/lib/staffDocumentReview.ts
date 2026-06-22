@@ -35,7 +35,7 @@ export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
 /** Full application rejection — blocks the guard account. Returns null if cancelled. */
 export function promptRejectGuardApplicationNote(): string | null {
   const confirmed = window.confirm(
-    'Reject this guard\'s application?\n\nThey will be blocked from the platform and cannot resubmit ID documents or activate their account.'
+    'Reject this guard\'s application?\n\nThey will be blocked from the platform and cannot resubmit ID documents or get their profile approved.'
   );
   if (!confirmed) return null;
 

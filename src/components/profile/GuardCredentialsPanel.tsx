@@ -255,7 +255,7 @@ export function GuardCredentialsPanel({
         </p>
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {editing
-            ? `Government ID and BSIS Guard Card are required for activation. ${CERT_IMAGE_POLICY_HINT}`
+            ? `Government ID and BSIS Guard Card are required before profile approval. ${CERT_IMAGE_POLICY_HINT}`
             : 'Government ID, guard card, and other licenses. Tap any item to view details and photos.'}
         </p>
       </div>

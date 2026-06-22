@@ -8,7 +8,7 @@ import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import {
-  getGuardsReadyForAccountActivation,
+  getGuardActivationChecklist,
   getPendingGuardAccountReviews,
   guardCanActivateAccount,
 } from '../../lib/guardAccountActivation';
@@ -35,7 +35,6 @@ interface StaffApprovalsProps {
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
-  onApproveAllReadyGuardAccounts?: () => void | Promise<void>;
   onApproveIdentityVerification?: (guardId: string) => void;
   onRejectIdentityVerification?: (guardId: string, reason?: string) => void;
   onRequestIdentityResubmit?: (
@@ -76,8 +75,8 @@ const QUEUE_META: Record<
     icon: <ClipboardCheck className="w-4 h-4" />,
   },
   accounts: {
-    title: 'Account activation',
-    description: 'Activate guard and client sign-ups',
+    title: 'Profile approval',
+    description: 'Approve guard and client sign-ups',
     icon: <Shield className="w-4 h-4" />,
   },
 };
@@ -115,7 +114,6 @@ export function StaffApprovals({
   onApproveGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
-  onApproveAllReadyGuardAccounts,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
@@ -131,7 +129,6 @@ export function StaffApprovals({
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
   const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
-  const readyForActivation = getGuardsReadyForAccountActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
 
@@ -176,30 +173,6 @@ export function StaffApprovals({
 
   const renderHub = () => (
     <div className="space-y-4">
-      {readyForActivation.length > 0 && onApproveAllReadyGuardAccounts && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-brand-primary/30 bg-brand-primary/5">
-          <p className="text-sm">
-            <strong>{readyForActivation.length}</strong> guard{readyForActivation.length === 1 ? '' : 's'} ready for
-            account activation (ID + Guard Card verified).
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              void (async () => {
-                try {
-                  await onApproveAllReadyGuardAccounts();
-                } catch (err) {
-                  alert(err instanceof Error ? err.message : 'Could not activate accounts.');
-                }
-              })();
-            }}
-            className="app-button-primary !w-auto !h-9 !px-4 !text-xs"
-          >
-            Activate all ready
-          </button>
-        </div>
-      )}
-
       {queueEmpty ? (
         <p className="staff-empty-state border border-dashed border-brand-border rounded-xl">
           Nothing waiting for approval.
@@ -509,7 +482,7 @@ export function StaffApprovals({
         if (guard) {
           return (
             <>
-              <ApprovalBackBar title={guard.name} subtitle="Guard account activation" onBack={() => setActiveItemId(null)} />
+              <ApprovalBackBar title={guard.name} subtitle="Guard profile approval" onBack={() => setActiveItemId(null)} />
               <div className="staff-detail-pane space-y-4">
                 <p className="text-sm text-brand-text-muted">{guard.email}</p>
                 <GuardActivationChecklistView guard={guard} />
@@ -519,22 +492,28 @@ export function StaffApprovals({
                       Full profile
                     </button>
                   )}
-                  {onApproveGuardAccount && guardCanActivateAccount(guard) && (
+                  {onApproveGuardAccount && (
                     <button
                       type="button"
+                      disabled={!guardCanActivateAccount(guard)}
+                      title={
+                        guardCanActivateAccount(guard)
+                          ? 'Approve guard profile'
+                          : getGuardActivationChecklist(guard).blockers.join(' · ') || 'Complete required-to-work items first'
+                      }
                       onClick={() => {
                         void (async () => {
                           try {
                             await onApproveGuardAccount(guard.id);
                             setActiveItemId(null);
                           } catch (err) {
-                            alert(err instanceof Error ? err.message : 'Could not activate account.');
+                            alert(err instanceof Error ? err.message : 'Could not approve profile.');
                           }
                         })();
                       }}
-                      className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1"
+                      className="app-button-primary !w-auto !h-9 !px-4 !text-xs gap-1 disabled:opacity-50"
                     >
-                      <Check className="w-3.5 h-3.5" /> Activate account
+                      <Check className="w-3.5 h-3.5" /> Approve profile
                     </button>
                   )}
                 </div>
@@ -582,7 +561,7 @@ export function StaffApprovals({
             {pendingGuardAccounts.map((guard) => (
               <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
                 <p className="font-semibold text-sm truncate">{guard.name}</p>
-                <p className="text-xs text-brand-text-muted">Ready for activation review</p>
+                <p className="text-xs text-brand-text-muted">Ready for profile approval</p>
               </AppItemCard>
             ))}
             {pendingClientAccounts.map((client) => (

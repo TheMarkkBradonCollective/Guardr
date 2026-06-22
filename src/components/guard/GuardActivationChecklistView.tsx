@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
+import { guardHasVerifiedIdForWork, guardMeetsLevel1 } from '../../lib/guardQualification';
 import { WfBadge } from '../ui/wireframe';
 import { Check, Circle, Plus } from 'lucide-react';
 
@@ -49,46 +50,50 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         <WfBadge tone={checklist.guardCardVerified ? 'success' : checklist.guardCardSubmitted ? 'warning' : 'default'}>
           Guard card {checklist.guardCardVerified ? 'verified' : checklist.guardCardSubmitted ? 'pending' : 'needed'}
         </WfBadge>
-        {checklist.canActivate && <WfBadge tone="primary">Ready to activate</WfBadge>}
+        {checklist.canActivate && <WfBadge tone="primary">Ready to approve</WfBadge>}
       </div>
     );
   }
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">Account activation requirements</p>
+      <p className="text-sm font-semibold">Required to work</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Submit government ID and a BSIS Guard Card. Staff verifies both before activating your account.
+        Verified government ID and a valid BSIS Guard Card must be on file before staff can approve your profile.
       </p>
       <div className="app-checklist-steps">
         <StepRow
-          done={checklist.idSubmitted}
-          label="Government ID + identity selfie"
+          done={guardHasVerifiedIdForWork(guard)}
+          label="Government ID (verified)"
           detail={
-            checklist.idSubmitted
-              ? 'On file — tap Government ID in Credentials to view'
-              : 'Upload in Credentials — tap Government ID'
+            checklist.idVerified
+              ? guardHasVerifiedIdForWork(guard)
+                ? 'Verified by staff — tap Government ID in Credentials to view'
+                : 'Verified but expired — update in Credentials'
+              : checklist.idSubmitted
+                ? 'Submitted — awaiting staff verification'
+                : 'Upload in Credentials — tap Government ID'
           }
         />
         <StepRow
-          done={checklist.guardCardVerified}
-          label="BSIS Guard Card"
+          done={guardMeetsLevel1(guard)}
+          label="BSIS Guard Card (valid)"
           detail={
-            checklist.guardCardVerified
-              ? 'Verified by staff'
+            guardMeetsLevel1(guard)
+              ? 'Valid guard card on file'
               : checklist.guardCardSubmitted
-                ? 'Uploaded — awaiting staff verification'
+                ? 'On file — must be current and valid to work'
                 : 'Upload in the Guard Card section of your profile'
           }
         />
         <OptionalNote
           label="Add extra credentials (optional)"
-          detail="Firearms permits, medical certs, FEMA, and more can be added in your profile anytime — not required for activation."
+          detail="Firearms permits, medical certs, FEMA, and more can be added in your profile anytime — not required for profile approval."
         />
       </div>
       {checklist.canActivate && (
         <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
-          All requirements complete — staff can activate your account.
+          All required-to-work items complete — staff can approve your profile.
         </p>
       )}
     </div>
