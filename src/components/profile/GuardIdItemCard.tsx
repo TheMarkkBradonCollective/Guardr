@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { ChevronRight, IdCard } from 'lucide-react';
+import { SecurityGuard } from '../../types';
+import {
+  formatIdSummaryLine,
+  getGuardIdVerificationStatus,
+  guardIdVerificationPhotosComplete,
+  ID_VERIFICATION_STATUS_LABELS,
+  isIdExpired,
+} from '../../lib/guardIdentityVerification';
+import { WfBadge } from '../ui/wireframe';
+import { GuardIdDetailModal } from './GuardIdDetailModal';
+import type {
+  GuardIdentityVerificationPayload,
+  IdentityVerificationSubmitResult,
+} from './GuardIdentityVerificationPanel';
+
+function guardHasIdOnFile(guard: SecurityGuard): boolean {
+  return Boolean(
+    guard.idState?.trim() ||
+      guard.idNumber?.trim() ||
+      guard.idExpiryDate?.trim() ||
+      guard.idFrontUrl?.trim() ||
+      guard.idBackUrl?.trim() ||
+      guard.idSelfieUrl?.trim()
+  );
+}
+
+interface GuardIdItemCardProps {
+  guard: SecurityGuard;
+  canEdit?: boolean;
+  staffMode?: boolean;
+  guardName?: string;
+  onSubmit?: (payload: GuardIdentityVerificationPayload) => Promise<IdentityVerificationSubmitResult>;
+}
+
+/** Government ID — credential-style card. Tap to view details; edit from the detail modal. */
+export function GuardIdItemCard({
+  guard,
+  canEdit = false,
+  staffMode = false,
+  guardName,
+  onSubmit,
+}: GuardIdItemCardProps) {
+  const [showDetail, setShowDetail] = useState(false);
+  const status = getGuardIdVerificationStatus(guard);
+  const hasOnFile = guardHasIdOnFile(guard);
+  const expired = isIdExpired(guard);
+  const statusTone =
+    status === 'verified' ? 'success' : status === 'pending' ? 'warning' : status === 'rejected' ? 'danger' : 'default';
+  const openInEditMode = canEdit && !hasOnFile;
+
+  return (
+    <>
+      <div className="app-cert-item">
+        <button
+          type="button"
+          onClick={() => setShowDetail(true)}
+          className="app-cert-item-interactive app-cert-item-body min-w-0 flex gap-3 flex-1 text-left"
+        >
+          {guard.idFrontUrl ? (
+            <img
+              src={guard.idFrontUrl}
+              alt=""
+              className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec flex items-center justify-center shrink-0">
+              <IdCard className="w-5 h-5 text-brand-text-muted" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm leading-snug">Government ID</p>
+            {hasOnFile ? (
+              <>
+                <p className={`text-xs mt-1 ${expired ? 'text-amber-600' : 'text-brand-text-muted'}`}>
+                  {formatIdSummaryLine(guard)}
+                </p>
+                <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-brand-text-muted mt-1">Not uploaded yet</p>
+                <p className="text-[10px] text-brand-primary mt-1">
+                  {canEdit ? 'Tap to add your ID' : 'No ID on file'}
+                </p>
+              </>
+            )}
+            {status === 'rejected' && guard.idVerificationRejectionReason && (
+              <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-2">
+                {guard.idVerificationRejectionReason}
+              </p>
+            )}
+          </div>
+        </button>
+        <div className="app-cert-item-meta">
+          <WfBadge tone={statusTone}>{ID_VERIFICATION_STATUS_LABELS[status]}</WfBadge>
+          {!guardIdVerificationPhotosComplete(guard) && hasOnFile && (
+            <span className="text-[10px] text-brand-text-muted">Photos incomplete</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowDetail(true)}
+            className="p-1 text-brand-text-muted hover:text-brand-text"
+            aria-label="View government ID details"
+          >
+            <ChevronRight className="w-4 h-4 shrink-0" />
+          </button>
+        </div>
+      </div>
+
+      {showDetail && onSubmit && (
+        <GuardIdDetailModal
+          guard={guard}
+          guardName={guardName}
+          canEdit={canEdit}
+          staffMode={staffMode}
+          initialEditMode={openInEditMode}
+          onSubmit={onSubmit}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
+    </>
+  );
+}
