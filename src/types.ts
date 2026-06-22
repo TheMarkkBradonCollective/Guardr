@@ -213,6 +213,8 @@ export interface SecurityGuard {
   mustChangePassword?: boolean;
   /** Government ID verification — separate from profile avatar */
   idVerificationStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected';
+  idState?: string;
+  idNumber?: string;
   idFrontUrl?: string;
   idBackUrl?: string;
   idSelfieUrl?: string;

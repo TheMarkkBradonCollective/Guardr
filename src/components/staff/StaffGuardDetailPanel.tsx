@@ -588,7 +588,6 @@ export function StaffGuardDetailPanel({
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
-                identityVerificationCompact
               />
             </section>
           )}

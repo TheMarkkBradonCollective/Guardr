@@ -34,6 +34,18 @@ export function guardIdVerificationPhotosComplete(
   return Boolean(guard.idFrontUrl?.trim() && guard.idBackUrl?.trim() && guard.idSelfieUrl?.trim());
 }
 
+export function guardIdVerificationSubmissionReady(
+  guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+): boolean {
+  return Boolean(
+    guard.idState?.trim() &&
+      guard.idNumber?.trim() &&
+      guard.idFrontUrl?.trim() &&
+      guard.idBackUrl?.trim() &&
+      guard.idSelfieUrl?.trim()
+  );
+}
+
 export function guardIdVerificationIsLocked(
   guard: Pick<SecurityGuard, 'idVerificationStatus'>
 ): boolean {
@@ -57,22 +69,26 @@ export function guardIdVerificationResubmitPending(
 }
 
 export function staffCanApproveIdVerification(
-  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+  guard: Pick<
+    SecurityGuard,
+    'idVerificationStatus' | 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+  >
 ): boolean {
-  return (
-    getGuardIdVerificationStatus(guard) === 'pending' && guardIdVerificationPhotosComplete(guard)
-  );
+  return getGuardIdVerificationStatus(guard) === 'pending' && guardIdVerificationSubmissionReady(guard);
 }
 
 /** Resubmit requests are only allowed while ID review is pending — not after approval. */
 export function staffCanRequestIdResubmit(
-  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+  guard: Pick<
+    SecurityGuard,
+    'idVerificationStatus' | 'idState' | 'idNumber' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+  >
 ): boolean {
   return staffCanApproveIdVerification(guard);
 }
 
 export function getPendingIdentityVerifications(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter(
-    (g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending' && guardIdVerificationPhotosComplete(g)
+    (g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending' && guardIdVerificationSubmissionReady(g)
   );
 }
