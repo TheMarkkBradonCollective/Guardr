@@ -1866,7 +1866,7 @@ export default function App() {
           )
         );
         console.error('Cert insert error:', e);
-        return { ok: false, error: certDatabaseErrorMessage(error) };
+        return { ok: false, error: certDatabaseErrorMessage(e) };
       }
     }
     return { ok: true };
