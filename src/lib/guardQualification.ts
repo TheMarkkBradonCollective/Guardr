@@ -37,8 +37,11 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 /** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
+import { isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
   const userStatus = guard.userStatus || 'active';
+  if (userStatus === 'pending') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
   return guardMeetsLevel1(guard, state) ? 'active' : 'inactive';
@@ -47,14 +50,16 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
 /** Active account + valid BSIS guard card — required to accept, be hired, or work jobs */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
-  const userStatus = guard.userStatus || 'active';
-  if (userStatus !== 'active') return false;
+  if (!isGuardAccountActive(guard)) return false;
   return guardMeetsLevel1(guard, state);
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
   if (guard.isStaff) {
     return 'Staff accounts cannot work field jobs.';
+  }
+  if (isGuardAccountPending(guard)) {
+    return 'Your application is pending Guardr approval. Complete your profile and credentials while you wait.';
   }
   const userStatus = guard.userStatus || 'active';
   if (userStatus === 'suspended') {

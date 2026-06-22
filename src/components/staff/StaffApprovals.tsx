@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Certification, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
+import { Certification, Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestForm } from '../client/EditRequestForm';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
-import { getPendingCertifications, getPendingJobApprovals } from '../../lib/staffOps';
+import { getPendingCertifications, getPendingClientAccounts, getPendingGuardAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -16,11 +16,14 @@ import { Briefcase, Check, Eye, MapPin, Pencil, Shield, X } from 'lucide-react';
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
+  clients?: Client[];
   onApproveRequest: (requestId: string) => void;
   onDenyRequest: (requestId: string) => void;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
+  onApproveClient?: (clientId: string) => void;
+  onApproveGuardAccount?: (guardId: string) => void;
   onViewGuard?: (guardId: string) => void;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
@@ -30,11 +33,14 @@ interface StaffApprovalsProps {
 export function StaffApprovals({
   requests,
   guards,
+  clients = [],
   onApproveRequest,
   onDenyRequest,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
+  onApproveClient,
+  onApproveGuardAccount,
   onViewGuard,
   canEditJobListing = false,
   onEditJobListing,
@@ -42,16 +48,22 @@ export function StaffApprovals({
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
+  const pendingGuardAccounts = getPendingGuardAccounts(guards);
+  const pendingClientAccounts = getPendingClientAccounts(clients);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const queueEmpty =
-    pendingJobs.length === 0 && pendingCerts.length === 0 && jobsWithApplications.length === 0;
+    pendingJobs.length === 0 &&
+    pendingCerts.length === 0 &&
+    jobsWithApplications.length === 0 &&
+    pendingGuardAccounts.length === 0 &&
+    pendingClientAccounts.length === 0;
 
   return (
     <div className="animate-fade-in space-y-6">
       <p className="text-sm text-brand-text-muted">
-        Approve client job offers before they can pay. Review guard applications and pick the best fit. Verify credentials separately.
+        Approve client job offers before they can pay. Review new guard and client sign-ups, guard applications, and credentials.
       </p>
 
       {queueEmpty ? (
@@ -60,6 +72,61 @@ export function StaffApprovals({
         </p>
       ) : (
         <>
+          {(pendingGuardAccounts.length > 0 || pendingClientAccounts.length > 0) && (
+            <section>
+              <WfSectionHeader
+                title="New account applications"
+                count={pendingGuardAccounts.length + pendingClientAccounts.length}
+              />
+              <p className="text-xs text-brand-text-muted mt-1 mb-3">
+                Self-sign-ups stay pending until staff approves. Applicants can complete profiles and upload credentials meanwhile.
+              </p>
+              <AppItemCardStack>
+                {pendingGuardAccounts.map((guard) => (
+                  <WfListCard
+                    key={guard.id}
+                    avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                    title={guard.name}
+                    subtitle={`Guard · ${guard.email}`}
+                    meta={<WfBadge tone="warning">Pending approval</WfBadge>}
+                    action={
+                      onApproveGuardAccount ? (
+                        <button
+                          type="button"
+                          onClick={() => onApproveGuardAccount(guard.id)}
+                          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                        >
+                          <Check className="w-3 h-3" /> Approve
+                        </button>
+                      ) : undefined
+                    }
+                    onClick={onViewGuard ? () => onViewGuard(guard.id) : undefined}
+                  />
+                ))}
+                {pendingClientAccounts.map((client) => (
+                  <WfListCard
+                    key={client.id}
+                    avatar={<ProfileAvatar src={client.avatar} name={client.name} size="sm" rounded="lg" />}
+                    title={client.companyName || client.name}
+                    subtitle={`Client · ${client.email}`}
+                    meta={<WfBadge tone="warning">Pending approval</WfBadge>}
+                    action={
+                      onApproveClient ? (
+                        <button
+                          type="button"
+                          onClick={() => onApproveClient(client.id)}
+                          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+                        >
+                          <Check className="w-3 h-3" /> Approve
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </AppItemCardStack>
+            </section>
+          )}
+
           {pendingJobs.length > 0 && (
             <section>
               <WfSectionHeader

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -6,6 +6,7 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
+import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -13,6 +14,7 @@ interface StaffClientDetailPanelProps {
   canManage: boolean;
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
+  onDeleteClient?: (id: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   compact?: boolean;
@@ -24,11 +26,15 @@ export function StaffClientDetailPanel({
   canManage,
   onApproveClient,
   onRejectClient,
+  onDeleteClient,
   onBack,
   onOpenJob,
   compact = false,
 }: StaffClientDetailPanelProps) {
-  const isSuspended = client.approved === false;
+  const [deleting, setDeleting] = useState(false);
+  const accountStatus = getClientAccountStatus(client);
+  const isPending = accountStatus === 'pending';
+  const isSuspended = accountStatus === 'suspended';
 
   const clientRequests = useMemo(
     () =>
@@ -40,6 +46,23 @@ export function StaffClientDetailPanel({
 
   const activeJobs = clientRequests.filter((r) => ['accepted', 'in-progress', 'open'].includes(r.status));
   const completedJobs = clientRequests.filter((r) => r.status === 'completed');
+
+  const handleDelete = async () => {
+    if (!onDeleteClient) return;
+    if (!window.confirm(`Delete client account for ${client.companyName || client.name}? This cannot be undone.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await onDeleteClient(client.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not delete client account.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const statusTone = isPending ? 'warning' : isSuspended ? 'danger' : 'success';
 
   return (
     <div className={`staff-detail-pane space-y-0 ${compact ? '' : 'h-full overflow-y-auto'}`}>
@@ -77,9 +100,7 @@ export function StaffClientDetailPanel({
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            <WfBadge tone={isSuspended ? 'danger' : 'success'}>
-              {isSuspended ? 'Suspended' : 'Active'}
-            </WfBadge>
+            <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
             {client.rating != null && (
               <WfBadge className="inline-flex items-center gap-1">
                 <Star className="w-3 h-3" />
@@ -109,13 +130,29 @@ export function StaffClientDetailPanel({
         <section className="py-4 border-b border-brand-border space-y-2">
           <WfSectionHeader title="Account controls" className="mb-0" />
           <div className="flex flex-wrap gap-2">
-            {isSuspended ? (
+            {isPending && (
+              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
+                Approve client account
+              </button>
+            )}
+            {isSuspended && (
               <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                 Restore client account
               </button>
-            ) : (
+            )}
+            {!isPending && !isSuspended && (
               <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
                 Suspend client account
+              </button>
+            )}
+            {onDeleteClient && (
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={deleting}
+                className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
+              >
+                {deleting ? 'Deleting…' : 'Delete account'}
               </button>
             )}
           </div>

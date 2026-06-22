@@ -32,6 +32,8 @@ import {
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
+import type { AddCertificationResult } from '../lib/certUniqueness';
+import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import {
   buildDisputes,
   buildIncidents,
@@ -48,6 +50,8 @@ import { StaffOverview } from './staff/StaffOverview';
 import { StaffApprovals } from './staff/StaffApprovals';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
+import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
+import type { StaffAddClientInput } from './staff/StaffAddClientForm';
 import { StaffTeamPanel } from './staff/StaffTeamPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
@@ -80,6 +84,9 @@ interface StaffDashboardProps {
   onDenyRequest: (requestId: string) => Promise<void>;
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
+  onApproveGuardAccount?: (guardId: string) => Promise<void>;
+  onDeleteGuardAccount?: (guardId: string) => Promise<void>;
+  onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
@@ -107,19 +114,8 @@ interface StaffDashboardProps {
     staffId: string,
     staffRole: StaffRole
   ) => Promise<void>;
-  onAddGuardProfile: (input: {
-    name: string;
-    email: string;
-    phone?: string;
-    badgeNumber?: string;
-    hourlyRate?: number;
-  }) => Promise<string>;
-  onAddClientProfile: (input: {
-    name: string;
-    email: string;
-    companyName?: string;
-    phone?: string;
-  }) => Promise<string>;
+  onAddGuardProfile: (input: StaffAddGuardInput) => Promise<string>;
+  onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
   onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
@@ -129,6 +125,15 @@ interface StaffDashboardProps {
   onChangeTheme: (mode: ThemeMode) => void;
   onSignOut: () => void;
   onUpdateGuardProfile: (guardId: string, payload: ProfileSavePayload) => void | Promise<void>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onDeleteCertification?: (guardId: string, certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (
+    guardId: string,
+    certId: string,
+    imageUrl: string
+  ) => Promise<CertImageMutationResult>;
+  onAddExperience?: (guardId: string, exp: Omit<Experience, 'id'>) => void | Promise<void>;
+  onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
@@ -155,6 +160,9 @@ export function StaffDashboard({
   onDenyRequest,
   onApproveClient,
   onRejectClient,
+  onApproveGuardAccount,
+  onDeleteGuardAccount,
+  onDeleteClientAccount,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -184,6 +192,11 @@ export function StaffDashboard({
   onChangeTheme,
   onSignOut,
   onUpdateGuardProfile,
+  onAddCertification,
+  onDeleteCertification,
+  onAttachCertificationImage,
+  onAddExperience,
+  onAddEducation,
   onSendSupportMessage,
   onUpdateSupportStatus,
   onSendStaffMessage,
@@ -281,11 +294,14 @@ export function StaffDashboard({
           <StaffApprovals
             requests={requests}
             guards={guards}
+            clients={clients}
             onApproveRequest={onApproveRequest}
             onDenyRequest={onDenyRequest}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onApproveGuardApplication={onApproveGuardApplication}
+            onApproveClient={onApproveClient}
+            onApproveGuardAccount={onApproveGuardAccount}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -331,6 +347,14 @@ export function StaffDashboard({
             onApproveGuard={onApproveGuard}
             onRejectGuard={onRejectGuard}
             onUpdateBackgroundChecked={onUpdateBackgroundChecked}
+            onUpdateProfile={canManageGuardAccounts ? onUpdateGuardProfile : undefined}
+            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
+            onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
+            onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
+            onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
+            onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
+            onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
+            onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             initialSelectedId={selectedGuardId}
             onOpenJob={openJob}
             onAddGuard={canManageGuardAccounts ? onAddGuardProfile : undefined}
@@ -362,6 +386,7 @@ export function StaffDashboard({
             canManage={canManageClientAccounts}
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
+            onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
             initialSelectedId={selectedClientId}
             onOpenJob={openJob}
             onAddClient={canManageClientAccounts ? onAddClientProfile : undefined}

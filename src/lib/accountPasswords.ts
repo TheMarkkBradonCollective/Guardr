@@ -52,6 +52,12 @@ export function setStoredPassword(email: string, entry: StoredAccountPassword): 
   savePasswordStore(store);
 }
 
+export function removeStoredPassword(email: string): void {
+  const store = loadPasswordStore();
+  delete store[email.toLowerCase()];
+  savePasswordStore(store);
+}
+
 export function provisionedPasswordFields() {
   return {
     password: STAFF_PROVISIONED_DEFAULT_PASSWORD,

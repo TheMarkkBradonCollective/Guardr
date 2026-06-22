@@ -86,6 +86,9 @@ import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient }
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
+import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
+import { getClientAccountStatus } from './lib/accountStatus';
+import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
   appendMessage,
@@ -370,8 +373,15 @@ export default function App() {
         return;
       }
 
-      setGuards((dbGuards ?? []).map((g: any) => ({
-        id: g.id, name: g.name, email: g.email, badgeNumber: g.badge_number,
+      setGuards((dbGuards ?? []).map((g: any) => {
+        const nameParts = resolvePersonNameParts({
+          firstName: g.first_name,
+          middleName: g.middle_name,
+          lastName: g.last_name,
+          name: g.name,
+        });
+        return {
+        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email, badgeNumber: g.badge_number,
         avatar: g.avatar, phone: g.phone, bio: g.bio,
         headline: g.headline || undefined,
         summary: g.summary || undefined,
@@ -409,18 +419,28 @@ export default function App() {
           id: e.id, school: e.school, degree: e.degree, field: e.field,
           period: e.period, description: e.description ?? '',
         })),
-      })));
+      };
+      }));
 
-      setClients((dbClients ?? []).map((c: any) => ({
-        id: c.id, name: c.name, email: c.email,
+      setClients((dbClients ?? []).map((c: any) => {
+        const nameParts = resolvePersonNameParts({
+          firstName: c.first_name,
+          middleName: c.middle_name,
+          lastName: c.last_name,
+          name: c.name,
+        });
+        return {
+        id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email,
         companyName: c.company_name, phone: c.phone, avatar: c.avatar,
         totalRequests: c.total_requests || 0,
-        approved: c.approved ?? true,
+        approved: c.account_status === 'active' || (c.approved ?? false),
+        accountStatus: c.account_status || (c.approved === false ? 'suspended' : 'active'),
         rating: c.rating != null ? Number(c.rating) : undefined,
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
         password: c.password ?? undefined,
         mustChangePassword: c.must_change_password ?? false,
-      })));
+      };
+      }));
 
       setRequests((dbRequests ?? []).map((r: any) => ({
         id: r.id, title: r.title, description: r.description,
@@ -724,76 +744,103 @@ export default function App() {
     profile: SecurityGuard | Client,
     role: 'guard' | 'client',
     password: string
-  ) => {
+  ): Promise<void> => {
     if (!isDbConnected) {
-      alert('Database is not connected. Cannot create accounts until Supabase is linked.');
-      return;
+      throw new Error('Database is not connected. Cannot create accounts until Supabase is linked.');
     }
+
+    const emailLower = assertEmailAvailable(profile.email);
+
     if (role === 'client') {
       const client = profile as Client;
-      if (isDbConnected) {
-        try {
-          await supabase.from('clients').insert({
-            id: client.id, name: client.name, email: client.email,
-            company_name: client.companyName, phone: client.phone,
-            avatar: client.avatar, total_requests: 0, approved: true,
-            password,
-            must_change_password: false,
-          });
-          setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
-          await loadFromSupabase();
-        } catch (e) { console.error('Client DB insert error:', e); }
+      const accountStatus = client.accountStatus ?? 'pending';
+      try {
+        await supabase.from('clients').insert({
+          id: client.id,
+          name: client.name,
+          first_name: client.firstName,
+          middle_name: client.middleName ?? null,
+          last_name: client.lastName,
+          email: emailLower,
+          company_name: client.companyName,
+          phone: client.phone,
+          avatar: client.avatar,
+          total_requests: 0,
+          approved: accountStatus === 'active',
+          account_status: accountStatus,
+          password,
+          must_change_password: false,
+        });
+        setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
+        await loadFromSupabase();
+      } catch (e) {
+        console.error('Client DB insert error:', e);
+        throw new Error('Could not create client account. This email may already be registered.');
       }
-    } else {
-      const guard = profile as SecurityGuard;
-      if (isDbConnected) {
-        try {
-          await supabase.from('guards').insert({
-            id: guard.id, name: guard.name, email: guard.email,
-            badge_number: guard.badgeNumber, avatar: guard.avatar,
-            phone: guard.phone, bio: guard.bio,
-            is_armed: guard.isArmed, background_checked: guard.backgroundChecked,
-            verified: guard.verified, rating: guard.rating,
-            jobs_completed: guard.jobsCompleted,
-            hourly_rate_requirement: guard.hourlyRateRequirement,
-            is_staff: guard.isStaff, staff_role: guard.staffRole,
-            user_status: guard.userStatus || 'active',
-            password,
-            must_change_password: false,
-          });
-          if (guard.certifications.length > 0) {
-            const seenNumbers = new Set<string>();
-            for (const cert of guard.certifications) {
-              const key = normalizeCertNumber(cert.number);
-              if (!key) continue;
-              if (seenNumbers.has(key)) {
-                throw new Error('Duplicate certificate numbers are not allowed on one profile.');
-              }
-              seenNumbers.add(key);
-              const available = validateCertNumberAvailable(guards, {
-                number: cert.number,
-                guardId: guard.id,
-              });
-              if (!available.ok) throw new Error(available.error);
-            }
-            await supabase.from('certifications').insert(
-              guard.certifications.map((cert) => ({
-                id: cert.id,
-                guard_id: guard.id,
-                name: cert.name,
-                issuer: cert.issuer,
-                number: cert.number,
-                status: cert.status,
-                issue_date: cert.issueDate,
-                expiry_date: cert.expiryDate,
-                state: cert.state ?? null,
-              }))
-            );
+      return;
+    }
+
+    const guard = profile as SecurityGuard;
+    const userStatus = guard.userStatus || 'pending';
+    try {
+      await supabase.from('guards').insert({
+        id: guard.id,
+        name: guard.name,
+        first_name: guard.firstName,
+        middle_name: guard.middleName ?? null,
+        last_name: guard.lastName,
+        email: emailLower,
+        badge_number: guard.badgeNumber,
+        avatar: guard.avatar,
+        phone: guard.phone,
+        bio: guard.bio,
+        is_armed: guard.isArmed,
+        background_checked: guard.backgroundChecked,
+        verified: guard.verified,
+        rating: guard.rating,
+        jobs_completed: guard.jobsCompleted,
+        hourly_rate_requirement: guard.hourlyRateRequirement,
+        is_staff: guard.isStaff,
+        staff_role: guard.staffRole,
+        user_status: userStatus,
+        password,
+        must_change_password: false,
+      });
+      if (guard.certifications.length > 0) {
+        const seenNumbers = new Set<string>();
+        for (const cert of guard.certifications) {
+          const key = normalizeCertNumber(cert.number);
+          if (!key) continue;
+          if (seenNumbers.has(key)) {
+            throw new Error('Duplicate certificate numbers are not allowed on one profile.');
           }
-          setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
-          await loadFromSupabase();
-        } catch (e) { console.error('Guard DB insert error:', e); }
+          seenNumbers.add(key);
+          const available = validateCertNumberAvailable(guards, {
+            number: cert.number,
+            guardId: guard.id,
+          });
+          if (!available.ok) throw new Error(available.error);
+        }
+        await supabase.from('certifications').insert(
+          guard.certifications.map((cert) => ({
+            id: cert.id,
+            guard_id: guard.id,
+            name: cert.name,
+            issuer: cert.issuer,
+            number: cert.number,
+            status: cert.status,
+            issue_date: cert.issueDate,
+            expiry_date: cert.expiryDate,
+            state: cert.state ?? null,
+          }))
+        );
       }
+      setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+      await loadFromSupabase();
+    } catch (e) {
+      console.error('Guard DB insert error:', e);
+      if (e instanceof Error && e.message.includes('certificate')) throw e;
+      throw new Error('Could not create guard account. This email may already be registered.');
     }
   };
 
@@ -1037,6 +1084,9 @@ export default function App() {
           ? {
               ...g,
               name: payload.name,
+              firstName: payload.firstName,
+              middleName: payload.middleName,
+              lastName: payload.lastName,
               phone: payload.phone,
               bio: payload.bio ?? payload.summary ?? g.bio,
               headline: payload.headline ?? g.headline,
@@ -1050,6 +1100,7 @@ export default function App() {
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
+              badgeNumber: payload.badgeNumber ?? g.badgeNumber,
             }
           : g
       )
@@ -1057,6 +1108,9 @@ export default function App() {
     if (isDbConnected) {
       const guardUpdate: Record<string, unknown> = {
           name: payload.name,
+          first_name: payload.firstName,
+          middle_name: payload.middleName ?? null,
+          last_name: payload.lastName,
           phone: payload.phone,
           bio: payload.bio ?? payload.summary ?? '',
           headline: payload.headline ?? '',
@@ -1071,6 +1125,7 @@ export default function App() {
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
       };
       if (payload.avatar !== undefined) guardUpdate.avatar = payload.avatar;
+      if (payload.badgeNumber !== undefined) guardUpdate.badge_number = payload.badgeNumber;
       await supabase.from('guards').update(guardUpdate).eq('id', guardId);
     }
     if (currentUser?.id === guardId) {
@@ -1089,6 +1144,9 @@ export default function App() {
           ? {
               ...c,
               name: payload.name,
+              firstName: payload.firstName,
+              middleName: payload.middleName,
+              lastName: payload.lastName,
               phone: payload.phone,
               companyName: payload.companyName ?? c.companyName,
               avatar: payload.avatar !== undefined ? payload.avatar : c.avatar,
@@ -1099,6 +1157,9 @@ export default function App() {
     if (isDbConnected) {
       const clientUpdate: Record<string, unknown> = {
         name: payload.name,
+        first_name: payload.firstName,
+        middle_name: payload.middleName ?? null,
+        last_name: payload.lastName,
         phone: payload.phone,
         company_name: payload.companyName ?? '',
       };
@@ -1132,7 +1193,10 @@ export default function App() {
   };
 
   const handleAddGuardProfile = async (input: {
-    name: string;
+    name?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
     email: string;
     phone?: string;
     badgeNumber?: string;
@@ -1140,9 +1204,19 @@ export default function App() {
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = input.firstName
+      ? personNameFromPayload({
+          firstName: input.firstName,
+          middleName: input.middleName,
+          lastName: input.lastName ?? '',
+        })
+      : personNameFromPayload(resolvePersonNameParts({ name: input.name ?? '' }));
     const newGuard: SecurityGuard = {
       id: `guard-${Date.now()}`,
-      name: input.name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: input.email.trim(),
       badgeNumber: input.badgeNumber?.trim() || `GR-${Math.floor(10000 + Math.random() * 90000)}`,
       avatar: '',
@@ -1167,6 +1241,9 @@ export default function App() {
         await supabase.from('guards').insert({
           id: newGuard.id,
           name: newGuard.name,
+          first_name: newGuard.firstName,
+          middle_name: newGuard.middleName ?? null,
+          last_name: newGuard.lastName,
           email: emailLower,
           badge_number: newGuard.badgeNumber,
           avatar: newGuard.avatar,
@@ -1194,22 +1271,36 @@ export default function App() {
   };
 
   const handleAddClientProfile = async (input: {
-    name: string;
+    name?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
     email: string;
     companyName?: string;
     phone?: string;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = input.firstName
+      ? personNameFromPayload({
+          firstName: input.firstName,
+          middleName: input.middleName,
+          lastName: input.lastName ?? '',
+        })
+      : personNameFromPayload(resolvePersonNameParts({ name: input.name ?? '' }));
     const newClient: Client = {
       id: `client-${Date.now()}`,
-      name: input.name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: input.email.trim(),
-      companyName: input.companyName?.trim() || input.name.trim(),
+      companyName: input.companyName?.trim() || normalized.name,
       phone: input.phone?.trim() || '',
       avatar: '',
       totalRequests: 0,
       approved: true,
+      accountStatus: 'active',
       password,
       mustChangePassword,
     };
@@ -1219,12 +1310,16 @@ export default function App() {
         await supabase.from('clients').insert({
           id: newClient.id,
           name: newClient.name,
+          first_name: newClient.firstName,
+          middle_name: newClient.middleName ?? null,
+          last_name: newClient.lastName,
           email: emailLower,
           company_name: newClient.companyName,
           phone: newClient.phone,
           avatar: newClient.avatar,
           total_requests: 0,
           approved: true,
+          account_status: 'active',
           password,
           must_change_password: mustChangePassword,
         });
@@ -1249,9 +1344,13 @@ export default function App() {
     }
     const emailLower = assertEmailAvailable(email);
     const { password, mustChangePassword } = provisionedPasswordFields();
+    const normalized = personNameFromPayload(resolvePersonNameParts({ name }));
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
-      name: name.trim(),
+      name: normalized.name,
+      firstName: normalized.firstName,
+      middleName: normalized.middleName,
+      lastName: normalized.lastName,
       email: email.trim(),
       badgeNumber: badgeNumber.trim(),
       avatar: '',
@@ -1277,6 +1376,9 @@ export default function App() {
         await supabase.from('guards').insert({
           id: newStaff.id,
           name: newStaff.name,
+          first_name: newStaff.firstName,
+          middle_name: newStaff.middleName ?? null,
+          last_name: newStaff.lastName,
           email: emailLower,
           badge_number: newStaff.badgeNumber,
           avatar: newStaff.avatar,
@@ -1335,17 +1437,93 @@ export default function App() {
   };
 
   const handleApproveClient = async (clientId: string) => {
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, approved: true } : c));
-    if (isDbConnected) await supabase.from('clients').update({ approved: true }).eq('id', clientId);
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId ? { ...c, approved: true, accountStatus: 'active' as const } : c
+      )
+    );
+    if (isDbConnected) {
+      await supabase.from('clients').update({ approved: true, account_status: 'active' }).eq('id', clientId);
+    }
   };
 
   const handleRejectClient = async (clientId: string) => {
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, approved: false } : c));
-    if (isDbConnected) await supabase.from('clients').update({ approved: false }).eq('id', clientId);
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === clientId ? { ...c, approved: false, accountStatus: 'suspended' as const } : c
+      )
+    );
+    if (isDbConnected) {
+      await supabase.from('clients').update({ approved: false, account_status: 'suspended' }).eq('id', clientId);
+    }
+  };
+
+  const handleApproveGuardAccount = async (guardId: string) => {
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, userStatus: 'active' as const } : g))
+    );
+    if (isDbConnected) {
+      await supabase.from('guards').update({ user_status: 'active' }).eq('id', guardId);
+    }
+  };
+
+  const handleDeleteGuardAccount = async (guardId: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) throw new Error('Guard not found.');
+    if (guard.isStaff) throw new Error('Use the Team panel to manage staff accounts.');
+    const activeJob = requests.find(
+      (r) => r.assignedGuardId === guardId && ['accepted', 'in-progress'].includes(r.status)
+    );
+    if (activeJob) {
+      throw new Error('This guard has an active job. Complete or reassign the shift before deleting the account.');
+    }
+    if (isDbConnected) {
+      const { error } = await supabase.from('guards').delete().eq('id', guardId);
+      if (error) {
+        console.error('Guard delete error:', error);
+        throw new Error('Could not delete guard account from the database.');
+      }
+    }
+    setGuards((prev) => prev.filter((g) => g.id !== guardId));
+    removeStoredPassword(guard.email);
+    if (currentUser?.id === guardId) {
+      handleSignOut();
+    }
+  };
+
+  const handleDeleteClientAccount = async (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) throw new Error('Client not found.');
+    const activeJob = requests.find(
+      (r) =>
+        r.clientId === clientId &&
+        ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
+    );
+    if (activeJob) {
+      throw new Error('This client has active job postings or shifts. Close those before deleting the account.');
+    }
+    if (isDbConnected) {
+      const { error } = await supabase.from('clients').delete().eq('id', clientId);
+      if (error) {
+        console.error('Client delete error:', error);
+        throw new Error('Could not delete client account from the database.');
+      }
+    }
+    setClients((prev) => prev.filter((c) => c.id !== clientId));
+    removeStoredPassword(client.email);
+    if (currentUser?.id === clientId) {
+      handleSignOut();
+    }
   };
 
   // ── Request CRUD ───────────────────────────────────────────
   const handlePostRequest = async (newRequest: Partial<SecurityRequest>) => {
+    const clientRecord = clients.find((c) => c.id === currentUser?.id);
+    if (clientRecord && getClientAccountStatus(clientRecord) !== 'active') {
+      alert('Your client account is pending Guardr approval. You can update your profile, but cannot post jobs yet.');
+      return;
+    }
+
     const startDate = newRequest.startDate || new Date().toISOString();
     const endDate = newRequest.endDate || new Date(Date.now() + 8 * 3600000).toISOString();
     const scheduleError = validateShiftSchedule(startDate, endDate);
@@ -1354,7 +1532,6 @@ export default function App() {
       return;
     }
 
-    const clientRecord = clients.find(c => c.id === currentUser?.id);
     const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Client';
     const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
     const siteName = newRequest.siteName || '';
@@ -3085,6 +3262,8 @@ export default function App() {
             <ClientDashboard
               companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
               clientId={currentUser.id}
+              accountStatus={clientRecord?.accountStatus}
+              approved={clientRecord?.approved}
               requests={myRequests}
               guards={hireableGuards}
               clientEmail={currentUser.email}
@@ -3129,6 +3308,9 @@ export default function App() {
           onDenyRequest={handleDenyRequest}
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
+          onApproveGuardAccount={handleApproveGuardAccount}
+          onDeleteGuardAccount={handleDeleteGuardAccount}
+          onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}
           onRejectCert={handleRejectCert}
           onApproveGuard={handleApproveGuard}
@@ -3158,6 +3340,11 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
           onUpdateGuardProfile={handleUpdateGuardProfile}
+          onAddCertification={handleAddCertification}
+          onDeleteCertification={handleDeleteCertification}
+          onAttachCertificationImage={handleAttachCertificationImage}
+          onAddExperience={handleAddExperience}
+          onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
           jobChatThreads={jobChatThreads}

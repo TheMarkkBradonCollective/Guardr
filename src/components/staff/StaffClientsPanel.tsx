@@ -6,6 +6,8 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddClientForm } from './StaffAddClientForm';
+import type { StaffAddClientInput } from './StaffAddClientForm';
+import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -13,14 +15,10 @@ interface StaffClientsPanelProps {
   canManage: boolean;
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
+  onDeleteClient?: (id: string) => void | Promise<void>;
   initialSelectedId?: string | null;
   onOpenJob?: (jobId: string) => void;
-  onAddClient?: (input: {
-    name: string;
-    email: string;
-    companyName?: string;
-    phone?: string;
-  }) => Promise<string>;
+  onAddClient?: (input: StaffAddClientInput) => Promise<string>;
 }
 
 export function StaffClientsPanel({
@@ -29,6 +27,7 @@ export function StaffClientsPanel({
   canManage,
   onApproveClient,
   onRejectClient,
+  onDeleteClient,
   initialSelectedId = null,
   onOpenJob,
   onAddClient,
@@ -49,7 +48,7 @@ export function StaffClientsPanel({
   const showDetailOnly = Boolean(selected && !splitView);
 
   function renderClientCard(client: Client, isActive: boolean) {
-    const isSuspended = client.approved === false;
+    const accountStatus = getClientAccountStatus(client);
     const activeJobs = requests.filter(
       (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status)
     ).length;
@@ -70,8 +69,8 @@ export function StaffClientsPanel({
         meta={
           <div className="flex flex-wrap items-center gap-1.5">
             <span>{activeJobs} active</span>
-            <WfBadge tone={isSuspended ? 'danger' : 'success'}>
-              {isSuspended ? 'Suspended' : 'Active'}
+            <WfBadge tone={accountStatus === 'pending' ? 'warning' : accountStatus === 'active' ? 'success' : 'danger'}>
+              {CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}
             </WfBadge>
           </div>
         }
@@ -122,6 +121,7 @@ export function StaffClientsPanel({
           canManage={canManage}
           onApproveClient={onApproveClient}
           onRejectClient={onRejectClient}
+          onDeleteClient={onDeleteClient}
           onOpenJob={onOpenJob}
           onBack={() => setSelectedId(null)}
         />
@@ -139,6 +139,7 @@ export function StaffClientsPanel({
               canManage={canManage}
               onApproveClient={onApproveClient}
               onRejectClient={onRejectClient}
+              onDeleteClient={onDeleteClient}
               onOpenJob={onOpenJob}
             />
           )}

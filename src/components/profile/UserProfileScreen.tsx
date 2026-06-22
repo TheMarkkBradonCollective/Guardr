@@ -11,14 +11,20 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
+import { PersonNameFields } from './PersonNameFields';
+import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
   phone: string;
   bio?: string;
   companyName?: string;
   hourlyRateRequirement?: number;
   avatar?: string;
+  badgeNumber?: string;
 }
 
 interface UserProfileScreenProps {
@@ -59,8 +65,17 @@ export function UserProfileScreen({
   const [saving, setSaving] = useState(false);
   const [photoSaving, setPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const profileSource = guard ?? client;
+  const initialName = resolvePersonNameParts({
+    firstName: profileSource?.firstName,
+    middleName: profileSource?.middleName,
+    lastName: profileSource?.lastName,
+    name: currentUser.name,
+  });
   const [avatar, setAvatar] = useState(guard?.avatar ?? client?.avatar ?? currentUser.avatar ?? '');
-  const [name, setName] = useState(currentUser.name);
+  const [firstName, setFirstName] = useState(initialName.firstName);
+  const [middleName, setMiddleName] = useState(initialName.middleName ?? '');
+  const [lastName, setLastName] = useState(initialName.lastName);
   const [phone, setPhone] = useState(guard?.phone ?? client?.phone ?? '');
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
   const [hourlyRate, setHourlyRate] = useState(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
@@ -78,8 +93,16 @@ export function UserProfileScreen({
   });
 
   useEffect(() => {
+    const resolved = resolvePersonNameParts({
+      firstName: profileSource?.firstName,
+      middleName: profileSource?.middleName,
+      lastName: profileSource?.lastName,
+      name: currentUser.name,
+    });
     setAvatar(guard?.avatar ?? client?.avatar ?? currentUser.avatar ?? '');
-    setName(currentUser.name);
+    setFirstName(resolved.firstName);
+    setMiddleName(resolved.middleName ?? '');
+    setLastName(resolved.lastName);
     setPhone(guard?.phone ?? client?.phone ?? '');
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
     setHourlyRate(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
@@ -98,10 +121,13 @@ export function UserProfileScreen({
   }, [currentUser, guard, client]);
 
   const roleLabel = ROLE_LABELS[currentUser.role as PlatformRole] ?? currentUser.role;
+  const displayName = formatPersonName({ firstName, middleName, lastName });
 
-  const buildPayload = (avatarOverride?: string): ProfileSavePayload => ({
-    name: name.trim(),
-    phone: phone.trim(),
+  const buildPayload = (avatarOverride?: string): ProfileSavePayload => {
+    const normalized = personNameFromPayload({ firstName, middleName, lastName });
+    return {
+      ...normalized,
+      phone: phone.trim(),
     companyName: companyName.trim(),
     hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
     avatar: avatarOverride ?? avatar,
@@ -110,7 +136,8 @@ export function UserProfileScreen({
     about: resume.about.trim(),
     headline: resume.headline.trim(),
     bio: resume.summary.trim(),
-  });
+    };
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -160,7 +187,7 @@ export function UserProfileScreen({
     <AppScreen className="pb-8">
       <div className="flex flex-col items-center text-center px-5 pt-4 pb-6">
         <div className="relative mb-3">
-          <ProfileAvatar src={avatar} name={name} size="xl" />
+          <ProfileAvatar src={avatar} name={displayName} size="xl" />
           <label
             className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg ${
               photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer'
@@ -184,7 +211,7 @@ export function UserProfileScreen({
           </button>
         )}
         {photoSaving && <p className="text-xs text-brand-text-muted mb-2">Saving photo…</p>}
-        <h2 className="text-xl font-bold">{name}</h2>
+        <h2 className="text-xl font-bold">{displayName}</h2>
         <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
         <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>
       </div>
@@ -211,7 +238,15 @@ export function UserProfileScreen({
       </div>
 
       <AppFormSection className="space-y-4">
-        <Field label="Full name" value={name} onChange={setName} editing={editing} />
+        <PersonNameFields
+          firstName={firstName}
+          middleName={middleName}
+          lastName={lastName}
+          onFirstNameChange={setFirstName}
+          onMiddleNameChange={setMiddleName}
+          onLastNameChange={setLastName}
+          editing={editing}
+        />
         {isClient && (
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
         )}
