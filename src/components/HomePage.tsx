@@ -5,16 +5,21 @@ import { ArrowRight, Building2, Shield, MapPin, Clock, CheckCircle2 } from 'luci
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
 import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
+import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import type { LegalPageId } from '../lib/legalContent';
+import { LEGAL_DISCLAIMER_SHORT } from '../lib/legalContent';
+import { LEGAL_ENTITY_NAME } from '../lib/siteConfig';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
+  onOpenLegal: (page: LegalPageId) => void;
 }
 
 const CLIENT_FEATURES = [
   { icon: MapPin, title: 'Post by site', body: 'Set location, hours, and coverage type in minutes.' },
-  { icon: Shield, title: 'Verified guards', body: 'Licensed independent professionals apply to your job.' },
+  { icon: Shield, title: 'Licensed professionals', body: 'Independent guards apply with credentials they upload to the platform.' },
   { icon: Clock, title: 'Live visibility', body: 'Track check-ins, audits, and support from one dashboard.' },
 ];
 
@@ -32,7 +37,7 @@ const COVERAGE_TYPES = [
   'Short & recurring posts',
 ];
 
-export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePageProps) {
+export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLegal }: HomePageProps) {
   return (
     <div className="page-shell min-h-screen">
       <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-bg/95 backdrop-blur-xl">
@@ -107,8 +112,9 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-6 text-lg sm:text-xl text-white/75 max-w-2xl leading-relaxed"
           >
-            Clients post jobs. Licensed guards choose assignments. Guardr connects both sides with maps,
-            messaging, and support — without acting as the employer.
+            Clients post jobs. Licensed guards choose assignments. {LEGAL_ENTITY_NAME} operates the
+            technology that connects both sides — maps, messaging, payments, and support — without
+            providing security services or employing guards.
           </motion.p>
 
           <motion.div
@@ -265,13 +271,13 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
         <div className="max-w-3xl mx-auto app-card-elevated p-8 sm:p-10 text-center space-y-4">
           <h2 className="text-xl font-bold">Transparent marketplace rules</h2>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Guardr does not employ guards or guarantee placement. We provide the system that connects
-            clients and independent licensed professionals — with staff oversight, payments, and support.
+            {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
+            independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-brand-text-muted">
-            <div className="rounded-xl border border-brand-border px-3 py-3">Clients hire per job</div>
+            <div className="rounded-xl border border-brand-border px-3 py-3">Clients contract per job</div>
             <div className="rounded-xl border border-brand-border px-3 py-3">Guards choose assignments</div>
-            <div className="rounded-xl border border-brand-border px-3 py-3">Staff + support on platform</div>
+            <div className="rounded-xl border border-brand-border px-3 py-3">Platform tools &amp; support</div>
           </div>
         </div>
       </section>
@@ -304,9 +310,13 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme }: HomePag
             </div>
           </div>
           <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
-          <p className="text-xs text-brand-text-muted max-w-xs">
-            © {new Date().getFullYear()} Guardr — independent contractor marketplace. Data handled per state license requirements.
-          </p>
+          <div className="flex flex-col items-center sm:items-end gap-3">
+            <LegalFooterLinks onOpenLegal={onOpenLegal} />
+            <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right">
+              © {new Date().getFullYear()} {LEGAL_ENTITY_NAME} — independent contractor marketplace.
+              Credential handling follows applicable state licensing rules.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

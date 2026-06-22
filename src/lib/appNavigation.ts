@@ -1,5 +1,6 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
+import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, type ApprovalQueueId, type StaffSection } from './staffOps';
 
 export type AppRole = 'staff' | 'guard' | 'client';
@@ -165,6 +166,10 @@ export function parseAppRoute(url: string): AppRoute | null {
   const { pathname, searchParams } = parsePath(url);
   const nested = parseNestedRoute(searchParams);
 
+  if (pathname === '/legal/terms' || pathname === '/legal/privacy') {
+    return null;
+  }
+
   if (pathname === '/' || pathname === '') {
     if (nested.authView) {
       return { role: 'client', ...nested };
@@ -205,6 +210,30 @@ export function parseAppRoute(url: string): AppRoute | null {
   }
 
   return null;
+}
+
+export function readLegalPageFromWindow(): LegalPageId | null {
+  const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+  if (pathname === '/legal/terms') return 'terms';
+  if (pathname === '/legal/privacy') return 'privacy';
+  return null;
+}
+
+export function buildLegalPath(page: LegalPageId): string {
+  return `/legal/${page}`;
+}
+
+export function syncLegalPage(page: LegalPageId | null, replace = false): void {
+  const nextPath = page ? buildLegalPath(page) : '/';
+  const current = window.location.pathname.replace(/\/$/, '') || '/';
+  if (current === nextPath) return;
+
+  const state = { legalPage: page };
+  if (replace) {
+    window.history.replaceState(state, '', nextPath);
+  } else {
+    window.history.pushState(state, '', nextPath);
+  }
 }
 
 export function buildAppPath(route: AppRoute): string {

@@ -2,7 +2,7 @@
   "id": "https://guardr.co/",
   "name": "Guardr",
   "short_name": "Guardr",
-  "description": "Independent Security Staffing. On Demand.",
+  "description": "Independent security marketplace technology — not a security services provider.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

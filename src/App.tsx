@@ -123,12 +123,16 @@ import {
   defaultRouteForRole,
   parseAppRoute,
   readAppRouteFromWindow,
+  readLegalPageFromWindow,
   syncAppRoute,
+  syncLegalPage,
   type AppRole,
   type AppRoute,
   type AuthViewMode,
   type AuthViewRole,
 } from './lib/appNavigation';
+import type { LegalPageId } from './lib/legalContent';
+import { LegalPage } from './components/legal/LegalPage';
 import type { GuardTab } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { type ApprovalQueueId, type StaffSection } from './lib/staffOps';
@@ -175,6 +179,7 @@ export default function App() {
   const [initialAuthMode, setInitialAuthMode] = useState<'sign-in' | 'sign-up'>(
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
+  const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -617,6 +622,27 @@ export default function App() {
     syncAppRoute({ role: 'client' }, true);
   };
 
+  const openLegalPage = (page: LegalPageId) => {
+    setLegalPageState(page);
+    setIsAuthView(false);
+    syncLegalPage(page);
+  };
+
+  const closeLegalPage = () => {
+    setLegalPageState(null);
+    if (currentUser) {
+      const role = appRoleForUser(currentUser);
+      if (role) {
+        const route = defaultRouteForRole(role);
+        applyAppRoute(route);
+        syncAppRoute(route, true);
+        return;
+      }
+    }
+    setIsAuthView(false);
+    syncLegalPage(null, true);
+  };
+
   const applyAppRouteRef = useRef(applyAppRoute);
   applyAppRouteRef.current = applyAppRoute;
 
@@ -624,6 +650,14 @@ export default function App() {
 
   useEffect(() => {
     const applyDeepLink = (url: string) => {
+      const legal = readLegalPageFromWindow();
+      if (legal) {
+        setLegalPageState(legal);
+        setIsAuthView(false);
+        return;
+      }
+      setLegalPageState(null);
+
       const route = parseAppRoute(url);
       if (!route) return;
       applyAppRouteRef.current(route);
@@ -633,6 +667,15 @@ export default function App() {
     applyDeepLink(window.location.pathname + window.location.search);
 
     const onPopState = (event: PopStateEvent) => {
+      const legal =
+        (event.state?.legalPage as LegalPageId | undefined) ?? readLegalPageFromWindow();
+      if (legal) {
+        setLegalPageState(legal);
+        setIsAuthView(false);
+        return;
+      }
+      setLegalPageState(null);
+
       const route =
         (event.state?.appRoute as AppRoute | undefined) ?? readAppRouteFromWindow();
       if (route) applyAppRouteRef.current(route);
@@ -3742,6 +3785,15 @@ export default function App() {
     );
   }
 
+  if (legalPage) {
+    return (
+      <>
+        <LegalPage page={legalPage} onBack={closeLegalPage} onOpenLegal={openLegalPage} />
+        <InstallPrompt />
+      </>
+    );
+  }
+
   if (!currentUser) {
     if (isAuthView) {
       return (
@@ -3752,6 +3804,7 @@ export default function App() {
             guardsList={guards}
             clientsList={clients}
             onBackToHome={closeAuthView}
+            onOpenLegal={openLegalPage}
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
             themeMode={themeMode}
@@ -3768,6 +3821,7 @@ export default function App() {
           onNavigateToAuth={(role, mode) => {
             openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
+          onOpenLegal={openLegalPage}
         />
         <InstallPrompt />
       </>

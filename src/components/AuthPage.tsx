@@ -14,6 +14,9 @@ import { PersonNameFields } from './profile/PersonNameFields';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
+import type { LegalPageId } from '../lib/legalContent';
+import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
+import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import {
   getStoredPassword,
   shouldPromptPasswordChange,
@@ -60,6 +63,7 @@ interface AuthPageProps {
   guardsList: SecurityGuard[];
   clientsList: Client[];
   onBackToHome: () => void;
+  onOpenLegal?: (page: LegalPageId) => void;
   initialRole?: 'guard' | 'client';
   initialMode?: 'sign-in' | 'sign-up';
   themeMode?: string;
@@ -82,6 +86,7 @@ export function AuthPage({
   guardsList,
   clientsList,
   onBackToHome,
+  onOpenLegal,
   initialRole = 'client',
   initialMode = 'sign-in',
 }: AuthPageProps) {
@@ -101,6 +106,7 @@ export function AuthPage({
   const [hourlyRate, setHourlyRate] = useState('35');
 
   const [clientCompanyName, setClientCompanyName] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     setRole(initialRole === 'guard' ? 'guard' : 'client');
@@ -122,6 +128,10 @@ export function AuthPage({
     }
 
     if (isSignUp) {
+      if (!acceptedTerms) {
+        setErrorMsg('Please accept the Terms of Service and Privacy Policy to create an account.');
+        return;
+      }
       if (!firstName.trim() || !lastName.trim()) {
         setErrorMsg('Please enter your first and last name.');
         return;
@@ -568,6 +578,43 @@ export function AuthPage({
                 </p>
               )}
 
+              {isSignUp && (
+                <label className="flex items-start gap-3 text-xs text-brand-text-muted leading-relaxed cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 rounded border-brand-border"
+                  />
+                  <span>
+                    I agree to the{' '}
+                    {onOpenLegal ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onOpenLegal('terms')}
+                          className="font-semibold text-brand-primary hover:underline"
+                        >
+                          Terms of Service
+                        </button>{' '}
+                        and{' '}
+                        <button
+                          type="button"
+                          onClick={() => onOpenLegal('privacy')}
+                          className="font-semibold text-brand-primary hover:underline"
+                        >
+                          Privacy Policy
+                        </button>
+                      </>
+                    ) : (
+                      'Terms of Service and Privacy Policy'
+                    )}
+                    . I understand {SITE_NAME} is a technology marketplace operated by {LEGAL_ENTITY_NAME},
+                    not a security services provider or employer of guards.
+                  </span>
+                </label>
+              )}
+
               <button type="submit" className="app-button-primary mt-2">
                 {isSignUp ? 'Create account' : 'Sign in'}
                 <ChevronRight className="w-4 h-4" />
@@ -575,9 +622,17 @@ export function AuthPage({
             </form>
           </div>
 
-          <p className="mt-8 text-center text-xs text-brand-text-muted leading-relaxed">
-            Guardr is an independent contractor marketplace. We do not employ or vet security professionals.
+          <p className="mt-8 text-center text-xs text-brand-text-muted leading-relaxed max-w-md mx-auto">
+            {SITE_NAME} is operated by {LEGAL_ENTITY_NAME}, a technology marketplace connecting clients
+            with independent licensed security professionals. We do not provide security services,
+            employ guards, or guarantee licensure, insurance, or on-site performance. Platform staff
+            may review uploaded credentials for account eligibility only.
           </p>
+          {onOpenLegal && (
+            <div className="mt-4 flex justify-center">
+              <LegalFooterLinks onOpenLegal={onOpenLegal} />
+            </div>
+          )}
         </div>
       </div>
     </div>

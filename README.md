@@ -4,6 +4,8 @@
 
 Guardr is an independent contractor marketplace connecting licensed security professionals with clients who need security services. Think Uber for security — clients post requests, guards browse and accept available work.
 
+**Legal positioning:** Guardr is operated by **Signature Security Specialist, LLC** as a technology platform only. We are not a private patrol operator, security guard employer, or staffing agency. Guards and clients contract directly for each job. See in-app Terms of Service and Privacy Policy at `/legal/terms` and `/legal/privacy`.
+
 ## Product Overview
 
 - **Clients** post security requests with site details, schedules, and requirements
@@ -11,7 +13,7 @@ Guardr is an independent contractor marketplace connecting licensed security pro
 - **Staff** approve clients, guards, certifications, and job postings
 - **Admins** have full platform control
 
-Guardr is **not** an employer or staffing agency. It is a direct-connect marketplace.
+Guardr is **not** an employer, staffing agency, or licensed security services provider. It is a direct-connect marketplace technology platform.
 
 ## Design
 
