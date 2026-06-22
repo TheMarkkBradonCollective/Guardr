@@ -733,28 +733,34 @@ export function StaffApprovals({
           <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingGuardAccounts.map((guard) => (
-              <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate">{guard.name}</p>
-                    <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+              <WfListCard
+                key={guard.id}
+                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                title={guard.name}
+                subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
+                meta={
+                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                    <GuardRosterStatusBadges guard={guard} />
+                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
                   </div>
-                  <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                </div>
-                <p className="text-xs text-brand-text-muted">Profile approval · {guardActivationSummaryLabel(guard)}</p>
-              </AppItemCard>
+                }
+                onClick={() => setActiveItemId(guard.id)}
+              />
             ))}
             {approvedGuardsAwaitingActivation.map((guard) => (
-              <AppItemCard key={guard.id} onClick={() => setActiveItemId(guard.id)} className="flex-col !items-stretch gap-1">
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <p className="font-semibold text-sm truncate">{guard.name}</p>
-                    <GuardRosterStatusBadges guard={guard} className="shrink-0" />
+              <WfListCard
+                key={guard.id}
+                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                title={guard.name}
+                subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
+                meta={
+                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                    <GuardRosterStatusBadges guard={guard} />
+                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
                   </div>
-                  <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                </div>
-                <p className="text-xs text-brand-text-muted">Account activation · {guardActivationSummaryLabel(guard)}</p>
-              </AppItemCard>
+                }
+                onClick={() => setActiveItemId(guard.id)}
+              />
             ))}
             {pendingClientAccounts.map((client) => (
               <AppItemCard key={client.id} onClick={() => setActiveItemId(client.id)} className="flex-col !items-stretch gap-1">

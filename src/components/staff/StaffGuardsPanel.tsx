@@ -199,29 +199,27 @@ export function StaffGuardsPanel({
       <WfListCard
         key={guard.id}
         avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-        title={
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="truncate">{guard.name}</span>
-            <GuardRosterStatusBadges guard={guard} className="shrink-0" />
-          </div>
-        }
+        title={guard.name}
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
-          secondaryMeta ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {pendingCerts > 0 && (
-                <WfBadge tone="warning">
-                  {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
-                </WfBadge>
-              )}
-              <GuardMissingCredentialsBadge guard={guard} />
-              {activeShift && (
-                <WfBadge tone="primary" className="max-w-full truncate">
-                  On job: {activeShift.title}
-                </WfBadge>
-              )}
-            </div>
-          ) : undefined
+          <div className="flex flex-col items-start gap-1.5 w-full">
+            <GuardRosterStatusBadges guard={guard} />
+            {secondaryMeta && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {pendingCerts > 0 && (
+                  <WfBadge tone="warning">
+                    {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+                  </WfBadge>
+                )}
+                <GuardMissingCredentialsBadge guard={guard} />
+                {activeShift && (
+                  <WfBadge tone="primary" className="max-w-full truncate">
+                    On job: {activeShift.title}
+                  </WfBadge>
+                )}
+              </div>
+            )}
+          </div>
         }
         onClick={() => setSelectedId(guard.id)}
         className={isActive ? 'app-item-card-selected' : ''}
