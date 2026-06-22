@@ -7,9 +7,12 @@ import {
   canGuardClockOut,
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
+  shiftClockInOpensAt,
+  shiftClockOutClosesAt,
   shiftClockOutOpensAt,
 } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface GuardActiveShiftProps {
@@ -39,6 +42,10 @@ const PHASE_LABELS: Record<ShiftPhase, string> = {
   complete: 'Complete',
 };
 
+function formatClockWindowTime(d: Date): string {
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
 export function GuardActiveShift({
   job,
   phase,
@@ -64,6 +71,9 @@ export function GuardActiveShift({
   const clockOutOpen = canGuardClockOut(job, now);
   const clockInMsg = guardClockInBlockedMessage(job, now);
   const clockOutMsg = guardClockOutBlockedMessage(job, now);
+  const clockInOpensLabel = formatClockWindowTime(shiftClockInOpensAt(job.startDate));
+  const clockOutOpensLabel = formatClockWindowTime(shiftClockOutOpensAt(job.endDate));
+  const clockOutClosesLabel = formatClockWindowTime(shiftClockOutClosesAt(job.endDate));
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
@@ -126,39 +136,30 @@ export function GuardActiveShift({
           <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
         )}
 
-        {(phase === 'upcoming' || phase === 'arrived') && !clockInOpen && clockInMsg && (
-          <p className="text-xs text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-xl p-3 flex gap-2">
-            <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{clockInMsg}</span>
-          </p>
-        )}
-
         {phase === 'upcoming' && (
-          <button
-            type="button"
-            onClick={onArrived}
+          <SlideToConfirm
+            label="Slide to arrive on site"
+            confirmedLabel="Arrived"
+            onConfirm={onArrived}
             disabled={!clockInOpen}
-            className="app-button-primary disabled:opacity-40"
-          >
-            I've arrived
-          </button>
+            disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
+          />
         )}
 
         {phase === 'arrived' && (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={onBeginAudit}
+          <div className="space-y-3">
+            <SlideToConfirm
+              label="Slide to start shift"
+              confirmedLabel="Starting…"
+              onConfirm={onBeginAudit}
               disabled={!clockInOpen}
-              className="app-button-primary disabled:opacity-40"
-            >
-              Begin self audit · clock in
-            </button>
+              disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
+            />
             <button
               type="button"
               onClick={onSkipAudit}
               disabled={!clockInOpen}
-              className="app-button-outline disabled:opacity-40 text-amber-400/95 border-amber-500/40"
+              className="app-button-outline disabled:opacity-40 text-amber-700 dark:text-amber-400 border-amber-500/40 !h-11 !text-sm"
             >
               Skip self audit · clock in
             </button>
@@ -170,7 +171,7 @@ export function GuardActiveShift({
 
         {phase === 'upcoming' && clockInOpen && (
           <p className="text-xs text-brand-text-muted text-center">
-            Clock-in open until job ends
+            Clock-in open from {clockInOpensLabel} until job ends
           </p>
         )}
 
@@ -192,27 +193,23 @@ export function GuardActiveShift({
                 <Phone className="w-4 h-4" /> Message client
               </button>
             </div>
-            {!clockOutOpen && clockOutMsg && (
-              <p className="text-xs text-amber-400/90 border border-amber-500/30 bg-amber-500/5 rounded-xl p-3 flex gap-2">
-                <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{clockOutMsg}</span>
-              </p>
-            )}
-            {clockOutOpen && (
-              <p className="text-xs text-brand-text-muted text-center">
-                Clock-out window: {shiftClockOutOpensAt(job.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                {' – '}
-                {new Date(shiftClockOutOpensAt(job.endDate).getTime() + 15 * 60_000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={onEndShift}
+            <SlideToConfirm
+              label="Slide to end shift"
+              confirmedLabel="Ending…"
+              tone="success"
+              onConfirm={onEndShift}
               disabled={!clockOutOpen}
-              className="app-button-primary disabled:opacity-40"
-            >
-              Complete job · clock out
-            </button>
+              disabledHint={
+                clockOutMsg ??
+                `Clock-out opens at ${clockOutOpensLabel} and closes at ${clockOutClosesLabel}.`
+              }
+            />
+            {clockOutOpen && (
+              <p className="text-xs text-brand-text-muted text-center flex items-center justify-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                End window: {clockOutOpensLabel} – {clockOutClosesLabel}
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -30,6 +30,7 @@ import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
+import { SlideToConfirm } from './ui/SlideToConfirm';
 import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy } from 'lucide-react';
 import {
   filterJobsByCategory,
@@ -751,15 +752,22 @@ export function GuardDashboard({
           panelClassName="p-6 space-y-4"
         >
           <h3 className="font-bold text-lg">Complete job?</h3>
-          <p className="text-sm text-brand-text-muted">Confirm you are leaving the site and your job duties are complete.</p>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setShowCheckout(false)} className="flex-1 uber-button-outline h-11 text-sm">
-              Cancel
-            </button>
-            <button type="button" onClick={handleCheckoutConfirm} className="flex-1 uber-button-sage h-11 text-sm">
-              Confirm
-            </button>
-          </div>
+          <p className="text-sm text-brand-text-muted">
+            Confirm you are leaving the site and your job duties are complete.
+          </p>
+          <SlideToConfirm
+            label="Slide to complete job"
+            confirmedLabel="Completed"
+            tone="success"
+            onConfirm={handleCheckoutConfirm}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCheckout(false)}
+            className="app-button-outline !h-11 !text-sm"
+          >
+            Cancel
+          </button>
         </AppModal>
 
       <GuardRatingModal

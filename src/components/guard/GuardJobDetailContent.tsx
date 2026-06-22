@@ -11,6 +11,7 @@ import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { WfBadge } from '../ui/wireframe';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { Check, X } from 'lucide-react';
 
 interface GuardJobDetailContentProps {
@@ -103,9 +104,11 @@ export function GuardJobDetailContent({
               )}
 
               {onAccept && job.status === 'open' && !hasApplied && canAccept && (
-                <button type="button" onClick={onAccept} className="app-button-primary">
-                  Apply for this job
-                </button>
+                <SlideToConfirm
+                  label={isDirectRequest ? 'Slide to claim job' : 'Slide to apply for job'}
+                  confirmedLabel={isDirectRequest ? 'Claimed' : 'Applied'}
+                  onConfirm={onAccept}
+                />
               )}
 
               {onAccept && job.status === 'open' && !hasApplied && !canAccept && (

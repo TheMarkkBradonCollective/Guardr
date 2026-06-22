@@ -5,6 +5,7 @@ import { JOB_TYPE_LABELS } from '../../lib/guardJobs';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatRouteEta, MapRouteSummary } from '../../lib/mapRouting';
 import { WfBadge } from '../ui/wireframe';
+import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { Clock, MapPin, Navigation, X } from 'lucide-react';
 
 type MapOfferJob = GuardJobView | SecurityRequest;
@@ -111,9 +112,12 @@ export function MapOfferCard({
           </button>
         )}
         {onPrimaryAction && primaryLabel && (
-          <button type="button" onClick={onPrimaryAction} className="app-button-primary !h-9 !text-xs flex-1">
-            {primaryLabel}
-          </button>
+          <SlideToConfirm
+            label={primaryLabel}
+            onConfirm={onPrimaryAction}
+            compact
+            className={!expanded && onExpand ? 'min-w-[58%]' : 'w-full'}
+          />
         )}
       </div>
     </div>
