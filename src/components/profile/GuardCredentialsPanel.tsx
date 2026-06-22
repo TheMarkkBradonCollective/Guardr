@@ -30,7 +30,6 @@ import {
 import {
   getGuardIdVerificationStatus,
   guardIdVerificationCanEdit,
-  ID_VERIFICATION_POLICY_HINT,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
@@ -87,6 +86,11 @@ interface GuardCredentialsPanelProps {
   onSubmitIdentityVerification?: (
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
+  /** Staff viewing a guard profile — enables ID edit in the detail modal. */
+  staffMode?: boolean;
+  /** Staff approve / resubmit actions shown under the primary credential stack. */
+  staffIdReview?: React.ReactNode;
+  renderCertActions?: (cert: Certification) => React.ReactNode;
 }
 
 export function GuardCredentialsPanel({
@@ -96,6 +100,9 @@ export function GuardCredentialsPanel({
   onDeleteCertification,
   onAttachCertificationImage,
   onSubmitIdentityVerification,
+  staffMode = false,
+  staffIdReview,
+  renderCertActions,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -178,6 +185,13 @@ export function GuardCredentialsPanel({
       : undefined,
   });
 
+  const renderCertRow = (cert: Certification) => (
+    <div key={cert.id} className="space-y-2">
+      <CertItemCard cert={cert} editing={editing} showCategory={false} {...certCardProps(cert)} />
+      {renderCertActions?.(cert)}
+    </div>
+  );
+
   const ptaUofProgress = getQualificationProgress(guard);
   const ptaUofCatalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
   const ptaUofItems = useMemo(
@@ -231,9 +245,6 @@ export function GuardCredentialsPanel({
             ? `Government ID and BSIS Guard Card are required for activation. ${CERT_IMAGE_POLICY_HINT}`
             : 'Government ID, guard card, and other licenses. Tap any item to view details and photos.'}
         </p>
-        {!editing && !guard.isStaff && (
-          <p className="text-xs text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
-        )}
       </div>
 
       {!guard.isStaff && idStatus === 'rejected' && guard.idVerificationRejectionReason && (
@@ -247,7 +258,8 @@ export function GuardCredentialsPanel({
           {onSubmitIdentityVerification && (
             <GuardIdItemCard
               guard={guard}
-              canEdit={canEditId}
+              canEdit={staffMode || canEditId}
+              staffMode={staffMode}
               onSubmit={onSubmitIdentityVerification}
             />
           )}
@@ -255,12 +267,15 @@ export function GuardCredentialsPanel({
             guard={guard}
             editing={editing}
             nested
+            renderCertActions={renderCertActions}
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}
           />
         </div>
       )}
+
+      {staffIdReview}
 
       {showSection(ptaUofItems.length) && (
       <section className="app-form-section space-y-3">
@@ -361,15 +376,7 @@ export function GuardCredentialsPanel({
           ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
-            {ptaUofItems.map((cert) => (
-              <CertItemCard
-                key={cert.id}
-                cert={cert}
-                editing={editing}
-                showCategory={false}
-                {...certCardProps(cert)}
-              />
-            ))}
+            {ptaUofItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
@@ -455,15 +462,7 @@ export function GuardCredentialsPanel({
           ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
-            {refresherItems.map((cert) => (
-              <CertItemCard
-                key={cert.id}
-                cert={cert}
-                editing={editing}
-                showCategory={false}
-                {...certCardProps(cert)}
-              />
-            ))}
+            {refresherItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
@@ -552,15 +551,7 @@ export function GuardCredentialsPanel({
           ) : null
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
-            {otherBsisItems.map((cert) => (
-              <CertItemCard
-                key={cert.id}
-                cert={cert}
-                editing={editing}
-                showCategory={false}
-                {...certCardProps(cert)}
-              />
-            ))}
+            {otherBsisItems.map((cert) => renderCertRow(cert))}
           </div>
         )}
       </section>
@@ -670,15 +661,7 @@ export function GuardCredentialsPanel({
               ) : null
             ) : (
               <div className="app-cert-item-stack border-t border-brand-border">
-                {items.map((cert) => (
-                  <CertItemCard
-                    key={cert.id}
-                    cert={cert}
-                    editing={editing}
-                    showCategory={false}
-                    {...certCardProps(cert)}
-                  />
-                ))}
+                {items.map((cert) => renderCertRow(cert))}
               </div>
             )}
           </section>

@@ -20,6 +20,7 @@ interface GuardCardPanelProps {
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   /** Render inside the credentials stack without a separate section header. */
   nested?: boolean;
+  renderCertActions?: (cert: Certification) => React.ReactNode;
 }
 
 export function GuardCardPanel({
@@ -29,6 +30,7 @@ export function GuardCardPanel({
   onDeleteCertification,
   onAttachCertificationImage,
   nested = false,
+  renderCertActions,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const checklist = useMemo(() => getGuardActivationChecklist(guard), [guard]);
@@ -168,7 +170,10 @@ export function GuardCardPanel({
   );
 
   const cardRows = items.map((cert) => (
-    <CertItemCard key={cert.id} cert={cert} editing={editing} showCategory={false} {...certCardProps(cert)} />
+    <div key={cert.id} className="space-y-2">
+      <CertItemCard key={cert.id} cert={cert} editing={editing} showCategory={false} {...certCardProps(cert)} />
+      {renderCertActions?.(cert)}
+    </div>
   ));
 
   if (nested) {

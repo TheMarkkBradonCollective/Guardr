@@ -10,7 +10,7 @@ import {
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { CertItemCard } from '../credentials/CertItemCard';
-import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
+import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
@@ -26,7 +26,6 @@ import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from 
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
-import { GuardIdItemCard } from '../profile/GuardIdItemCard';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import {
   getGuardActivationChecklist,
@@ -186,8 +185,6 @@ export function StaffGuardDetailPanel({
       });
   }, [groupedCerts]);
 
-  const pendingCount = allCerts.filter((c) => c.status === 'pending').length;
-
   const displayName = formatPersonName({ firstName, middleName, lastName });
 
   const buildPayload = (avatarOverride?: string): ProfileSavePayload => {
@@ -285,6 +282,35 @@ export function StaffGuardDetailPanel({
     void onRequestCertImageResubmit(guard.id, cert.id, note);
   };
 
+  const renderStaffCertActions = (cert: Certification) =>
+    canManage && cert.status === 'pending' ? (
+      <div className="flex gap-1.5 justify-end flex-wrap">
+        {cert.imageUrl && onRequestCertImageResubmit && (
+          <button
+            type="button"
+            onClick={() => requestCertResubmit(cert)}
+            className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
+          >
+            Request clearer photo
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onRejectCert(guard.id, cert.id)}
+          className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
+        >
+          <X className="w-3 h-3" /> Reject
+        </button>
+        <button
+          type="button"
+          onClick={() => onApproveCert(guard.id, cert.id)}
+          className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
+        >
+          <Check className="w-3 h-3" /> Verify
+        </button>
+      </div>
+    ) : null;
+
   const renderPendingCertActions = () => {
     const pendingCerts = allCerts.filter((c) => c.status === 'pending');
     if (pendingCerts.length === 0) return null;
@@ -296,33 +322,7 @@ export function StaffGuardDetailPanel({
           {pendingCerts.map((cert) => (
             <div key={cert.id} className="space-y-2">
               <CertItemCard cert={cert} guardName={guard.name} />
-              {canManage && (
-                <div className="flex gap-1.5 justify-end flex-wrap">
-                  {cert.imageUrl && onRequestCertImageResubmit && (
-                    <button
-                      type="button"
-                      onClick={() => requestCertResubmit(cert)}
-                      className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
-                    >
-                      Request clearer photo
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => onRejectCert(guard.id, cert.id)}
-                    className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                  >
-                    <X className="w-3 h-3" /> Reject
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onApproveCert(guard.id, cert.id)}
-                    className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                  >
-                    <Check className="w-3 h-3" /> Verify
-                  </button>
-                </div>
-              )}
+              {renderStaffCertActions(cert)}
             </div>
           ))}
         </div>
@@ -446,10 +446,6 @@ export function StaffGuardDetailPanel({
         </div>
       </div>
 
-      {!guard.isStaff && guardAccountStatus === 'pending' && (
-        <GuardActivationChecklistView guard={guard} />
-      )}
-
       {!guard.isStaff && (
         <>
           {canManage && (
@@ -567,72 +563,30 @@ export function StaffGuardDetailPanel({
 
           {editing ? renderPendingCertActions() : (
             <section className="staff-detail-section space-y-3">
-              <WfSectionHeader
-                title="Credentials"
-                count={pendingCount > 0 ? pendingCount : undefined}
-                className="!px-0 !mb-0"
-              />
-              {onUpdateGuardIdImages && (
-                <div className="space-y-3">
-                  <div className="app-cert-item-stack">
-                    <GuardIdItemCard
-                      guard={guard}
-                      canEdit={canManage}
-                      staffMode
-                      guardName={guard.name}
-                      onSubmit={onUpdateGuardIdImages}
-                    />
-                  </div>
-                  <StaffIdReviewSection
-                    guard={guard}
-                    canManage={canManage}
-                    onApprove={onApproveIdentityVerification}
-                    onReject={onRejectIdentityVerification}
-                    onRequestResubmit={
-                      onRequestIdentityResubmit
-                        ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                        : undefined
-                    }
-                  />
-                </div>
+              {!guard.isStaff && guardAccountStatus === 'pending' && (
+                <GuardActivationChecklistView guard={guard} compact />
               )}
-              <GuardCredentialsView
+              <GuardCredentialsPanel
                 guard={guard}
-                guardName={guard.name}
-                hideEmpty
-                excludeRejected={false}
-                renderCertActions={
-                  canManage
-                    ? (cert) =>
-                        cert.status === 'pending' ? (
-                          <div className="flex gap-1.5 justify-end flex-wrap">
-                            {cert.imageUrl && onRequestCertImageResubmit && (
-                              <button
-                                type="button"
-                                onClick={() => requestCertResubmit(cert)}
-                                className="app-button-outline !w-auto !h-8 !px-3 !text-xs gap-1"
-                              >
-                                Request clearer photo
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => onRejectCert(guard.id, cert.id)}
-                              className="app-button-outline !w-auto !h-8 !px-3 !text-xs text-red-400 border-red-500/40 gap-1"
-                            >
-                              <X className="w-3 h-3" /> Reject
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onApproveCert(guard.id, cert.id)}
-                              className="app-button-primary !w-auto !h-8 !px-3 !text-xs gap-1"
-                            >
-                              <Check className="w-3 h-3" /> Verify
-                            </button>
-                          </div>
-                        ) : null
-                    : undefined
+                editing={false}
+                staffMode={canManage}
+                onSubmitIdentityVerification={onUpdateGuardIdImages}
+                staffIdReview={
+                  canManage ? (
+                    <StaffIdReviewSection
+                      guard={guard}
+                      canManage={canManage}
+                      onApprove={onApproveIdentityVerification}
+                      onReject={onRejectIdentityVerification}
+                      onRequestResubmit={
+                        onRequestIdentityResubmit
+                          ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                          : undefined
+                      }
+                    />
+                  ) : undefined
                 }
+                renderCertActions={renderStaffCertActions}
               />
             </section>
           )}
