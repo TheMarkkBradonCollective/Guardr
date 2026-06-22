@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
+import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
   getGuardDisplayStatus,
   getQualificationProgress,
@@ -283,7 +284,7 @@ export function StaffGuardDetailPanel({
 
   const requestCertResubmit = (cert: Certification) => {
     if (!onRequestCertImageResubmit) return;
-    const note = promptStaffResubmitNote(`${cert.name} photo`);
+    const note = promptStaffResubmitNote(`${certDisplayName(cert)} photo`);
     if (note === null) return;
     void onRequestCertImageResubmit(guard.id, cert.id, note);
   };
