@@ -5,22 +5,19 @@
   "framework": null,
   "functions": {
     "api/push/subscribe.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "lib/pushApi/**,lib/push/**"
     },
     "api/push/unsubscribe.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "lib/pushApi/**,lib/push/**"
     },
     "api/push/send.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "lib/pushApi/**,lib/push/**"
     },
     "api/push/events.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "lib/pushApi/**,lib/push/**"
     },
     "api/push/test.ts": {
-      "includeFiles": "lib/push/**"
-    },
-    "api/push/vapid-public-key.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "lib/pushApi/**,lib/push/**"
     }
   },
   "rewrites": [

@@ -34,6 +34,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     !!((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? '').trim()
   );
   const [enabled, setEnabled] = useState(isPushEnabledLocally());
+  const [serverSynced, setServerSynced] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -54,9 +55,12 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
   useEffect(() => {
     void (async () => {
-      setPermission(await getPushPermission());
+      const perm = await getPushPermission();
+      setPermission(perm);
       const sub = await getExistingSubscription();
-      setEnabled(!!sub && isPushEnabledLocally());
+      const localOn = !!sub && isPushEnabledLocally();
+      setEnabled(localOn);
+      setServerSynced(localOn && perm === 'granted');
     })();
   }, []);
 
@@ -114,20 +118,34 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       if (enabled) {
         const sub = await getExistingSubscription();
         await unsubscribeFromPush();
-        await unsubscribePush(currentUser, sub?.endpoint);
+        try {
+          await unsubscribePush(currentUser, sub?.endpoint);
+        } catch {
+          /* local unsubscribe still counts */
+        }
         setPushEnabledLocally(false);
         setEnabled(false);
+        setServerSynced(false);
         setMessage('Push notifications disabled.');
       } else {
         const subscription = await subscribeToPush();
         if (!subscription) throw new Error('Could not create subscription');
-        await subscribePush(currentUser, subscription, {
-          siteId: siteId.trim() || undefined,
-          quietHoursStart: useQuietHours ? quietStart : undefined,
-          quietHoursEnd: useQuietHours ? quietEnd : undefined,
-        });
+        try {
+          await subscribePush(currentUser, subscription, {
+            siteId: siteId.trim() || undefined,
+            quietHoursStart: useQuietHours ? quietStart : undefined,
+            quietHoursEnd: useQuietHours ? quietEnd : undefined,
+          });
+        } catch (err) {
+          await unsubscribeFromPush();
+          setPushEnabledLocally(false);
+          setEnabled(false);
+          setServerSynced(false);
+          throw err;
+        }
         setPushEnabledLocally(true);
         setEnabled(true);
+        setServerSynced(true);
         setPermission('granted');
         setMessage('Push notifications enabled.');
         if (!isDbConnected) {
@@ -191,11 +209,16 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
           type="button"
           disabled={busy || !configured}
           onClick={() => void handleToggle()}
-          className={`relative w-12 h-7 rounded-full transition-colors ${enabled ? 'bg-brand-primary' : 'bg-brand-border'} disabled:opacity-50`}
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+            enabled ? 'bg-brand-primary' : 'bg-brand-border'
+          }`}
           aria-pressed={enabled}
+          aria-label={enabled ? 'Disable push notifications' : 'Enable push notifications'}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : ''}`}
+            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              enabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
           />
         </button>
       </div>
@@ -212,11 +235,15 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
               <button
                 type="button"
                 onClick={() => void handleTogglePref(opt.key)}
-                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 mt-0.5 ${prefs[opt.key] ? 'bg-brand-primary' : 'bg-brand-border'}`}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors mt-0.5 ${
+                  prefs[opt.key] ? 'bg-brand-primary' : 'bg-brand-border'
+                }`}
                 aria-pressed={prefs[opt.key]}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${prefs[opt.key] ? 'translate-x-5' : ''}`}
+                  className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                    prefs[opt.key] ? 'translate-x-6' : 'translate-x-1'
+                  }`}
                 />
               </button>
             </label>
@@ -272,8 +299,14 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       </button>
 
       <p className="text-xs text-brand-text-muted">
-        Permission: {permission}
+        Browser permission: {permission}
         {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
+        {permission === 'granted' && !serverSynced && enabled
+          ? ' — device subscribed locally but not synced to server yet.'
+          : ''}
+        {permission === 'granted' && !enabled && !busy
+          ? ' — turn on the toggle above to register this device.'
+          : ''}
       </p>
 
       {message && <p className="text-xs text-brand-text-muted">{message}</p>}

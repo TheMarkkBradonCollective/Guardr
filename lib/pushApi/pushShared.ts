@@ -27,10 +27,15 @@ export async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!url || !serviceKey) return null;
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    return createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch (err) {
+    console.error('Failed to create Supabase admin client:', err);
+    return null;
+  }
 }
 
 function resolvePlatformRole(input: {
@@ -87,8 +92,11 @@ export async function verifySession(
     legacyRole: data.is_staff ? 'staff' : 'guard',
   });
 
-  if (platformRole !== role) return null;
-  return { userId, email, role, platformRole };
+  if (platformRole !== role && role !== 'staff' && role !== 'auditor') {
+    console.warn(`Push session role mismatch for ${email}: client sent ${role}, db has ${platformRole}`);
+  }
+
+  return { userId, email, role: platformRole, platformRole };
 }
 
 export function platformRoleToPushRole(role: PlatformRole | string): PushRole {

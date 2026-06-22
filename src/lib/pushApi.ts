@@ -9,7 +9,13 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(`Server returned invalid response: ${text.slice(0, 120)}`);
+    const compact = text.replace(/\s+/g, ' ').trim();
+    if (compact.includes('FUNCTION_INVOCATION_FAILED')) {
+      throw new Error(
+        'Push server is temporarily unavailable. Please try again in a moment — if this persists, contact support.'
+      );
+    }
+    throw new Error(compact.length > 160 ? `${compact.slice(0, 160)}…` : compact);
   }
 }
 

@@ -2,8 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PushRole, PushSubscriptionPayload } from './types';
 
 function subscriptionId(userId: string, endpoint: string): string {
-  const suffix = Buffer.from(endpoint).toString('base64url').slice(-12);
-  return `push-${userId}-${suffix}`;
+  let hash = 0;
+  for (let i = 0; i < endpoint.length; i += 1) {
+    hash = (hash << 5) - hash + endpoint.charCodeAt(i);
+    hash |= 0;
+  }
+  return `push-${userId}-${Math.abs(hash)}`;
 }
 
 export async function upsertPushSubscription(

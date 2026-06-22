@@ -64,9 +64,11 @@ export async function verifySession(
     legacyRole: data.is_staff ? 'staff' : 'guard',
   });
 
-  if (platformRole !== role) return null;
+  if (platformRole !== role && role !== 'staff' && role !== 'auditor') {
+    console.warn(`Push session role mismatch for ${email}: client sent ${role}, db has ${platformRole}`);
+  }
 
-  return { userId, email, role, platformRole };
+  return { userId, email, role: platformRole, platformRole };
 }
 
 export function isInternalPushAuthorized(authHeader: string | undefined): boolean {
