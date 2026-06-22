@@ -15,6 +15,7 @@ interface ClientAppLayoutProps {
   onChangeTheme: (mode: ThemeMode) => void;
   activeView?: ClientView;
   onNavigate?: (view: ClientView) => void;
+  accountPending?: boolean;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -51,10 +52,13 @@ export function ClientAppLayout({
   onChangeTheme,
   activeView = 'map',
   onNavigate,
+  accountPending = false,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map' || activeView === 'coverage';
+  const navHighlightView =
+    accountPending && !['home', 'profile', 'support'].includes(activeView) ? 'home' : activeView;
 
   const themeToggle = <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />;
 
@@ -75,7 +79,7 @@ export function ClientAppLayout({
       onSignOut={onSignOut}
       navItems={PRIMARY_NAV}
       overflowNavItems={OVERFLOW_NAV}
-      activeNavId={activeView}
+      activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       headerRight={themeToggle}
       moreMenuFooter={moreFooter}

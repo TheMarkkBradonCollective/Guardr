@@ -64,6 +64,8 @@ interface AuthPageProps {
   clientsList: Client[];
   onBackToHome: () => void;
   onOpenLegal?: (page: LegalPageId) => void;
+  onAuthModeChange?: (mode: 'sign-in' | 'sign-up') => void;
+  onAuthRoleChange?: (role: 'guard' | 'client') => void;
   initialRole?: 'guard' | 'client';
   initialMode?: 'sign-in' | 'sign-up';
   themeMode?: string;
@@ -87,6 +89,8 @@ export function AuthPage({
   clientsList,
   onBackToHome,
   onOpenLegal,
+  onAuthModeChange,
+  onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
 }: AuthPageProps) {
@@ -437,14 +441,14 @@ export function AuthPage({
           <div className="segmented-control segmented-control-full mb-6">
             <button
               type="button"
-              onClick={() => { setIsSignUp(false); setErrorMsg(''); }}
+              onClick={() => { setIsSignUp(false); setErrorMsg(''); onAuthModeChange?.('sign-in'); }}
               className={`segmented-control-btn flex-1 text-center ${!isSignUp ? 'segmented-control-btn-active' : ''}`}
             >
               Sign in
             </button>
             <button
               type="button"
-              onClick={() => { setIsSignUp(true); setErrorMsg(''); }}
+              onClick={() => { setIsSignUp(true); setErrorMsg(''); onAuthModeChange?.('sign-up'); }}
               className={`segmented-control-btn flex-1 text-center ${isSignUp ? 'segmented-control-btn-active' : ''}`}
             >
               Sign up
@@ -467,7 +471,7 @@ export function AuthPage({
                     <button
                       key={id}
                       type="button"
-                      onClick={() => { setRole(id); setErrorMsg(''); }}
+                      onClick={() => { setRole(id); setErrorMsg(''); onAuthRoleChange?.(id); }}
                       className={`auth-role-card text-left w-full ${
                         role === id ? 'auth-role-card-active' : 'hover:border-brand-primary/30'
                       }`}

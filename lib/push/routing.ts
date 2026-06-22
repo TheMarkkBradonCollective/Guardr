@@ -107,6 +107,39 @@ export function resolveNotificationUrlForRole(
       return options.requestId
         ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}`
         : '/staff/messages?mtab=jobs';
+    case 'emergency_alert':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/coverage';
+      }
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/my-jobs';
+      }
+      if (options.requestId) {
+        return `/staff/jobs?j=${encodeURIComponent(options.requestId)}`;
+      }
+      if (options.ticketId) {
+        return `/staff/support?st=${encodeURIComponent(options.ticketId)}`;
+      }
+      return '/staff/incidents';
+    case 'missed_checkin':
+    case 'guard_checkin':
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/my-jobs';
+      }
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/coverage';
+      }
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
     case 'staff_message':
       return '/staff/messages?mtab=team';
     case 'assignment':

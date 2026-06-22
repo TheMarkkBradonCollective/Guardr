@@ -90,6 +90,7 @@ import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdate
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
+import { isClientAccountPending } from './lib/accountStatus';
 import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
@@ -180,6 +181,7 @@ export default function App() {
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
+  const [legalReturnAuth, setLegalReturnAuth] = useState(false);
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -552,6 +554,25 @@ export default function App() {
     setStaffApprovalQueueState(null);
   };
 
+  const updateStaffApprovalQueue = (queue: ApprovalQueueId | null) => {
+    setStaffApprovalQueueState(queue);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'approvals',
+        staffApprovalQueue: queue ?? undefined,
+        staffGuardId: staffGuardId ?? undefined,
+        staffClientId: staffClientId ?? undefined,
+        staffJobId: staffJobId ?? undefined,
+        staffTeamId: staffTeamId ?? undefined,
+        staffEdit: staffEdit || undefined,
+        jobChatRequestId: jobChatRequestId ?? undefined,
+        supportTicketId: supportTicketId ?? undefined,
+        staffMessageTab: staffMessageTab,
+      })
+    );
+  };
+
   const setStaffGuardId = (guardId: string | null) => {
     setStaffGuardIdState(guardId);
     if (!guardId) setStaffEditState(false);
@@ -610,6 +631,16 @@ export default function App() {
     );
   };
 
+  const setAuthViewRole = (role: AuthViewRole) => {
+    setInitialAuthRole(role);
+    syncAppRoute({ role: 'client', authView: initialAuthMode, authRole: role }, true);
+  };
+
+  const setAuthViewMode = (mode: AuthViewMode) => {
+    setInitialAuthMode(mode);
+    syncAppRoute({ role: 'client', authView: mode, authRole: initialAuthRole }, true);
+  };
+
   const openAuthView = (role: AuthViewRole, mode: AuthViewMode) => {
     setInitialAuthRole(role);
     setInitialAuthMode(mode);
@@ -619,10 +650,13 @@ export default function App() {
 
   const closeAuthView = () => {
     setIsAuthView(false);
-    syncAppRoute({ role: 'client' }, true);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/');
+    }
   };
 
   const openLegalPage = (page: LegalPageId) => {
+    setLegalReturnAuth(isAuthView);
     setLegalPageState(page);
     setIsAuthView(false);
     syncLegalPage(page);
@@ -630,12 +664,28 @@ export default function App() {
 
   const closeLegalPage = () => {
     setLegalPageState(null);
+    if (legalReturnAuth) {
+      setLegalReturnAuth(false);
+      setIsAuthView(true);
+      syncLegalPage(null, true);
+      syncAppRoute(
+        { role: 'client', authView: initialAuthMode, authRole: initialAuthRole },
+        true
+      );
+      return;
+    }
     if (currentUser) {
       const role = appRoleForUser(currentUser);
       if (role) {
-        const route = defaultRouteForRole(role);
-        applyAppRoute(route);
-        syncAppRoute(route, true);
+        const route = readAppRouteFromWindow();
+        if (route && routeMatchesUser(route, currentUser)) {
+          applyAppRoute(route);
+          syncAppRoute(route, true);
+        } else {
+          const fallback = defaultRouteForRole(role);
+          applyAppRoute(fallback);
+          syncAppRoute(fallback, true);
+        }
         return;
       }
     }
@@ -645,6 +695,8 @@ export default function App() {
 
   const applyAppRouteRef = useRef(applyAppRoute);
   applyAppRouteRef.current = applyAppRoute;
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
 
   useNativeBackButtonBootstrap(!!currentUser);
 
@@ -660,6 +712,21 @@ export default function App() {
 
       const route = parseAppRoute(url);
       if (!route) return;
+
+      const user = currentUserRef.current;
+      if (route.authView) {
+        if (!user) {
+          setIsAuthView(true);
+          setInitialAuthRole(route.authRole ?? 'client');
+          setInitialAuthMode(route.authView);
+        }
+        return;
+      }
+
+      if (user && !routeMatchesUser(route, user)) {
+        return;
+      }
+
       applyAppRouteRef.current(route);
       syncAppRoute(route, true);
     };
@@ -1208,6 +1275,11 @@ export default function App() {
     localStorage.removeItem('guardr_current_user');
     setCurrentUser(null);
     setIsAuthView(false);
+    setLegalPageState(null);
+    setLegalReturnAuth(false);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/');
+    }
   };
 
   /**
@@ -3805,6 +3877,8 @@ export default function App() {
             clientsList={clients}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
+            onAuthModeChange={setAuthViewMode}
+            onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
             themeMode={themeMode}
@@ -3911,6 +3985,22 @@ export default function App() {
       r.clientName === currentUser.name
     );
     const hireableGuards = getBrowsableGuards(verifiedGuards);
+    const clientAccountPending = isClientAccountPending({
+      accountStatus: clientRecord?.accountStatus,
+      approved: clientRecord?.approved,
+    });
+    const handleClientNavigate = (view: ClientView) => {
+      if (
+        clientAccountPending &&
+        view !== 'home' &&
+        view !== 'profile' &&
+        view !== 'support'
+      ) {
+        setClientView('home');
+        return;
+      }
+      setClientView(view);
+    };
 
     return (
       <>
@@ -3920,7 +4010,8 @@ export default function App() {
           onSignOut={handleSignOut}
           onChangeTheme={changeThemeMode}
           activeView={clientView}
-          onNavigate={setClientView}
+          onNavigate={handleClientNavigate}
+          accountPending={clientAccountPending}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -4013,6 +4104,7 @@ export default function App() {
           staffApprovalQueue={staffApprovalQueue}
           onOpenStaffApprovals={openStaffApprovals}
           onClearStaffApprovalQueue={clearStaffApprovalQueue}
+          onUpdateStaffApprovalQueue={updateStaffApprovalQueue}
           guards={verifiedGuards}
           clients={clients}
           requests={requests}

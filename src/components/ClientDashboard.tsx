@@ -129,10 +129,15 @@ export function ClientDashboard({
   }, [activeView]);
 
   useEffect(() => {
-    if (view === 'direct-request' && !requestTargetGuard) {
+    if (view !== 'direct-request' || requestTargetGuard) return;
+    if (!effectiveDirectGuardId) {
       navigate('guards');
+      return;
     }
-  }, [view, requestTargetGuard]);
+    if (guards.length === 0) return;
+    const found = guards.some((g) => g.id === effectiveDirectGuardId);
+    if (!found) navigate('guards');
+  }, [view, requestTargetGuard, effectiveDirectGuardId, guards]);
 
   const navigate = (next: ClientView) => {
     setView(next);

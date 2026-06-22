@@ -588,7 +588,25 @@ export function GuardDashboard({
             void onReportIncident?.(activeShiftJob.id);
             alert('Incident reported. Client and staff have been notified.');
           }}
-          onActivityReport={() => alert('Activity report saved to job log.')}
+          onActivityReport={() => {
+            if (!activeShiftJob) return;
+            const report = window.prompt('Log activity for this shift');
+            if (!report?.trim()) return;
+            const stamp = new Date().toISOString();
+            const entry = `[${new Date(stamp).toLocaleTimeString()}] ${report.trim()}`;
+            const prior = activeShiftJob.checkOutAudit?.dailyActivityReport ?? '';
+            onUpdateJobAudit(activeShiftJob.id, {
+              checkOutAudit: {
+                checkedAt: activeShiftJob.checkOutAudit?.checkedAt ?? stamp,
+                completed: false,
+                noViolations: activeShiftJob.checkOutAudit?.noViolations ?? true,
+                noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
+                dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
+                incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
+                clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
+              },
+            });
+          }}
           onEndShift={handleEndShift}
           onOpenJobChat={onSendJobChatMessage ? () => setShowJobChat(true) : undefined}
         />
@@ -728,7 +746,21 @@ export function GuardDashboard({
         <GuardRatingModal
           clientName={ratingJob.clientName}
           onSkip={() => setRatingJob(null)}
-          onSubmit={() => setRatingJob(null)}
+          onSubmit={(rating, note) => {
+            const existing = ratingJob.checkOutAudit;
+            onUpdateJobAudit(ratingJob.id, {
+              checkOutAudit: {
+                checkedAt: existing?.checkedAt ?? new Date().toISOString(),
+                completed: existing?.completed ?? true,
+                noViolations: existing?.noViolations ?? true,
+                noEquipmentIssues: existing?.noEquipmentIssues ?? true,
+                dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
+                incidentReport: existing?.incidentReport ?? { hasIncident: false },
+                clientNotes: `Guard rated client ${rating}/5: ${note}`,
+              },
+            });
+            setRatingJob(null);
+          }}
         />
       )}
     </>

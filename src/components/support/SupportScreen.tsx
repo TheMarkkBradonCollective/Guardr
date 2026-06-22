@@ -59,9 +59,15 @@ export function SupportScreen({
 
   useEffect(() => {
     if (!initialTicketId) return;
+    const ticket = myTickets.find((t) => t.id === initialTicketId);
+    if (!ticket) {
+      setActiveTicketId(null);
+      setView('home');
+      return;
+    }
     setActiveTicketId(initialTicketId);
     setView('thread');
-  }, [initialTicketId]);
+  }, [initialTicketId, myTickets]);
 
   const openThread = (ticketId: string) => {
     setActiveTicketId(ticketId);

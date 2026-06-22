@@ -170,6 +170,7 @@ interface StaffDashboardProps {
   staffApprovalQueue?: ApprovalQueueId | null;
   onOpenStaffApprovals?: (queue?: ApprovalQueueId | null) => void;
   onClearStaffApprovalQueue?: () => void;
+  onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
 }
 
 export function StaffDashboard({
@@ -254,6 +255,7 @@ export function StaffDashboard({
   staffApprovalQueue = null,
   onOpenStaffApprovals,
   onClearStaffApprovalQueue,
+  onUpdateStaffApprovalQueue,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -295,7 +297,11 @@ export function StaffDashboard({
   };
 
   const navigateSection = (next: StaffSection) => {
-    if (next !== 'approvals') onClearStaffApprovalQueue?.();
+    if (next === 'approvals') {
+      onOpenStaffApprovals?.(null);
+      return;
+    }
+    onClearStaffApprovalQueue?.();
     if (!isControlled) setInternalSection(next);
     onSectionChange?.(next);
     if (next !== 'guards') setSelectedGuardId(null);
@@ -320,8 +326,11 @@ export function StaffDashboard({
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
   const overviewActions = useMemo(
-    () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
-    [stats, requests, incidents, supportTickets, guards, clients]
+    () => {
+      const items = buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients);
+      return showFinance ? items : items.filter((item) => item.section !== 'payments');
+    },
+    [stats, requests, incidents, supportTickets, guards, clients, showFinance]
   );
   const overviewLiveJobs = useMemo(() => buildOverviewLiveJobs(guards, requests), [guards, requests]);
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
@@ -387,7 +396,7 @@ export function StaffDashboard({
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
             initialQueue={staffApprovalQueue}
-            onQueueChange={(queue) => onOpenStaffApprovals?.(queue)}
+            onQueueChange={(queue) => onUpdateStaffApprovalQueue?.(queue ?? null)}
             onViewGuard={(guardId) => {
               setSelectedGuardId(guardId);
               navigateSection('guards');
@@ -489,7 +498,7 @@ export function StaffDashboard({
           />
         );
       case 'incidents':
-        return <StaffIncidentsPanel incidents={incidents} />;
+        return <StaffIncidentsPanel incidents={incidents} onOpenJob={openJob} />;
       case 'support':
         return onSendSupportMessage && onUpdateSupportStatus ? (
           <StaffSupportPanel
@@ -534,7 +543,15 @@ export function StaffDashboard({
             onDepositCashToStripe={onDepositCashToStripe}
             onCompletePayoutInvoice={onCompletePayoutInvoice}
           />
-        ) : null;
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Payments</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Financial controls are limited to Director and Administrator roles. If money is owed on
+              jobs, ask your Director to review the Payments section.
+            </p>
+          </div>
+        );
       case 'disputes':
         return <StaffDisputesPanel disputes={disputes} />;
       case 'analytics':

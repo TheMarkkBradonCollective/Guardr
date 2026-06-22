@@ -5,6 +5,7 @@ import { AppList } from '../ui/app/AppPrimitives';
 
 interface StaffIncidentsPanelProps {
   incidents: OpsIncident[];
+  onOpenJob?: (requestId: string) => void;
 }
 
 const SEVERITY_TONE: Record<OpsIncident['severity'], 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
@@ -14,7 +15,7 @@ const SEVERITY_TONE: Record<OpsIncident['severity'], 'default' | 'primary' | 'su
   critical: 'danger',
 };
 
-export function StaffIncidentsPanel({ incidents }: StaffIncidentsPanelProps) {
+export function StaffIncidentsPanel({ incidents, onOpenJob }: StaffIncidentsPanelProps) {
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4 max-w-2xl">
@@ -40,6 +41,15 @@ export function StaffIncidentsPanel({ incidents }: StaffIncidentsPanelProps) {
                 <span className="text-xs text-brand-text-muted">{new Date(inc.timestamp).toLocaleString()}</span>
               </div>
               <p className="text-sm text-brand-text-muted leading-relaxed">{inc.description}</p>
+              {onOpenJob && (
+                <button
+                  type="button"
+                  onClick={() => onOpenJob(inc.requestId)}
+                  className="mt-2 app-button-outline !w-auto !h-9 !px-4 !text-xs"
+                >
+                  Open job
+                </button>
+              )}
             </div>
           ))}
         </AppList>

@@ -2479,3 +2479,222 @@ html.theme-dark .app-cta-dark {
   border-color: var(--brand-text);
   background: color-mix(in srgb, var(--brand-text) 4%, transparent);
 }
+
+/* ─── UBER INSTANT-RECOGNITION LAYER ───────────────────────── */
+.app-card-elevated {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-float);
+}
+
+html.theme-light {
+  --uber-chrome-bg: #000000;
+  --uber-chrome-text: #ffffff;
+  --uber-chrome-muted: rgba(255, 255, 255, 0.62);
+  --uber-chrome-border: rgba(255, 255, 255, 0.1);
+}
+
+html.theme-dark,
+html.theme-grey {
+  --uber-chrome-bg: var(--brand-elevated);
+  --uber-chrome-text: var(--brand-text);
+  --uber-chrome-muted: var(--brand-text-muted);
+  --uber-chrome-border: var(--brand-border);
+}
+
+html.theme-light .app-button-primary {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+html.theme-light .app-button-primary:hover {
+  background: #1a1a1a;
+}
+
+.role-experience-client .app-screen-header,
+.role-experience-guard .app-screen-header {
+  background: var(--uber-chrome-bg);
+  color: var(--uber-chrome-text);
+  border-bottom-color: var(--uber-chrome-border);
+}
+
+.role-experience-client .app-screen-header h1,
+.role-experience-guard .app-screen-header h1 {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.role-experience-client .app-screen-header p,
+.role-experience-guard .app-screen-header p,
+.role-experience-client .app-screen-header button,
+.role-experience-guard .app-screen-header button {
+  color: var(--uber-chrome-muted);
+}
+
+.role-experience-client .app-screen-header .border-brand-border,
+.role-experience-guard .app-screen-header .border-brand-border {
+  border-color: var(--uber-chrome-border);
+}
+
+.role-experience-client .bottom-nav-bar,
+.role-experience-guard .bottom-nav-bar {
+  background: var(--uber-chrome-bg);
+  border-top-color: var(--uber-chrome-border);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+}
+
+html.theme-light .role-experience-client .bottom-nav-item,
+html.theme-light .role-experience-guard .bottom-nav-item {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+html.theme-light .role-experience-client .bottom-nav-item[aria-current="page"],
+html.theme-light .role-experience-guard .bottom-nav-item[aria-current="page"] {
+  color: #ffffff;
+}
+
+.role-experience-client .bottom-nav-item[aria-current="page"]::before,
+.role-experience-guard .bottom-nav-item[aria-current="page"]::before {
+  background: var(--brand-primary);
+}
+
+.more-menu-panel {
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+}
+
+.staff-main-header {
+  background: var(--uber-chrome-bg, var(--brand-bg));
+  color: var(--uber-chrome-text, var(--brand-text));
+  border-bottom-color: var(--uber-chrome-border, var(--brand-border));
+}
+
+.staff-main-header h1,
+.staff-main-header p,
+.staff-main-header button {
+  color: inherit;
+}
+
+html.theme-light .staff-main-header {
+  color: #ffffff;
+}
+
+.staff-sidebar-brand {
+  background: var(--uber-chrome-bg, var(--brand-bg-sec));
+  color: var(--uber-chrome-text, var(--brand-text));
+  margin: -1rem -1rem 1rem;
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--uber-chrome-border, var(--brand-border));
+}
+
+html.theme-light .staff-sidebar-brand {
+  color: #ffffff;
+}
+
+html.theme-light .staff-sidebar-brand .text-brand-text-muted {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.app-screen {
+  max-width: 42rem;
+}
+
+.app-screen-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.app-list-row {
+  min-height: 3.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.15s ease;
+}
+
+.app-list-row-interactive:hover {
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.segmented-control {
+  background: var(--brand-bg-sec);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem;
+}
+
+.segmented-control-btn-active {
+  background: var(--brand-text);
+  color: var(--brand-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+html.theme-light .segmented-control-btn-active {
+  background: #000000;
+  color: #ffffff;
+}
+
+.auth-experience-guard .auth-hero,
+.auth-experience-client .auth-hero {
+  background: linear-gradient(165deg, #000000 0%, #1a1f1a 55%, #0a0a0a 100%);
+}
+
+.uber-input,
+.uber-select {
+  height: 3.25rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--brand-border);
+  background: var(--brand-bg);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.uber-input:focus,
+.uber-select:focus {
+  outline: none;
+  border-color: var(--brand-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+}
+
+.staff-ops-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-text);
+  color: var(--brand-bg);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+html.theme-light .staff-ops-btn-primary {
+  background: #000000;
+  color: #ffffff;
+}
+
+.staff-ops-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--brand-text);
+  border: 1.5px solid var(--brand-border);
+  cursor: pointer;
+}

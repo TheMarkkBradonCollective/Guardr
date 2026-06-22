@@ -237,6 +237,12 @@ export function syncLegalPage(page: LegalPageId | null, replace = false): void {
 }
 
 export function buildAppPath(route: AppRoute): string {
+  if (route.authView) {
+    const params = buildNestedQuery(route);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : '/';
+  }
+
   let base: string;
   switch (route.role) {
     case 'staff':
@@ -250,10 +256,6 @@ export function buildAppPath(route: AppRoute): string {
       break;
     default:
       base = '/';
-  }
-
-  if (route.authView && base === '/') {
-    // keep root for unauthenticated auth
   }
 
   const params = buildNestedQuery(route);
