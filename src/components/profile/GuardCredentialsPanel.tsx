@@ -22,11 +22,16 @@ import { US_STATES } from '../../lib/states';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { GuardCardPanel } from './GuardCardPanel';
+import { GuardIdItemCard } from './GuardIdItemCard';
 import {
-  GuardIdentityVerificationPanel,
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
+import {
+  getGuardIdVerificationStatus,
+  guardIdVerificationCanEdit,
+  ID_VERIFICATION_POLICY_HINT,
+} from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, ImagePlus, Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, validateCertDeletion } from '../../lib/certImagePolicy';
@@ -212,44 +217,56 @@ export function GuardCredentialsPanel({
   const isRefresherOpen = openSection === 'bsis-refresher';
   const isOtherBsisOpen = openSection === 'bsis-training';
   const showSection = (count: number) => editing || count > 0;
+  const idStatus = getGuardIdVerificationStatus(guard);
+  const canEditId = !guard.isStaff && guardIdVerificationCanEdit(guard);
 
   return (
-    <div className="space-y-4">
-      {editing && (
-        <div className="app-form-section space-y-1">
-          <p className="text-sm font-semibold text-brand-primary">Upload credentials</p>
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Add permits, medical certs, BSIS training, and other credentials you hold. Guardr verification is a trust badge
-            for clients, not required to accept work. {CERT_IMAGE_POLICY_HINT}
-          </p>
-        </div>
+    <section className="app-form-section space-y-4">
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-brand-primary">
+          {editing ? 'Upload credentials' : 'Credentials'}
+        </p>
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          {editing
+            ? `Government ID and BSIS Guard Card are required for activation. ${CERT_IMAGE_POLICY_HINT}`
+            : 'Government ID, guard card, and other licenses. Tap any item to view details and photos.'}
+        </p>
+        {!editing && !guard.isStaff && (
+          <p className="text-xs text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
+        )}
+      </div>
+
+      {!guard.isStaff && idStatus === 'rejected' && guard.idVerificationRejectionReason && (
+        <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
+          ID resubmit requested — tap Government ID, then Edit to update. {guard.idVerificationRejectionReason}
+        </p>
       )}
 
-      {!editing && (
-        <div className="app-form-section space-y-1">
-          <p className="text-sm font-semibold text-brand-primary">Credentials</p>
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Government ID first, then guard card and other licenses. Tap any item to view details and photos.
-          </p>
-        </div>
-      )}
-
-      {!guard.isStaff && onSubmitIdentityVerification && (
-        <GuardIdentityVerificationPanel
-          guard={guard}
-          onSubmit={onSubmitIdentityVerification}
-          embedded
-        />
+      {!guard.isStaff && idStatus === 'pending' && (
+        <p className="text-sm text-amber-400/90">
+          ID submitted {guard.idVerificationSubmittedAt ? new Date(guard.idVerificationSubmittedAt).toLocaleString() : ''} —
+          awaiting staff review.
+        </p>
       )}
 
       {!guard.isStaff && (
-        <GuardCardPanel
-          guard={guard}
-          editing={editing}
-          onAddCertification={onAddCertification}
-          onDeleteCertification={onDeleteCertification}
-          onAttachCertificationImage={onAttachCertificationImage}
-        />
+        <div className="app-cert-item-stack">
+          {onSubmitIdentityVerification && (
+            <GuardIdItemCard
+              guard={guard}
+              canEdit={canEditId}
+              onSubmit={onSubmitIdentityVerification}
+            />
+          )}
+          <GuardCardPanel
+            guard={guard}
+            editing={editing}
+            nested
+            onAddCertification={onAddCertification}
+            onDeleteCertification={onDeleteCertification}
+            onAttachCertificationImage={onAttachCertificationImage}
+          />
+        </div>
       )}
 
       {showSection(ptaUofItems.length) && (
@@ -675,6 +692,6 @@ export function GuardCredentialsPanel({
         );
         return sectionCard;
       })}
-    </div>
+    </section>
   );
 }

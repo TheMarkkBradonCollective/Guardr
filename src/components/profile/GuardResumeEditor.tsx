@@ -123,6 +123,17 @@ export function GuardResumeEditor({
 
   return (
     <div className="space-y-5">
+      {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
+
+      <GuardCredentialsPanel
+        guard={guard}
+        editing={credEditing}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
+        onSubmitIdentityVerification={onSubmitIdentityVerification}
+      />
+
       <section className="app-form-section space-y-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
@@ -224,17 +235,6 @@ export function GuardResumeEditor({
           })}
         </div>
       </section>
-
-      {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
-
-      <GuardCredentialsPanel
-        guard={guard}
-        editing={credEditing}
-        onAddCertification={onAddCertification}
-        onDeleteCertification={onDeleteCertification}
-        onAttachCertificationImage={onAttachCertificationImage}
-        onSubmitIdentityVerification={onSubmitIdentityVerification}
-      />
 
       <ExperienceSection
         title="Work experience"

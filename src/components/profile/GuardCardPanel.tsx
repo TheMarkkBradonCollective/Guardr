@@ -18,6 +18,8 @@ interface GuardCardPanelProps {
   onAddCertification?: (cert: Partial<Certification>) => Promise<AddCertificationResult>;
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  /** Render inside the credentials stack without a separate section header. */
+  nested?: boolean;
 }
 
 export function GuardCardPanel({
@@ -26,6 +28,7 @@ export function GuardCardPanel({
   onAddCertification,
   onDeleteCertification,
   onAttachCertificationImage,
+  nested = false,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const checklist = useMemo(() => getGuardActivationChecklist(guard), [guard]);
@@ -115,6 +118,84 @@ export function GuardCardPanel({
       ? 'Pending review'
       : 'Not uploaded';
 
+  const uploadForm = showForm && editing && (
+    <form onSubmit={submitGuardCard} className="space-y-3 border-t border-brand-border pt-3">
+      <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
+        {US_STATES.map(({ code, name }) => (
+          <option key={code} value={code}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <input
+        className="uber-input w-full"
+        placeholder="Issuing organization (e.g. BSIS)"
+        value={issuer}
+        onChange={(e) => setIssuer(e.target.value)}
+        required
+      />
+      <input
+        className="uber-input w-full"
+        placeholder="Guard card / registration number"
+        value={number}
+        onChange={(e) => setNumber(e.target.value)}
+        required
+      />
+      <input
+        type="date"
+        value={expiryDate}
+        onChange={(e) => setExpiryDate(e.target.value)}
+        className="uber-input w-full"
+        aria-label="Expiry date"
+      />
+      <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
+        <ImagePlus className="w-4 h-4 shrink-0" />
+        <span>Photo of guard card — required for staff verification</span>
+        <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
+      </label>
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt="Guard card preview"
+          className="w-full max-h-40 object-contain rounded-lg border border-brand-border"
+        />
+      )}
+      {formError && <p className="text-xs text-red-400">{formError}</p>}
+      <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
+        Upload guard card
+      </button>
+    </form>
+  );
+
+  const cardRows = items.map((cert) => (
+    <CertItemCard key={cert.id} cert={cert} editing={editing} showCategory={false} {...certCardProps(cert)} />
+  ));
+
+  if (nested) {
+    return (
+      <>
+        {cardRows}
+        {editing && onAddCertification && (
+          <div className="pt-2 space-y-2">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <p className="text-xs text-brand-text-muted">
+                BSIS Guard Card — required for activation. {CERT_IMAGE_POLICY_HINT}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowForm((open) => !open)}
+                className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+              >
+                {showForm ? 'Cancel' : items.length ? 'Add another' : 'Upload'}
+              </button>
+            </div>
+            {uploadForm}
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <section className="app-form-section space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -124,8 +205,7 @@ export function GuardCardPanel({
             BSIS Guard Card
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Your state guard license — required for account activation and to work jobs. Upload here, not under
-            credentials below. {CERT_IMAGE_POLICY_HINT}
+            Your state guard license — required for account activation and to work jobs. {CERT_IMAGE_POLICY_HINT}
           </p>
           <div className="mt-2">
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
@@ -142,54 +222,7 @@ export function GuardCardPanel({
         )}
       </div>
 
-      {showForm && editing && (
-        <form onSubmit={submitGuardCard} className="space-y-3 border-t border-brand-border pt-3">
-          <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
-            {US_STATES.map(({ code, name }) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <input
-            className="uber-input w-full"
-            placeholder="Issuing organization (e.g. BSIS)"
-            value={issuer}
-            onChange={(e) => setIssuer(e.target.value)}
-            required
-          />
-          <input
-            className="uber-input w-full"
-            placeholder="Guard card / registration number"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            className="uber-input w-full"
-            aria-label="Expiry date"
-          />
-          <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-            <ImagePlus className="w-4 h-4 shrink-0" />
-            <span>Photo of guard card — required for staff verification</span>
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-          </label>
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt="Guard card preview"
-              className="w-full max-h-40 object-contain rounded-lg border border-brand-border"
-            />
-          )}
-          {formError && <p className="text-xs text-red-400">{formError}</p>}
-          <button type="submit" className="w-full app-button-primary !h-11 !text-sm">
-            Upload guard card
-          </button>
-        </form>
-      )}
+      {uploadForm}
 
       {items.length === 0 ? (
         <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
@@ -197,9 +230,7 @@ export function GuardCardPanel({
         </p>
       ) : (
         <div className="app-cert-item-stack border-t border-brand-border">
-          {items.map((cert) => (
-            <CertItemCard key={cert.id} cert={cert} editing={editing} {...certCardProps(cert)} />
-          ))}
+          {cardRows}
         </div>
       )}
     </section>

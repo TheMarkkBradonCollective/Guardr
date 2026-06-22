@@ -69,7 +69,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               ? 'Verified by staff'
               : checklist.idSubmitted
                 ? 'Submitted — awaiting staff review'
-                : 'Upload in ID verification section'
+                : 'Upload in Credentials — tap Government ID'
           }
         />
         <StepRow
