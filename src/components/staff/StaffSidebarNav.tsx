@@ -20,7 +20,6 @@ interface StaffSidebarNavProps {
 const PRIMARY_IDS: StaffSection[] = ['overview', 'map', 'jobs', 'approvals'];
 const MORE_IDS: StaffSection[] = ['clients', 'guards', 'team', 'messages', 'support', 'incidents', 'disputes', 'analytics'];
 const ADMIN_IDS: StaffSection[] = ['payments', 'settings'];
-const ACCOUNT_IDS: StaffSection[] = ['profile'];
 
 function NavGroup({
   title,
@@ -112,13 +111,6 @@ export function StaffSidebarNav({
           onNavigate={onNavigate}
         />
       )}
-      <NavGroup
-        title="Account"
-        itemIds={ACCOUNT_IDS}
-        items={visibleItems}
-        activeSection={activeSection}
-        onNavigate={onNavigate}
-      />
     </nav>
   );
 }

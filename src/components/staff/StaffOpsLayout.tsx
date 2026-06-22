@@ -3,10 +3,9 @@ import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
-import { ThemeToggle } from '../ui/ThemeToggle';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { AccountMenu } from '../layouts/AccountMenu';
 import {
   AlertTriangle,
   BarChart3,
@@ -16,14 +15,12 @@ import {
   DollarSign,
   LayoutDashboard,
   LifeBuoy,
-  LogOut,
   Map,
   Menu,
   MessageSquare,
   Scale,
   Settings,
   Shield,
-  User,
   Users,
   X,
 } from 'lucide-react';
@@ -98,7 +95,6 @@ export function StaffOpsLayout({
     { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
-    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   const navigate = (section: StaffSection) => {
@@ -121,11 +117,8 @@ export function StaffOpsLayout({
         />
       </div>
       <div className="staff-sidebar-footer">
-        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
         {onOpenLegal && (
-          <div className="mt-3">
-            <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-          </div>
+          <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
         )}
         {isDbConnected && (
           <p className="text-[10px] text-brand-primary flex items-center gap-1.5 justify-center mt-3">
@@ -133,10 +126,6 @@ export function StaffOpsLayout({
             Connected
           </p>
         )}
-        <button type="button" onClick={onSignOut} className="w-full app-button-outline !h-10 !text-xs mt-3">
-          <LogOut className="w-3.5 h-3.5" />
-          Sign out
-        </button>
       </div>
     </div>
   );
@@ -178,25 +167,16 @@ export function StaffOpsLayout({
             <h1 className="text-lg font-semibold truncate">{SECTION_TITLES[activeSection]}</h1>
             <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
           </div>
-          <div className="shrink-0 flex items-center gap-1">
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="inline-flex items-center gap-1.5 h-9 px-2 sm:px-2.5 rounded-lg text-xs font-medium text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20 transition-colors"
-              aria-label="Log out"
-            >
-              <LogOut className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Log out</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('profile')}
-              className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-              aria-label="Open profile"
-            >
-              <ProfileAvatar src={currentUser.avatar} name={currentUser.name} size="sm" />
-            </button>
-          </div>
+          <AccountMenu
+            userName={currentUser.name}
+            userSubtitle={ROLE_LABELS[currentUser.role]}
+            avatarUrl={currentUser.avatar}
+            themeMode={themeMode}
+            onChangeTheme={onChangeTheme}
+            onOpenProfile={() => navigate('profile')}
+            onSignOut={onSignOut}
+            active={activeSection === 'profile'}
+          />
         </header>
 
         <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>

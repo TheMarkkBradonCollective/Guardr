@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavBar, BottomNavItem } from './BottomNavBar';
 import { MoreMenuSheet } from './MoreMenuSheet';
+import type { AccountMenuProps } from './AccountMenu';
 
 interface RoleAppShellProps {
   title: string;
   subtitle?: string;
   locationLabel?: string;
-  avatarUrl?: string;
-  avatarName?: string;
-  onAvatarClick?: () => void;
-  onSignOut?: () => void;
+  accountMenu: AccountMenuProps;
   navItems: BottomNavItem[];
   overflowNavItems?: BottomNavItem[];
   activeNavId: string;
@@ -30,10 +28,7 @@ export function RoleAppShell({
   title,
   subtitle,
   locationLabel,
-  avatarUrl,
-  avatarName,
-  onAvatarClick,
-  onSignOut,
+  accountMenu,
   navItems,
   overflowNavItems = [],
   activeNavId,
@@ -70,10 +65,7 @@ export function RoleAppShell({
           title={title}
           subtitle={subtitle}
           locationLabel={locationLabel}
-          avatarUrl={avatarUrl}
-          avatarName={avatarName}
-          onAvatarClick={onAvatarClick}
-          onSignOut={onSignOut}
+          accountMenu={accountMenu}
           right={headerRight}
           className={`${isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}${
             experience ? ` role-header-${experience}` : ''

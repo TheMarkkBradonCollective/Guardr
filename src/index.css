@@ -4047,8 +4047,83 @@ html.theme-light .staff-ops-btn-primary:hover {
   .modal-panel,
   .animate-fade-in,
   .animate-slide-up,
-  .animate-slide-down {
+  .animate-slide-down,
+  .account-menu-panel {
     animation: none !important;
     transition: none !important;
   }
 }
+
+/* ─── ACCOUNT MENU (top-right, all roles) ─────────────────── */
+.account-menu-panel {
+  animation: accountMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes accountMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── CREDENTIAL CATEGORIES (viewing) ─────────────────────── */
+.credential-view-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.credential-view-section-count {
+  flex-shrink: 0;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-surface));
+  color: var(--brand-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.credential-category-badge {
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+.credential-category-guard-card {
+  color: #0f766e;
+  background: color-mix(in srgb, #0f766e 10%, var(--brand-surface));
+  border-color: color-mix(in srgb, #0f766e 22%, var(--brand-border));
+}
+
+.credential-category-bsis-training {
+  color: var(--brand-primary);
+}
+
+.credential-category-bsis-permit,
+.credential-category-security-advanced {
+  color: #b45309;
+  background: color-mix(in srgb, #b45309 10%, var(--brand-surface));
+  border-color: color-mix(in srgb, #b45309 22%, var(--brand-border));
+}
+
+.credential-category-medical {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 10%, var(--brand-surface));
+  border-color: color-mix(in srgb, #dc2626 22%, var(--brand-border));
+}
+
+.credential-category-fema,
+.credential-category-industry {
+  color: var(--brand-text-muted);
+}
+
