@@ -80,6 +80,11 @@ export function StaffIdReviewSection({
           <IdPreview label={ID_VERIFICATION_SLOT_LABELS.selfie} url={guard.idSelfieUrl} />
         </div>
       )}
+      <p className="text-xs text-brand-text-muted leading-relaxed">
+        Request a resubmit when a photo is unclear — the guard can upload again. Use{' '}
+        <strong className="text-brand-text">Reject application</strong> once to deny the entire application
+        (all three ID images); the account is blocked and they cannot continue on Guardr.
+      </p>
       <div className="flex flex-wrap gap-2">
         {status === 'pending' && onApprove && (
           <button
