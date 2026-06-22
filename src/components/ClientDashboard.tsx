@@ -27,7 +27,9 @@ export type ClientView =
   | 'requests'
   | 'guards'
   | 'profile'
-  | 'support';
+  | 'support'
+  | 'support-compose'
+  | 'support-report';
 
 interface ClientDashboardProps {
   companyName: string;

@@ -128,6 +128,8 @@ import {
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
+import { SupportComposePage } from './components/support/SupportComposePage';
+import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
   buildNewTicket,
@@ -174,7 +176,7 @@ import {
 import type { LegalPageId } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
 import { showAppToast } from './components/ui/AppToast';
-import type { GuardTab } from './components/GuardDashboard';
+import type { GuardTab, GuardSupportMode } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
 import { type ApprovalQueueId, type StaffSection } from './lib/staffOps';
 import {
@@ -309,6 +311,12 @@ export default function App() {
   const [supportTicketId, setSupportTicketIdState] = useState<string | null>(
     () => initialRoute?.supportTicketId ?? null
   );
+  const [supportSection, setSupportSectionState] = useState<'support' | 'reports'>(
+    () => initialRoute?.supportSection ?? 'support'
+  );
+  const [supportMode, setSupportModeState] = useState<GuardSupportMode | null>(
+    () => initialRoute?.supportMode ?? null
+  );
   const [staffMessageTab, setStaffMessageTabState] = useState<'team' | 'jobs'>(
     () => initialRoute?.staffMessageTab ?? 'team'
   );
@@ -335,6 +343,8 @@ export default function App() {
       clientDirectGuardId: clientDirectGuardId ?? undefined,
       jobChatRequestId: jobChatRequestId ?? undefined,
       supportTicketId: supportTicketId ?? undefined,
+      supportSection: supportSection ?? undefined,
+      supportMode: supportMode ?? undefined,
       staffMessageTab: staffMessageTab ?? undefined,
       staffApprovalQueue: staffApprovalQueue ?? undefined,
       openJobChat: openJobChat || undefined,
@@ -357,6 +367,8 @@ export default function App() {
     setClientDirectGuardIdState(route.clientDirectGuardId ?? null);
     setJobChatRequestIdState(route.jobChatRequestId ?? null);
     setSupportTicketIdState(route.supportTicketId ?? null);
+    setSupportSectionState(route.supportSection ?? 'support');
+    setSupportModeState(route.supportMode ?? null);
     if (route.staffMessageTab) setStaffMessageTabState(route.staffMessageTab);
     setStaffApprovalQueueState(route.staffApprovalQueue ?? null);
     setOpenJobChatState(route.openJobChat ?? false);
@@ -374,15 +386,19 @@ export default function App() {
     const nextGuardId = view === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = view === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
     const nextJobChatId = view === 'coverage' ? jobChatRequestId ?? undefined : undefined;
-    const nextSupportId = view === 'support' ? supportTicketId ?? undefined : undefined;
+    const isSupportHome = view === 'support';
+    const nextSupportId = isSupportHome ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
     if (view !== 'coverage') {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
     }
-    if (view !== 'support') {
+    if (!isSupportHome) {
       setSupportTicketIdState(null);
+    }
+    if (view !== 'support' && view !== 'support-compose' && view !== 'support-report') {
+      setSupportSectionState('support');
     }
     syncAppRoute(
       buildAppRoute({
@@ -393,6 +409,50 @@ export default function App() {
         jobChatRequestId: nextJobChatId,
         openJobChat: view === 'coverage' && openJobChat ? true : undefined,
         supportTicketId: nextSupportId,
+        supportSection: view === 'support' ? supportSection : undefined,
+        supportMode: undefined,
+      })
+    );
+  };
+
+  const openClientSupportCompose = () => {
+    setClientViewState('support-compose');
+    setSupportTicketIdState(null);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: 'support-compose',
+        supportTicketId: undefined,
+        supportSection: undefined,
+        supportMode: undefined,
+      })
+    );
+  };
+
+  const openClientSupportReport = () => {
+    setClientViewState('support-report');
+    setSupportTicketIdState(null);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: 'support-report',
+        supportTicketId: undefined,
+        supportSection: undefined,
+        supportMode: undefined,
+      })
+    );
+  };
+
+  const closeClientSupportForm = (section: 'support' | 'reports' = 'support') => {
+    setSupportSectionState(section);
+    setClientViewState('support');
+    syncAppRoute(
+      buildAppRoute({
+        role: 'client',
+        clientView: 'support',
+        supportTicketId: undefined,
+        supportSection: section,
+        supportMode: undefined,
       })
     );
   };
@@ -430,6 +490,8 @@ export default function App() {
     }
     if (tab !== 'support') {
       setSupportTicketIdState(null);
+      setSupportModeState(null);
+      setSupportSectionState('support');
     }
     syncAppRoute(
       buildAppRoute({
@@ -438,6 +500,52 @@ export default function App() {
         jobChatRequestId: keepJobChat,
         openJobChat: keepOpenChat,
         supportTicketId: tab === 'support' ? supportTicketId ?? undefined : undefined,
+        supportSection: tab === 'support' ? supportSection : undefined,
+        supportMode: tab === 'support' ? supportMode ?? undefined : undefined,
+      })
+    );
+  };
+
+  const openGuardSupportCompose = () => {
+    setGuardTabState('support');
+    setSupportTicketIdState(null);
+    setSupportModeState('compose');
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'support',
+        supportMode: 'compose',
+        supportTicketId: undefined,
+        supportSection: undefined,
+      })
+    );
+  };
+
+  const openGuardSupportReport = () => {
+    setGuardTabState('support');
+    setSupportTicketIdState(null);
+    setSupportModeState('report');
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'support',
+        supportMode: 'report',
+        supportTicketId: undefined,
+        supportSection: undefined,
+      })
+    );
+  };
+
+  const closeGuardSupportForm = (section: 'support' | 'reports' = 'support') => {
+    setSupportSectionState(section);
+    setSupportModeState(null);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'support',
+        supportMode: undefined,
+        supportTicketId: undefined,
+        supportSection: section,
       })
     );
   };
@@ -488,6 +596,7 @@ export default function App() {
 
   const setSupportTicketId = (ticketId: string | null) => {
     setSupportTicketIdState(ticketId);
+    setSupportModeState(null);
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
       setStaffSectionState('support');
@@ -497,6 +606,7 @@ export default function App() {
           role: 'staff',
           staffSection: 'support',
           supportTicketId: ticketId ?? undefined,
+          supportMode: undefined,
           staffApprovalQueue: undefined,
         })
       );
@@ -509,6 +619,7 @@ export default function App() {
           role: 'guard',
           guardTab: 'support',
           supportTicketId: ticketId ?? undefined,
+          supportMode: undefined,
         })
       );
       return;
@@ -520,6 +631,7 @@ export default function App() {
           role: 'client',
           clientView: 'support',
           supportTicketId: ticketId ?? undefined,
+          supportMode: undefined,
         })
       );
     }
@@ -4813,6 +4925,11 @@ export default function App() {
           }}
           supportTicketId={supportTicketId}
           onSupportTicketIdChange={setSupportTicketId}
+          supportMode={supportMode}
+          supportSection={supportSection}
+          onOpenSupportCompose={openGuardSupportCompose}
+          onOpenSupportReport={openGuardSupportReport}
+          onCloseSupportForm={closeGuardSupportForm}
           onReportIncident={handleReportIncident}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
@@ -4844,13 +4961,28 @@ export default function App() {
         clientAccountPending &&
         view !== 'home' &&
         view !== 'profile' &&
-        view !== 'support'
+        view !== 'support' &&
+        view !== 'support-compose' &&
+        view !== 'support-report'
       ) {
         setClientView('home');
         return;
       }
       setClientView(view);
     };
+
+    const supportInbox = (
+      <SupportScreen
+        currentUser={currentUser}
+        tickets={supportTickets}
+        onSendMessage={handleSendSupportMessage}
+        initialTicketId={supportTicketId}
+        onActiveTicketIdChange={setSupportTicketId}
+        initialSection={supportSection}
+        onOpenCompose={openClientSupportCompose}
+        onOpenReport={openClientSupportReport}
+      />
+    );
 
     return (
       <>
@@ -4871,16 +5003,21 @@ export default function App() {
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
               onOpenLegal={openLegalPage}
             />
-          ) : clientView === 'support' ? (
-            <SupportScreen
-              currentUser={currentUser}
-              tickets={supportTickets}
-              relatedRequests={myRequests}
+          ) : clientView === 'support-compose' ? (
+            <SupportComposePage
+              onBack={() => closeClientSupportForm('support')}
               onCreateTicket={handleCreateSupportTicket}
-              onSendMessage={handleSendSupportMessage}
-              initialTicketId={supportTicketId}
-              onActiveTicketIdChange={setSupportTicketId}
+              onCreated={(ticketId) => setSupportTicketId(ticketId)}
             />
+          ) : clientView === 'support-report' ? (
+            <SupportReportPage
+              relatedRequests={myRequests}
+              onBack={() => closeClientSupportForm('reports')}
+              onCreateTicket={handleCreateSupportTicket}
+              onSubmitted={() => closeClientSupportForm('reports')}
+            />
+          ) : clientView === 'support' ? (
+            supportInbox
           ) : (
             <ClientDashboard
               companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}

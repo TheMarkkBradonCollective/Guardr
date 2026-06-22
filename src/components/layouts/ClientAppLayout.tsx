@@ -40,6 +40,8 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   coverage: 'Live coverage',
   requests: 'Jobs',
   support: 'Support',
+  'support-compose': 'Contact support',
+  'support-report': 'File a report',
   profile: 'Profile',
   request: 'Post job offer',
   'direct-request': 'Request guard',
@@ -61,7 +63,11 @@ export function ClientAppLayout({
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map' || activeView === 'coverage';
   const navHighlightView =
-    accountPending && !['home', 'profile', 'support'].includes(activeView) ? 'home' : activeView;
+    activeView === 'support-compose' || activeView === 'support-report'
+      ? 'support'
+      : accountPending && !['home', 'profile', 'support', 'support-compose', 'support-report'].includes(activeView)
+        ? 'home'
+        : activeView;
 
   const moreFooter = onOpenLegal ? (
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />

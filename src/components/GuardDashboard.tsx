@@ -24,6 +24,8 @@ import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
 import { showAppToast } from './ui/AppToast';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
+import { SupportComposePage } from './support/SupportComposePage';
+import { SupportReportPage } from './support/SupportReportPage';
 import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
@@ -98,6 +100,11 @@ interface GuardDashboardProps {
   onJobChatOpenChange?: (open: boolean) => void;
   supportTicketId?: string | null;
   onSupportTicketIdChange?: (ticketId: string | null) => void;
+  supportMode?: GuardSupportMode | null;
+  supportSection?: 'support' | 'reports';
+  onOpenSupportCompose?: () => void;
+  onOpenSupportReport?: () => void;
+  onCloseSupportForm?: () => void;
   /** Render inside staff dashboard — no outer shell */
   variant?: 'standalone' | 'embedded';
   shiftTab?: GuardTab;
@@ -109,6 +116,7 @@ interface GuardDashboardProps {
 }
 
 export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'support' | 'profile';
+export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -155,6 +163,11 @@ export function GuardDashboard({
   onJobChatOpenChange,
   supportTicketId = null,
   onSupportTicketIdChange,
+  supportMode = null,
+  supportSection = 'support',
+  onOpenSupportCompose,
+  onOpenSupportReport,
+  onCloseSupportForm,
   variant = 'standalone',
   shiftTab = 'map',
   initialTab = 'map',
@@ -665,15 +678,35 @@ export function GuardDashboard({
 
           {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <SupportScreen
-                currentUser={currentUser}
-                tickets={supportTickets}
-                relatedRequests={relatedRequests}
-                onCreateTicket={onCreateSupportTicket}
-                onSendMessage={onSendSupportMessage}
-                initialTicketId={supportTicketId}
-                onActiveTicketIdChange={onSupportTicketIdChange}
-              />
+              {supportMode === 'compose' ? (
+                <SupportComposePage
+                  onBack={() => onCloseSupportForm?.()}
+                  onCreateTicket={onCreateSupportTicket}
+                  onCreated={(ticketId) => {
+                    onCloseSupportForm?.();
+                    onSupportTicketIdChange?.(ticketId);
+                  }}
+                />
+              ) : supportMode === 'report' ? (
+                <SupportReportPage
+                  relatedRequests={relatedRequests}
+                  onBack={() => onCloseSupportForm?.()}
+                  onCreateTicket={onCreateSupportTicket}
+                  onSubmitted={() => onCloseSupportForm?.()}
+                />
+              ) : (
+                <SupportScreen
+                  currentUser={currentUser}
+                  tickets={supportTickets}
+                  relatedRequests={relatedRequests}
+                  onSendMessage={onSendSupportMessage}
+                  initialTicketId={supportTicketId}
+                  onActiveTicketIdChange={onSupportTicketIdChange}
+                  initialSection={supportSection}
+                  onOpenCompose={onOpenSupportCompose}
+                  onOpenReport={onOpenSupportReport}
+                />
+              )}
             </div>
           )}
 
@@ -795,9 +828,16 @@ export function GuardDashboard({
     );
   }
 
+  const guardScreenTitle =
+    activeTab === 'support' && supportMode === 'compose'
+      ? 'Contact support'
+      : activeTab === 'support' && supportMode === 'report'
+        ? 'File a report'
+        : GUARD_TAB_TITLES[activeTab];
+
   return (
     <RoleAppShell
-      title={GUARD_TAB_TITLES[activeTab]}
+      title={guardScreenTitle}
       locationLabel={guard.name}
       accountMenu={{
         userName: guard.name,

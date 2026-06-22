@@ -32,6 +32,10 @@ export interface AppRoute {
   jobChatRequestId?: string;
   /** Support ticket — opens the thread directly */
   supportTicketId?: string;
+  /** Support inbox tab when on support home */
+  supportSection?: 'support' | 'reports';
+  /** Guard support tab — dedicated form page */
+  supportMode?: 'compose' | 'report';
   /** Staff messages hub tab */
   staffMessageTab?: 'team' | 'jobs';
   /** Staff approvals queue — opens a specific review list */
@@ -65,6 +69,8 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   home: 'home',
   profile: 'profile',
   support: 'support',
+  'support-compose': 'support-compose',
+  'support-report': 'support-report',
   map: 'map',
   request: 'request',
   'direct-request': 'direct-request',
@@ -78,6 +84,8 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   home: 'home',
   profile: 'profile',
   support: 'support',
+  'support-compose': 'support-compose',
+  'support-report': 'support-report',
   map: 'map',
   request: 'request',
   'direct-request': 'direct-request',
@@ -110,6 +118,8 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const clientDirectGuardId = searchParams.get('dr');
   const jobChatRequestId = searchParams.get('jc');
   const supportTicketId = searchParams.get('st');
+  const supportSection = searchParams.get('sec');
+  const supportMode = searchParams.get('sm');
   const staffMessageTab = searchParams.get('mtab');
   const staffApprovalQueue = searchParams.get('aq');
   const openJobChat = searchParams.get('chat');
@@ -125,6 +135,8 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (clientDirectGuardId) nested.clientDirectGuardId = clientDirectGuardId;
   if (jobChatRequestId) nested.jobChatRequestId = jobChatRequestId;
   if (supportTicketId) nested.supportTicketId = supportTicketId;
+  if (supportSection === 'support' || supportSection === 'reports') nested.supportSection = supportSection;
+  if (supportMode === 'compose' || supportMode === 'report') nested.supportMode = supportMode;
   if (staffMessageTab === 'team' || staffMessageTab === 'jobs') nested.staffMessageTab = staffMessageTab;
   if (
     staffApprovalQueue === 'accounts' ||
@@ -152,6 +164,8 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.clientDirectGuardId) params.set('dr', route.clientDirectGuardId);
   if (route.jobChatRequestId) params.set('jc', route.jobChatRequestId);
   if (route.supportTicketId) params.set('st', route.supportTicketId);
+  if (route.supportSection) params.set('sec', route.supportSection);
+  if (route.supportMode) params.set('sm', route.supportMode);
   if (route.staffMessageTab) params.set('mtab', route.staffMessageTab);
   if (route.staffApprovalQueue) params.set('aq', route.staffApprovalQueue);
   if (route.openJobChat) params.set('chat', '1');
@@ -307,6 +321,8 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     clientDirectGuardId: undefined,
     jobChatRequestId: undefined,
     supportTicketId: undefined,
+    supportSection: undefined,
+    supportMode: undefined,
     staffMessageTab: undefined,
     staffApprovalQueue: undefined,
     openJobChat: undefined,

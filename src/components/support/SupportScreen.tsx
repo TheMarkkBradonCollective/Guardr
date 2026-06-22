@@ -1,17 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
-  CreateSupportTicketInput,
   SecurityRequest,
   SessionUser,
   SupportTicket,
-  SupportTicketCategory,
-  SupportPriority,
 } from '../../types';
 import {
   categoryLabel,
-  priorityLabel,
-  SUPPORT_CATEGORY_OPTIONS,
-  SUPPORT_PRIORITY_OPTIONS,
   SUPPORT_STATUS_LABEL,
   supportStatusLabel,
   ticketsForUser,
@@ -30,44 +24,34 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { AppPageTransition } from '../ui/motion/AppMotion';
-import { ArrowLeft, ChevronRight, FileText, LifeBuoy } from 'lucide-react';
+import { ChevronRight, FileText, LifeBuoy } from 'lucide-react';
 
-type SupportView = 'home' | 'report' | 'thread' | 'compose-chat';
 type SupportSection = 'support' | 'reports';
 
 interface SupportScreenProps {
   currentUser: SessionUser;
   tickets: SupportTicket[];
   relatedRequests?: Pick<SecurityRequest, 'id' | 'title' | 'location'>[];
-  onCreateTicket: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   onSendMessage: (ticketId: string, body: string) => void | Promise<void>;
-  onBack?: () => void;
   initialTicketId?: string | null;
   onActiveTicketIdChange?: (ticketId: string | null) => void;
+  initialSection?: SupportSection;
+  onOpenCompose?: () => void;
+  onOpenReport?: () => void;
 }
 
 export function SupportScreen({
   currentUser,
   tickets,
-  relatedRequests = [],
-  onCreateTicket,
   onSendMessage,
-  onBack,
   initialTicketId = null,
   onActiveTicketIdChange,
+  initialSection = 'support',
+  onOpenCompose,
+  onOpenReport,
 }: SupportScreenProps) {
-  const [view, setView] = useState<SupportView>('home');
-  const [section, setSection] = useState<SupportSection>('support');
+  const [section, setSection] = useState<SupportSection>(initialSection);
   const [activeTicketId, setActiveTicketId] = useState<string | null>(initialTicketId);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [reportSubject, setReportSubject] = useState('');
-  const [reportBody, setReportBody] = useState('');
-  const [reportCategory, setReportCategory] = useState<SupportTicketCategory>('general');
-  const [reportPriority, setReportPriority] = useState<SupportPriority>('normal');
-  const [relatedRequestId, setRelatedRequestId] = useState('');
-  const [chatSubject, setChatSubject] = useState('');
-  const [chatBody, setChatBody] = useState('');
 
   const myTickets = useMemo(() => ticketsForUser(tickets, currentUser), [tickets, currentUser]);
   const chatTickets = useMemo(() => myTickets.filter((t) => t.kind === 'chat'), [myTickets]);
@@ -80,16 +64,21 @@ export function SupportScreen({
   const activeTicket = myTickets.find((t) => t.id === activeTicketId) ?? null;
 
   useEffect(() => {
-    if (!initialTicketId) return;
+    setSection(initialSection);
+  }, [initialSection]);
+
+  useEffect(() => {
+    if (!initialTicketId) {
+      setActiveTicketId(null);
+      return;
+    }
     const ticket = myTickets.find((t) => t.id === initialTicketId);
     if (!ticket) {
       setActiveTicketId(null);
-      setView('home');
       return;
     }
     setSection(ticket.kind === 'report' ? 'reports' : 'support');
     setActiveTicketId(initialTicketId);
-    setView('thread');
   }, [initialTicketId, myTickets]);
 
   const openThread = (ticketId: string) => {
@@ -99,7 +88,6 @@ export function SupportScreen({
     }
     setActiveTicketId(ticketId);
     onActiveTicketIdChange?.(ticketId);
-    setView('thread');
   };
 
   const startChat = () => {
@@ -107,120 +95,14 @@ export function SupportScreen({
       openThread(activeChatTicket.id);
       return;
     }
-    setChatSubject('');
-    setChatBody('');
-    setSection('support');
-    setView('compose-chat');
-  };
-
-  const handleSubmitChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatSubject.trim() || !chatBody.trim()) return;
-    setSubmitting(true);
-    try {
-      const ticketId = await onCreateTicket({
-        kind: 'chat',
-        subject: chatSubject.trim(),
-        category: 'general',
-        body: chatBody.trim(),
-        priority: 'normal',
-      });
-      if (ticketId) openThread(ticketId);
-    } finally {
-      setSubmitting(false);
-    }
+    onOpenCompose?.();
   };
 
   const startReport = () => {
-    setReportSubject('');
-    setReportBody('');
-    setReportCategory('general');
-    setReportPriority('normal');
-    setRelatedRequestId('');
-    setSection('reports');
-    setView('report');
+    onOpenReport?.();
   };
 
-  const handleSubmitReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reportSubject.trim() || !reportBody.trim()) return;
-    setSubmitting(true);
-    try {
-      await onCreateTicket({
-        kind: 'report',
-        subject: reportSubject.trim(),
-        category: reportCategory,
-        priority: reportPriority,
-        body: reportBody.trim(),
-        relatedRequestId: relatedRequestId || undefined,
-      });
-      setView('home');
-      setSection('reports');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const backButton = (toHome = false) => (
-    <button
-      type="button"
-      onClick={() => {
-        if (toHome && onBack) onBack();
-        else {
-          setView('home');
-          setActiveTicketId(null);
-          onActiveTicketIdChange?.(null);
-        }
-      }}
-      className="p-2 -ml-2 text-brand-text"
-      aria-label="Back"
-    >
-      <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
-    </button>
-  );
-
-  if (view === 'compose-chat') {
-    return (
-      <AppPageTransition motionKey="compose-chat" className="h-full min-h-0">
-        <AppScreen className="pb-8">
-          <div className="flex items-center gap-2 px-3 pt-2 mb-2">
-            {backButton()}
-            <h1 className="text-[1.75rem] font-bold tracking-tight">Contact support</h1>
-          </div>
-          <p className="text-sm text-brand-text-muted px-5 mb-6">
-            Tell the Guardr team what you need — we will reply in this thread.
-          </p>
-          <form onSubmit={(e) => void handleSubmitChat(e)} className="px-5 space-y-4">
-            <div>
-              <label className="uber-label block mb-1">Subject</label>
-              <input
-                value={chatSubject}
-                onChange={(e) => setChatSubject(e.target.value)}
-                className="uber-input w-full"
-                placeholder="e.g. Question about my shift"
-                required
-              />
-            </div>
-            <div>
-              <label className="uber-label block mb-1">Message</label>
-              <textarea
-                value={chatBody}
-                onChange={(e) => setChatBody(e.target.value)}
-                className="uber-input w-full min-h-[140px] resize-y"
-                placeholder="Describe what you need help with..."
-                required
-              />
-            </div>
-            <button type="submit" disabled={submitting} className="w-full app-button-primary disabled:opacity-50">
-              Send to Guardr staff
-            </button>
-          </form>
-        </AppScreen>
-      </AppPageTransition>
-    );
-  }
-
-  if (view === 'thread' && activeTicket) {
+  if (activeTicket) {
     const isReport = activeTicket.kind === 'report';
     const threadMessages = activeTicket.messages.map((msg) => ({
       id: msg.id,
@@ -242,7 +124,6 @@ export function SupportScreen({
             title={activeTicket.subject}
             subtitle={threadSubtitle}
             onBack={() => {
-              setView('home');
               setActiveTicketId(null);
               onActiveTicketIdChange?.(null);
             }}
@@ -262,92 +143,6 @@ export function SupportScreen({
             />
           </div>
         </div>
-      </AppPageTransition>
-    );
-  }
-
-  if (view === 'report') {
-    return (
-      <AppPageTransition motionKey="report" className="h-full min-h-0">
-        <AppScreen className="pb-8">
-          <div className="flex items-center gap-2 px-3 pt-2 mb-2">
-            {backButton()}
-            <h1 className="text-[1.75rem] font-bold tracking-tight">File a report</h1>
-          </div>
-          <p className="text-sm text-brand-text-muted px-5 mb-6">
-            Describe the issue — staff will review and follow up.
-          </p>
-          <form onSubmit={(e) => void handleSubmitReport(e)} className="px-5 space-y-4">
-            <div>
-              <label className="uber-label block mb-1">Category</label>
-              <select
-                value={reportCategory}
-                onChange={(e) => setReportCategory(e.target.value as SupportTicketCategory)}
-                className="uber-input w-full"
-              >
-                {SUPPORT_CATEGORY_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="uber-label block mb-1">Priority</label>
-              <select
-                value={reportPriority}
-                onChange={(e) => setReportPriority(e.target.value as SupportPriority)}
-                className="uber-input w-full"
-              >
-                {SUPPORT_PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {relatedRequests.length > 0 && (
-              <div>
-                <label className="uber-label block mb-1">Related job (optional)</label>
-                <select
-                  value={relatedRequestId}
-                  onChange={(e) => setRelatedRequestId(e.target.value)}
-                  className="uber-input w-full"
-                >
-                  <option value="">None</option>
-                  {relatedRequests.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.title} — {r.location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div>
-              <label className="uber-label block mb-1">Subject</label>
-              <input
-                value={reportSubject}
-                onChange={(e) => setReportSubject(e.target.value)}
-                className="uber-input w-full"
-                placeholder="Brief summary"
-                required
-              />
-            </div>
-            <div>
-              <label className="uber-label block mb-1">Details</label>
-              <textarea
-                value={reportBody}
-                onChange={(e) => setReportBody(e.target.value)}
-                className="uber-input w-full min-h-[140px] resize-y"
-                placeholder="What happened? Include dates, locations, and anyone involved."
-                required
-              />
-            </div>
-            <button type="submit" disabled={submitting} className="w-full app-button-primary disabled:opacity-50">
-              Submit report to staff
-            </button>
-          </form>
-        </AppScreen>
       </AppPageTransition>
     );
   }
@@ -372,7 +167,7 @@ export function SupportScreen({
           <>
             <AppDashboardZone title="Contact support">
               <AppItemCardStack>
-                <AppItemCard onClick={() => !submitting && startChat()}>
+                <AppItemCard onClick={() => startChat()}>
                   <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm">
@@ -421,7 +216,7 @@ export function SupportScreen({
           <>
             <AppDashboardZone title="File a report">
               <AppItemCardStack>
-                <AppItemCard onClick={() => void startReport()}>
+                <AppItemCard onClick={() => startReport()}>
                   <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm">File a report</p>
