@@ -20,8 +20,15 @@ import {
 } from '../../lib/overviewVisuals';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
-import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
-import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import {
+  AppDashboardHero,
+  AppDashboardZone,
+  AppItemCard,
+  AppItemCardStack,
+  AppMetricCell,
+  AppMetricStrip,
+} from '../ui/app/AppPrimitives';
+import { WfBadge } from '../ui/wireframe';
 import { StaffSummaryCell } from './StaffSummaryCell';
 import {
   OverviewSegmentBar,
@@ -122,84 +129,32 @@ export function StaffOverview({
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
 
+  const healthStatus = (
+    <div
+      className={`staff-overview-health shrink-0 ${
+        stats.platformHealthy ? 'staff-overview-health-ok' : 'staff-overview-health-warn'
+      }`}
+    >
+      <span className="staff-overview-health-dot" aria-hidden />
+      <div>
+        <p className="text-sm font-semibold leading-tight">
+          {stats.platformHealthy ? 'All clear' : 'Needs review'}
+        </p>
+        <p className="text-xs text-brand-text-muted mt-0.5">{stats.pendingReviews} in queue</p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="staff-overview animate-fade-in space-y-6 pb-6">
-      <header className="staff-overview-hero">
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted">{formatOverviewDate()}</p>
-          <h2 className="text-xl sm:text-2xl font-semibold mt-1 truncate">Hello, {staffName.split(' ')[0]}</h2>
-        </div>
-        <div
-          className={`staff-overview-health shrink-0 ${
-            stats.platformHealthy ? 'staff-overview-health-ok' : 'staff-overview-health-warn'
-          }`}
-        >
-          <span className="staff-overview-health-dot" aria-hidden />
-          <div>
-            <p className="text-sm font-medium leading-tight text-brand-text-muted">
-              {stats.platformHealthy ? 'All clear' : 'Needs review'}
-            </p>
-            <p className="text-xs text-brand-text-muted/80 mt-0.5">
-              {stats.pendingReviews} in queue
-            </p>
-          </div>
-        </div>
-      </header>
+    <div className="staff-overview animate-fade-in pb-8">
+      <AppDashboardHero
+        kicker={formatOverviewDate()}
+        title={`Hello, ${staffName.split(' ')[0]}`}
+        status={healthStatus}
+      />
 
-      {showDirectorFinancials && (
-        <section>
-          <WfSectionHeader
-            title="Company financials"
-            actionLabel="Payments"
-            onAction={() => onNavigate('payments')}
-          />
-          <div className="staff-payment-summary-grid">
-            {directorFinancialCells.map(({ label, value, sub, accent }) => (
-              <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section>
-        <WfSectionHeader
-          title="Platform pulse"
-          actionLabel={showDirectorFinancials ? 'Analytics' : undefined}
-          onAction={showDirectorFinancials ? () => onNavigate('analytics') : undefined}
-        />
-        <div className="staff-overview-lower grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {platformPulseCards.map((card) => (
-            <section key={card.id} className="staff-overview-chart-card">
-              <WfSectionHeader title={card.title} />
-              <OverviewVisualCardBody card={card} />
-            </section>
-          ))}
-        </div>
-      </section>
-
-      {showDirectorFinancials && (
-        <section>
-          <WfSectionHeader
-            title="Operations snapshot"
-            actionLabel="Payments"
-            onAction={() => onNavigate('payments')}
-          />
-          <div className="staff-overview-lower grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {operationsSnapshotCards.map((card) => (
-              <section key={card.id} className="staff-overview-chart-card">
-                <WfSectionHeader title={card.title} />
-                <OverviewVisualCardBody card={card} />
-              </section>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section>
-        {showDirectorFinancials ? (
-          <WfSectionHeader title="Live operations" />
-        ) : null}
-        <div className="staff-overview-metrics">
+      <AppDashboardZone title="At a glance" className="!mb-4">
+        <AppMetricStrip className="app-metric-strip--staff">
           {metrics.map(({ label, value, sub, accent, navigateTo }) => {
             const handleMetricClick = () => {
               if (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) {
@@ -215,171 +170,218 @@ export function StaffOverview({
 
             if (isClickable) {
               return (
-                <button
+                <AppMetricCell
                   key={label}
-                  type="button"
+                  label={label}
+                  value={value}
+                  sub={sub}
+                  accent={accent}
                   onClick={handleMetricClick}
-                  className={`staff-summary-cell text-left ${accent ? 'staff-summary-cell-accent' : ''}`}
-                >
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-brand-text-muted">{label}</p>
-                  <p className="text-lg font-bold mt-1">{value}</p>
-                  <p className="text-xs text-brand-text-muted mt-0.5 leading-snug">{sub}</p>
-                </button>
+                />
               );
             }
-            return <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />;
+            return (
+              <AppMetricCell key={label} label={label} value={value} sub={sub} accent={accent} />
+            );
           })}
-        </div>
-      </section>
+        </AppMetricStrip>
+      </AppDashboardZone>
 
-      <section>
-        <WfSectionHeader title="Needs your attention" count={actionItems.length || undefined} />
-        {actionItems.length === 0 ? (
-          <div className="staff-overview-empty-card">
-            <CheckCircle2 className="w-5 h-5 text-brand-primary shrink-0" />
-            <div>
-              <p className="text-sm font-medium">You&apos;re caught up</p>
-              <p className="text-xs text-brand-text-muted mt-0.5">
-                No approvals, incidents, or payouts waiting. Browse jobs or open the map to monitor jobs.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <AppItemCardStack>
-            {actionItems.map((item) => (
-                <AppItemCard
-                  key={item.id}
-                  onClick={() =>
-                    item.section === 'approvals' && item.approvalQueue && onNavigateApprovals
-                      ? onNavigateApprovals(item.approvalQueue)
-                      : onNavigate(item.section)
-                  }
-                >
-                <div className="flex items-start gap-3 w-full text-left">
-                  <span
-                    className={`staff-overview-action-icon ${
-                      item.tone === 'urgent' ? 'staff-overview-action-icon-urgent' : ''
-                    }`}
-                  >
-                    {ACTION_ICONS[item.id] ?? <ArrowRight className="w-4 h-4" />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold">{item.title}</p>
-                      <WfBadge tone={item.tone === 'urgent' ? 'warning' : 'default'}>{item.count}</WfBadge>
-                    </div>
-                    <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{item.description}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 shrink-0 text-brand-text-muted mt-0.5" />
+      <div className="app-dashboard-split px-0">
+        <div className="space-y-6 min-w-0">
+          <AppDashboardZone
+            title="Needs your attention"
+            actionLabel={actionItems.length > 0 ? 'Approvals' : undefined}
+            onAction={actionItems.length > 0 ? () => onNavigate('approvals') : undefined}
+          >
+            {actionItems.length === 0 ? (
+              <div className="staff-overview-empty-card">
+                <CheckCircle2 className="w-5 h-5 text-brand-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">You&apos;re caught up</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
+                    No approvals, incidents, or payouts waiting. Open the map to monitor live jobs.
+                  </p>
                 </div>
-              </AppItemCard>
-            ))}
-          </AppItemCardStack>
-        )}
-      </section>
-
-      <section>
-        <WfSectionHeader
-          title="Live jobs"
-          count={liveJobs.length || undefined}
-          actionLabel={liveJobs.length > 0 ? 'Open map' : undefined}
-          onAction={liveJobs.length > 0 ? () => onNavigate('map') : undefined}
-        />
-        {liveJobs.length === 0 ? (
-          <div className="staff-overview-empty-card">
-            <MapPin className="w-5 h-5 text-brand-text-muted shrink-0" />
-            <div>
-              <p className="text-sm font-medium">No guards on site</p>
-              <p className="text-xs text-brand-text-muted mt-0.5">
-                Picked-up and in-progress jobs show up here when work is underway on site.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <AppItemCardStack>
-            {liveJobs.map((job) => {
-              const statusCfg = LIVE_JOB_STATUS_LABEL[job.status];
-              return (
-                <AppItemCard
-                  key={job.id}
-                  onClick={() => (onOpenJob ? onOpenJob(job.id) : onNavigate('jobs'))}
-                >
-                  <div className="flex items-start justify-between gap-3 w-full text-left">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold truncate">{job.title}</p>
-                        <WfBadge tone={job.status === 'in-progress' ? 'success' : 'primary'}>
-                          {statusCfg.emoji} {statusCfg.label}
-                        </WfBadge>
+              </div>
+            ) : (
+              <AppItemCardStack>
+                {actionItems.map((item) => (
+                  <AppItemCard
+                    key={item.id}
+                    onClick={() =>
+                      item.section === 'approvals' && item.approvalQueue && onNavigateApprovals
+                        ? onNavigateApprovals(item.approvalQueue)
+                        : onNavigate(item.section)
+                    }
+                  >
+                    <div className="flex items-start gap-3 w-full text-left">
+                      <span
+                        className={`staff-overview-action-icon ${
+                          item.tone === 'urgent' ? 'staff-overview-action-icon-urgent' : ''
+                        }`}
+                      >
+                        {ACTION_ICONS[item.id] ?? <ArrowRight className="w-4 h-4" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold">{item.title}</p>
+                          <WfBadge tone={item.tone === 'urgent' ? 'warning' : 'default'}>{item.count}</WfBadge>
+                        </div>
+                        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{item.description}</p>
                       </div>
-                      <p className="text-xs text-brand-text-muted mt-1">
-                        {job.guardName} · {job.clientName}
-                      </p>
-                      <p className="text-xs text-brand-text-muted mt-0.5 truncate">{job.site}</p>
-                      {canUpdateJobs && onOpenJob && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenJob(job.id);
-                          }}
-                          className="mt-2 app-button-outline !w-auto !h-8 !px-3 !text-xs"
-                        >
-                          Edit / update job
-                        </button>
-                      )}
+                      <ArrowRight className="w-4 h-4 shrink-0 text-brand-text-muted mt-0.5" />
                     </div>
-                    {job.startedAt && (
-                      <p className="text-[11px] text-brand-text-muted shrink-0">
-                        {formatActivityTime(job.startedAt)}
-                      </p>
-                    )}
-                  </div>
-                </AppItemCard>
-              );
-            })}
-          </AppItemCardStack>
-        )}
-      </section>
+                  </AppItemCard>
+                ))}
+              </AppItemCardStack>
+            )}
+          </AppDashboardZone>
 
-      <div className="staff-overview-lower grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="staff-overview-chart-card">
-          <WfSectionHeader title="Completed jobs this week" />
-          <OverviewWeekChart series={weeklySeries} />
-        </section>
+          <AppDashboardZone
+            title="Live on site"
+            actionLabel={liveJobs.length > 0 ? 'Open map' : undefined}
+            onAction={liveJobs.length > 0 ? () => onNavigate('map') : undefined}
+          >
+            {liveJobs.length === 0 ? (
+              <div className="staff-overview-empty-card">
+                <MapPin className="w-5 h-5 text-brand-text-muted shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">No guards on site</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">
+                    Picked-up and in-progress jobs appear here when work is underway.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <AppItemCardStack>
+                {liveJobs.map((job) => {
+                  const statusCfg = LIVE_JOB_STATUS_LABEL[job.status];
+                  return (
+                    <AppItemCard
+                      key={job.id}
+                      onClick={() => (onOpenJob ? onOpenJob(job.id) : onNavigate('jobs'))}
+                    >
+                      <div className="flex items-start justify-between gap-3 w-full text-left">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold truncate">{job.title}</p>
+                            <WfBadge tone={job.status === 'in-progress' ? 'success' : 'primary'}>
+                              {statusCfg.emoji} {statusCfg.label}
+                            </WfBadge>
+                          </div>
+                          <p className="text-xs text-brand-text-muted mt-1">
+                            {job.guardName} · {job.clientName}
+                          </p>
+                          <p className="text-xs text-brand-text-muted mt-0.5 truncate">{job.site}</p>
+                          {canUpdateJobs && onOpenJob && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenJob(job.id);
+                              }}
+                              className="mt-2 app-button-outline !w-auto !h-8 !px-3 !text-xs"
+                            >
+                              Edit / update job
+                            </button>
+                          )}
+                        </div>
+                        {job.startedAt && (
+                          <p className="text-[11px] text-brand-text-muted shrink-0">
+                            {formatActivityTime(job.startedAt)}
+                          </p>
+                        )}
+                      </div>
+                    </AppItemCard>
+                  );
+                })}
+              </AppItemCardStack>
+            )}
+          </AppDashboardZone>
+        </div>
 
-        <section className="staff-overview-chart-card">
-          <WfSectionHeader title="Job pipeline mix" />
-          {jobPipelineSegments.length > 0 ? (
-            <div className="mt-3">
-              <OverviewSegmentBar segments={jobPipelineSegments} />
-            </div>
-          ) : (
-            <p className="text-sm text-brand-text-muted py-6 text-center">No jobs in the pipeline yet.</p>
-          )}
-        </section>
-
-        <section className="staff-overview-feed-card">
-          <WfSectionHeader title="Recent activity" count={activityFeed.length || undefined} />
-          {activityFeed.length === 0 ? (
-            <p className="text-sm text-brand-text-muted py-6 text-center">
-              Check-ins, patrol reports, and new jobs will show here as they happen.
-            </p>
-          ) : (
-            <ul className="staff-overview-feed-list">
-              {activityFeed.slice(0, 12).map((item) => (
-                <li key={item.id} className="staff-overview-feed-item">
-                  <span className="staff-overview-feed-dot" aria-hidden />
-                  <div className="min-w-0">
-                    <p className="text-sm leading-snug">{item.message}</p>
-                    <p className="text-[11px] text-brand-text-muted mt-0.5">{formatActivityTime(item.timestamp)}</p>
-                  </div>
-                </li>
+        <div className="space-y-6 min-w-0">
+          <AppDashboardZone
+            title="Platform pulse"
+            actionLabel={showDirectorFinancials ? 'Analytics' : undefined}
+            onAction={showDirectorFinancials ? () => onNavigate('analytics') : undefined}
+          >
+            <div className="staff-overview-pulse-grid">
+              {platformPulseCards.map((card) => (
+                <section key={card.id} className="staff-overview-chart-card">
+                  <p className="overview-visual-title">{card.title}</p>
+                  <OverviewVisualCardBody card={card} />
+                </section>
               ))}
-            </ul>
+            </div>
+          </AppDashboardZone>
+
+          {showDirectorFinancials && (
+            <>
+              <AppDashboardZone title="Company financials" actionLabel="Payments" onAction={() => onNavigate('payments')}>
+                <div className="staff-payment-summary-grid">
+                  {directorFinancialCells.map(({ label, value, sub, accent }) => (
+                    <StaffSummaryCell key={label} label={label} value={value} sub={sub} accent={accent} />
+                  ))}
+                </div>
+              </AppDashboardZone>
+
+              <AppDashboardZone title="Operations snapshot" actionLabel="Payments" onAction={() => onNavigate('payments')}>
+                <div className="staff-overview-pulse-grid">
+                  {operationsSnapshotCards.map((card) => (
+                    <section key={card.id} className="staff-overview-chart-card">
+                      <p className="overview-visual-title">{card.title}</p>
+                      <OverviewVisualCardBody card={card} />
+                    </section>
+                  ))}
+                </div>
+              </AppDashboardZone>
+            </>
           )}
-        </section>
+        </div>
       </div>
+
+      <AppDashboardZone title="Insights" className="mt-2">
+        <div className="staff-overview-insights">
+          <section className="staff-overview-chart-card">
+            <p className="overview-visual-title">Completed jobs this week</p>
+            <OverviewWeekChart series={weeklySeries} />
+          </section>
+
+          <section className="staff-overview-chart-card">
+            <p className="overview-visual-title">Job pipeline mix</p>
+            {jobPipelineSegments.length > 0 ? (
+              <div className="mt-3">
+                <OverviewSegmentBar segments={jobPipelineSegments} />
+              </div>
+            ) : (
+              <p className="text-sm text-brand-text-muted py-6 text-center">No jobs in the pipeline yet.</p>
+            )}
+          </section>
+
+          <section className="staff-overview-feed-card">
+            <p className="overview-visual-title">Recent activity</p>
+            {activityFeed.length === 0 ? (
+              <p className="text-sm text-brand-text-muted py-6 text-center">
+                Check-ins, patrol reports, and new jobs will show here as they happen.
+              </p>
+            ) : (
+              <ul className="staff-overview-feed-list">
+                {activityFeed.slice(0, 12).map((item) => (
+                  <li key={item.id} className="staff-overview-feed-item">
+                    <span className="staff-overview-feed-dot" aria-hidden />
+                    <div className="min-w-0">
+                      <p className="text-sm leading-snug">{item.message}</p>
+                      <p className="text-[11px] text-brand-text-muted mt-0.5">{formatActivityTime(item.timestamp)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </AppDashboardZone>
     </div>
   );
 }

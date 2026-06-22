@@ -17,8 +17,18 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
-import { AppItemCard, AppItemCardStack, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
-import { ArrowLeft, ChevronRight, FileText, MessageCircle, Send } from 'lucide-react';
+import {
+  AppChatHeader,
+  AppDashboardHero,
+  AppDashboardZone,
+  AppInboxList,
+  AppInboxRow,
+  AppItemCard,
+  AppItemCardStack,
+  AppScreen,
+} from '../ui/app/AppPrimitives';
+import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { ArrowLeft, ChevronRight, FileText, MessageCircle } from 'lucide-react';
 
 type SupportView = 'home' | 'chat' | 'report' | 'thread';
 
@@ -45,7 +55,6 @@ export function SupportScreen({
 }: SupportScreenProps) {
   const [view, setView] = useState<SupportView>('home');
   const [activeTicketId, setActiveTicketId] = useState<string | null>(initialTicketId);
-  const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [reportSubject, setReportSubject] = useState('');
@@ -76,7 +85,6 @@ export function SupportScreen({
   const openThread = (ticketId: string) => {
     setActiveTicketId(ticketId);
     onActiveTicketIdChange?.(ticketId);
-    setDraft('');
     setView('thread');
   };
 
@@ -104,17 +112,6 @@ export function SupportScreen({
         priority: 'normal',
       });
       if (ticketId) openThread(ticketId);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleSend = async () => {
-    if (!draft.trim() || !activeTicket) return;
-    setSubmitting(true);
-    try {
-      await onSendMessage(activeTicket.id, draft.trim());
-      setDraft('');
     } finally {
       setSubmitting(false);
     }
@@ -158,63 +155,36 @@ export function SupportScreen({
   );
 
   if (view === 'thread' && activeTicket) {
+    const chatMessages = activeTicket.messages.map((msg) => ({
+      id: msg.id,
+      senderId: msg.senderId,
+      senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+      senderRole: msg.senderRole,
+      body: msg.body,
+      createdAt: msg.createdAt,
+    }));
+
     return (
-      <div className="h-full flex flex-col bg-brand-bg">
-        <div className="shrink-0 flex items-center gap-2 px-3 pt-2 pb-3 border-b border-brand-border">
-          {backButton()}
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate">{activeTicket.subject}</p>
-            <p className="text-xs text-brand-text-muted truncate">
-              {categoryLabel(activeTicket.category)} · {SUPPORT_STATUS_LABEL[activeTicket.status]}
-            </p>
-          </div>
+      <div className="h-full flex flex-col bg-brand-bg min-h-0">
+        <AppChatHeader
+          title={activeTicket.subject}
+          subtitle={`${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`}
+          onBack={() => {
+            setView('home');
+            setActiveTicketId(null);
+            onActiveTicketIdChange?.(null);
+          }}
+        />
+        <div className="flex-1 min-h-0">
+          <ChatThreadPanel
+            messages={chatMessages}
+            currentUserId={currentUser.id}
+            onSend={(body) => onSendMessage(activeTicket.id, body)}
+            placeholder="Type a message to staff…"
+            readOnly={activeTicket.status === 'resolved'}
+            readOnlyMessage="This conversation is resolved. Open a new message if you need more help."
+          />
         </div>
-        <div className="app-chat-pane space-y-3">
-          {activeTicket.messages.map((msg) => {
-            const mine = msg.senderId === currentUser.id;
-            const staff = isStaffRole(msg.senderRole);
-            return (
-              <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`chat-bubble max-w-[85%] px-4 py-2.5 text-sm border ${
-                    staff
-                      ? 'chat-bubble-incoming bg-brand-surface text-brand-text border-brand-border'
-                      : mine
-                        ? 'chat-bubble-outgoing bg-brand-primary text-brand-accent-text border-brand-primary'
-                        : 'chat-bubble-incoming bg-brand-surface text-brand-text border-brand-border'
-                  }`}
-                >
-                  <p className="text-xs opacity-70 mb-1">{staff ? 'Guardr staff' : msg.senderName}</p>
-                  <p className="whitespace-pre-wrap">{msg.body}</p>
-                  <p className="text-xs opacity-60 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {activeTicket.status !== 'resolved' ? (
-          <div className="shrink-0 flex gap-2 p-3 border-t border-brand-border">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void handleSend()}
-              placeholder="Type a message to staff…"
-              className="uber-input flex-1"
-            />
-            <button
-              type="button"
-              onClick={() => void handleSend()}
-              disabled={submitting || !draft.trim()}
-              className="app-button-primary !w-auto !h-11 !px-4 shrink-0 disabled:opacity-50"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <p className="shrink-0 text-sm text-brand-text-muted text-center p-4 border-t border-brand-border">
-            This conversation is resolved. Open a new message if you need more help.
-          </p>
-        )}
       </div>
     );
   }
@@ -297,63 +267,64 @@ export function SupportScreen({
 
   return (
     <AppScreen className="pb-8">
-      <AppScreenTitle>Support</AppScreenTitle>
-      <p className="text-sm text-brand-text-muted px-5 -mt-3 mb-6">Message Guardr staff or submit a report.</p>
+      <AppDashboardHero kicker="Help center" title="Support" />
 
-      <AppItemCardStack className="px-5">
-        <AppItemCard onClick={() => !submitting && void startKind('chat')}>
-          <MessageCircle className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-          <div className="flex-1 min-w-0 text-left">
-            <p className="font-semibold text-sm">
-              {activeChatTicket ? 'Continue staff chat' : 'Message staff'}
-            </p>
-            <p className="text-sm text-brand-text-muted mt-0.5">
-              {activeChatTicket
-                ? `Resume your open conversation: ${activeChatTicket.subject}`
-                : 'Chat with the Guardr operations team.'}
-            </p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-        </AppItemCard>
-        <AppItemCard onClick={() => void startKind('report')}>
-          <FileText className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-          <div className="flex-1 min-w-0 text-left">
-            <p className="font-semibold text-sm">File a report</p>
-            <p className="text-sm text-brand-text-muted mt-0.5">Submit an issue, safety concern, or complaint.</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-        </AppItemCard>
-      </AppItemCardStack>
-
-      <div className="app-section-head mt-8">
-        <h2>Your conversations</h2>
-      </div>
-
-      {myTickets.length === 0 ? (
-        <p className="text-sm text-brand-text-muted text-center py-10 px-5">
-          No support threads yet. Message staff or file a report to get started.
-        </p>
-      ) : (
-        <AppItemCardStack className="px-5">
-          {myTickets.map((ticket) => (
-            <AppItemCard key={ticket.id} onClick={() => openThread(ticket.id)} className="!items-start">
-              <div className="flex-1 min-w-0 text-left">
-                <p className="font-semibold text-sm">{ticket.subject}</p>
-                <p className="text-xs text-brand-text-muted mt-1">
-                  {categoryLabel(ticket.category)}
-                  {ticket.priority !== 'normal' ? ` · ${priorityLabel(ticket.priority)}` : ''}
-                  {' · '}
-                  {new Date(ticket.updatedAt).toLocaleString()}
-                </p>
-                <p className="text-xs text-brand-text-muted mt-1">
-                  {ticket.kind === 'report' ? 'Report' : 'Chat'} · {SUPPORT_STATUS_LABEL[ticket.status]}
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0 mt-0.5" />
-            </AppItemCard>
-          ))}
+      <AppDashboardZone title="Get help">
+        <AppItemCardStack>
+          <AppItemCard onClick={() => !submitting && void startKind('chat')}>
+            <MessageCircle className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-semibold text-sm">
+                {activeChatTicket ? 'Continue staff chat' : 'Message staff'}
+              </p>
+              <p className="text-sm text-brand-text-muted mt-0.5">
+                {activeChatTicket
+                  ? `Resume your open conversation: ${activeChatTicket.subject}`
+                  : 'Direct line to the Guardr operations team.'}
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
+          </AppItemCard>
+          <AppItemCard onClick={() => void startKind('report')}>
+            <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-semibold text-sm">File a report</p>
+              <p className="text-sm text-brand-text-muted mt-0.5">Safety concern, dispute, or formal complaint.</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
+          </AppItemCard>
         </AppItemCardStack>
-      )}
+      </AppDashboardZone>
+
+      <AppDashboardZone title="Your conversations">
+        {myTickets.length === 0 ? (
+          <p className="text-sm text-brand-text-muted text-center py-10">
+            No support threads yet. Message staff or file a report to get started.
+          </p>
+        ) : (
+          <AppInboxList>
+            {myTickets.map((ticket) => (
+              <AppInboxRow
+                key={ticket.id}
+                title={ticket.subject}
+                preview={ticket.messages[ticket.messages.length - 1]?.body}
+                meta={new Date(ticket.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                badges={
+                  <>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-brand-primary">
+                      {SUPPORT_STATUS_LABEL[ticket.status]}
+                    </span>
+                    <span className="text-[10px] text-brand-text-muted">
+                      {ticket.kind === 'report' ? 'Report' : 'Chat'}
+                    </span>
+                  </>
+                }
+                onClick={() => openThread(ticket.id)}
+              />
+            ))}
+          </AppInboxList>
+        )}
+      </AppDashboardZone>
     </AppScreen>
   );
 }

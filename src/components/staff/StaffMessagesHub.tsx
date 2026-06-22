@@ -8,6 +8,7 @@ import {
   SecurityGuard,
   SecurityRequest,
 } from '../../types';
+import { AppSegmentedControl } from '../ui/app/AppPrimitives';
 
 interface StaffMessagesHubProps {
   requests: SecurityRequest[];
@@ -55,23 +56,19 @@ export function StaffMessagesHub({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="shrink-0 flex uber-tab-bar border-b border-brand-border">
-        {(['team', 'jobs'] as const).map((id) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => changeTab(id)}
-            className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${
-              tab === id
-                ? 'border-brand-primary text-brand-text bg-brand-bg'
-                : 'border-transparent text-brand-text-muted hover:text-brand-text hover:bg-brand-bg-sec'
-            }`}
-          >
-            {id === 'team' ? 'Staff team chat' : 'Job chats'}
-          </button>
-        ))}
+    <div className="app-messages-hub">
+      <div className="app-messages-hub-lead">
+        <h1 className="text-lg font-bold tracking-tight">Messages</h1>
+        <p>Team coordination and live job conversations — clear, direct, and on record.</p>
       </div>
+      <AppSegmentedControl
+        options={[
+          { id: 'team', label: 'Staff team' },
+          { id: 'jobs', label: 'Job chats' },
+        ]}
+        value={tab}
+        onChange={changeTab}
+      />
       <div className="flex-1 min-h-0">
         {tab === 'team' ? (
           <StaffMessengerPanel

@@ -6,7 +6,7 @@ import {
   messagesForThread,
 } from '../../lib/jobChat';
 import { ChatThreadPanel } from './ChatThreadPanel';
-import { ArrowLeft } from 'lucide-react';
+import { AppChatHeader } from '../ui/app/AppPrimitives';
 
 interface JobChatPanelProps {
   request: Pick<SecurityRequest, 'id' | 'status' | 'clientId' | 'assignedGuardId' | 'title' | 'siteName' | 'location'>;
@@ -46,15 +46,11 @@ export function JobChatPanel({
   return (
     <div className={`flex flex-col ${compact ? 'h-[420px]' : 'h-full'} min-h-0 bg-brand-bg`}>
       {!compact && onBack && (
-        <div className="shrink-0 flex items-center gap-2 px-3 pt-2 pb-3 border-b border-brand-border">
-          <button type="button" onClick={onBack} className="p-2 -ml-2 text-brand-text" aria-label="Back">
-            <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate">Job chat — {request.title}</p>
-            <p className="text-xs text-brand-text-muted truncate">{request.location}</p>
-          </div>
-        </div>
+        <AppChatHeader
+          title={`Job chat — ${request.title}`}
+          subtitle={request.location}
+          onBack={onBack}
+        />
       )}
       <ChatThreadPanel
         messages={threadMessages}

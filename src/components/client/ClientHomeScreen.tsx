@@ -9,11 +9,11 @@ import {
 } from '../../lib/clientCoverage';
 import { WfMetricTile } from '../ui/wireframe';
 import {
+  AppDashboardHero,
+  AppDashboardZone,
   AppHeroBand,
   AppItemCard,
-  AppPageLead,
   AppScreen,
-  AppSection,
   AppStatusBanner,
 } from '../ui/app/AppPrimitives';
 import {
@@ -68,7 +68,7 @@ export function ClientHomeScreen({
 
   return (
     <AppScreen>
-      <AppPageLead kicker="Client workspace" subtitle="Welcome back" title={companyName} />
+      <AppDashboardHero kicker="Client workspace" title={companyName} />
 
       {accountPending && (
         <AppStatusBanner
@@ -108,7 +108,7 @@ export function ClientHomeScreen({
         </div>
       </AppHeroBand>
 
-      <AppSection title="At a glance">
+      <AppDashboardZone title="At a glance">
         <div className="app-tile-grid-2">
           <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left !p-4">
             <ClipboardList className="w-5 h-5 text-brand-primary" />
@@ -121,10 +121,11 @@ export function ClientHomeScreen({
             <p className="text-2xl font-bold tracking-tight">{upcoming.length}</p>
           </button>
         </div>
-      </AppSection>
+      </AppDashboardZone>
 
-      <AppSection title="Quick actions" bleed>
-        <div className="app-quick-action-row">
+      <AppDashboardZone title="Quick actions">
+        <div className="app-section-body-bleed">
+          <div className="app-quick-action-row">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
@@ -144,10 +145,11 @@ export function ClientHomeScreen({
               </button>
             );
           })}
+          </div>
         </div>
-      </AppSection>
+      </AppDashboardZone>
 
-      <AppSection
+      <AppDashboardZone
         title="Upcoming coverage"
         actionLabel={upcoming.length > 0 ? 'All jobs' : undefined}
         onAction={upcoming.length > 0 ? () => onAction('requests') : undefined}
@@ -175,9 +177,9 @@ export function ClientHomeScreen({
             ))}
           </div>
         )}
-      </AppSection>
+      </AppDashboardZone>
 
-      <AppSection
+      <AppDashboardZone
         title="Recent reports"
         actionLabel={recentReports.length > 0 ? 'View all' : undefined}
         onAction={recentReports.length > 0 ? () => onAction('reports') : undefined}
@@ -196,7 +198,7 @@ export function ClientHomeScreen({
             ))}
           </div>
         )}
-      </AppSection>
+      </AppDashboardZone>
     </AppScreen>
   );
 }
