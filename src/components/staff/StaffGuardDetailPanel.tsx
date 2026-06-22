@@ -150,9 +150,6 @@ export function StaffGuardDetailPanel({
     });
   }, [guard]);
 
-  const accountStatus = guard.userStatus || 'active';
-  const idVerificationStatus = getGuardIdVerificationStatus(guard);
-  const activationChecklist = getGuardActivationChecklist(guard);
   const guardAccountStatus = getGuardUserStatus(guard);
   const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
@@ -521,17 +518,17 @@ export function StaffGuardDetailPanel({
                   {deleting ? 'Deleting…' : 'Delete account'}
                 </button>
               )}
-              {canSuspend && accountStatus !== 'suspended' && guardAccountStatus === 'active' && (
+              {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs">
                   Suspend
                 </button>
               )}
-              {canSuspend && accountStatus !== 'blocked' && guardAccountStatus === 'active' && (
+              {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40">
                   Flag / Block
                 </button>
               )}
-              {canSuspend && accountStatus !== 'active' && guardAccountStatus !== 'pending' && (
+              {canSuspend && guardAccountStatus !== 'active' && guardAccountStatus !== 'pending' && (
                 <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary !w-auto !h-9 !px-4 !text-xs">
                   Restore account
                 </button>

@@ -37,11 +37,11 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 /** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
-import { isGuardAccountActive, isGuardAccountPending } from './accountStatus';
+import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPending } from './accountStatus';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
-  const userStatus = guard.userStatus || 'active';
+  const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'pending') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
@@ -69,7 +69,7 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     }
     return 'Your documents are verified — awaiting final account activation by Guardr staff.';
   }
-  const userStatus = guard.userStatus || 'active';
+  const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'suspended') {
     return 'Your account is suspended. Contact Guardr support to restore access.';
   }

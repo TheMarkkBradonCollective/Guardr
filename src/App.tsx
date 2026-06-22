@@ -94,7 +94,7 @@ import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refund
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
-import { getClientAccountStatus } from './lib/accountStatus';
+import { getClientAccountStatus, getGuardUserStatus } from './lib/accountStatus';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportScreen } from './components/support/SupportScreen';
 import {
@@ -597,7 +597,7 @@ export default function App() {
         hourlyRateRequirement: g.hourly_rate_requirement,
         isStaff: g.is_staff,
         staffRole: g.staff_role,
-        userStatus: g.user_status || 'active',
+        userStatus: g.user_status || (g.is_staff ? 'active' : 'pending'),
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
@@ -1470,7 +1470,7 @@ export default function App() {
       certifications: [],
       experience: [],
       hourlyRateRequirement: input.hourlyRate ?? 35,
-      userStatus: 'active',
+      userStatus: 'pending',
       isStaff: false,
       password,
       mustChangePassword,
@@ -1496,7 +1496,7 @@ export default function App() {
           jobs_completed: 0,
           hourly_rate_requirement: newGuard.hourlyRateRequirement,
           is_staff: false,
-          user_status: 'active',
+          user_status: 'pending',
           password,
           must_change_password: mustChangePassword,
         });
@@ -2023,7 +2023,10 @@ export default function App() {
     if (input.assignGuardId) {
       const guard = guards.find((g) => g.id === input.assignGuardId);
       if (!guard) throw new Error('Guard not found.');
-      const userStatus = guard.userStatus || 'active';
+      const userStatus = getGuardUserStatus(guard);
+      if (userStatus === 'pending') {
+        throw new Error(`${guard.name} cannot pick up this job — account is pending approval.`);
+      }
       if (userStatus === 'suspended' || userStatus === 'blocked') {
         throw new Error(`${guard.name} cannot pick up this job — account is ${userStatus}.`);
       }
@@ -2159,7 +2162,11 @@ export default function App() {
       alert('Guards can only be placed on open jobs awaiting a guard.');
       return;
     }
-    const userStatus = guard.userStatus || 'active';
+    const userStatus = getGuardUserStatus(guard);
+    if (userStatus === 'pending') {
+      alert(`${guard.name} cannot pick up this job — account is pending approval.`);
+      return;
+    }
     if (userStatus === 'suspended' || userStatus === 'blocked') {
       alert(`${guard.name} cannot pick up this job — account is ${userStatus}.`);
       return;
@@ -3178,7 +3185,7 @@ export default function App() {
       if (g.id !== guardId) return g;
       const fails = (g.failedAudits || 0) + 1;
       if (fails >= 3) autoSuspend = true;
-      return { ...g, failedAudits: fails, userStatus: fails >= 3 ? 'suspended' : g.userStatus || 'active' };
+      return { ...g, failedAudits: fails, userStatus: fails >= 3 ? 'suspended' : getGuardUserStatus(g) };
     }));
     if (autoSuspend) {
       alert('🚨 AUTOMATED ACTION: 3 compliance violations logged. Account automatically suspended.');
@@ -3193,7 +3200,7 @@ export default function App() {
           .from('guards')
           .update({
             failed_audits: fails,
-            user_status: fails >= 3 ? 'suspended' : g.userStatus || 'active',
+            user_status: fails >= 3 ? 'suspended' : getGuardUserStatus(g),
           })
           .eq('id', guardId);
       }

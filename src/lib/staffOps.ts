@@ -1,5 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
-import { getClientAccountStatus } from './accountStatus';
+import { getClientAccountStatus, isGuardAccountPending } from './accountStatus';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
@@ -150,9 +150,7 @@ export function computePlatformStats(
   );
   const pendingJobApprovals = pendingJobReviews;
   const pendingCertApprovals = pendingCerts;
-  const pendingGuardAccounts = guards.filter(
-    (g) => !g.isStaff && (g.userStatus || 'active') === 'pending'
-  ).length;
+  const pendingGuardAccounts = guards.filter((g) => isGuardAccountPending(g)).length;
   const pendingIdentityVerifications = guards.filter(
     (g) => !g.isStaff && g.idVerificationStatus === 'pending'
   ).length;
@@ -669,7 +667,7 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {
-  return guards.filter((g) => !g.isStaff && (g.userStatus || 'active') === 'pending');
+  return guards.filter((g) => isGuardAccountPending(g));
 }
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {

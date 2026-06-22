@@ -1,4 +1,5 @@
 import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { isGuardAccountActive } from './accountStatus';
 import { guardCanWorkFieldJobs } from './guardQualification';
 
 /** Match a session user to their guard row (staff often share one email across roles). */
@@ -66,7 +67,7 @@ export function getClientRehireableGuards(
       .map((r) => r.assignedGuardId as string)
   );
   return guards
-    .filter((g) => guardIds.has(g.id) && !g.isStaff && (g.userStatus || 'active') === 'active')
+    .filter((g) => guardIds.has(g.id) && isGuardAccountActive(g))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { isGuardAccountActive } from '../../lib/accountStatus';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
@@ -148,7 +148,7 @@ function JobDetailPanel({
   const assignableGuards = useMemo(
     () =>
       guards
-        .filter((g) => !g.isStaff && (g.userStatus || 'active') === 'active')
+        .filter((g) => isGuardAccountActive(g))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [guards]
   );

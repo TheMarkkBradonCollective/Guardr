@@ -18,7 +18,7 @@ export function isClientAccountActive(client: Pick<Client, 'accountStatus' | 'ap
 
 export function getGuardUserStatus(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): GuardUserStatus {
   if (guard.isStaff) return 'active';
-  return (guard.userStatus as GuardUserStatus) || 'active';
+  return (guard.userStatus as GuardUserStatus) || 'pending';
 }
 
 export function isGuardAccountPending(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
