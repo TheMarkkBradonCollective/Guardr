@@ -49,10 +49,10 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
   const blockers: string[] = [];
   if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') {
     blockers.push('Guard application rejected — account blocked');
+  } else if (idStatus === 'rejected') {
+    blockers.push('ID resubmit requested — approval on hold until guard re-uploads');
   } else if (!idSubmitted) {
     blockers.push('Government ID and identity selfie not submitted');
-  } else if (idStatus === 'rejected') {
-    blockers.push('ID verification rejected — guard must resubmit');
   } else if (!idVerified) {
     blockers.push('ID verification awaiting staff approval');
   }

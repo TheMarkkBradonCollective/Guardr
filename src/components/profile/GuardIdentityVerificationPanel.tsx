@@ -298,8 +298,8 @@ export function GuardIdentityVerificationPanel({
       <p className="text-sm text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
 
       {status === 'rejected' && guard.idVerificationRejectionReason && (
-        <p className="text-sm text-red-400 border border-red-500/30 rounded-lg px-3 py-2">
-          Rejected: {guard.idVerificationRejectionReason}
+        <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2">
+          Staff requested a resubmit — approval is on hold until you upload again. {guard.idVerificationRejectionReason}
         </p>
       )}
 

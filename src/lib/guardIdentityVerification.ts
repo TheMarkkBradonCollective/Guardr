@@ -49,6 +49,28 @@ export function guardIdVerificationCanEdit(
   return status === 'not_submitted' || status === 'rejected';
 }
 
+/** Staff requested clearer ID photos — guard must re-upload before approval. */
+export function guardIdVerificationResubmitPending(
+  guard: Pick<SecurityGuard, 'idVerificationStatus'>
+): boolean {
+  return getGuardIdVerificationStatus(guard) === 'rejected';
+}
+
+export function staffCanApproveIdVerification(
+  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+): boolean {
+  return (
+    getGuardIdVerificationStatus(guard) === 'pending' && guardIdVerificationPhotosComplete(guard)
+  );
+}
+
+/** Resubmit requests are only allowed while ID review is pending — not after approval. */
+export function staffCanRequestIdResubmit(
+  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+): boolean {
+  return staffCanApproveIdVerification(guard);
+}
+
 export function getPendingIdentityVerifications(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter(
     (g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending' && guardIdVerificationPhotosComplete(g)

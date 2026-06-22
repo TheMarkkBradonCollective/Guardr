@@ -4,7 +4,10 @@ import { SecurityGuard } from '../../types';
 import {
   getGuardIdVerificationStatus,
   guardIdVerificationPhotosComplete,
+  guardIdVerificationResubmitPending,
   ID_VERIFICATION_SLOT_LABELS,
+  staffCanApproveIdVerification,
+  staffCanRequestIdResubmit,
 } from '../../lib/guardIdentityVerification';
 import {
   IdVerificationSlot,
@@ -51,6 +54,9 @@ export function StaffIdReviewSection({
   const status = getGuardIdVerificationStatus(guard);
   const hasPhotos = guardIdVerificationPhotosComplete(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
+  const resubmitPending = guardIdVerificationResubmitPending(guard);
+  const canApprove = staffCanApproveIdVerification(guard);
+  const canRequestResubmit = staffCanRequestIdResubmit(guard);
 
   if (!hasPhotos && status === 'not_submitted') {
     return null;
@@ -73,7 +79,7 @@ export function StaffIdReviewSection({
   return (
     <section className="py-4 border-b border-brand-border space-y-3">
       <WfSectionHeader title="ID verification review" className="mb-0" />
-      {hasPhotos && (
+      {status !== 'not_submitted' && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <IdPreview label={ID_VERIFICATION_SLOT_LABELS.front} url={guard.idFrontUrl} />
           <IdPreview label={ID_VERIFICATION_SLOT_LABELS.back} url={guard.idBackUrl} />
@@ -81,12 +87,18 @@ export function StaffIdReviewSection({
         </div>
       )}
       <p className="text-xs text-brand-text-muted leading-relaxed">
-        Request a resubmit when a photo is unclear — the guard can upload again. Use{' '}
-        <strong className="text-brand-text">Reject application</strong> once to deny the entire application
-        (all three ID images); the account is blocked and they cannot continue on Guardr.
+        Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and
+        staff can review again. Resubmit requests are not available after ID is approved. Use{' '}
+        <strong className="text-brand-text">Reject application</strong> to deny the entire application; the
+        account is blocked.
       </p>
+      {resubmitPending && guard.idVerificationRejectionReason && (
+        <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
+          Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
-        {status === 'pending' && onApprove && (
+        {canApprove && onApprove && (
           <button
             type="button"
             onClick={() => void onApprove(guard.id)}
@@ -95,7 +107,7 @@ export function StaffIdReviewSection({
             <Check className="w-3.5 h-3.5" /> Approve ID
           </button>
         )}
-        {onRequestResubmit && hasPhotos && (
+        {onRequestResubmit && canRequestResubmit && (
           <>
             <button
               type="button"
@@ -127,7 +139,7 @@ export function StaffIdReviewSection({
             </button>
           </>
         )}
-        {onReject && !applicationBlocked && (
+        {onReject && !applicationBlocked && status !== 'verified' && (
           <button
             type="button"
             onClick={() => {

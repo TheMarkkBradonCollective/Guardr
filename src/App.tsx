@@ -81,6 +81,10 @@ import {
   GUARD_APPLICATION_REJECT_DEFAULT_REASON,
   type IdVerificationSlot,
 } from './lib/staffDocumentReview';
+import {
+  staffCanApproveIdVerification,
+  staffCanRequestIdResubmit,
+} from './lib/guardIdentityVerification';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
@@ -2291,6 +2295,9 @@ export default function App() {
   };
 
   const handleApproveGuardIdentityVerification = async (guardId: string) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard || !staffCanApproveIdVerification(guard)) return;
+
     const reviewedAt = new Date().toISOString();
     setGuards((prev) =>
       prev.map((g) =>
@@ -2356,7 +2363,7 @@ export default function App() {
     staffNote?: string
   ) => {
     const guard = guards.find((g) => g.id === guardId);
-    if (!guard || slots.length === 0) return;
+    if (!guard || slots.length === 0 || !staffCanRequestIdResubmit(guard)) return;
 
     const slotSet = new Set(slots);
     const rejectionReason = buildIdResubmitReason(slots, staffNote);
