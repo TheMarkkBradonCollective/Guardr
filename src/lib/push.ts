@@ -1,6 +1,15 @@
 import type { SessionUser } from '../types';
+import { subscribePush } from './pushApi';
 
 const PUSH_ENABLED_KEY = 'guardr_push_enabled';
+const VAPID_CACHE_KEY = 'guardr_vapid_public_key';
+
+export const SW_MESSAGE = {
+  NOTIFICATION_CLICK: 'NOTIFICATION_CLICK',
+  PUSH_SUBSCRIPTION_CHANGED: 'PUSH_SUBSCRIPTION_CHANGED',
+  /** @deprecated Use NOTIFICATION_CLICK */
+  LEGACY_NAVIGATE: 'guardr-push-navigate',
+} as const;
 
 export interface PushSubscriptionDto {
   endpoint: string;
@@ -31,9 +40,57 @@ export function isPushSupported(): boolean {
   );
 }
 
+function readCachedVapidKey(): string | null {
+  try {
+    const cached = localStorage.getItem(VAPID_CACHE_KEY)?.trim();
+    return cached || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedVapidKey(key: string): void {
+  try {
+    localStorage.setItem(VAPID_CACHE_KEY, key);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Sync check: build-time env or localStorage cache from a prior fetch. */
 export function getVapidPublicKey(): string | null {
-  const key = ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? '').trim();
-  return key || null;
+  const envKey = (
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? ''
+  ).trim();
+  if (envKey) return envKey;
+  return readCachedVapidKey();
+}
+
+/** Fetch VAPID public key from server (SacramentoBuyNothing pattern) and cache locally. */
+export async function fetchVapidPublicKey(): Promise<string | null> {
+  const envKey = (
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? ''
+  ).trim();
+  if (envKey) return envKey;
+
+  try {
+    const res = await fetch('/api/push/vapid-public-key');
+    if (!res.ok) return readCachedVapidKey();
+    const data = (await res.json()) as { publicKey?: string };
+    const key = data.publicKey?.trim();
+    if (key) {
+      writeCachedVapidKey(key);
+      return key;
+    }
+  } catch {
+    /* fall through */
+  }
+  return readCachedVapidKey();
+}
+
+export async function isPushConfigured(): Promise<boolean> {
+  const key = await fetchVapidPublicKey();
+  return !!key;
 }
 
 export function isPushEnabledLocally(): boolean {
@@ -50,7 +107,7 @@ export function setPushEnabledLocally(enabled: boolean): void {
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
-  return navigator.serviceWorker.register('/sw.js');
+  return navigator.serviceWorker.register('/service-worker.js');
 }
 
 export async function getPushPermission(): Promise<NotificationPermission | 'unsupported'> {
@@ -69,9 +126,9 @@ export async function getExistingSubscription(): Promise<PushSubscription | null
 }
 
 export async function subscribeToPush(): Promise<PushSubscriptionDto | null> {
-  const vapidPublicKey = getVapidPublicKey();
+  const vapidPublicKey = await fetchVapidPublicKey();
   if (!vapidPublicKey) {
-    throw new Error('VITE_VAPID_PUBLIC_KEY is not configured');
+    throw new Error('Push notifications are not configured on the server');
   }
 
   const registration = await registerServiceWorker();
@@ -123,11 +180,43 @@ export function listenForPushNavigation(onNavigate: (url: string) => void): () =
   if (!('serviceWorker' in navigator)) return () => undefined;
 
   const handler = (event: MessageEvent) => {
-    if (event.data?.type === 'guardr-push-navigate' && typeof event.data.url === 'string') {
-      onNavigate(event.data.url);
+    const type = event.data?.type;
+    const url = event.data?.url;
+    if (
+      (type === SW_MESSAGE.NOTIFICATION_CLICK || type === SW_MESSAGE.LEGACY_NAVIGATE) &&
+      typeof url === 'string'
+    ) {
+      onNavigate(url);
     }
   };
 
   navigator.serviceWorker.addEventListener('message', handler);
   return () => navigator.serviceWorker.removeEventListener('message', handler);
+}
+
+export function listenForPushSubscriptionChange(onChanged: () => void): () => void {
+  if (!('serviceWorker' in navigator)) return () => undefined;
+
+  const handler = (event: MessageEvent) => {
+    if (event.data?.type === SW_MESSAGE.PUSH_SUBSCRIPTION_CHANGED) {
+      onChanged();
+    }
+  };
+
+  navigator.serviceWorker.addEventListener('message', handler);
+  return () => navigator.serviceWorker.removeEventListener('message', handler);
+}
+
+/** Re-sync browser subscription with server after SW rotation (SBN pattern). */
+export async function syncPushSubscriptionWithServer(
+  user: SessionUser,
+  options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
+): Promise<boolean> {
+  if (!isPushEnabledLocally() || Notification.permission !== 'granted') return false;
+
+  const subscription = await subscribeToPush();
+  if (!subscription) return false;
+
+  await subscribePush(user, subscription, options);
+  return true;
 }

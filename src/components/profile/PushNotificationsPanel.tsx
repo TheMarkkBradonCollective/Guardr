@@ -4,7 +4,7 @@ import type { NotificationPreferences, SessionUser } from '../../types';
 import {
   getExistingSubscription,
   getPushPermission,
-  getVapidPublicKey,
+  isPushConfigured,
   isPushEnabledLocally,
   isPushSupported,
   setPushEnabledLocally,
@@ -30,7 +30,9 @@ interface PushNotificationsPanelProps {
 
 export function PushNotificationsPanel({ currentUser, isDbConnected = false }: PushNotificationsPanelProps) {
   const supported = isPushSupported();
-  const configured = !!getVapidPublicKey();
+  const [configured, setConfigured] = useState(
+    !!((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? '').trim()
+  );
   const [enabled, setEnabled] = useState(isPushEnabledLocally());
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [busy, setBusy] = useState(false);
@@ -45,6 +47,10 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
   const role = roleCategory(currentUser.role);
   const typeOptions = optionsForRole(role);
+
+  useEffect(() => {
+    void isPushConfigured().then(setConfigured);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -175,7 +181,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
       {!configured && (
         <p className="text-xs text-amber-600">
-          Server VAPID keys are not configured yet. Add VITE_VAPID_PUBLIC_KEY to enable subscriptions.
+          Server VAPID keys are not configured yet. Push notifications will be available once the server is set up.
         </p>
       )}
 

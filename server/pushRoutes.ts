@@ -6,6 +6,7 @@ import {
   handlePushSubscribe,
   handlePushTest,
   handlePushUnsubscribe,
+  handlePushVapidPublicKey,
 } from './pushHandlers';
 
 function getDb() {
@@ -31,6 +32,11 @@ async function runHandler(
 }
 
 export function registerPushRoutes(app: Express): void {
+  app.get('/api/push/vapid-public-key', (_req: Request, res: Response) => {
+    const result = handlePushVapidPublicKey();
+    return res.status(result.status).json(result.body);
+  });
+
   app.post('/api/push/subscribe', (req: Request, res: Response) =>
     runHandler(res, () => handlePushSubscribe(getDb()!, req.body))
   );

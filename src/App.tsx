@@ -117,7 +117,7 @@ import {
   loadStaffMessagesFromStorage,
   saveStaffMessagesToStorage,
 } from './lib/staffMessenger';
-import { listenForPushNavigation } from './lib/push';
+import { listenForPushNavigation, listenForPushSubscriptionChange, syncPushSubscriptionWithServer } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import {
   defaultRouteForRole,
@@ -459,6 +459,19 @@ export default function App() {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsubscribe = listenForPushSubscriptionChange(() => {
+      void syncPushSubscriptionWithServer(currentUser).catch((err) => {
+        console.warn('Push subscription sync failed:', err);
+      });
+    });
+    void syncPushSubscriptionWithServer(currentUser).catch(() => {
+      /* not enabled or not configured */
+    });
+    return unsubscribe;
+  }, [currentUser?.id, currentUser?.email, currentUser?.role]);
 
   useEffect(() => {
     if (!currentUser) return;

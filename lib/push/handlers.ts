@@ -5,6 +5,14 @@ import { isInternalPushAuthorized, verifySession } from './sessionAuth';
 import { removePushSubscription, upsertPushSubscription } from './subscriptions';
 import type { PushSendPayload, PushSubscriptionPayload, SessionCredentials } from './types';
 
+export function handlePushVapidPublicKey() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  if (!publicKey) {
+    return { status: 503, body: { error: 'VAPID public key is not configured' } };
+  }
+  return { status: 200, body: { publicKey } };
+}
+
 export function pushNotConfiguredResponse() {
   return { status: 503, body: { error: 'Web Push is not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY.' } };
 }

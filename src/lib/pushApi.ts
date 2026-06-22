@@ -22,14 +22,44 @@ function sessionBody(user: SessionUser, extra: Record<string, unknown> = {}) {
   };
 }
 
+const MAX_PUSH_RETRIES = 2;
+const PUSH_RETRY_DELAY_MS = 400;
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  retries = MAX_PUSH_RETRIES
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok || res.status < 500 || attempt === retries) {
+        return res;
+      }
+      await sleep(PUSH_RETRY_DELAY_MS * (attempt + 1));
+    } catch (err) {
+      lastError = err;
+      if (attempt === retries) throw err;
+      await sleep(PUSH_RETRY_DELAY_MS * (attempt + 1));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Push request failed');
+}
+
 export async function subscribePush(
   user: SessionUser,
   subscription: PushSubscriptionDto,
   options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
 ): Promise<void> {
-  const res = await fetch('/api/push/subscribe', {
+  const res = await fetchWithRetry('/api/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
     body: JSON.stringify(sessionBody(user, { subscription, ...options })),
   });
   const data = await parseApiResponse<{ error?: string }>(res);
@@ -37,9 +67,10 @@ export async function subscribePush(
 }
 
 export async function unsubscribePush(user: SessionUser, endpoint?: string): Promise<void> {
-  const res = await fetch('/api/push/unsubscribe', {
+  const res = await fetchWithRetry('/api/push/unsubscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
     body: JSON.stringify(sessionBody(user, { endpoint })),
   });
   const data = await parseApiResponse<{ error?: string }>(res);
@@ -47,7 +78,7 @@ export async function unsubscribePush(user: SessionUser, endpoint?: string): Pro
 }
 
 export async function sendTestPush(user: SessionUser, siteId?: string): Promise<{ sent: number; failed: number }> {
-  const res = await fetch('/api/push/test', {
+  const res = await fetchWithRetry('/api/push/test', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sessionBody(user, { siteId })),
@@ -81,9 +112,10 @@ export async function reportPushEvent(
   }
 ): Promise<void> {
   try {
-    const res = await fetch('/api/push/events', {
+    const res = await fetchWithRetry('/api/push/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
       body: JSON.stringify(sessionBody(user, event)),
     });
     if (!res.ok) {

@@ -188,6 +188,8 @@ async function deliverToSubscriptions(
   const message = {
     title: payload.title,
     body: payload.body,
+    url: data.url,
+    eventType: payload.type,
     data,
     tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
     priority: data.priority,
