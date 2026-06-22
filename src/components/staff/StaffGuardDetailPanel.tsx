@@ -3,9 +3,7 @@ import { Certification, Experience, GuardEducation, SecurityGuard, SecurityReque
 import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
-  getGuardDisplayStatus,
   getQualificationProgress,
-  GUARD_STATUS_LABELS,
   guardPathwayStatusLabel,
 } from '../../lib/guardQualification';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
@@ -23,7 +21,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
-import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
@@ -33,8 +31,8 @@ import {
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { promptStaffGuardProfileApproval } from '../../lib/guardMissingCredentials';
+import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -170,7 +168,6 @@ export function StaffGuardDetailPanel({
   }, [guard]);
 
   const guardAccountStatus = getGuardUserStatus(guard);
-  const pathwayStatus = getGuardDisplayStatus(guard);
   const progress = getQualificationProgress(guard);
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
@@ -447,16 +444,7 @@ export function StaffGuardDetailPanel({
           )}
           {!guard.isStaff && (
             <div className="flex flex-wrap gap-2 mt-3">
-              <WfBadge tone="primary">{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
-              <WfBadge tone={guardAccountStatus === 'pending' ? 'warning' : guardAccountStatus === 'active' ? 'success' : 'danger'}>
-                Account: {GUARD_USER_STATUS_LABELS[guardAccountStatus]}
-              </WfBadge>
-              {isGuardTrusted(guard) && (
-                <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
-              )}
-              {guard.backgroundChecked && (
-                <WfBadge tone="primary">Background checked</WfBadge>
-              )}
+              <GuardRosterStatusBadges guard={guard} />
               <GuardMissingCredentialsBadge guard={guard} />
             </div>
           )}

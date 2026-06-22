@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
-import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
-import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
 import { useDevice } from '../../lib/platform';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
+import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -13,23 +12,7 @@ import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
-import type { GuardDisplayStatus } from '../../lib/guardQualification';
-import type { GuardUserStatus } from '../../lib/accountStatus';
-
-function guardPathwayBadgeTone(status: GuardDisplayStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  if (status === 'active') return 'success';
-  if (status === 'inactive') return 'default';
-  return 'danger';
-}
-
-function guardAccountBadgeTone(status: GuardUserStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  if (status === 'active') return 'success';
-  if (status === 'approved') return 'primary';
-  if (status === 'pending') return 'warning';
-  return 'danger';
-}
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -137,12 +120,18 @@ export function StaffGuardsPanel({
 
   const roster = guards.filter((g) => !g.isStaff);
 
-  const filtered = roster.filter(
-    (g) =>
-      g.name.toLowerCase().includes(search.toLowerCase()) ||
-      g.email.toLowerCase().includes(search.toLowerCase()) ||
-      g.badgeNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = roster
+    .filter(
+      (g) =>
+        g.name.toLowerCase().includes(search.toLowerCase()) ||
+        g.email.toLowerCase().includes(search.toLowerCase()) ||
+        g.badgeNumber.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const rank = guardRosterSortRank(a) - guardRosterSortRank(b);
+      if (rank !== 0) return rank;
+      return a.name.localeCompare(b.name);
+    });
 
   const selected = filtered.find((g) => g.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
   const showDetailOnly = Boolean(selected && !splitView);
@@ -198,8 +187,6 @@ export function StaffGuardsPanel({
     const activeShift = requests.find(
       (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
     );
-    const pathwayStatus = getGuardDisplayStatus(guard);
-    const accountStatus = getGuardUserStatus(guard);
     const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
 
     return (
@@ -210,15 +197,11 @@ export function StaffGuardsPanel({
         subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
         meta={
           <div className="flex flex-wrap items-center gap-1.5">
-            <WfBadge tone={guardPathwayBadgeTone(pathwayStatus)}>{GUARD_STATUS_LABELS[pathwayStatus]}</WfBadge>
-            <WfBadge tone={guardAccountBadgeTone(accountStatus)}>{GUARD_USER_STATUS_LABELS[accountStatus]}</WfBadge>
+            <GuardRosterStatusBadges guard={guard} />
             {pendingCerts > 0 && (
               <WfBadge tone="warning">
                 {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
               </WfBadge>
-            )}
-            {isGuardTrusted(guard) && (
-              <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>
             )}
             <GuardMissingCredentialsBadge guard={guard} />
             {activeShift && (
