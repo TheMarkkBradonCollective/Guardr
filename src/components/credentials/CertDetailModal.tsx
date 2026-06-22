@@ -106,7 +106,11 @@ export function CertDetailModal({
   const draftExpiry = expiryDate.trim();
   const draftImage = imageUrl.trim();
   const draftComplete = Boolean(
-    draftIssuer && draftNumber && draftExpiry && (!requiresState || draftState)
+    draftIssuer &&
+      draftNumber &&
+      draftExpiry &&
+      draftImage &&
+      (!requiresState || draftState)
   );
 
   const handleSave = async () => {
@@ -121,6 +125,10 @@ export function CertDetailModal({
     }
     if (requiresState && !draftState) {
       setSubmitError('Select the issuing state.');
+      return;
+    }
+    if (!draftImage) {
+      setSubmitError('Upload a photo or scan of the credential document.');
       return;
     }
 
@@ -264,7 +272,7 @@ export function CertDetailModal({
             </div>
 
             <div className="space-y-2">
-              <p className="uber-label">Document photo</p>
+              <p className="uber-label">Document photo (required)</p>
               <CertPhotoRow
                 label="Credential photo"
                 currentUrl={imageUrl || undefined}

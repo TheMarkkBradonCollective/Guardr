@@ -3,11 +3,25 @@ import { Certification } from '../types';
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
 export const CERT_IMAGE_POLICY_HINT =
-  'You can add a photo later if you skip it now. Once a photo is uploaded, it cannot be changed or removed.';
+  'Upload a photo or scan of the credential document — required for staff verification. Once uploaded, the photo cannot be changed or removed.';
+
+export const CERT_DOCUMENT_PHOTO_LABEL = 'Document photo — required for staff verification';
+
+/** Credential has a document photo on file (proof of credential). */
+export function certHasDocumentProof(cert: Pick<Certification, 'imageUrl'>): boolean {
+  return Boolean(cert.imageUrl?.trim());
+}
 
 /** Credential document photo has been uploaded and is locked. */
 export function certImageIsLocked(cert: Pick<Certification, 'imageUrl'>): boolean {
-  return Boolean(cert.imageUrl?.trim());
+  return certHasDocumentProof(cert);
+}
+
+export function validateCertSubmission(imageUrl: string | undefined): CertImageMutationResult {
+  if (!imageUrl?.trim()) {
+    return { ok: false, error: 'Upload a photo or scan of the credential document.' };
+  }
+  return { ok: true };
 }
 
 export function guardCanDeleteCertification(cert: Pick<Certification, 'imageUrl'>): boolean {
