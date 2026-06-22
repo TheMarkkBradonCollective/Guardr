@@ -80,6 +80,7 @@ import {
   validateCertNumberAvailable,
 } from './lib/certUniqueness';
 import { validateCertDeletion, validateCertImageAttachment, guardCertificationCanEdit, certImageIsLocked, validateCertSubmission, certDatabaseErrorMessage } from './lib/certImagePolicy';
+import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
 import {
@@ -1727,7 +1728,7 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase.from('certifications').insert({
+        const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
           issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
@@ -1737,7 +1738,7 @@ export default function App() {
           image_url: certWithId.imageUrl ?? null,
           submitted_by_role: certWithId.submittedByRole ?? null,
         });
-        if (error) {
+        if (!insertResult.ok) {
           setGuards(prev =>
             prev.map(g =>
               g.id === guardId
@@ -1745,14 +1746,7 @@ export default function App() {
                 : g
             )
           );
-          if (error.code === '23505') {
-            return {
-              ok: false,
-              error: certDatabaseErrorMessage(error),
-            };
-          }
-          console.error('Cert insert error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return insertResult;
         }
       } catch (e) {
         setGuards(prev =>
@@ -1838,14 +1832,11 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase
-          .from('certifications')
-          .update({
+        const updateResult = await updateCertificationRow(supabase, certId, {
             image_url: imageUrl,
             ...(requeueForReview ? { status: 'pending', rejection_reason: null } : {}),
-          })
-          .eq('id', certId);
-        if (error) {
+          });
+        if (!updateResult.ok) {
           setGuards((prev) =>
             prev.map((g) =>
               g.id === guardId
@@ -1858,8 +1849,7 @@ export default function App() {
                 : g
             )
           );
-          console.error('Cert image update error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return updateResult;
         }
       } catch (e) {
         setGuards((prev) =>
@@ -1977,9 +1967,7 @@ export default function App() {
     if (isDbConnected) {
       beginLocalMutation();
       try {
-        const { error } = await supabase
-          .from('certifications')
-          .update({
+        const updateResult = await updateCertificationRow(supabase, certId, {
             issuer,
             number,
             expiry_date: expiryDate,
@@ -1989,9 +1977,8 @@ export default function App() {
             rejection_reason:
               nextStatus === 'pending' && cert.status !== 'verified' ? null : cert.rejectionReason ?? null,
             submitted_by_role: nextSubmittedByRole ?? null,
-          })
-          .eq('id', certId);
-        if (error) {
+          });
+        if (!updateResult.ok) {
           setGuards((prev) =>
             prev.map((g) =>
               g.id === guardId
@@ -2002,11 +1989,7 @@ export default function App() {
                 : g
             )
           );
-          if (error.code === '23505') {
-            return { ok: false, error: certDatabaseErrorMessage(error) };
-          }
-          console.error('Cert update error:', error);
-          return { ok: false, error: certDatabaseErrorMessage(error) };
+          return updateResult;
         }
       } catch (e) {
         setGuards((prev) =>
