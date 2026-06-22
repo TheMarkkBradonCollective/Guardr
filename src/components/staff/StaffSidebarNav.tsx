@@ -17,9 +17,10 @@ interface StaffSidebarNavProps {
   showFinance: boolean;
 }
 
-const PRIMARY_IDS: StaffSection[] = ['overview', 'map', 'jobs', 'approvals'];
-const MORE_IDS: StaffSection[] = ['clients', 'guards', 'team', 'messages', 'support', 'incidents', 'disputes', 'analytics'];
-const ADMIN_IDS: StaffSection[] = ['payments', 'settings'];
+const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
+const OPERATIONS_IDS: StaffSection[] = ['jobs', 'approvals', 'payments'];
+const PEOPLE_IDS: StaffSection[] = ['clients', 'guards', 'team', 'messages', 'support', 'incidents', 'disputes', 'analytics'];
+const PLATFORM_IDS: StaffSection[] = ['settings'];
 
 function NavGroup({
   title,
@@ -84,28 +85,34 @@ export function StaffSidebarNav({
   showFinance,
 }: StaffSidebarNavProps) {
   const visibleItems = items.filter((item) => !item.adminOnly || showFinance);
-  const adminItems = showFinance ? ADMIN_IDS : [];
 
   return (
     <nav aria-label="Staff navigation">
       <NavGroup
-        title="Command"
-        itemIds={PRIMARY_IDS}
+        title="Dashboard"
+        itemIds={DASHBOARD_IDS}
         items={visibleItems}
         activeSection={activeSection}
         onNavigate={onNavigate}
       />
       <NavGroup
         title="Operations"
-        itemIds={MORE_IDS}
+        itemIds={OPERATIONS_IDS}
         items={visibleItems}
         activeSection={activeSection}
         onNavigate={onNavigate}
       />
-      {adminItems.length > 0 && (
+      <NavGroup
+        title="People & support"
+        itemIds={PEOPLE_IDS}
+        items={visibleItems}
+        activeSection={activeSection}
+        onNavigate={onNavigate}
+      />
+      {showFinance && (
         <NavGroup
-          title="Administration"
-          itemIds={adminItems}
+          title="Platform"
+          itemIds={PLATFORM_IDS}
           items={visibleItems}
           activeSection={activeSection}
           onNavigate={onNavigate}
