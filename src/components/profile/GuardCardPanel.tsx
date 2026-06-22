@@ -7,13 +7,13 @@ import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { WfBadge } from '../ui/wireframe';
-import { ImagePlus, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_DOCUMENT_PHOTO_LABEL, CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
+import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { showAppToast } from '../ui/AppToast';
-import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 interface GuardCardPanelProps {
@@ -61,19 +61,6 @@ export function GuardCardPanel({
     setImageUrl(undefined);
     setFormError('');
     setShowForm(false);
-  };
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      const dataUrl = await processDocumentPhotoFile(file);
-      setImageUrl(dataUrl);
-      setFormError('');
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Could not process image.');
-    }
   };
 
   const submitGuardCard = async (e: React.FormEvent) => {
@@ -176,18 +163,14 @@ export function GuardCardPanel({
         className="uber-input w-full"
         aria-label="Expiry date"
       />
-      <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-        <ImagePlus className="w-4 h-4 shrink-0" />
-        <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-        <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-      </label>
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Guard card preview"
-          className="w-full max-h-40 object-contain rounded-lg border border-brand-border"
-        />
-      )}
+      <DocumentPhotoUploadField
+        imageUrl={imageUrl}
+        onImageUrlChange={(url) => {
+          setImageUrl(url);
+          setFormError('');
+        }}
+        previewAlt="Guard card preview"
+      />
       {formError && <p className="text-xs text-red-400">{formError}</p>}
       <button
         type="submit"

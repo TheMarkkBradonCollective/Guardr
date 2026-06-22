@@ -39,11 +39,13 @@ export function CertImageAttachButton({ onAttach, compact = false }: CertImageAt
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className={`inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline disabled:opacity-60 ${
-          compact ? '' : 'py-0.5'
-        }`}
+        className={
+          compact
+            ? 'inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline disabled:opacity-60 py-0.5'
+            : 'w-full app-button-outline !h-11 !text-sm gap-2 disabled:opacity-50'
+        }
       >
-        {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
+        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
         {uploading ? 'Uploading…' : 'Add photo'}
       </button>
       <input

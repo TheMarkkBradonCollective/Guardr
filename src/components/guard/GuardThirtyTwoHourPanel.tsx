@@ -6,6 +6,7 @@ import {
   getCourseUploadStatusLabel,
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
+import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
   formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
@@ -13,14 +14,13 @@ import {
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
-import { BookOpen, ImagePlus, Plus } from 'lucide-react';
+import { BookOpen, Plus } from 'lucide-react';
 import { WfBadge } from '../ui/wireframe';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { CERT_DOCUMENT_PHOTO_LABEL, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
+import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
-import { processDocumentPhotoFile } from '../../lib/documentPhoto';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
@@ -91,19 +91,6 @@ export function GuardThirtyTwoHourPanel({
     setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
-  };
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      const dataUrl = await processDocumentPhotoFile(file);
-      setImageUrl(dataUrl);
-      setFormError('');
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Could not process image.');
-    }
   };
 
   const submitCert = async (e: React.FormEvent) => {
@@ -304,14 +291,13 @@ export function GuardThirtyTwoHourPanel({
               className="uber-input w-full"
               aria-label="Expiry date"
             />
-            <label className="flex items-center gap-2 text-xs text-brand-text-muted cursor-pointer">
-              <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>{CERT_DOCUMENT_PHOTO_LABEL}</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleImageSelect} />
-            </label>
-            {imageUrl && (
-              <img src={imageUrl} alt="Credential preview" className="w-full max-h-40 object-contain rounded-lg" />
-            )}
+            <DocumentPhotoUploadField
+              imageUrl={imageUrl}
+              onImageUrlChange={(url) => {
+                setImageUrl(url);
+                setFormError('');
+              }}
+            />
             {formError && <p className="text-xs text-red-500">{formError}</p>}
             <div className="flex gap-2">
               <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
