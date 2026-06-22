@@ -964,7 +964,7 @@ export default function App() {
         hourlyRateRequirement: g.hourly_rate_requirement,
         isStaff: g.is_staff,
         staffRole: g.staff_role,
-        userStatus: g.user_status || (g.is_staff ? 'active' : 'pending'),
+        userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: Boolean(g.is_staff) }),
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
