@@ -116,9 +116,11 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-  if (!req.guardPayoutAvailable) return false;
 
-  // Staff records cash only after the guard requested pickup via a payout invoice
+  if (isCashClientPayment(req)) {
+    return ['paid', 'held'].includes(req.paymentStatus);
+  }
+
   return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
 }
 
