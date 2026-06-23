@@ -9,19 +9,14 @@ import {
 } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
-  getPtaUofCatalogEntries,
-  getQualificationProgress,
-  guardHasCredentialUploaded,
-  guardMeetsPtaUofTrainingListed,
   isPtaUofCatalogId,
   isThirtyTwoHourCatalogId,
-  BSIS_PTA_UOF_COMBINED_ID,
-  PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { resolveCertCatalogId } from '../../lib/certCatalog';
 import { US_STATES } from '../../lib/states';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
+import { GuardPtaUofPanel } from '../guard/GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { GuardCardPanel } from './GuardCardPanel';
 import { GuardIdItemCard } from './GuardIdItemCard';
@@ -34,7 +29,6 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import {
   CERT_IMAGE_POLICY_HINT,
@@ -86,7 +80,7 @@ const CREDENTIAL_SECTIONS: {
   },
 ];
 
-type CredentialOpenSection = CertCategory | 'bsis-refresher' | 'bsis-pta-uof';
+type CredentialOpenSection = CertCategory | 'bsis-refresher';
 
 interface GuardCredentialsPanelProps {
   guard: SecurityGuard;
@@ -209,15 +203,6 @@ export function GuardCredentialsPanel({
     </div>
   );
 
-  const ptaUofProgress = getQualificationProgress(guard);
-  const ptaUofCatalogOptions = useMemo(() => getPtaUofCatalogEntries(), []);
-  const ptaUofItems = useMemo(
-    () =>
-      (grouped['bsis-training'] ?? []).filter((cert) =>
-        isPtaUofCatalogId(resolveCertCatalogId(cert))
-      ),
-    [grouped]
-  );
   const refresherEntry = getCertCatalogEntry(BSIS_REFRESHER_CATALOG_ID);
   const refresherItems = useMemo(
     () =>
@@ -251,9 +236,6 @@ export function GuardCredentialsPanel({
 
   const credentialAddSheetMeta = (() => {
     if (!openSection) return { title: 'Upload credential' };
-    if (openSection === 'bsis-pta-uof') {
-      return { title: 'Add PTA & UOF training', subtitle: PTA_UOF_UPLOAD_GUIDANCE };
-    }
     if (openSection === 'bsis-refresher') {
       return {
         title: refresherEntry?.name ?? '8-Hour BSIS Refresher',
@@ -276,18 +258,15 @@ export function GuardCredentialsPanel({
   const renderCredentialAddForm = () => {
     if (!openSection) return null;
     const showCatalogSelect =
-      openSection === 'bsis-pta-uof' ||
       openSection === 'bsis-training' ||
       (openSection !== 'bsis-refresher' && CREDENTIAL_SECTIONS.some((s) => s.category === openSection));
 
     const catalogOptions =
-      openSection === 'bsis-pta-uof'
-        ? ptaUofCatalogOptions
-        : openSection === 'bsis-training'
-          ? otherBsisCatalogOptions
-          : openSection !== 'bsis-refresher'
-            ? getCertsByCategory(openSection as CertCategory)
-            : [];
+      openSection === 'bsis-training'
+        ? otherBsisCatalogOptions
+        : openSection !== 'bsis-refresher'
+          ? getCertsByCategory(openSection as CertCategory)
+          : [];
 
     return (
       <form onSubmit={submitCert} className="space-y-3">
@@ -419,74 +398,16 @@ export function GuardCredentialsPanel({
         </>
       )}
 
-      <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="uber-label flex items-center gap-2 flex-wrap">
-              <BookOpen className="w-4 h-4 text-brand-primary" />
-              Power to Arrest &amp; Appropriate Use of Force
-              {staffMode && !guardMeetsPtaUofTrainingListed(guard) &&
-                (canUpload ? (
-                  <button
-                    type="button"
-                    onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
-                    className="inline-flex"
-                  >
-                    <CredentialSectionStatusBadge label="Not listed" />
-                  </button>
-                ) : (
-                  <CredentialSectionStatusBadge label="Not listed" />
-                ))}
-            </p>
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
-            </p>
-            <p
-              className={`text-xs font-semibold mt-2 ${
-                ptaUofProgress.ptaUofTraining ? 'text-brand-primary' : 'text-brand-text-muted'
-              }`}
-            >
-              {ptaUofProgress.ptaUofTraining
-                ? ptaUofProgress.ptaUofCombined
-                  ? 'Combined 8-hr certificate on file'
-                  : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
-                    ? 'PTA & WMD certs on file'
-                    : 'Separate PTA & UOF certificates on file'
-                : guardMeetsPtaUofTrainingListed(guard)
-                  ? 'Listed — document photos optional for activation'
-                  : 'Not listed'}
-            </p>
-          </div>
-          {canUpload && (
-            <button
-              type="button"
-              onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-            >
-              Add
-            </button>
-          )}
-        </div>
-
-        {ptaUofItems.length === 0 ? (
-          <div className="border-t border-brand-border py-3 space-y-2">
-            <p className="text-xs text-brand-text-muted">No PTA/UOF training on file.</p>
-            {canUpload && (
-              <button
-                type="button"
-                onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'PTA/UOF training')}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="app-cert-item-stack border-t border-brand-border">
-            {ptaUofItems.map((cert) => renderCertRow(cert))}
-          </div>
-        )}
-      </section>
+      <GuardPtaUofPanel
+        guard={guard}
+        editing={editing}
+        staffMode={staffMode}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
+        onUpdateCertification={onUpdateCertification}
+        renderCertActions={renderCertActions}
+      />
       <GuardThirtyTwoHourPanel
         guard={guard}
         editing={editing}
