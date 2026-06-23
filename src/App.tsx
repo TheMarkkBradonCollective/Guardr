@@ -1820,6 +1820,15 @@ export default function App() {
         });
         setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
         await loadFromSupabase();
+        if (accountStatus !== 'active') {
+          void reportPushEvent(
+            { id: client.id, email: emailLower, role: 'client', name: client.name },
+            {
+              type: 'client_pending_approval',
+              body: `New client sign-up: ${client.companyName || client.name}`,
+            }
+          );
+        }
       } catch (e) {
         console.error('Client DB insert error:', e);
         throw new Error('Could not create client account. This email may already be registered.');
@@ -1912,6 +1921,17 @@ export default function App() {
       }
       setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
       await loadFromSupabase();
+      if (userStatus === 'pending') {
+        void reportPushEvent(
+          { id: guard.id, email: emailLower, role: 'guard', name: guard.name },
+          {
+            type: 'guard_pending_approval',
+            guardId: guard.id,
+            guardName: guard.name,
+            body: `New guard sign-up: ${guard.name}`,
+          }
+        );
+      }
     } catch (e) {
       console.error('Guard DB insert error:', e);
       if (e instanceof Error && e.message.includes('certificate')) throw e;
@@ -2034,6 +2054,15 @@ export default function App() {
         console.error('Cert insert error:', e);
         return { ok: false, error: certDatabaseErrorMessage(e instanceof Error ? { message: e.message } : {}) };
       }
+    }
+    if (submittedByRole === 'guard' && currentUser) {
+      const guard = guards.find((g) => g.id === guardId);
+      void reportPushEvent(currentUser, {
+        type: 'credential_pending',
+        guardId,
+        guardName: guard?.name,
+        body: `${guard?.name ?? 'A guard'} uploaded ${certWithId.name} for review`,
+      });
     }
     return { ok: true };
   };
@@ -2651,6 +2680,17 @@ export default function App() {
       }
     }
     setStoredPassword(emailLower, { password, mustChangePassword, role: 'guard' });
+    if (newGuard.userStatus === 'pending') {
+      void reportPushEvent(
+        { id: newGuard.id, email: emailLower, role: 'guard', name: newGuard.name },
+        {
+          type: 'guard_pending_approval',
+          guardId: newGuard.id,
+          guardName: newGuard.name,
+          body: `New guard account: ${newGuard.name}`,
+        }
+      );
+    }
     return newGuard.id;
   };
 
@@ -2995,6 +3035,14 @@ export default function App() {
         console.error('ID verification submit error:', error);
         return { ok: false, error: 'Could not save ID verification. Please try again.' };
       }
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'credential_pending',
+        guardId,
+        guardName: guard.name,
+        body: `${guard.name} submitted government ID for review`,
+      });
     }
     return { ok: true };
   };
@@ -3413,6 +3461,15 @@ export default function App() {
       });
     }
 
+    if (currentUser && freshJob.status === 'pending-review') {
+      void reportPushEvent(currentUser, {
+        type: 'job_submitted',
+        requestId: freshJob.id,
+        location: freshJob.location,
+        body: `${clientName} submitted "${freshJob.title}" for review`,
+      });
+    }
+
     if (isDbConnected) {
       beginLocalMutation();
       try {
@@ -3755,6 +3812,15 @@ export default function App() {
           payment_method: 'cash',
         });
       }
+    }
+
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req.location,
+        body: `Cash payment recorded for "${req.title}" — $${req.estimatedPayout.toFixed(2)}`,
+      });
     }
   };
 
@@ -4279,6 +4345,16 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
     }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_application',
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        location: job.location,
+        body: `${activeGuard.name} applied for "${job.title}"`,
+      });
+    }
     appToast('Application submitted. Guardr staff will review applicants and approve the best fit.', 'success');
   };
 
@@ -4680,6 +4756,12 @@ export default function App() {
       return;
     }
     await appendGuardPayoutInvoice(draft);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        body: `${guard.name} requested a $${draft.total.toFixed(2)} ${label} payout for ${eligible.length} job(s)`,
+      });
+    }
     appToast(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`, 'success');
   };
 
@@ -4804,6 +4886,13 @@ export default function App() {
 
     if (paymentResult === 'success' && jobId) {
       void loadFromSupabase();
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'payment_attention',
+          requestId: jobId,
+          body: 'Client card payment received — job may be ready for guard assignment',
+        });
+      }
       if (currentUser?.role === 'client') {
         setClientViewState('requests');
         syncAppRoute({ role: 'client', clientView: 'requests' }, true);

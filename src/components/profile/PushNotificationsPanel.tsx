@@ -17,6 +17,7 @@ import {
   defaultNotificationPreferences,
   loadNotificationPreferencesFromStorage,
   optionsForRole,
+  prefsFromDbRow,
   prefsToDbRow,
   roleCategory,
   saveNotificationPreferencesToStorage,
@@ -75,18 +76,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
           .eq('user_id', currentUser.id)
           .maybeSingle();
         if (data) {
-          const loaded = {
-            userId: currentUser.id,
-            assignment: data.assignment !== false,
-            guardCheckin: data.guard_checkin !== false,
-            missedCheckin: data.missed_checkin !== false,
-            emergencyAlert: data.emergency_alert !== false,
-            supportMessage: data.support_message !== false,
-            jobChatMessage: data.job_chat_message !== false,
-            staffMessage: data.staff_message !== false,
-            guardMessage: data.guard_message !== false,
-            updatedAt: data.updated_at ?? new Date().toISOString(),
-          };
+          const loaded = prefsFromDbRow(data as Record<string, unknown>);
           setPrefs(loaded);
           saveNotificationPreferencesToStorage(loaded);
         }

@@ -62,6 +62,28 @@ export function resolveNotificationUrl(
       return '/staff/messages?mtab=team';
     case 'guard_message':
       return '/guard/guard-chat';
+    case 'job_submitted':
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/approvals?aq=job-offers';
+    case 'guard_application':
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/approvals?aq=applications';
+    case 'guard_pending_approval':
+      return options.guardId
+        ? `/staff/guards?g=${encodeURIComponent(options.guardId)}`
+        : '/staff/approvals?aq=accounts';
+    case 'client_pending_approval':
+      return '/staff/approvals?aq=accounts';
+    case 'credential_pending':
+      return options.guardId
+        ? `/staff/approvals?aq=credentials&g=${encodeURIComponent(options.guardId)}`
+        : '/staff/approvals?aq=credentials';
+    case 'payment_attention':
+      return options.requestId
+        ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/payments';
     case 'test':
       return '/';
     default:
@@ -175,6 +197,13 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['dispatch', 'admin'];
     case 'guard_message':
       return ['guard'];
+    case 'job_submitted':
+    case 'guard_application':
+    case 'guard_pending_approval':
+    case 'client_pending_approval':
+    case 'credential_pending':
+    case 'payment_attention':
+      return ['dispatch', 'admin'];
     case 'test':
       return [];
     default:

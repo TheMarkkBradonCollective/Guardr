@@ -66,6 +66,48 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     description: 'Internal messages between Guardr staff members.',
     roles: ['staff'],
   },
+  {
+    key: 'jobSubmitted',
+    type: 'job_submitted',
+    label: 'New job requests',
+    description: 'When a client submits a job awaiting staff review.',
+    roles: ['staff'],
+  },
+  {
+    key: 'guardApplication',
+    type: 'guard_application',
+    label: 'Guard applications',
+    description: 'When a guard applies to an open job offer.',
+    roles: ['staff'],
+  },
+  {
+    key: 'guardPendingApproval',
+    type: 'guard_pending_approval',
+    label: 'Guard account reviews',
+    description: 'New guard sign-ups and accounts awaiting activation.',
+    roles: ['staff'],
+  },
+  {
+    key: 'clientPendingApproval',
+    type: 'client_pending_approval',
+    label: 'Client account reviews',
+    description: 'New client sign-ups awaiting approval.',
+    roles: ['staff'],
+  },
+  {
+    key: 'credentialPending',
+    type: 'credential_pending',
+    label: 'Credential reviews',
+    description: 'Government ID, guard card, and cert uploads needing review.',
+    roles: ['staff'],
+  },
+  {
+    key: 'paymentAttention',
+    type: 'payment_attention',
+    label: 'Payments & payouts',
+    description: 'Client payments, cash deposits, and guard payout invoices.',
+    roles: ['staff'],
+  },
 ];
 
 export function defaultNotificationPreferences(userId: string): NotificationPreferences {
@@ -80,6 +122,12 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     jobChatMessage: true,
     staffMessage: true,
     guardMessage: true,
+    jobSubmitted: true,
+    guardApplication: true,
+    guardPendingApproval: true,
+    clientPendingApproval: true,
+    credentialPending: true,
+    paymentAttention: true,
     updatedAt: now,
   };
 }
@@ -89,7 +137,9 @@ export function loadNotificationPreferencesFromStorage(userId: string): Notifica
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultNotificationPreferences(userId);
     const parsed = JSON.parse(raw) as Record<string, NotificationPreferences>;
-    return parsed[userId] ?? defaultNotificationPreferences(userId);
+    const stored = parsed[userId];
+    if (!stored) return defaultNotificationPreferences(userId);
+    return { ...defaultNotificationPreferences(userId), ...stored, userId };
   } catch {
     return defaultNotificationPreferences(userId);
   }
@@ -144,6 +194,12 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     job_chat_message: prefs.jobChatMessage,
     staff_message: prefs.staffMessage,
     guard_message: prefs.guardMessage,
+    job_submitted: prefs.jobSubmitted,
+    guard_application: prefs.guardApplication,
+    guard_pending_approval: prefs.guardPendingApproval,
+    client_pending_approval: prefs.clientPendingApproval,
+    credential_pending: prefs.credentialPending,
+    payment_attention: prefs.paymentAttention,
     updated_at: prefs.updatedAt,
   };
 }
@@ -159,6 +215,12 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     jobChatMessage: row.job_chat_message !== false,
     staffMessage: row.staff_message !== false,
     guardMessage: row.guard_message !== false,
+    jobSubmitted: row.job_submitted !== false,
+    guardApplication: row.guard_application !== false,
+    guardPendingApproval: row.guard_pending_approval !== false,
+    clientPendingApproval: row.client_pending_approval !== false,
+    credentialPending: row.credential_pending !== false,
+    paymentAttention: row.payment_attention !== false,
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
 }

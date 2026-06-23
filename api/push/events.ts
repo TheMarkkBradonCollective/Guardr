@@ -5,6 +5,7 @@ import {
   getSupabaseAdmin,
   isPushConfigured,
   jsonError,
+  parseRequestBody,
   verifySession,
 } from './_shared';
 import type { PushSendPayload } from './_types';
@@ -20,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return jsonError(res, 503, 'Database is not configured');
     }
 
-    const body = (req.body ?? {}) as {
+    const body = parseRequestBody<{
       userId?: string;
       email?: string;
       role?: string;
@@ -34,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       location?: string;
       recipientUserId?: string;
       ticketId?: string;
-    };
+    }>(req);
 
     const session = await verifySession(db, {
       userId: body.userId ?? '',
@@ -92,6 +93,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         title: 'Guard chat',
         body: body.body || 'New message from another guard',
       },
+      job_submitted: {
+        title: 'New job request',
+        body: body.body || 'A client submitted a job awaiting staff review',
+      },
+      guard_application: {
+        title: 'Guard application',
+        body: body.body || 'A guard applied to an open job offer',
+      },
+      guard_pending_approval: {
+        title: 'Guard pending approval',
+        body: body.body || 'A guard account needs staff review',
+      },
+      client_pending_approval: {
+        title: 'Client pending approval',
+        body: body.body || 'A client account needs staff review',
+      },
+      credential_pending: {
+        title: 'Credential review',
+        body: body.body || 'A guard submitted credentials for review',
+      },
+      payment_attention: {
+        title: 'Payment attention',
+        body: body.body || 'A payment or payout needs staff action',
+      },
     };
 
     const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
@@ -122,6 +147,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (
       body.type === 'staff_message' ||
       body.type === 'guard_message' ||
+      body.type === 'job_submitted' ||
+      body.type === 'guard_application' ||
+      body.type === 'guard_pending_approval' ||
+      body.type === 'client_pending_approval' ||
+      body.type === 'credential_pending' ||
+      body.type === 'payment_attention' ||
       (body.type === 'support_message' && !body.recipientUserId) ||
       (body.type === 'job_chat_message' && !body.recipientUserId)
     ) {

@@ -681,6 +681,12 @@ export interface NotificationPreferences {
   jobChatMessage: boolean;
   staffMessage: boolean;
   guardMessage: boolean;
+  jobSubmitted: boolean;
+  guardApplication: boolean;
+  guardPendingApproval: boolean;
+  clientPendingApproval: boolean;
+  credentialPending: boolean;
+  paymentAttention: boolean;
   updatedAt: string;
 }
 

@@ -102,7 +102,13 @@ export type PushEventType =
   | 'support_message'
   | 'job_chat_message'
   | 'staff_message'
-  | 'guard_message';
+  | 'guard_message'
+  | 'job_submitted'
+  | 'guard_application'
+  | 'guard_pending_approval'
+  | 'client_pending_approval'
+  | 'credential_pending'
+  | 'payment_attention';
 
 export async function reportPushEvent(
   user: SessionUser,
