@@ -28,7 +28,7 @@ export function StaffMessengerPanel({
   return (
     <div className="staff-split-pane-detail flex flex-col min-h-[420px] h-full">
       <div className="staff-pane-header">
-        <h2 className="font-bold text-sm">Team chat</h2>
+        <h2 className="font-bold text-sm">Staff chat</h2>
         <p className="text-xs text-brand-text-muted mt-1">
           Internal staff-only channel — not visible to clients or guards.
         </p>
@@ -39,7 +39,7 @@ export function StaffMessengerPanel({
           currentUserId={currentUser.id}
           onSend={onSend}
           placeholder="Message the Guardr team…"
-          teamChat
+          staffChatLabels
         />
       </div>
     </div>
