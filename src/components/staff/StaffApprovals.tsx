@@ -37,6 +37,7 @@ import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
+import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, MapPin, Pencil, Shield, UserCheck, X } from 'lucide-react';
