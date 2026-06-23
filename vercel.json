@@ -9,6 +9,26 @@
       "schedule": "*/5 * * * *"
     }
   ],
+  "functions": {
+    "api/push/subscribe.ts": {
+      "includeFiles": "lib/push/**"
+    },
+    "api/push/unsubscribe.ts": {
+      "includeFiles": "lib/push/**"
+    },
+    "api/push/test.ts": {
+      "includeFiles": "lib/push/**"
+    },
+    "api/push/events.ts": {
+      "includeFiles": "lib/push/**"
+    },
+    "api/push/send.ts": {
+      "includeFiles": "lib/push/**"
+    },
+    "api/cron/missed-checkins.ts": {
+      "includeFiles": "lib/push/**"
+    }
+  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
