@@ -96,6 +96,11 @@ export function GuardPtaUofPanel({
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
 
+  const hasAnyCerts = combinedCerts.length > 0 || ptaCerts.length > 0 || secondPartCerts.length > 0;
+  const effectivePath: CredentialUploadPath = hasAnyCerts
+    ? (combinedCerts.length > 0 ? 'combined' : 'individual')
+    : uploadPath;
+
   const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
   const sectionStatus = getAggregateSectionStatus(ptaUofStatusSummary, progress.complete);
 
@@ -263,14 +268,16 @@ export function GuardPtaUofPanel({
         </div>
       </div>
 
-      <CredentialPathToggle
-        value={uploadPath}
-        onChange={setUploadPath}
-        combinedLabel="Combined certificate"
-        individualLabel="Individual parts"
-      />
+      {!hasAnyCerts && (
+        <CredentialPathToggle
+          value={uploadPath}
+          onChange={setUploadPath}
+          combinedLabel="Combined certificate"
+          individualLabel="Individual parts"
+        />
+      )}
 
-      {uploadPath === 'combined' ? (
+      {effectivePath === 'combined' ? (
         <div className="border-t border-brand-border pt-3 space-y-3">
           <CredentialRowHeader
             rawTitle
