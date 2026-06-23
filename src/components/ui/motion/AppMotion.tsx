@@ -265,30 +265,40 @@ export function AppDrawer({ open, onClose, title, subtitle, children, footer }: 
             onClick={onClose}
           />
           <motion.aside
-            className="sidebar-drawer-panel absolute inset-y-0 left-0 w-72 max-w-[88vw] flex flex-col border-r border-brand-border bg-brand-bg-sec shadow-2xl"
+            className="sidebar-drawer-panel absolute inset-y-0 left-0 flex flex-col"
+            style={{ width: 'min(22rem, 90vw)' }}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: APP_MOTION_DURATION.sheet, ease: APP_MOTION_EASE }}
           >
-            <div className="shrink-0 flex items-start justify-between gap-3 p-4 border-b border-brand-border">
+            {/* Dark Uber-style header */}
+            <div
+              className="shrink-0 flex items-center justify-between gap-3 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-4"
+              style={{ borderBottom: '1px solid #1a1a1a' }}
+            >
               <div className="min-w-0">
                 {subtitle && (
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-brand-text-muted">{subtitle}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] opacity-40 mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{subtitle}</p>
                 )}
-                <p className="font-black text-sm uppercase tracking-tight">{title}</p>
+                <p className="font-black text-xl tracking-[-0.04em] leading-tight" style={{ color: '#ffffff' }}>{title}</p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 border border-brand-border text-brand-text-muted hover:text-brand-text shrink-0"
+                className="w-8 h-8 flex items-center justify-center transition-colors shrink-0 rounded-lg"
+                style={{ color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.08)' }}
                 aria-label="Close sidebar"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2">{children}</div>
-            {footer && <div className="shrink-0 p-3 border-t border-brand-border space-y-2">{footer}</div>}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2 pb-6">{children}</div>
+            {footer && (
+              <div className="shrink-0 p-4 space-y-2" style={{ borderTop: '1px solid #1a1a1a' }}>
+                {footer}
+              </div>
+            )}
           </motion.aside>
         </motion.div>
       )}

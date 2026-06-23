@@ -159,29 +159,31 @@ export function RequestSecurityFlow({
 
   return (
     <div className="h-full flex flex-col animate-fade-in client-content-shell client-form-shell">
-      <div className="flex items-center gap-3 mb-6 shrink-0">
-        <button type="button" onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface transition-colors" aria-label="Back">
+      <div className="flex items-center gap-3 mb-7 shrink-0 px-1">
+        <button type="button" onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-bg-sec transition-colors shrink-0 -ml-1" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex-1">
-          <p className="text-sm text-brand-text-muted">
-            Step {step} of 9 · {STEP_LABELS[step - 1]}
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-brand-text-muted mb-2">
+            Step {step} of 9 &mdash; {STEP_LABELS[step - 1]}
           </p>
-          <div className="flex gap-1 mt-2">
-            {STEP_LABELS.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 flex-1 rounded-full transition-colors ${i < step ? 'bg-brand-primary' : 'bg-brand-border'}`}
-              />
-            ))}
+          {/* Single thick progress bar: Uber-style */}
+          <div className="h-1.5 w-full rounded-full overflow-hidden bg-brand-border">
+            <div
+              className="h-full rounded-full bg-brand-primary transition-all duration-300"
+              style={{ width: `${(step / 9) * 100}%` }}
+            />
           </div>
         </div>
       </div>
 
       <div className="guard-scroll-panel flex-1 pb-24">
         {step === 1 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">What do you need?</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">What do you need?</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Choose the type of security coverage.</p>
+            </div>
             <div className="grid grid-cols-1 gap-2">
               {CLIENT_SERVICE_OPTIONS.map((opt) => (
                 <button
@@ -189,13 +191,15 @@ export function RequestSecurityFlow({
                   type="button"
                   onClick={() => setServiceId(opt.id)}
                   className={`wf-list-card transition-all ${
-                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
+                    serviceId === opt.id ? '!border-brand-primary bg-brand-primary/8' : ''
                   }`}
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  <div className="w-10 h-10 rounded-lg bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0 text-brand-primary">
+                    <span className="text-lg leading-none">{opt.emoji}</span>
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm">{opt.label}</p>
-                    <p className="text-xs text-brand-text-muted">{opt.description}</p>
+                    <p className="font-bold text-[0.9375rem] tracking-tight">{opt.label}</p>
+                    <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{opt.description}</p>
                   </div>
                   {serviceId === opt.id && <Check className="w-5 h-5 text-brand-primary shrink-0" />}
                 </button>
@@ -214,8 +218,11 @@ export function RequestSecurityFlow({
         )}
 
         {step === 2 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Where?</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Where?</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Enter the job site address.</p>
+            </div>
             <div>
               <label className="uber-label block mb-1.5">Address</label>
               <input
@@ -276,8 +283,11 @@ export function RequestSecurityFlow({
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">When?</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">When?</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Set start and end date/time for the shift.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="uber-label block mb-1.5">Start Date</label>
@@ -320,8 +330,11 @@ export function RequestSecurityFlow({
         )}
 
         {step === 4 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">How many guards?</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Guards per shift at this site.</p>
+            </div>
             <div className="segmented-control segmented-control-full">
               {GUARD_COUNT_PRESETS.map((n) => (
                 <button
@@ -351,9 +364,11 @@ export function RequestSecurityFlow({
         )}
 
         {step === 5 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Pay rate</h2>
-            <p className="text-xs text-brand-text-muted">Client hourly rate per guard</p>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Pay rate</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Client hourly rate per guard.</p>
+            </div>
             <div className="segmented-control segmented-control-full">
               {PAY_RATE_PRESETS.map((rate) => (
                 <button
@@ -396,25 +411,33 @@ export function RequestSecurityFlow({
         )}
 
         {step === 7 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Professional listing details</h2>
-            <p className="text-sm text-brand-text-muted">
-              Guards review this like a job posting — dress code, equipment, access, and post orders.
-            </p>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Listing details</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">
+                Guards review this like a job posting — dress code, equipment, and post orders.
+              </p>
+            </div>
             <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
           </div>
         )}
 
         {step === 8 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Site briefing</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Site briefing</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Operational details guards need for this assignment.</p>
+            </div>
             <JobOperationalDetailsFields value={operational} onChange={setOperational} />
           </div>
         )}
 
         {step === 9 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Review your listing</h2>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Review & post</h2>
+              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Your listing is ready. Slide to publish it to the marketplace.</p>
+            </div>
             <JobListingPreview
               job={{
                 title,
