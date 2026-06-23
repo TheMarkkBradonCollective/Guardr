@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
-import { getCourseUploadStatus, type CourseUploadStatus } from '../../lib/certStatus';
+import {
+  countPtaUofSlotStatuses,
+  formatCredentialSlotStatusSummary,
+} from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
@@ -13,16 +16,14 @@ import {
   PTA_UOF_UPLOAD_GUIDANCE,
   computePtaUofProgress,
   formatPtaUofProgressSummary,
-  guardPtaUofSecondPartListed,
-  guardPtaUofSecondPartOnFile,
 } from '../../lib/guardQualification';
-import { BookOpen, Plus } from 'lucide-react';
-import { CredentialListStatusBadge } from '../credentials/CredentialStatusLabels';
+import { BookOpen } from 'lucide-react';
+import { CredentialSectionAddButton, CredentialSectionStatusSummary } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
+import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -50,17 +51,6 @@ function certsForSecondPart(guard: SecurityGuard): Certification[] {
     const id = resolveCertCatalogId(cert);
     return id === LEGACY_UOF_ID || id === BSIS_WMD_AWARENESS_ID;
   });
-}
-
-function getSecondPartUploadStatus(guard: SecurityGuard): CourseUploadStatus {
-  if (guardPtaUofSecondPartOnFile(guard)) {
-    const uofStatus = getCourseUploadStatus(guard, LEGACY_UOF_ID);
-    const wmdStatus = getCourseUploadStatus(guard, BSIS_WMD_AWARENESS_ID);
-    if (uofStatus === 'expired' || wmdStatus === 'expired') return 'expired';
-    return 'on-file';
-  }
-  if (guardPtaUofSecondPartListed(guard)) return 'listed';
-  return 'missing';
 }
 
 export function GuardPtaUofPanel({
@@ -95,6 +85,7 @@ export function GuardPtaUofPanel({
 
   // Hide individual PTA/UOF rows when the combined 8-hour certificate is on file.
   const showIndividualRows = !progress.combinedOnFile;
+  const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -183,7 +174,6 @@ export function GuardPtaUofPanel({
     catalogId,
     label,
     subtitle,
-    uploadStatus,
     uploaded,
     alternateCatalogId,
     alternateLabel,
@@ -191,51 +181,31 @@ export function GuardPtaUofPanel({
     catalogId: string;
     label: string;
     subtitle?: string;
-    uploadStatus: CourseUploadStatus;
     uploaded: Certification[];
     alternateCatalogId?: string;
     alternateLabel?: string;
   }) => (
     <div className="app-list-subrow space-y-2">
-      {uploaded.length === 0 && canUpload ? (
-        <button
-          type="button"
-          onClick={() => startAdd(catalogId)}
-          className="flex w-full items-start justify-between gap-3 text-left"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-brand-text-muted">{label}</p>
-            {subtitle && <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>}
-          </div>
-          <CredentialListStatusBadge status={uploadStatus} />
-        </button>
-      ) : (
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className={`text-sm font-semibold ${uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'}`}>
-              {label}
-            </p>
-            {subtitle && <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>}
-          </div>
-          {uploaded.length === 0 && <CredentialListStatusBadge status={uploadStatus} />}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-sm font-semibold ${
+              uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'
+            }`}
+          >
+            {label}
+          </p>
+          {subtitle && (
+            <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
+          )}
         </div>
-      )}
+        {canUpload && <CredentialSectionAddButton onClick={() => startAdd(catalogId)} />}
+      </div>
 
       {uploaded.length > 0 && (
         <div className="app-cert-item-stack !pt-0">
           {uploaded.map((cert) => renderCertRow(cert))}
         </div>
-      )}
-
-      {canUpload && addingCatalogId !== catalogId && uploaded.length > 0 && (
-        <button
-          type="button"
-          onClick={() => startAdd(catalogId)}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text-muted hover:text-brand-text"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add another
-        </button>
       )}
 
       {canUpload && alternateCatalogId && uploaded.length === 0 && secondPartCerts.length === 0 && (
@@ -256,6 +226,7 @@ export function GuardPtaUofPanel({
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           Power to Arrest &amp; Appropriate Use of Force
+          {!progress.complete && <CredentialSectionStatusSummary summary={ptaUofStatusSummary} />}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
@@ -276,26 +247,20 @@ export function GuardPtaUofPanel({
       </div>
 
       <div className="border-t border-brand-border pt-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
-          Combined certificate (optional)
-        </p>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+            Combined certificate (optional)
+          </p>
+          {canUpload && (
+            <CredentialSectionAddButton onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)} />
+          )}
+        </div>
         {combinedCerts.length > 0 ? (
           <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
         ) : (
-          <div className="py-2 space-y-2">
-            <p className="text-xs text-brand-text-muted">
-              {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
-            </p>
-            {canUpload && (
-              <button
-                type="button"
-                onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'combined 8-hour cert')}
-              </button>
-            )}
-          </div>
+          <p className="text-xs text-brand-text-muted py-2">
+            {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
+          </p>
         )}
       </div>
 
@@ -308,14 +273,12 @@ export function GuardPtaUofPanel({
             catalogId: LEGACY_PTA_ID,
             label: ptaEntry?.name ?? 'Power to Arrest',
             subtitle: ptaEntry?.description,
-            uploadStatus: getCourseUploadStatus(guard, LEGACY_PTA_ID),
             uploaded: ptaCerts,
           })}
           {renderPartRow({
             catalogId: LEGACY_UOF_ID,
             label: uofEntry?.name ?? 'Appropriate Use of Force',
             subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
-            uploadStatus: getSecondPartUploadStatus(guard),
             uploaded: secondPartCerts,
             alternateCatalogId: BSIS_WMD_AWARENESS_ID,
             alternateLabel: 'Upload WMD Awareness instead',

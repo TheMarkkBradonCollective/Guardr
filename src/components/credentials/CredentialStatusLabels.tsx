@@ -52,6 +52,15 @@ export function CredentialListStatusBadge({
   return <CredentialSectionStatusBadge label="Missing" />;
 }
 
+/** Aggregate upload counts for section headers — e.g. "5 Missing and another 1 listed and another 3 on file". */
+export function CredentialSectionStatusSummary({ summary }: { summary: string }) {
+  return (
+    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 normal-case tracking-normal">
+      {summary}
+    </span>
+  );
+}
+
 /** Consistent section-header action for credential uploads. */
 export function CredentialSectionAddButton({ onClick }: { onClick: () => void }) {
   return (

@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
+  countThirtyTwoHourCourseSlotStatuses,
+  formatCredentialSlotStatusSummary,
   getCourseUploadStatus,
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
@@ -15,9 +17,8 @@ import {
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
 import {
-  CredentialListStatusBadge,
   CredentialSectionAddButton,
-  CredentialSectionStatusBadge,
+  CredentialSectionStatusSummary,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -79,6 +80,9 @@ export function GuardThirtyTwoHourPanel({
   );
 
   const progressPct = progress.thirtyTwoHourProgressPercent;
+  const courseStatusSummary = formatCredentialSlotStatusSummary(
+    countThirtyTwoHourCourseSlotStatuses(guard)
+  );
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -169,8 +173,8 @@ export function GuardThirtyTwoHourPanel({
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
-          {staffMode && !progress.thirtyTwoHourBlockComplete && (
-            <CredentialSectionStatusBadge label="Missing" />
+          {!progress.thirtyTwoHourBlockComplete && (
+            <CredentialSectionStatusSummary summary={courseStatusSummary} />
           )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -236,10 +240,9 @@ export function GuardThirtyTwoHourPanel({
                 >
                   {course.name}
                 </p>
-                <div className="flex items-center gap-2 shrink-0">
-                  <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
-                  {canUpload && <CredentialSectionAddButton onClick={() => startAdd(course.id)} />}
-                </div>
+                {canUpload && (
+                  <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
+                )}
               </div>
 
               {uploaded.length > 0 && (
