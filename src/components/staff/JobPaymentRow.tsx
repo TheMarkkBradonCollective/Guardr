@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Banknote, CreditCard, Loader2, RotateCcw, Wallet } from 'lucide-react';
+import { Banknote, Loader2, RotateCcw, Wallet } from 'lucide-react';
 import {
-  canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
@@ -13,7 +12,6 @@ import {
   getPlatformFeeAmount,
   guardPayoutAmount,
   isClientCashPaymentPendingApproval,
-  stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../../lib/paymentDisplay';
@@ -66,7 +64,6 @@ interface JobPaymentRowProps {
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
-  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
 }
 
@@ -85,10 +82,9 @@ export function JobPaymentRow({
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
-  onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'deposit' | 'platformFee' | 'manualDeposit' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'platformFee' | 'manualDeposit' | null>(null);
 
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
@@ -107,7 +103,6 @@ export function JobPaymentRow({
   const canMarkClientCash =
     paymentGates.allowCash && isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
   const manualDepositDue = getManualCashDepositDue(req);
-  const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
   const canManualDeposit =
     isDirector && canDirectorMarkCashDepositManually(req) && onMarkCashDepositManually;
   const canPlatformFeeCash =
@@ -177,7 +172,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
             <button
@@ -215,15 +210,15 @@ export function JobPaymentRow({
             </button>
           )}
 
-          {canDeposit && (
+          {canCashGuard && (
             <button
               type="button"
-              onClick={() => run('deposit', onDepositCashToStripe)}
+              onClick={() => run('guard', onMarkGuardPaidCash)}
               disabled={busy !== null}
               className="app-button-primary app-btn-sm gap-1.5"
             >
-              {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-              {stripeDepositLabel(req)}
+              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Pay guard ${guardAmount.toFixed(2)} cash
             </button>
           )}
 
@@ -268,18 +263,6 @@ export function JobPaymentRow({
             >
               {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
               Make ${guardAmount.toFixed(2)} available to guard
-            </button>
-          )}
-
-          {canCashGuard && (
-            <button
-              type="button"
-              onClick={() => run('guard', onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
-            >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Pay guard ${guardAmount.toFixed(2)} cash
             </button>
           )}
 

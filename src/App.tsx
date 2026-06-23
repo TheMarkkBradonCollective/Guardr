@@ -34,7 +34,6 @@ import {
 import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from './lib/spotChecks';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
-  canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorPayGuardCash,
   canDirectorMarkCashDepositManually,
@@ -43,7 +42,6 @@ import {
   canStaffApproveClientCashPayment,
   getManualCashDepositDue,
   getPlatformFeeAmount,
-  getRemainingStripeDeposit,
   getRequiredStripeDeposit,
   guardPayoutAmount,
   isCashClientPayment,
@@ -126,7 +124,7 @@ import {
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isClientAccountPending } from './lib/accountStatus';
-import { createCashDepositCheckoutSession, holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
+import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -4288,38 +4286,6 @@ export default function App() {
     appToast(`Recorded $${depositAmount.toFixed(2)} manual deposit.`, 'success');
   };
 
-  const handleDepositCashToStripe = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can pay client cash into Stripe.', 'error');
-      return;
-    }
-    const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorDepositCashToStripe(req)) {
-      appToast('This job does not need a card payment into Stripe right now.', 'error');
-      return;
-    }
-    const depositAmount = getRemainingStripeDeposit(req);
-    const amountCents = Math.round(depositAmount * 100);
-    if (amountCents < 50) {
-      appToast('Deposit amount is too small to charge.', 'error');
-      return;
-    }
-
-    try {
-      const { url } = await createCashDepositCheckoutSession({
-        jobId: requestId,
-        directorEmail: currentUser.email,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (e: unknown) {
-      appToast(e instanceof Error ? e.message : 'Unable to start card checkout', 'error');
-    }
-  };
-
   const handleAddReview = async (requestId: string, rating: number, reviewText: string) => {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ratingGiven: rating, reviewText } : r));
     const req = requests.find(r => r.id === requestId);
@@ -6013,7 +5979,6 @@ export default function App() {
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
           onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
           onMarkCashDepositManually={handleMarkCashDepositManually}
-          onDepositCashToStripe={handleDepositCashToStripe}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           platformSettings={platformSettings}
           onUpdatePlatformSettings={handleUpdatePlatformSettings}
