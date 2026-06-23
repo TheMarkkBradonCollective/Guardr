@@ -2352,6 +2352,21 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   -webkit-overflow-scrolling: touch;
 }
 
+.app-full-page-screen,
+.app-full-page-detail {
+  height: 100%;
+  min-height: 0;
+  background: var(--brand-bg);
+}
+
+.app-full-page-detail .app-subscreen-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
+}
+
 .app-screen-title {
   font-size: 1.75rem;
   font-weight: 700;

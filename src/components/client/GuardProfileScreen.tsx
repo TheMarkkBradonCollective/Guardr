@@ -13,8 +13,8 @@ import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import {
-  ArrowLeft,
   BookOpen,
   Briefcase,
   Check,
@@ -56,14 +56,9 @@ export function GuardProfileScreen({
   const aboutText = guard.about?.trim() || guard.bio?.trim();
 
   return (
-    <div className="h-full flex flex-col overflow-hidden client-content-shell">
-      <div className="guard-scroll-panel flex-1">
-        <div className="px-4 py-4 space-y-6 pb-28 max-w-3xl mx-auto">
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-medium text-brand-primary">
-            <ArrowLeft className="w-4 h-4" />
-            Back to directory
-          </button>
-
+    <AppScreen className="app-full-page-detail">
+      <AppSubScreenHeader title={guard.name} onBack={onBack} backLabel="Guards" />
+      <div className="px-4 py-4 space-y-6 pb-28 max-w-3xl mx-auto">
           <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-4 overflow-hidden p-0">
             <div className="p-6 bg-gradient-to-br from-brand-primary/20 via-brand-primary/8 to-transparent">
               <div className="flex items-start gap-4">
@@ -208,7 +203,6 @@ export function GuardProfileScreen({
             )}
           </section>
         </div>
-      </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full">
         <button
@@ -222,7 +216,7 @@ export function GuardProfileScreen({
           Separate from posting a general job to all guards
         </p>
       </div>
-    </div>
+    </AppScreen>
   );
 }
 

@@ -433,8 +433,8 @@ export default function App() {
     setClientViewState(resolvedView);
     const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
-    const keepsJobChat = resolvedView === 'coverage' || resolvedView === 'messages' || resolvedView === 'map';
-    const nextJobChatId = keepsJobChat ? jobChatRequestId ?? undefined : undefined;
+    const keepsJobChatId = resolvedView === 'coverage' || resolvedView === 'messages' || resolvedView === 'map';
+    const nextJobChatId = keepsJobChatId ? jobChatRequestId ?? undefined : undefined;
     const inMessagesFlow =
       resolvedView === 'messages' ||
       resolvedView === 'support-compose' ||
@@ -442,8 +442,10 @@ export default function App() {
     const nextSupportId = resolvedView === 'messages' ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
-    if (!keepsJobChat) {
+    if (!keepsJobChatId) {
       setJobChatRequestIdState(null);
+      setOpenJobChatState(false);
+    } else if (resolvedView !== 'messages') {
       setOpenJobChatState(false);
     }
     if (!inMessagesFlow) {
@@ -459,7 +461,7 @@ export default function App() {
         clientGuardId: nextGuardId,
         clientDirectGuardId: nextDirectId,
         jobChatRequestId: nextJobChatId,
-        openJobChat: keepsJobChat && openJobChat ? true : undefined,
+        openJobChat: resolvedView === 'messages' && openJobChat ? true : undefined,
         supportTicketId: nextSupportId,
         supportSection: resolvedView === 'messages' ? supportSection : undefined,
         supportMode: undefined,
@@ -636,13 +638,11 @@ export default function App() {
       return;
     }
     if (role === 'client') {
-      const targetView =
-        clientView === 'map' ? 'map' : clientView === 'coverage' ? 'coverage' : 'messages';
-      setClientViewState(targetView);
+      setClientViewState('messages');
       syncAppRoute(
         buildAppRoute({
           role: 'client',
-          clientView: targetView,
+          clientView: 'messages',
           jobChatRequestId: requestId ?? undefined,
           openJobChat: options?.openChat ?? true,
         })
@@ -1661,9 +1661,7 @@ export default function App() {
       return (
         clientView === 'messages' ||
         clientView === 'support-compose' ||
-        clientView === 'support-report' ||
-        (clientView === 'coverage' && openJobChat) ||
-        (clientView === 'map' && openJobChat)
+        clientView === 'support-report'
       );
     }
     if (role === 'guard') {
@@ -1671,7 +1669,7 @@ export default function App() {
         guardTab === 'messages' ||
         guardTab === 'guardChat' ||
         guardTab === 'support' ||
-        (guardTab === 'myJobs' && openJobChat)
+        (guardTab === 'myJobs' && !!jobChatRequestId)
       );
     }
     if (role === 'staff') {
@@ -5738,7 +5736,7 @@ export default function App() {
       (clientView === 'messages' && (!!supportTicketId || openJobChat)) ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
-      (openJobChat && ['messages', 'coverage', 'map'].includes(clientView));
+      (clientView === 'guards' && !!clientGuardId);
 
     return (
       <>

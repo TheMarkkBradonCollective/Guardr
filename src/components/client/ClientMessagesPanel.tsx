@@ -147,7 +147,7 @@ export function ClientMessagesPanel({
 
   if (chatOpen && chatRequest) {
     return (
-      <div className="h-full flex flex-col min-h-0">
+      <div className="h-full flex flex-col min-h-0 app-full-page-screen">
         <JobChatPanel
           request={chatRequest}
           thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
@@ -167,7 +167,7 @@ export function ClientMessagesPanel({
       : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
 
     return (
-      <div className="h-full flex flex-col bg-brand-bg min-h-0">
+      <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
         <AppChatHeader
           title={activeTicket.subject}
           subtitle={threadSubtitle}

@@ -27,8 +27,6 @@ import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
-import { JobChatPanel } from './messaging/JobChatPanel';
-import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { AppWorkflowPage } from './docs/AppWorkflowPage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
@@ -213,7 +211,6 @@ export function GuardDashboard({
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
-  const [showJobChat, setShowJobChat] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
@@ -305,6 +302,21 @@ export function GuardDashboard({
       .then((s) => setConnectReady(s.payoutsEnabled && s.detailsSubmitted))
       .catch(() => setConnectReady(false));
   }, [guard.stripeConnectAccountId]);
+
+  useEffect(() => {
+    if (tab === 'myJobs' && openJobChat && jobChatRequestId) {
+      setTab('messages');
+    }
+  }, [tab, openJobChat, jobChatRequestId, setTab]);
+
+  const openMessagesForJob = useCallback(
+    (requestId: string) => {
+      setTab('messages');
+      onJobChatRequestIdChange?.(requestId);
+      onJobChatOpenChange?.(true);
+    },
+    [setTab, onJobChatRequestIdChange, onJobChatOpenChange]
+  );
 
   useEffect(() => {
     if (activePhase !== 'on-duty') return;
@@ -608,7 +620,7 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && !showJobChat && (
+      {activeTab === 'map' && showShiftOverlay && activeShiftJob && activePhase && (
         <GuardActiveShift
           job={activeShiftJob}
           phase={activePhase}
@@ -625,22 +637,10 @@ export function GuardDashboard({
           }}
           onActivityReport={() => setShowActivityLog(true)}
           onEndShift={handleEndShift}
-          onOpenJobChat={onSendJobChatMessage ? () => setShowJobChat(true) : undefined}
+          onOpenJobChat={
+            onSendJobChatMessage ? () => openMessagesForJob(activeShiftJob.id) : undefined
+          }
         />
-      )}
-
-      {activeTab === 'map' && showShiftOverlay && activeShiftJob && showJobChat && onSendJobChatMessage && (
-        <div className="absolute inset-x-0 bottom-0 z-[1002] h-[70vh] rounded-t-2xl border border-brand-border bg-brand-bg shadow-xl overflow-hidden">
-          <JobChatPanel
-            request={activeShiftJob}
-            thread={threadForRequest(jobChatThreads, activeShiftJob.id) ?? null}
-            messages={jobChatMessages}
-            currentUser={currentUser}
-            onSend={(body) => onSendJobChatMessage(activeShiftJob.id, body)}
-            onBack={() => setShowJobChat(false)}
-            compact
-          />
-        </div>
       )}
 
       {activeTab === 'map' && !showShiftOverlay && (
@@ -693,12 +693,9 @@ export function GuardDashboard({
                 guard={guard}
                 currentUser={currentUser}
                 jobChatThreads={jobChatThreads}
-                jobChatMessages={jobChatMessages}
-                onSendJobChatMessage={onSendJobChatMessage}
                 initialSelectedJobId={jobChatRequestId}
-                initialChatOpen={openJobChat}
                 onSelectedJobIdChange={onJobChatRequestIdChange}
-                onChatOpenChange={onJobChatOpenChange}
+                onOpenMessages={openMessagesForJob}
               />
             </div>
           )}
@@ -889,7 +886,7 @@ export function GuardDashboard({
   const shellHideHeader =
     (tab === 'messages' &&
       (!!supportTicketId || supportMode === 'compose' || supportMode === 'report' || openJobChat)) ||
-    (tab === 'myJobs' && openJobChat);
+    (tab === 'myJobs' && !!jobChatRequestId);
 
   return (
     <RoleAppShell

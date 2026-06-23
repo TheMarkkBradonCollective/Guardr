@@ -161,7 +161,7 @@ export function GuardMessagesPanel({
 
   if (activeView.kind === 'guard-channel' && onSendGuardMessage) {
     return (
-      <div className="h-full flex flex-col min-h-0">
+      <div className="h-full flex flex-col min-h-0 app-full-page-screen">
         <AppChatHeader
           title="Guard chat"
           subtitle="Community channel — not visible to clients or staff"
@@ -185,7 +185,7 @@ export function GuardMessagesPanel({
     const job = jobById.get(activeView.requestId);
     if (job) {
       return (
-        <div className="h-full flex flex-col min-h-0">
+        <div className="h-full flex flex-col min-h-0 app-full-page-screen">
           <JobChatPanel
             request={job}
             thread={threadForRequest(jobChatThreads, job.id) ?? null}
@@ -208,7 +208,7 @@ export function GuardMessagesPanel({
         : `${categoryLabel(ticket.category)} · ${SUPPORT_STATUS_LABEL[ticket.status]}`;
 
       return (
-        <div className="h-full flex flex-col min-h-0 bg-brand-bg">
+        <div className="h-full flex flex-col min-h-0 bg-brand-bg app-full-page-screen">
           <AppChatHeader title={ticket.subject} subtitle={threadSubtitle} onBack={backToList} />
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
