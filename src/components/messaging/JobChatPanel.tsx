@@ -39,16 +39,16 @@ export function JobChatPanel({
     );
   }
 
-  const headerNote = readOnly
-    ? 'This job is complete — chat history is archived for your records.'
-    : 'Staff may monitor this chat and chime in if needed.';
+  const headerSubtitle = readOnly
+    ? 'Archived — chat history only'
+    : [request.location, 'Staff may monitor or reply'].filter(Boolean).join(' · ');
 
   return (
     <div className={`flex flex-col ${compact ? 'h-[420px]' : 'h-full'} min-h-0 bg-brand-bg`}>
       {!compact && onBack && (
         <AppChatHeader
-          title={`Job chat — ${request.title}`}
-          subtitle={request.location}
+          title={request.title}
+          subtitle={headerSubtitle}
           onBack={onBack}
         />
       )}
@@ -59,7 +59,6 @@ export function JobChatPanel({
         placeholder="Message about this job…"
         readOnly={readOnly || !canChat}
         readOnlyMessage="Job chat is closed. Contact support if you need help."
-        headerNote={headerNote}
       />
     </div>
   );

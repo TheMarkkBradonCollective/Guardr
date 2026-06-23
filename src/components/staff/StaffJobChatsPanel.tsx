@@ -70,33 +70,31 @@ export function StaffJobChatsPanel({
     [requests, threads]
   );
 
-  const selectedRequest = activeJobs.find((r) => r.id === selectedRequestId)
-    ?? archivedJobs.find((r) => r.id === selectedRequestId)
-    ?? null;
+  const chatJobs = useMemo(() => {
+    const active = activeJobs.map((job) => ({ job, archived: false }));
+    const archived = archivedJobs.map((job) => ({ job, archived: true }));
+    return [...active, ...archived];
+  }, [activeJobs, archivedJobs]);
+
+  const selectedRequest = chatJobs.find((entry) => entry.job.id === selectedRequestId)?.job ?? null;
 
   const selectedThread = selectedRequest
     ? threadForRequest(threads, selectedRequest.id) ?? null
     : null;
 
 
-  const renderJobRow = (job: SecurityRequest) => {
+  const renderJobRow = ({ job, archived }: { job: SecurityRequest; archived: boolean }) => {
     const guard = guards.find((g) => g.id === job.assignedGuardId);
     const thread = threadForRequest(threads, job.id);
     const count = thread ? messagesForThread(messages, thread.id).length : 0;
-    const active = job.status === 'accepted' || job.status === 'in-progress';
     return (
       <AppInboxRow
         key={job.id}
         title={job.title}
         preview={`${job.clientName} ↔ ${guard?.name ?? 'Guard'}`}
-        meta={count > 0 ? `${count} msg${count === 1 ? '' : 's'}` : active ? 'Live' : 'Archived'}
+        meta={count > 0 ? `${count} msg${count === 1 ? '' : 's'}` : archived ? 'Archived' : 'Live'}
         selected={selectedRequestId === job.id}
-        badges={
-          <>
-            <WfBadge tone={active ? 'primary' : 'default'}>{active ? 'Live' : 'Archived'}</WfBadge>
-            {count > 0 && <WfBadge tone="default">{count} messages</WfBadge>}
-          </>
-        }
+        badges={<WfBadge tone={archived ? 'default' : 'primary'}>{archived ? 'Archived' : 'Live'}</WfBadge>}
         onClick={() => setSelectedRequestId(job.id)}
       />
     );
@@ -104,32 +102,11 @@ export function StaffJobChatsPanel({
 
   const listView = (
     <div className="staff-split-pane-list flex flex-col min-h-0">
-      <div className="app-messages-hub-lead">
-        <h2 className="text-base font-bold tracking-tight">Job chats</h2>
-        <p>Each active job has its own thread. Monitor or reply in real time.</p>
-      </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {activeJobs.length === 0 && archivedJobs.length === 0 ? (
+        {chatJobs.length === 0 ? (
           <p className="staff-empty-state">No job chats yet.</p>
         ) : (
-          <div className="space-y-4">
-            {activeJobs.length > 0 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted px-4 py-2">
-                  Active jobs
-                </p>
-                <AppInboxList>{activeJobs.map(renderJobRow)}</AppInboxList>
-              </div>
-            )}
-            {archivedJobs.length > 0 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-text-muted px-4 py-2">
-                  Archived
-                </p>
-                <AppInboxList>{archivedJobs.map(renderJobRow)}</AppInboxList>
-              </div>
-            )}
-          </div>
+          <AppInboxList>{chatJobs.map(renderJobRow)}</AppInboxList>
         )}
       </div>
     </div>
