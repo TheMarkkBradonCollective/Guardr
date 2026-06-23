@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { PushSendPayload } from './push/pushTypes';
+import type { PushSendPayload } from './pushTypes';
+import { dispatchPushNotification } from './pushDelivery';
+import { resolveNotificationUrl } from './pushRouting';
+import {
+  getSupabaseAdmin,
+  isPushConfigured,
+  jsonError,
+  parseRequestBody,
+  verifySession,
+} from './pushShared';
 
 interface EventBody {
   userId?: string;
@@ -233,16 +242,6 @@ async function buildEventDispatchPayloads(
 }
 
 export async function handlePushEvents(req: VercelRequest, res: VercelResponse) {
-  const { dispatchPushNotification } = await import('./push/pushDelivery');
-  const { resolveNotificationUrl } = await import('./push/pushRouting');
-  const {
-    getSupabaseAdmin,
-    isPushConfigured,
-    jsonError,
-    parseRequestBody,
-    verifySession,
-  } = await import('./push/pushShared');
-
   if (req.method !== 'POST') {
     return jsonError(res, 405, 'Method not allowed');
   }
