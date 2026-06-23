@@ -350,6 +350,11 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolved
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolution TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_hours NUMERIC(10, 2);
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_minutes INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_breaks JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+COMMENT ON COLUMN security_requests.break_minutes IS 'Total unpaid break minutes the client allows during the shift';
+COMMENT ON COLUMN security_requests.shift_breaks IS 'Guard break sessions: [{ id, startedAt, endedAt? }]';
 
 COMMENT ON COLUMN security_requests.scheduled_duration_hours IS 'Original scheduled shift length before late clock-out adjustment';
 COMMENT ON COLUMN security_requests.scheduled_estimated_payout IS 'Original client bill before late clock-out adjustment';
@@ -399,6 +404,8 @@ UPDATE security_requests SET client_cash_payment_requested = FALSE WHERE client_
 UPDATE security_requests SET guard_payout_available = FALSE WHERE guard_payout_available IS NULL;
 UPDATE security_requests SET overtime_client_cash_payment_requested = FALSE WHERE overtime_client_cash_payment_requested IS NULL;
 UPDATE security_requests SET overtime_guard_payout_available = FALSE WHERE overtime_guard_payout_available IS NULL;
+UPDATE security_requests SET break_minutes = 0 WHERE break_minutes IS NULL;
+UPDATE security_requests SET shift_breaks = '[]'::jsonb WHERE shift_breaks IS NULL;
 UPDATE security_requests
 SET
   guard_payout_available = TRUE,
@@ -550,6 +557,19 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ── PUSH NOTIFICATION DEDUP (server-side duplicate prevention) ───────────────
+CREATE TABLE IF NOT EXISTS push_notification_dedup (
+  id TEXT PRIMARY KEY,
+  notification_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_notification_dedup_created
+  ON push_notification_dedup (created_at);
+
+COMMENT ON TABLE push_notification_dedup IS
+  'Prevents duplicate operational push alerts; rows older than ~25h are pruned by cron.';
+
 -- ── MESSAGING (job chat + staff channel + notification prefs) ───────────────
 CREATE TABLE IF NOT EXISTS job_chat_threads (
   id TEXT PRIMARY KEY,
@@ -605,6 +625,12 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   client_pending_approval BOOLEAN NOT NULL DEFAULT true,
   credential_pending BOOLEAN NOT NULL DEFAULT true,
   payment_attention BOOLEAN NOT NULL DEFAULT true,
+  support_ticket BOOLEAN NOT NULL DEFAULT true,
+  support_ticket_status BOOLEAN NOT NULL DEFAULT true,
+  dispute_update BOOLEAN NOT NULL DEFAULT true,
+  guard_clockout BOOLEAN NOT NULL DEFAULT true,
+  guard_break_start BOOLEAN NOT NULL DEFAULT true,
+  guard_break_end BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -615,6 +641,16 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_pending_appr
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_pending_approval BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS credential_pending BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS payment_attention BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS support_ticket BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS support_ticket_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS dispute_update BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_clockout BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_start BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_end BOOLEAN NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN notification_preferences.support_ticket IS 'Staff alert for new support chats and formal reports';
+COMMENT ON COLUMN notification_preferences.support_ticket_status IS 'User alert when staff updates ticket status';
+COMMENT ON COLUMN notification_preferences.dispute_update IS 'Alerts for dispute filings and resolutions';
 
 CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
@@ -697,6 +733,7 @@ ALTER TABLE guard_payout_invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_notification_dedup ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
@@ -711,7 +748,7 @@ BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
-    'support_tickets', 'support_messages', 'push_subscriptions',
+    'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'notification_preferences',
     'platform_settings'
   ]
@@ -884,6 +921,7 @@ WHERE table_schema = 'public'
     'overtime_client_payment_method', 'overtime_client_cash_payment_requested',
     'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
     'overtime_guard_payout_method',
+    'break_minutes', 'shift_breaks',
     'check_in_audit', 'spot_checks', 'mid_shift_audits', 'check_out_audit',
     'pending_guard_id', 'staff_approved_guard_at'
   )
@@ -909,8 +947,16 @@ WHERE table_schema = 'public'
   AND table_name = 'notification_preferences'
   AND column_name IN (
     'job_submitted', 'guard_application', 'guard_pending_approval',
-    'client_pending_approval', 'credential_pending', 'payment_attention'
+    'client_pending_approval', 'credential_pending', 'payment_attention',
+    'support_ticket', 'support_ticket_status', 'dispute_update',
+    'guard_clockout', 'guard_break_start', 'guard_break_end'
   )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'push_notification_dedup'
 ORDER BY column_name;
 
 SELECT policyname, cmd
