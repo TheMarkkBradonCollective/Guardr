@@ -31,7 +31,7 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
     ...(showFinancials
       ? [
           { label: 'Gross Income', value: formatOperationalMoney(financials.grossIncome), pct: null },
-          { label: 'Platform Fees Collected', value: formatOperationalMoney(financials.platformFeesCollected), pct: null },
+          { label: 'Company Payout', value: formatOperationalMoney(financials.platformFeesCollected), pct: null },
           { label: 'Guard Payouts', value: formatOperationalMoney(financials.guardPayoutsPaid), pct: null },
           { label: 'Outstanding', value: formatOperationalMoney(financials.clientOwed + financials.guardPayoutsDue + financials.stripeDepositPending), pct: null },
         ]
