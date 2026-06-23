@@ -10,7 +10,6 @@ import {
   guardMeets32HourBlock,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
-  GUARDR_RECOMMENDED_TRAINING_LABEL,
   PTA_UOF_UPLOAD_GUIDANCE,
 } from '../../lib/guardQualification';
 import { WfBadge } from '../ui/wireframe';
@@ -79,14 +78,14 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">{approved ? 'Awaiting account activation' : 'Your application'}</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        Upload your government ID, BSIS Guard Card, PTA/UOF training, and 32-hour BSIS courses in your profile — you
-        can add everything at once. Staff reviews in order: verified ID to approve your profile, then your guard card
-        to activate your account.
+        All four items below are required to work field jobs. Upload your government ID, BSIS Guard Card, PTA/UOF
+        training, and 32-hour BSIS courses in your profile — you can add everything at once. Staff reviews in order:
+        verified ID to approve your profile, then your guard card to activate your account.
       </p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || guardHasVerifiedIdForWork(guard)}
-          label="1. Government ID — profile approval"
+          label="1. Government ID — required to work"
           detail={
             approved
               ? 'Profile approved — ID verified'
@@ -101,7 +100,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsLevel1(guard)}
-          label="2. BSIS Guard Card — account activation"
+          label="2. BSIS Guard Card — required to work"
           detail={
             guardMeetsLevel1(guard)
               ? approved
@@ -120,16 +119,16 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeetsPtaUofTraining(guard)}
-          label="3. Power to Arrest & Appropriate Use of Force (8 hr)"
+          label="3. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
           detail={
             guardMeetsPtaUofTraining(guard)
               ? 'PTA/UOF training on file'
-              : `Required to work field jobs — upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
+              : `Upload in Credentials. ${PTA_UOF_UPLOAD_GUIDANCE}`
           }
         />
         <StepRow
           done={guardMeets32HourBlock(guard)}
-          label={`4. 32-hour BSIS course block — ${GUARDR_RECOMMENDED_TRAINING_LABEL.toLowerCase()}`}
+          label="4. 32-hour BSIS course block — required to work"
           detail={
             guardMeets32HourBlock(guard)
               ? progress.thirtyTwoHourRollup
@@ -137,7 +136,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
                 : `All ${progress.total32HourCourses} courses on file`
               : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0 || progress.listed32HourCount > 0
                 ? `${formatThirtyTwoHourCourseProgressCounts(progress)} — finish in Credentials under 32-Hour BSIS Course Block`
-                : `Upload in Credentials — all 9 individual course certificates or one 32-hour completion certificate. ${GUARDR_RECOMMENDED_TRAINING_LABEL}.`
+                : 'Upload in Credentials — all 9 individual course certificates or one 32-hour completion certificate.'
           }
         />
         <OptionalNote

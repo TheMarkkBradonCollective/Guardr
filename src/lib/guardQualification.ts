@@ -21,15 +21,11 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
-  active:
-    'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
+  active: 'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
   'Verified government ID and valid BSIS Guard Card required — complete both in Credentials to become Active and work jobs';
-
-/** Shown on training credentials and job checklists — not a work blocker. */
-export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
 
 /** @deprecated Use GUARD_PATHWAY_STATUS_LABELS */
 export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;

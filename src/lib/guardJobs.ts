@@ -12,7 +12,6 @@ import {
   guardMeetsPtaUofTraining,
   GUARD_PATHWAY_STATUS_DESCRIPTIONS,
   GUARD_PATHWAY_STATUS_LABELS,
-  GUARDR_RECOMMENDED_TRAINING_LABEL,
 } from './guardQualification';
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -119,9 +118,8 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
       met: guardMeetsPtaUofTraining(guard),
     },
     {
-      label: `${requirementLabel('bsis-32-hour-completed')} — ${GUARDR_RECOMMENDED_TRAINING_LABEL}`,
+      label: requirementLabel('bsis-32-hour-completed'),
       met: guardMeets32HourBlock(guard),
-      recommended: true,
     }
   );
 

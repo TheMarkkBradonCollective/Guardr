@@ -173,8 +173,8 @@ export function GuardThirtyTwoHourPanel({
           )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
-          completion certificate if your training provider issued one.
+          Required to work field jobs. Upload all 9 individual course certificates, or a single 32-hour completion
+          certificate if your training provider issued one.
         </p>
       </div>
 
