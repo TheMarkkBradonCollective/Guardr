@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
@@ -26,6 +26,17 @@ import {
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
+type SidebarTheme = 'light' | 'grey' | 'dark';
+
+const SIDEBAR_THEME_KEY = 'guardr_sidebar_theme';
+
+function getSavedSidebarTheme(): SidebarTheme {
+  try {
+    const saved = localStorage.getItem(SIDEBAR_THEME_KEY);
+    if (saved === 'light' || saved === 'grey' || saved === 'dark') return saved;
+  } catch { /* ignore */ }
+  return 'light';
+}
 
 interface StaffOpsLayoutProps {
   children: React.ReactNode;
@@ -78,6 +89,12 @@ export function StaffOpsLayout({
   hideHeader = false,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarTheme, setSidebarThemeState] = useState<SidebarTheme>(getSavedSidebarTheme);
+
+  const setSidebarTheme = useCallback((t: SidebarTheme) => {
+    setSidebarThemeState(t);
+    try { localStorage.setItem(SIDEBAR_THEME_KEY, t); } catch { /* ignore */ }
+  }, []);
   const showFinance = canAccessFinancialControls(currentUser);
   const bleed =
     fullBleed ||
@@ -106,16 +123,26 @@ export function StaffOpsLayout({
     setMobileNavOpen(false);
   };
 
+  const isDarkSidebar = sidebarTheme === 'dark' || sidebarTheme === 'grey';
+
   const sidebar = (
     <div className="staff-sidebar-inner">
       <div className="staff-sidebar-brand">
         <div className="flex items-center gap-2.5">
-          <span className="font-black text-xl tracking-[-0.04em] leading-none text-white">Guardr</span>
+          <span
+            className="font-black text-xl tracking-[-0.04em] leading-none"
+            style={{ color: isDarkSidebar ? '#ffffff' : undefined }}
+          >
+            Guardr
+          </span>
           {isDbConnected && (
             <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
           )}
         </div>
-        <p className="text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
+        <p
+          className="text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5"
+          style={{ color: isDarkSidebar ? 'rgba(255,255,255,0.38)' : undefined }}
+        >
           {ROLE_LABELS[currentUser.role]}
         </p>
       </div>
@@ -127,10 +154,37 @@ export function StaffOpsLayout({
           showFinance={showFinance}
         />
       </div>
-      <div className="staff-sidebar-footer">
+      <div className="staff-sidebar-footer space-y-3">
         {onOpenLegal && (
           <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
         )}
+        {/* Sidebar colour picker */}
+        <div className="sidebar-theme-toggle" aria-label="Sidebar colour">
+          <button
+            type="button"
+            onClick={() => setSidebarTheme('light')}
+            className={`sidebar-theme-swatch ${sidebarTheme === 'light' ? 'sidebar-theme-swatch-active' : ''}`}
+            style={{ background: '#ffffff', border: '2px solid #d1d5db' }}
+            title="Light sidebar"
+            aria-pressed={sidebarTheme === 'light'}
+          />
+          <button
+            type="button"
+            onClick={() => setSidebarTheme('grey')}
+            className={`sidebar-theme-swatch ${sidebarTheme === 'grey' ? 'sidebar-theme-swatch-active' : ''}`}
+            style={{ background: '#25282e', border: '2px solid #4b5563' }}
+            title="Grey sidebar"
+            aria-pressed={sidebarTheme === 'grey'}
+          />
+          <button
+            type="button"
+            onClick={() => setSidebarTheme('dark')}
+            className={`sidebar-theme-swatch ${sidebarTheme === 'dark' ? 'sidebar-theme-swatch-active' : ''}`}
+            style={{ background: '#050505', border: '2px solid #374151' }}
+            title="Dark sidebar"
+            aria-pressed={sidebarTheme === 'dark'}
+          />
+        </div>
       </div>
     </div>
   );
@@ -146,7 +200,7 @@ export function StaffOpsLayout({
         />
       )}
 
-      <aside className={`staff-sidebar ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}>
+      <aside className={`staff-sidebar staff-sidebar-${sidebarTheme} ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}>
         <button
           type="button"
           className="staff-sidebar-close lg:hidden"
