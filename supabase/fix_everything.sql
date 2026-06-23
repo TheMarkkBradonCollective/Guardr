@@ -587,32 +587,34 @@ ON CONFLICT (email) DO UPDATE SET
   staff_role = EXCLUDED.staff_role,
   user_status = 'active';
 
--- Migrate any legacy staff rows still on guards into staff (keeps guards rows archived).
+-- Migrate any legacy staff rows still on guards into staff, then remove them from guards.
 INSERT INTO staff (
   id, name, first_name, middle_name, last_name, email, badge_number,
   avatar, phone, bio, staff_role, user_status, password, must_change_password,
   theme_preference, created_at, migrated_from_guards_at
 )
 SELECT
-  g.id, g.name, g.first_name, g.middle_name, g.last_name, g.email, g.badge_number,
-  g.avatar, g.phone, g.bio, g.staff_role,
+  g.id, g.name, g.first_name, g.middle_name, g.last_name,
+  CASE
+    WHEN g.email LIKE 'migrated-%@guardr.internal' THEN COALESCE(s_live.email, g.email)
+    ELSE g.email
+  END,
+  g.badge_number,
+  g.avatar, g.phone, g.bio,
+  COALESCE(g.staff_role, s_live.staff_role, 'Moderator'),
   CASE WHEN g.user_status IN ('active', 'suspended', 'blocked') THEN g.user_status ELSE 'active' END,
   g.password, COALESCE(g.must_change_password, false), g.theme_preference, g.created_at, now()
 FROM guards g
-WHERE g.is_staff = true AND g.staff_role IS NOT NULL
+LEFT JOIN staff s_live ON s_live.id = g.id
+WHERE g.is_staff = true OR g.migrated_to_staff_at IS NOT NULL
 ON CONFLICT (id) DO NOTHING;
 
-UPDATE guards g
-SET
-  migrated_to_staff_at = COALESCE(g.migrated_to_staff_at, timezone('utc'::text, now())),
-  is_staff = false,
-  staff_role = NULL,
-  email = CASE
-    WHEN g.email LIKE 'migrated-%@guardr.internal' THEN g.email
-    ELSE 'migrated-' || g.id || '@guardr.internal'
-  END
+DELETE FROM guard_payout_invoices WHERE guard_id IN (SELECT id FROM staff);
+
+DELETE FROM guards g
 WHERE g.is_staff = true
-  AND EXISTS (SELECT 1 FROM staff s WHERE s.id = g.id);
+   OR g.migrated_to_staff_at IS NOT NULL
+   OR EXISTS (SELECT 1 FROM staff s WHERE s.id = g.id);
 
 -- Legacy data: guards marked active before approved→active split
 UPDATE guards g

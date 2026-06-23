@@ -74,17 +74,14 @@ async function verifyFieldGuardSession(
 ): Promise<VerifiedSession | null> {
   const { data, error } = await db
     .from('guards')
-    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+    .select('id, email')
     .eq('id', userId)
     .maybeSingle();
 
   if (error || !data || data.email?.toLowerCase() !== email) return null;
-  if (data.migrated_to_staff_at) return null;
 
   const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
-    staffRole: data.staff_role ?? undefined,
-    legacyRole: data.is_staff ? 'staff' : 'guard',
+    legacyRole: 'guard',
   });
 
   if (platformRole !== credentialsRole && credentialsRole !== 'staff' && credentialsRole !== 'auditor') {

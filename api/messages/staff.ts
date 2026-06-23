@@ -60,18 +60,7 @@ async function verifyStaffSession(
   }
 
   if (!data && error?.code === '42P01') {
-    const legacy = await db
-      .from('guards')
-      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
-      .eq('id', userId)
-      .maybeSingle();
-    if (legacy.data && !legacy.data.migrated_to_staff_at && legacy.data.is_staff) {
-      data = {
-        id: legacy.data.id,
-        email: legacy.data.email,
-        staff_role: legacy.data.staff_role,
-      };
-    }
+    return null;
   }
 
   if (!data || data.email?.toLowerCase() !== email) return null;

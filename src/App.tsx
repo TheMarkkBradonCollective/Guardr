@@ -1075,9 +1075,8 @@ export default function App() {
         isArmed: g.is_armed, backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
         hourlyRateRequirement: g.hourly_rate_requirement,
-        isStaff: g.is_staff,
-        staffRole: g.staff_role,
-        userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: Boolean(g.is_staff) }),
+        isStaff: false,
+        userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: false }),
         failedAudits: g.failed_audits ?? 0,
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
@@ -1122,22 +1121,14 @@ export default function App() {
       };
       };
 
-      const staffFromTable = staffTableAvailable ? (dbStaffRows ?? []).map((row: any) => mapStaffRowToSecurityGuard(row)) : [];
-      const staffMigrated = staffTableAvailable && staffFromTable.length > 0;
-      const fieldGuardRows = (dbGuards ?? []).filter((g: any) => {
-        if (g.migrated_to_staff_at) return false;
-        if (staffMigrated) return !g.is_staff;
-        return !g.is_staff;
-      });
-      const legacyStaffRows = staffMigrated
-        ? []
-        : (dbGuards ?? []).filter((g: any) => g.is_staff && !g.migrated_to_staff_at);
+      const staffFromTable = staffTableAvailable
+        ? (dbStaffRows ?? []).map((row: any) => mapStaffRowToSecurityGuard(row))
+        : [];
+      const fieldGuardRows = (dbGuards ?? []).filter(
+        (g: any) => !g.migrated_to_staff_at && !g.is_staff
+      );
 
-      setGuards([
-        ...fieldGuardRows.map(mapGuardRow),
-        ...staffFromTable,
-        ...legacyStaffRows.map(mapGuardRow),
-      ]);
+      setGuards([...fieldGuardRows.map(mapGuardRow), ...staffFromTable]);
 
       setClients((dbClients ?? []).map((c: any) => {
         const nameParts = resolvePersonNameParts({
@@ -1650,8 +1641,7 @@ export default function App() {
    * Sign up handler — routes to the correct table based on role:
    *   guard   → guards table
    *   client  → clients table
-   *   auditor → guards table (auditor is a special reviewer role, same table)
-   *   staff   → guards table
+   *   staff   → staff table (platform operators only)
    */
   const handleSignUp = async (
     profile: SecurityGuard | Client,
@@ -1695,6 +1685,35 @@ export default function App() {
 
     const guard = profile as SecurityGuard;
     const userStatus = guard.userStatus || 'pending';
+
+    if (guard.isStaff && guard.staffRole) {
+      try {
+        await supabase.from('staff').insert({
+          id: guard.id,
+          name: guard.name,
+          first_name: guard.firstName,
+          middle_name: guard.middleName ?? null,
+          last_name: guard.lastName,
+          email: emailLower,
+          badge_number: guard.badgeNumber,
+          avatar: guard.avatar,
+          phone: guard.phone,
+          bio: guard.bio,
+          staff_role: guard.staffRole,
+          user_status:
+            userStatus === 'suspended' || userStatus === 'blocked' ? userStatus : 'active',
+          password,
+          must_change_password: false,
+        });
+        setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+        await loadFromSupabase();
+      } catch (e) {
+        console.error('Staff DB insert error:', e);
+        throw new Error('Could not create staff account. This email may already be registered.');
+      }
+      return;
+    }
+
     try {
       await supabase.from('guards').insert({
         id: guard.id,
@@ -1713,8 +1732,7 @@ export default function App() {
         rating: guard.rating,
         jobs_completed: guard.jobsCompleted,
         hourly_rate_requirement: guard.hourlyRateRequirement,
-        is_staff: guard.isStaff,
-        staff_role: guard.staffRole,
+        is_staff: false,
         user_status: userStatus,
         password,
         must_change_password: false,

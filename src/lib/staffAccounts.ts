@@ -59,25 +59,9 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
   };
 }
 
-export function isArchivedGuardShell(row: { is_staff?: boolean | null; migrated_to_staff_at?: string | null }): boolean {
+export function isLegacyStaffGuardRow(row: {
+  is_staff?: boolean | null;
+  migrated_to_staff_at?: string | null;
+}): boolean {
   return Boolean(row.migrated_to_staff_at) || Boolean(row.is_staff);
-}
-
-export function splitGuardsAndStaffFromLegacyRows(rows: Record<string, unknown>[]): {
-  staffRows: Record<string, unknown>[];
-  fieldGuardRows: Record<string, unknown>[];
-} {
-  const staffRows: Record<string, unknown>[] = [];
-  const fieldGuardRows: Record<string, unknown>[] = [];
-
-  for (const row of rows) {
-    if (row.migrated_to_staff_at) continue;
-    if (row.is_staff) {
-      staffRows.push(row);
-    } else {
-      fieldGuardRows.push(row);
-    }
-  }
-
-  return { staffRows, fieldGuardRows };
 }
