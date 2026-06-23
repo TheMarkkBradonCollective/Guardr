@@ -649,6 +649,8 @@ export interface SecurityRequest {
     };
     clientNotes: string;
     attachments?: string[];
+    /** Guard corrected departure time after forgetting to clock out on time */
+    leftEarlier?: boolean;
   };
   reports?: ShiftReport[];
 }

@@ -22,6 +22,7 @@ import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
+import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
@@ -61,6 +62,7 @@ import {
   canGuardClockOut,
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
+  isLateClockOut,
 } from '../lib/shiftWindow';
 
 interface GuardDashboardProps {
@@ -212,6 +214,9 @@ export function GuardDashboard({
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showLateClockOutPrompt, setShowLateClockOutPrompt] = useState(false);
+  const [pendingClockOutAt, setPendingClockOutAt] = useState<string | null>(null);
+  const [pendingLeftEarlier, setPendingLeftEarlier] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
@@ -476,6 +481,19 @@ export function GuardDashboard({
       showAppToast(blocked, { tone: 'error' });
       return;
     }
+    if (isLateClockOut(activeShiftJob)) {
+      setShowLateClockOutPrompt(true);
+      return;
+    }
+    setPendingClockOutAt(null);
+    setPendingLeftEarlier(false);
+    setShowCheckout(true);
+  };
+
+  const handleLateClockOutConfirm = (checkedAt: string, leftEarlier: boolean) => {
+    setPendingClockOutAt(checkedAt);
+    setPendingLeftEarlier(leftEarlier);
+    setShowLateClockOutPrompt(false);
     setShowCheckout(true);
   };
 
@@ -486,20 +504,24 @@ export function GuardDashboard({
       setShowCheckout(false);
       return;
     }
+    const checkedAt = pendingClockOutAt ?? new Date().toISOString();
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
-        checkedAt: new Date().toISOString(),
+        checkedAt,
         completed: true,
         noViolations: true,
         noEquipmentIssues: true,
         dailyActivityReport: 'Job completed. No incidents to report.',
         incidentReport: { hasIncident: false },
         clientNotes: '',
+        leftEarlier: pendingLeftEarlier || undefined,
       },
     });
     updatePhase(activeShiftJob.id, 'complete');
     setShowCheckout(false);
+    setPendingClockOutAt(null);
+    setPendingLeftEarlier(false);
     setRatingJob(activeShiftJob);
   };
 
@@ -772,17 +794,36 @@ export function GuardDashboard({
         onSubmit={handleSelfAuditSubmit}
       />
 
+        <LateClockOutPrompt
+          open={showLateClockOutPrompt && !!activeShiftJob}
+          endDate={activeShiftJob?.endDate ?? ''}
+          checkInAt={activeShiftJob?.checkInAudit?.checkedAt}
+          onClose={() => setShowLateClockOutPrompt(false)}
+          onConfirm={handleLateClockOutConfirm}
+        />
+
         <AppModal
           open={showCheckout && !!activeShiftJob}
           align="center"
           position="absolute"
           zIndex={1003}
-          onClose={() => setShowCheckout(false)}
+          onClose={() => {
+            setShowCheckout(false);
+            setPendingClockOutAt(null);
+            setPendingLeftEarlier(false);
+          }}
           panelClassName="p-6 space-y-4"
         >
           <h3 className="font-bold text-lg">Complete job?</h3>
           <p className="text-sm text-brand-text-muted">
-            Confirm you are leaving the site and your job duties are complete.
+            {pendingClockOutAt
+              ? `Confirm you are clocking out at ${new Date(pendingClockOutAt).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })} and your job duties are complete.`
+              : 'Confirm you are leaving the site and your job duties are complete.'}
           </p>
           <SlideToConfirm
             label="Slide to complete job"
