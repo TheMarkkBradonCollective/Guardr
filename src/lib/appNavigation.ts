@@ -302,16 +302,70 @@ export function buildAppPath(route: AppRoute): string {
 }
 
 export function readAppRouteFromWindow(): AppRoute | null {
-  return parseAppRoute(window.location.pathname + window.location.search);
+  return parseAppRoute(stripEphemeralQueryParams(window.location.pathname + window.location.search));
+}
+
+const LAST_ROUTE_STORAGE_KEY = 'guardr_last_app_route';
+
+function routesEqual(a: AppRoute, b: AppRoute): boolean {
+  return buildAppPath(a) === buildAppPath(b);
+}
+
+export function persistAppRoute(route: AppRoute, userId?: string | null): void {
+  try {
+    sessionStorage.setItem(
+      LAST_ROUTE_STORAGE_KEY,
+      JSON.stringify({ route, userId: userId ?? null, savedAt: Date.now() })
+    );
+  } catch {
+    /* private browsing / quota */
+  }
+}
+
+export function readPersistedAppRoute(userId?: string | null): AppRoute | null {
+  try {
+    const raw = sessionStorage.getItem(LAST_ROUTE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { route?: AppRoute; userId?: string | null };
+    if (!parsed.route) return null;
+    if (userId && parsed.userId && parsed.userId !== userId) return null;
+    return parsed.route;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPersistedAppRoute(): void {
+  try {
+    sessionStorage.removeItem(LAST_ROUTE_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Resolve the route for the current URL, falling back to the last in-app route for this user. */
+export function resolveAppRouteForUser(
+  url: string,
+  options?: {
+    allowPersistedFallback?: boolean;
+    userId?: string | null;
+    userRole?: AppRole | null;
+  }
+): AppRoute | null {
+  const parsed = parseAppRoute(stripEphemeralQueryParams(url));
+  if (parsed) return parsed;
+  if (!options?.allowPersistedFallback) return null;
+  const { pathname } = parsePath(url);
+  if (pathname !== '/' && pathname !== '') return null;
+  const persisted = readPersistedAppRoute(options?.userId);
+  if (!persisted) return null;
+  if (options?.userRole && persisted.role !== options.userRole) return null;
+  return persisted;
 }
 
 function currentBrowserPath(): string {
   const path = window.location.pathname.replace(/\/$/, '') || '/';
   return path + window.location.search;
-}
-
-function historyHasAppRouteState(): boolean {
-  return (window.history.state as { appRoute?: AppRoute } | null)?.appRoute != null;
 }
 
 /** True when the route only represents the logged-out auth screen at `/`. */
@@ -347,8 +401,12 @@ export function syncAppRoute(route: AppRoute, replace = false): void {
   const nextPath = buildAppPath(route);
   const state = { appRoute: route };
   const pathMatches = currentBrowserPath() === nextPath;
+  const existingRoute = (window.history.state as { appRoute?: AppRoute } | null)?.appRoute;
+  const stateMatches = !!existingRoute && routesEqual(existingRoute, route);
 
-  if (pathMatches && historyHasAppRouteState()) return;
+  if (pathMatches && stateMatches) return;
+
+  persistAppRoute(route);
 
   if (replace || pathMatches) {
     window.history.replaceState(state, '', nextPath);
