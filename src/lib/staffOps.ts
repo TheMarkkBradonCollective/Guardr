@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { computeLateClockOutHours, computeOvertimeAmount } from './shiftBilling';
 import {
   buildIncidentReportViews,
   incidentCategoryLabel,
@@ -167,7 +168,8 @@ export interface OpsIncident {
 
 export interface OpsDispute {
   id: string;
-  type: 'payment' | 'no-show' | 'safety' | 'service';
+  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime';
+  requestId?: string;
   jobTitle: string;
   guardName: string;
   clientName: string;
@@ -175,6 +177,15 @@ export interface OpsDispute {
   clientStatement: string;
   status: 'open' | 'held' | 'resolved';
   openedAt: string;
+  scheduledEnd?: string;
+  clockOutAt?: string;
+  clientClaimedClockOutAt?: string;
+  clientClaimedHours?: number;
+  clientClaimedAmount?: number;
+  claimedHours?: number;
+  claimedAmount?: number;
+  hourlyRate?: number;
+  guardsNeeded?: number;
 }
 
 export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
@@ -683,11 +694,65 @@ export function buildIncidents(
   }));
 }
 
+function formatDisputeWhen(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 export function buildDisputes(
-  _requests: SecurityRequest[],
-  _guards: SecurityGuard[]
+  requests: SecurityRequest[],
+  guards: SecurityGuard[]
 ): OpsDispute[] {
-  return [];
+  const disputes: OpsDispute[] = [];
+
+  for (const req of requests) {
+    if (req.overtimeStatus !== 'disputed') continue;
+
+    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
+    const claimedHours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
+    const claimedAmount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
+    const clockOutAt = req.checkOutAudit?.checkedAt;
+    const clientClaimedClockOutAt = req.overtimeDisputeClaimedClockOutAt;
+    const clientClaimedHours =
+      clientClaimedClockOutAt != null
+        ? computeLateClockOutHours(clientClaimedClockOutAt, req.endDate)
+        : undefined;
+    const clientClaimedAmount =
+      clientClaimedHours != null
+        ? computeOvertimeAmount(clientClaimedHours, req.hourlyRate, req.guardsNeeded ?? 1)
+        : undefined;
+    const guardApprovedAt = req.overtimeGuardApprovedAt;
+
+    disputes.push({
+      id: `ot-dispute-${req.id}`,
+      type: 'overtime',
+      requestId: req.id,
+      jobTitle: req.title,
+      guardName,
+      clientName: req.clientName,
+      guardStatement: guardApprovedAt
+        ? `Confirmed ${claimedHours}h late clock-out on ${formatDisputeWhen(guardApprovedAt)}.`
+        : `Confirmed ${claimedHours}h late clock-out.`,
+      clientStatement: req.overtimeDisputeReason?.trim() || 'No reason provided.',
+      status: 'open',
+      openedAt: req.overtimeDisputedAt ?? req.endDate,
+      scheduledEnd: req.endDate,
+      clockOutAt,
+      clientClaimedClockOutAt,
+      clientClaimedHours,
+      clientClaimedAmount,
+      claimedHours,
+      claimedAmount,
+      hourlyRate: req.hourlyRate,
+      guardsNeeded: req.guardsNeeded ?? 1,
+    });
+  }
+
+  return disputes.sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime());
 }
 
 export function computeWeeklyCompletedJobs(requests: SecurityRequest[]): number[] {

@@ -545,10 +545,17 @@ export interface SecurityRequest {
   overtimeHours?: number;
   /** Additional client charge for late clock-out */
   overtimeAmount?: number;
-  /** Workflow: none → pending_guard → pending_client → awaiting_payment → paid */
-  overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
+  /** Workflow: none → pending_guard → pending_client → awaiting_payment | disputed → paid | waived */
+  overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'disputed' | 'paid' | 'waived';
   overtimeGuardApprovedAt?: string;
   overtimeClientApprovedAt?: string;
+  overtimeDisputeReason?: string;
+  overtimeDisputedAt?: string;
+  overtimeDisputeClaimedClockOutAt?: string;
+  overtimeDisputeResolvedAt?: string;
+  overtimeDisputeResolution?: string;
+  overtimeOriginalHours?: number;
+  overtimeOriginalAmount?: number;
   /** Tracks whether the overtime difference has been collected from the client */
   overtimePaymentStatus?: 'none' | 'unpaid' | 'paid';
   overtimeClientPaymentMethod?: 'cash' | 'stripe';
