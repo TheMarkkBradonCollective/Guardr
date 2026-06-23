@@ -555,22 +555,13 @@ INSERT INTO staff (
   staff_role, user_status
 ) VALUES
   (
-    'staff-owner',
-    'Platform Owner',
-    'owner@signaturesecurityspecialist.com',
+    'staff-director',
+    'M. White',
+    'm.white@signaturesecurityspecialist.com',
     'OWN-00001',
     '', '',
     'Owner — Platform governance.',
     'Owner', 'active'
-  ),
-  (
-    'staff-director',
-    'M. White',
-    'm.white@signaturesecurityspecialist.com',
-    'DIR-00001',
-    '', '',
-    'Director — Platform operations.',
-    'Director', 'active'
   ),
   (
     'staff-director-tyrone',

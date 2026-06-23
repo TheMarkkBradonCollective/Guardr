@@ -27,11 +27,11 @@ const OWNER_BOOTSTRAP_ACCOUNTS: Record<
   string,
   { password: string; defaultName: string; badgeNumber: string; id: string }
 > = {
-  'owner@signaturesecurityspecialist.com': {
-    password: '#GuardrOwner2026',
-    defaultName: 'Platform Owner',
+  'm.white@signaturesecurityspecialist.com': {
+    password: '#FuckinDstorm11',
+    defaultName: 'M. White',
     badgeNumber: 'OWN-00001',
-    id: 'staff-owner',
+    id: 'staff-director',
   },
 };
 
@@ -39,12 +39,6 @@ const DIRECTOR_BOOTSTRAP_ACCOUNTS: Record<
   string,
   { password: string; defaultName: string; badgeNumber: string; id: string }
 > = {
-  'm.white@signaturesecurityspecialist.com': {
-    password: '#FuckinDstorm11',
-    defaultName: 'M. White',
-    badgeNumber: 'DIR-00001',
-    id: 'staff-director',
-  },
   't.johnson@signaturesecurityspecialist.com': {
     password: '#Qwerty12345',
     defaultName: 'Tyrone Johnson',
