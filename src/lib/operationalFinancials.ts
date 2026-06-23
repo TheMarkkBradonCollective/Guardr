@@ -120,7 +120,7 @@ export function buildDirectorFinancialCells(financials: OperationalFinancials): 
       accent: financials.grossIncome > 0,
     },
     {
-      label: 'Platform fees',
+      label: 'Company payout',
       value: formatOperationalMoney(financials.platformFeesCollected),
       sub:
         financials.platformFeesOutstanding > 0
