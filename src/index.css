@@ -2147,7 +2147,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   background: var(--brand-bg-sec);
   border: 1px solid var(--brand-border);
   border-radius: var(--radius-app-lg);
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.125rem;
 }
 
 .wf-metric-tile-accent {
@@ -2156,7 +2156,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
 }
 
 .wf-metric-label {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   color: var(--brand-text-muted);
   margin-bottom: 0.25rem;
@@ -6021,4 +6021,403 @@ html.theme-dark .wf-badge-success {
 }
 
 /* End Wave 2 — Full Responsive Uber Overhaul */
+
+/* ═══════════════════════════════════════════════════════════
+   WAVE 3 — FINAL COMPREHENSIVE POLISH
+   Every last detail. Breathtaking on every screen.
+══════════════════════════════════════════════════════════════ */
+
+/* ─── WF METRIC TILE: UBER STAT DISPLAY ─────────────────── */
+.wf-metric-label {
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--brand-text-muted) !important;
+  margin-bottom: 0.375rem !important;
+}
+
+.wf-metric-value {
+  font-size: 1.625rem !important;
+  font-weight: 900 !important;
+  color: var(--brand-text) !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+
+.wf-metric-tile-accent .wf-metric-value {
+  color: var(--brand-primary) !important;
+}
+
+/* ─── APP HERO BAND: UBER LIVE SHIFT ALERT ───────────────── */
+.app-hero-band-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.app-hero-band {
+  border-left: 4px solid var(--brand-primary);
+  padding: 1.375rem 1.25rem 1.5rem;
+}
+
+/* ─── PROFILE SECTION: UBER PROFILE HEADER ──────────────── */
+/* Avatar: bigger on profile screen */
+.profile-avatar-xl {
+  width: 5rem !important;
+  height: 5rem !important;
+}
+
+/* ─── CLIENT TILE GRID: BIG NUMBERS ────────────────────── */
+/* Numbers in the 2×2 "at a glance" grid */
+.app-tile-grid-2 .app-item-card p.text-4xl {
+  font-size: 3.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.06em !important;
+  line-height: 0.95 !important;
+}
+
+/* ─── GUARD EARNINGS HERO: UBER DRIVER PAY DISPLAY ────────── */
+.app-pay-hero p.text-xs {
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+/* ─── STAFF PANE BODY: BETTER SCROLL ────────────────────── */
+.staff-pane-body {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── APPROVAL QUEUE: CLEAN ROWS ────────────────────────── */
+/* Approval cards in staff approvals */
+.staff-approvals-card {
+  transition: background 0.15s ease;
+}
+
+/* ─── JOB STATUS BADGES: CRISPER ────────────────────────── */
+.badge-open {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-active {
+  background: color-mix(in srgb, #f59e0b 18%, transparent);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+}
+
+/* ─── SECTION ACTIONS: UBER "SEE ALL" ────────────────────── */
+.app-section-link {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--brand-primary);
+}
+
+.app-section-link:hover {
+  color: var(--brand-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ─── GUARD JOBS PANEL: UBER DRIVER FEEL ─────────────────── */
+/* The job availability status text in guard map */
+.guard-status-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ─── SHIFT PERIOD STATUS BAR: BOLDER ───────────────────── */
+.shift-period-progress-fill {
+  background: var(--brand-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+}
+
+/* ─── CHAT COMPOSER: UBER MESSAGES SEND ─────────────────── */
+.app-chat-composer-send {
+  border-radius: 0.5rem;
+}
+
+.app-chat-composer-input {
+  border-radius: 0.625rem;
+  font-weight: 500;
+}
+
+/* ─── CREDENTIAL STATUS LABELS: CLEAN ──────────────────── */
+/* Make all credential/cert status text bold */
+.credential-status-badge {
+  font-weight: 700;
+  font-size: 0.6875rem;
+}
+
+/* ─── GUARD CARD PANEL: UBER DRIVER LICENSE STYLE ─────── */
+.guard-card-number {
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── SUPPORT SCREEN: UBER HELP STYLE ───────────────────── */
+.support-ticket-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ─── LEGAL PAGE: CLEAN UBER LEGAL STYLE ────────────────── */
+.legal-info-card {
+  border-radius: 0.875rem;
+  border: 1.5px solid var(--brand-border);
+  transition: border-color 0.15s ease;
+}
+
+.legal-info-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--brand-border));
+}
+
+/* ─── APP CONFIRM: UBER ALERT STYLE ─────────────────────── */
+.app-confirm-btn {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+/* ─── DESKTOP: STAFF MAIN CONTENT PADDING ───────────────── */
+@media (min-width: 1024px) {
+  .staff-main-content:not(:empty) > .h-full {
+    padding-bottom: 2rem;
+  }
+}
+
+/* ─── CONTENT MAX-WIDTH: PROPER AT ALL SIZES ──────────────  */
+/* Guard/client content on large desktop */
+@media (min-width: 1400px) {
+  .client-content-shell,
+  body[data-form-factor="desktop"] .client-content-shell {
+    max-width: 1280px;
+  }
+}
+
+/* ─── FORM SECTION TITLE: UBER LABEL ─────────────────────── */
+.app-form-section-title {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--brand-text-muted) !important;
+}
+
+/* ─── DETAIL FIELD LABEL: UBER UPPERCASE ─────────────────── */
+.detail-field-label {
+  font-size: 0.6rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--brand-text-muted) !important;
+}
+
+/* ─── OVERVIEW SECTION TITLES: BIGGER ───────────────────── */
+.overview-visual-title {
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* ─── MAP OFFER CARD: SHARPER ────────────────────────────── */
+.map-offer-card-handle {
+  width: 3rem;
+  height: 0.3125rem;
+  background: color-mix(in srgb, var(--brand-text-muted) 35%, transparent);
+  border-radius: 999px;
+  margin: 0.625rem auto 0.5rem;
+}
+
+/* ─── LOADING SCREEN ORB: LARGER ────────────────────────── */
+.guardr-loading-orb--a {
+  width: 18rem;
+  height: 18rem;
+}
+
+.guardr-loading-orb--b {
+  width: 22rem;
+  height: 22rem;
+}
+
+/* ─── STAFF SIDEBAR: MOBILE OVERLAY BACKDROP ────────────── */
+.staff-sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* ─── ACCOUNT MENU PANEL: UBER DROPDOWN ─────────────────── */
+.account-menu-panel {
+  border-radius: 1.25rem;
+  border: 1px solid var(--brand-border);
+}
+
+html.theme-dark .account-menu-panel {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* ─── RESPONSIVE HERO: DESKTOP GIANT ────────────────────── */
+@media (min-width: 1280px) {
+  .landing-hero-dark h1.font-black {
+    font-size: 7rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .landing-hero-dark h1.font-black {
+    font-size: 8.5rem;
+  }
+}
+
+/* ─── STAFF PANEL HEADER TITLES ─────────────────────────── */
+.app-screen-header h1.font-black {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+/* ─── GUARD ACTIVE SHIFT: UBER DRIVER ON-TRIP ──────────── */
+/* The active shift screen should feel like being on an Uber trip */
+.guardr-active-shift {
+  background: var(--brand-surface) !important;
+}
+
+/* ─── LIGHT THEME: MAKE SURFACES CRISP WHITE ──────────────── */
+html.theme-light .app-item-card {
+  background: #ffffff;
+  border-color: #e8e8e8;
+}
+
+html.theme-light .app-item-card:hover,
+html.theme-light button.app-item-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, #e8e8e8);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+html.theme-light .modal-panel {
+  background: #ffffff;
+  border-color: #e8e8e8;
+}
+
+/* ─── DARK THEME: CRISP BORDERS ─────────────────────────── */
+html.theme-dark .app-item-card {
+  background: var(--brand-surface);
+  border-color: var(--brand-border);
+}
+
+/* ─── ALL THEMES: BOTTOM NAV REFINEMENT ─────────────────── */
+.bottom-nav-bar {
+  background: var(--brand-bg) !important;
+}
+
+html.theme-light .bottom-nav-bar {
+  background: #ffffff !important;
+  border-top-color: #e8e8e8 !important;
+}
+
+html.theme-dark .bottom-nav-bar {
+  background: #0a0a0a !important;
+  border-top-color: #1c1c1c !important;
+}
+
+/* ─── EXPERIENCE-SPECIFIC NAV: SAGE-GREEN CHROME HEADER ── */
+/* Light mode: the sage green header with white text is VERY Uber Driver */
+html.theme-light .role-experience-client .app-screen-header,
+html.theme-light .role-experience-guard .app-screen-header {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+}
+
+html.theme-light .role-experience-client .app-screen-header h1,
+html.theme-light .role-experience-guard .app-screen-header h1 {
+  color: #ffffff !important;
+}
+
+html.theme-light .role-experience-client .app-screen-header p,
+html.theme-light .role-experience-guard .app-screen-header p {
+  color: rgba(255,255,255,0.75) !important;
+}
+
+/* ─── GUARD MAP: NAV HEADER TRANSPARENT ────────────────── */
+/* Uber Driver map has transparent overlay header */
+.guard-map-layout .app-screen-header,
+.client-map-layout .app-screen-header {
+  background: color-mix(in srgb, var(--brand-bg) 85%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+/* ─── AUTH PAGE: LARGER FORM ON DESKTOP ─────────────────── */
+@media (min-width: 768px) {
+  .auth-experience-client,
+  .auth-experience-guard {
+    background: var(--brand-bg);
+  }
+  
+  /* Side-by-side layout: auth hero on left, form on right on large screens */
+  @media (min-width: 1024px) {
+    .page-shell.flex.flex-col[class*="auth-experience"] {
+      flex-direction: row;
+    }
+    
+    .auth-hero {
+      width: 42%;
+      height: 100dvh !important;
+      flex-shrink: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .auth-hero-curve {
+      display: none;
+    }
+  }
+}
+
+/* ─── MOBILE: ENSURE CONTENT DOESN'T CLIP ───────────────── */
+@media (max-width: 639px) {
+  .client-form-shell {
+    padding-inline: 0;
+  }
+  
+  .app-screen-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* ─── MICRO TOUCH: DIVIDERS BETWEEN CONTENT BLOCKS ──────── */
+/* Uber uses fine 1px lines to separate sections */
+.app-list > .app-list-row:last-child {
+  border-bottom: none;
+}
+
+.app-section + .app-section {
+  margin-top: 0;
+}
+
+/* ─── UBER MOVE FONT FALLBACK STACK ─────────────────────── */
+/* Ensure the font stack feels geometric and confident everywhere */
+* {
+  font-family: var(--font-sans);
+}
+
+input, select, textarea, button {
+  font-family: var(--font-sans);
+}
+
+/* End Wave 3 — Final Comprehensive Polish */
 

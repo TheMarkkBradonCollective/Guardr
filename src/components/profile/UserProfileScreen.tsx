@@ -197,12 +197,12 @@ export function UserProfileScreen({
 
   return (
     <AppScreen>
-      <section className="flex flex-col items-center text-center px-5 pt-5 pb-6 border-b border-brand-border">
-        <div className="relative mb-3">
+      <section className="flex flex-col items-center text-center px-5 pt-8 pb-7 border-b border-brand-border">
+        <div className="relative mb-4">
           <ProfileAvatar src={avatar} name={displayName} size="xl" />
           <label
-            className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg ${
-              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer'
+            className={`absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-brand-primary text-brand-accent-text flex items-center justify-center border-2 border-brand-bg shadow-lg ${
+              photoSaving ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:opacity-90 transition-opacity'
             }`}
             title="Change profile photo"
           >
@@ -211,21 +211,21 @@ export function UserProfileScreen({
           </label>
         </div>
         {photoError && <p className="text-xs text-red-500 mb-2">{photoError}</p>}
-        {avatar && (
+        {avatar && !photoSaving && (
           <button
             type="button"
             onClick={() => void handleRemovePhoto()}
             disabled={photoSaving}
-            className="text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mb-2 disabled:opacity-50"
+            className="text-xs text-brand-text-muted hover:text-red-500 flex items-center gap-1 mb-3 disabled:opacity-50 transition-colors"
           >
             <X className="w-3 h-3" />
             Remove photo
           </button>
         )}
-        {photoSaving && <p className="text-xs text-brand-text-muted mb-2">Saving photo…</p>}
-        <h2 className="text-xl font-bold">{displayName}</h2>
-        <p className="text-sm text-brand-text-muted mt-1">{roleLabel}</p>
-        <p className="text-xs text-brand-text-muted mt-0.5">{currentUser.email}</p>
+        {photoSaving && <p className="text-xs text-brand-text-muted mb-3">Saving photo…</p>}
+        <h2 className="text-2xl font-black tracking-[-0.04em] leading-tight">{displayName}</h2>
+        <p className="text-sm text-brand-text-muted mt-1.5 font-semibold tracking-tight">{roleLabel}</p>
+        <p className="text-xs text-brand-text-muted mt-0.5 font-medium">{currentUser.email}</p>
       </section>
 
       <div className="px-5 py-4 flex gap-2 border-b border-brand-border">
