@@ -210,6 +210,18 @@ export function JobPaymentRow({
             </button>
           )}
 
+          {canReleaseFunds && (
+            <button
+              type="button"
+              onClick={() => run('release', onMakeGuardPayoutAvailable)}
+              disabled={busy !== null}
+              className="app-button-primary app-btn-sm gap-1.5"
+            >
+              {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
+              Make ${guardAmount.toFixed(2)} available to guard
+            </button>
+          )}
+
           {canCashGuard && (
             <button
               type="button"
@@ -251,18 +263,6 @@ export function JobPaymentRow({
                 <Banknote className="w-3 h-3" />
               )}
               Manually deposit ${getPlatformFeeAmount(req).toFixed(2)} platform fee
-            </button>
-          )}
-
-          {canReleaseFunds && (
-            <button
-              type="button"
-              onClick={() => run('release', onMakeGuardPayoutAvailable)}
-              disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
-            >
-              {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
-              Make ${guardAmount.toFixed(2)} available to guard
             </button>
           )}
 
