@@ -5,6 +5,7 @@ import {
   countPtaUofSlotStatuses,
   formatCredentialSlotStatusSummary,
 } from '../../lib/certStatus';
+import { getAggregateSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
@@ -15,11 +16,10 @@ import {
   PTA_UOF_SEPARATE_PART_COUNT,
   PTA_UOF_UPLOAD_GUIDANCE,
   computePtaUofProgress,
-  formatPtaUofProgressSummary,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
-import { CredentialCollapsibleSubsection } from '../credentials/CredentialCollapsibleSubsection';
-import { CredentialSectionAddButton, CredentialSectionStatusSummary } from '../credentials/CredentialStatusLabels';
+import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
+import { CredentialSectionAddButton, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
@@ -54,6 +54,10 @@ function certsForSecondPart(guard: SecurityGuard): Certification[] {
   });
 }
 
+function defaultPtaUofUploadPath(guard: SecurityGuard): CredentialUploadPath {
+  return certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID).length > 0 ? 'combined' : 'individual';
+}
+
 export function GuardPtaUofPanel({
   guard,
   editing,
@@ -76,7 +80,7 @@ export function GuardPtaUofPanel({
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
-  const [combinedOpen, setCombinedOpen] = useState(true);
+  const [uploadPath, setUploadPath] = useState<CredentialUploadPath>(() => defaultPtaUofUploadPath(guard));
 
   const combinedCerts = useMemo(
     () => certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID),
@@ -85,9 +89,8 @@ export function GuardPtaUofPanel({
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
 
-  const hasCombinedCert = combinedCerts.length > 0;
-  const showIndividualRows = !hasCombinedCert;
   const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
+  const sectionStatus = getAggregateSectionStatus(ptaUofStatusSummary, progress.complete);
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -228,16 +231,17 @@ export function GuardPtaUofPanel({
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           Power to Arrest &amp; Appropriate Use of Force
-          {!progress.complete && <CredentialSectionStatusSummary summary={ptaUofStatusSummary} />}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
         </p>
+        <div className="mt-2">
+          <CredentialSectionStatusDisplay status={sectionStatus} />
+        </div>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-brand-text">{formatPtaUofProgressSummary(guard)}</span>
+        <div className="flex items-center justify-end text-xs">
           <span className="text-brand-text-muted">{progress.progressPercent}%</span>
         </div>
         <div className="app-medication-progress">
@@ -248,28 +252,34 @@ export function GuardPtaUofPanel({
         </div>
       </div>
 
-      <CredentialCollapsibleSubsection
-        title="Combined certificate (optional)"
-        open={combinedOpen}
-        onToggle={() => setCombinedOpen((open) => !open)}
-        actions={
-          canUpload ? (
-            <CredentialSectionAddButton onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)} />
-          ) : undefined
-        }
-      >
-        {combinedCerts.length > 0 ? (
-          <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
-        ) : (
-          <p className="text-xs text-brand-text-muted py-2">
-            {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
-          </p>
-        )}
-      </CredentialCollapsibleSubsection>
+      <CredentialPathToggle
+        value={uploadPath}
+        onChange={setUploadPath}
+        combinedLabel="Combined certificate"
+        individualLabel="Individual parts"
+      />
 
-      {showIndividualRows && (
-        <div className="border-t border-brand-border pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+      {uploadPath === 'combined' ? (
+        <div className="border-t border-brand-border pt-3 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+              Combined 8-hour certificate
+            </p>
+            {canUpload && (
+              <CredentialSectionAddButton onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)} />
+            )}
+          </div>
+          {combinedCerts.length > 0 ? (
+            <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
+          ) : (
+            <p className="text-xs text-brand-text-muted py-2">
+              {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="border-t border-brand-border pt-3 space-y-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
             Individual parts ({PTA_UOF_SEPARATE_PART_COUNT} required)
           </p>
           {renderPartRow({

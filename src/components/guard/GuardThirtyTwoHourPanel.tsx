@@ -6,20 +6,20 @@ import {
   formatCredentialSlotStatusSummary,
   getCourseUploadStatus,
 } from '../../lib/certStatus';
+import { getAggregateSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
-  formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
-import { CredentialCollapsibleSubsection } from '../credentials/CredentialCollapsibleSubsection';
+import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialSectionAddButton,
-  CredentialSectionStatusSummary,
+  CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -49,6 +49,18 @@ function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certificati
   });
 }
 
+function rollupCertsForGuard(guard: SecurityGuard): Certification[] {
+  return guard.certifications.filter((cert) => {
+    if (cert.status === 'rejected') return false;
+    const id = resolveCertCatalogId(cert);
+    return id && (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(id);
+  });
+}
+
+function defaultThirtyTwoHourUploadPath(guard: SecurityGuard): CredentialUploadPath {
+  return rollupCertsForGuard(guard).length > 0 ? 'combined' : 'individual';
+}
+
 export function GuardThirtyTwoHourPanel({
   guard,
   editing,
@@ -69,23 +81,19 @@ export function GuardThirtyTwoHourPanel({
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
-  const [completionOpen, setCompletionOpen] = useState(true);
-
-  const rollupCerts = useMemo(
-    () =>
-      guard.certifications.filter((cert) => {
-        if (cert.status === 'rejected') return false;
-        const id = resolveCertCatalogId(cert);
-        return id && (THIRTY_TWO_HOUR_ROLLUP_IDS as readonly string[]).includes(id);
-      }),
-    [guard.certifications]
+  const [uploadPath, setUploadPath] = useState<CredentialUploadPath>(() =>
+    defaultThirtyTwoHourUploadPath(guard)
   );
 
+  const rollupCerts = useMemo(() => rollupCertsForGuard(guard), [guard.certifications]);
+
   const progressPct = progress.thirtyTwoHourProgressPercent;
-  const hasRollupCert = rollupCerts.length > 0;
-  const showIndividualCourses = !hasRollupCert;
   const courseStatusSummary = formatCredentialSlotStatusSummary(
     countThirtyTwoHourCourseSlotStatuses(guard)
+  );
+  const sectionStatus = getAggregateSectionStatus(
+    courseStatusSummary,
+    progress.thirtyTwoHourBlockComplete
   );
 
   const resetForm = () => {
@@ -177,29 +185,18 @@ export function GuardThirtyTwoHourPanel({
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
-          {!progress.thirtyTwoHourBlockComplete && (
-            <CredentialSectionStatusSummary summary={courseStatusSummary} />
-          )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Required to work field jobs. Upload all 9 individual course certificates, or a single 32-hour completion
           certificate if your training provider issued one.
         </p>
+        <div className="mt-2">
+          <CredentialSectionStatusDisplay status={sectionStatus} />
+        </div>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-brand-text">
-            {progress.thirtyTwoHourBlockComplete
-              ? progress.thirtyTwoHourBlockVerified
-                ? progress.thirtyTwoHourRollup
-                  ? '32-hour block complete (rollup cert verified)'
-                  : '32-hour block complete (all 9 courses verified)'
-                : progress.thirtyTwoHourRollup
-                  ? '32-hour block complete (rollup cert on file)'
-                  : '32-hour block complete (all 9 courses on file)'
-              : formatThirtyTwoHourCourseProgressCounts(progress, { staffMode })}
-          </span>
+        <div className="flex items-center justify-end text-xs">
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
         <div className="app-medication-progress">
@@ -207,58 +204,64 @@ export function GuardThirtyTwoHourPanel({
         </div>
       </div>
 
-      <CredentialCollapsibleSubsection
-        title="Completion certificate (optional shortcut)"
-        open={completionOpen}
-        onToggle={() => setCompletionOpen((open) => !open)}
-        actions={
-          canUpload ? (
-            <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
-          ) : undefined
-        }
-      >
-        {rollupCerts.length > 0 ? (
-          <div className="app-cert-item-stack !pt-0">
-            {rollupCerts.map((cert) => renderCertRow(cert))}
-          </div>
-        ) : (
-          <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
-        )}
-      </CredentialCollapsibleSubsection>
+      <CredentialPathToggle
+        value={uploadPath}
+        onChange={setUploadPath}
+        combinedLabel="Completion certificate"
+        individualLabel="Individual courses"
+      />
 
-      {showIndividualCourses && (
-        <div className="border-t border-brand-border pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+      {uploadPath === 'combined' ? (
+        <div className="border-t border-brand-border pt-3 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+              32-hour completion certificate
+            </p>
+            {canUpload && (
+              <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
+            )}
+          </div>
+          {rollupCerts.length > 0 ? (
+            <div className="app-cert-item-stack !pt-0">
+              {rollupCerts.map((cert) => renderCertRow(cert))}
+            </div>
+          ) : (
+            <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
+          )}
+        </div>
+      ) : (
+        <div className="border-t border-brand-border pt-3 space-y-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
             Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
           </p>
-        {courses.map((course) => {
-          const uploadStatus = getCourseUploadStatus(guard, course.id);
-          const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
-          const uploaded = certsForCatalogId(guard, course.id);
+          {courses.map((course) => {
+            const uploadStatus = getCourseUploadStatus(guard, course.id);
+            const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
+            const uploaded = certsForCatalogId(guard, course.id);
 
-          return (
-            <div key={course.id} className="app-list-subrow space-y-2">
-              <div className="flex items-start justify-between gap-3">
-                <p
-                  className={`text-sm font-semibold min-w-0 ${
-                    fullyOnFile ? 'text-brand-text' : 'text-brand-text-muted'
-                  }`}
-                >
-                  {course.name}
-                </p>
-                {canUpload && (
-                  <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
+            return (
+              <div key={course.id} className="app-list-subrow space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p
+                    className={`text-sm font-semibold min-w-0 ${
+                      fullyOnFile ? 'text-brand-text' : 'text-brand-text-muted'
+                    }`}
+                  >
+                    {course.name}
+                  </p>
+                  {canUpload && (
+                    <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
+                  )}
+                </div>
+
+                {uploaded.length > 0 && (
+                  <div className="app-cert-item-stack !pt-0">
+                    {uploaded.map((cert) => renderCertRow(cert))}
+                  </div>
                 )}
               </div>
-
-              {uploaded.length > 0 && (
-                <div className="app-cert-item-stack !pt-0">
-                  {uploaded.map((cert) => renderCertRow(cert))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       )}
 

@@ -1,16 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
-import { getCourseUploadStatus, CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL } from '../../lib/certStatus';
-import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
+import { getGuardCardSectionStatus } from '../../lib/credentialSectionStatus';
 import { getGuardLicenses } from '../../lib/guardResume';
-import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { CredentialSectionAddButton, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
+import { CredentialSectionAddButton, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
-import { WfBadge } from '../ui/wireframe';
 import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -41,9 +38,8 @@ export function GuardCardPanel({
   renderCertActions,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
-  const checklist = useMemo(() => getGuardActivationChecklist(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
-  const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
+  const sectionStatus = useMemo(() => getGuardCardSectionStatus(guard, staffMode), [guard, staffMode]);
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
 
   const [showForm, setShowForm] = useState(false);
@@ -123,17 +119,6 @@ export function GuardCardPanel({
     guardName: guard.name,
   });
 
-  const statusTone = checklist.guardCardVerified
-    ? 'success'
-    : checklist.guardCardSubmitted
-      ? 'warning'
-      : 'default';
-  const statusLabel = checklist.guardCardVerified
-    ? 'Verified'
-    : checklist.guardCardSubmitted
-      ? 'Pending review'
-      : 'Not on file';
-
   const uploadForm = (
     <form onSubmit={submitGuardCard} className="space-y-3">
       <select value={state} onChange={(e) => setState(e.target.value)} className="uber-select w-full" required>
@@ -209,46 +194,13 @@ export function GuardCardPanel({
             <p className="uber-label flex items-center gap-2 flex-wrap">
               <Shield className="w-4 h-4 text-brand-primary" />
               BSIS Guard Card
-              {staffMode && !guardMeetsLevel1(guard) &&
-                (canUpload ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(true)}
-                    className="inline-flex"
-                  >
-                    <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
-                  </button>
-                ) : (
-                  <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
-                ))}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
               Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
             </p>
-            <p
-              className={`text-xs font-semibold mt-2 ${
-                uploadStatus === 'on-file' ? 'text-brand-primary' : 'text-brand-text-muted'
-              }`}
-            >
-              {uploadStatus === 'missing'
-                ? 'Not on file'
-                : uploadStatus === 'listed'
-                  ? staffMode
-                    ? 'Listed — document photo required'
-                    : 'Not on file'
-                  : uploadStatus === 'expired'
-                    ? 'On file · expired'
-                    : checklist.guardCardVerified
-                      ? 'Verified — on file'
-                      : checklist.guardCardSubmitted
-                        ? 'Submitted — pending staff review'
-                        : 'On file'}
-            </p>
-            {!staffMode && (
-              <div className="mt-2">
-                <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
-              </div>
-            )}
+            <div className="mt-2">
+              <CredentialSectionStatusDisplay status={sectionStatus} />
+            </div>
           </div>
           {canUpload && <CredentialSectionAddButton onClick={() => setShowForm(true)} />}
         </div>

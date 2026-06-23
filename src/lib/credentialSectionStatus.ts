@@ -1,0 +1,74 @@
+import { SecurityGuard } from '../types';
+import { getGuardActivationChecklist } from './guardAccountActivation';
+import {
+  CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL,
+  getCourseUploadStatus,
+} from './certStatus';
+import {
+  getGovernmentIdUploadStatusSummary,
+  getGuardIdVerificationStatus,
+} from './guardIdentityVerification';
+
+export type CredentialSectionStatusTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
+
+export interface CredentialSectionStatus {
+  label: string;
+  tone: CredentialSectionStatusTone;
+}
+
+export function getGuardCardSectionStatus(
+  guard: SecurityGuard,
+  staffMode = false
+): CredentialSectionStatus {
+  const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
+  const checklist = getGuardActivationChecklist(guard);
+
+  if (checklist.guardCardVerified) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (uploadStatus === 'expired') {
+    return { label: 'On file · expired', tone: 'warning' };
+  }
+  if (checklist.guardCardSubmitted) {
+    return { label: 'Submitted — pending review', tone: 'warning' };
+  }
+  if (uploadStatus === 'listed') {
+    return staffMode
+      ? { label: 'Listed — document photo required', tone: 'warning' }
+      : { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  }
+  if (uploadStatus === 'on-file') {
+    return { label: 'On file', tone: 'primary' };
+  }
+  return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+}
+
+export function getGovernmentIdSectionStatus(
+  guard: SecurityGuard,
+  staffMode = false
+): CredentialSectionStatus {
+  const idStatus = getGuardIdVerificationStatus(guard);
+  const checklist = getGuardActivationChecklist(guard);
+  const label = getGovernmentIdUploadStatusSummary(guard, { staffMode });
+
+  if (checklist.idVerified) {
+    return { label, tone: 'success' };
+  }
+  if (idStatus === 'rejected') {
+    return { label, tone: 'danger' };
+  }
+  if (checklist.idSubmitted) {
+    return { label, tone: 'warning' };
+  }
+  return { label, tone: 'default' };
+}
+
+export function getAggregateSectionStatus(
+  summary: string,
+  complete: boolean
+): CredentialSectionStatus {
+  if (complete) {
+    return { label: 'On file', tone: 'success' };
+  }
+  return { label: summary, tone: 'warning' };
+}

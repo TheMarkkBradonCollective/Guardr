@@ -1,15 +1,28 @@
 import React from 'react';
 import type { CourseUploadStatus } from '../../lib/certStatus';
 import { CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, getCourseUploadStatusLabel } from '../../lib/certStatus';
+import type { CredentialSectionStatus } from '../../lib/credentialSectionStatus';
 import { WfBadge } from '../ui/wireframe';
 
-/** Orange warning badge for section headers — PTA/UOF, 32-hour block, Government ID, guard card. */
-export function CredentialSectionStatusBadge({ label }: { label: string }) {
+type WfBadgeTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
+
+/** Boxed status badge used across credential section headers and rows. */
+export function CredentialSectionStatusBadge({
+  label,
+  tone = 'warning',
+}: {
+  label: string;
+  tone?: WfBadgeTone;
+}) {
   return (
-    <WfBadge tone="warning" className="!text-[10px]">
+    <WfBadge tone={tone} className="!text-[10px] normal-case tracking-normal">
       {label}
     </WfBadge>
   );
+}
+
+export function CredentialSectionStatusDisplay({ status }: { status: CredentialSectionStatus }) {
+  return <CredentialSectionStatusBadge label={status.label} tone={status.tone} />;
 }
 
 export type CredentialListStatus = CourseUploadStatus | 'not-listed';
@@ -24,7 +37,14 @@ export function credentialListStatusLabel(
   return getCourseUploadStatusLabel(status, options);
 }
 
-/** Row-level upload status — matches 32-hour course rows; missing/not-listed use the same warning badge. */
+function listStatusTone(status: CredentialListStatus, staffMode: boolean): WfBadgeTone {
+  if (status === 'on-file') return 'success';
+  if (status === 'expired') return 'warning';
+  if (status === 'listed') return staffMode ? 'warning' : 'default';
+  return 'default';
+}
+
+/** Row-level upload status — boxed to match section headers. */
 export function CredentialListStatusBadge({
   status,
   staffMode = false,
@@ -32,37 +52,8 @@ export function CredentialListStatusBadge({
   status: CredentialListStatus;
   staffMode?: boolean;
 }) {
-  if (status === 'on-file') {
-    return <span className="shrink-0 text-[10px] font-semibold text-brand-primary">On file</span>;
-  }
-  if (status === 'listed') {
-    if (staffMode) {
-      return (
-        <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">Listed</span>
-      );
-    }
-    return <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />;
-  }
-  if (status === 'expired') {
-    return <CredentialSectionStatusBadge label="On file · Expired" />;
-  }
-  if (status === 'not-listed') {
-    return (
-      <CredentialSectionStatusBadge
-        label={staffMode ? 'Not listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL}
-      />
-    );
-  }
-  return <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />;
-}
-
-/** Aggregate upload counts for section headers — e.g. "5 not listed or on file and another 1 listed and another 3 on file". */
-export function CredentialSectionStatusSummary({ summary }: { summary: string }) {
-  return (
-    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 normal-case tracking-normal">
-      {summary}
-    </span>
-  );
+  const label = credentialListStatusLabel(status, { staffMode });
+  return <CredentialSectionStatusBadge label={label} tone={listStatusTone(status, staffMode)} />;
 }
 
 /** Consistent section-header action for credential uploads. */
