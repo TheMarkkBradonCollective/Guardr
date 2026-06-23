@@ -1,9 +1,21 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { ArrowRight, Building2, Shield, MapPin, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Building2,
+  Shield,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  MessageSquare,
+  CreditCard,
+  Navigation,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
+import { useDevice } from '../lib/platform';
+import type { FormFactor } from '../lib/platform/device';
 import { SignatureSecuritySpecialistLink } from './SignatureSecuritySpecialistLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { LegalInfoCards } from './legal/LegalInfoCards';
@@ -38,35 +50,178 @@ const COVERAGE_TYPES = [
   'Short & recurring posts',
 ];
 
-export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLegal }: HomePageProps) {
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    icon: Navigation,
+    title: 'Post or discover',
+    body: 'Clients post coverage needs. Guards browse open jobs on the map.',
+  },
+  {
+    step: '02',
+    icon: MessageSquare,
+    title: 'Match & confirm',
+    body: 'Review credentials, message directly, and lock in the details.',
+  },
+  {
+    step: '03',
+    icon: CreditCard,
+    title: 'Track & complete',
+    body: 'Live check-ins, shift audits, and payment through the platform.',
+  },
+];
+
+const TRUST_METRICS = [
+  { value: 'Map-first', label: 'Job discovery' },
+  { value: 'Licensed', label: 'Independent pros' },
+  { value: 'Live', label: 'Shift tracking' },
+  { value: 'Direct', label: 'Platform payments' },
+];
+
+function LandingProductPreview({ formFactor }: { formFactor: FormFactor }) {
+  if (formFactor === 'mobile') return null;
+
   return (
-    <div className="page-shell min-h-screen">
-      <header className="sticky top-0 z-50 border-b border-brand-border/60 bg-brand-bg/96 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="landing-preview"
+      aria-hidden="true"
+    >
+      <div className="landing-preview-frame">
+        <div className="landing-preview-chrome">
+          <span className="landing-preview-dot" />
+          <span className="landing-preview-dot" />
+          <span className="landing-preview-dot" />
+          <span className="landing-preview-title">Guardr</span>
+        </div>
+        <div className="landing-preview-map">
+          <div className="landing-preview-grid" />
+          <span className="landing-preview-pin landing-preview-pin-a" />
+          <span className="landing-preview-pin landing-preview-pin-b" />
+          <span className="landing-preview-pin landing-preview-pin-c" />
+          <span className="landing-preview-pin landing-preview-pin-active" />
+        </div>
+        <div className="landing-preview-sheet">
+          <div className="landing-preview-handle" />
+          <div className="landing-preview-job">
+            <div>
+              <p className="landing-preview-job-title">Retail patrol</p>
+              <p className="landing-preview-job-meta">Tonight · 8 hrs · 2.4 mi</p>
+            </div>
+            <span className="landing-preview-job-rate">$28/hr</span>
+          </div>
+          <div className="landing-preview-job landing-preview-job-muted">
+            <div>
+              <p className="landing-preview-job-title">Event security</p>
+              <p className="landing-preview-job-meta">Sat · 6 hrs · 5.1 mi</p>
+            </div>
+            <span className="landing-preview-job-rate">$32/hr</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function LandingPathCards({
+  onNavigateToAuth,
+  layout,
+}: {
+  onNavigateToAuth: HomePageProps['onNavigateToAuth'];
+  layout: FormFactor;
+}) {
+  return (
+    <div className={`landing-path-grid landing-path-grid--${layout}`}>
+      <button
+        type="button"
+        onClick={() => onNavigateToAuth('client', 'sign-up')}
+        className="landing-path-card landing-path-card-client group w-full"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-left">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-text-muted mb-2.5">
+              For businesses &amp; sites
+            </p>
+            <p className="text-xl font-black tracking-tight text-brand-text">I need security</p>
+            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+              Post coverage, review guards, monitor live shifts.
+            </p>
+          </div>
+          <Building2 className="w-7 h-7 text-brand-text shrink-0 opacity-75 mt-0.5 group-hover:scale-105 transition-transform" />
+        </div>
+        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-text">
+          Get started <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onNavigateToAuth('guard', 'sign-up')}
+        className="landing-path-card landing-path-card-guard group w-full"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-left">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-primary mb-2.5">
+              Independent contractor
+            </p>
+            <p className="text-xl font-black tracking-tight text-brand-text">I&apos;m a guard</p>
+            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+              Browse jobs on the map, set your rate, work on your terms.
+            </p>
+          </div>
+          <Shield className="w-7 h-7 text-brand-primary shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
+        </div>
+        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-primary">
+          Create account <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+      </button>
+    </div>
+  );
+}
+
+export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLegal }: HomePageProps) {
+  const { formFactor } = useDevice();
+  const isMobile = formFactor === 'mobile';
+  const isTablet = formFactor === 'tablet';
+  const isDesktop = formFactor === 'desktop';
+
+  return (
+    <div
+      className={`landing-page page-shell min-h-screen ${isMobile ? 'landing-page--mobile' : ''} ${isTablet ? 'landing-page--tablet' : ''} ${isDesktop ? 'landing-page--desktop' : ''}`}
+      data-landing-factor={formFactor}
+    >
+      <header className="landing-header sticky top-0 z-50 border-b border-brand-border/60 bg-brand-bg/96 backdrop-blur-xl">
+        <div className="landing-container landing-header-inner">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Logo size={28} className="text-brand-primary shrink-0" />
+            <Logo size={isMobile ? 26 : 28} className="text-brand-primary shrink-0" />
             <span className="font-black text-xl tracking-[-0.04em] leading-none">Guardr</span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="hidden sm:flex" />
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth('client', 'sign-in')}
-              className="text-sm font-bold text-brand-text-muted hover:text-brand-text transition-colors hidden md:block tracking-tight"
-            >
-              Client
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth('guard', 'sign-in')}
-              className="text-sm font-bold text-brand-text-muted hover:text-brand-text transition-colors hidden md:block tracking-tight"
-            >
-              Guard
-            </button>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="landing-header-theme" />
+            {!isMobile && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onNavigateToAuth('client', 'sign-in')}
+                  className="landing-header-link"
+                >
+                  Client
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigateToAuth('guard', 'sign-in')}
+                  className="landing-header-link"
+                >
+                  Guard
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-              className="text-sm font-bold px-4 py-2 rounded-full border border-brand-border text-brand-text hover:border-brand-text transition-colors"
+              className="landing-header-signin"
             >
               Sign in
             </button>
@@ -75,127 +230,134 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
       </header>
 
       <section className="landing-hero-dark relative overflow-hidden">
-        {/* Ambient green glow — Uber-style background accent */}
-        <div className="absolute inset-0 opacity-45 pointer-events-none">
-          <div
-            className="absolute top-0 right-0 w-[min(70vw,480px)] h-[min(70vw,480px)] rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(107,143,110,0.28) 0%, transparent 68%)' }}
-          />
-          <div
-            className="absolute bottom-0 left-0 w-[min(50vw,320px)] h-[min(50vw,320px)] rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(107,143,110,0.14) 0%, transparent 65%)' }}
-          />
+        <div className="landing-hero-glow" aria-hidden="true">
+          <div className="landing-hero-glow-a" />
+          <div className="landing-hero-glow-b" />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-5 pt-16 pb-24 sm:pt-24 sm:pb-32">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="landing-stat-pill mb-10"
-          >
-            Independent security marketplace
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.04 }}
-            className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-[-0.04em] leading-[0.92] max-w-4xl text-white"
-          >
-            Security,<br className="hidden sm:block" /> when you need it.
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-7 text-lg sm:text-xl text-white/72 max-w-xl leading-relaxed font-medium"
-          >
-            Clients post jobs. Licensed guards choose assignments.
-            Maps, messaging, and payments — all in one place.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl"
-          >
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth('client', 'sign-up')}
-              className="landing-path-card landing-path-card-client group w-full"
+        <div className="landing-container landing-hero-inner">
+          <div className="landing-hero-copy">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="landing-stat-pill mb-8 sm:mb-10"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-left">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-text-muted mb-2.5">
-                    For businesses &amp; sites
-                  </p>
-                  <p className="text-xl font-black tracking-tight text-brand-text">I need security</p>
-                  <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
-                    Post coverage, review guards, monitor live shifts.
-                  </p>
-                </div>
-                <Building2 className="w-7 h-7 text-brand-text shrink-0 opacity-75 mt-0.5 group-hover:scale-105 transition-transform" />
-              </div>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-text">
-                Get started <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </button>
+              Independent security marketplace
+            </motion.div>
 
-            <button
-              type="button"
-              onClick={() => onNavigateToAuth('guard', 'sign-up')}
-              className="landing-path-card landing-path-card-guard group w-full"
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.04 }}
+              className="landing-hero-title font-black tracking-[-0.04em] text-white"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-left">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-primary mb-2.5">
-                    Independent contractor
-                  </p>
-                  <p className="text-xl font-black tracking-tight text-brand-text">I&apos;m a guard</p>
-                  <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
-                    Browse jobs on the map, set your rate, work on your terms.
-                  </p>
-                </div>
-                <Shield className="w-7 h-7 text-brand-primary shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
-              </div>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-primary">
-                Create account <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </button>
-          </motion.div>
+              {isMobile ? (
+                <>Security, when you need it.</>
+              ) : (
+                <>
+                  Security,
+                  <br />
+                  when you need it.
+                </>
+              )}
+            </motion.h1>
 
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.28 }}
-            type="button"
-            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="mt-7 text-sm font-semibold text-white/65 hover:text-white underline-offset-4 hover:underline transition-colors"
-          >
-            Already have an account? Sign in →
-          </motion.button>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="landing-hero-subcopy text-white/72 font-medium"
+            >
+              Clients post jobs. Licensed guards choose assignments.
+              Maps, messaging, and payments — all in one place.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="landing-hero-actions"
+            >
+              <LandingPathCards onNavigateToAuth={onNavigateToAuth} layout={formFactor} />
+              <button
+                type="button"
+                onClick={() => onNavigateToAuth(undefined, 'sign-in')}
+                className="landing-hero-signin-link"
+              >
+                Already have an account? Sign in →
+              </button>
+            </motion.div>
+          </div>
+
+          <LandingProductPreview formFactor={formFactor} />
         </div>
       </section>
 
-      <section className="px-5 py-20 border-t border-brand-border bg-brand-bg">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-            <div>
+      {!isMobile && (
+        <section className="landing-trust-strip" aria-label="Platform highlights">
+          <div className="landing-container">
+            <div className="landing-trust-grid">
+              {TRUST_METRICS.map(({ value, label }) => (
+                <div key={label} className="landing-trust-item">
+                  <span className="landing-trust-value">{value}</span>
+                  <span className="landing-trust-label">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="landing-section landing-how-section">
+        <div className="landing-container">
+          <div className="landing-section-head">
+            <p className="experience-badge">How it works</p>
+            <h2 className="landing-section-title">From post to paid shift</h2>
+            <p className="landing-section-lead">
+              A direct marketplace — clients and guards arrange each job, with Guardr handling the tools.
+            </p>
+          </div>
+          <div className={`landing-how-grid landing-how-grid--${formFactor}`}>
+            {HOW_IT_WORKS.map(({ step, icon: Icon, title, body }, index) => (
+              <motion.article
+                key={step}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+                className="landing-how-card"
+              >
+                <div className="landing-how-card-top">
+                  <span className="landing-how-step">{step}</span>
+                  <span className="landing-how-icon">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                </div>
+                <h3 className="landing-how-title">{title}</h3>
+                <p className="landing-how-body">{body}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-section landing-features-section border-t border-brand-border bg-brand-bg">
+        <div className="landing-container">
+          <div className={`landing-features-grid landing-features-grid--${formFactor}`}>
+            <article className="landing-feature-column">
               <p className="experience-badge">Client workspace</p>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.035em] leading-tight mb-4">
-                Request coverage<br className="hidden sm:block" /> at your site
+              <h2 className="landing-feature-headline">
+                Request coverage at your site
               </h2>
-              <p className="text-brand-text-muted leading-relaxed mb-8 text-base">
+              <p className="landing-feature-lead">
                 Post jobs, review licensed guards, and monitor active coverage —
                 with dedicated messaging and support when you need it.
               </p>
-              <ul className="space-y-5">
+              <ul className="landing-feature-list">
                 {CLIENT_FEATURES.map(({ icon: Icon, title, body }) => (
-                  <li key={title} className="flex gap-4 items-start">
-                    <span className="w-10 h-10 bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0 rounded-lg">
+                  <li key={title} className="landing-feature-item">
+                    <span className="landing-feature-icon landing-feature-icon--client">
                       <Icon className="w-5 h-5 text-brand-text" />
                     </span>
                     <div>
@@ -208,26 +370,26 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               <button
                 type="button"
                 onClick={() => onNavigateToAuth('client', 'sign-up')}
-                className="app-cta-dark mt-8 w-full sm:w-auto"
+                className="app-cta-dark landing-feature-cta"
               >
                 Get started as a client
                 <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
+            </article>
 
-            <div>
+            <article className="landing-feature-column landing-feature-column--guard">
               <p className="experience-badge">Guard workspace</p>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.035em] leading-tight mb-4">
-                Work independently,<br className="hidden sm:block" /> get paid directly
+              <h2 className="landing-feature-headline">
+                Work independently, get paid directly
               </h2>
-              <p className="text-brand-text-muted leading-relaxed mb-8 text-base">
+              <p className="landing-feature-lead">
                 Map-first job discovery, earnings tracking, credentials, and shift tools.
                 You contract per assignment — not an employee of Guardr or the client.
               </p>
-              <ul className="space-y-5">
+              <ul className="landing-feature-list">
                 {GUARD_FEATURES.map(({ icon: Icon, title, body }) => (
-                  <li key={title} className="flex gap-4 items-start">
-                    <span className="w-10 h-10 bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center shrink-0 rounded-lg">
+                  <li key={title} className="landing-feature-item">
+                    <span className="landing-feature-icon landing-feature-icon--guard">
                       <Icon className="w-5 h-5 text-brand-primary" />
                     </span>
                     <div>
@@ -240,26 +402,25 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               <button
                 type="button"
                 onClick={() => onNavigateToAuth('guard', 'sign-up')}
-                className="uber-button-sage mt-8 w-full sm:w-auto"
+                className="uber-button-sage landing-feature-cta"
               >
                 Create guard account
                 <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-16 bg-brand-bg-sec border-t border-brand-border">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-[-0.03em] mb-3">Built for real-world coverage</h2>
-          <p className="text-sm text-brand-text-muted mb-8 font-medium">Any site, any shift length, any requirement.</p>
-          <div className="flex flex-wrap justify-center gap-2">
+      <section className="landing-section landing-coverage-section bg-brand-bg-sec border-t border-brand-border">
+        <div className="landing-container landing-coverage-inner">
+          <div className="landing-section-head landing-section-head--center">
+            <h2 className="landing-section-title">Built for real-world coverage</h2>
+            <p className="landing-section-lead">Any site, any shift length, any requirement.</p>
+          </div>
+          <div className={`landing-coverage-grid landing-coverage-grid--${formFactor}`}>
             {COVERAGE_TYPES.map((tag) => (
-              <span
-                key={tag}
-                className="px-5 py-2.5 rounded-full text-sm font-bold bg-brand-bg border border-brand-border text-brand-text tracking-tight"
-              >
+              <span key={tag} className="landing-coverage-tag">
                 {tag}
               </span>
             ))}
@@ -267,26 +428,28 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
         </div>
       </section>
 
-      <section className="px-5 py-16 border-t border-brand-border">
-        <div className="max-w-3xl mx-auto app-card-elevated p-8 sm:p-10 text-center space-y-4">
-          <h2 className="text-xl font-bold">Transparent marketplace rules</h2>
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
-            independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-brand-text-muted">
-            <div className="rounded-xl border border-brand-border px-3 py-3">Clients contract per job</div>
-            <div className="rounded-xl border border-brand-border px-3 py-3">Guards choose assignments</div>
-            <div className="rounded-xl border border-brand-border px-3 py-3">Platform tools &amp; support</div>
+      <section className="landing-section border-t border-brand-border">
+        <div className="landing-container landing-rules-inner">
+          <div className="app-card-elevated landing-rules-card text-center space-y-4">
+            <h2 className="text-xl font-bold">Transparent marketplace rules</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
+              independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
+            </p>
+            <div className={`landing-rules-pills landing-rules-pills--${formFactor}`}>
+              <div className="landing-rules-pill">Clients contract per job</div>
+              <div className="landing-rules-pill">Guards choose assignments</div>
+              <div className="landing-rules-pill">Platform tools &amp; support</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-16 border-t border-brand-border bg-brand-bg-sec">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold">Policies &amp; data</h2>
-            <p className="text-sm text-brand-text-muted mt-2 max-w-xl mx-auto">
+      <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
+        <div className="landing-container landing-legal-inner">
+          <div className="landing-section-head landing-section-head--center">
+            <h2 className="landing-section-title landing-section-title--sm">Policies &amp; data</h2>
+            <p className="landing-section-lead">
               Read how Guardr handles your data and the marketplace rules for clients and guards.
             </p>
           </div>
@@ -294,30 +457,32 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
         </div>
       </section>
 
-      <section className="px-5 py-24 border-t border-brand-border bg-brand-bg">
-        <div className="max-w-lg mx-auto text-center space-y-5">
-          <h2 className="text-4xl sm:text-5xl font-black tracking-[-0.04em] leading-tight">Ready when you are</h2>
-          <p className="text-brand-text-muted font-medium">Choose your path — each experience is built for how you use Guardr.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark flex-1">
+      <section className="landing-section landing-final-cta border-t border-brand-border bg-brand-bg">
+        <div className="landing-container landing-final-cta-inner">
+          <h2 className="landing-final-title font-black tracking-[-0.04em]">Ready when you are</h2>
+          <p className="landing-final-lead">
+            Choose your path — each experience is built for how you use Guardr.
+          </p>
+          <div className={`landing-final-actions landing-final-actions--${formFactor}`}>
+            <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark">
               I need security
             </button>
-            <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark flex-1">
+            <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark">
               I&apos;m a guard
             </button>
           </div>
           <button
             type="button"
             onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="text-sm font-semibold text-brand-text-muted hover:text-brand-primary transition-colors underline-offset-4 hover:underline"
+            className="landing-final-signin"
           >
             Sign in to your account
           </button>
         </div>
       </section>
 
-      <footer className="border-t border-brand-border px-5 py-10">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+      <footer className="landing-footer border-t border-brand-border">
+        <div className="landing-container landing-footer-inner">
           <div className="flex items-center gap-2">
             <Logo size={24} className="text-brand-primary" />
             <div>
@@ -328,7 +493,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               </span>
             </div>
           </div>
-          <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
+          {!isMobile && <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />}
           <div className="flex flex-col items-center sm:items-end gap-3">
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
             <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right">
@@ -337,7 +502,31 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
             </p>
           </div>
         </div>
+        {isMobile && (
+          <div className="landing-footer-theme-mobile">
+            <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
+          </div>
+        )}
       </footer>
+
+      {isMobile && (
+        <div className="landing-mobile-cta-bar" role="region" aria-label="Get started">
+          <button
+            type="button"
+            onClick={() => onNavigateToAuth('client', 'sign-up')}
+            className="landing-mobile-cta landing-mobile-cta--client"
+          >
+            I need security
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigateToAuth('guard', 'sign-up')}
+            className="landing-mobile-cta landing-mobile-cta--guard"
+          >
+            I&apos;m a guard
+          </button>
+        </div>
+      )}
     </div>
   );
 }
