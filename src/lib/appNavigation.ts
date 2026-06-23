@@ -53,8 +53,9 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   jobs: 'myJobs',
   earnings: 'earnings',
   pay: 'earnings',
-  'guard-chat': 'guardChat',
-  support: 'support',
+  'guard-chat': 'messages',
+  messages: 'messages',
+  support: 'messages',
   profile: 'profile',
   guide: 'guide',
 };
@@ -63,8 +64,9 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   map: 'map',
   myJobs: 'my-jobs',
   earnings: 'earnings',
-  guardChat: 'guard-chat',
-  support: 'support',
+  guardChat: 'messages',
+  messages: 'messages',
+  support: 'messages',
   profile: 'profile',
   guide: 'guide',
 };
@@ -72,7 +74,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   home: 'home',
   profile: 'profile',
-  support: 'support',
+  support: 'messages',
   'support-compose': 'support-compose',
   'support-report': 'support-report',
   map: 'map',
@@ -89,7 +91,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
 const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   home: 'home',
   profile: 'profile',
-  support: 'support',
+  support: 'messages',
   'support-compose': 'support-compose',
   'support-report': 'support-report',
   map: 'map',

@@ -4,7 +4,7 @@ import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { MessagesSquare, Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText, BookOpen } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, Radio, FileText, BookOpen } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -34,7 +34,6 @@ const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'guide', label: 'Workflow guide', icon: BookOpen },
-  { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
@@ -43,7 +42,6 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   guards: 'Guards',
   coverage: 'Live coverage',
   requests: 'Jobs',
-  support: 'Support',
   'support-compose': 'Contact support',
   'support-report': 'File a report',
   profile: 'Profile',
@@ -52,6 +50,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   reports: 'Reports',
   guide: 'Workflow guide',
   messages: 'Messages',
+  support: 'Messages',
 };
 
 export function ClientAppLayout({
@@ -70,12 +69,12 @@ export function ClientAppLayout({
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map' || activeView === 'coverage';
-  const navHighlightView =
-    activeView === 'support-compose' || activeView === 'support-report'
-      ? 'support'
-      : accountPending && !['home', 'profile', 'support', 'support-compose', 'support-report', 'guide'].includes(activeView)
-        ? 'home'
-        : activeView;
+  const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
+  const navHighlightView = messagesViews.includes(activeView)
+    ? 'messages'
+    : accountPending && !['home', 'profile', 'guide', ...messagesViews].includes(activeView)
+      ? 'home'
+      : activeView;
 
   const moreFooter = onOpenLegal ? (
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />

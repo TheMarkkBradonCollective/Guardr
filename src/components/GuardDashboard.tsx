@@ -25,7 +25,6 @@ import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
-import { SupportScreen } from './support/SupportScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { JobChatPanel } from './messaging/JobChatPanel';
@@ -34,7 +33,7 @@ import { RoleAppShell } from './layouts/RoleAppShell';
 import { AppWorkflowPage } from './docs/AppWorkflowPage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy, MessagesSquare, BookOpen } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -53,7 +52,7 @@ import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
-import { GuardMessengerPanel } from './guard/GuardMessengerPanel';
+import { GuardMessagesPanel } from './guard/GuardMessagesPanel';
 import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
@@ -123,15 +122,16 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'guardChat' | 'support' | 'profile' | 'guide';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'guide';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
   myJobs: 'My jobs',
   earnings: 'Pay',
-  guardChat: 'Guard chat',
-  support: 'Support',
+  messages: 'Messages',
+  guardChat: 'Messages',
+  support: 'Messages',
   profile: 'Profile',
   guide: 'Workflow guide',
 };
@@ -192,6 +192,8 @@ export function GuardDashboard({
   const isControlled = controlledTab !== undefined;
   const [standaloneTab, setStandaloneTab] = useState<GuardTab>(controlledTab ?? initialTab);
   const activeTab = isEmbedded ? shiftTab : (isControlled ? controlledTab : standaloneTab);
+  const tab: GuardTab =
+    activeTab === 'guardChat' || activeTab === 'support' ? 'messages' : activeTab;
 
   const setTab = useCallback(
     (next: GuardTab) => {
@@ -569,8 +571,7 @@ export function GuardDashboard({
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
-    { id: 'guardChat', icon: MessagesSquare, label: 'Guard chat' },
-    { id: 'support', icon: LifeBuoy, label: 'Support' },
+    { id: 'messages', icon: MessagesSquare, label: 'Messages' },
   ];
 
   const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -660,9 +661,9 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab !== 'map' && (
-        <AppPageTransition motionKey={activeTab} className="absolute inset-0">
-          {activeTab === 'earnings' && (
+      {tab !== 'map' && (
+        <AppPageTransition motionKey={tab} className="absolute inset-0">
+          {tab === 'earnings' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <div className="guard-scroll-panel flex-1">
                 <GuardEarningsPanel
@@ -684,7 +685,7 @@ export function GuardDashboard({
             </div>
           )}
 
-          {activeTab === 'myJobs' && (
+          {tab === 'myJobs' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <GuardMyJobsPanel
                 upcomingJobs={upcomingMyJobs}
@@ -702,20 +703,9 @@ export function GuardDashboard({
             </div>
           )}
 
-          {activeTab === 'guardChat' && onSendGuardMessage && (
+          {tab === 'messages' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <GuardMessengerPanel
-                messages={guardMessages}
-                currentUser={currentUser}
-                onSend={onSendGuardMessage}
-                onRefresh={onRefreshGuardMessages}
-              />
-            </div>
-          )}
-
-          {activeTab === 'support' && onCreateSupportTicket && onSendSupportMessage && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              {supportMode === 'compose' ? (
+              {supportMode === 'compose' && onCreateSupportTicket ? (
                 <SupportComposePage
                   onBack={() => onCloseSupportForm?.()}
                   onCreateTicket={onCreateSupportTicket}
@@ -724,7 +714,7 @@ export function GuardDashboard({
                     onSupportTicketIdChange?.(ticketId);
                   }}
                 />
-              ) : supportMode === 'report' ? (
+              ) : supportMode === 'report' && onCreateSupportTicket ? (
                 <SupportReportPage
                   relatedRequests={relatedRequests}
                   onBack={() => onCloseSupportForm?.()}
@@ -732,28 +722,39 @@ export function GuardDashboard({
                   onSubmitted={() => onCloseSupportForm?.()}
                 />
               ) : (
-                <SupportScreen
+                <GuardMessagesPanel
+                  upcomingJobs={upcomingMyJobs}
+                  pastJobs={pastMyJobs}
+                  guard={guard}
                   currentUser={currentUser}
-                  tickets={supportTickets}
-                  relatedRequests={relatedRequests}
-                  onSendMessage={onSendSupportMessage}
-                  initialTicketId={supportTicketId}
-                  onActiveTicketIdChange={onSupportTicketIdChange}
-                  initialSection={supportSection}
-                  onOpenCompose={onOpenSupportCompose}
-                  onOpenReport={onOpenSupportReport}
+                  jobChatThreads={jobChatThreads}
+                  jobChatMessages={jobChatMessages}
+                  guardMessages={guardMessages}
+                  supportTickets={supportTickets}
+                  onSendJobChatMessage={onSendJobChatMessage}
+                  onSendGuardMessage={onSendGuardMessage}
+                  onSendSupportMessage={onSendSupportMessage}
+                  onRefreshGuardMessages={onRefreshGuardMessages}
+                  initialJobChatRequestId={jobChatRequestId}
+                  initialJobChatOpen={openJobChat}
+                  onJobChatRequestIdChange={onJobChatRequestIdChange}
+                  onJobChatOpenChange={onJobChatOpenChange}
+                  initialSupportTicketId={supportTicketId}
+                  onSupportTicketIdChange={onSupportTicketIdChange}
+                  onOpenSupportCompose={onOpenSupportCompose}
+                  onOpenSupportReport={onOpenSupportReport}
                 />
               )}
             </div>
           )}
 
-          {activeTab === 'guide' && (
+          {tab === 'guide' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <AppWorkflowPage audience="guard" />
             </div>
           )}
 
-          {activeTab === 'profile' && (
+          {tab === 'profile' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <UserProfileScreen
                 currentUser={currentUser}
@@ -860,8 +861,8 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support' && activeTab !== 'guardChat' && activeTab !== 'guide';
-  const shellFullBleed = !showPendingGate && activeTab === 'map';
+  const showPendingGate = accountPreActive && tab !== 'profile' && tab !== 'messages' && tab !== 'guide';
+  const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
     <AccountPendingScreen role="guard" guard={guard} onOpenProfile={() => setTab('profile')} />
@@ -879,16 +880,16 @@ export function GuardDashboard({
   }
 
   const guardScreenTitle =
-    activeTab === 'support' && supportMode === 'compose'
+    tab === 'messages' && supportMode === 'compose'
       ? 'Contact support'
-      : activeTab === 'support' && supportMode === 'report'
+      : tab === 'messages' && supportMode === 'report'
         ? 'File a report'
-        : GUARD_TAB_TITLES[activeTab];
+        : GUARD_TAB_TITLES[tab];
 
   const shellHideHeader =
-    (activeTab === 'support' &&
-      (!!supportTicketId || supportMode === 'compose' || supportMode === 'report')) ||
-    (activeTab === 'myJobs' && openJobChat);
+    (tab === 'messages' &&
+      (!!supportTicketId || supportMode === 'compose' || supportMode === 'report' || openJobChat)) ||
+    (tab === 'myJobs' && openJobChat);
 
   return (
     <RoleAppShell
@@ -907,7 +908,7 @@ export function GuardDashboard({
       }}
       navItems={NAV_TABS}
       overflowNavItems={OVERFLOW_NAV}
-      activeNavId={activeTab === 'profile' || activeTab === 'guide' ? activeTab : activeTab}
+      activeNavId={tab}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}

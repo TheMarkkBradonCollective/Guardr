@@ -135,7 +135,6 @@ import {
 } from './lib/accountStatus';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
-import { SupportScreen } from './components/support/SupportScreen';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
@@ -152,8 +151,8 @@ import {
   saveJobChatMessagesToStorage,
   saveJobChatThreadsToStorage,
   threadForRequest,
-  clientActiveJobChatCount,
 } from './lib/jobChat';
+import { clientMessagesBadge } from './lib/messagesInbox';
 import {
   buildGuardMessage,
   loadGuardMessagesFromStorage,
@@ -200,7 +199,7 @@ function appToast(message: string, tone: 'success' | 'error' | 'info' = 'error')
 }
 import type { GuardTab, GuardSupportMode } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
-import { type ApprovalQueueId, resolveStaffSection, type StaffSection } from './lib/staffOps';
+import { type ApprovalQueueId, resolveStaffSection, isStaffMessagesSection, type StaffSection } from './lib/staffOps';
 import {
   buildLocationLabel,
   canClientEditJobListing,
@@ -394,12 +393,18 @@ export default function App() {
   };
 
   const applyAppRoute = (route: AppRoute) => {
-    if (route.clientView) setClientViewState(route.clientView);
-    if (route.guardTab) setGuardTabState(route.guardTab);
+    if (route.clientView) {
+      setClientViewState(route.clientView === 'support' ? 'messages' : route.clientView);
+    }
+    if (route.guardTab) {
+      const tab =
+        route.guardTab === 'guardChat' || route.guardTab === 'support' ? 'messages' : route.guardTab;
+      setGuardTabState(tab);
+    }
     if (route.staffSection) {
-      setStaffSectionState(
-        resolveStaffSection(route.staffSection, route.staffMessageTab) ?? route.staffSection
-      );
+      const section =
+        resolveStaffSection(route.staffSection, route.staffMessageTab) ?? route.staffSection;
+      setStaffSectionState(isStaffMessagesSection(section) ? 'messages' : section);
     }
     setStaffGuardIdState(route.staffGuardId ?? null);
     setStaffClientIdState(route.staffClientId ?? null);
@@ -424,35 +429,39 @@ export default function App() {
   };
 
   const setClientView = (view: ClientView) => {
-    setClientViewState(view);
-    const nextGuardId = view === 'guards' ? clientGuardId ?? undefined : undefined;
-    const nextDirectId = view === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
-    const keepsJobChat = view === 'coverage' || view === 'messages' || view === 'map';
+    const resolvedView = view === 'support' ? 'messages' : view;
+    setClientViewState(resolvedView);
+    const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
+    const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
+    const keepsJobChat = resolvedView === 'coverage' || resolvedView === 'messages' || resolvedView === 'map';
     const nextJobChatId = keepsJobChat ? jobChatRequestId ?? undefined : undefined;
-    const isSupportHome = view === 'support';
-    const nextSupportId = isSupportHome ? supportTicketId ?? undefined : undefined;
+    const inMessagesFlow =
+      resolvedView === 'messages' ||
+      resolvedView === 'support-compose' ||
+      resolvedView === 'support-report';
+    const nextSupportId = resolvedView === 'messages' ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
     if (!keepsJobChat) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
     }
-    if (!isSupportHome) {
+    if (!inMessagesFlow) {
       setSupportTicketIdState(null);
     }
-    if (view !== 'support' && view !== 'support-compose' && view !== 'support-report') {
+    if (!inMessagesFlow) {
       setSupportSectionState('support');
     }
     syncAppRoute(
       buildAppRoute({
         role: 'client',
-        clientView: view,
+        clientView: resolvedView,
         clientGuardId: nextGuardId,
         clientDirectGuardId: nextDirectId,
         jobChatRequestId: nextJobChatId,
         openJobChat: keepsJobChat && openJobChat ? true : undefined,
         supportTicketId: nextSupportId,
-        supportSection: view === 'support' ? supportSection : undefined,
+        supportSection: resolvedView === 'messages' ? supportSection : undefined,
         supportMode: undefined,
       })
     );
@@ -486,15 +495,14 @@ export default function App() {
     );
   };
 
-  const closeClientSupportForm = (section: 'support' | 'reports' = 'support') => {
-    setSupportSectionState(section);
-    setClientViewState('support');
+  const closeClientSupportForm = (_section: 'support' | 'reports' = 'support') => {
+    setClientViewState('messages');
     syncAppRoute(
       buildAppRoute({
         role: 'client',
-        clientView: 'support',
+        clientView: 'messages',
         supportTicketId: undefined,
-        supportSection: section,
+        supportSection: undefined,
         supportMode: undefined,
       })
     );
@@ -524,14 +532,18 @@ export default function App() {
   };
 
   const setGuardTab = (tab: GuardTab) => {
-    setGuardTabState(tab);
-    const keepJobChat = tab === 'myJobs' ? jobChatRequestId ?? undefined : undefined;
-    const keepOpenChat = tab === 'myJobs' && openJobChat ? true : undefined;
-    if (tab !== 'myJobs') {
+    const normalizedTab: GuardTab =
+      tab === 'guardChat' || tab === 'support' ? 'messages' : tab;
+    setGuardTabState(normalizedTab);
+    const keepsMessages = normalizedTab === 'messages';
+    const keepsMyJobs = normalizedTab === 'myJobs';
+    const keepsJobChat = keepsMyJobs || keepsMessages;
+    const keepOpenChat = keepsJobChat && openJobChat ? true : undefined;
+    if (!keepsJobChat) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
     }
-    if (tab !== 'support') {
+    if (!keepsMessages) {
       setSupportTicketIdState(null);
       setSupportModeState(null);
       setSupportSectionState('support');
@@ -539,24 +551,24 @@ export default function App() {
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
-        guardTab: tab,
-        jobChatRequestId: keepJobChat,
+        guardTab: normalizedTab,
+        jobChatRequestId: keepsJobChat ? jobChatRequestId ?? undefined : undefined,
         openJobChat: keepOpenChat,
-        supportTicketId: tab === 'support' ? supportTicketId ?? undefined : undefined,
-        supportSection: tab === 'support' ? supportSection : undefined,
-        supportMode: tab === 'support' ? supportMode ?? undefined : undefined,
+        supportTicketId: keepsMessages ? supportTicketId ?? undefined : undefined,
+        supportSection: keepsMessages ? supportSection : undefined,
+        supportMode: keepsMessages ? supportMode ?? undefined : undefined,
       })
     );
   };
 
   const openGuardSupportCompose = () => {
-    setGuardTabState('support');
+    setGuardTabState('messages');
     setSupportTicketIdState(null);
     setSupportModeState('compose');
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
-        guardTab: 'support',
+        guardTab: 'messages',
         supportMode: 'compose',
         supportTicketId: undefined,
         supportSection: undefined,
@@ -565,13 +577,13 @@ export default function App() {
   };
 
   const openGuardSupportReport = () => {
-    setGuardTabState('support');
+    setGuardTabState('messages');
     setSupportTicketIdState(null);
     setSupportModeState('report');
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
-        guardTab: 'support',
+        guardTab: 'messages',
         supportMode: 'report',
         supportTicketId: undefined,
         supportSection: undefined,
@@ -585,7 +597,7 @@ export default function App() {
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
-        guardTab: 'support',
+        guardTab: 'messages',
         supportMode: undefined,
         supportTicketId: undefined,
         supportSection: section,
@@ -598,12 +610,12 @@ export default function App() {
     if (options?.openChat !== undefined) setOpenJobChatState(options.openChat);
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
-      setStaffSectionState('job-chats');
+      setStaffSectionState('messages');
       setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
-          staffSection: 'job-chats',
+          staffSection: 'messages',
           jobChatRequestId: requestId ?? undefined,
           staffApprovalQueue: undefined,
         })
@@ -611,11 +623,12 @@ export default function App() {
       return;
     }
     if (role === 'guard') {
-      setGuardTabState('myJobs');
+      const targetTab = openJobChat || requestId ? 'messages' : 'myJobs';
+      setGuardTabState(targetTab);
       syncAppRoute(
         buildAppRoute({
           role: 'guard',
-          guardTab: 'myJobs',
+          guardTab: targetTab,
           jobChatRequestId: requestId ?? undefined,
           openJobChat: options?.openChat ?? openJobChat,
         })
@@ -642,12 +655,12 @@ export default function App() {
     setSupportModeState(null);
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
-      setStaffSectionState('support');
+      setStaffSectionState('messages');
       setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
-          staffSection: 'support',
+          staffSection: 'messages',
           supportTicketId: ticketId ?? undefined,
           supportMode: undefined,
           staffApprovalQueue: undefined,
@@ -656,11 +669,11 @@ export default function App() {
       return;
     }
     if (role === 'guard') {
-      setGuardTabState('support');
+      setGuardTabState('messages');
       syncAppRoute(
         buildAppRoute({
           role: 'guard',
-          guardTab: 'support',
+          guardTab: 'messages',
           supportTicketId: ticketId ?? undefined,
           supportMode: undefined,
         })
@@ -668,11 +681,11 @@ export default function App() {
       return;
     }
     if (role === 'client') {
-      setClientViewState('support');
+      setClientViewState('messages');
       syncAppRoute(
         buildAppRoute({
           role: 'client',
-          clientView: 'support',
+          clientView: 'messages',
           supportTicketId: ticketId ?? undefined,
           supportMode: undefined,
         })
@@ -681,13 +694,15 @@ export default function App() {
   };
 
   const setStaffSection = (section: StaffSection) => {
-    setStaffSectionState(section);
-    const nextGuardId = section === 'guards' ? staffGuardId ?? undefined : undefined;
-    const nextClientId = section === 'clients' ? staffClientId ?? undefined : undefined;
-    const nextJobId = section === 'jobs' ? staffJobId ?? undefined : undefined;
-    const nextTeamId = section === 'team' ? staffTeamId ?? undefined : undefined;
-    const nextJobChatId = section === 'job-chats' ? jobChatRequestId ?? undefined : undefined;
-    const nextSupportId = section === 'support' ? supportTicketId ?? undefined : undefined;
+    const normalizedSection = isStaffMessagesSection(section) ? 'messages' : section;
+    setStaffSectionState(normalizedSection);
+    const nextGuardId = normalizedSection === 'guards' ? staffGuardId ?? undefined : undefined;
+    const nextClientId = normalizedSection === 'clients' ? staffClientId ?? undefined : undefined;
+    const nextJobId = normalizedSection === 'jobs' ? staffJobId ?? undefined : undefined;
+    const nextTeamId = normalizedSection === 'team' ? staffTeamId ?? undefined : undefined;
+    const keepsMessages = normalizedSection === 'messages';
+    const nextJobChatId = keepsMessages ? jobChatRequestId ?? undefined : undefined;
+    const nextSupportId = keepsMessages ? supportTicketId ?? undefined : undefined;
     const nextApprovalQueue =
       section === 'approvals' ? staffApprovalQueue ?? undefined : undefined;
     const nextEdit = section === 'guards' && nextGuardId ? staffEdit || undefined : undefined;
@@ -695,14 +710,14 @@ export default function App() {
     setStaffClientIdState(nextClientId ?? null);
     setStaffJobIdState(nextJobId ?? null);
     setStaffTeamIdState(nextTeamId ?? null);
-    if (section !== 'job-chats') setJobChatRequestIdState(null);
-    if (section !== 'support') setSupportTicketIdState(null);
-    if (section !== 'approvals') setStaffApprovalQueueState(null);
-    if (section !== 'guards') setStaffEditState(false);
+    if (!keepsMessages) setJobChatRequestIdState(null);
+    if (!keepsMessages) setSupportTicketIdState(null);
+    if (normalizedSection !== 'approvals') setStaffApprovalQueueState(null);
+    if (normalizedSection !== 'guards') setStaffEditState(false);
     syncAppRoute(
       buildAppRoute({
         role: 'staff',
-        staffSection: section,
+        staffSection: normalizedSection,
         staffGuardId: nextGuardId,
         staffClientId: nextClientId,
         staffJobId: nextJobId,
@@ -1644,17 +1659,23 @@ export default function App() {
     const role = appRoleForUser(currentUser);
     if (role === 'client') {
       return (
-        clientView === 'support' ||
         clientView === 'messages' ||
+        clientView === 'support-compose' ||
+        clientView === 'support-report' ||
         (clientView === 'coverage' && openJobChat) ||
         (clientView === 'map' && openJobChat)
       );
     }
     if (role === 'guard') {
-      return guardTab === 'guardChat' || (guardTab === 'myJobs' && openJobChat);
+      return (
+        guardTab === 'messages' ||
+        guardTab === 'guardChat' ||
+        guardTab === 'support' ||
+        (guardTab === 'myJobs' && openJobChat)
+      );
     }
     if (role === 'staff') {
-      return staffSection === 'team-chat' || staffSection === 'job-chats' || staffSection === 'support';
+      return isStaffMessagesSection(staffSection);
     }
     return false;
   }, [currentUser, clientView, guardTab, staffSection, openJobChat]);
@@ -1667,11 +1688,11 @@ export default function App() {
   useEffect(() => {
     if (!isDbConnected || !isInMessagingView) return;
     const interval = setInterval(() => {
-      if ((staffSection === 'team-chat' || staffSection === 'job-chats') && currentUser && isStaffRole(currentUser.role)) {
+      if (isStaffMessagesSection(staffSection) && currentUser && isStaffRole(currentUser.role)) {
         void refreshStaffMessagesRef.current();
         return;
       }
-      if (guardTab === 'guardChat' && currentUser?.role === 'guard') {
+      if ((guardTab === 'messages' || guardTab === 'guardChat') && currentUser?.role === 'guard') {
         void refreshGuardMessagesRef.current();
         return;
       }
@@ -5703,7 +5724,7 @@ export default function App() {
         clientAccountPending &&
         view !== 'home' &&
         view !== 'profile' &&
-        view !== 'support' &&
+        view !== 'messages' &&
         view !== 'support-compose' &&
         view !== 'support-report'
       ) {
@@ -5714,23 +5735,10 @@ export default function App() {
     };
 
     const clientHideHeader =
-      (clientView === 'support' && !!supportTicketId) ||
+      (clientView === 'messages' && (!!supportTicketId || openJobChat)) ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (openJobChat && ['messages', 'coverage', 'map'].includes(clientView));
-
-    const supportInbox = (
-      <SupportScreen
-        currentUser={currentUser}
-        tickets={supportTickets}
-        onSendMessage={handleSendSupportMessage}
-        initialTicketId={supportTicketId}
-        onActiveTicketIdChange={setSupportTicketId}
-        initialSection={supportSection}
-        onOpenCompose={openClientSupportCompose}
-        onOpenReport={openClientSupportReport}
-      />
-    );
 
     return (
       <>
@@ -5743,7 +5751,7 @@ export default function App() {
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
-          messagesBadge={clientActiveJobChatCount(jobChatThreads, currentUser.id)}
+          messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
           hideHeader={clientHideHeader}
         >
           {clientView === 'profile' ? (
@@ -5766,8 +5774,6 @@ export default function App() {
               onCreateTicket={handleCreateSupportTicket}
               onSubmitted={() => closeClientSupportForm('reports')}
             />
-          ) : clientView === 'support' ? (
-            supportInbox
           ) : (
             <ClientDashboard
               companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
@@ -5778,7 +5784,7 @@ export default function App() {
               guards={hireableGuards}
               clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
-              activeView={clientView}
+              activeView={clientView === 'support' ? 'messages' : clientView}
               onViewChange={setClientView}
               profileGuardId={clientGuardId}
               onProfileGuardIdChange={setClientGuardId}
@@ -5810,8 +5816,12 @@ export default function App() {
               onOpenJobChat={(requestId) => {
                 setJobChatRequestId(requestId, { openChat: true });
               }}
+              supportTickets={supportTickets}
+              onSendSupportMessage={handleSendSupportMessage}
               supportTicketId={supportTicketId}
               onSupportTicketIdChange={setSupportTicketId}
+              onOpenSupportCompose={openClientSupportCompose}
+              onOpenSupportReport={openClientSupportReport}
             />
           )}
         </ClientAppLayout>
