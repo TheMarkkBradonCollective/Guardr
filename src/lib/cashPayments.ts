@@ -114,14 +114,26 @@ export function canStripePayGuard(req: SecurityRequest): boolean {
   return true;
 }
 
+/** Platform fee already recorded (manual deposit or partial Stripe deposit). */
+export function isPlatformFeeCollected(req: SecurityRequest): boolean {
+  if (!isCashClientPayment(req)) {
+    return !!req.paymentStatus && req.paymentStatus !== 'unpaid';
+  }
+  if (isPlatformFeePaidCash(req)) return true;
+  return getCashDepositedAmount(req) >= getPlatformFeeAmount(req) - 0.001;
+}
+
 export function stripeDepositLabel(req: SecurityRequest): string {
   const remaining = getRemainingStripeDeposit(req);
   if (remaining <= 0) return 'Paid into Stripe';
-  if (isCashGuardPayout(req) || getRequiredStripeDeposit(req) < req.estimatedPayout) {
+  if (isPlatformFeeOnlyDeposit(req)) {
     if (isPlatformFeePaidCash(req)) {
       return `Pay $${remaining} with card`;
     }
     return `Pay $${remaining} platform fee (card)`;
+  }
+  if (isPlatformFeeCollected(req)) {
+    return `Pay guard $${remaining} with card`;
   }
   return `Pay $${remaining} with card`;
 }
@@ -184,6 +196,9 @@ export function platformFeeLedgerLabel(req: SecurityRequest): string {
         return `$${getRemainingStripeDeposit(req).toFixed(2)} card deposit due`;
       }
       return `Manually deposit or card — $${getPlatformFeeAmount(req).toFixed(2)}`;
+    }
+    if (isPlatformFeeCollected(req)) {
+      return 'Collected via Stripe';
     }
     return 'Awaiting Stripe deposit';
   }
