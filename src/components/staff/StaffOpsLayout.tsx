@@ -109,8 +109,15 @@ export function StaffOpsLayout({
   const sidebar = (
     <div className="staff-sidebar-inner">
       <div className="staff-sidebar-brand">
-        <p className="font-bold text-base tracking-tight">Guardr</p>
-        <p className="text-xs text-brand-text-muted mt-0.5">{ROLE_LABELS[currentUser.role]}</p>
+        <div className="flex items-center gap-2.5">
+          <span className="font-black text-xl tracking-[-0.04em] leading-none text-white">Guardr</span>
+          {isDbConnected && (
+            <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
+          )}
+        </div>
+        <p className="text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
+          {ROLE_LABELS[currentUser.role]}
+        </p>
       </div>
       <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <StaffSidebarNav
@@ -123,12 +130,6 @@ export function StaffOpsLayout({
       <div className="staff-sidebar-footer">
         {onOpenLegal && (
           <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-        )}
-        {isDbConnected && (
-          <p className="text-[10px] text-brand-primary flex items-center gap-1.5 justify-center mt-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-            Connected
-          </p>
         )}
       </div>
     </div>
@@ -190,10 +191,10 @@ export function StaffOpsLayout({
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg font-semibold truncate">
-              {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
-            </h1>
-              <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
+              <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
+                {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
+              </h1>
+              <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
             </div>
             <AccountMenu
               userName={currentUser.name}

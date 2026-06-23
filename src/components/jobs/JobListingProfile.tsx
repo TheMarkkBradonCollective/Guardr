@@ -77,18 +77,18 @@ export function JobListingProfile({
   return (
     <div className="staff-detail-pane space-y-4">
       {showClientHeader && (
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-xl bg-brand-primary/15 border border-brand-primary/25 flex items-center justify-center shrink-0">
-            <span className="text-sm font-bold text-brand-primary">{job.clientLogo || job.clientName.slice(0, 2).toUpperCase()}</span>
+        <div className="flex items-start gap-3.5">
+          <div className="w-12 h-12 bg-brand-primary/12 border border-brand-primary/22 flex items-center justify-center shrink-0 rounded-xl">
+            <span className="text-sm font-black text-brand-primary tracking-tight">{job.clientLogo || job.clientName.slice(0, 2).toUpperCase()}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-brand-primary uppercase tracking-wide">Client offer</p>
-            <h3 className="text-xl font-bold tracking-tight leading-tight mt-0.5">{job.title}</h3>
-            <p className="text-sm text-brand-text-muted mt-1">{job.clientName}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-primary mb-1">Client offer</p>
+            <h3 className="text-2xl font-black tracking-[-0.04em] leading-tight">{job.title}</h3>
+            <p className="text-sm text-brand-text-muted mt-1.5 font-medium">{job.clientName}</p>
             {job.clientRating != null && (
-              <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
+              <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1 font-medium">
                 <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />
-                Client rating {job.clientRating.toFixed(1)}
+                {job.clientRating.toFixed(1)} client rating
               </p>
             )}
           </div>

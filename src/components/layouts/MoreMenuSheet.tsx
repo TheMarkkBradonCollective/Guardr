@@ -25,7 +25,7 @@ export function MoreMenuSheet({
   return (
     <AppOverlaySheet open={open} onClose={onClose} ariaLabel={title} panelClassName="more-menu-panel">
       <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border">
-        <p className="text-base font-bold tracking-tight">{title}</p>
+        <p className="text-base font-black tracking-[-0.03em]">{title}</p>
         <button
           type="button"
           onClick={onClose}
@@ -54,7 +54,7 @@ export function MoreMenuSheet({
                 }`}
               >
                 <Icon className="w-5 h-5 shrink-0" />
-                <span className="text-sm font-semibold flex-1">{label}</span>
+                <span className="text-sm font-bold flex-1 tracking-tight">{label}</span>
                 {badge != null && badge > 0 && (
                   <span className="min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
                     {badge > 9 ? '9+' : badge}

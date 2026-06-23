@@ -15,10 +15,10 @@ export function LoadingScreen() {
 
       <div className="guardr-loading-core">
         <div className="guardr-loading-logo-wrap">
-          <Logo size={56} className="guardr-loading-logo" />
+          <Logo size={64} className="guardr-loading-logo" />
         </div>
         <p className="guardr-loading-brand">Guardr</p>
-        <p className="guardr-loading-caption">Loading your workspace…</p>
+        <p className="guardr-loading-caption">Anytime. Anywhere.</p>
 
         <div className="guardr-loading-lane" aria-hidden="true">
           <div className="guardr-loading-lane-track" />

@@ -139,15 +139,19 @@ export function ClientHomeScreen({
 
       <AppDashboardZone title="At a glance">
         <div className="app-tile-grid-2">
-          <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left !p-4">
+          <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2.5 text-left !p-5">
             <ClipboardList className="w-5 h-5 text-brand-primary" />
-            <p className="font-semibold text-sm">Open jobs</p>
-            <p className="text-2xl font-bold tracking-tight">{openRequestCount}</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-muted">Open jobs</p>
+              <p className="text-4xl font-black tracking-[-0.05em] leading-none mt-1">{openRequestCount}</p>
+            </div>
           </button>
-          <button type="button" onClick={() => onAction('schedule')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2 text-left !p-4">
+          <button type="button" onClick={() => onAction('schedule')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2.5 text-left !p-5">
             <Calendar className="w-5 h-5 text-brand-primary" />
-            <p className="font-semibold text-sm">Upcoming</p>
-            <p className="text-2xl font-bold tracking-tight">{upcoming.length}</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-muted">Upcoming</p>
+              <p className="text-4xl font-black tracking-[-0.05em] leading-none mt-1">{upcoming.length}</p>
+            </div>
           </button>
         </div>
       </AppDashboardZone>

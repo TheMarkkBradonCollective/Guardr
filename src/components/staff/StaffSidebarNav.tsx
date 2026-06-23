@@ -51,33 +51,25 @@ function NavGroup({
   if (groupItems.length === 0) return null;
 
   return (
-    <div className="mb-4">
-      <p className="px-3 mb-1.5 text-[9px] font-mono font-bold uppercase tracking-widest text-brand-text-muted">
+    <div className="mb-5">
+      <p className="px-4 mb-2 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-text-muted opacity-60">
         {title}
       </p>
-      <div className="uber-side-nav divide-y divide-brand-border border-y border-brand-border">
+      <div className="uber-side-nav">
         {groupItems.map(({ id, label, icon: Icon, badge }) => (
           <button
             key={id}
             type="button"
             onClick={() => onNavigate(id)}
-            className={`uber-side-nav-item w-full flex items-center gap-2 px-3 py-3 text-left text-sm font-medium transition-colors ${
-              activeSection === id
-                ? 'uber-side-nav-item-active bg-brand-primary text-brand-accent-text'
-                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface'
+            className={`uber-side-nav-item w-full flex items-center gap-2.5 text-left transition-colors ${
+              activeSection === id ? 'uber-side-nav-item-active' : ''
             }`}
           >
-            <Icon className="w-4 h-4 shrink-0" />
+            <Icon className="w-[1.125rem] h-[1.125rem] shrink-0" />
             <span className="flex-1 truncate">{label}</span>
             {badge != null && badge > 0 && (
-              <span
-                className={`text-xs font-bold px-1.5 py-0.5 min-w-[1.25rem] text-center ${
-                  activeSection === id
-                    ? 'bg-brand-accent-text/20 text-brand-accent-text'
-                    : 'bg-brand-primary/15 text-brand-primary'
-                }`}
-              >
-                {badge}
+              <span className="text-[11px] font-bold min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 rounded-full bg-white/15 text-white/85">
+                {badge > 99 ? '99+' : badge}
               </span>
             )}
           </button>

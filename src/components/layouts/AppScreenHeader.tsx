@@ -38,7 +38,7 @@ export function AppScreenHeader({
         ) : subtitle ? (
           <p className="text-xs text-brand-text-muted leading-none truncate">{subtitle}</p>
         ) : null}
-        <h1 className="text-lg font-semibold truncate leading-tight mt-0.5">{title}</h1>
+        <h1 className="text-lg font-black truncate leading-tight tracking-[-0.025em] mt-0.5">{title}</h1>
       </div>
 
       <div className="shrink-0 flex items-center gap-2">

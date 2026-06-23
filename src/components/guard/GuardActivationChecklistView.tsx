@@ -21,15 +21,19 @@ interface GuardActivationChecklistProps {
 
 function StepRow({ done, label, detail }: { done: boolean; label: string; detail?: string }) {
   return (
-    <div className="flex items-start gap-2 text-sm">
-      {done ? (
-        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-      ) : (
-        <Circle className="w-4 h-4 text-brand-text-muted shrink-0 mt-0.5" />
-      )}
-      <div>
-        <span className={done ? 'text-brand-text' : 'text-brand-text-muted'}>{label}</span>
-        {detail && <p className="text-xs text-brand-text-muted mt-0.5">{detail}</p>}
+    <div className="flex items-start gap-3 py-0.5">
+      <span className="shrink-0 mt-0.5">
+        {done ? (
+          <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center">
+            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+          </span>
+        ) : (
+          <span className="w-5 h-5 rounded-full border-2 border-brand-border block" />
+        )}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-bold tracking-tight leading-snug ${done ? 'text-brand-text' : 'text-brand-text-muted'}`}>{label}</p>
+        {detail && <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{detail}</p>}
       </div>
     </div>
   );
@@ -37,10 +41,12 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
 
 function OptionalNote({ label, detail }: { label: string; detail: string }) {
   return (
-    <div className="flex items-start gap-2 text-sm pt-3 mt-1 border-t border-brand-border">
-      <Plus className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-      <div>
-        <span className="text-brand-text">{label}</span>
+    <div className="flex items-start gap-3 pt-3 mt-2 border-t border-brand-border">
+      <span className="w-5 h-5 rounded-full bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center shrink-0 mt-0.5">
+        <Plus className="w-3 h-3 text-brand-primary" strokeWidth={2.5} />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold tracking-tight text-brand-text">{label}</p>
         <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{detail}</p>
       </div>
     </div>
@@ -75,8 +81,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">{approved ? 'Awaiting account activation' : 'Your application'}</p>
-      <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
+      <p className="text-base font-black tracking-tight">{approved ? 'Awaiting account activation' : 'Your application'}</p>
+      <p className="text-sm text-brand-text-muted leading-relaxed mt-1.5 font-medium">
         All four items below are required to work field jobs. Upload your government ID, BSIS Guard Card, PTA/UOF
         training, and 32-hour BSIS courses in your profile — you can add everything at once. Staff reviews your
         guard card and certs to activate your account.
@@ -145,7 +151,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         </p>
       )}
       {approved && !guardMeetsLevel1(guard) && (
-        <p className="text-xs text-amber-400 font-medium pt-3 border-t border-brand-border mt-3">
+        <p className="text-xs text-brand-primary font-bold pt-3 border-t border-brand-border mt-3 tracking-tight">
           Upload your guard card and required certs with document photos in Credentials so staff can activate your
           account.
         </p>
