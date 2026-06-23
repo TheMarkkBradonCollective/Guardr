@@ -14,6 +14,23 @@ function renderInline(text: string): React.ReactNode[] {
   });
 }
 
+interface MarkdownListItem {
+  text: string;
+  children: string[];
+}
+
+function isTopLevelListItem(line: string): boolean {
+  return /^\d+\.\s/.test(line) || line.startsWith('- ');
+}
+
+function isNestedListItem(line: string): boolean {
+  return /^\s{2,}(?:\d+\.\s|- )/.test(line);
+}
+
+function stripListMarker(line: string): string {
+  return line.trim().replace(/^\d+\.\s/, '').replace(/^- /, '');
+}
+
 function MarkdownDoc({ source }: { source: string }) {
   const blocks = useMemo(() => {
     const lines = source.replace(/\r\n/g, '\n').split('\n');
@@ -126,11 +143,18 @@ function MarkdownDoc({ source }: { source: string }) {
         continue;
       }
 
-      if (/^\d+\.\s/.test(line) || line.startsWith('- ')) {
+      if (isTopLevelListItem(line)) {
         const ordered = /^\d+\.\s/.test(line);
-        const items: string[] = [];
-        while (i < lines.length && (/^\d+\.\s/.test(lines[i]) || lines[i].startsWith('- '))) {
-          items.push(lines[i].replace(/^\d+\.\s/, '').replace(/^- /, ''));
+        const items: MarkdownListItem[] = [];
+        while (i < lines.length && (isTopLevelListItem(lines[i]) || isNestedListItem(lines[i]))) {
+          if (isNestedListItem(lines[i])) {
+            const currentItem = items[items.length - 1];
+            if (currentItem) {
+              currentItem.children.push(stripListMarker(lines[i]));
+            }
+          } else {
+            items.push({ text: stripListMarker(lines[i]), children: [] });
+          }
           i += 1;
         }
         const ListTag = ordered ? 'ol' : 'ul';
@@ -141,8 +165,17 @@ function MarkdownDoc({ source }: { source: string }) {
               ordered ? 'list-decimal pl-5' : 'list-disc pl-5'
             }`}
           >
-            {items.map((item) => (
-              <li key={item}>{renderInline(item)}</li>
+            {items.map((item, itemIndex) => (
+              <li key={`${item.text}-${itemIndex}`}>
+                {renderInline(item.text)}
+                {item.children.length > 0 && (
+                  <ul className="mt-2 space-y-1 list-disc pl-5">
+                    {item.children.map((child, childIndex) => (
+                      <li key={`${child}-${childIndex}`}>{renderInline(child)}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
             ))}
           </ListTag>
         );
