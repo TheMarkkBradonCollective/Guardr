@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -71,8 +71,12 @@ interface ClientDashboardProps {
   onJobChatRequestIdChange?: (requestId: string | null) => void;
   onJobChatOpenChange?: (open: boolean) => void;
   onOpenJobChat?: (requestId: string) => void;
+  supportTickets?: SupportTicket[];
+  onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   supportTicketId?: string | null;
   onSupportTicketIdChange?: (ticketId: string | null) => void;
+  onOpenSupportCompose?: () => void;
+  onOpenSupportReport?: () => void;
 }
 
 export function ClientDashboard({
@@ -109,8 +113,12 @@ export function ClientDashboard({
   onJobChatRequestIdChange,
   onJobChatOpenChange,
   onOpenJobChat,
+  supportTickets = [],
+  onSendSupportMessage,
   supportTicketId = null,
   onSupportTicketIdChange,
+  onOpenSupportCompose,
+  onOpenSupportReport,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -216,7 +224,7 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'support' && view !== 'home') {
+  if (accountPending && view !== 'profile' && view !== 'messages' && view !== 'home') {
     return page(
       'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
@@ -292,7 +300,7 @@ export function ClientDashboard({
     );
   }
 
-  if (view === 'messages' && currentUser && onSendJobChatMessage) {
+  if (view === 'messages' && currentUser && onSendJobChatMessage && onSendSupportMessage) {
     return page(
       'messages',
       <ClientMessagesPanel
@@ -301,11 +309,17 @@ export function ClientDashboard({
         currentUser={currentUser}
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
+        supportTickets={supportTickets}
         onSendJobChatMessage={onSendJobChatMessage}
+        onSendSupportMessage={onSendSupportMessage}
         initialChatRequestId={jobChatRequestId}
         initialChatOpen={openJobChat}
         onChatRequestIdChange={onJobChatRequestIdChange}
         onChatOpenChange={onJobChatOpenChange}
+        initialSupportTicketId={supportTicketId}
+        onSupportTicketIdChange={onSupportTicketIdChange}
+        onOpenCompose={onOpenSupportCompose}
+        onOpenReport={onOpenSupportReport}
       />
     );
   }

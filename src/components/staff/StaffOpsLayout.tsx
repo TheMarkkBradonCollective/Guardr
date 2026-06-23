@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
-import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
+import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -53,9 +53,10 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   team: 'Staff',
   clients: 'Clients',
   incidents: 'Client incidents',
-  support: 'Support inbox',
-  'team-chat': 'Staff chat',
-  'job-chats': 'Job chats',
+  messages: 'Messages',
+  support: 'Messages',
+  'team-chat': 'Messages',
+  'job-chats': 'Messages',
   payments: 'Payments',
   disputes: 'Disputes',
   analytics: 'Analytics',
@@ -83,9 +84,7 @@ export function StaffOpsLayout({
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
-    activeSection === 'support' ||
-    activeSection === 'team-chat' ||
-    activeSection === 'job-chats';
+    isStaffMessagesSection(activeSection);
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -95,10 +94,7 @@ export function StaffOpsLayout({
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'team', label: 'Staff', icon: Users },
-    { id: 'team-chat', label: 'Staff chat', icon: MessagesSquare, badge: badges['team-chat'] },
-    { id: 'job-chats', label: 'Job chats', icon: MessageCircle, badge: badges['job-chats'] },
-    { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },
-    { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
+    { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -120,7 +116,7 @@ export function StaffOpsLayout({
       <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <StaffSidebarNav
           items={navItems}
-          activeSection={activeSection}
+          activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
           onNavigate={navigate}
           showFinance={showFinance}
         />
@@ -195,7 +191,9 @@ export function StaffOpsLayout({
               <Menu className="w-5 h-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-lg font-semibold truncate">{SECTION_TITLES[activeSection]}</h1>
+              <h1 className="text-lg font-semibold truncate">
+              {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
+            </h1>
               <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
             </div>
             <AccountMenu
