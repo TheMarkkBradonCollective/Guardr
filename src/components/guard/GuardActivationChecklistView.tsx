@@ -78,8 +78,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       <p className="text-sm font-semibold">{approved ? 'Awaiting account activation' : 'Your application'}</p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
         All four items below are required to work field jobs. Upload your government ID, BSIS Guard Card, PTA/UOF
-        training, and 32-hour BSIS courses in your profile — you can add everything at once. Staff reviews in order:
-        verified ID to approve your profile, then your guard card to activate your account.
+        training, and 32-hour BSIS courses in your profile — you can add everything at once. Staff reviews your
+        guard card and certs to activate your account.
       </p>
       <div className="app-checklist-steps">
         <StepRow
@@ -141,13 +141,13 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       </div>
       {!approved && checklist.canStaffApprove && (
         <p className="text-xs text-brand-primary font-medium pt-3 border-t border-brand-border mt-3">
-          ID verified — staff can approve your profile. You can keep uploading guard card and other credentials while
-          you wait.
+          Staff is reviewing your credentials. You can keep uploading your guard card and certs while you wait.
         </p>
       )}
       {approved && !guardMeetsLevel1(guard) && (
         <p className="text-xs text-amber-400 font-medium pt-3 border-t border-brand-border mt-3">
-          Upload a valid BSIS Guard Card with document photos in Credentials so staff can activate your account.
+          Upload your guard card and required certs with document photos in Credentials so staff can activate your
+          account.
         </p>
       )}
     </div>

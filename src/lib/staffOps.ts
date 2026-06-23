@@ -392,7 +392,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'pending-accounts',
       title: 'Approve guard and client profiles',
-      description: 'Verify ID to approve profile, then guard card to activate account',
+      description: 'Review guard card and certs to activate account',
       count: accountQueueCount,
       section: 'approvals',
       approvalQueue: 'accounts',
