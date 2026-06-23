@@ -427,7 +427,7 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
       />
       {showSection(refresherItems.length) && (
-      <div className="mt-8 pt-6 border-t border-brand-border">
+      <div className="mt-14 pt-8 border-t border-brand-border">
       <section className="app-form-section space-y-3 !pt-0 !border-t-0">
         <CredentialRowHeader
           rawTitle
