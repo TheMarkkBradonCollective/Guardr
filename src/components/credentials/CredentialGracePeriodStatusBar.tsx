@@ -54,7 +54,7 @@ export function CredentialGracePeriodStatusBar({ guard, kind }: CredentialGraceP
         />
       </div>
       <p className="text-[10px] text-brand-text-muted">
-        Upload required credentials before grace ends · {notice.elapsedLabel} elapsed
+        {notice.elapsedLabel} elapsed
       </p>
     </div>
   );

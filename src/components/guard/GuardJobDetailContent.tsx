@@ -70,9 +70,6 @@ export function GuardJobDetailContent({
             <div className="space-y-3 border-t border-brand-border pt-3">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Your qualification checklist</p>
-                <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                  A valid guard card is required to apply. Training items marked as recommended are not required.
-                </p>
               </div>
               {checks.map((c) => (
                 <div key={c.label} className="flex items-center gap-2.5 text-sm py-0.5">

@@ -32,9 +32,6 @@ export function ClientSelfAuditConfirm({ request, onConfirm }: ClientSelfAuditCo
           <p className="text-sm font-semibold text-brand-primary">Guard self-audit</p>
           <NoSelfAuditBadge />
         </div>
-        <p className="text-xs text-brand-text-muted">
-          The guard skipped the self-audit at clock-in. Photos will appear here once all three are on file.
-        </p>
       </div>
     );
   }
@@ -59,9 +56,6 @@ export function ClientSelfAuditConfirm({ request, onConfirm }: ClientSelfAuditCo
     <div className="border-t border-brand-border pt-4 space-y-3 w-full">
       <div>
         <p className="text-sm font-semibold text-brand-primary">Guard self-audit photos</p>
-        <p className="text-xs text-brand-text-muted mt-1">
-          Review the guard&apos;s self, uniform, and shoes photos when you are ready.
-        </p>
       </div>
 
       <SelfAuditPhotoGallery audit={audit} />

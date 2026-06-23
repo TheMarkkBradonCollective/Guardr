@@ -82,11 +82,6 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
   return (
     <div className="app-checklist-panel">
       <p className="text-base font-black tracking-tight">{approved ? 'Awaiting account activation' : 'Your application'}</p>
-      <p className="text-sm text-brand-text-muted leading-relaxed mt-1.5 font-medium">
-        All four items below are required to work field jobs. Upload your government ID, BSIS Guard Card, PTA/UOF
-        training, and 32-hour BSIS courses in your profile — you can add everything at once. Staff reviews your
-        guard card and certs to activate your account.
-      </p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || guardHasVerifiedIdForWork(guard)}

@@ -157,9 +157,6 @@ export function StaffSettingsPanel({
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <AppFormSection title="Payment methods">
         <div className="pb-6 space-y-4">
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            {platformPaymentModeDescription(platformSettings)}
-          </p>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
             Current mode: {platformPaymentModeLabel(platformSettings)}
           </p>
@@ -176,12 +173,7 @@ export function StaffSettingsPanel({
                 onChange={() => void toggleCash()}
                 disabled={!canEditPaymentModes || savingModes}
               />
-              <span>
-                <span className="block text-sm font-semibold">Cash</span>
-                <span className="block text-xs text-brand-text-muted mt-1 leading-relaxed">
-                  Client requests pay-in-cash; staff approves when payment is received.
-                </span>
-              </span>
+              <span className="text-sm font-semibold">Cash</span>
             </label>
             <label
               className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
@@ -195,12 +187,7 @@ export function StaffSettingsPanel({
                 onChange={() => void toggleStripe()}
                 disabled={!canEditPaymentModes || savingModes}
               />
-              <span>
-                <span className="block text-sm font-semibold">Card (Stripe)</span>
-                <span className="block text-xs text-brand-text-muted mt-1 leading-relaxed">
-                  Automatic online checkout — no staff approval needed for payment.
-                </span>
-              </span>
+              <span className="text-sm font-semibold">Card (Stripe)</span>
             </label>
           </div>
           {!canEditPaymentModes && (
@@ -213,10 +200,6 @@ export function StaffSettingsPanel({
 
       <AppFormSection title="Platform fees">
         <div className="pb-6 space-y-4">
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            Fees are snapshotted onto each job at creation. Existing jobs keep their original fee.
-            New jobs use the model below.
-          </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>

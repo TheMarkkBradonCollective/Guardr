@@ -227,8 +227,6 @@ export function ClientMessagesPanel({
         <MessagesQuickActions
           onContactSupport={onOpenCompose}
           onFileReport={onOpenReport}
-          supportHint="Direct line to the Guardr operations team"
-          reportHint="Safety concern, dispute, or formal complaint"
         />
       )}
 

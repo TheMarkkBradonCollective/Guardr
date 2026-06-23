@@ -607,7 +607,6 @@ export function AuthPage({
                     >
                       <Icon className={`w-5 h-5 mb-2 ${role === id ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
                       <p className={`text-sm font-semibold ${role === id ? 'text-brand-primary' : 'text-brand-text'}`}>{label}</p>
-                      <p className="text-xs text-brand-text-muted mt-0.5">{desc}</p>
                     </button>
                   ))}
                 </div>
@@ -666,9 +665,6 @@ export function AuthPage({
               {isSignUp && role === 'guard' && (
                 <div className="space-y-4 pt-4 border-t border-brand-border">
                   <p className="uber-label">Guard details</p>
-                  <p className="text-xs text-brand-text-muted">
-                    Add your guard card and other credentials from your profile after signing up — each has its own section.
-                  </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="uber-label block mb-2">Phone</label>
@@ -1071,11 +1067,6 @@ export function AuthPage({
                 </div>
               )}
 
-              {!isSignUp && (
-                <p className="text-xs text-brand-text-muted text-center leading-relaxed">
-                  Platform staff ({ROLE_LABELS.moderator}, {ROLE_LABELS.administrator}, {ROLE_LABELS.director}, {ROLE_LABELS.owner}) sign in with credentials provisioned by your Director or Owner.
-                </p>
-              )}
 
               {isSignUp && (
                 <label className="flex items-start gap-3 text-xs text-brand-text-muted leading-relaxed cursor-pointer">
@@ -1121,14 +1112,8 @@ export function AuthPage({
             </form>
           </div>
 
-          <p className="mt-8 text-center text-xs text-brand-text-muted leading-relaxed max-w-md mx-auto">
-            {SITE_NAME} is operated by {LEGAL_ENTITY_NAME}, a technology marketplace connecting clients
-            with independent licensed security professionals. We do not provide security services,
-            employ guards, or guarantee licensure, insurance, or on-site performance. Platform staff
-            may review uploaded credentials for account eligibility only.
-          </p>
           {onOpenLegal && (
-            <div className="mt-4 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <LegalFooterLinks onOpenLegal={onOpenLegal} />
             </div>
           )}

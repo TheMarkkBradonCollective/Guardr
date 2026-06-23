@@ -64,8 +64,6 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
       </div>
 
       <div className="p-5 space-y-5">
-        <p className="text-sm text-brand-text-muted">Confirm your appearance and equipment before starting your job.</p>
-
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
           {(Object.keys(uniform) as (keyof typeof uniform)[]).map((key) => (
             <label key={key} className="flex items-center gap-3 py-2 cursor-pointer w-full">

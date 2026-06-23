@@ -98,7 +98,7 @@ export function StaffAddGuardForm({ onAdd, onCreated }: StaffAddGuardFormProps) 
         open={open}
         onClose={closeForm}
         title="Add field guard"
-        subtitle={`Creates a guard profile. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD} — they will be prompted to change it on first login.`}
+        subtitle={`Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <PersonNameFields

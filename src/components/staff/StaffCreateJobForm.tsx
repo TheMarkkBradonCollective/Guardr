@@ -221,7 +221,6 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         open={open}
         onClose={closeForm}
         title="Create job for client"
-        subtitle="Post a job on behalf of a client. Rehire a prior guard to skip applicant review — otherwise leave open for guards to apply."
       >
         <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

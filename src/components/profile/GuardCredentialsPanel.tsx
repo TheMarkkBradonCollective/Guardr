@@ -370,11 +370,6 @@ export function GuardCredentialsPanel({
         <p className="text-sm font-semibold text-brand-primary">
           {editing ? 'Upload credentials' : 'Credentials'}
         </p>
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          {editing
-            ? `Government ID and BSIS Guard Card are required before profile approval. ${CERT_IMAGE_POLICY_HINT}`
-            : 'Government ID, guard card, and other licenses. Tap any item to view details and photos — staff can upload on the guard’s behalf when you have the document.'}
-        </p>
       </div>
 
       {!guard.isStaff && idStatus === 'rejected' && guard.idVerificationRejectionReason && (
@@ -437,12 +432,7 @@ export function GuardCredentialsPanel({
               {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
             </p>
           }
-          subtitle={
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Separate from the 32-hour block —{' '}
-              {refresherEntry?.description ?? 'upload when applicable for guard card renewals.'}
-            </p>
-          }
+          subtitle={undefined}
           action={
             canUpload ? (
               <CredentialRowAction
@@ -483,11 +473,7 @@ export function GuardCredentialsPanel({
               Other BSIS Training
             </p>
           }
-          subtitle={
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
-            </p>
-          }
+          subtitle={undefined}
           action={
             canUpload && otherBsisCatalogOptions.length > 0 ? (
               <CredentialRowAction

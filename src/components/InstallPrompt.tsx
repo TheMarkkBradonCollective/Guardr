@@ -110,9 +110,6 @@ export function InstallPrompt() {
                 <h4 className="text-base font-black tracking-tight text-brand-text">
                   Add Guardr to your home screen
                 </h4>
-                <p className="text-xs text-brand-text-muted leading-relaxed font-medium">
-                  Faster updates, live shift tracking, and instant notifications — always one tap away.
-                </p>
               </div>
             </div>
 

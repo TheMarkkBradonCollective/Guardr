@@ -54,11 +54,6 @@ export function StaffIncidentsPanel({
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4 max-w-2xl">
-        Incident reports are filed by guards during active shifts and at checkout. Each report includes who,
-        what, when, where, why, and how the guard responded — shared with the client for review.
-      </p>
-
       {incidents.length === 0 ? (
         <p className="staff-empty-state border-t border-brand-border">No incident reports on file.</p>
       ) : (

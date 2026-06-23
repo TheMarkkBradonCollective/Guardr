@@ -99,7 +99,7 @@ export function StaffAddClientForm({ onAdd, onCreated }: StaffAddClientFormProps
         open={open}
         onClose={closeForm}
         title="Add client account"
-        subtitle={`Creates an approved client account. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD} — they will be prompted to change it on first login.`}
+        subtitle={`Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <PersonNameFields

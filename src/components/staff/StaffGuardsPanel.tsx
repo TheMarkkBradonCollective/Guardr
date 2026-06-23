@@ -187,9 +187,6 @@ export function StaffGuardsPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
-            </p>
             {canManage && onAddGuard && (
               <StaffAddGuardForm
                 onAdd={onAddGuard}

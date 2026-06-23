@@ -273,7 +273,6 @@ export function GuardResumeEditor({
         open={showAddExp}
         onClose={() => setShowAddExp(false)}
         title="Add work experience"
-        subtitle="Build your resume with past security roles and relevant work history."
       >
         <form onSubmit={submitExperience} className="space-y-3">
           <input className="uber-input w-full" placeholder="Job title" value={expTitle} onChange={(e) => setExpTitle(e.target.value)} required />
@@ -288,7 +287,6 @@ export function GuardResumeEditor({
         open={showAddEdu}
         onClose={() => setShowAddEdu(false)}
         title="Add education"
-        subtitle="Schools, academies, and training programs."
       >
         <form onSubmit={submitEducation} className="space-y-3">
           <input className="uber-input w-full" placeholder="School / academy" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} required />

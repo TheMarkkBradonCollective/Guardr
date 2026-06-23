@@ -116,9 +116,6 @@ export function GuardIdItemCard({
           }
           subtitle={
             <>
-              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
-              </p>
               <div className="mt-2">
                 <CredentialSectionStatusDisplay status={sectionStatus} />
               </div>

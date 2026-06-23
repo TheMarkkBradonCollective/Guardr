@@ -185,36 +185,18 @@ export function StaffPaymentsPanel({
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <div className="px-4 sm:px-5 pb-5 border-b border-brand-border">
-        <p className="text-sm text-brand-text-muted leading-relaxed">
-          Every job follows the same path: the client pays, the job runs, then the guard collects pay from their Pay screen.
-          Jobs below are grouped by what needs to happen next.
-        </p>
-        <ol className="mt-4 space-y-1.5 text-xs text-brand-text-muted list-decimal list-inside">
-          {PIPELINE_FLOW_STEPS.map((step) => (
-            <li key={step.step}>
-              <span className="font-semibold text-brand-text">{step.label}</span>
-              {' — '}
-              {step.description}
-            </li>
-          ))}
-        </ol>
         {actionCount > 0 && (
-          <p className="text-sm font-semibold text-brand-primary mt-4">
+          <p className="text-sm font-semibold text-brand-primary mb-4">
             {actionCount} job{actionCount === 1 ? '' : 's'} need your attention
           </p>
         )}
-        <div className="mt-5">
-          <StaffPaymentSummary summary={summary} financials={financials} />
-        </div>
+        <StaffPaymentSummary summary={summary} financials={financials} />
       </div>
 
       <div className="px-4 sm:px-5 space-y-8 pt-6">
         {openInvoices.length > 0 && (
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
-            <p className="text-xs text-brand-text-muted leading-relaxed">
-              Guards submit these from Pay when they want cash pickup or a bank transfer. Fulfill each line item, then mark the invoice completed.
-            </p>
             <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
               {openInvoices.map((invoice) => (
                 <StaffPayoutInvoiceRow

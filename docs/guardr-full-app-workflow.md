@@ -828,6 +828,266 @@ Client opens Home or Jobs
 
 ---
 
+## Sections & features reference
+
+This section describes each key part of the app — what it contains, what it is for, and how to use it.
+
+---
+
+### Guard credentials
+
+**Where:** Account menu → **Profile** → **Credentials**
+
+The credentials panel contains all license and certification uploads for a guard account. Staff can also open it from **Guards → guard detail** and upload documents on the guard's behalf.
+
+| Section | What it is |
+|---------|------------|
+| **Government ID** | State-issued photo ID — required before profile approval. Upload a photo of the front and back of the ID, plus state, number, and expiration date. |
+| **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo of the card. Staff verify the card before activation. |
+| **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | 8-hour required training — required to accept field jobs. Upload your PTA and UOF completion certificates. Some jurisdictions package them together. |
+| **32-Hour BSIS Course Block** | Required training block — required to accept field jobs. Upload all 9 individual course certificates, or a single 32-hour completion certificate if you have one. |
+| **8-Hour BSIS Refresher** | Separate from the 32-hour block — upload when applicable for guard card renewals. Not required for initial activation. |
+| **Other BSIS Training** | Supplemental BSIS courses — not part of the active pathway or 32-hour block. Upload any additional BSIS training not covered above. |
+| **Permits & armed training** | Firearms permits, baton permit, and related training. Required for armed posts that request them. |
+| **Medical & safety** | CPR/AED, First Aid, and similar certifications. |
+| **FEMA / emergency mgmt** | FEMA ICS and related emergency management credentials. |
+
+**Credential upload rules:**
+
+- Upload a photo or scan of the actual credential document. Staff use the document photo to verify the credential.
+- Each credential has its own section — tap any item to open its detail view.
+- Staff can tap any item, then **Edit**, to upload or update details on behalf of the guard when you have the document in hand.
+- Credentials show a status: **Pending review**, **Verified**, **Rejected**, or **Expired**.
+- If staff request a resubmit, the item shows a resubmit-requested notice. Open the item and use **Edit** to re-upload.
+
+**Guard activation requirements:**
+
+All four items below must be on file before a guard account can be activated:
+
+1. **Government ID** — fully on file with photos and details, verified by staff.
+2. **BSIS Guard Card** — fully on file with a document photo, verified by staff.
+3. **PTA/UOF training** — completion certificate(s) on file.
+4. **32-hour BSIS course block** — all 9 individual certificates, or one 32-hour completion certificate.
+
+Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time and are not required for activation.
+
+**Staff: grace period**
+
+When activating a guard who has not yet uploaded PTA/UOF or the 32-hour block, staff can set a grace period. The guard can continue working while they gather the remaining documents. If the grace period expires before the credentials are uploaded, the account may return to inactive.
+
+---
+
+### Guard status & qualification panel
+
+**Where:** Account menu → **Profile** → guard status card
+
+This panel shows the guard's current activation level and which of the four required credentials are on file.
+
+| Status | Meaning |
+|--------|---------|
+| **Inactive** | Account is not yet activated — missing one or more required credentials or staff approval. |
+| **Pending** | Credentials submitted, profile approved, awaiting activation. |
+| **Active** | All four requirements are on file, staff-verified, and the account is activated for field jobs. |
+
+The checklist shows each requirement as met, on file, or missing, plus whether each item has been verified by staff.
+
+---
+
+### Guard pay
+
+**Where:** Bottom navigation → **Pay**
+
+When you finish a job, your earnings appear here. Request a payout when jobs are ready to collect.
+
+| Section | What it shows |
+|---------|---------------|
+| **Ready to collect** | Total earnings from finished jobs not yet paid out. Use **Send to my bank** or **Request cash pickup** to request a payout. |
+| **Already paid** | Total received to date, broken down by bank transfer and cash. |
+| **Earnings by job** | A line-by-line breakdown of each job, its pay amount, and payout status. |
+
+**Connecting a bank account:**
+
+Open **Pay** and use **Connect bank account** to link a Stripe account for bank transfers. You can still request cash pickup without a connected bank account.
+
+**Requesting a payout:**
+
+- **Send to my bank** — submits an invoice to staff Payments for a bank transfer via Stripe.
+- **Request cash pickup** — submits an invoice to staff Payments for cash pickup.
+
+Staff fulfill open payout invoices from **Payments → Guard payout invoices**.
+
+---
+
+### Guard self-audit
+
+**What it is:** A mandatory photo check performed by the guard at the start of each shift — selfie, uniform, and shoes. It confirms the guard arrived prepared and in the correct appearance.
+
+**For guards:** When you start a shift, the self-audit modal opens automatically. Take and submit all three photos to start the shift. If you need to skip, use **Skip self audit · clock in** — the job is then flagged for staff follow-up.
+
+**For clients:** Self-audit photos appear in the job detail under **Guard self-audit photos**. Review the photos and tap **Confirm self-audit photos** when they are acceptable.
+
+**For staff:** If a guard skipped the audit, the job shows a **No Self Audit** flag. You can upload self-audit photos on behalf of the guard from **Jobs**.
+
+---
+
+### Staff spot check
+
+**What it is:** A photo uploaded by staff to document physical presence — confirming the guard was on site. It is separate from the guard's self-audit.
+
+**For staff:** Open the job from **Jobs**, then use **Spot check photo** to upload a presence photo.
+
+**For clients:** Spot-check photos appear in the job detail under **Staff spot check**. Review and confirm each spot check.
+
+---
+
+### Incident reports
+
+**What they are:** Filed by guards during active shifts or at clock-out when something notable happened. Each report covers who was involved, what happened, when and where, why, and how the guard responded.
+
+**For guards:** During an active shift, use **Report incident** to file a report. Complete all fields and submit.
+
+**For clients:** Incident reports appear under **Home → Reports** after they are filed. Open a report to see full details.
+
+**For staff:** All incident reports are visible in **Incidents**. Each report includes the full guard-submitted detail and is shared with the client for review.
+
+---
+
+### Activity reports
+
+**What they are:** Routine notes submitted by guards during a shift to document normal patrol activity, observations, or actions taken.
+
+**For guards:** Use **Activity report** from the active shift controls to add a note. The note is appended to the daily activity log for that job.
+
+**For clients and staff:** Activity log entries appear in the job's report history.
+
+---
+
+### Staff panels reference
+
+#### Guards panel
+
+**Where:** Staff sidebar → **Guards**
+
+The Guards panel lists all field guard accounts. Staff can:
+
+- Search and filter the guard roster.
+- Open a guard profile to view credentials, activation status, jobs, and contact info.
+- Add a new guard account (**Add guard** button).
+- Edit credentials and verify documents on behalf of the guard.
+- Approve profiles and activate accounts.
+- Suspend or restore access.
+
+#### Clients panel
+
+**Where:** Staff sidebar → **Clients**
+
+The Clients panel lists all client accounts. Staff can:
+
+- Search and filter the client roster.
+- Open a client profile to view account status, jobs, and contact info.
+- Add a new client account (**Add client** button).
+- Approve, suspend, or restore client access.
+
+#### Staff / Team panel
+
+**Where:** Staff sidebar → **Staff**
+
+The Staff panel lists all platform staff accounts. Staff can:
+
+- View the team roster.
+- Add new staff accounts (**Add staff** button) — Directors and Owners only.
+- Review role and permissions for each team member.
+
+Staff accounts manage the platform only and cannot accept field guard jobs.
+
+#### Approvals panel
+
+**Where:** Staff sidebar → **Approvals**
+
+The Approvals hub holds all pending review queues. Open a queue to view items and take action.
+
+| Queue | What it holds |
+|-------|---------------|
+| **Job offers** | Submitted job listings waiting for staff approval before going live. |
+| **Guard applications** | Guard applications on open marketplace jobs — review and send the best fit to the client. |
+| **Guard credentials** | Credential uploads from guards — verify license photos and approve or reject. |
+| **Profile approval** | New guard and client accounts waiting for initial approval and, for guards, activation. |
+
+#### Payments panel
+
+**Where:** Staff sidebar → **Payments** (Directors, Owners, and Admins as configured)
+
+Every job follows the same payment path: the client pays, the job runs, then the guard collects pay from their Pay screen. Jobs in Payments are grouped by what needs to happen next.
+
+| Stage | Description |
+|-------|-------------|
+| **Awaiting client payment** | Client has not paid yet — job is ready for payment but funds have not cleared. |
+| **Cash payment pending** | Client requested cash payment — waiting for cash to be received and staff to approve. |
+| **Awaiting guard payout** | Job is complete and payment cleared — guard can request payout from Pay. |
+| **Cash deposit pending** | Cash job completed — staff are depositing or recording the cash transaction. |
+| **Guard payout invoices** | Guards submitted payout requests from Pay — fulfill each line item, then mark the invoice completed. |
+
+**Settings → Payment methods:**
+
+- **Cash** — client requests pay-in-cash; staff approve when payment is received.
+- **Card (Stripe)** — automatic online checkout with no staff payment approval needed.
+
+**Settings → Platform fees:**
+
+Platform fees are set per job at creation time. Existing jobs keep their original fee — only new jobs use the updated model.
+
+#### Incidents panel
+
+**Where:** Staff sidebar → **Incidents**
+
+All incident reports filed by guards across active and completed jobs. Each report includes who, what, when, where, why, and how the guard responded — shared with the client.
+
+#### Disputes panel
+
+**Where:** Staff sidebar → **Disputes**
+
+Overtime billing disputes and guard vs. client conflicts appear here when they need staff review. Inspect the evidence and resolve contested charges or conflicts.
+
+#### Reports panel
+
+**Where:** Staff sidebar → **Reports** (some configurations label this elsewhere)
+
+Job audits, activity logs, and compliance records. Shows all jobs with self-audit photos, checkout audits, spot checks, and any flagged audit issues.
+
+---
+
+### Messages & support
+
+#### Job chat
+
+Each accepted job has a dedicated chat thread between the guard, client, and staff. Job chat opens once a guard is assigned. Staff may monitor or reply to job chats.
+
+#### Guard community chat
+
+Guards on the platform have access to a shared community channel — visible only to guards and staff, not to clients.
+
+#### Contact support
+
+Available from **Messages** for all users. Opens a new support thread with the Guardr operations team. The team responds in the same thread.
+
+#### File a report
+
+Available from **Messages** for all users. Use for safety concerns, formal complaints, or structured reports that need staff review and follow-up.
+
+---
+
+### Install the app
+
+Guardr works as an installable web app on both iOS and Android.
+
+**iOS:** Open Guardr in Safari, tap the **Share** button, then tap **Add to Home Screen**.
+
+**Android / Chrome:** Tap the browser menu or the install prompt that appears, then follow the install steps.
+
+Installing the app gives faster access, live shift tracking, and push notifications when Guardr is closed.
+
+---
+
 ## Need help?
 
 - **Clients:** Open **Messages**, then choose **Contact support** or **File a report**. Use job chat for job-specific questions.

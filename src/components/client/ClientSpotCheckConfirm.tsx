@@ -33,9 +33,6 @@ export function ClientSpotCheckConfirm({ request, onConfirm }: ClientSpotCheckCo
           <p className="text-sm font-semibold text-brand-primary">Staff spot check</p>
           <NoSpotCheckBadge />
         </div>
-        <p className="text-xs text-brand-text-muted">
-          Guardr staff has not uploaded a presence photo for this job yet. You will be able to review and confirm once a spot check is on file.
-        </p>
       </div>
     );
   }
