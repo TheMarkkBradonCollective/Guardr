@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
-import { useDevice } from '../../lib/platform';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
@@ -119,9 +118,6 @@ export function StaffGuardsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
-
   const roster = guards.filter((g) => !g.isStaff);
 
   const filtered = roster
@@ -137,122 +133,75 @@ export function StaffGuardsPanel({
       return a.name.localeCompare(b.name);
     });
 
-  const selected = filtered.find((g) => g.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
-  const showDetailOnly = Boolean(selected && !splitView);
-
-  const detailProps = selected
-    ? {
-        guard: selected,
-        requests,
-        canManage,
-        canSuspend,
-        onUpdateUserStatus,
-        onResetAuditFailures,
-        onApproveCert,
-        onRejectCert,
-        onUpdateBackgroundChecked,
-        onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(selected.id, payload) : undefined,
-        onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(selected.id, cert) : undefined,
-        onDeleteCertification: onDeleteCertification ? (certId: string) => onDeleteCertification(selected.id, certId) : undefined,
-        onAttachCertificationImage: onAttachCertificationImage
-          ? (certId: string, imageUrl: string) => onAttachCertificationImage(selected.id, certId, imageUrl)
-          : undefined,
-        onUpdateCertification: onUpdateCertification
-          ? (certId, payload) => onUpdateCertification(selected.id, certId, payload)
-          : undefined,
-        onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(selected.id, exp) : undefined,
-        onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(selected.id, edu) : undefined,
-        onApproveGuardAccount,
-        onActivateGuardAccount,
-        onDeleteGuard,
-        onSubmitIdentityVerification: onSubmitIdentityVerification
-          ? (payload) => onSubmitIdentityVerification(selected.id, payload)
-          : undefined,
-        onApproveIdentityVerification: onApproveIdentityVerification
-          ? () => onApproveIdentityVerification(selected.id)
-          : undefined,
-        onRejectIdentityVerification: onRejectIdentityVerification
-          ? (reason) => onRejectIdentityVerification(selected.id, reason)
-          : undefined,
-        onRequestIdentityResubmit: onRequestIdentityResubmit
-          ? (slots, staffNote) => onRequestIdentityResubmit(selected.id, slots, staffNote)
-          : undefined,
-        onRequestCertImageResubmit: onRequestCertImageResubmit
-          ? (certId, staffNote) => onRequestCertImageResubmit(selected.id, certId, staffNote)
-          : undefined,
-        onUpdateGuardIdImages: onUpdateGuardIdImages
-          ? (payload) => onUpdateGuardIdImages(selected.id, payload)
-          : undefined,
-        onOpenJob,
-      }
-    : null;
-
-  function renderGuardCard(guard: SecurityGuard, isActive: boolean) {
-    const activeShift = requests.find(
-      (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
-    );
-    const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
-    const secondaryMeta =
-      pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
-
-    return (
-      <WfListCard
-        key={guard.id}
-        avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-        title={guard.name}
-        subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
-        meta={
-          <div className="flex flex-col items-start gap-1.5 w-full">
-            <GuardRosterStatusBadges guard={guard} />
-            {secondaryMeta && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {pendingCerts > 0 && (
-                  <WfBadge tone="warning">
-                    {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
-                  </WfBadge>
-                )}
-                <GuardMissingCredentialsBadge guard={guard} />
-                {activeShift && (
-                  <WfBadge tone="primary" className="max-w-full truncate">
-                    On job: {activeShift.title}
-                  </WfBadge>
-                )}
-              </div>
-            )}
-          </div>
-        }
-        onClick={() => setSelectedId(guard.id)}
-        className={isActive ? 'app-item-card-selected' : ''}
-      />
-    );
+  function buildDetailProps(guard: SecurityGuard) {
+    return {
+      guard,
+      requests,
+      canManage,
+      canSuspend,
+      onUpdateUserStatus,
+      onResetAuditFailures,
+      onApproveCert,
+      onRejectCert,
+      onUpdateBackgroundChecked,
+      onUpdateProfile: onUpdateProfile ? (payload: ProfileSavePayload) => onUpdateProfile(guard.id, payload) : undefined,
+      onAddCertification: onAddCertification ? (cert: Partial<Certification>) => onAddCertification(guard.id, cert) : undefined,
+      onDeleteCertification: onDeleteCertification ? (certId: string) => onDeleteCertification(guard.id, certId) : undefined,
+      onAttachCertificationImage: onAttachCertificationImage
+        ? (certId: string, imageUrl: string) => onAttachCertificationImage(guard.id, certId, imageUrl)
+        : undefined,
+      onUpdateCertification: onUpdateCertification
+        ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
+        : undefined,
+      onAddExperience: onAddExperience ? (exp: Omit<Experience, 'id'>) => onAddExperience(guard.id, exp) : undefined,
+      onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(guard.id, edu) : undefined,
+      onApproveGuardAccount,
+      onActivateGuardAccount,
+      onDeleteGuard,
+      onSubmitIdentityVerification: onSubmitIdentityVerification
+        ? (payload) => onSubmitIdentityVerification(guard.id, payload)
+        : undefined,
+      onApproveIdentityVerification: onApproveIdentityVerification
+        ? () => onApproveIdentityVerification(guard.id)
+        : undefined,
+      onRejectIdentityVerification: onRejectIdentityVerification
+        ? (reason) => onRejectIdentityVerification(guard.id, reason)
+        : undefined,
+      onRequestIdentityResubmit: onRequestIdentityResubmit
+        ? (slots, staffNote) => onRequestIdentityResubmit(guard.id, slots, staffNote)
+        : undefined,
+      onRequestCertImageResubmit: onRequestCertImageResubmit
+        ? (certId, staffNote) => onRequestCertImageResubmit(guard.id, certId, staffNote)
+        : undefined,
+      onUpdateGuardIdImages: onUpdateGuardIdImages
+        ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+        : undefined,
+      onOpenJob,
+    };
   }
 
   return (
     <div className="animate-fade-in space-y-4">
-      {!showDetailOnly && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
-            </p>
-            {canManage && onAddGuard && (
-              <StaffAddGuardForm
-                onAdd={onAddGuard}
-                onCreated={(guardId) => {
-                  setSearch('');
-                  setSelectedId(guardId);
-                }}
-              />
-            )}
-          </div>
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search guards..."
-            className="max-w-md"
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <p className="text-sm text-brand-text-muted flex-1">
+          Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
+        </p>
+        {canManage && onAddGuard && (
+          <StaffAddGuardForm
+            onAdd={onAddGuard}
+            onCreated={(guardId) => {
+              setSearch('');
+              setSelectedId(guardId);
+            }}
           />
-        </>
-      )}
+        )}
+      </div>
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search guards..."
+        className="max-w-md"
+      />
 
       {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
@@ -260,32 +209,59 @@ export function StaffGuardsPanel({
             ? 'No field guards yet. Use Add guard above to create the first profile.'
             : 'No field guards match your search.'}
         </p>
-      ) : showDetailOnly && detailProps ? (
-        <StaffGuardDetailPanel
-          {...detailProps}
-          editing={staffEdit}
-          onEditingChange={onStaffEditChange}
-          onBack={() => setSelectedId(null)}
-        />
-      ) : splitView ? (
-        <div className="tablet-split-panel">
-          <div className="max-h-[75vh] overflow-y-auto pr-1">
-            <AppItemCardStack>
-              {filtered.map((guard) => renderGuardCard(guard, selected?.id === guard.id))}
-            </AppItemCardStack>
-          </div>
-          {detailProps && (
+      ) : (
+        <ListDetailLayout
+          items={filtered}
+          selectedId={selectedId}
+          onSelectId={setSelectedId}
+          getItemId={(guard) => guard.id}
+          listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
+          renderItem={(guard, isActive, onSelect) => {
+            const activeShift = requests.find(
+              (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
+            );
+            const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
+            const secondaryMeta =
+              pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
+
+            return (
+              <WfListCard
+                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                title={guard.name}
+                subtitle={`${guard.badgeNumber} · ★ ${guard.rating}`}
+                meta={
+                  <div className="flex flex-col items-start gap-1.5 w-full">
+                    <GuardRosterStatusBadges guard={guard} />
+                    {secondaryMeta && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {pendingCerts > 0 && (
+                          <WfBadge tone="warning">
+                            {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
+                          </WfBadge>
+                        )}
+                        <GuardMissingCredentialsBadge guard={guard} />
+                        {activeShift && (
+                          <WfBadge tone="primary" className="max-w-full truncate">
+                            On job: {activeShift.title}
+                          </WfBadge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                }
+                onClick={onSelect}
+                className={isActive ? 'app-item-card-selected' : ''}
+              />
+            );
+          }}
+          renderDetail={(guard) => (
             <StaffGuardDetailPanel
-              {...detailProps}
+              {...buildDetailProps(guard)}
               editing={staffEdit}
               onEditingChange={onStaffEditChange}
             />
           )}
-        </div>
-      ) : (
-        <AppItemCardStack>
-          {filtered.map((guard) => renderGuardCard(guard, false))}
-        </AppItemCardStack>
+        />
       )}
     </div>
   );

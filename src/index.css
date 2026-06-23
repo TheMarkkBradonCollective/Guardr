@@ -2047,6 +2047,14 @@ body[data-form-factor="tablet"] .tablet-split-panel {
   min-height: 60vh;
 }
 
+body[data-form-factor="desktop"] .tablet-split-panel {
+  display: grid;
+  grid-template-columns: minmax(300px, 34%) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  min-height: 60vh;
+}
+
 body[data-form-factor="tablet"] .tablet-card-lg,
 body[data-form-factor="desktop"] .tablet-card-lg {
   padding: 1.25rem;
