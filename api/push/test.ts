@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { dispatchPushNotification } from './_delivery';
+import { dispatchPushNotification } from './pushDelivery';
 import {
   getSupabaseAdmin,
   isPushConfigured,
   jsonError,
   verifySession,
-} from './_shared';
+} from './pushShared';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

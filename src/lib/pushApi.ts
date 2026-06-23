@@ -15,6 +15,15 @@ export async function parseApiResponse<T>(res: Response): Promise<T> {
         'Push server is temporarily unavailable. Please try again in a moment — if this persists, contact support.'
       );
     }
+    if (!res.ok) {
+      try {
+        const errBody = JSON.parse(text) as { error?: string };
+        if (errBody.error) throw new Error(errBody.error);
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message !== compact) throw parseErr;
+      }
+      throw new Error(`Server error (${res.status})`);
+    }
     throw new Error(compact.length > 160 ? `${compact.slice(0, 160)}…` : compact);
   }
 }

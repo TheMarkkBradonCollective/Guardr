@@ -1,6 +1,72 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { verifyAccountSession } from '../../lib/accountSessionAuth';
+
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+
+function resolvePlatformRole(input: {
+  isStaff?: boolean;
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  legacyRole?: string;
+}): PlatformRole {
+  if (input.legacyRole === 'client') return 'client';
+  if (input.isStaff && input.staffRole) {
+    switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
+      case 'Director':
+        return 'director';
+      case 'Administrator':
+        return 'administrator';
+      case 'Moderator':
+        return 'moderator';
+    }
+  }
+  if (input.legacyRole === 'auditor') return 'moderator';
+  if (input.legacyRole === 'staff') return 'administrator';
+  return 'guard';
+}
+
+async function verifyGuardSession(
+  db: SupabaseClient,
+  credentials: { userId: string; email: string; role: string } | null | undefined
+): Promise<{ userId: string; email: string; platformRole: PlatformRole } | null> {
+  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
+    return null;
+  }
+
+  const email = credentials.email.trim().toLowerCase();
+  const { userId } = credentials;
+
+  let { data, error } = await db
+    .from('guards')
+    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (!data && !error) {
+    const byEmail = await db
+      .from('guards')
+      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .eq('email', email)
+      .maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
+  }
+
+  if (!data && error?.code === '42P01') return null;
+  if (!data || data.email?.toLowerCase() !== email) return null;
+  if (data.migrated_to_staff_at) return null;
+
+  const platformRole = resolvePlatformRole({
+    isStaff: data.is_staff,
+    staffRole: data.staff_role ?? undefined,
+    legacyRole: data.is_staff ? 'staff' : 'guard',
+  });
+
+  if (platformRole !== 'guard') return null;
+
+  return { userId: data.id, email, platformRole };
+}
 
 interface GuardMessageRow {
   id: string;
@@ -54,12 +120,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'GET') {
       const query = req.query as { userId?: string; email?: string; role?: string };
-      const session = await verifyAccountSession(db, {
+      const session = await verifyGuardSession(db, {
         userId: String(query.userId ?? ''),
         email: String(query.email ?? ''),
         role: String(query.role ?? ''),
       });
-      if (!session || session.platformRole !== 'guard') {
+      if (!session) {
         return res.status(401).json({ error: 'Unauthorized — guard sign-in required' });
       }
 
@@ -98,12 +164,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       };
 
-      const session = await verifyAccountSession(db, {
+      const session = await verifyGuardSession(db, {
         userId: body.userId ?? '',
         email: body.email ?? '',
         role: body.role ?? '',
       });
-      if (!session || session.platformRole !== 'guard') {
+      if (!session) {
         return res.status(401).json({ error: 'Unauthorized — guard sign-in required' });
       }
 
