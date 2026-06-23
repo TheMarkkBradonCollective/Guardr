@@ -1,5 +1,4 @@
 import React from 'react';
-import { BookOpen } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
 import { getWorkflowMarkdown, WORKFLOW_SOURCE_PATH, WORKFLOW_TITLE, type WorkflowAudience } from '../../lib/appWorkflow';
 import { AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
@@ -22,7 +21,6 @@ export function AppWorkflowPage({ audience = 'all' }: AppWorkflowPageProps) {
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
       <AppPageLead
-        icon={BookOpen}
         title={audience === 'all' ? WORKFLOW_TITLE : 'Workflow guide'}
         subtitle={subtitle}
       />

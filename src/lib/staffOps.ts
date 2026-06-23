@@ -4,6 +4,7 @@ import {
   isUserSubmittedPendingCert,
 } from './approvalSubmissions';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
+import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
