@@ -141,17 +141,17 @@ function LandingPathCards({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="text-left">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-text-muted mb-2.5">
+            <p className="landing-path-card-eyebrow landing-path-card-eyebrow--accent">
               For businesses &amp; sites
             </p>
-            <p className="text-xl font-black tracking-tight text-brand-text">I need security</p>
-            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+            <p className="landing-path-card-title">I need security</p>
+            <p className="landing-path-card-body">
               Post coverage, review guards, monitor live shifts.
             </p>
           </div>
-          <Building2 className="w-7 h-7 text-brand-text shrink-0 opacity-75 mt-0.5 group-hover:scale-105 transition-transform" />
+          <Building2 className="landing-path-card-icon landing-path-card-icon--accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
         </div>
-        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-text">
+        <span className="landing-path-card-action landing-path-card-action--accent">
           Get started <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </button>
@@ -163,17 +163,15 @@ function LandingPathCards({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="text-left">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-primary mb-2.5">
-              Independent contractor
-            </p>
-            <p className="text-xl font-black tracking-tight text-brand-text">I&apos;m a guard</p>
-            <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">
+            <p className="landing-path-card-eyebrow">Independent contractor</p>
+            <p className="landing-path-card-title">I&apos;m a guard</p>
+            <p className="landing-path-card-body">
               Browse jobs on the map, set your rate, work on your terms.
             </p>
           </div>
-          <Shield className="w-7 h-7 text-brand-primary shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
+          <Shield className="landing-path-card-icon shrink-0 mt-0.5 group-hover:scale-105 transition-transform" />
         </div>
-        <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-primary">
+        <span className="landing-path-card-action">
           Create account <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </button>
