@@ -201,7 +201,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">What do you need?</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Choose the type of security coverage.</p>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {CLIENT_SERVICE_OPTIONS.map((opt) => (
@@ -247,7 +246,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Where?</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Enter the job site address.</p>
             </div>
             <div>
               <label className="uber-label block mb-1.5">Address</label>
@@ -312,7 +310,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">When?</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Set start and end date/time for the shift.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -394,7 +391,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Guards per shift at this site.</p>
             </div>
             <div className="segmented-control segmented-control-full">
               {GUARD_COUNT_PRESETS.map((n) => (
@@ -428,7 +424,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Pay rate</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Client hourly rate per guard.</p>
             </div>
             <div className="segmented-control segmented-control-full">
               {PAY_RATE_PRESETS.map((rate) => (
@@ -475,9 +470,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Listing details</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">
-                Guards review this like a job posting — dress code, equipment, and post orders.
-              </p>
             </div>
             <JobPostOrdersFields value={listing} onChange={setListing} serviceId={serviceId} />
           </div>
@@ -487,7 +479,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Site briefing</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Operational details guards need for this assignment.</p>
             </div>
             <JobOperationalDetailsFields value={operational} onChange={setOperational} />
           </div>
@@ -497,7 +488,6 @@ export function RequestSecurityFlow({
           <div className="space-y-5">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Review & post</h2>
-              <p className="text-brand-text-muted text-sm mt-1.5 font-medium">Your listing is ready. Slide to publish it to the marketplace.</p>
             </div>
             <JobListingPreview
               job={{

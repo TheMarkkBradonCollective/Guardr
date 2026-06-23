@@ -41,14 +41,6 @@ export function GuardIdentityVerificationPanel({
 
   const body = (
     <>
-      {!staffMode && !embedded && (
-        <p className="text-xs text-brand-text-muted leading-relaxed">{ID_VERIFICATION_POLICY_HINT}</p>
-      )}
-      {staffMode && (
-        <p className="text-sm text-brand-text-muted leading-relaxed">
-          Tap the ID card to view details or edit state, number, expiration, and photos on behalf of the guard.
-        </p>
-      )}
 
       {guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
@@ -79,9 +71,6 @@ export function GuardIdentityVerificationPanel({
           <p className="uber-label flex items-center gap-2">
             <IdCard className="w-4 h-4 text-brand-primary" />
             Government ID
-          </p>
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Required before profile approval. Tap the card to view details — use Edit inside to update your ID.
           </p>
         </div>
       )}

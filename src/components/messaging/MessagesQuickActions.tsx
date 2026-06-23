@@ -15,9 +15,9 @@ export function MessagesQuickActions({
   onContactSupport,
   onFileReport,
   supportLabel = 'Contact support',
-  supportHint = 'Direct line to Guardr operations',
+  supportHint = '',
   reportLabel = 'File a report',
-  reportHint = 'Safety concern or formal complaint',
+  reportHint = '',
 }: MessagesQuickActionsProps) {
   return (
     <div className="app-messages-quick-actions">
@@ -26,7 +26,7 @@ export function MessagesQuickActions({
           <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
           <div className="flex-1 min-w-0 text-left">
             <p className="font-semibold text-sm">{supportLabel}</p>
-            <p className="text-sm text-brand-text-muted mt-0.5 leading-snug">{supportHint}</p>
+            {supportHint && <p className="text-sm text-brand-text-muted mt-0.5 leading-snug">{supportHint}</p>}
           </div>
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0 lg:hidden" />
         </AppItemCard>
@@ -34,7 +34,7 @@ export function MessagesQuickActions({
           <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
           <div className="flex-1 min-w-0 text-left">
             <p className="font-semibold text-sm">{reportLabel}</p>
-            <p className="text-sm text-brand-text-muted mt-0.5 leading-snug">{reportHint}</p>
+            {reportHint && <p className="text-sm text-brand-text-muted mt-0.5 leading-snug">{reportHint}</p>}
           </div>
           <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0 lg:hidden" />
         </AppItemCard>

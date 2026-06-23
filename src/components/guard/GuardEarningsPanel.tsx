@@ -60,21 +60,12 @@ export function GuardEarningsPanel({
     <AppScreen>
       <AppScreenTitle>Your pay</AppScreenTitle>
 
-      <AppFormSection>
-        <p className="text-sm text-brand-text-muted leading-relaxed -mt-2">
-          When you finish a job, your pay shows up here. Send an invoice to Payments for each payout — bank transfer or cash pickup.
-        </p>
-      </AppFormSection>
-
       {!stripeReady && onConnectStripe && (
         <div className="app-inline-banner space-y-3 mx-5 mb-0">
           <div className="flex items-center gap-2">
             <Link2 className="w-4 h-4" />
             <p className="text-sm font-semibold">Connect your bank to get paid online</p>
           </div>
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            Link a Stripe account so we can send job pay directly to your bank. You can still request cash without it.
-          </p>
           <button
             type="button"
             onClick={onConnectStripe}
@@ -99,9 +90,6 @@ export function GuardEarningsPanel({
           Ready to collect
         </p>
         <p className="app-pay-amount mb-1">${breakdown.onlineAvailable.toFixed(2)}</p>
-        <p className="text-sm text-brand-text-muted mb-5">
-          From finished jobs you haven&apos;t been paid for yet.
-        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
@@ -118,9 +106,6 @@ export function GuardEarningsPanel({
               )}
               Send to my bank
             </span>
-            <span className="text-xs font-normal opacity-80">
-              Sends an invoice to Payments for a bank transfer
-            </span>
           </button>
           <button
             type="button"
@@ -135,9 +120,6 @@ export function GuardEarningsPanel({
                 <Banknote className="w-4 h-4" />
               )}
               Request cash pickup
-            </span>
-            <span className="text-xs font-normal opacity-80">
-              Sends an invoice to Payments for cash pickup
             </span>
           </button>
         </div>

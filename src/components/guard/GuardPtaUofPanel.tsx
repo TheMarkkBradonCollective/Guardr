@@ -247,9 +247,6 @@ export function GuardPtaUofPanel({
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           Power to Arrest &amp; Appropriate Use of Force
         </p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
-        </p>
         <div className="mt-2 space-y-2">
           <CredentialSectionStatusDisplay status={sectionStatus} />
           <CredentialGracePeriodStatusBar guard={guard} kind="pta-uof" />

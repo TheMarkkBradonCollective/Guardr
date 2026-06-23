@@ -68,12 +68,6 @@ export function StaffIdReviewSection({
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
         </p>
       )}
-      <p className="text-xs text-brand-text-muted leading-relaxed">
-        Request a resubmit when a photo is unclear — approval stays on hold until the guard re-uploads and staff can
-        review again. Resubmit requests are not available after ID is approved. Use{' '}
-        <strong className="text-brand-text">Reject application</strong> to deny the entire application; the account is
-        blocked.
-      </p>
       <div className="app-action-row--equal">
         {canApprove && onApprove && (
           <button

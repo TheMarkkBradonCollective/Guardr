@@ -693,12 +693,9 @@ export function StaffGuardDetailPanel({
         </>
       )}
 
-      {guard.isStaff && (
+      {guard.isStaff && guard.phone && (
         <section className="staff-detail-section">
-          <p className="text-sm text-brand-text-muted">
-            Staff platform account — field credential verification does not apply.
-          </p>
-          {guard.phone && <p className="text-sm mt-2">{guard.phone}</p>}
+          <p className="text-sm mt-2">{guard.phone}</p>
         </section>
       )}
 

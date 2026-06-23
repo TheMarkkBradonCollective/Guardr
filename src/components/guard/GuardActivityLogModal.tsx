@@ -24,7 +24,6 @@ export function GuardActivityLogModal({ open, onClose, onSubmit }: GuardActivity
       <h3 id="guard-activity-log-title" className="font-bold text-lg">
         Log shift activity
       </h3>
-      <p className="text-sm text-brand-text-muted">This note is appended to the daily activity report for this job.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           value={entry}

@@ -42,8 +42,8 @@ export function JobChatPanel({
   }
 
   const headerSubtitle = readOnly
-    ? 'Archived — chat history only'
-    : [request.location, 'Staff may monitor or reply'].filter(Boolean).join(' · ');
+    ? 'Archived'
+    : request.location ?? undefined;
 
   return (
     <div className={`flex flex-col ${compact ? 'h-[420px]' : 'h-full'} min-h-0 bg-brand-bg`}>

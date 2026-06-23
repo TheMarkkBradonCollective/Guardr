@@ -43,11 +43,6 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
   return (
     <div className="app-checklist-panel">
       <p className="text-sm font-semibold">Profile approval & activation (staff)</p>
-      <p className="text-xs text-brand-text-muted leading-relaxed mt-1">
-        ID must be fully on file (photos + details) and verified before profile approval. Guard card must be fully
-        on file (document photo) and staff-verified before activation. PTA/UOF and 32-hour count if listed or on
-        file — if not listed at all, staff sets a grace period when activating.
-      </p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || active}

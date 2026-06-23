@@ -111,10 +111,6 @@ export function ClientHomeScreen({
             ) : undefined
           }
         >
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            You can review your workspace here, but posting jobs and hiring guards unlocks after Guardr staff
-            approves your account.
-          </p>
         </AppStatusBanner>
       )}
 

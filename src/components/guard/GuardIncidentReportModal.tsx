@@ -50,10 +50,7 @@ export function GuardIncidentReportModal({
       <h3 id="guard-incident-report-title" className="font-bold text-lg">
         File incident report
       </h3>
-      <p className="text-sm text-brand-text-muted">
-        Provide full details for the client — who, what, when, where, why, and how you responded.
-        {siteName ? ` Site: ${siteName}.` : ''}
-      </p>
+      {siteName && <p className="text-sm text-brand-text-muted">Site: {siteName}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -34,9 +34,9 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
         <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
           {isGuard
             ? approved
-              ? 'Your profile is approved. Upload your BSIS Guard Card, PTA/UOF training, 32-hour BSIS courses, and any other credentials in your profile if you have not already — staff will verify your guard card and certs and activate your account so you can work jobs.'
-              : 'Upload your government ID, BSIS Guard Card, PTA/UOF training, 32-hour BSIS courses, and any other credentials in your profile — you can add everything at once. Staff reviews your guard card and certs to activate your account.'
-            : 'Your client account is waiting for Guardr staff approval. You can update your profile now, but posting jobs and hiring guards unlocks after approval.'}
+              ? 'Profile approved — upload your credentials in your profile so staff can activate your account.'
+              : 'Upload your credentials in your profile. Staff reviews and activates your account.'
+            : 'Your account is pending staff approval.'}
         </p>
       </div>
 

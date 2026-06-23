@@ -422,7 +422,6 @@ export function ClientRequestsList({
                         <div className="border-t border-brand-border pt-3 w-full space-y-2">
                           <p className="text-sm text-brand-text-muted leading-relaxed">
                             <span className="font-medium text-brand-text">{hiredGuard.name}</span> is assigned.
-                            They will start the shift on site with a self-audit when clock-in opens — you can confirm their photos here once the job is in progress.
                           </p>
                           {onOpenJobChat && currentUser && onSendJobChatMessage && isJobChatEligible(req) && (
                             <button
@@ -690,7 +689,7 @@ export function ClientRequestsList({
           setOvertimeDisputeClockOutLocal('');
         }}
         title="Dispute late clock-out charge"
-        subtitle="Set when the guard actually left and explain why the billed overtime is wrong. Staff will review both times before adjusting the bill."
+        subtitle={undefined}
       >
         <div className="space-y-4">
           {disputeRequest && (

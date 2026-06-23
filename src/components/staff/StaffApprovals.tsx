@@ -95,22 +95,22 @@ const QUEUE_META: Record<
 > = {
   'job-offers': {
     title: 'Job offers',
-    description: 'Approve before clients can pay',
+    description: '',
     icon: <Briefcase className="w-4 h-4" />,
   },
   applications: {
     title: 'Guard applications',
-    description: 'Pick the best fit for open jobs',
+    description: '',
     icon: <UserCheck className="w-4 h-4" />,
   },
   credentials: {
     title: 'Guard credentials',
-    description: 'Verify licenses and certificates',
+    description: '',
     icon: <ClipboardCheck className="w-4 h-4" />,
   },
   accounts: {
     title: 'Profile approval',
-    description: 'Approve on verified ID, then activate on guard card',
+    description: '',
     icon: <Shield className="w-4 h-4" />,
   },
 };
@@ -293,7 +293,6 @@ export function StaffApprovals({
                     <p className="text-sm font-semibold">{meta.title}</p>
                     <WfBadge tone="warning">{queueCounts[queueId]}</WfBadge>
                   </div>
-                  <p className="text-xs text-brand-text-muted mt-1">{meta.description}</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
               </AppItemCard>
@@ -386,7 +385,7 @@ export function StaffApprovals({
       }
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
+          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingJobs.map((req) => (
               <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
@@ -486,7 +485,7 @@ export function StaffApprovals({
       }
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
+          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {jobsWithApplications.map((req) => (
               <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
@@ -590,7 +589,7 @@ export function StaffApprovals({
       const pendingSections = groupPendingCertsByViewSection(pendingCerts, { hideEmpty: true });
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
+          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
           <div className="space-y-5">
             {pendingSections.map((section) => (
               <section key={section.id} className="credential-view-section space-y-2">
@@ -806,7 +805,7 @@ export function StaffApprovals({
 
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={meta.description} onBack={() => selectQueue(null)} />
+          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingGuardAccounts.map((guard) => (
               <WfListCard
@@ -854,11 +853,6 @@ export function StaffApprovals({
 
   return (
     <div className="animate-fade-in space-y-4">
-      <p className="text-sm text-brand-text-muted">
-        Review pending job offers, applications, credentials, and account sign-ups. Open a queue to view details and
-        approve or decline.
-      </p>
-
       {!activeQueue ? renderHub() : renderQueueList()}
 
       {viewCert && (

@@ -78,9 +78,6 @@ export function StaffClientsPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Staff can add client accounts, approve them, and suspend or restore access.
-            </p>
             {canManage && onAddClient && (
               <StaffAddClientForm
                 onAdd={onAddClient}

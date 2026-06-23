@@ -97,7 +97,7 @@ export function StaffAddStaffForm({ assignableRoles, onAdd, onCreated }: StaffAd
         open={open}
         onClose={closeForm}
         title="Add platform staff"
-        subtitle={`Staff manage the platform only — they cannot accept field jobs. Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}.`}
+        subtitle={`Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <PersonNameFields
