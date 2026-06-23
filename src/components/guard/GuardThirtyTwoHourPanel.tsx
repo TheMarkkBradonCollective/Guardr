@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
+  countThirtyTwoHourCourseSlotStatuses,
+  formatCredentialSlotStatusSummary,
   getCourseUploadStatus,
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
@@ -14,10 +16,10 @@ import {
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
+import { CredentialCollapsibleSubsection } from '../credentials/CredentialCollapsibleSubsection';
 import {
-  CredentialListStatusBadge,
   CredentialSectionAddButton,
-  CredentialSectionStatusBadge,
+  CredentialSectionStatusSummary,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -67,6 +69,7 @@ export function GuardThirtyTwoHourPanel({
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
+  const [completionOpen, setCompletionOpen] = useState(true);
 
   const rollupCerts = useMemo(
     () =>
@@ -79,6 +82,11 @@ export function GuardThirtyTwoHourPanel({
   );
 
   const progressPct = progress.thirtyTwoHourProgressPercent;
+  const hasRollupCert = rollupCerts.length > 0;
+  const showIndividualCourses = !hasRollupCert;
+  const courseStatusSummary = formatCredentialSlotStatusSummary(
+    countThirtyTwoHourCourseSlotStatuses(guard)
+  );
 
   const resetForm = () => {
     setAddingCatalogId(null);
@@ -169,8 +177,8 @@ export function GuardThirtyTwoHourPanel({
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
-          {staffMode && !progress.thirtyTwoHourBlockComplete && (
-            <CredentialSectionStatusBadge label="Missing" />
+          {!progress.thirtyTwoHourBlockComplete && (
+            <CredentialSectionStatusSummary summary={courseStatusSummary} />
           )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -199,15 +207,16 @@ export function GuardThirtyTwoHourPanel({
         </div>
       </div>
 
-      <div className="border-t border-brand-border pt-3">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Completion certificate (optional shortcut)
-          </p>
-          {canUpload && (
+      <CredentialCollapsibleSubsection
+        title="Completion certificate (optional shortcut)"
+        open={completionOpen}
+        onToggle={() => setCompletionOpen((open) => !open)}
+        actions={
+          canUpload ? (
             <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
-          )}
-        </div>
+          ) : undefined
+        }
+      >
         {rollupCerts.length > 0 ? (
           <div className="app-cert-item-stack !pt-0">
             {rollupCerts.map((cert) => renderCertRow(cert))}
@@ -215,12 +224,13 @@ export function GuardThirtyTwoHourPanel({
         ) : (
           <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
         )}
-      </div>
+      </CredentialCollapsibleSubsection>
 
-      <div className="border-t border-brand-border pt-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
-          Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
-        </p>
+      {showIndividualCourses && (
+        <div className="border-t border-brand-border pt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">
+            Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
+          </p>
         {courses.map((course) => {
           const uploadStatus = getCourseUploadStatus(guard, course.id);
           const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
@@ -236,10 +246,9 @@ export function GuardThirtyTwoHourPanel({
                 >
                   {course.name}
                 </p>
-                <div className="flex items-center gap-2 shrink-0">
-                  <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
-                  {canUpload && <CredentialSectionAddButton onClick={() => startAdd(course.id)} />}
-                </div>
+                {canUpload && (
+                  <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
+                )}
               </div>
 
               {uploaded.length > 0 && (
@@ -250,7 +259,8 @@ export function GuardThirtyTwoHourPanel({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       <AppFormSheet
         open={Boolean(addingCatalogId && (editing || staffMode))}
