@@ -1,12 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handlePushUnsubscribe } from '../../lib/push/handlers';
+import { withPushHandler } from '../../lib/push/vercelAdapter';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    const { handlePushUnsubscribe } = await import('../pushRuntime');
-    return await handlePushUnsubscribe(req, res);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Push unsubscribe failed to start';
-    console.error('Push unsubscribe bootstrap error:', message, err);
-    return res.status(500).json({ error: message });
-  }
+  return withPushHandler(req, res, ['POST'], async (db, request) =>
+    handlePushUnsubscribe(db, (request.body ?? {}) as Parameters<typeof handlePushUnsubscribe>[1])
+  );
 }

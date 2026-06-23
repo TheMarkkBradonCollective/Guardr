@@ -1,12 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handlePushEvent } from '../../lib/push/handlers';
+import { withPushHandler } from '../../lib/push/vercelAdapter';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    const { handlePushEvents } = await import('../pushRuntime');
-    return await handlePushEvents(req, res);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Push events failed to start';
-    console.error('Push events bootstrap error:', message, err);
-    return res.status(500).json({ error: message });
-  }
+  return withPushHandler(req, res, ['POST'], async (db, request) =>
+    handlePushEvent(db, (request.body ?? {}) as Parameters<typeof handlePushEvent>[1])
+  );
 }

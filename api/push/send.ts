@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handlePushSend } from '../../lib/push/handlers';
+import { withPushHandler } from '../../lib/push/vercelAdapter';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    const { handlePushSend } = await import('../pushRuntime');
-    return await handlePushSend(req, res);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Push send failed to start';
-    console.error('Push send bootstrap error:', message, err);
-    return res.status(500).json({ error: message });
-  }
+  return withPushHandler(req, res, ['POST'], async (db, request) => {
+    const authHeader = Array.isArray(request.headers.authorization)
+      ? request.headers.authorization[0]
+      : request.headers.authorization;
+    return handlePushSend(db, authHeader, (request.body ?? {}) as Parameters<typeof handlePushSend>[2]);
+  });
 }
