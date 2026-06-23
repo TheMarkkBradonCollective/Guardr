@@ -12,6 +12,7 @@ import {
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
+import { CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL } from '../../lib/certStatus';
 import { CredentialListStatusBadge, CredentialSectionAddButton, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
@@ -132,10 +133,10 @@ export function GuardIdItemCard({
               {staffMode && uploadStatus === 'missing' &&
                 (canEdit ? (
                   <button type="button" onClick={() => setShowDetail(true)} className="inline-flex">
-                    <CredentialSectionStatusBadge label="Missing" />
+                    <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
                   </button>
                 ) : (
-                  <CredentialSectionStatusBadge label="Missing" />
+                  <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
                 ))}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">

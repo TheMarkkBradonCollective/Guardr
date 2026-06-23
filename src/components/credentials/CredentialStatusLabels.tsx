@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CourseUploadStatus } from '../../lib/certStatus';
-import { getCourseUploadStatusLabel } from '../../lib/certStatus';
+import { CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, getCourseUploadStatusLabel } from '../../lib/certStatus';
 import { WfBadge } from '../ui/wireframe';
 
 /** Orange warning badge for section headers — PTA/UOF, 32-hour block, Government ID, guard card. */
@@ -18,7 +18,9 @@ export function credentialListStatusLabel(
   status: CredentialListStatus,
   options?: { staffMode?: boolean }
 ): string {
-  if (status === 'not-listed') return options?.staffMode ? 'Not listed' : 'Missing';
+  if (status === 'not-listed') {
+    return options?.staffMode ? 'Not listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
+  }
   return getCourseUploadStatusLabel(status, options);
 }
 
@@ -39,20 +41,22 @@ export function CredentialListStatusBadge({
         <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">Listed</span>
       );
     }
-    return <CredentialSectionStatusBadge label="Missing" />;
+    return <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />;
   }
   if (status === 'expired') {
     return <CredentialSectionStatusBadge label="On file · Expired" />;
   }
   if (status === 'not-listed') {
     return (
-      <CredentialSectionStatusBadge label={staffMode ? 'Not listed' : 'Missing'} />
+      <CredentialSectionStatusBadge
+        label={staffMode ? 'Not listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL}
+      />
     );
   }
-  return <CredentialSectionStatusBadge label="Missing" />;
+  return <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />;
 }
 
-/** Aggregate upload counts for section headers — e.g. "5 Missing and another 1 listed and another 3 on file". */
+/** Aggregate upload counts for section headers — e.g. "5 not listed or on file and another 1 listed and another 3 on file". */
 export function CredentialSectionStatusSummary({ summary }: { summary: string }) {
   return (
     <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 normal-case tracking-normal">

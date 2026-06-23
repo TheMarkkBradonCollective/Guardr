@@ -17,8 +17,13 @@ import {
 
 export { isCertExpired };
 
+export const CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL = 'Not listed or on file';
+export const CREDENTIAL_NOT_LISTED_OR_ON_FILE_COUNT_LABEL = 'not listed or on file';
+
 export function getCredentialUploadLabel(cert: Certification, options?: { staffMode?: boolean }): string {
-  if (!certHasDocumentProof(cert)) return options?.staffMode ? 'Listed' : 'Missing';
+  if (!certHasDocumentProof(cert)) {
+    return options?.staffMode ? 'Listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
+  }
   return isCertExpired(cert) ? 'On file · Expired' : 'On file';
 }
 
@@ -95,11 +100,11 @@ export function getCourseUploadStatusLabel(status: CourseUploadStatus, options?:
     case 'on-file':
       return 'On file';
     case 'listed':
-      return options?.staffMode ? 'Listed' : 'Missing';
+      return options?.staffMode ? 'Listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
     case 'expired':
       return 'On file · Expired';
     default:
-      return 'Missing';
+      return CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
   }
 }
 
@@ -132,11 +137,11 @@ export function summarizeCredentialSlotStatuses(
   };
 }
 
-/** e.g. "5 Missing and another 1 listed and another 3 on file" */
+/** e.g. "5 not listed or on file and another 1 listed and another 3 on file" */
 export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCounts): string {
   const segments: string[] = [];
   if (counts.missing > 0) {
-    segments.push(`${counts.missing} Missing`);
+    segments.push(`${counts.missing} ${CREDENTIAL_NOT_LISTED_OR_ON_FILE_COUNT_LABEL}`);
   }
   if (counts.listed > 0) {
     segments.push(segments.length > 0 ? `another ${counts.listed} listed` : `${counts.listed} listed`);

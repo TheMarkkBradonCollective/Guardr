@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
-import { getCourseUploadStatus } from '../../lib/certStatus';
+import { getCourseUploadStatus, CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL } from '../../lib/certStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { guardMeetsLevel1 } from '../../lib/guardQualification';
@@ -216,10 +216,10 @@ export function GuardCardPanel({
                     onClick={() => setShowForm(true)}
                     className="inline-flex"
                   >
-                    <CredentialSectionStatusBadge label="Missing" />
+                    <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
                   </button>
                 ) : (
-                  <CredentialSectionStatusBadge label="Missing" />
+                  <CredentialSectionStatusBadge label={CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL} />
                 ))}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
