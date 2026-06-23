@@ -5722,7 +5722,7 @@ button.wf-list-card:hover {
   box-shadow: 0 2px 12px color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
-button.wf-list-card.\\!border-brand-primary {
+button.wf-list-card.\!border-brand-primary {
   border-color: var(--brand-primary) !important;
   background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface)) !important;
   box-shadow: 0 0 0 1px var(--brand-primary), 0 4px 16px color-mix(in srgb, var(--brand-primary) 14%, transparent) !important;
