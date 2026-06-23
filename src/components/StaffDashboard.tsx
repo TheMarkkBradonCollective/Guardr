@@ -19,11 +19,14 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canAccessStaffSettings,
   canEditJobListingDetails,
+  canHandleDisputes,
   canManageClients,
   canManageCompanyOperations,
   canManageGuards,
   canManageStaffAccounts,
+  canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
   canUploadJobSelfAuditPhotos,
@@ -367,9 +370,12 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
+  const showSettings = canAccessStaffSettings(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
+  const canReviewJobs = canReviewJobRequests(currentUser);
+  const canResolveDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canUploadSelfAuditPhotos = canUploadJobSelfAuditPhotos(currentUser);
   const canUploadSpotCheck = canUploadJobSpotCheck(currentUser);
@@ -438,13 +444,13 @@ export function StaffDashboard({
             requests={requests}
             guards={guards}
             clients={clients}
-            onApproveRequest={onApproveRequest}
-            onDenyRequest={onDenyRequest}
+            onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
+            onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
-            onApproveGuardApplication={onApproveGuardApplication}
-            onDenyGuardApplication={onDenyGuardApplication}
-            onApproveClient={onApproveClient}
+            onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : async () => {}}
+            onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
+            onApproveClient={canManageClientAccounts ? onApproveClient : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
             onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
             onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
@@ -457,6 +463,8 @@ export function StaffDashboard({
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
             onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
             canManageGuardAccounts={canManageGuardAccounts}
+            canManageClientAccounts={canManageClientAccounts}
+            canReviewJobRequests={canReviewJobs}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             staffRole={currentUser.role}
@@ -478,15 +486,15 @@ export function StaffDashboard({
             canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
             canUploadSpotCheck={canUploadSpotCheck}
             canEditJobListing={canEditJobListing}
-            onApproveRequest={onApproveRequest}
-            onDenyRequest={onDenyRequest}
+            onApproveRequest={canReviewJobs ? onApproveRequest : undefined}
+            onDenyRequest={canReviewJobs ? onDenyRequest : undefined}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
             onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
             onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
-            onApproveGuardApplication={onApproveGuardApplication}
-            onDenyGuardApplication={onDenyGuardApplication}
+            onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
+            onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             selectedId={selectedJobId}
             onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
@@ -630,18 +638,26 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Payments</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Financial controls are limited to Director and Administrator roles. If money is owed on
+              Financial controls are limited to Director and Owner roles. If money is owed on
               jobs, ask your Director to review the Payments section.
             </p>
           </div>
         );
       case 'disputes':
-        return (
+        return canResolveDisputes ? (
           <StaffDisputesPanel
             disputes={disputes}
             onResolveDispute={onResolveDispute}
             onResolveOvertimeDispute={onResolveOvertimeDispute}
           />
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Disputes</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Dispute resolution is limited to Administrator roles and above. Escalate open disputes
+              to your Administrator or Director.
+            </p>
+          </div>
         );
       case 'analytics':
         return (
@@ -655,7 +671,7 @@ export function StaffDashboard({
       case 'guide':
         return <AppWorkflowPage audience="staff" />;
       case 'settings':
-        return showFinance ? (
+        return showSettings ? (
           <StaffSettingsPanel
             currentUser={currentUser}
             platformSettings={platformSettings}

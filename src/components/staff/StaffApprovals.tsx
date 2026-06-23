@@ -80,6 +80,8 @@ interface StaffApprovalsProps {
   ) => Promise<CertUpdateResult>;
   onViewGuard?: (guardId: string) => void;
   canManageGuardAccounts?: boolean;
+  canManageClientAccounts?: boolean;
+  canReviewJobRequests?: boolean;
   canEditJobListing?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   staffRole?: PlatformRole;
@@ -159,6 +161,8 @@ export function StaffApprovals({
   onUpdateCertification,
   onViewGuard,
   canManageGuardAccounts = false,
+  canManageClientAccounts = false,
+  canReviewJobRequests = false,
   canEditJobListing = false,
   onEditJobListing,
   staffRole,
@@ -261,9 +265,13 @@ export function StaffApprovals({
     ]
   );
 
-  const availableQueues = (Object.keys(QUEUE_META) as ApprovalQueueId[]).filter(
-    (id) => queueCounts[id] > 0
-  );
+  const availableQueues = (Object.keys(QUEUE_META) as ApprovalQueueId[]).filter((id) => {
+    if (queueCounts[id] === 0) return false;
+    if (id === 'credentials') return true;
+    if (id === 'job-offers' || id === 'applications') return canReviewJobRequests;
+    if (id === 'accounts') return canManageGuardAccounts || canManageClientAccounts;
+    return false;
+  });
 
   const queueEmpty = availableQueues.length === 0;
 

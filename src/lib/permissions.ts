@@ -86,22 +86,20 @@ const GUARD_PERMISSIONS: Permission[] = [
 
 const MODERATOR_PERMISSIONS: Permission[] = [
   ...GUARD_PERMISSIONS,
-  'moderator.approve_guards',
-  'moderator.approve_clients',
   'moderator.review_certifications',
   'moderator.review_reports',
-  'moderator.review_job_requests',
-  'moderator.handle_disputes',
-  'moderator.suspend_users',
-  'moderator.issue_warnings',
   'moderator.monitor_activity',
 ];
 
 const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   ...MODERATOR_PERMISSIONS,
+  'moderator.approve_guards',
+  'moderator.approve_clients',
+  'moderator.review_job_requests',
+  'moderator.handle_disputes',
+  'moderator.suspend_users',
+  'moderator.issue_warnings',
   'admin.manage_users',
-  'admin.manage_payouts',
-  'admin.manage_fees',
   'admin.manage_settings',
   'admin.view_analytics',
   'admin.manage_content',
@@ -146,8 +144,8 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   client: 'Individuals or businesses seeking security services.',
   guard: 'Independent licensed security professionals.',
-  moderator: 'Operations and support — no financial controls.',
-  administrator: 'Platform management and daily operations.',
+  moderator: 'Field support — credentials, reports, and live monitoring only.',
+  administrator: 'Platform management and daily operations — no financial controls.',
   director: 'Executive platform operations and unrestricted staff-side access.',
   owner: 'Platform governance — manages staff below the Owner tier.',
 };
@@ -210,8 +208,13 @@ export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: P
   return permissions.some((p) => hasPermission(user, p));
 }
 
+/** Payouts, fees, cash handling, and financial analytics — Director and Owner only */
 export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boolean {
-  return hasAnyPermission(user, ['admin.manage_payouts', 'admin.manage_fees', 'director.view_all_financial_data']);
+  return hasExecutivePaymentControls(user);
+}
+
+export function canAccessStaffSettings(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.manage_settings') || canManagePlatformSettings(user);
 }
 
 /** Directors manage moderators and administrators; Owners manage all staff tiers */
@@ -258,16 +261,28 @@ export function canModerateStaffMember(
   return canModifyStaffMember(actorRole, member.staffRole);
 }
 
+export function canReviewJobRequests(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.review_job_requests');
+}
+
+export function canReviewCertifications(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.review_certifications');
+}
+
+export function canHandleDisputes(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'moderator.handle_disputes');
+}
+
 export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.suspend_users');
 }
 
-/** All platform staff can manage field guards (add, verify, suspend) */
+/** Administrator+ — approve guard profiles, activate accounts, manage roster */
 export function canManageGuards(user: Pick<SessionUser, 'role'>): boolean {
   return hasAnyPermission(user, ['moderator.approve_guards', 'admin.manage_users']);
 }
 
-/** All platform staff can manage client accounts (add, approve, suspend) */
+/** Administrator+ — approve client accounts and manage client roster */
 export function canManageClients(user: Pick<SessionUser, 'role'>): boolean {
   return hasAnyPermission(user, ['moderator.approve_clients', 'admin.manage_users']);
 }

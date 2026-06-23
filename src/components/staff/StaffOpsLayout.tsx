@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
@@ -81,6 +81,8 @@ export function StaffOpsLayout({
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
+  const showSettings = canAccessStaffSettings(currentUser);
+  const showDisputes = canHandleDisputes(currentUser);
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
@@ -95,12 +97,12 @@ export function StaffOpsLayout({
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'team', label: 'Staff', icon: Users },
     { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
-    { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },
+    { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
-    { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
+    { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'guide', label: 'Workflow guide', icon: BookOpen },
-    { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
+    { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];
 
   const navigate = (section: StaffSection) => {
@@ -138,6 +140,8 @@ export function StaffOpsLayout({
           activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
           onNavigate={navigate}
           showFinance={showFinance}
+          showSettings={showSettings}
+          showDisputes={showDisputes}
         />
       </div>
       <div className="staff-sidebar-footer">

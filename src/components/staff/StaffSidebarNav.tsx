@@ -7,7 +7,12 @@ export interface StaffNavItem {
   label: string;
   icon: typeof LayoutDashboard;
   badge?: number;
-  adminOnly?: boolean;
+  /** Visible only to Director and Owner (payments / fund handling) */
+  financeOnly?: boolean;
+  /** Visible to Administrator and above (platform settings) */
+  settingsOnly?: boolean;
+  /** Visible to Administrator and above (dispute resolution) */
+  disputesOnly?: boolean;
 }
 
 interface StaffSidebarNavProps {
@@ -15,6 +20,8 @@ interface StaffSidebarNavProps {
   activeSection: StaffSection;
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
+  showSettings: boolean;
+  showDisputes: boolean;
 }
 
 const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
@@ -84,8 +91,15 @@ export function StaffSidebarNav({
   activeSection,
   onNavigate,
   showFinance,
+  showSettings,
+  showDisputes,
 }: StaffSidebarNavProps) {
-  const visibleItems = items.filter((item) => !item.adminOnly || showFinance);
+  const visibleItems = items.filter((item) => {
+    if (item.financeOnly) return showFinance;
+    if (item.settingsOnly) return showSettings;
+    if (item.disputesOnly) return showDisputes;
+    return true;
+  });
 
   return (
     <nav aria-label="Staff navigation">
@@ -117,7 +131,7 @@ export function StaffSidebarNav({
         activeSection={activeSection}
         onNavigate={onNavigate}
       />
-      {showFinance && (
+      {showSettings && (
         <NavGroup
           title="Platform"
           itemIds={PLATFORM_IDS}

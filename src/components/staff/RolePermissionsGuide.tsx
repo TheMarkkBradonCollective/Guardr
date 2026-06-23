@@ -8,11 +8,10 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     role: 'moderator',
     icon: Shield,
     permissions: [
-      'Approve guard & client accounts',
-      'Review certifications & reports',
-      'Review job requests & handle disputes',
-      'Suspend users & issue warnings',
-      'Monitor platform activity',
+      'Review guard credentials & reports',
+      'Monitor live jobs & platform activity',
+      'Upload self-audit & spot-check photos',
+      'No account approvals, job reviews, or disputes',
     ],
   },
   {
@@ -20,9 +19,11 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Briefcase,
     permissions: [
       'Everything Moderators can do',
-      'Manage users & platform settings',
-      'Manage payouts, fees & analytics',
-      'Manage content & platform configuration',
+      'Approve guard & client accounts',
+      'Review job requests & handle disputes',
+      'Suspend users & issue warnings',
+      'Manage users, analytics & platform settings',
+      'No payouts, fees, or cash handling',
     ],
   },
   {
