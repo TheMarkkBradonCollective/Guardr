@@ -5,6 +5,7 @@ import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
+import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
@@ -28,6 +29,7 @@ import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './St
 import { StaffSpotCheckUpload } from './StaffSpotCheckUpload';
 import { canStaffAddSpotCheck, hasSpotChecks, isNoSpotCheckFlagged } from '../../lib/spotChecks';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
+import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'done';
 
@@ -192,6 +194,7 @@ function JobDetailPanel({
         <WfBadge tone={statusBadgeTone(req.status)}>{workflowLabel}</WfBadge>
         {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
         {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
+        {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
         <span className="text-xs text-brand-text-muted">{req.id}</span>
       </div>
       <p className="text-sm">

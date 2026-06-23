@@ -12,11 +12,11 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
-import { ArrowLeft, ArrowRight, Check, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
-import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -215,14 +215,14 @@ export function RequestSecurityFlow({
         {step === 2 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Where?</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+            <div>
+              <label className="uber-label block mb-1.5">Address</label>
               <input
                 type="text"
-                placeholder="Search address..."
+                placeholder="Street address, city"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="uber-input pl-10 h-14 text-base rounded-xl"
+                className="uber-input h-14 text-base rounded-xl"
                 autoFocus
               />
             </div>
@@ -251,10 +251,7 @@ export function RequestSecurityFlow({
               />
             </div>
             {address.trim().length > 3 && jobState.length === 2 && (
-              <JobLocationPinPicker
-                address={address}
-                state={jobState}
-                siteName={siteName}
+              <JobLocationCoordsFields
                 latitude={latitude}
                 longitude={longitude}
                 onCoordsChange={(coords) => {

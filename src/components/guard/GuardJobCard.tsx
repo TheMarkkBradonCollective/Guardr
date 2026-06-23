@@ -46,7 +46,8 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
             <p className="text-sm text-brand-text-muted mt-1">{job.clientName}</p>
             <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
               <MapPin className="w-3 h-3 shrink-0" />
-              {job.siteName || job.location} · {distance} mi
+              {job.siteName || job.location}
+              {distance != null ? ` · ${distance} mi` : ''}
             </p>
             <p className="text-xs text-brand-text-muted mt-0.5">
               {formatJobDate(job)} · {formatJobTimeRange(job)} · {formatDuration(job.durationHours)}

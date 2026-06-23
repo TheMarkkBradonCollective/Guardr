@@ -5,7 +5,7 @@ import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEd
 import { computeGuardPay } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { listingFieldsFromJob } from '../../lib/jobListing';
-import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { operationalDetailsFromJob, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
@@ -163,10 +163,7 @@ export function EditRequestForm({
         <input value={address} onChange={(e) => setAddress(e.target.value)} className="uber-input w-full" />
       </div>
       {address.trim().length > 3 && state.length === 2 && (
-        <JobLocationPinPicker
-          address={address}
-          state={state}
-          siteName={siteName}
+        <JobLocationCoordsFields
           latitude={latitude}
           longitude={longitude}
           onCoordsChange={(coords) => {

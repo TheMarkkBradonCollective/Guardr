@@ -19,7 +19,7 @@ import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEd
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
-import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
@@ -385,10 +385,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
 
         {address.trim().length > 3 && (
           <div className="sm:col-span-2">
-            <JobLocationPinPicker
-              address={address}
-              state={jobState}
-              siteName={siteName}
+            <JobLocationCoordsFields
               latitude={latitude}
               longitude={longitude}
               onCoordsChange={(coords) => {

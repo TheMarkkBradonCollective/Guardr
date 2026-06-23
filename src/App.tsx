@@ -46,6 +46,7 @@ import {
   isCashClientPayment,
   parsePaymentMethod,
 } from './lib/cashPayments';
+import { isJobLocationCoordsMissing } from './lib/jobLocation';
 import { ChangePasswordPrompt } from './components/auth/ChangePasswordPrompt';
 import {
   provisionedPasswordFields,
@@ -3475,6 +3476,15 @@ export default function App() {
         location: freshJob.location,
         body: `${clientName} submitted "${freshJob.title}" for review`,
       });
+      if (isJobLocationCoordsMissing(freshJob)) {
+        void reportPushEvent(currentUser, {
+          type: 'job_submitted',
+          requestId: freshJob.id,
+          title: 'Map coordinates missing',
+          location: freshJob.location,
+          body: `"${freshJob.title}" needs latitude and longitude — add them in Jobs before guards rely on the map.`,
+        });
+      }
     }
 
     if (isDbConnected) {
@@ -3615,6 +3625,16 @@ export default function App() {
         requestId: freshJob.id,
         location: freshJob.location,
         body: `You picked up ${freshJob.title}`,
+      });
+    }
+
+    if (currentUser && isJobLocationCoordsMissing(freshJob)) {
+      void reportPushEvent(currentUser, {
+        type: 'job_submitted',
+        requestId: freshJob.id,
+        title: 'Map coordinates missing',
+        location: freshJob.location,
+        body: `Staff-created job "${freshJob.title}" needs latitude and longitude.`,
       });
     }
 

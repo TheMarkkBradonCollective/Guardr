@@ -35,8 +35,10 @@ Every job offer moves through these statuses:
 **Marketplace job** — open to qualified guards:
 
 1. Go to **Home → Post job offer** (or Jobs).
-2. Enter site details, schedule, requirements, and pay.
-3. Submit — status becomes **Pending review**.
+2. Enter **address**, **state**, and optional **site name**.
+3. Optionally paste **latitude and longitude** from Google Maps or GPS. If you skip coordinates, the job is flagged and staff are notified to add them.
+4. Enter schedule, requirements, and pay.
+5. Submit — status becomes **Pending review**.
 
 **Direct request** — hire a specific guard from their profile:
 
