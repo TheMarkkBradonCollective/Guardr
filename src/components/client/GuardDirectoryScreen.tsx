@@ -6,7 +6,12 @@ import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import {
+  GUARD_APPROVED_BADGE_LABEL,
+  GUARD_TRUSTED_BADGE_LABEL,
+  isGuardProfileApproved,
+  isGuardTrusted,
+} from '../../lib/guardTrust';
 import { Star } from 'lucide-react';
 
 interface GuardDirectoryScreenProps {
@@ -53,7 +58,8 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
                   <div>
                     <div className="flex items-center gap-2 text-sm text-brand-text-muted">
                       {guard.isStaff && <WfBadge tone="primary">Staff</WfBadge>}
-                      {isGuardTrusted(guard) && <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
+                      {isGuardProfileApproved(guard) && <WfBadge tone="success">{GUARD_APPROVED_BADGE_LABEL}</WfBadge>}
+                      {isGuardTrusted(guard) && <WfBadge tone="primary">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
                       <Star className="w-3.5 h-3.5 fill-brand-primary text-brand-primary" />
                       <span>{guard.rating.toFixed(1)}</span>
                       <span>·</span>

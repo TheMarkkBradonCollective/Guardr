@@ -1,4 +1,4 @@
-import { SecurityRequest } from '../types';
+import { SecurityGuard, SecurityRequest } from '../types';
 
 /** Staff picked a guard — waiting for the client to confirm before the job is picked up. */
 export function isAwaitingClientGuardApproval(
@@ -13,6 +13,18 @@ export function shouldSkipClientGuardApproval(
   guardId: string
 ): boolean {
   return req.requestType === 'direct' && !!req.targetGuardId && req.targetGuardId === guardId;
+}
+
+/**
+ * Trusted guards skip client confirmation when placed on non-cash jobs.
+ * Cash jobs always require the full approval + cash-connection workflow regardless of trust.
+ */
+export function shouldSkipClientGuardApprovalForTrusted(
+  guard: Pick<SecurityGuard, 'trusted'>,
+  req: Pick<SecurityRequest, 'clientPaymentMethod'>
+): boolean {
+  if (!guard.trusted) return false;
+  return req.clientPaymentMethod !== 'cash';
 }
 
 export function removeGuardFromApplicants(

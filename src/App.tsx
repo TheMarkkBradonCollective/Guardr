@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -130,6 +130,7 @@ import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
   shouldSkipClientGuardApproval,
+  shouldSkipClientGuardApprovalForTrusted,
 } from './lib/guardAssignment';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -1302,6 +1303,7 @@ export default function App() {
           : undefined,
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
+        trusted: g.trusted === true,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1372,6 +1374,7 @@ export default function App() {
         hasPriorSecurityService: c.has_prior_security_service ?? undefined,
         priorSecurityProvider: c.prior_security_provider ?? undefined,
         specialRequirements: c.special_requirements ?? undefined,
+        trusted: c.trusted === true,
       };
       }));
 
@@ -3227,6 +3230,36 @@ export default function App() {
     }
   };
 
+  const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a guard as trusted.', 'error');
+      return;
+    }
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
+        appToast('Could not update guard trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleSetClientTrusted = async (clientId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a client as trusted.', 'error');
+      return;
+    }
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted } : c)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('clients').update({ trusted }).eq('id', clientId);
+      if (error) {
+        setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted: !trusted } : c)));
+        appToast('Could not update client trusted status.', 'error');
+      }
+    }
+  };
+
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
     payload: {
@@ -3667,6 +3700,12 @@ export default function App() {
     const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const location = siteName ? `${siteName} — ${address}` : address;
 
+    // Trusted clients skip the approval queue unless they're using cash.
+    const clientIsTrusted = clientRecord?.trusted === true;
+    const requestingCash = newRequest.clientPaymentMethod === 'cash';
+    const initialStatus: SecurityRequest['status'] =
+      clientIsTrusted && !requestingCash ? 'open' : 'pending-review';
+
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
       title: newRequest.title || 'Security Guard Deployment',
@@ -3695,7 +3734,7 @@ export default function App() {
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
       estimatedPayout,
-      status: 'pending-review',
+      status: initialStatus,
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
@@ -5158,6 +5197,10 @@ export default function App() {
       return;
     }
     if (shouldSkipClientGuardApproval(job, guardId)) {
+      await assignGuardToJob(requestId, guardId);
+      return;
+    }
+    if (shouldSkipClientGuardApprovalForTrusted(guard, job)) {
       await assignGuardToJob(requestId, guardId);
       return;
     }
@@ -6858,6 +6901,8 @@ export default function App() {
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
           onActivateGuardAccount={handleActivateGuardAccount}
+          onSetGuardTrusted={handleSetGuardTrusted}
+          onSetClientTrusted={handleSetClientTrusted}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}

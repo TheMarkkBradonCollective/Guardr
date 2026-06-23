@@ -17,6 +17,7 @@ interface StaffClientDetailPanelProps {
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onDeleteClient?: (id: string) => void | Promise<void>;
+  onSetClientTrusted?: (clientId: string, trusted: boolean) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   compact?: boolean;
@@ -29,6 +30,7 @@ export function StaffClientDetailPanel({
   onApproveClient,
   onRejectClient,
   onDeleteClient,
+  onSetClientTrusted,
   onBack,
   onOpenJob,
   compact = false,
@@ -108,6 +110,7 @@ export function StaffClientDetailPanel({
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
+            {client.trusted && <WfBadge tone="primary">Trusted</WfBadge>}
             {client.rating != null && (
               <WfBadge className="inline-flex items-center gap-1">
                 <Star className="w-3 h-3" />
@@ -150,6 +153,20 @@ export function StaffClientDetailPanel({
             {!isPending && !isSuspended && (
               <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
                 Suspend client account
+              </button>
+            )}
+            {onSetClientTrusted && (
+              <button
+                type="button"
+                onClick={() => void onSetClientTrusted(client.id, !client.trusted)}
+                className={`app-button-outline app-btn-sm ${client.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
+                title={
+                  client.trusted
+                    ? 'Remove trusted status — client jobs will require staff approval'
+                    : 'Mark as trusted — client jobs skip approval queue for non-cash jobs'
+                }
+              >
+                {client.trusted ? 'Remove trusted' : 'Mark as trusted'}
               </button>
             )}
             {onDeleteClient && (

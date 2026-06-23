@@ -20,7 +20,12 @@ import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import {
+  GUARD_APPROVED_BADGE_LABEL,
+  GUARD_TRUSTED_BADGE_LABEL,
+  isGuardProfileApproved,
+  isGuardTrusted,
+} from '../../lib/guardTrust';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import {
   BookOpen,
@@ -121,6 +126,12 @@ export function GuardProfileScreen({
                       <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
                   </div>
+                  {isGuardProfileApproved(guard) && (
+                    <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
+                      <Check className="w-4 h-4" />
+                      {GUARD_APPROVED_BADGE_LABEL}
+                    </p>
+                  )}
                   {isGuardTrusted(guard) && (
                     <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
                       <Check className="w-4 h-4" />
