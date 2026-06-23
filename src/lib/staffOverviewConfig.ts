@@ -1,0 +1,159 @@
+import { PlatformRole } from '../types';
+import { ROLE_LABELS } from './permissions';
+import type { OverviewActionItem, OverviewMetricCell, StaffSection } from './staffOps';
+
+export type StaffOverviewLayout = 'compact' | 'standard' | 'executive';
+
+export interface StaffOverviewConfig {
+  roleLabel: string;
+  workspaceKicker: string;
+  focusLine: string;
+  layout: StaffOverviewLayout;
+  /** Metric cell labels to show, or all six platform metrics */
+  metricLabels: string[] | 'all';
+  showPaymentsInQueue: boolean;
+  showDirectorFinancials: boolean;
+  showOperationsSnapshot: boolean;
+  showPlatformPulse: boolean;
+  pulseFullDetail: boolean;
+  showPipelineInsight: boolean;
+  showWeeklyInsight: boolean;
+  showActivityFeed: boolean;
+  emptyAttentionCopy: string;
+  quickLinkSections: StaffSection[];
+}
+
+const ALL_METRICS = [
+  'Active jobs',
+  'On site now',
+  'To verify',
+  'Completed jobs',
+  'Active clients',
+  'Open incidents',
+] as const;
+
+const MODERATOR_METRICS = ['Active jobs', 'On site now', 'To verify', 'Open incidents'];
+
+const ADMIN_METRICS = [
+  'Active jobs',
+  'On site now',
+  'To verify',
+  'Completed jobs',
+  'Active clients',
+  'Open incidents',
+];
+
+const STAFF_OVERVIEW_CONFIG: Record<
+  Extract<PlatformRole, 'moderator' | 'administrator' | 'director' | 'owner'>,
+  StaffOverviewConfig
+> = {
+  moderator: {
+    roleLabel: ROLE_LABELS.moderator,
+    workspaceKicker: 'Moderator workspace',
+    focusLine: 'Approvals, live coverage, and incident follow-up — no financial controls.',
+    layout: 'compact',
+    metricLabels: [...MODERATOR_METRICS],
+    showPaymentsInQueue: false,
+    showDirectorFinancials: false,
+    showOperationsSnapshot: false,
+    showPlatformPulse: true,
+    pulseFullDetail: false,
+    showPipelineInsight: false,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'No approvals, incidents, or support tickets waiting. Open the map to watch live coverage.',
+    quickLinkSections: ['approvals', 'map', 'guards', 'incidents', 'messages'],
+  },
+  administrator: {
+    roleLabel: ROLE_LABELS.administrator,
+    workspaceKicker: 'Administrator workspace',
+    focusLine: 'Daily platform operations — users, payouts, analytics, and job pipeline.',
+    layout: 'standard',
+    metricLabels: [...ADMIN_METRICS],
+    showPaymentsInQueue: true,
+    showDirectorFinancials: false,
+    showOperationsSnapshot: false,
+    showPlatformPulse: true,
+    pulseFullDetail: true,
+    showPipelineInsight: true,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'No approvals, incidents, or payouts waiting. Review analytics or open the ops map.',
+    quickLinkSections: ['approvals', 'jobs', 'payments', 'clients', 'analytics', 'messages'],
+  },
+  director: {
+    roleLabel: ROLE_LABELS.director,
+    workspaceKicker: 'Director workspace',
+    focusLine: 'Executive operations — company financials, team oversight, and live command.',
+    layout: 'executive',
+    metricLabels: 'all',
+    showPaymentsInQueue: true,
+    showDirectorFinancials: true,
+    showOperationsSnapshot: true,
+    showPlatformPulse: true,
+    pulseFullDetail: true,
+    showPipelineInsight: true,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'Nothing urgent in the queue. Review financials, team activity, or live jobs on the map.',
+    quickLinkSections: ['map', 'payments', 'team', 'analytics', 'jobs', 'approvals'],
+  },
+  owner: {
+    roleLabel: ROLE_LABELS.owner,
+    workspaceKicker: 'Owner workspace',
+    focusLine: 'Platform governance — full visibility, staff management, and company health.',
+    layout: 'executive',
+    metricLabels: 'all',
+    showPaymentsInQueue: true,
+    showDirectorFinancials: true,
+    showOperationsSnapshot: true,
+    showPlatformPulse: true,
+    pulseFullDetail: true,
+    showPipelineInsight: true,
+    showWeeklyInsight: true,
+    showActivityFeed: true,
+    emptyAttentionCopy:
+      'Platform is clear. Review governance settings, financials, or staff activity.',
+    quickLinkSections: ['settings', 'team', 'payments', 'analytics', 'map', 'approvals'],
+  },
+};
+
+export function getStaffOverviewConfig(role: PlatformRole): StaffOverviewConfig {
+  if (role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner') {
+    return STAFF_OVERVIEW_CONFIG[role];
+  }
+  return STAFF_OVERVIEW_CONFIG.moderator;
+}
+
+export function filterOverviewMetrics(
+  cells: OverviewMetricCell[],
+  role: PlatformRole
+): OverviewMetricCell[] {
+  const config = getStaffOverviewConfig(role);
+  if (config.metricLabels === 'all') return cells;
+  const allowed = new Set(config.metricLabels);
+  return cells.filter((cell) => allowed.has(cell.label));
+}
+
+const JOB_COORDS_ACTION_IDS = new Set(['jobs-missing-coords']);
+
+export function filterOverviewActionItems(
+  items: OverviewActionItem[],
+  role: PlatformRole
+): OverviewActionItem[] {
+  const config = getStaffOverviewConfig(role);
+  return items.filter((item) => {
+    if (item.section === 'payments' && !config.showPaymentsInQueue) return false;
+    if (JOB_COORDS_ACTION_IDS.has(item.id) && role === 'moderator') return false;
+    return true;
+  });
+}
+
+export function staffOverviewMetricCount(role: PlatformRole): number {
+  const config = getStaffOverviewConfig(role);
+  if (config.metricLabels === 'all') return ALL_METRICS.length;
+  return config.metricLabels.length;
+}
