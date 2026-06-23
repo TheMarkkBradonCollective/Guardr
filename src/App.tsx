@@ -36,7 +36,7 @@ import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm'
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
-  canDirectorMarkGuardPaidCash,
+  canDirectorPayGuardCash,
   canDirectorMarkPlatformFeePaidCash,
   canStaffApproveClientCashPayment,
   getPlatformFeeAmount,
@@ -3981,7 +3981,7 @@ export default function App() {
       return;
     }
     const req = requests.find((r) => r.id === requestId);
-    if (!req || !canDirectorMarkGuardPaidCash(req)) {
+    if (!req || !canDirectorPayGuardCash(req)) {
       appToast('This job is not ready for a cash guard payout.', 'error');
       return;
     }

@@ -99,13 +99,23 @@ export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
   return isCashAwaitingStripeDeposit(req) && getRemainingStripeDeposit(req) > 0;
 }
 
+export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
+  if (!req.assignedGuardId) return false;
+  if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
+  if (isCashGuardPayout(req)) return false;
+
+  // Client paid cash — hand guard pay on site instead of a Stripe card deposit
+  if (isCashClientPayment(req)) {
+    return ['paid', 'held'].includes(req.paymentStatus);
+  }
+
+  // Card client — guard cash only after the job is complete
+  return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
+}
+
+/** @deprecated Use canDirectorPayGuardCash */
 export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
-  return (
-    req.status === 'completed' &&
-    !!req.assignedGuardId &&
-    ['paid', 'held'].includes(req.paymentStatus || '') &&
-    req.paymentStatus !== 'released'
-  );
+  return canDirectorPayGuardCash(req);
 }
 
 /** Stripe Connect payout — never pay online for cash-paid or cash-requested jobs */
