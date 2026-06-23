@@ -7,7 +7,7 @@ import { getGuardLicenses } from '../../lib/guardResume';
 import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
+import { CredentialSectionAddButton, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { WfBadge } from '../ui/wireframe';
@@ -15,7 +15,7 @@ import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
+import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -178,7 +178,7 @@ export function GuardCardPanel({
         disabled={!imageUrl?.trim()}
         className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
       >
-        Upload guard card
+        Add
       </button>
     </form>
   );
@@ -187,7 +187,7 @@ export function GuardCardPanel({
     <AppFormSheet
       open={showForm && canUpload}
       onClose={resetForm}
-      title={items.length ? 'Add another guard card' : 'Upload guard card'}
+      title={items.length ? 'Add another guard card' : 'Add guard card'}
       subtitle={`BSIS Guard Card — required before profile approval. ${CERT_IMAGE_POLICY_HINT}`}
     >
       {uploadForm}
@@ -248,29 +248,12 @@ export function GuardCardPanel({
               </div>
             )}
           </div>
-          {canUpload && (
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-            >
-              {items.length ? 'Add another' : 'Upload'}
-            </button>
-          )}
+          {canUpload && <CredentialSectionAddButton onClick={() => setShowForm(true)} />}
         </div>
 
         {items.length === 0 ? (
-          <div className="border-t border-brand-border py-3 space-y-2">
+          <div className="border-t border-brand-border py-3">
             <p className="text-xs text-brand-text-muted">No guard card on file yet.</p>
-            {canUpload && (
-              <button
-                type="button"
-                onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'guard card')}
-              </button>
-            )}
           </div>
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">

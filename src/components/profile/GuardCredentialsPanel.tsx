@@ -34,7 +34,7 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
+import { CredentialSectionStatusBadge, CredentialSectionAddButton } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import {
   CERT_IMAGE_POLICY_HINT,
@@ -46,7 +46,7 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
-import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
+import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 
 const CREDENTIAL_SECTIONS: {
   category: CertCategory;
@@ -359,7 +359,7 @@ export function GuardCredentialsPanel({
           disabled={!imageUrl?.trim()}
           className="w-full app-button-primary !h-11 !text-sm disabled:opacity-50"
         >
-          Upload credential
+          Add
         </button>
       </form>
     );
@@ -458,28 +458,15 @@ export function GuardCredentialsPanel({
             </p>
           </div>
           {canUpload && (
-            <button
-              type="button"
+            <CredentialSectionAddButton
               onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-            >
-              Add
-            </button>
+            />
           )}
         </div>
 
         {ptaUofItems.length === 0 ? (
-          <div className="border-t border-brand-border py-3 space-y-2">
+          <div className="border-t border-brand-border py-3">
             <p className="text-xs text-brand-text-muted">No PTA/UOF training on file.</p>
-            {canUpload && (
-              <button
-                type="button"
-                onClick={() => openCredentialAddSheet('bsis-pta-uof', BSIS_PTA_UOF_COMBINED_ID)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'PTA/UOF training')}
-              </button>
-            )}
           </div>
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
@@ -510,29 +497,16 @@ export function GuardCredentialsPanel({
             </p>
           </div>
           {canUpload && (
-            <button
-              type="button"
+            <CredentialSectionAddButton
               onClick={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-            >
-              Add
-            </button>
+            />
           )}
         </div>
 
         {refresherItems.length === 0 ? (
           canUpload || editing ? (
-            <div className="border-t border-brand-border py-3 space-y-2">
+            <div className="border-t border-brand-border py-3">
               <p className="text-xs text-brand-text-muted">No refresher course on file.</p>
-              {canUpload && (
-                <button
-                  type="button"
-                  onClick={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-                >
-                  {staffCredentialUploadLabel(staffMode, 'refresher course')}
-                </button>
-              )}
             </div>
           ) : null
         ) : (
@@ -555,29 +529,16 @@ export function GuardCredentialsPanel({
             </p>
           </div>
           {canUpload && otherBsisCatalogOptions.length > 0 && (
-            <button
-              type="button"
+            <CredentialSectionAddButton
               onClick={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
-              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-            >
-              Add
-            </button>
+            />
           )}
         </div>
 
         {otherBsisItems.length === 0 ? (
           canUpload || editing ? (
-            <div className="border-t border-brand-border py-3 space-y-2">
+            <div className="border-t border-brand-border py-3">
               <p className="text-xs text-brand-text-muted">No other BSIS training on file.</p>
-              {canUpload && otherBsisCatalogOptions.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-                >
-                  {staffCredentialUploadLabel(staffMode, 'BSIS training')}
-                </button>
-              )}
             </div>
           ) : null
         ) : (
@@ -604,31 +565,18 @@ export function GuardCredentialsPanel({
                 <p className="text-xs text-brand-text-muted mt-1">{subtitle}</p>
               </div>
               {canUpload && catalogOptions.length > 0 && (
-                <button
-                  type="button"
+                <CredentialSectionAddButton
                   onClick={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
-                  className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-                >
-                  Add
-                </button>
+                />
               )}
             </div>
 
             {items.length === 0 ? (
               canUpload || editing ? (
-                <div className="border-t border-brand-border py-3 space-y-2">
+                <div className="border-t border-brand-border py-3">
                   <p className="text-xs text-brand-text-muted">
                     No {CERT_CATEGORY_LABELS[category].toLowerCase()} on file.
                   </p>
-                  {canUpload && catalogOptions.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-                    >
-                      {staffCredentialUploadLabel(staffMode, CERT_CATEGORY_LABELS[category].toLowerCase())}
-                    </button>
-                  )}
                 </div>
               ) : null
             ) : (

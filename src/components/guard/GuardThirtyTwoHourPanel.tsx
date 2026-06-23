@@ -16,13 +16,14 @@ import {
 import { BookOpen, Plus } from 'lucide-react';
 import {
   CredentialListStatusBadge,
+  CredentialSectionAddButton,
   CredentialSectionStatusBadge,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
+import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -207,16 +208,10 @@ export function GuardThirtyTwoHourPanel({
             {rollupCerts.map((cert) => renderCertRow(cert))}
           </div>
         ) : (
-          <div className="py-2 space-y-2">
+          <div className="py-2 flex items-center justify-between gap-3">
             <p className="text-xs text-brand-text-muted">No 32-hour completion certificate on file.</p>
             {canUpload && (
-              <button
-                type="button"
-                onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'completion cert')}
-              </button>
+              <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
             )}
           </div>
         )}
@@ -318,7 +313,7 @@ export function GuardThirtyTwoHourPanel({
                 disabled={!imageUrl?.trim()}
                 className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
               >
-                Upload credential
+                Add
               </button>
             </div>
           </form>

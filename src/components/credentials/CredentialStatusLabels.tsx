@@ -37,3 +37,16 @@ export function CredentialListStatusBadge({ status }: { status: CredentialListSt
   }
   return <CredentialSectionStatusBadge label="Missing" />;
 }
+
+/** Consistent section-header action for credential uploads. */
+export function CredentialSectionAddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+    >
+      Add
+    </button>
+  );
+}
