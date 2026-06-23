@@ -20,6 +20,7 @@ import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
+import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
@@ -284,6 +285,16 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
             placeholder="123 Main St, City"
             required
           />
+          <div className="mt-2">
+            <UseCurrentLocationButton
+              onLocated={({ coords, addressLine, stateCode }) => {
+                setLatitude(coords.lat);
+                setLongitude(coords.lng);
+                if (addressLine) setAddress(addressLine);
+                if (stateCode) setJobState(stateCode);
+              }}
+            />
+          </div>
         </div>
 
         <div>
@@ -383,7 +394,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
           )}
         </div>
 
-        {address.trim().length > 3 && (
+        {address.trim().length > 0 && (
           <div className="sm:col-span-2">
             <JobLocationCoordsFields
               latitude={latitude}

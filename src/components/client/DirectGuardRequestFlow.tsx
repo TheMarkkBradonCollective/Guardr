@@ -14,11 +14,12 @@ import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../.
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
+import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -201,10 +202,25 @@ export function DirectGuardRequestFlow({
         {step === 2 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Where?</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-              <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="uber-input pl-10 w-full" autoFocus />
+            <div>
+              <label className="uber-label block mb-1">Address</label>
+              <input
+                type="text"
+                placeholder="Street address, city"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="uber-input w-full"
+                autoFocus
+              />
             </div>
+            <UseCurrentLocationButton
+              onLocated={({ coords, addressLine, stateCode }) => {
+                setLatitude(coords.lat);
+                setLongitude(coords.lng);
+                if (addressLine) setAddress(addressLine);
+                if (stateCode) setJobState(stateCode);
+              }}
+            />
             <div>
               <label className="uber-label block mb-1">State</label>
               <select value={jobState} onChange={(e) => setJobState(e.target.value)} className="uber-select w-full" required>
@@ -218,21 +234,19 @@ export function DirectGuardRequestFlow({
               <label className="uber-label block mb-1">Site name (optional)</label>
               <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
             </div>
-            {address.trim().length > 3 && jobState.length === 2 && (
-              <JobLocationCoordsFields
-                latitude={latitude}
-                longitude={longitude}
-                onCoordsChange={(coords) => {
-                  if (coords) {
-                    setLatitude(coords.lat);
-                    setLongitude(coords.lng);
-                  } else {
-                    setLatitude(undefined);
-                    setLongitude(undefined);
-                  }
-                }}
-              />
-            )}
+            <JobLocationCoordsFields
+              latitude={latitude}
+              longitude={longitude}
+              onCoordsChange={(coords) => {
+                if (coords) {
+                  setLatitude(coords.lat);
+                  setLongitude(coords.lng);
+                } else {
+                  setLatitude(undefined);
+                  setLongitude(undefined);
+                }
+              }}
+            />
           </div>
         )}
 
