@@ -223,7 +223,7 @@ export function buildOperationsSnapshotCards(
           tone: outstandingTotal > 0 ? 'warning' : 'success',
         },
         {
-          label: 'Fees collected',
+          label: 'Company payout',
           value: `${feeCollectionPct}%`,
           pct: feeCollectionPct,
           sub: `${formatOperationalMoney(financials.platformFeesCollected)} of ${formatOperationalMoney(financials.platformFeesTotal)}`,
