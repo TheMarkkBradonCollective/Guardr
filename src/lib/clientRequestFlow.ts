@@ -40,3 +40,13 @@ export function serviceToJobType(serviceId: ClientServiceId): JobType {
 export function serviceDefaultTitle(serviceId: ClientServiceId): string {
   return CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)?.defaultTitle ?? 'Security Coverage Request';
 }
+
+export function defaultDirectGuardJobTitle(serviceId: ClientServiceId, guardName: string): string {
+  return `${serviceDefaultTitle(serviceId)} — ${guardName}`;
+}
+
+/** Trim user-entered title; fall back to service default when empty. */
+export function resolveJobTitle(jobTitle: string, serviceId: ClientServiceId): string {
+  const trimmed = jobTitle.trim();
+  return trimmed || serviceDefaultTitle(serviceId);
+}
