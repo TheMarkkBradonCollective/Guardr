@@ -1,6 +1,14 @@
 import React, { useMemo } from 'react';
-import { SecurityGuard, SecurityRequest } from '../../types';
+import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import { getGuardHistoryWithClient } from '../../lib/guardDirectory';
+import {
+  canOpenJobChatForRequest,
+  findMessageableRequestForGuard,
+  isJobChatEligible,
+  isJobChatReadOnly,
+  jobChatActionLabel,
+  threadForRequest,
+} from '../../lib/jobChat';
 import {
   formatServiceAreas,
   formatSkillList,
@@ -21,6 +29,7 @@ import {
   Clock,
   GraduationCap,
   MapPin,
+  MessageCircle,
 } from 'lucide-react';
 
 interface GuardProfileScreenProps {
@@ -29,6 +38,10 @@ interface GuardProfileScreenProps {
   requests: SecurityRequest[];
   onBack: () => void;
   onRequestGuard: (guard: SecurityGuard) => void;
+  jobChatThreads?: JobChatThread[];
+  currentUser?: SessionUser;
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  onOpenJobChat?: (requestId: string) => void;
 }
 
 const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
@@ -47,11 +60,36 @@ export function GuardProfileScreen({
   requests,
   onBack,
   onRequestGuard,
+  jobChatThreads = [],
+  currentUser,
+  onSendJobChatMessage,
+  onOpenJobChat,
 }: GuardProfileScreenProps) {
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
     [guard.id, clientId, requests]
   );
+
+  const messageableRequest = useMemo(
+    () => findMessageableRequestForGuard(clientId, guard.id, requests, jobChatThreads),
+    [clientId, guard.id, requests, jobChatThreads]
+  );
+
+  const canMessageFromProfile =
+    !!messageableRequest &&
+    !!onOpenJobChat &&
+    (isJobChatEligible(messageableRequest)
+      ? !!(currentUser && onSendJobChatMessage)
+      : canOpenJobChatForRequest(messageableRequest, jobChatThreads));
+
+  const openJobChat = (requestId: string) => onOpenJobChat?.(requestId);
+
+  const canOpenHistoryChat = (requestId: string) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !onOpenJobChat) return false;
+    if (isJobChatEligible(req)) return !!(currentUser && onSendJobChatMessage);
+    return isJobChatReadOnly(req) && !!threadForRequest(jobChatThreads, req.id);
+  };
 
   const aboutText = guard.about?.trim() || guard.bio?.trim();
 
@@ -184,27 +222,55 @@ export function GuardProfileScreen({
               </div>
             ) : (
               <div className="space-y-2">
-                {history.map((item) => (
-                  <div key={item.requestId} className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">
-                    <div className="flex items-start justify-between gap-2 w-full">
-                      <p className="font-semibold text-sm">{item.title}</p>
-                      <WfBadge className="shrink-0">{STATUS_LABEL[item.status]}</WfBadge>
-                    </div>
-                    <p className="text-xs text-brand-text-muted">{item.location}</p>
-                    <p className="text-sm text-brand-primary">{formatShiftRange(item.startDate, item.endDate)}</p>
-                    {item.ratingGiven != null && (
-                      <p className="text-xs text-brand-text-muted">
-                        Your rating: {item.ratingGiven}/5{item.reviewText ? ` — "${item.reviewText}"` : ''}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                {history.map((item) => {
+                  const historyChatOpen = canOpenHistoryChat(item.requestId);
+                  const historyReq = requests.find((r) => r.id === item.requestId);
+                  const CardTag = historyChatOpen ? 'button' : 'div';
+                  return (
+                    <CardTag
+                      key={item.requestId}
+                      type={historyChatOpen ? 'button' : undefined}
+                      onClick={historyChatOpen ? () => openJobChat(item.requestId) : undefined}
+                      className={`wf-list-card flex-col items-stretch !flex !flex-col gap-1 text-left w-full${
+                        historyChatOpen ? ' hover:border-brand-primary/40 transition-colors' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 w-full">
+                        <p className="font-semibold text-sm">{item.title}</p>
+                        <WfBadge className="shrink-0">{STATUS_LABEL[item.status]}</WfBadge>
+                      </div>
+                      <p className="text-xs text-brand-text-muted">{item.location}</p>
+                      <p className="text-sm text-brand-primary">{formatShiftRange(item.startDate, item.endDate)}</p>
+                      {item.ratingGiven != null && (
+                        <p className="text-xs text-brand-text-muted">
+                          Your rating: {item.ratingGiven}/5{item.reviewText ? ` — "${item.reviewText}"` : ''}
+                        </p>
+                      )}
+                      {historyChatOpen && historyReq && (
+                        <p className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-primary mt-1">
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          {jobChatActionLabel(historyReq)}
+                        </p>
+                      )}
+                    </CardTag>
+                  );
+                })}
               </div>
             )}
           </section>
         </div>
 
-      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full">
+      <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
+        {canMessageFromProfile && messageableRequest && (
+          <button
+            type="button"
+            onClick={() => openJobChat(messageableRequest.id)}
+            className="app-button-outline w-full gap-1.5"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {jobChatActionLabel(messageableRequest)}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onRequestGuard(guard)}

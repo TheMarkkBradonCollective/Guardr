@@ -315,6 +315,10 @@ export function ClientDashboard({
           requests={requests}
           onBack={() => setSelectedGuard(null)}
           onRequestGuard={startDirectGuardRequest}
+          jobChatThreads={jobChatThreads}
+          currentUser={currentUser}
+          onSendJobChatMessage={onSendJobChatMessage}
+          onOpenJobChat={onOpenJobChat ?? openMessages}
         />
       );
     }
