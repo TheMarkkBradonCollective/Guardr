@@ -128,14 +128,12 @@ function JobDetailPanel({
   const [assigning, setAssigning] = useState(false);
   const [editing, setEditing] = useState(false);
   const [auditUploadOpen, setAuditUploadOpen] = useState(() => isNoSelfAuditFlagged(req));
-  const [spotCheckOpen, setSpotCheckOpen] = useState(() => isNoSpotCheckFlagged(req));
+  const [spotCheckOpen, setSpotCheckOpen] = useState(false);
   useEffect(() => setEditing(false), [req.id]);
+  useEffect(() => setSpotCheckOpen(false), [req.id]);
   useEffect(() => {
     if (isNoSelfAuditFlagged(req)) setAuditUploadOpen(true);
   }, [req.id, req.checkInAudit?.selfAuditSkipped, req.checkInAudit?.selfieUpload, req.checkInAudit?.uniformPhoto, req.checkInAudit?.shoesPhoto]);
-  useEffect(() => {
-    if (isNoSpotCheckFlagged(req)) setSpotCheckOpen(true);
-  }, [req.id, req.status, req.spotChecks?.length, req.checkInAudit?.checkedAt]);
   const scheduleLocked = isJobScheduleLocked(req);
   const showEdit =
     canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
