@@ -41,7 +41,7 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
       continue;
     }
 
-    if (job.payoutMethod !== 'cash') {
+    if (job.guardPayoutAvailable && job.payoutMethod !== 'cash') {
       onlineAvailable += amount;
     }
   }

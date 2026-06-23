@@ -38,6 +38,7 @@ import {
   canDirectorMarkClientPaidCash,
   canDirectorPayGuardCash,
   canDirectorMarkPlatformFeePaidCash,
+  canMakeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
   getPlatformFeeAmount,
   getRemainingStripeDeposit,
@@ -1262,6 +1263,8 @@ export default function App() {
         platformFeePaidCash: !!r.platform_fee_paid_cash,
         guardCashPayoutRequested: !!r.guard_cash_payout_requested,
         guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
+        guardPayoutAvailable: !!r.guard_payout_available,
+        guardPayoutAvailableAt: r.guard_payout_available_at || undefined,
         clientCashPaymentRequested: !!r.client_cash_payment_requested,
         clientCashPaymentRequestedAt: r.client_cash_payment_requested_at || undefined,
         checkInAudit: r.check_in_audit ?? undefined,
@@ -4009,6 +4012,45 @@ export default function App() {
     appToast('Platform settings saved.', 'success');
   };
 
+  const handleMakeGuardPayoutAvailable = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can release guard pay.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canMakeGuardPayoutAvailable(req)) {
+      appToast('This job is not ready to release guard pay.', 'error');
+      return;
+    }
+    const amount = guardPayoutAmount(req);
+    if (!(await showAppConfirm({
+      title: 'Make funds available?',
+      message: `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then choose bank transfer or cash pickup from their Pay screen.`,
+      confirmLabel: 'Make available',
+    }))) {
+      return;
+    }
+
+    const releasedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, guardPayoutAvailable: true, guardPayoutAvailableAt: releasedAt }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          guard_payout_available: true,
+          guard_payout_available_at: releasedAt,
+        })
+        .eq('id', requestId);
+    }
+    appToast(`$${amount.toFixed(2)} is now available for the guard to collect.`, 'success');
+  };
+
   const handleMarkGuardPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
       appToast('Only Directors and Owners can record cash guard payouts.', 'error');
@@ -5880,6 +5922,7 @@ export default function App() {
           onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
           onRecordAuditViolation={handleRecordAuditViolation}
           onResetAuditFailures={handleResetAuditFailures}
+          onMakeGuardPayoutAvailable={handleMakeGuardPayoutAvailable}
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}

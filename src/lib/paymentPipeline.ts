@@ -18,15 +18,17 @@ export type PaymentPipelineStage =
   | 'cash-deposit-pending'
   | 'client-paid-active'
   | 'awaiting-guard-payout'
+  | 'guard-collection-pending'
   | 'settled'
   | 'closed';
 
 export function getPaymentPipelineStage(req: SecurityRequest): PaymentPipelineStage {
   if (req.status === 'closed') return 'closed';
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'awaiting-client';
+  if (req.paymentStatus === 'released') return 'settled';
+  if (req.guardPayoutAvailable && req.status === 'completed') return 'guard-collection-pending';
   // Fee deposit can still be owed after guard cash payout — check before "settled"
   if (isCashAwaitingStripeDeposit(req)) return 'cash-deposit-pending';
-  if (req.paymentStatus === 'released') return 'settled';
   if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus)) {
     return 'awaiting-guard-payout';
   }
@@ -38,13 +40,19 @@ export const PIPELINE_SECTION_META: Record<
   { title: string; description: string }
 > = {
   'awaiting-guard-payout': {
-    title: 'Pay the guard',
-    description: 'These jobs are finished. Send pay through Stripe or hand cash to the guard on site.',
+    title: 'Release guard pay',
+    description:
+      'These jobs are finished. Make funds available so the guard can collect from their Pay screen.',
+  },
+  'guard-collection-pending': {
+    title: 'Waiting on guard',
+    description:
+      'Funds are available. The guard chooses bank transfer or cash pickup from Pay — you fulfill their invoice when they submit one.',
   },
   'cash-deposit-pending': {
     title: 'Platform fee / Stripe deposit pending',
     description:
-      'The client paid in cash. If the guard was paid cash, only the platform fee is due — manually deposit it or pay with card. Otherwise deposit the full job amount to fund guard payout on Stripe.',
+      'The client paid in cash. Deposit the platform fee or remaining Stripe balance with card. Guard pay is released separately once the job is done.',
   },
   'awaiting-client': {
     title: 'Waiting on the client',
@@ -66,6 +74,7 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
   const cashDepositPending: SecurityRequest[] = [];
   const clientPaidActive: SecurityRequest[] = [];
   const awaitingGuardPayout: SecurityRequest[] = [];
+  const guardCollectionPending: SecurityRequest[] = [];
   const settled: SecurityRequest[] = [];
 
   for (const req of requests) {
@@ -82,6 +91,9 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
       case 'awaiting-guard-payout':
         awaitingGuardPayout.push(req);
         break;
+      case 'guard-collection-pending':
+        guardCollectionPending.push(req);
+        break;
       case 'settled':
         settled.push(req);
         break;
@@ -97,9 +109,10 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
   cashDepositPending.sort(byNewest);
   clientPaidActive.sort(byNewest);
   awaitingGuardPayout.sort(byNewest);
+  guardCollectionPending.sort(byNewest);
   settled.sort(byNewest);
 
-  return { awaitingClient, cashDepositPending, clientPaidActive, awaitingGuardPayout, settled };
+  return { awaitingClient, cashDepositPending, clientPaidActive, awaitingGuardPayout, guardCollectionPending, settled };
 }
 
 export function paymentPipelineSummary(requests: SecurityRequest[]) {
@@ -153,7 +166,16 @@ export function paymentAttentionSummary(requests: SecurityRequest[]): {
   }
   if (s.awaitingGuardPayout.length > 0) {
     lines.push(
-      `${s.awaitingGuardPayout.length} job${s.awaitingGuardPayout.length === 1 ? '' : 's'}: $${s.guardPayoutDue.toFixed(2)} guard pay still due`
+      `${s.awaitingGuardPayout.length} job${s.awaitingGuardPayout.length === 1 ? '' : 's'}: release $${s.guardPayoutDue.toFixed(2)} for guard collection`
+    );
+  }
+  if (s.guardCollectionPending.length > 0) {
+    const guardCollectionTotal = s.guardCollectionPending.reduce(
+      (sum, r) => sum + computeGuardEarnings(r.durationHours, r.hourlyRate),
+      0
+    );
+    lines.push(
+      `${s.guardCollectionPending.length} job${s.guardCollectionPending.length === 1 ? '' : 's'}: $${guardCollectionTotal.toFixed(2)} available — waiting on guard to collect`
     );
   }
   if (s.cashDepositPending.length > 0) {
@@ -202,6 +224,9 @@ export function guardPayoutBadgeClass(req: SecurityRequest): string {
   }
   if (getPaymentPipelineStage(req) === 'awaiting-guard-payout') {
     return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+  }
+  if (getPaymentPipelineStage(req) === 'guard-collection-pending') {
+    return 'text-sky-300 border-sky-500/40 bg-sky-500/10';
   }
   return 'text-brand-text-muted border-brand-border bg-white/5';
 }

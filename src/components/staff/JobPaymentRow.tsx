@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Banknote, CreditCard, Loader2, RotateCcw } from 'lucide-react';
+import { Banknote, CreditCard, Loader2, RotateCcw, Wallet } from 'lucide-react';
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
-  canDirectorPayGuardCash,
   canDirectorMarkPlatformFeePaidCash,
+  canMakeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
-  canStripePayGuard,
   getCashDepositedAmount,
   getPlatformFeeAmount,
   guardPayoutAmount,
@@ -15,11 +14,10 @@ import {
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../../lib/paymentDisplay';
-import { getPaymentPipelineStage } from '../../lib/paymentPipeline';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { WfBadge } from '../ui/wireframe';
-import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {
   paid: 'text-emerald-400',
@@ -58,12 +56,11 @@ interface JobPaymentRowProps {
   isDirector: boolean;
   canManagePayments: boolean;
   paymentGates: ClientPaymentGates;
-  onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
+  onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
@@ -76,19 +73,17 @@ export function JobPaymentRow({
   isDirector,
   canManagePayments,
   paymentGates,
-  onReleasePayout,
+  onMakeGuardPayoutAvailable,
   onRefundPayment,
   onMarkClientPaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
-  onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | 'platformFee' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'refund' | 'deposit' | 'platformFee' | null>(null);
 
-  const stage = getPaymentPipelineStage(req);
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
   const guardAmount = guardPayoutAmount(req);
@@ -108,14 +103,10 @@ export function JobPaymentRow({
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
   const canPlatformFeeCash =
     isDirector && canDirectorMarkPlatformFeePaidCash(req) && onMarkPlatformFeePaidCash;
-  const canPayGuard = stage === 'awaiting-guard-payout' && !!guard;
-  const stripePayAllowed = canStripePayGuard(req);
-  const canStripeRelease = canPayGuard && onReleasePayout && !readOnly && stripePayAllowed && paymentGates.allowStripe;
-  const canCashGuard =
-    paymentGates.allowCash &&
+  const canReleaseFunds =
     isDirector &&
-    canDirectorPayGuardCash(req) &&
-    onMarkGuardPaidCash &&
+    canMakeGuardPayoutAvailable(req) &&
+    onMakeGuardPayoutAvailable &&
     !readOnly;
   const canRefund =
     isDirector &&
@@ -124,11 +115,11 @@ export function JobPaymentRow({
     onRefundPayment &&
     !readOnly;
 
-  const run = async (kind: typeof busy, fn?: (id: string, force?: boolean) => Promise<void>, force = false) => {
+  const run = async (kind: typeof busy, fn?: (id: string) => Promise<void>) => {
     if (!fn) return;
     setBusy(kind);
     try {
-      await fn(req.id, force);
+      await fn(req.id);
     } finally {
       setBusy(null);
     }
@@ -170,7 +161,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canPlatformFeeCash || canStripeRelease || canCashGuard || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canPlatformFeeCash || canReleaseFunds || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
             <button
@@ -220,18 +211,6 @@ export function JobPaymentRow({
             </button>
           )}
 
-          {canCashGuard && (
-            <button
-              type="button"
-              onClick={() => run('guard', onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
-            >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Pay guard ${guardAmount.toFixed(2)} cash
-            </button>
-          )}
-
           {canPlatformFeeCash && (
             <button
               type="button"
@@ -248,30 +227,15 @@ export function JobPaymentRow({
             </button>
           )}
 
-          {canStripeRelease && (
-            <SlideToConfirm
-              compact
-              label={`Slide to pay guard $${guardAmount.toFixed(0)}`}
-              confirmedLabel="Sending…"
-              tone="success"
-              disabled={busy !== null || !guard?.stripeConnectAccountId}
-              disabledHint={
-                !guard?.stripeConnectAccountId ? 'Guard has no Stripe account connected' : undefined
-              }
-              onConfirm={() => run('stripe', onReleasePayout)}
-            />
-          )}
-
-          {isDirector && canPayGuard && onReleasePayout && stripePayAllowed && !readOnly && (
+          {canReleaseFunds && (
             <button
               type="button"
-              onClick={() => run('force', onReleasePayout, true)}
+              onClick={() => run('release', onMakeGuardPayoutAvailable)}
               disabled={busy !== null}
-              className="app-button-outline app-btn-sm text-amber-400 border-amber-500/40"
-              title="Director force payout without Connect check"
+              className="app-button-primary app-btn-sm gap-1.5"
             >
-              {busy === 'force' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-              Force Stripe payout
+              {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
+              Make ${guardAmount.toFixed(2)} available to guard
             </button>
           )}
 

@@ -118,6 +118,7 @@ interface StaffDashboardProps {
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
+  onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
@@ -228,6 +229,7 @@ export function StaffDashboard({
   onDenyGuardApplication,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
+  onMakeGuardPayoutAvailable,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
@@ -586,6 +588,7 @@ export function StaffDashboard({
               allowCash: platformSettings.paymentCashEnabled,
               allowStripe: platformSettings.paymentStripeEnabled,
             }}
+            onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}

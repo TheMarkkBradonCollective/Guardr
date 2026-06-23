@@ -13,7 +13,8 @@ export function getGuardPayoutEligibleJobs(
       r.assignedGuardId === guardId &&
       r.status === 'completed' &&
       ['paid', 'held'].includes(r.paymentStatus || '') &&
-      r.guardPayoutMethod !== 'cash'
+      r.guardPayoutMethod !== 'cash' &&
+      !!r.guardPayoutAvailable
   );
 }
 
