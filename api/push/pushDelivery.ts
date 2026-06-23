@@ -4,8 +4,8 @@ import {
   pushRoleToPlatformRole,
   resolveNotificationUrlForRole,
   rolesForNotificationType,
-} from './_routing';
-import type { PushNotificationType, PushRole, PushSendPayload } from './_types';
+} from './pushRouting';
+import type { PushNotificationType, PushRole, PushSendPayload } from './pushTypes';
 
 const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   assignment: 'assignment',

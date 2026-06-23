@@ -6,7 +6,7 @@ import type {
   PushSubscriptionPayload,
   SessionCredentials,
   VerifiedSession,
-} from './_types';
+} from './pushTypes';
 
 const STAFF_PLATFORM_ROLES = new Set([
   'owner',

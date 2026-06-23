@@ -1,4 +1,4 @@
-import type { PushNotificationData, PushNotificationType, PushRole, PlatformRole } from './_types';
+import type { PushNotificationData, PushNotificationType, PushRole, PlatformRole } from './pushTypes';
 
 export function platformRoleToPushRole(role: PlatformRole | string): PushRole {
   switch (role) {

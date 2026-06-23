@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { scanAndNotifyMissedCheckins } from '../../lib/push/missedCheckins';
-import { getSupabaseAdmin } from '../../lib/push/vercelAdapter';
+import { scanAndNotifyMissedCheckins } from '../push/pushMissedCheckins';
+import { getSupabaseAdmin } from '../push/pushShared';
 
 function isCronAuthorized(req: VercelRequest): boolean {
   const secret = process.env.CRON_SECRET?.trim();
