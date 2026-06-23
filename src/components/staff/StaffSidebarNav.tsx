@@ -68,7 +68,7 @@ function NavGroup({
             <Icon className="w-[1.125rem] h-[1.125rem] shrink-0" />
             <span className="flex-1 truncate">{label}</span>
             {badge != null && badge > 0 && (
-              <span className="text-[11px] font-bold min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 rounded-full bg-white/15 text-white/85">
+              <span className="sidebar-nav-badge text-[11px] font-bold min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 rounded-full">
                 {badge > 99 ? '99+' : badge}
               </span>
             )}

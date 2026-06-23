@@ -5081,55 +5081,15 @@ html.theme-light .app-cta-outline-dark {
    Every Page. Breathtaking on all screen sizes.
 ══════════════════════════════════════════════════════════════ */
 
-/* ─── 1. STAFF SIDEBAR: ALWAYS DARK — UBER OPS PORTAL ───── */
-/* Force dark sidebar in ALL themes (light, dark, grey) */
-.staff-sidebar,
-html.theme-light .staff-sidebar,
-html.theme-grey .staff-sidebar {
-  background: #050505;
-  border-right: 1px solid #1a1a1a;
+/* ─── 1. STAFF SIDEBAR: THEME SYSTEM (light / grey / dark) ── */
+
+/* Base sidebar — width only; background comes from theme class */
+.staff-sidebar {
   width: 17rem;
 }
 
-.staff-sidebar-brand,
-html.theme-light .staff-sidebar-brand,
-html.theme-grey .staff-sidebar-brand {
-  border-bottom-color: #1a1a1a;
-}
-
-.staff-sidebar-footer,
-html.theme-light .staff-sidebar-footer,
-html.theme-grey .staff-sidebar-footer {
-  border-top-color: #1a1a1a;
-}
-
-/* Override all text/border tokens inside sidebar for dark background */
-.staff-sidebar {
-  --brand-text:         #f0f0f0;
-  --brand-text-muted:   rgba(255, 255, 255, 0.42);
-  --brand-border:       #1a1a1a;
-  --brand-surface:      #111111;
-  --brand-bg-sec:       #0f0f0f;
-  --brand-elevated:     #1e1e1e;
-}
-
-/* ─── 2. STAFF SIDEBAR NAV ITEMS — White-on-dark Uber Ops ── */
-.staff-sidebar .uber-side-nav {
-  border-top-color: transparent !important;
-  border-bottom-color: transparent !important;
-}
-
-.staff-sidebar .divide-brand-border > * + * {
-  border-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-.staff-sidebar .border-brand-border {
-  border-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-/* Nav item base: muted white */
+/* All nav items: shared size/font regardless of theme */
 .staff-sidebar .uber-side-nav-item {
-  color: rgba(255, 255, 255, 0.52) !important;
   font-size: 0.9375rem !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
@@ -5137,39 +5097,209 @@ html.theme-grey .staff-sidebar-footer {
   transition: color 0.12s ease, background 0.12s ease !important;
 }
 
-/* Nav item hover: brighter white */
-.staff-sidebar .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
+.staff-sidebar .uber-side-nav-item svg {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+/* Sidebar nav: no divider borders (whitespace grouping) */
+.staff-sidebar .uber-side-nav {
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+/* ─── LIGHT SIDEBAR (default — white) ─────────────────────── */
+.staff-sidebar.staff-sidebar-light {
+  background: #ffffff;
+  border-right: 1px solid #e8e8e8;
+}
+
+html.theme-dark .staff-sidebar.staff-sidebar-light {
+  background: var(--brand-surface);
+  border-right-color: var(--brand-border);
+}
+
+.staff-sidebar.staff-sidebar-light .staff-sidebar-brand {
+  border-bottom-color: #e8e8e8;
+}
+
+html.theme-dark .staff-sidebar.staff-sidebar-light .staff-sidebar-brand {
+  border-bottom-color: var(--brand-border);
+}
+
+.staff-sidebar.staff-sidebar-light .staff-sidebar-footer {
+  border-top-color: #e8e8e8;
+}
+
+html.theme-dark .staff-sidebar.staff-sidebar-light .staff-sidebar-footer {
+  border-top-color: var(--brand-border);
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item {
+  color: var(--brand-text-muted) !important;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
+  color: var(--brand-text) !important;
+  background: var(--brand-bg-sec) !important;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item.uber-side-nav-item-active {
+  color: var(--brand-accent-text) !important;
+  background: var(--brand-primary) !important;
+  box-shadow: none !important;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item.uber-side-nav-item-active svg {
+  color: var(--brand-accent-text) !important;
+  opacity: 1;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item svg {
+  opacity: 0.7;
+}
+
+/* ─── DARK SIDEBAR (black — #050505) ──────────────────────── */
+.staff-sidebar.staff-sidebar-dark {
+  background: #050505;
+  border-right: 1px solid #1a1a1a;
+  --brand-text:       #f0f0f0;
+  --brand-text-muted: rgba(255, 255, 255, 0.42);
+  --brand-border:     #1a1a1a;
+  --brand-surface:    #111111;
+  --brand-bg-sec:     #0f0f0f;
+}
+
+.staff-sidebar.staff-sidebar-dark .staff-sidebar-brand {
+  border-bottom-color: #1a1a1a;
+}
+
+.staff-sidebar.staff-sidebar-dark .staff-sidebar-footer {
+  border-top-color: #1a1a1a;
+}
+
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item {
+  color: rgba(255, 255, 255, 0.52) !important;
+}
+
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
   color: rgba(255, 255, 255, 0.88) !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Nav item active: full white + green left bar */
-.staff-sidebar .uber-side-nav-item.uber-side-nav-item-active {
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item.uber-side-nav-item-active {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.09) !important;
   box-shadow: inset 3px 0 0 var(--brand-primary) !important;
 }
 
-/* Nav icons */
-.staff-sidebar .uber-side-nav-item svg {
-  width: 1.125rem !important;
-  height: 1.125rem !important;
-  opacity: 0.85;
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item svg {
+  opacity: 0.75;
 }
 
-.staff-sidebar .uber-side-nav-item.uber-side-nav-item-active svg {
-  opacity: 1;
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item.uber-side-nav-item-active svg {
   color: var(--brand-primary) !important;
+  opacity: 1;
 }
 
-/* Sidebar close button on mobile */
-.staff-sidebar-close {
+.staff-sidebar.staff-sidebar-dark .staff-sidebar-close {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.staff-sidebar-close:hover {
+.staff-sidebar.staff-sidebar-dark .staff-sidebar-close:hover {
   color: rgba(255, 255, 255, 0.88);
 }
+
+.staff-sidebar.staff-sidebar-dark .divide-brand-border > * + * {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ─── GREY SIDEBAR (slate — #25282e) ──────────────────────── */
+.staff-sidebar.staff-sidebar-grey {
+  background: #25282e;
+  border-right: 1px solid #32363e;
+  --brand-text:       #e8eaed;
+  --brand-text-muted: rgba(255, 255, 255, 0.45);
+  --brand-border:     #32363e;
+  --brand-surface:    #2d3038;
+  --brand-bg-sec:     #2a2d34;
+}
+
+.staff-sidebar.staff-sidebar-grey .staff-sidebar-brand {
+  border-bottom-color: #32363e;
+}
+
+.staff-sidebar.staff-sidebar-grey .staff-sidebar-footer {
+  border-top-color: #32363e;
+}
+
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item:hover:not(.uber-side-nav-item-active) {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item.uber-side-nav-item-active {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 3px 0 0 var(--brand-primary) !important;
+}
+
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item svg {
+  opacity: 0.75;
+}
+
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item.uber-side-nav-item-active svg {
+  color: var(--brand-primary) !important;
+  opacity: 1;
+}
+
+.staff-sidebar.staff-sidebar-grey .staff-sidebar-close {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.staff-sidebar.staff-sidebar-grey .staff-sidebar-close:hover {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.staff-sidebar.staff-sidebar-grey .divide-brand-border > * + * {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ─── SIDEBAR THEME SWATCH TOGGLE ─────────────────────────── */
+.sidebar-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.sidebar-theme-swatch {
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.sidebar-theme-swatch:hover {
+  transform: scale(1.18);
+}
+
+.sidebar-theme-swatch-active {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+}
+
+/* ─── 2. STAFF SIDEBAR GROUP LABELS ───────────────────────── */
+/* Shared across all sidebar themes — the text will inherit from CSS vars */
 
 /* ─── 3. UBER-LABEL: PROPER FORM LABEL STYLE ─────────────── */
 /* Replace plain text with uppercase micro-label like Uber */
@@ -5925,38 +6055,55 @@ button:active:not(:disabled) {
   padding: 1rem 1rem 1.125rem;
 }
 
-.staff-sidebar-brand * {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.staff-sidebar-brand svg,
-.staff-sidebar-brand img {
-  opacity: 0.9;
-}
-
-/* Guardr wordmark in sidebar: large bold */
-.staff-sidebar-brand span.font-bold,
-.staff-sidebar-brand span.font-black,
-.staff-sidebar-brand span[class*="font-"] {
-  color: #ffffff !important;
-  font-size: 1.125rem !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.04em !important;
-}
-
 /* ─── 44. STAFF SIDEBAR GROUP LABELS: PROPERLY STYLED ───── */
-/* These are the "DASHBOARD", "OPERATIONS" labels */
-.staff-sidebar .mb-4 > p[class*="text-\\[9px\\]"],
-.staff-sidebar .mb-4 > p.text-brand-text-muted {
+/* These are the "DASHBOARD", "OPERATIONS" labels — shared sizing */
+.staff-sidebar .mb-5 > p {
   font-size: 0.625rem !important;
   font-family: var(--font-sans) !important;
   font-weight: 700 !important;
   letter-spacing: 0.1em !important;
-  color: rgba(255, 255, 255, 0.3) !important;
   font-variant: normal !important;
   font-style: normal !important;
   text-transform: uppercase !important;
   padding-left: 1rem !important;
+}
+
+/* Light sidebar: group labels use brand muted color */
+.staff-sidebar.staff-sidebar-light .mb-5 > p {
+  color: var(--brand-text-muted) !important;
+}
+
+/* Dark/grey sidebar: group labels white at low opacity */
+.staff-sidebar.staff-sidebar-dark .mb-5 > p,
+.staff-sidebar.staff-sidebar-grey .mb-5 > p {
+  color: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* ─── SIDEBAR NAV BADGE: THEME-AWARE ─────────────────────── */
+/* Light: brand-primary tinted */
+.staff-sidebar.staff-sidebar-light .sidebar-nav-badge {
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  color: var(--brand-primary);
+}
+
+/* Light: active item badge: white on green */
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item-active .sidebar-nav-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* Dark/grey: white tinted */
+.staff-sidebar.staff-sidebar-dark .sidebar-nav-badge,
+.staff-sidebar.staff-sidebar-grey .sidebar-nav-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Dark/grey: active item badge */
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item-active .sidebar-nav-badge,
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item-active .sidebar-nav-badge {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 /* ─── 45. SLIDE-UP ANIMATION: MORE UBER-LIKE ──────────────── */
