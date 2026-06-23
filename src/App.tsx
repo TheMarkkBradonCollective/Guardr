@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -179,13 +179,17 @@ import {
 import { reportPushEvent } from './lib/pushApi';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
+  clearPersistedAppRoute,
   defaultRouteForRole,
+  buildAppPath,
   isAuthOnlyRoute,
   parseAppRoute,
+  persistAppRoute,
   readAppRouteFromPopState,
   readAppRouteFromWindow,
   readLegalPageFromUrl,
   readLegalPageFromWindow,
+  resolveAppRouteForUser,
   stripEphemeralQueryParams,
   syncAppRoute,
   syncLegalPage,
@@ -919,13 +923,21 @@ export default function App() {
     }
     setLegalPageState(null);
 
+    const user = currentUserRef.current;
     const strippedUrl = stripEphemeralQueryParams(url);
+    const routeFromUrl = parseAppRoute(strippedUrl);
+    const userRole = user ? appRoleForUser(user) : null;
     const route =
       options.source === 'popstate'
         ? readAppRouteFromPopState(options.event)
-        : parseAppRoute(strippedUrl);
-
-    const user = currentUserRef.current;
+        : routeFromUrl ??
+          (user
+            ? resolveAppRouteForUser(strippedUrl, {
+                allowPersistedFallback: true,
+                userId: user.id,
+                userRole,
+              })
+            : null);
 
     if (route?.authView) {
       if (!user) {
@@ -964,16 +976,47 @@ export default function App() {
     }
 
     if (user && !routeMatchesUser(route, user)) {
+      if (options.source === 'popstate') {
+        const role = appRoleForUser(user);
+        if (role) {
+          const fallback = defaultRouteForRole(role);
+          applyAppRouteRef.current(fallback);
+          window.history.replaceState({ appRoute: fallback }, '', buildAppPath(fallback));
+        }
+      }
       return;
     }
 
     applyAppRouteRef.current(route);
+    persistAppRoute(route, user?.id ?? null);
     if (options.source !== 'popstate') {
       syncAppRoute(route, true);
     }
   };
 
   useNativeBackButtonBootstrap(!!currentUser);
+
+  useLayoutEffect(() => {
+    const url = window.location.pathname + window.location.search;
+    const user = currentUserRef.current;
+    const userRole = user ? appRoleForUser(user) : null;
+    const route =
+      parseAppRoute(stripEphemeralQueryParams(url)) ??
+      (user
+        ? resolveAppRouteForUser(url, {
+            allowPersistedFallback: true,
+            userId: user.id,
+            userRole,
+          })
+        : null);
+
+    if (!route || route.authView) return;
+    if (user && !routeMatchesUser(route, user)) return;
+
+    applyAppRouteRef.current(route);
+    persistAppRoute(route, user?.id ?? null);
+    syncAppRoute(route, true);
+  }, []);
 
   useEffect(() => {
     navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
@@ -986,11 +1029,18 @@ export default function App() {
     };
     window.addEventListener('popstate', onPopState);
 
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
+    };
+    window.addEventListener('pageshow', onPageShow);
+
     const unsubscribe = listenForPushNavigation((url) => {
       navigateFromLocation(url, { source: 'deeplink' });
     });
     return () => {
       window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('pageshow', onPageShow);
       unsubscribe();
     };
   }, []);
@@ -1003,12 +1053,16 @@ export default function App() {
     const role = appRoleForUser(currentUser);
     if (!role) return;
 
-    const isFreshLogin = loggedInUserIdRef.current !== currentUser.id;
     loggedInUserIdRef.current = currentUser.id;
 
-    const route = parseAppRoute(
-      stripEphemeralQueryParams(window.location.pathname + window.location.search)
-    );
+    const url = stripEphemeralQueryParams(window.location.pathname + window.location.search);
+    const route =
+      parseAppRoute(url) ??
+      resolveAppRouteForUser(url, {
+        allowPersistedFallback: true,
+        userId: currentUser.id,
+        userRole: role,
+      });
 
     if (route && isAuthOnlyRoute(route)) {
       const fallback = defaultRouteForRole(role);
@@ -1018,14 +1072,13 @@ export default function App() {
     }
 
     if (route && routeMatchesUser(route, currentUser)) {
-      if (isFreshLogin) {
-        applyAppRouteRef.current(route);
-      }
+      applyAppRouteRef.current(route);
+      persistAppRoute(route, currentUser.id);
       syncAppRoute(route, true);
       return;
     }
 
-    if (isFreshLogin || !route) {
+    if (!route) {
       const fallback = defaultRouteForRole(role);
       applyAppRouteRef.current(fallback);
       syncAppRoute(fallback, true);
@@ -1875,6 +1928,7 @@ export default function App() {
 
   const handleSignOut = () => {
     localStorage.removeItem('guardr_current_user');
+    clearPersistedAppRoute();
     setCurrentUser(null);
     setIsAuthView(false);
     setLegalPageState(null);
