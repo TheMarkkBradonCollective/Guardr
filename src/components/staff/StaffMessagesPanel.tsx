@@ -165,27 +165,46 @@ export function StaffMessagesPanel({
         <p className="staff-empty-state">No conversations yet.</p>
       ) : (
         <AppInboxList>
-          {inboxRows.map((row) => (
-            <AppInboxRow
-              key={row.id}
-              title={row.title}
-              subtitle={row.subtitle}
-              preview={row.preview}
-              meta={formatInboxMeta(row.updatedAt)}
-              selected={isRowSelected(row)}
-              leading={
-                row.channel === 'staff-community' ? (
-                  <MessagesSquare className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'report' ? (
-                  <FileText className="w-5 h-5 text-brand-primary" />
-                ) : row.channel === 'support' ? (
-                  <LifeBuoy className="w-5 h-5 text-brand-primary" />
-                ) : undefined
-              }
-              badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
-              onClick={() => selectRow(row)}
-            />
-          ))}
+          {inboxRows.map((row, i) => {
+            const prevRow = i > 0 ? inboxRows[i - 1] : null;
+            const sectionChanged = prevRow && prevRow.channel !== row.channel;
+            const isFirstRow = i === 0;
+            const showSection =
+              (isFirstRow && row.channel !== 'staff-community') || sectionChanged;
+
+            const sectionLabel =
+              row.channel === 'job'
+                ? 'Job Chats'
+                : row.channel === 'support' || row.channel === 'report'
+                ? 'Support'
+                : null;
+
+            return (
+              <React.Fragment key={row.id}>
+                {showSection && sectionLabel && (
+                  <div className="app-inbox-section-head">{sectionLabel}</div>
+                )}
+                <AppInboxRow
+                  title={row.title}
+                  subtitle={row.subtitle}
+                  preview={row.preview}
+                  meta={formatInboxMeta(row.updatedAt)}
+                  selected={isRowSelected(row)}
+                  leading={
+                    row.channel === 'staff-community' ? (
+                      <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                    ) : row.channel === 'report' ? (
+                      <FileText className="w-5 h-5 text-brand-primary" />
+                    ) : row.channel === 'support' ? (
+                      <LifeBuoy className="w-5 h-5 text-brand-primary" />
+                    ) : undefined
+                  }
+                  badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
+                  onClick={() => selectRow(row)}
+                />
+              </React.Fragment>
+            );
+          })}
         </AppInboxList>
       )}
     </>

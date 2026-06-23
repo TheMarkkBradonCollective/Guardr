@@ -1,5 +1,8 @@
 import React from 'react';
-import { ArrowLeft, ChevronRight, Filter, Search, Send } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } from 'lucide-react';
+
+/** Shared type for reply-to context (also exported from ChatThreadPanel) */
+export type ChatReplyContext = { senderName: string; body: string };
 
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`app-screen ${className}`}>{children}</div>;
@@ -436,30 +439,67 @@ export function AppChatBubble({
   body,
   timestamp,
   tone,
+  groupClass = '',
+  replyTo,
+  readReceipt = false,
 }: {
   sender?: AppChatSender;
   senderLabel?: string;
   body: string;
   timestamp?: string;
   tone: AppChatBubbleTone;
+  /** CSS modifier class for grouped messages (app-chat-bubble-gfirst/gmid/glast) */
+  groupClass?: string;
+  /** Quoted reply context shown above the message body */
+  replyTo?: ChatReplyContext;
+  /** Show a read-receipt checkmark after the timestamp (own messages only) */
+  readReceipt?: boolean;
 }) {
+  const hasSender = !!(sender || senderLabel);
   return (
-    <div className={`app-chat-bubble app-chat-bubble-${tone}`}>
-      {(sender || senderLabel) && (
+    <div className={`app-chat-bubble app-chat-bubble-${tone}${groupClass ? ` ${groupClass}` : ''}`}>
+      {/* Reply quote */}
+      {replyTo && (
+        <div className="app-chat-bubble-reply">
+          <div className="app-chat-bubble-reply-content">
+            <span className="app-chat-bubble-reply-sender">{replyTo.senderName}</span>
+            <p className="app-chat-bubble-reply-text">{replyTo.body}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Sender info */}
+      {hasSender && (
         <div className="app-chat-bubble-sender">
           {sender ? (
             <>
-              {sender.showBrand && <span className="app-chat-bubble-brand">Guardr</span>}
               <span className="app-chat-bubble-name">{sender.name}</span>
-              {sender.roleLabel && <span className="app-chat-bubble-role">{sender.roleLabel}</span>}
+              {sender.roleLabel && (
+                <span className="app-chat-bubble-role">{sender.roleLabel}</span>
+              )}
+              {sender.showBrand && (
+                <span className="app-chat-bubble-brand">via Guardr</span>
+              )}
             </>
           ) : (
             <span className="app-chat-bubble-name">{senderLabel}</span>
           )}
         </div>
       )}
+
       <p className="app-chat-bubble-body whitespace-pre-wrap">{body}</p>
-      {timestamp && <p className="app-chat-bubble-time">{timestamp}</p>}
+
+      {/* Timestamp + read receipt row */}
+      {(timestamp || readReceipt) && (
+        <div className="app-chat-bubble-footer">
+          {timestamp && <p className="app-chat-bubble-time">{timestamp}</p>}
+          {readReceipt && (
+            <span className="app-chat-receipt" title="Sent">
+              <Check className="app-chat-receipt-check" strokeWidth={2.5} />
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -471,6 +511,8 @@ export function AppChatComposer({
   placeholder = 'Type a message…',
   disabled = false,
   submitting = false,
+  replyTo,
+  onCancelReply,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -478,6 +520,10 @@ export function AppChatComposer({
   placeholder?: string;
   disabled?: boolean;
   submitting?: boolean;
+  /** Active reply context to display above the input */
+  replyTo?: ChatReplyContext | null;
+  /** Called when the user cancels the reply */
+  onCancelReply?: () => void;
 }) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -492,8 +538,34 @@ export function AppChatComposer({
     resizeComposer();
   }, [value]);
 
+  // Focus textarea when a reply is set
+  React.useEffect(() => {
+    if (replyTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyTo]);
+
   return (
     <div className="app-chat-composer">
+      {/* Reply preview strip — full-width, above the padded input area */}
+      {replyTo && (
+        <div className="app-chat-reply-bar">
+          <div className="app-chat-reply-bar-body">
+            <p className="app-chat-reply-bar-label">↩ Replying to {replyTo.senderName}</p>
+            <p className="app-chat-reply-bar-text">{replyTo.body}</p>
+          </div>
+          <button
+            type="button"
+            className="app-chat-reply-bar-cancel"
+            onClick={onCancelReply}
+            aria-label="Cancel reply"
+          >
+            <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
+
+      <div className="app-chat-composer-inner">
       <div className="app-chat-composer-field">
         <textarea
           ref={textareaRef}
@@ -519,6 +591,7 @@ export function AppChatComposer({
         >
           <Send className="w-4 h-4" />
         </button>
+      </div>
       </div>
     </div>
   );

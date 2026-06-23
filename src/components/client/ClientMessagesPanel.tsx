@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   JobChatMessage,
   JobChatThread,
@@ -186,12 +186,18 @@ export function ClientMessagesPanel({
   };
 
   const header = (
-    <MessagesQuickActions
-      onContactSupport={onOpenCompose}
-      onFileReport={onOpenReport}
-      supportHint="Direct line to the Guardr operations team"
-      reportHint="Safety concern, dispute, or formal complaint"
-    />
+    <>
+      <div className="app-messages-hub-lead">
+        <h2 className="text-base font-bold tracking-tight">Messages</h2>
+        <p>Job chats and support conversations sorted by recent activity</p>
+      </div>
+      <MessagesQuickActions
+        onContactSupport={onOpenCompose}
+        onFileReport={onOpenReport}
+        supportHint="Direct line to the Guardr operations team"
+        reportHint="Safety concern, dispute, or formal complaint"
+      />
+    </>
   );
 
   const list = (
@@ -202,23 +208,41 @@ export function ClientMessagesPanel({
         </p>
       ) : (
         <AppInboxList>
-          {inboxRows.map((row) => (
-            <AppInboxRow
-              key={row.id}
-              title={row.title}
-              subtitle={row.subtitle}
-              preview={row.preview}
-              meta={formatInboxMeta(row.updatedAt)}
-              leading={renderInboxIcon(row)}
-              selected={isRowSelected(row)}
-              badges={
-                row.badge ? (
-                  <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge>
-                ) : undefined
-              }
-              onClick={() => openRow(row)}
-            />
-          ))}
+          {inboxRows.map((row, i) => {
+            const prevRow = i > 0 ? inboxRows[i - 1] : null;
+            const sectionChanged = prevRow && prevRow.channel !== row.channel;
+            const isFirstRow = i === 0;
+            const showSection = isFirstRow || sectionChanged;
+
+            const sectionLabel =
+              row.channel === 'job'
+                ? 'Job Chats'
+                : row.channel === 'support' || row.channel === 'report'
+                ? 'Support'
+                : null;
+
+            return (
+              <React.Fragment key={row.id}>
+                {showSection && sectionLabel && (
+                  <div className="app-inbox-section-head">{sectionLabel}</div>
+                )}
+                <AppInboxRow
+                  title={row.title}
+                  subtitle={row.subtitle}
+                  preview={row.preview}
+                  meta={formatInboxMeta(row.updatedAt)}
+                  leading={renderInboxIcon(row)}
+                  selected={isRowSelected(row)}
+                  badges={
+                    row.badge ? (
+                      <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge>
+                    ) : undefined
+                  }
+                  onClick={() => openRow(row)}
+                />
+              </React.Fragment>
+            );
+          })}
         </AppInboxList>
       )}
     </>
