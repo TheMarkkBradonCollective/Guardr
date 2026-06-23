@@ -134,17 +134,6 @@ export function GuardResumeEditor({
     <div className="space-y-5">
       {!guard.isStaff && <GuardQualificationPanel guard={guard} />}
 
-      <GuardCredentialsPanel
-        guard={guard}
-        editing={credEditing}
-        staffMode={staffMode}
-        onAddCertification={onAddCertification}
-        onDeleteCertification={onDeleteCertification}
-        onAttachCertificationImage={onAttachCertificationImage}
-        onUpdateCertification={onUpdateCertification}
-        onSubmitIdentityVerification={onSubmitIdentityVerification}
-      />
-
       <section className="app-form-section space-y-4">
         <p className="uber-label flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-primary" />
@@ -267,6 +256,17 @@ export function GuardResumeEditor({
         }))}
         canAdd={editing && !!onAddEducation}
         onAdd={() => setShowAddEdu(true)}
+      />
+
+      <GuardCredentialsPanel
+        guard={guard}
+        editing={credEditing}
+        staffMode={staffMode}
+        onAddCertification={onAddCertification}
+        onDeleteCertification={onDeleteCertification}
+        onAttachCertificationImage={onAttachCertificationImage}
+        onUpdateCertification={onUpdateCertification}
+        onSubmitIdentityVerification={onSubmitIdentityVerification}
       />
 
       <AppFormSheet
