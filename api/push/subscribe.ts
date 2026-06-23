@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   getSupabaseAdmin,
   jsonError,
+  parseRequestBody,
   platformRoleToPushRole,
   upsertPushSubscription,
   verifySession,
@@ -15,10 +16,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const db = await getSupabaseAdmin();
     if (!db) {
-      return jsonError(res, 503, 'Database is not configured');
+      return jsonError(
+        res,
+        503,
+        'Database is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server.'
+      );
     }
 
-    const body = (req.body ?? {}) as {
+    const body = parseRequestBody<{
       userId?: string;
       email?: string;
       role?: string;
@@ -26,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       siteId?: string;
       quietHoursStart?: string;
       quietHoursEnd?: string;
-    };
+    }>(req);
 
     const session = await verifySession(db, {
       userId: body.userId ?? '',

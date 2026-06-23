@@ -18,6 +18,12 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   job_chat_message: 'job_chat_message',
   staff_message: 'staff_message',
   guard_message: 'guard_message',
+  job_submitted: 'job_submitted',
+  guard_application: 'guard_application',
+  guard_pending_approval: 'guard_pending_approval',
+  client_pending_approval: 'client_pending_approval',
+  credential_pending: 'credential_pending',
+  payment_attention: 'payment_attention',
 };
 
 async function isTypeEnabledForUser(

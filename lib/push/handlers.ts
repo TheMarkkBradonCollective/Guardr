@@ -189,6 +189,30 @@ export async function handlePushEvent(
       title: 'Guard chat',
       body: body.body || 'New message from another guard',
     },
+    job_submitted: {
+      title: 'New job request',
+      body: body.body || 'A client submitted a job awaiting staff review',
+    },
+    guard_application: {
+      title: 'Guard application',
+      body: body.body || 'A guard applied to an open job offer',
+    },
+    guard_pending_approval: {
+      title: 'Guard pending approval',
+      body: body.body || 'A guard account needs staff review',
+    },
+    client_pending_approval: {
+      title: 'Client pending approval',
+      body: body.body || 'A client account needs staff review',
+    },
+    credential_pending: {
+      title: 'Credential review',
+      body: body.body || 'A guard submitted credentials for review',
+    },
+    payment_attention: {
+      title: 'Payment attention',
+      body: body.body || 'A payment or payout needs staff action',
+    },
   };
 
   const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
@@ -216,10 +240,19 @@ export async function handlePushEvent(
     dispatchPayload.userId = body.recipientUserId;
   } else if (body.type === 'job_chat_message' && body.recipientUserId) {
     dispatchPayload.userId = body.recipientUserId;
-  } else if (body.type === 'staff_message') {
-    dispatchPayload.role = 'dispatch';
-  } else if (body.type === 'guard_message') {
-    dispatchPayload.role = 'guard';
+  } else if (
+    body.type === 'staff_message' ||
+    body.type === 'guard_message' ||
+    body.type === 'job_submitted' ||
+    body.type === 'guard_application' ||
+    body.type === 'guard_pending_approval' ||
+    body.type === 'client_pending_approval' ||
+    body.type === 'credential_pending' ||
+    body.type === 'payment_attention' ||
+    (body.type === 'support_message' && !body.recipientUserId) ||
+    (body.type === 'job_chat_message' && !body.recipientUserId)
+  ) {
+    dispatchPayload.role = body.type === 'guard_message' ? 'guard' : 'dispatch';
   }
 
   const { dispatchPushNotification } = await import('./delivery');

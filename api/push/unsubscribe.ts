@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   getSupabaseAdmin,
   jsonError,
+  parseRequestBody,
   removePushSubscription,
   verifySession,
 } from './_shared';
@@ -17,12 +18,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return jsonError(res, 503, 'Database is not configured');
     }
 
-    const body = (req.body ?? {}) as {
+    const body = parseRequestBody<{
       userId?: string;
       email?: string;
       role?: string;
       endpoint?: string;
-    };
+    }>(req);
 
     const session = await verifySession(db, {
       userId: body.userId ?? '',
