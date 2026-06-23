@@ -40,7 +40,7 @@ import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
-import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, MapPin, Pencil, Shield, UserCheck, X } from 'lucide-react';
+import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
@@ -773,6 +773,25 @@ export function StaffApprovals({
         }
 
         if (client) {
+          const budgetLabel: Record<string, string> = {
+            'under-500': 'Under $500',
+            '500-2000': '$500 – $2,000',
+            '2000-5000': '$2,000 – $5,000',
+            '5000-15000': '$5,000 – $15,000',
+            '15000+': '$15,000+',
+            'ongoing': 'Ongoing / monthly contract',
+          };
+          const frequencyLabel: Record<string, string> = {
+            'one-time': 'One-time event',
+            'recurring': 'Ongoing / recurring',
+            'temporary': 'Temporary / short-term',
+          };
+          const armedLabel: Record<string, string> = {
+            armed: 'Armed',
+            unarmed: 'Unarmed',
+            'no-preference': 'No preference',
+          };
+
           return (
             <>
               <ApprovalBackBar
@@ -780,20 +799,195 @@ export function StaffApprovals({
                 subtitle="Client account approval"
                 onBack={() => setActiveItemId(null)}
               />
-              <div className="staff-detail-pane space-y-4">
-                <p className="text-sm text-brand-text-muted">{client.email}</p>
+              <div className="staff-detail-pane space-y-5">
                 <WfBadge tone="warning">Pending approval</WfBadge>
+
+                {/* ── Identity ── */}
+                <section className="space-y-2">
+                  <p className="uber-label text-xs">Contact</p>
+                  <div className="space-y-1 text-sm">
+                    <p className="font-semibold">{client.name}</p>
+                    <p className="text-brand-text-muted flex items-center gap-1.5">
+                      <span className="w-3.5 h-3.5 shrink-0 inline-block">@</span>
+                      {client.email}
+                    </p>
+                    {client.phone && (
+                      <p className="text-brand-text-muted flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 shrink-0" />
+                        {client.phone}
+                      </p>
+                    )}
+                    {client.website && (
+                      <p className="text-brand-text-muted flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 shrink-0" />
+                        <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline truncate">{client.website}</a>
+                      </p>
+                    )}
+                  </div>
+                </section>
+
+                {/* ── Business info ── */}
+                {(client.businessType || client.industry || client.businessLicense) && (
+                  <section className="space-y-2 pt-3 border-t border-brand-border">
+                    <p className="uber-label text-xs">Business</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                      {client.businessType && (
+                        <>
+                          <span className="text-brand-text-muted">Type</span>
+                          <span>{client.businessType}</span>
+                        </>
+                      )}
+                      {client.industry && (
+                        <>
+                          <span className="text-brand-text-muted">Industry</span>
+                          <span>{client.industry}</span>
+                        </>
+                      )}
+                      {client.businessLicense && (
+                        <>
+                          <span className="text-brand-text-muted">License / EIN</span>
+                          <span className="font-mono text-xs">{client.businessLicense}</span>
+                        </>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {/* ── Security needs ── */}
+                <section className="space-y-2 pt-3 border-t border-brand-border">
+                  <p className="uber-label text-xs">Security needs</p>
+                  {client.serviceDescription && (
+                    <p className="text-sm text-brand-text border-l-2 border-brand-primary pl-3 leading-relaxed">
+                      {client.serviceDescription}
+                    </p>
+                  )}
+                  {client.serviceTypes && client.serviceTypes.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {client.serviceTypes.map((t) => (
+                        <span key={t} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    {client.estimatedGuardsNeeded != null && (
+                      <>
+                        <span className="text-brand-text-muted">Guards needed</span>
+                        <span>{client.estimatedGuardsNeeded}</span>
+                      </>
+                    )}
+                    {client.armedPreference && (
+                      <>
+                        <span className="text-brand-text-muted">Armed preference</span>
+                        <span>{armedLabel[client.armedPreference] ?? client.armedPreference}</span>
+                      </>
+                    )}
+                    {client.serviceFrequency && (
+                      <>
+                        <span className="text-brand-text-muted">Engagement type</span>
+                        <span>{frequencyLabel[client.serviceFrequency] ?? client.serviceFrequency}</span>
+                      </>
+                    )}
+                    {client.estimatedStartDate && (
+                      <>
+                        <span className="text-brand-text-muted">Est. start</span>
+                        <span>{client.estimatedStartDate}</span>
+                      </>
+                    )}
+                    {client.budgetRange && (
+                      <>
+                        <span className="text-brand-text-muted">Budget range</span>
+                        <span>{budgetLabel[client.budgetRange] ?? client.budgetRange}</span>
+                      </>
+                    )}
+                  </div>
+                </section>
+
+                {/* ── Location ── */}
+                {(client.serviceCity || client.serviceState || client.propertyType) && (
+                  <section className="space-y-2 pt-3 border-t border-brand-border">
+                    <p className="uber-label text-xs">Location</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                      {(client.serviceCity || client.serviceState) && (
+                        <>
+                          <span className="text-brand-text-muted flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> City / State</span>
+                          <span>{[client.serviceCity, client.serviceState].filter(Boolean).join(', ')}</span>
+                        </>
+                      )}
+                      {client.propertyType && (
+                        <>
+                          <span className="text-brand-text-muted">Property type</span>
+                          <span>{client.propertyType}</span>
+                        </>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {/* ── Prior experience ── */}
+                {(client.hasPriorSecurityService != null || client.specialRequirements) && (
+                  <section className="space-y-2 pt-3 border-t border-brand-border">
+                    <p className="uber-label text-xs">Background</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                      {client.hasPriorSecurityService != null && (
+                        <>
+                          <span className="text-brand-text-muted">Prior security</span>
+                          <span>
+                            {client.hasPriorSecurityService ? 'Yes' : 'No'}
+                            {client.priorSecurityProvider ? ` — ${client.priorSecurityProvider}` : ''}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {client.specialRequirements && (
+                      <p className="text-sm text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">
+                        {client.specialRequirements}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+                {/* ── Referral / Discovery ── */}
+                {(client.referredBy || client.howHeardAboutUs) && (
+                  <section className="space-y-2 pt-3 border-t border-brand-border">
+                    <p className="uber-label text-xs">How they found us</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                      {client.referredBy && (
+                        <>
+                          <span className="text-brand-text-muted">Referred by</span>
+                          <span>
+                            {client.referredBy}
+                            {client.referredById && (
+                              <span className="text-xs text-brand-text-muted ml-1">(on platform)</span>
+                            )}
+                          </span>
+                        </>
+                      )}
+                      {client.howHeardAboutUs && (
+                        <>
+                          <span className="text-brand-text-muted">Source</span>
+                          <span>{client.howHeardAboutUs}</span>
+                        </>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {/* ── Approve action ── */}
                 {onApproveClient && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApproveClient(client.id);
-                      setActiveItemId(null);
-                    }}
-                    className="app-button-primary app-btn-sm gap-1"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Approve client
-                  </button>
+                  <div className="pt-3 border-t border-brand-border">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onApproveClient(client.id);
+                        setActiveItemId(null);
+                      }}
+                      className="app-button-primary app-btn-sm gap-1"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Approve client
+                    </button>
+                  </div>
                 )}
               </div>
             </>

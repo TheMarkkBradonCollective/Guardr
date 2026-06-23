@@ -123,6 +123,53 @@ export interface Client {
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
   mustChangePassword?: boolean;
+
+  // --- Sign-up intake fields (used by staff to evaluate pending accounts) ---
+
+  /** Business entity type, e.g. LLC, Corporation, Sole Proprietor */
+  businessType?: string;
+  /** Industry / sector, e.g. retail, hospitality, construction */
+  industry?: string;
+  /** Business license number or EIN / Tax ID */
+  businessLicense?: string;
+  /** Company website URL */
+  website?: string;
+
+  /** Client's own description of what security coverage they need */
+  serviceDescription?: string;
+  /** Types of security service requested */
+  serviceTypes?: string[];
+  /** Rough estimate of how many guards they need */
+  estimatedGuardsNeeded?: number;
+  /** Armed vs unarmed preference */
+  armedPreference?: 'armed' | 'unarmed' | 'no-preference';
+  /** Engagement frequency */
+  serviceFrequency?: 'one-time' | 'recurring' | 'temporary';
+  /** Approximate start date or timeframe */
+  estimatedStartDate?: string;
+  /** Rough budget tier */
+  budgetRange?: string;
+
+  /** City where security coverage is needed */
+  serviceCity?: string;
+  /** US state where coverage is needed */
+  serviceState?: string;
+  /** Type of property, e.g. retail, office, warehouse */
+  propertyType?: string;
+
+  /** Freehand name of the guard or staff member who referred this client */
+  referredBy?: string;
+  /** Platform ID of the referring guard or staff member, if found */
+  referredById?: string;
+  /** How the client heard about the platform */
+  howHeardAboutUs?: string;
+
+  /** Whether the client has used a security company before */
+  hasPriorSecurityService?: boolean;
+  /** Previous security provider name */
+  priorSecurityProvider?: string;
+  /** Any special licensing, compliance, or site requirements */
+  specialRequirements?: string;
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';

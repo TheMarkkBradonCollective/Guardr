@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Logo } from './Logo';
 import {
   Shield,
@@ -7,8 +7,12 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  User,
   Building2,
+  Phone,
+  Globe,
+  MapPin,
+  Users,
+  ChevronDown,
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { personNameFromPayload } from '../lib/personName';
@@ -22,6 +26,57 @@ import {
   shouldPromptPasswordChange,
   verifyAccountPassword,
 } from '../lib/accountPasswords';
+
+const SERVICE_TYPE_OPTIONS = [
+  'Event security',
+  'Site patrol',
+  'Access control',
+  'Executive protection',
+  'Armed transport',
+  'Loss prevention / retail',
+  'Construction site',
+  'Residential / HOA',
+  'Corporate / office',
+  'Hospital / healthcare',
+  'School / campus',
+  'Fire watch',
+  'Other',
+] as const;
+
+const PROPERTY_TYPE_OPTIONS = [
+  'Retail storefront',
+  'Office building',
+  'Warehouse / industrial',
+  'Residential / HOA',
+  'Event venue',
+  'Construction site',
+  'Hospital / healthcare',
+  'School / campus',
+  'Restaurant / bar',
+  'Hotel / hospitality',
+  'Other',
+] as const;
+
+const BUSINESS_TYPE_OPTIONS = [
+  'LLC',
+  'Corporation',
+  'Sole Proprietor',
+  'Partnership',
+  'Non-profit',
+  'Government / Public agency',
+  'Individual',
+  'Other',
+] as const;
+
+const HOW_HEARD_OPTIONS = [
+  'Referred by a guard or staff member',
+  'Google / web search',
+  'Social media',
+  'Word of mouth',
+  'Industry event',
+  'Advertisement',
+  'Other',
+] as const;
 
 const OWNER_BOOTSTRAP_ACCOUNTS: Record<
   string,
@@ -65,6 +120,13 @@ interface AuthPageProps {
   themeMode?: string;
 }
 
+/** Lightweight person entry for the referredBy autocomplete */
+interface ReferralPerson {
+  id: string;
+  name: string;
+  role: 'guard' | 'staff';
+}
+
 function resolveStoredPassword(
   emailLower: string,
   account?: SecurityGuard | Client | null
@@ -105,6 +167,30 @@ export function AuthPage({
 
   const [clientCompanyName, setClientCompanyName] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // Client intake fields
+  const [businessType, setBusinessType] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [businessLicense, setBusinessLicense] = useState('');
+  const [website, setWebsite] = useState('');
+  const [serviceDescription, setServiceDescription] = useState('');
+  const [serviceTypes, setServiceTypes] = useState<string[]>([]);
+  const [estimatedGuardsNeeded, setEstimatedGuardsNeeded] = useState('');
+  const [armedPreference, setArmedPreference] = useState('');
+  const [serviceFrequency, setServiceFrequency] = useState('');
+  const [estimatedStartDate, setEstimatedStartDate] = useState('');
+  const [budgetRange, setBudgetRange] = useState('');
+  const [serviceCity, setServiceCity] = useState('');
+  const [serviceState, setServiceState] = useState('');
+  const [propertyType, setPropertyType] = useState('');
+  const [referredByText, setReferredByText] = useState('');
+  const [referredById, setReferredById] = useState('');
+  const [referralSuggestionsOpen, setReferralSuggestionsOpen] = useState(false);
+  const [howHeardAboutUs, setHowHeardAboutUs] = useState('');
+  const [hasPriorSecurityService, setHasPriorSecurityService] = useState<'' | 'yes' | 'no'>('');
+  const [priorSecurityProvider, setPriorSecurityProvider] = useState('');
+  const [specialRequirements, setSpecialRequirements] = useState('');
+  const referralRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setRole(initialRole === 'guard' ? 'guard' : 'client');
@@ -161,11 +247,32 @@ export function AuthPage({
           lastName: normalized.lastName,
           email,
           companyName: company,
-          phone: phone || '',
+          phone: phone.trim() || '',
           avatar: '',
           totalRequests: 0,
           approved: false,
           accountStatus: 'pending',
+
+          businessType: businessType || undefined,
+          industry: industry.trim() || undefined,
+          businessLicense: businessLicense.trim() || undefined,
+          website: website.trim() || undefined,
+          serviceDescription: serviceDescription.trim() || undefined,
+          serviceTypes: serviceTypes.length > 0 ? serviceTypes : undefined,
+          estimatedGuardsNeeded: estimatedGuardsNeeded ? parseInt(estimatedGuardsNeeded) : undefined,
+          armedPreference: (armedPreference as Client['armedPreference']) || undefined,
+          serviceFrequency: (serviceFrequency as Client['serviceFrequency']) || undefined,
+          estimatedStartDate: estimatedStartDate.trim() || undefined,
+          budgetRange: budgetRange || undefined,
+          serviceCity: serviceCity.trim() || undefined,
+          serviceState: serviceState.trim() || undefined,
+          propertyType: propertyType || undefined,
+          referredBy: referredByText.trim() || undefined,
+          referredById: referredById || undefined,
+          howHeardAboutUs: howHeardAboutUs || undefined,
+          hasPriorSecurityService: hasPriorSecurityService === 'yes' ? true : hasPriorSecurityService === 'no' ? false : undefined,
+          priorSecurityProvider: priorSecurityProvider.trim() || undefined,
+          specialRequirements: specialRequirements.trim() || undefined,
         };
         try {
           await onSignUp(clientProfile, 'client', password);
@@ -565,15 +672,358 @@ export function AuthPage({
               )}
 
               {isSignUp && role === 'client' && (
-                <div className="pt-4 border-t border-brand-border">
-                  <label className="uber-label block mb-2">Company name <span className="font-normal">(optional)</span></label>
-                  <input
-                    type="text"
-                    placeholder="Acme Corp"
-                    value={clientCompanyName}
-                    onChange={(e) => setClientCompanyName(e.target.value)}
-                    className="uber-input"
-                  />
+                <div className="space-y-5 pt-4 border-t border-brand-border">
+
+                  {/* ── Contact & Business ── */}
+                  <p className="uber-label">Business &amp; contact</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Phone <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <input
+                          type="tel"
+                          placeholder="+1 (555) 000-0000"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="uber-input pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Company name <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="Acme Corp"
+                        value={clientCompanyName}
+                        onChange={(e) => setClientCompanyName(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Business type <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <select
+                          value={businessType}
+                          onChange={(e) => setBusinessType(e.target.value)}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">Select…</option>
+                          {BUSINESS_TYPE_OPTIONS.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Industry <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Retail, Events…"
+                        value={industry}
+                        onChange={(e) => setIndustry(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Business license / EIN <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="12-3456789"
+                        value={businessLicense}
+                        onChange={(e) => setBusinessLicense(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Website <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <input
+                          type="url"
+                          placeholder="https://yoursite.com"
+                          value={website}
+                          onChange={(e) => setWebsite(e.target.value)}
+                          className="uber-input pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Service needs ── */}
+                  <p className="uber-label pt-2 border-t border-brand-border">Security needs</p>
+                  <div>
+                    <label className="uber-label block mb-2">Tell us what you're looking for <span className="font-normal">(optional)</span></label>
+                    <textarea
+                      rows={3}
+                      placeholder="Briefly describe the security coverage you need…"
+                      value={serviceDescription}
+                      onChange={(e) => setServiceDescription(e.target.value)}
+                      className="uber-input resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Type of service needed <span className="font-normal">(optional — select all that apply)</span></label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {SERVICE_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() =>
+                            setServiceTypes((prev) =>
+                              prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            serviceTypes.includes(opt)
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Guards needed <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="1"
+                          value={estimatedGuardsNeeded}
+                          onChange={(e) => setEstimatedGuardsNeeded(e.target.value)}
+                          className="uber-input pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Armed preference <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <select
+                          value={armedPreference}
+                          onChange={(e) => setArmedPreference(e.target.value)}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">No preference</option>
+                          <option value="armed">Armed</option>
+                          <option value="unarmed">Unarmed</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Engagement type <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <select
+                          value={serviceFrequency}
+                          onChange={(e) => setServiceFrequency(e.target.value)}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">Select…</option>
+                          <option value="one-time">One-time event</option>
+                          <option value="recurring">Ongoing / recurring</option>
+                          <option value="temporary">Temporary / short-term</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Estimated start <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="e.g. July 2026, ASAP…"
+                        value={estimatedStartDate}
+                        onChange={(e) => setEstimatedStartDate(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Budget range <span className="font-normal">(optional)</span></label>
+                    <div className="relative">
+                      <select
+                        value={budgetRange}
+                        onChange={(e) => setBudgetRange(e.target.value)}
+                        className="uber-input appearance-none pr-8"
+                      >
+                        <option value="">Prefer not to say</option>
+                        <option value="under-500">Under $500</option>
+                        <option value="500-2000">$500 – $2,000</option>
+                        <option value="2000-5000">$2,000 – $5,000</option>
+                        <option value="5000-15000">$5,000 – $15,000</option>
+                        <option value="15000+">$15,000+</option>
+                        <option value="ongoing">Ongoing / monthly contract</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* ── Location ── */}
+                  <p className="uber-label pt-2 border-t border-brand-border">Location</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">City <span className="font-normal">(optional)</span></label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <input
+                          type="text"
+                          placeholder="Los Angeles"
+                          value={serviceCity}
+                          onChange={(e) => setServiceCity(e.target.value)}
+                          className="uber-input pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">State <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="CA"
+                        maxLength={2}
+                        value={serviceState}
+                        onChange={(e) => setServiceState(e.target.value.toUpperCase())}
+                        className="uber-input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Property type <span className="font-normal">(optional)</span></label>
+                    <div className="relative">
+                      <select
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value)}
+                        className="uber-input appearance-none pr-8"
+                      >
+                        <option value="">Select…</option>
+                        {PROPERTY_TYPE_OPTIONS.map((o) => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* ── Prior experience ── */}
+                  <p className="uber-label pt-2 border-t border-brand-border">Prior security experience</p>
+                  <div>
+                    <label className="uber-label block mb-2">Have you used a security company before? <span className="font-normal">(optional)</span></label>
+                    <div className="flex gap-3">
+                      {(['yes', 'no'] as const).map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setHasPriorSecurityService(hasPriorSecurityService === val ? '' : val)}
+                          className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                            hasPriorSecurityService === val
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
+                        >
+                          {val === 'yes' ? 'Yes' : 'No'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {hasPriorSecurityService === 'yes' && (
+                    <div>
+                      <label className="uber-label block mb-2">Previous provider <span className="font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="Company name"
+                        value={priorSecurityProvider}
+                        onChange={(e) => setPriorSecurityProvider(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="uber-label block mb-2">Special requirements or compliance needs <span className="font-normal">(optional)</span></label>
+                    <textarea
+                      rows={2}
+                      placeholder="Any licensing, regulatory, or site-specific requirements…"
+                      value={specialRequirements}
+                      onChange={(e) => setSpecialRequirements(e.target.value)}
+                      className="uber-input resize-none"
+                    />
+                  </div>
+
+                  {/* ── Referral ── */}
+                  <p className="uber-label pt-2 border-t border-brand-border">How did you find us?</p>
+                  <div ref={referralRef} className="relative">
+                    <label className="uber-label block mb-2">Referred by a guard or staff member? <span className="font-normal">(optional)</span></label>
+                    <input
+                      type="text"
+                      placeholder="Search by name or type freehand…"
+                      value={referredByText}
+                      onChange={(e) => {
+                        setReferredByText(e.target.value);
+                        setReferredById('');
+                        setReferralSuggestionsOpen(e.target.value.trim().length > 0);
+                      }}
+                      onFocus={() => {
+                        if (referredByText.trim().length > 0) setReferralSuggestionsOpen(true);
+                      }}
+                      onBlur={() => setTimeout(() => setReferralSuggestionsOpen(false), 150)}
+                      className="uber-input"
+                    />
+                    {referralSuggestionsOpen && (() => {
+                      const query = referredByText.trim().toLowerCase();
+                      const suggestions: ReferralPerson[] = guardsList
+                        .filter((g) => g.name.toLowerCase().includes(query))
+                        .slice(0, 6)
+                        .map((g) => ({
+                          id: g.id,
+                          name: g.name,
+                          role: g.isStaff ? 'staff' : 'guard',
+                        }));
+                      return suggestions.length > 0 ? (
+                        <div className="absolute z-20 left-0 right-0 top-full mt-1 rounded-xl border border-brand-border bg-brand-card shadow-lg overflow-hidden">
+                          {suggestions.map((s) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onMouseDown={() => {
+                                setReferredByText(s.name);
+                                setReferredById(s.id);
+                                setReferralSuggestionsOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-brand-primary/10 flex items-center justify-between gap-2"
+                            >
+                              <span>{s.name}</span>
+                              <span className="text-xs text-brand-text-muted capitalize">{s.role}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">How did you hear about us? <span className="font-normal">(optional)</span></label>
+                    <div className="relative">
+                      <select
+                        value={howHeardAboutUs}
+                        onChange={(e) => setHowHeardAboutUs(e.target.value)}
+                        className="uber-input appearance-none pr-8"
+                      >
+                        <option value="">Select…</option>
+                        {HOW_HEARD_OPTIONS.map((o) => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
               )}
 
