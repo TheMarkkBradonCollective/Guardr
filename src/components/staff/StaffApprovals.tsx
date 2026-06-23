@@ -308,6 +308,7 @@ export function StaffApprovals({
                 <p className="font-semibold text-sm">{req.title}</p>
                 <WfBadge tone="warning">Pending approval</WfBadge>
                 <WfBadge tone="default">{jobPostingTypeLabel(req.requestType)}</WfBadge>
+                {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
               </div>
               <p className="text-sm text-brand-text-muted">{req.clientName}</p>
               <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
