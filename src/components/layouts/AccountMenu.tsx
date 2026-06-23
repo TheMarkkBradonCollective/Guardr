@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, LogOut, LucideIcon, User } from 'lucide-react';
+import { ChevronDown, LogOut, LucideIcon, Settings, User } from 'lucide-react';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ThemeToggle } from '../ui/ThemeToggle';
-import type { ThemeMode } from '../../lib/platform/theme';
 
 export interface AccountMenuLink {
   label: string;
@@ -16,11 +14,10 @@ export interface AccountMenuProps {
   userName: string;
   userSubtitle?: string;
   avatarUrl?: string;
-  themeMode: ThemeMode;
-  onChangeTheme: (mode: ThemeMode) => void;
   onOpenProfile: () => void;
+  onOpenSettings: () => void;
   onSignOut: () => void;
-  /** Highlight avatar when profile is the active screen */
+  /** Highlight avatar when profile or settings is the active screen */
   active?: boolean;
   extraLinks?: AccountMenuLink[];
   footer?: React.ReactNode;
@@ -57,9 +54,8 @@ export function AccountMenu({
   userName,
   userSubtitle,
   avatarUrl,
-  themeMode,
-  onChangeTheme,
   onOpenProfile,
+  onOpenSettings,
   onSignOut,
   active = false,
   extraLinks = [],
@@ -98,6 +94,11 @@ export function AccountMenu({
     close();
   };
 
+  const handleSettings = () => {
+    onOpenSettings();
+    close();
+  };
+
   const handleSignOut = () => {
     close();
     onSignOut();
@@ -116,7 +117,7 @@ export function AccountMenu({
         {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
       </div>
 
-      <div className="p-2 border-b border-brand-border">
+      <div className="p-2 border-b border-brand-border space-y-0.5">
         <button
           type="button"
           role="menuitem"
@@ -124,7 +125,16 @@ export function AccountMenu({
           className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
         >
           <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-          Profile & settings
+          Profile
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          onClick={handleSettings}
+          className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
+        >
+          <Settings className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+          Settings
         </button>
       </div>
 
@@ -151,11 +161,6 @@ export function AccountMenu({
           ))}
         </div>
       )}
-
-      <div className="px-4 py-3 border-b border-brand-border">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Appearance</p>
-        <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
-      </div>
 
       <div className="p-2">
         <button

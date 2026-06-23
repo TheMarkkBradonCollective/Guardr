@@ -27,6 +27,7 @@ import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
+import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
@@ -131,7 +132,7 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'guide';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
@@ -142,6 +143,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   guardChat: 'Messages',
   support: 'Messages',
   profile: 'Profile',
+  settings: 'Settings',
   guide: 'Workflow guide',
 };
 
@@ -813,6 +815,16 @@ export function GuardDashboard({
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
+              />
+            </div>
+          )}
+
+          {tab === 'settings' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <UserSettingsScreen
+                currentUser={currentUser}
+                themeMode={themeMode as 'dark' | 'light' | 'grey'}
+                onChangeTheme={onChangeTheme}
                 onOpenLegal={onOpenLegal}
               />
             </div>
@@ -943,7 +955,7 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPreActive && tab !== 'profile' && tab !== 'messages' && tab !== 'guide';
+  const showPendingGate = accountPreActive && tab !== 'profile' && tab !== 'settings' && tab !== 'messages' && tab !== 'guide';
   const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
@@ -982,11 +994,10 @@ export function GuardDashboard({
         userName: guard.name,
         userSubtitle: currentUser.email,
         avatarUrl: guard.avatar,
-        themeMode: themeMode as 'dark' | 'light' | 'grey',
-        onChangeTheme,
         onOpenProfile: () => setTab('profile'),
+        onOpenSettings: () => setTab('settings'),
         onSignOut,
-        active: activeTab === 'profile',
+        active: activeTab === 'profile' || activeTab === 'settings',
         extraLinks: [
           {
             label: 'Workflow guide',

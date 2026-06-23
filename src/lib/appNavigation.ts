@@ -57,6 +57,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   messages: 'messages',
   support: 'messages',
   profile: 'profile',
+  settings: 'settings',
   guide: 'guide',
 };
 
@@ -68,12 +69,14 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   messages: 'messages',
   support: 'messages',
   profile: 'profile',
+  settings: 'settings',
   guide: 'guide',
 };
 
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   home: 'home',
   profile: 'profile',
+  settings: 'settings',
   support: 'messages',
   'support-compose': 'support-compose',
   'support-report': 'support-report',
@@ -91,6 +94,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
 const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   home: 'home',
   profile: 'profile',
+  settings: 'settings',
   support: 'messages',
   'support-compose': 'support-compose',
   'support-report': 'support-report',

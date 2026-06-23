@@ -61,6 +61,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   settings: 'System Settings',
   guide: 'Workflow guide',
   profile: 'Profile',
+  preferences: 'Settings',
 };
 
 export function StaffOpsLayout({
@@ -183,11 +184,10 @@ export function StaffOpsLayout({
               userName={currentUser.name}
               userSubtitle={ROLE_LABELS[currentUser.role]}
               avatarUrl={currentUser.avatar}
-              themeMode={themeMode}
-              onChangeTheme={onChangeTheme}
               onOpenProfile={() => navigate('profile')}
+              onOpenSettings={() => navigate('preferences')}
               onSignOut={onSignOut}
-              active={activeSection === 'profile'}
+              active={activeSection === 'profile' || activeSection === 'preferences'}
             />
           </header>
         ) : (
@@ -210,11 +210,10 @@ export function StaffOpsLayout({
               userName={currentUser.name}
               userSubtitle={ROLE_LABELS[currentUser.role]}
               avatarUrl={currentUser.avatar}
-              themeMode={themeMode}
-              onChangeTheme={onChangeTheme}
               onOpenProfile={() => navigate('profile')}
+              onOpenSettings={() => navigate('preferences')}
               onSignOut={onSignOut}
-              active={activeSection === 'profile'}
+              active={activeSection === 'profile' || activeSection === 'preferences'}
             />
           </header>
         )}

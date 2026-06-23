@@ -137,6 +137,7 @@ import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
+import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
 import {
   getClientAccountStatus,
@@ -6619,6 +6620,7 @@ export default function App() {
         clientAccountPending &&
         view !== 'home' &&
         view !== 'profile' &&
+        view !== 'settings' &&
         view !== 'messages' &&
         view !== 'support-compose' &&
         view !== 'support-report'
@@ -6639,9 +6641,7 @@ export default function App() {
       <>
         <ClientAppLayout
           currentUser={currentUser}
-          themeMode={themeMode}
           onSignOut={handleSignOut}
-          onChangeTheme={changeThemeMode}
           activeView={clientView}
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
@@ -6654,6 +6654,13 @@ export default function App() {
               currentUser={currentUser}
               client={clientRecord ?? null}
               onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
+            />
+          ) : clientView === 'settings' ? (
+            <UserSettingsScreen
+              currentUser={currentUser}
+              themeMode={themeMode}
+              onChangeTheme={changeThemeMode}
+              isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
             />
           ) : clientView === 'support-compose' ? (

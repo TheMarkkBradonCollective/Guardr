@@ -6,14 +6,10 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen } from 'lucide-react';
 
-type ThemeMode = 'dark' | 'light' | 'grey';
-
 interface ClientAppLayoutProps {
   children: React.ReactNode;
   currentUser: SessionUser;
-  themeMode: ThemeMode;
   onSignOut: () => void;
-  onChangeTheme: (mode: ThemeMode) => void;
   activeView?: ClientView;
   onNavigate?: (view: ClientView) => void;
   accountPending?: boolean;
@@ -39,6 +35,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   'support-compose': 'Contact support',
   'support-report': 'File a report',
   profile: 'Profile',
+  settings: 'Settings',
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
@@ -50,9 +47,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
 export function ClientAppLayout({
   children,
   currentUser,
-  themeMode,
   onSignOut,
-  onChangeTheme,
   activeView = 'map',
   onNavigate,
   accountPending = false,
@@ -66,7 +61,7 @@ export function ClientAppLayout({
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
   const navHighlightView = messagesViews.includes(activeView)
     ? 'messages'
-    : accountPending && !['home', 'profile', 'guide', ...messagesViews].includes(activeView)
+    : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
       ? 'home'
       : activeView;
 
@@ -90,11 +85,10 @@ export function ClientAppLayout({
         userName: currentUser.name,
         userSubtitle: currentUser.email,
         avatarUrl: currentUser.avatar,
-        themeMode,
-        onChangeTheme,
         onOpenProfile: () => onNavigate?.('profile'),
+        onOpenSettings: () => onNavigate?.('settings'),
         onSignOut,
-        active: activeView === 'profile',
+        active: activeView === 'profile' || activeView === 'settings',
         extraLinks: [
           {
             label: 'Workflow guide',
