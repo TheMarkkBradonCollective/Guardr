@@ -15,6 +15,7 @@ import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 interface GuardCardPanelProps {
@@ -106,7 +107,12 @@ export function GuardCardPanel({
         return;
       }
     }
-    if (!window.confirm('Remove this guard card from your profile?')) return;
+    if (!(await showAppConfirm({
+      title: 'Remove guard card?',
+      message: 'Remove this guard card from your profile?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    }))) return;
     const result = await onDeleteCertification(certId);
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };

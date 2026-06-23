@@ -3,6 +3,7 @@ import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
@@ -223,7 +224,18 @@ export function ClientRequestsList({
                     {canClientCancelRequest(req) && (
                       <button
                         type="button"
-                        onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
+                        onClick={() => {
+                          void (async () => {
+                            if (await showAppConfirm({
+                              title: 'Cancel job?',
+                              message: `Cancel "${req.title}"?`,
+                              confirmLabel: 'Cancel job',
+                              tone: 'danger',
+                            })) {
+                              onCancelRequest(req.id);
+                            }
+                          })();
+                        }}
                         className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
                       >
                         <X className="w-3 h-3 inline" /> Cancel

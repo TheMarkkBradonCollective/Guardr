@@ -41,6 +41,7 @@ import {
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 
@@ -180,7 +181,12 @@ export function GuardCredentialsPanel({
         return;
       }
     }
-    if (!window.confirm('Remove this credential from your profile?')) return;
+    if (!(await showAppConfirm({
+      title: 'Remove credential?',
+      message: 'Remove this credential from your profile?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    }))) return;
     const result = await onDeleteCertification(certId);
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };

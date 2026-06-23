@@ -23,6 +23,7 @@ import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
 import { showAppToast } from './ui/AppToast';
+import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { SupportScreen } from './support/SupportScreen';
 import { SupportComposePage } from './support/SupportComposePage';
@@ -422,10 +423,17 @@ export function GuardDashboard({
       showAppToast(guardClockInBlockedMessage(activeShiftJob) ?? 'Clock-in is not open yet.', { tone: 'error' });
       return;
     }
-    if (!window.confirm('Skip self audit and clock in? This job will be flagged No Self Audit until staff add photos after the job.')) {
-      return;
-    }
-    onUpdateJobAudit(activeShiftJob.id, {
+    void (async () => {
+      if (!(await showAppConfirm({
+        title: 'Skip self audit?',
+        message:
+          'Clock in without a self audit? This job will be flagged No Self Audit until staff add photos after the job.',
+        confirmLabel: 'Skip and clock in',
+        tone: 'danger',
+      }))) {
+        return;
+      }
+      onUpdateJobAudit(activeShiftJob.id, {
       status: 'in-progress',
       checkInAudit: {
         checkedAt: new Date().toISOString(),
@@ -449,6 +457,7 @@ export function GuardDashboard({
     });
     updatePhase(activeShiftJob.id, 'on-duty');
     setDutySeconds(0);
+    })();
   };
 
   const handleEndShift = () => {

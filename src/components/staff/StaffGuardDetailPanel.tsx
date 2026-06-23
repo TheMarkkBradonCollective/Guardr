@@ -1,4 +1,5 @@
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
@@ -237,7 +238,12 @@ export function StaffGuardDetailPanel({
 
   const handleDeleteGuard = async () => {
     if (!onDeleteGuard) return;
-    if (!window.confirm(`Delete guard account for ${guard.name}? This cannot be undone.`)) {
+    if (!(await showAppConfirm({
+      title: 'Delete guard account?',
+      message: `Delete guard account for ${guard.name}? This cannot be undone.`,
+      confirmLabel: 'Delete account',
+      tone: 'danger',
+    }))) {
       return;
     }
     setDeleting(true);
@@ -295,9 +301,11 @@ export function StaffGuardDetailPanel({
 
   const requestCertResubmit = (cert: Certification) => {
     if (!onRequestCertImageResubmit) return;
-    const note = promptStaffResubmitNote(`${certDisplayName(cert)} photo`);
-    if (note === null) return;
-    void onRequestCertImageResubmit(guard.id, cert.id, note);
+    void (async () => {
+      const note = await promptStaffResubmitNote(`${certDisplayName(cert)} photo`);
+      if (note === null) return;
+      void onRequestCertImageResubmit(guard.id, cert.id, note);
+    })();
   };
 
   const renderStaffCertActions = (cert: Certification) =>
@@ -515,7 +523,7 @@ export function StaffGuardDetailPanel({
                   onClick={() => {
                     void (async () => {
                       if (!guardCanStaffActivateAccount(guard)) return;
-                      const graceChoice = promptStaffGuardActivationGrace(guard);
+                      const graceChoice = await promptStaffGuardActivationGrace(guard);
                       if (!graceChoice.proceed) return;
                       try {
                         await onActivateGuardAccount(guard.id, {

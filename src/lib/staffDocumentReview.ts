@@ -1,3 +1,4 @@
+import { showAppConfirm, showAppPrompt } from '../components/ui/AppConfirm';
 import { ID_VERIFICATION_SLOT_LABELS } from './guardIdentityVerification';
 
 export type IdVerificationSlot = 'front' | 'back' | 'selfie';
@@ -33,26 +34,37 @@ export const GUARD_APPLICATION_REJECT_DEFAULT_REASON =
   'Your guard application was not approved. Contact Guardr support if you have questions.';
 
 /** Full application rejection — blocks the guard account. Returns null if cancelled. */
-export function promptRejectGuardApplicationNote(): string | null {
-  const confirmed = window.confirm(
-    'Reject this guard\'s application?\n\nThey will be blocked from the platform and cannot resubmit ID documents or get their profile approved.'
-  );
+export async function promptRejectGuardApplicationNote(): Promise<string | null> {
+  const confirmed = await showAppConfirm({
+    title: 'Reject guard application?',
+    message:
+      'They will be blocked from the platform and cannot resubmit ID documents or get their profile approved.',
+    confirmLabel: 'Reject application',
+    cancelLabel: 'Keep reviewing',
+    tone: 'danger',
+  });
   if (!confirmed) return null;
 
-  const reason = window.prompt(
-    'Rejection reason (shown to guard):',
-    GUARD_APPLICATION_REJECT_DEFAULT_REASON
-  );
+  const reason = await showAppPrompt({
+    title: 'Rejection reason',
+    message: 'This message is shown to the guard on their profile.',
+    defaultValue: GUARD_APPLICATION_REJECT_DEFAULT_REASON,
+    multiline: true,
+    confirmLabel: 'Save reason',
+  });
   if (reason === null) return null;
   return reason.trim();
 }
 
 /** Returns null if cancelled; otherwise trimmed note (may be empty). */
-export function promptStaffResubmitNote(itemLabel: string): string | null {
-  const reason = window.prompt(
-    `What should the guard fix? (shown on their profile)\n\n${itemLabel}`,
-    'Image is blurry or hard to read — please upload a clearer photo.'
-  );
+export async function promptStaffResubmitNote(itemLabel: string): Promise<string | null> {
+  const reason = await showAppPrompt({
+    title: 'Request resubmit',
+    message: `What should the guard fix? This note is shown on their profile.\n\n${itemLabel}`,
+    defaultValue: 'Image is blurry or hard to read — please upload a clearer photo.',
+    multiline: true,
+    confirmLabel: 'Send request',
+  });
   if (reason === null) return null;
   return reason.trim();
 }

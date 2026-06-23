@@ -185,6 +185,7 @@ import {
 import type { LegalPageId } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
 import { showAppToast } from './components/ui/AppToast';
+import { showAppConfirm } from './components/ui/AppConfirm';
 
 function appToast(message: string, tone: 'success' | 'error' | 'info' = 'error') {
   showAppToast(message, { tone });
@@ -3660,7 +3661,11 @@ export default function App() {
       appToast('This job cannot be marked as paid in cash.', 'error');
       return;
     }
-    if (!window.confirm(`Record client cash payment of $${req.estimatedPayout} for "${req.title}"?`)) return;
+    if (!(await showAppConfirm({
+      title: 'Record cash payment?',
+      message: `Record client cash payment of $${req.estimatedPayout} for "${req.title}"?`,
+      confirmLabel: 'Record payment',
+    }))) return;
 
     const paymentId = `pay-cash-client-${Date.now()}`;
     const existingPayment = payments.find((p) => p.jobId === requestId);
@@ -3738,7 +3743,11 @@ export default function App() {
       return;
     }
     const amount = guardPayoutAmount(req);
-    if (!window.confirm(`Record $${amount} paid in cash to the guard for "${req.title}"?`)) return;
+    if (!(await showAppConfirm({
+      title: 'Record cash payout?',
+      message: `Record $${amount} paid in cash to the guard for "${req.title}"?`,
+      confirmLabel: 'Record payout',
+    }))) return;
 
     const paymentId = `pay-cash-guard-${Date.now()}`;
     const existingGuardPayment = payments.find(
@@ -3817,7 +3826,11 @@ export default function App() {
       return;
     }
     const feeAmount = getPlatformFeeAmount(req);
-    if (!window.confirm(`Manually deposit $${feeAmount.toFixed(2)} platform fee for "${req.title}"?`)) {
+    if (!(await showAppConfirm({
+      title: 'Deposit platform fee?',
+      message: `Manually deposit $${feeAmount.toFixed(2)} platform fee for "${req.title}"?`,
+      confirmLabel: 'Deposit fee',
+    }))) {
       return;
     }
 
@@ -4493,9 +4506,11 @@ export default function App() {
     const draft = createGuardPayoutInvoiceRecord({ guard, method, jobs: eligible });
     const label = method === 'cash' ? 'cash pickup' : 'bank transfer';
     if (
-      !window.confirm(
-        `Send a $${draft.total.toFixed(2)} ${label} invoice to Payments for ${eligible.length} completed job(s)?`
-      )
+      !(await showAppConfirm({
+        title: 'Send payout invoice?',
+        message: `Send a $${draft.total.toFixed(2)} ${label} invoice to Payments for ${eligible.length} completed job(s)?`,
+        confirmLabel: 'Send invoice',
+      }))
     ) {
       return;
     }
