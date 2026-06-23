@@ -113,14 +113,16 @@ export function JobPaymentRow({
     isDirector &&
     canMakeGuardPayoutAvailable(req) &&
     onMakeGuardPayoutAvailable &&
-    !readOnly &&
-    !cashClientJob;
+    !readOnly;
   const canCashGuard =
     paymentGates.allowCash &&
     isDirector &&
     canDirectorPayGuardCash(req) &&
-    !readOnly &&
-    (cashClientJob ? onMakeGuardPayoutAvailable : onMarkGuardPaidCash);
+    onMarkGuardPaidCash &&
+    !readOnly;
+  const guardDepositLabel = cashClientJob
+    ? `Deposit $${guardAmount.toFixed(2)} for guard`
+    : `Make $${guardAmount.toFixed(2)} available to guard`;
   const canRefund =
     isDirector &&
     !!req.stripePaymentIntentId &&
@@ -213,18 +215,6 @@ export function JobPaymentRow({
             </button>
           )}
 
-          {canCashGuard && (
-            <button
-              type="button"
-              onClick={() => run('guard', cashClientJob ? onMakeGuardPayoutAvailable : onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              className="app-button-primary app-btn-sm gap-1.5"
-            >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Pay guard ${guardAmount.toFixed(2)} cash
-            </button>
-          )}
-
           {canReleaseFunds && (
             <button
               type="button"
@@ -233,7 +223,19 @@ export function JobPaymentRow({
               className="app-button-primary app-btn-sm gap-1.5"
             >
               {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
-              Make ${guardAmount.toFixed(2)} available to guard
+              {guardDepositLabel}
+            </button>
+          )}
+
+          {canCashGuard && (
+            <button
+              type="button"
+              onClick={() => run('guard', onMarkGuardPaidCash)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5"
+            >
+              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Pay guard ${guardAmount.toFixed(2)} cash
             </button>
           )}
 

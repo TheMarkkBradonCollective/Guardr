@@ -4087,10 +4087,13 @@ export default function App() {
       return;
     }
     const amount = guardPayoutAmount(req);
+    const cashClient = isCashClientPayment(req);
     if (!(await showAppConfirm({
-      title: 'Make funds available?',
-      message: `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then choose bank transfer or cash pickup from their Pay screen.`,
-      confirmLabel: 'Make available',
+      title: cashClient ? 'Deposit guard pay?' : 'Make funds available?',
+      message: cashClient
+        ? `Deposit $${amount.toFixed(2)} for "${req.title}"? The guard will see it in Ready to collect on Pay and can send a Stripe bank payout.`
+        : `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then choose bank transfer or cash pickup from their Pay screen.`,
+      confirmLabel: cashClient ? 'Deposit for guard' : 'Make available',
     }))) {
       return;
     }
