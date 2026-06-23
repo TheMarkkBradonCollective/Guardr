@@ -644,9 +644,53 @@ export interface SecurityRequest {
     incidentReport: {
       hasIncident: boolean;
       incidentType?: string;
-      priority?: 'low' | 'medium' | 'high';
+      priority?: 'low' | 'medium' | 'high' | 'critical';
+      occurredAt?: string;
+      locationOnSite?: string;
       description?: string;
+      partiesInvolved?: string;
+      witnesses?: string;
+      causeOrTrigger?: string;
+      actionsTaken?: string;
+      authoritiesNotified?: boolean;
+      authorityDetails?: string;
+      injuryInvolved?: boolean;
+      propertyDamageInvolved?: boolean;
+      injuryDetails?: string;
+      propertyDamageDetails?: string;
+      followUpRequired?: boolean;
+      followUpNotes?: string;
+      evidenceNotes?: string;
+      submittedAt?: string;
+      submittedByGuardId?: string;
+      submittedByGuardName?: string;
     };
+    /** All incident reports filed during this shift (mid-shift and checkout). */
+    incidentReports?: Array<{
+      id: string;
+      hasIncident: boolean;
+      incidentType?: string;
+      priority?: 'low' | 'medium' | 'high' | 'critical';
+      occurredAt?: string;
+      locationOnSite?: string;
+      description?: string;
+      partiesInvolved?: string;
+      witnesses?: string;
+      causeOrTrigger?: string;
+      actionsTaken?: string;
+      authoritiesNotified?: boolean;
+      authorityDetails?: string;
+      injuryInvolved?: boolean;
+      propertyDamageInvolved?: boolean;
+      injuryDetails?: string;
+      propertyDamageDetails?: string;
+      followUpRequired?: boolean;
+      followUpNotes?: string;
+      evidenceNotes?: string;
+      submittedAt: string;
+      submittedByGuardId?: string;
+      submittedByGuardName?: string;
+    }>;
     clientNotes: string;
     attachments?: string[];
     /** Guard corrected departure time after forgetting to clock out on time */
