@@ -3574,21 +3574,86 @@ export default function App() {
   const handleDeleteClientAccount = async (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);
     if (!client) throw new Error('Client not found.');
-    const activeJob = requests.find(
-      (r) =>
-        r.clientId === clientId &&
-        ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
-    );
-    if (activeJob) {
-      throw new Error('This client has active job postings or shifts. Close those before deleting the account.');
-    }
+
     if (isDbConnected) {
-      const { error } = await supabase.from('clients').delete().eq('id', clientId);
+      // Collect all job IDs for this client so we can clean up related tables.
+      const clientJobIds = requests
+        .filter((r) => r.clientId === clientId)
+        .map((r) => r.id);
+
+      // Delete in dependency order so FK constraints are never violated.
+      // job_chat_messages cascade from job_chat_threads.
+      // support_messages cascade from support_tickets.
+      // payments cascade from security_requests.
+
+      if (clientJobIds.length > 0) {
+        await supabase
+          .from('job_chat_threads')
+          .delete()
+          .in('request_id', clientJobIds);
+
+        await supabase
+          .from('payments')
+          .delete()
+          .in('job_id', clientJobIds);
+      }
+
+      await supabase
+        .from('job_chat_threads')
+        .delete()
+        .eq('client_id', clientId);
+
+      await supabase
+        .from('security_requests')
+        .delete()
+        .eq('client_id', clientId);
+
+      await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('user_id', clientId);
+
+      await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('user_id', clientId);
+
+      await supabase
+        .from('chat_read_receipts')
+        .delete()
+        .eq('user_id', clientId);
+
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', clientId);
+
+      await supabase
+        .from('push_notification_dedup')
+        .delete()
+        .eq('user_id', clientId);
+
+      await supabase
+        .from('notification_preferences')
+        .delete()
+        .eq('user_id', clientId);
+
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
       if (error) {
         console.error('Client delete error:', error);
         throw new Error('Could not delete client account from the database.');
       }
     }
+
+    // Update local state to reflect the deletion.
+    setRequests((prev) => prev.filter((r) => r.clientId !== clientId));
+    setPayments((prev) => prev.filter((p) => {
+      const job = requests.find((r) => r.id === p.jobId);
+      return !job || job.clientId !== clientId;
+    }));
     setClients((prev) => prev.filter((c) => c.id !== clientId));
     removeStoredPassword(client.email);
     if (currentUser?.id === clientId) {
