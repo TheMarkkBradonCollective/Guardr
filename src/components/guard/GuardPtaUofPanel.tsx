@@ -241,7 +241,7 @@ export function GuardPtaUofPanel({
   );
 
   return (
-    <section className="app-form-section space-y-4">
+    <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
       <div>
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />

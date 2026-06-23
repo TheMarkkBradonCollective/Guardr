@@ -427,7 +427,7 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
       />
       {showSection(refresherItems.length) && (
-      <div className="mt-14 pt-8 border-t border-brand-border">
+      <div className="mt-14 pt-8 border-t border-b border-brand-border pb-5">
       <section className="app-form-section space-y-3 !pt-0 !border-t-0">
         <CredentialRowHeader
           rawTitle
@@ -474,7 +474,7 @@ export function GuardCredentialsPanel({
       </div>
       )}
       {showSection(otherBsisItems.length) && (
-      <section className="app-form-section space-y-3">
+      <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
         <CredentialRowHeader
           rawTitle
           title={
@@ -524,7 +524,7 @@ export function GuardCredentialsPanel({
         const catalogOptions = getCertsByCategory(category);
 
         const sectionCard = (
-          <section key={category} className="app-form-section space-y-3">
+          <section key={category} className="app-form-section space-y-3 pb-4 border-b border-brand-border">
             <CredentialRowHeader
               rawTitle
               title={
