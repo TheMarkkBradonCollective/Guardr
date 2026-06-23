@@ -19,6 +19,7 @@ import {
 } from '../types';
 import {
   canAccessFinancialControls,
+  canAccessStaffSettings,
   canEditJobListingDetails,
   canManageClients,
   canManageCompanyOperations,
@@ -367,6 +368,7 @@ export function StaffDashboard({
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
+  const showSettings = canAccessStaffSettings(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
@@ -630,7 +632,7 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Payments</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Financial controls are limited to Director and Administrator roles. If money is owed on
+              Financial controls are limited to Director and Owner roles. If money is owed on
               jobs, ask your Director to review the Payments section.
             </p>
           </div>
@@ -655,7 +657,7 @@ export function StaffDashboard({
       case 'guide':
         return <AppWorkflowPage audience="staff" />;
       case 'settings':
-        return showFinance ? (
+        return showSettings ? (
           <StaffSettingsPanel
             currentUser={currentUser}
             platformSettings={platformSettings}

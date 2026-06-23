@@ -68,10 +68,10 @@ const STAFF_OVERVIEW_CONFIG: Record<
   administrator: {
     roleLabel: ROLE_LABELS.administrator,
     workspaceKicker: 'Administrator workspace',
-    focusLine: 'Daily platform operations — users, payouts, analytics, and job pipeline.',
+    focusLine: 'Daily platform operations — users, analytics, and job pipeline. No financial controls.',
     layout: 'standard',
     metricLabels: [...ADMIN_METRICS],
-    showPaymentsInQueue: true,
+    showPaymentsInQueue: false,
     showDirectorFinancials: false,
     showOperationsSnapshot: false,
     showPlatformPulse: true,
@@ -80,8 +80,8 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showWeeklyInsight: true,
     showActivityFeed: true,
     emptyAttentionCopy:
-      'No approvals, incidents, or payouts waiting. Review analytics or open the ops map.',
-    quickLinkSections: ['approvals', 'jobs', 'payments', 'clients', 'analytics', 'messages'],
+      'No approvals or incidents waiting. Review analytics or open the ops map.',
+    quickLinkSections: ['approvals', 'jobs', 'clients', 'analytics', 'messages'],
   },
   director: {
     roleLabel: ROLE_LABELS.director,

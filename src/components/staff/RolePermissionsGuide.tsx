@@ -21,8 +21,8 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     permissions: [
       'Everything Moderators can do',
       'Manage users & platform settings',
-      'Manage payouts, fees & analytics',
-      'Manage content & platform configuration',
+      'View analytics & platform configuration',
+      'No payouts, fees, or cash handling',
     ],
   },
   {

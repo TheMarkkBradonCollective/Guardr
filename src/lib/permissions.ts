@@ -100,8 +100,6 @@ const MODERATOR_PERMISSIONS: Permission[] = [
 const ADMINISTRATOR_PERMISSIONS: Permission[] = [
   ...MODERATOR_PERMISSIONS,
   'admin.manage_users',
-  'admin.manage_payouts',
-  'admin.manage_fees',
   'admin.manage_settings',
   'admin.view_analytics',
   'admin.manage_content',
@@ -147,7 +145,7 @@ export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
   client: 'Individuals or businesses seeking security services.',
   guard: 'Independent licensed security professionals.',
   moderator: 'Operations and support — no financial controls.',
-  administrator: 'Platform management and daily operations.',
+  administrator: 'Platform management and daily operations — no financial controls.',
   director: 'Executive platform operations and unrestricted staff-side access.',
   owner: 'Platform governance — manages staff below the Owner tier.',
 };
@@ -210,8 +208,13 @@ export function hasAnyPermission(user: Pick<SessionUser, 'role'>, permissions: P
   return permissions.some((p) => hasPermission(user, p));
 }
 
+/** Payouts, fees, cash handling, and financial analytics — Director and Owner only */
 export function canAccessFinancialControls(user: Pick<SessionUser, 'role'>): boolean {
-  return hasAnyPermission(user, ['admin.manage_payouts', 'admin.manage_fees', 'director.view_all_financial_data']);
+  return hasExecutivePaymentControls(user);
+}
+
+export function canAccessStaffSettings(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.manage_settings') || canManagePlatformSettings(user);
 }
 
 /** Directors manage moderators and administrators; Owners manage all staff tiers */
