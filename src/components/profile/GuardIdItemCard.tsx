@@ -127,7 +127,7 @@ export function GuardIdItemCard({
               uploadStatus === 'on-file' ? 'text-brand-primary' : 'text-brand-text-muted'
             }`}
           >
-            {getGovernmentIdUploadStatusSummary(guard)}
+            {getGovernmentIdUploadStatusSummary(guard, { staffMode })}
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export function GuardIdItemCard({
             className="flex items-start justify-between gap-3 w-full text-left"
           >
             <p className="text-sm font-semibold text-brand-text-muted">Government ID</p>
-            <CredentialListStatusBadge status={uploadStatus} />
+            <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
           </button>
         </div>
         {detailModal}

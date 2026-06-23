@@ -5,8 +5,8 @@ import { guardHasCredentialListed, guardHasCredentialUploaded, isCertExpired } f
 
 export { isCertExpired };
 
-export function getCredentialUploadLabel(cert: Certification): string {
-  if (!certHasDocumentProof(cert)) return 'Listed';
+export function getCredentialUploadLabel(cert: Certification, options?: { staffMode?: boolean }): string {
+  if (!certHasDocumentProof(cert)) return options?.staffMode ? 'Listed' : 'Missing';
   return isCertExpired(cert) ? 'On file · Expired' : 'On file';
 }
 
@@ -78,12 +78,12 @@ export function getCourseUploadStatus(
   return 'on-file';
 }
 
-export function getCourseUploadStatusLabel(status: CourseUploadStatus): string {
+export function getCourseUploadStatusLabel(status: CourseUploadStatus, options?: { staffMode?: boolean }): string {
   switch (status) {
     case 'on-file':
       return 'On file';
     case 'listed':
-      return 'Listed';
+      return options?.staffMode ? 'Listed' : 'Missing';
     case 'expired':
       return 'On file · Expired';
     default:

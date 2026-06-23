@@ -452,9 +452,11 @@ export function GuardCredentialsPanel({
                   : ptaUofProgress.legacyPta && ptaUofProgress.legacyWmd
                     ? 'PTA & WMD certs on file'
                     : 'Separate PTA & UOF certificates on file'
-                : guardMeetsPtaUofTrainingListed(guard)
-                  ? 'Listed — document photos optional for activation'
-                  : 'Not listed'}
+                : staffMode
+                  ? guardMeetsPtaUofTrainingListed(guard)
+                    ? 'Listed — document photos optional for activation'
+                    : 'Not listed'
+                  : 'Not on file'}
             </p>
           </div>
           {canUpload && (

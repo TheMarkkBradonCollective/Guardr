@@ -173,8 +173,8 @@ export function GuardThirtyTwoHourPanel({
           )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Highly recommended by Guardr. Upload all 9 individual course certificates, or a single 32-hour
-          completion certificate if your training provider issued one.
+          Required to work field jobs. Upload all 9 individual course certificates, or a single 32-hour completion
+          certificate if your training provider issued one.
         </p>
       </div>
 
@@ -189,7 +189,7 @@ export function GuardThirtyTwoHourPanel({
                 : progress.thirtyTwoHourRollup
                   ? '32-hour block complete (rollup cert on file)'
                   : '32-hour block complete (all 9 courses on file)'
-              : formatThirtyTwoHourCourseProgressCounts(progress)}
+              : formatThirtyTwoHourCourseProgressCounts(progress, { staffMode })}
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
@@ -228,7 +228,7 @@ export function GuardThirtyTwoHourPanel({
         </p>
         {courses.map((course) => {
           const uploadStatus = getCourseUploadStatus(guard, course.id);
-          const onFile = uploadStatus !== 'missing';
+          const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
           const uploaded = certsForCatalogId(guard, course.id);
 
           return (
@@ -240,14 +240,16 @@ export function GuardThirtyTwoHourPanel({
                   className="flex w-full items-start justify-between gap-3 text-left"
                 >
                   <p className="text-sm font-semibold text-brand-text-muted">{course.name}</p>
-                  <CredentialListStatusBadge status={uploadStatus} />
+                  <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
                 </button>
               ) : (
                 <div className="flex items-start justify-between gap-3">
-                  <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                  <p className={`text-sm font-semibold ${fullyOnFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
                     {course.name}
                   </p>
-                  {uploaded.length === 0 && <CredentialListStatusBadge status={uploadStatus} />}
+                  {uploaded.length === 0 && (
+                    <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
+                  )}
                 </div>
               )}
 

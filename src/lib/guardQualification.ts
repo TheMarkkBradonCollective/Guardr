@@ -21,15 +21,11 @@ export const GUARD_PATHWAY_STATUS_LABELS: Record<Exclude<GuardQualificationLevel
 
 export const GUARD_PATHWAY_STATUS_DESCRIPTIONS: Record<Exclude<GuardQualificationLevel, 'none'>, string> = {
   pending: 'Verified government ID and valid BSIS Guard Card on file — Active and eligible to work jobs',
-  active:
-    'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file (highly recommended by Guardr)',
+  active: 'Guard Card plus 8-hr PTA/UOF and 32-hour BSIS training on file',
 };
 
 export const GUARD_INACTIVE_DESCRIPTION =
   'Verified government ID and valid BSIS Guard Card required — complete both in Credentials to become Active and work jobs';
-
-/** Shown on training credentials and job checklists — not a work blocker. */
-export const GUARDR_RECOMMENDED_TRAINING_LABEL = 'Highly recommended by Guardr';
 
 /** @deprecated Use GUARD_PATHWAY_STATUS_LABELS */
 export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
@@ -40,10 +36,7 @@ export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTION
 import { getGuardUserStatus, isGuardAccountActive, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
-  guardCredentialGraceExpired,
-  guardCredentialGraceMsRemaining,
   guardHasActiveCredentialGrace,
-  formatCredentialGraceTimeRemaining,
 } from './guardCredentialGrace';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import {
@@ -133,13 +126,6 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
   }
   if (!guardMeetsPtaUofTraining(guard)) {
-    if (guardHasActiveCredentialGrace(guard)) {
-      const remaining = formatCredentialGraceTimeRemaining(guardCredentialGraceMsRemaining(guard));
-      return `Upload 8-hour PTA/UOF training in Credentials within ${remaining} or your account will be deactivated. ${PTA_UOF_UPLOAD_GUIDANCE}`;
-    }
-    if (guardCredentialGraceExpired(guard)) {
-      return 'Your credential grace period has expired — upload PTA/UOF training in Credentials to work again.';
-    }
     return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   return null;
@@ -359,28 +345,34 @@ export function formatThirtyTwoHourCourseProgressCounts(
     listed32HourCount: number;
     total32HourCourses: number;
   },
-  options?: { scopeLabel?: string }
+  options?: { scopeLabel?: string; staffMode?: boolean }
 ): string {
   const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
   const scope = options?.scopeLabel ?? 'courses';
-  const base = `${uploaded32HourCount} of ${total32HourCourses} ${scope} on file`;
-  if (listed32HourCount > 0) {
+  const onFileCount = uploaded32HourCount;
+  const base = `${onFileCount} of ${total32HourCourses} ${scope} on file`;
+  if (options?.staffMode && listed32HourCount > 0) {
     return `${base} · ${listed32HourCount} listed`;
   }
   return base;
 }
 
-/** On file = full credit; listed-only = half credit toward the 9-course block. */
-export function thirtyTwoHourCourseProgressPercent(progress: {
-  thirtyTwoHourBlockComplete: boolean;
-  uploaded32HourCount: number;
-  listed32HourCount: number;
-  total32HourCourses: number;
-}): number {
+/** On file = full credit; listed-only = half credit toward the 9-course block (staff view only). */
+export function thirtyTwoHourCourseProgressPercent(
+  progress: {
+    thirtyTwoHourBlockComplete: boolean;
+    uploaded32HourCount: number;
+    listed32HourCount: number;
+    total32HourCourses: number;
+  },
+  options?: { staffMode?: boolean }
+): number {
   if (progress.thirtyTwoHourBlockComplete) return 100;
   const { uploaded32HourCount, listed32HourCount, total32HourCourses } = progress;
   if (total32HourCourses <= 0) return 0;
-  const weight = uploaded32HourCount + listed32HourCount * 0.5;
+  const weight = options?.staffMode
+    ? uploaded32HourCount + listed32HourCount * 0.5
+    : uploaded32HourCount;
   return Math.round((weight / total32HourCourses) * 100);
 }
 

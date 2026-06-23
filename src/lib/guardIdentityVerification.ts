@@ -95,10 +95,15 @@ export function getGovernmentIdUploadStatus(
   return 'on-file';
 }
 
-export function getGovernmentIdUploadStatusSummary(guard: SecurityGuard): string {
+export function getGovernmentIdUploadStatusSummary(
+  guard: SecurityGuard,
+  options?: { staffMode?: boolean }
+): string {
   const status = getGovernmentIdUploadStatus(guard);
   if (status === 'missing') return 'Not on file';
-  if (status === 'listed') return 'Incomplete — finish upload';
+  if (status === 'listed') {
+    return options?.staffMode ? 'Incomplete — finish upload' : 'Not on file';
+  }
   if (status === 'expired') return 'On file · expired';
   const verification = getGuardIdVerificationStatus(guard);
   if (verification === 'verified') return 'Verified — on file';

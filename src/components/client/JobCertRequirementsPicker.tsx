@@ -50,9 +50,8 @@ export function JobCertRequirementsPicker({
       <div className="space-y-2">
         <p className="text-sm font-semibold">Minimum guard status</p>
         <p className="text-xs text-brand-text-muted">
-          All guards need a valid guard card to be {GUARD_STATUS_LABELS.active} and work. Choose whether you prefer
-          guards who have also completed full BSIS training — training is highly recommended by Guardr but not required
-          to accept jobs.
+          All guards need a valid guard card, government ID, PTA/UOF, and the 32-hour BSIS course block on file to
+          work field jobs. Choose whether you prefer guards with full training verified on file.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {
