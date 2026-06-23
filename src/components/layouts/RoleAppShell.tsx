@@ -67,7 +67,7 @@ export function RoleAppShell({
           locationLabel={locationLabel}
           accountMenu={accountMenu}
           right={headerRight}
-          className={`${isMapMode ? 'bg-brand-bg/90 backdrop-blur-xl' : ''}${
+          className={`${isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : ''}${
             experience ? ` role-header-${experience}` : ''
           }`}
         />
