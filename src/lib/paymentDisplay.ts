@@ -202,8 +202,10 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       };
     case 'awaiting-guard-payout':
       return {
-        headline: 'Job done · release guard pay',
-        detail: `Make $${guardPay.toFixed(2)} available so the guard can collect from Pay.`,
+        headline: 'Job done · pay the guard',
+        detail: isCashClientPayment(req)
+          ? `Deposit $${guardPay.toFixed(2)} for Stripe payout, or pay $${guardPay.toFixed(2)} in cash on site.`
+          : `Make $${guardPay.toFixed(2)} available so the guard can collect from Pay.`,
       };
     case 'guard-collection-pending':
       return {
