@@ -56,6 +56,33 @@ export function CredentialListStatusBadge({
   return <CredentialSectionStatusBadge label={label} tone={listStatusTone(status, staffMode)} />;
 }
 
+export function credentialNeedsUploadAction(status: CredentialListStatus): boolean {
+  return status === 'missing' || status === 'listed';
+}
+
+/**
+ * Per-row / per-section header action: staff always sees status; guards see Add only while upload is still needed.
+ */
+export function CredentialRowAction({
+  staffMode = false,
+  uploadStatus,
+  canUpload,
+  onAdd,
+}: {
+  staffMode?: boolean;
+  uploadStatus: CredentialListStatus;
+  canUpload: boolean;
+  onAdd: () => void;
+}) {
+  if (staffMode || !credentialNeedsUploadAction(uploadStatus)) {
+    return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
+  }
+  if (canUpload) {
+    return <CredentialSectionAddButton onClick={onAdd} />;
+  }
+  return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
+}
+
 /** Consistent section-header action for credential uploads. */
 export function CredentialSectionAddButton({ onClick }: { onClick: () => void }) {
   return (

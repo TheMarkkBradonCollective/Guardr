@@ -29,8 +29,9 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { CredentialSectionAddButton } from '../credentials/CredentialStatusLabels';
+import { CredentialRowAction } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import {
   CERT_IMAGE_POLICY_HINT,
   guardCertificationCanEdit,
@@ -432,8 +433,15 @@ export function GuardCredentialsPanel({
             </p>
           </div>
           {canUpload && (
-            <CredentialSectionAddButton
-              onClick={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={
+                refresherItems.length > 0
+                  ? 'on-file'
+                  : getCourseUploadStatus(guard, BSIS_REFRESHER_CATALOG_ID)
+              }
+              canUpload={canUpload}
+              onAdd={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
             />
           )}
         </div>
@@ -464,8 +472,15 @@ export function GuardCredentialsPanel({
             </p>
           </div>
           {canUpload && otherBsisCatalogOptions.length > 0 && (
-            <CredentialSectionAddButton
-              onClick={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={
+                otherBsisItems.length > 0
+                  ? 'on-file'
+                  : getCourseUploadStatus(guard, otherBsisCatalogOptions[0]?.id ?? '')
+              }
+              canUpload={canUpload}
+              onAdd={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
             />
           )}
         </div>
@@ -500,8 +515,13 @@ export function GuardCredentialsPanel({
                 <p className="text-xs text-brand-text-muted mt-1">{subtitle}</p>
               </div>
               {canUpload && catalogOptions.length > 0 && (
-                <CredentialSectionAddButton
-                  onClick={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
+                <CredentialRowAction
+                  staffMode={staffMode}
+                  uploadStatus={
+                    items.length > 0 ? 'on-file' : getCourseUploadStatus(guard, catalogOptions[0]?.id ?? '')
+                  }
+                  canUpload={canUpload}
+                  onAdd={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
                 />
               )}
             </div>

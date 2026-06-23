@@ -19,8 +19,12 @@ import {
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
-import { CredentialSectionAddButton, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import {
+  CredentialRowAction,
+  CredentialSectionStatusDisplay,
+} from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -204,7 +208,12 @@ export function GuardPtaUofPanel({
             <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
           )}
         </div>
-        {canUpload && <CredentialSectionAddButton onClick={() => startAdd(catalogId)} />}
+        <CredentialRowAction
+          staffMode={staffMode}
+          uploadStatus={getCourseUploadStatus(guard, catalogId)}
+          canUpload={canUpload}
+          onAdd={() => startAdd(catalogId)}
+        />
       </div>
 
       {uploaded.length > 0 && (
@@ -213,7 +222,7 @@ export function GuardPtaUofPanel({
         </div>
       )}
 
-      {canUpload && alternateCatalogId && uploaded.length === 0 && secondPartCerts.length === 0 && (
+      {canUpload && !staffMode && alternateCatalogId && uploaded.length === 0 && secondPartCerts.length === 0 && (
         <button
           type="button"
           onClick={() => startAdd(alternateCatalogId)}
@@ -265,9 +274,12 @@ export function GuardPtaUofPanel({
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
               Combined 8-hour certificate
             </p>
-            {canUpload && (
-              <CredentialSectionAddButton onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)} />
-            )}
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID)}
+              canUpload={canUpload}
+              onAdd={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
+            />
           </div>
           {combinedCerts.length > 0 ? (
             <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>

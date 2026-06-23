@@ -17,10 +17,11 @@ import {
 import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
-  CredentialSectionAddButton,
+  CredentialRowAction,
   CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
@@ -203,7 +204,12 @@ export function GuardThirtyTwoHourPanel({
             <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
           )}
         </div>
-        {canUpload && <CredentialSectionAddButton onClick={() => startAdd(catalogId)} />}
+        <CredentialRowAction
+          staffMode={staffMode}
+          uploadStatus={getCourseUploadStatus(guard, catalogId)}
+          canUpload={canUpload}
+          onAdd={() => startAdd(catalogId)}
+        />
       </div>
 
       {uploaded.length > 0 && (
@@ -254,9 +260,12 @@ export function GuardThirtyTwoHourPanel({
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
               32-hour completion certificate
             </p>
-            {canUpload && (
-              <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
-            )}
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID)}
+              canUpload={canUpload}
+              onAdd={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+            />
           </div>
           {rollupCerts.length > 0 ? (
             <div className="app-cert-item-stack !pt-0">
