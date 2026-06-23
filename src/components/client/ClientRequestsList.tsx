@@ -34,7 +34,9 @@ import {
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
+import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
 
@@ -50,6 +52,8 @@ interface ClientRequestsListProps {
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
+  onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
+  onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onRequestNew: () => void;
 }
 
@@ -90,6 +94,8 @@ export function ClientRequestsList({
   onConfirmSelfAudit,
   onConfirmSpotCheck,
   onRequestCashPayment,
+  onApprovePendingGuard,
+  onDenyPendingGuard,
   onRequestNew,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
@@ -97,6 +103,7 @@ export function ClientRequestsList({
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
+  const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -179,6 +186,10 @@ export function ClientRequestsList({
         <AppItemCardStack>
           {filtered.map((req) => {
             const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
+            const pendingGuard = req.pendingGuardId
+              ? guards.find((g) => g.id === req.pendingGuardId)
+              : undefined;
+            const awaitingClientGuard = isAwaitingClientGuardApproval(req);
             const isExpanded = expandedId === req.id;
 
             if (!isExpanded) {
@@ -193,6 +204,9 @@ export function ClientRequestsList({
                         {jobPostingTypeLabel(req.requestType)}
                       </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                      {awaitingClientGuard && (
+                        <WfBadge tone="warning">Guard pending your approval</WfBadge>
+                      )}
                       <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                     </div>
                   }
@@ -213,6 +227,9 @@ export function ClientRequestsList({
                         {jobPostingTypeLabel(req.requestType)}
                       </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                      {awaitingClientGuard && (
+                        <WfBadge tone="warning">Guard pending your approval</WfBadge>
+                      )}
                       <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                     </div>
                   }
@@ -277,6 +294,59 @@ export function ClientRequestsList({
 
                 {req.status === 'open' && (
                   <div className="border-t border-brand-border pt-3 space-y-3 w-full">
+                    {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && (
+                      <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <ProfileAvatar src={pendingGuard.avatar} name={pendingGuard.name} size="sm" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-brand-text">Approve your guard</p>
+                            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
+                              Guardr approved <span className="font-medium text-brand-text">{pendingGuard.name}</span> for this job.
+                              Confirm to hire them, or decline to send the job back to the applicant list.
+                            </p>
+                            <p className="text-xs text-brand-text-muted mt-1">
+                              ★ {pendingGuard.rating.toFixed(1)} · {pendingGuard.jobsCompleted} jobs completed
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setPendingGuardActionId(req.id);
+                              try {
+                                await onApprovePendingGuard(req.id);
+                              } finally {
+                                setPendingGuardActionId(null);
+                              }
+                            }}
+                            disabled={pendingGuardActionId === req.id}
+                            className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
+                          >
+                            {pendingGuardActionId === req.id ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Confirming...</>
+                            ) : (
+                              <><CheckCircle2 className="w-3.5 h-3.5" /> Approve guard</>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setPendingGuardActionId(req.id);
+                              try {
+                                await onDenyPendingGuard(req.id);
+                              } finally {
+                                setPendingGuardActionId(null);
+                              }
+                            }}
+                            disabled={pendingGuardActionId === req.id}
+                            className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 text-red-400 border-red-500/40 disabled:opacity-50"
+                          >
+                            <X className="w-3.5 h-3.5" /> Decline guard
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {isClientCashPaymentPendingApproval(req) && (
                       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
                         <p className="text-sm font-semibold text-amber-300">Cash payment pending approval</p>
@@ -333,12 +403,14 @@ export function ClientRequestsList({
                       </p>
                     )}
                     <p className="text-sm text-brand-text-muted">
-                      {req.applicants.length === 0 ? (
-                        <>Guards can apply to this offer. Guardr staff will review applicants and approve the best fit.</>
+                      {awaitingClientGuard ? (
+                        <>Waiting for your approval on the guard Guardr recommended.</>
+                      ) : req.applicants.length === 0 ? (
+                        <>Guards can apply to this offer. Guardr staff will review applicants and send the best fit for your approval.</>
                       ) : (
                         <>
                           <span className="font-medium text-brand-text">{req.applicants.length} guard{req.applicants.length === 1 ? '' : 's'} applied.</span>
-                          {' '}Staff will approve who picks up this job.
+                          {' '}Staff will review applicants and send the best fit for your approval.
                         </>
                       )}
                     </p>

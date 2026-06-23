@@ -8,6 +8,7 @@ import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import {
   getApprovedGuardsAwaitingActivation,
@@ -48,6 +49,7 @@ interface StaffApprovalsProps {
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
+  onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
   onActivateGuardAccount?: (
@@ -140,6 +142,7 @@ export function StaffApprovals({
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
+  onDenyGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
   onActivateGuardAccount,
@@ -394,14 +397,26 @@ export function StaffApprovals({
           return null;
         }
         const ranked = rankApplicantGuards(req, guards);
+        const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
+        const awaitingClientGuard = isAwaitingClientGuardApproval(req);
         return (
           <>
             <ApprovalBackBar title={req.title} subtitle="Choose a guard for this job" onBack={() => setActiveItemId(null)} />
             <div className="staff-detail-pane space-y-3">
               <p className="text-sm text-brand-text-muted">{req.clientName} · {req.location}</p>
+              {awaitingClientGuard && pendingGuard && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                  <p className="text-sm font-medium text-amber-300">Awaiting client approval</p>
+                  <p className="text-xs text-brand-text-muted mt-1">
+                    {pendingGuard.name} was sent to {req.clientName} for confirmation.
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 {ranked.map((guard, index) => {
                   const meets = guardMeetsJobRequirements(guard, req);
+                  const isPending = req.pendingGuardId === guard.id;
+                  const anotherPending = !!req.pendingGuardId && !isPending;
                   return (
                     <WfListCard
                       key={guard.id}
@@ -409,19 +424,46 @@ export function StaffApprovals({
                       title={`${index === 0 ? '★ ' : ''}${guard.name}`}
                       subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
                       meta={
-                        <span className={meets ? 'text-emerald-400' : 'text-amber-400'}>
-                          {meets ? 'Meets job requirements' : 'Missing required credentials'}
+                        <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
+                          {isPending
+                            ? 'Awaiting client approval'
+                            : meets
+                              ? 'Meets job requirements'
+                              : 'Missing required credentials'}
                         </span>
                       }
                       action={
-                        <button
-                          type="button"
-                          onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                          disabled={!meets}
-                          className="app-button-primary app-btn-sm disabled:opacity-40"
-                        >
-                          Approve guard
-                        </button>
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          {isPending ? (
+                            onDenyGuardApplication && (
+                              <button
+                                type="button"
+                                onClick={() => onDenyGuardApplication(req.id, guard.id)}
+                                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                              >
+                                Withdraw
+                              </button>
+                            )
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onApproveGuardApplication(req.id, guard.id)}
+                              disabled={!meets || anotherPending}
+                              className="app-button-primary app-btn-sm disabled:opacity-40"
+                            >
+                              Send to client
+                            </button>
+                          )}
+                          {!isPending && onDenyGuardApplication && (
+                            <button
+                              type="button"
+                              onClick={() => onDenyGuardApplication(req.id, guard.id)}
+                              className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                            >
+                              Decline
+                            </button>
+                          )}
+                        </div>
                       }
                     />
                   );
@@ -440,6 +482,7 @@ export function StaffApprovals({
                 <p className="font-semibold text-sm truncate">{req.title}</p>
                 <p className="text-xs text-brand-text-muted truncate">
                   {req.applicants.length} applicant{req.applicants.length === 1 ? '' : 's'} · {req.location}
+                  {isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''}
                 </p>
               </AppItemCard>
             ))}

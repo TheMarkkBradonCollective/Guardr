@@ -97,9 +97,15 @@ export function GuardJobDetailContent({
                 </div>
               ))}
 
-              {hasApplied && job.status === 'open' && (
+              {hasApplied && job.status === 'open' && job.pendingGuardId === guard.id && (
+                <p className="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
+                  Guardr approved you for this job — awaiting client confirmation.
+                </p>
+              )}
+
+              {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
-                  Application submitted. Guardr staff will review applicants and approve the best fit.
+                  Application submitted. Guardr staff will review applicants and send the best fit for client approval.
                 </p>
               )}
 
