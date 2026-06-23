@@ -7,6 +7,7 @@ import {
   PIPELINE_SECTION_META,
   paymentPipelineSummary,
 } from '../../lib/paymentPipeline';
+import { computeOperationalFinancials } from '../../lib/operationalFinancials';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
 import { JobPaymentRow } from './JobPaymentRow';
@@ -152,6 +153,7 @@ export function StaffPaymentsPanel({
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
+  const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);
   const openInvoices = useMemo(() => openGuardPayoutInvoices(payoutInvoices), [payoutInvoices]);
 
   const sectionProps = {
@@ -202,7 +204,7 @@ export function StaffPaymentsPanel({
           </p>
         )}
         <div className="mt-5">
-          <StaffPaymentSummary summary={summary} />
+          <StaffPaymentSummary summary={summary} financials={financials} />
         </div>
       </div>
 
