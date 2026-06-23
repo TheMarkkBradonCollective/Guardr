@@ -20,14 +20,18 @@ export interface ActivateGuardAccountOptions {
   graceHours?: number;
 }
 
+/** Labels stored on guard.credentialGraceMissing when staff grants activation grace. */
+export const GRACE_CREDENTIAL_PTA_UOF_LABEL = 'PTA/UOF training';
+export const GRACE_CREDENTIAL_32_HOUR_LABEL = '32-hour BSIS training';
+
 /** Optional credentials completely absent — not listed and not on file. */
 export function getGuardMissingGraceCredentialLabels(guard: SecurityGuard, _state = 'CA'): string[] {
   const missing: string[] = [];
   if (!guardMeetsPtaUofTrainingListed(guard)) {
-    missing.push('PTA/UOF training');
+    missing.push(GRACE_CREDENTIAL_PTA_UOF_LABEL);
   }
   if (!guardMeets32HourBlockListed(guard)) {
-    missing.push('32-hour BSIS training');
+    missing.push(GRACE_CREDENTIAL_32_HOUR_LABEL);
   }
   return missing;
 }
