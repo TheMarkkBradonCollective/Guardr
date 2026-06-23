@@ -116,10 +116,8 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-
-  if (isCashClientPayment(req)) {
-    return ['paid', 'held'].includes(req.paymentStatus);
-  }
+  // Cash-client jobs release pay via "Make funds available" so the guard can invoice bank/cash pickup.
+  if (isCashClientPayment(req)) return false;
 
   return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
 }
