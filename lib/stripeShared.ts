@@ -67,7 +67,9 @@ export async function markJobHeld(jobId: string) {
     .in('status', ['paid']);
 }
 
-const GUARD_PAY_PLATFORM_FEE = 5;
+import { LEGACY_PLATFORM_FEE_PER_HOUR } from './platformFees';
+
+const GUARD_PAY_PLATFORM_FEE = LEGACY_PLATFORM_FEE_PER_HOUR;
 
 function computeRequiredCashDeposit(job: {
   estimated_payout: number;

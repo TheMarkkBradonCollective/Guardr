@@ -89,7 +89,9 @@ async function markJobPaid(
   }
 }
 
-const PLATFORM_FEE_PER_HOUR = 5;
+import { LEGACY_PLATFORM_FEE_PER_HOUR } from '../../lib/platformFees';
+
+const PLATFORM_FEE_PER_HOUR = LEGACY_PLATFORM_FEE_PER_HOUR;
 
 function computeRequiredCashDeposit(job: {
   estimated_payout: number;

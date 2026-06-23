@@ -476,8 +476,35 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
   payment_cash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  fee_config JSONB NOT NULL DEFAULT '{
+    "model": "flat",
+    "flatFeePerHour": 5,
+    "percentRate": 0.15,
+    "minFeePerHour": 4,
+    "maxFeePerHour": 12,
+    "tiers": [
+      { "minHourlyRate": 75, "feePerHour": 10 },
+      { "minHourlyRate": 50, "feePerHour": 8 },
+      { "minHourlyRate": 30, "feePerHour": 6 },
+      { "minHourlyRate": 0, "feePerHour": 5 }
+    ]
+  }'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL DEFAULT '{
+  "model": "flat",
+  "flatFeePerHour": 5,
+  "percentRate": 0.15,
+  "minFeePerHour": 4,
+  "maxFeePerHour": 12,
+  "tiers": [
+    { "minHourlyRate": 75, "feePerHour": 10 },
+    { "minHourlyRate": 50, "feePerHour": 8 },
+    { "minHourlyRate": 30, "feePerHour": 6 },
+    { "minHourlyRate": 0, "feePerHour": 5 }
+  ]
+}'::jsonb;
 
 INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 

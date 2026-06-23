@@ -11,7 +11,7 @@ import {
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -34,6 +34,7 @@ export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
 interface RequestSecurityFlowProps {
   preset?: RequestFlowPreset;
+  feeConfig: PlatformFeeConfig;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -42,6 +43,7 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requi
 
 export function RequestSecurityFlow({
   preset = 'default',
+  feeConfig,
   onBack,
   onSubmit,
 }: RequestSecurityFlowProps) {
@@ -82,8 +84,9 @@ export function RequestSecurityFlow({
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
-  const guardPay = computeGuardPay(effectiveRate);
-  const platformFeeTotal = computePlatformFee(durationHours) * effectiveGuards;
+  const platformFeePerHour = resolvePlatformFeePerHour(effectiveRate, feeConfig);
+  const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
+  const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour) * effectiveGuards;
   const estimatedTotal = Math.round(durationHours * effectiveRate * effectiveGuards * 100) / 100;
 
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
@@ -146,6 +149,7 @@ export function RequestSecurityFlow({
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
+      platformFeePerHour,
       estimatedPayout: estimatedTotal,
       description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
@@ -395,7 +399,7 @@ export function RequestSecurityFlow({
               />
             </div>
             <p className="text-xs text-brand-text-muted">
-              Guard receives ${guardPay}/hr · Platform fee ${PLATFORM_FEE_PER_HOUR}/hr per guard
+              Guard receives ${guardPay}/hr · Platform fee ${platformFeePerHour}/hr per guard
             </p>
           </div>
         )}

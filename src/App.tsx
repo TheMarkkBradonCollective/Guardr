@@ -103,7 +103,7 @@ import {
 } from './lib/guardIdentityVerification';
 import { computeDurationHours } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
-import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from './lib/payments';
+import { computeGuardPay, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
 import { getGuardPayoutEligibleJobs } from './lib/guardPayoutInvoice';
 import {
@@ -1240,7 +1240,7 @@ export default function App() {
         startDate: r.start_date, endDate: r.end_date,
         durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
         guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
-        platformFeePerHour: r.platform_fee_per_hour ?? PLATFORM_FEE_PER_HOUR,
+        platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
         estimatedPayout: r.estimated_payout,
         status: normalizeJobStatus(r.status),
         assignedGuardId: r.assigned_guard_id,
@@ -3428,7 +3428,9 @@ export default function App() {
     const address = newRequest.address || newRequest.location || 'To Be Confirmed';
     const durationHours = newRequest.durationHours ?? computeDurationHours(startDate, endDate);
     const hourlyRate = newRequest.hourlyRate || 35;
-    const guardPay = newRequest.guardPay ?? computeGuardPay(hourlyRate);
+    const platformFeePerHour =
+      newRequest.platformFeePerHour ?? resolvePlatformFeePerHour(hourlyRate, platformSettings.feeConfig);
+    const guardPay = newRequest.guardPay ?? computeGuardPay(hourlyRate, platformFeePerHour);
     const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const location = siteName ? `${siteName} — ${address}` : address;
 
@@ -3458,7 +3460,7 @@ export default function App() {
       longitude: newRequest.longitude,
       operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
-      platformFeePerHour: PLATFORM_FEE_PER_HOUR,
+      platformFeePerHour,
       estimatedPayout,
       status: 'pending-review',
       paymentStatus: 'unpaid',
@@ -3638,7 +3640,8 @@ export default function App() {
       durationHours: input.durationHours,
       hourlyRate: input.hourlyRate,
       guardPay: input.guardPay,
-      platformFeePerHour: PLATFORM_FEE_PER_HOUR,
+      platformFeePerHour:
+        resolvePlatformFeePerHour(input.hourlyRate, platformSettings.feeConfig),
       estimatedPayout: input.estimatedPayout,
       status,
       paymentStatus: 'unpaid',
@@ -5841,6 +5844,7 @@ export default function App() {
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
               paymentGates={clientPaymentGatesMemo}
+              feeConfig={platformSettings.feeConfig}
               currentUser={currentUser}
               jobChatThreads={jobChatThreads}
               jobChatMessages={jobChatMessages}

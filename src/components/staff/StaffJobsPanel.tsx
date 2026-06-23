@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { PlatformFeeConfig } from '../../lib/payments';
 import { isGuardAccountActive } from '../../lib/accountStatus';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
@@ -54,6 +55,7 @@ interface StaffJobsPanelProps {
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
   staffRole?: PlatformRole;
+  feeConfig: PlatformFeeConfig;
 }
 
 function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
@@ -405,6 +407,7 @@ export function StaffJobsPanel({
   onSelectedIdChange,
   initialSelectedId = null,
   staffRole,
+  feeConfig,
 }: StaffJobsPanelProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<JobsFilter>('all');
@@ -480,6 +483,7 @@ export function StaffJobsPanel({
           clients={clients}
           guards={guards}
           requests={requests}
+          feeConfig={feeConfig}
           onCreate={onCreateJob}
           onCreated={(jobId) => setSelectedId(jobId)}
         />
