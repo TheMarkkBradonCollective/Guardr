@@ -185,6 +185,10 @@ export async function handlePushEvent(
       title: 'Staff chat',
       body: body.body || 'New message from the Guardr team',
     },
+    guard_message: {
+      title: 'Guard chat',
+      body: body.body || 'New message from another guard',
+    },
   };
 
   const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
@@ -214,6 +218,8 @@ export async function handlePushEvent(
     dispatchPayload.userId = body.recipientUserId;
   } else if (body.type === 'staff_message') {
     dispatchPayload.role = 'dispatch';
+  } else if (body.type === 'guard_message') {
+    dispatchPayload.role = 'guard';
   }
 
   const { dispatchPushNotification } = await import('./delivery');

@@ -88,6 +88,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         title: 'Staff chat',
         body: body.body || 'New message from the Guardr team',
       },
+      guard_message: {
+        title: 'Guard chat',
+        body: body.body || 'New message from another guard',
+      },
     };
 
     const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
@@ -115,8 +119,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dispatchPayload.userId = body.recipientUserId;
     } else if (body.type === 'job_chat_message' && body.recipientUserId) {
       dispatchPayload.userId = body.recipientUserId;
-    } else if (body.type === 'staff_message') {
-      dispatchPayload.role = 'dispatch';
+    } else if (
+      body.type === 'staff_message' ||
+      body.type === 'guard_message' ||
+      (body.type === 'support_message' && !body.recipientUserId) ||
+      (body.type === 'job_chat_message' && !body.recipientUserId)
+    ) {
+      dispatchPayload.role = body.type === 'guard_message' ? 'guard' : 'dispatch';
     }
 
     const result = await dispatchPushNotification(db, dispatchPayload);

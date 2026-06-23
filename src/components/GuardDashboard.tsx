@@ -10,6 +10,7 @@ import {
   SupportTicket,
   JobChatThread,
   JobChatMessage,
+  GuardMessage,
 } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
@@ -31,7 +32,7 @@ import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy, MessagesSquare } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -50,7 +51,7 @@ import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
-import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
+import { GuardMessengerPanel } from './guard/GuardMessengerPanel';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';
@@ -92,6 +93,9 @@ interface GuardDashboardProps {
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  guardMessages?: GuardMessage[];
+  onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onRefreshGuardMessages?: () => void | Promise<void>;
   onReportIncident?: (requestId: string) => void | Promise<void>;
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
@@ -116,13 +120,14 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'support' | 'profile';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'guardChat' | 'support' | 'profile';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
   myJobs: 'My jobs',
   earnings: 'Pay',
+  guardChat: 'Guard chat',
   support: 'Support',
   profile: 'Profile',
 };
@@ -155,6 +160,9 @@ export function GuardDashboard({
   jobChatThreads = [],
   jobChatMessages = [],
   onSendJobChatMessage,
+  guardMessages = [],
+  onSendGuardMessage,
+  onRefreshGuardMessages,
   onReportIncident,
   onRequestCashPayout,
   onRequestStripePayout,
@@ -549,6 +557,7 @@ export function GuardDashboard({
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'guardChat', icon: MessagesSquare, label: 'Guard chat' },
     { id: 'support', icon: LifeBuoy, label: 'Support' },
   ];
 
@@ -673,6 +682,17 @@ export function GuardDashboard({
                 initialChatOpen={openJobChat}
                 onSelectedJobIdChange={onJobChatRequestIdChange}
                 onChatOpenChange={onJobChatOpenChange}
+              />
+            </div>
+          )}
+
+          {activeTab === 'guardChat' && onSendGuardMessage && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <GuardMessengerPanel
+                messages={guardMessages}
+                currentUser={currentUser}
+                onSend={onSendGuardMessage}
+                onRefresh={onRefreshGuardMessages}
               />
             </div>
           )}
@@ -818,7 +838,7 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support';
+  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support' && activeTab !== 'guardChat';
   const shellFullBleed = !showPendingGate && activeTab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (

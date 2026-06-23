@@ -60,6 +60,8 @@ export function resolveNotificationUrl(
         : '/staff/messages?mtab=jobs';
     case 'staff_message':
       return '/staff/messages?mtab=team';
+    case 'guard_message':
+      return '/guard/guard-chat';
     case 'test':
       return '/';
     default:
@@ -142,6 +144,8 @@ export function resolveNotificationUrlForRole(
         : '/staff/jobs';
     case 'staff_message':
       return '/staff/messages?mtab=team';
+    case 'guard_message':
+      return '/guard/guard-chat';
     case 'assignment':
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -169,6 +173,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['client', 'guard', 'dispatch', 'admin'];
     case 'staff_message':
       return ['dispatch', 'admin'];
+    case 'guard_message':
+      return ['guard'];
     case 'test':
       return [];
     default:

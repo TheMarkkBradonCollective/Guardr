@@ -22,6 +22,7 @@ import {
   JobChatThread,
   JobChatMessage,
   StaffMessage,
+  GuardMessage,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
@@ -145,6 +146,14 @@ import {
   saveJobChatThreadsToStorage,
   threadForRequest,
 } from './lib/jobChat';
+import {
+  buildGuardMessage,
+  loadGuardMessagesFromStorage,
+  mergeGuardMessages,
+  appendGuardMessage,
+  saveGuardMessagesToStorage,
+} from './lib/guardMessenger';
+import { fetchGuardMessagesFromApi, postGuardMessageToApi } from './lib/guardMessagesApi';
 import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
@@ -270,6 +279,7 @@ export default function App() {
   const [jobChatThreads, setJobChatThreads] = useState<JobChatThread[]>(() => loadJobChatThreadsFromStorage());
   const [jobChatMessages, setJobChatMessages] = useState<JobChatMessage[]>(() => loadJobChatMessagesFromStorage());
   const [staffMessages, setStaffMessages] = useState<StaffMessage[]>(() => loadStaffMessagesFromStorage());
+  const [guardMessages, setGuardMessages] = useState<GuardMessage[]>(() => loadGuardMessagesFromStorage());
   const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
   const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
     loadGuardPayoutInvoicesFromStorage()
@@ -1023,6 +1033,7 @@ export default function App() {
       const { data: dbJobChatThreads, error: jobChatThreadsErr } = await supabase.from('job_chat_threads').select('*');
       const { data: dbJobChatMessages, error: jobChatMessagesErr } = await supabase.from('job_chat_messages').select('*');
       const { data: dbStaffMessages, error: staffMessagesErr } = await supabase.from('staff_messages').select('*');
+      const { data: dbGuardMessages, error: guardMessagesErr } = await supabase.from('guard_messages').select('*');
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
         .from('guard_payout_invoices')
         .select('*');
@@ -1036,6 +1047,9 @@ export default function App() {
       }
       if (staffMessagesErr) {
         console.warn('Staff messages load (run migration if missing):', staffMessagesErr);
+      }
+      if (guardMessagesErr) {
+        console.warn('Guard messages load (run migration if missing):', guardMessagesErr);
       }
       if (payoutInvoicesErr) {
         console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
@@ -1309,6 +1323,22 @@ export default function App() {
         });
       }
 
+      if (!guardMessagesErr && dbGuardMessages != null) {
+        const mappedGuardMessages = dbGuardMessages.map((m: any) => ({
+          id: m.id,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderRole: m.sender_role,
+          body: m.body,
+          createdAt: m.created_at,
+        }));
+        setGuardMessages((prev) => {
+          const next = mergeGuardMessages(prev, mappedGuardMessages);
+          saveGuardMessagesToStorage(next);
+          return next;
+        });
+      }
+
       setIsDbConnected(true);
     } catch (err) {
       console.error('Supabase load error:', err);
@@ -1334,6 +1364,66 @@ export default function App() {
     body: m.body,
     createdAt: m.created_at,
   });
+
+  const mapDbGuardMessageRow = (m: {
+    id: string;
+    sender_id: string;
+    sender_name: string;
+    sender_role: string;
+    body: string;
+    created_at: string;
+  }): GuardMessage => ({
+    id: m.id,
+    senderId: m.sender_id,
+    senderName: m.sender_name,
+    senderRole: m.sender_role as GuardMessage['senderRole'],
+    body: m.body,
+    createdAt: m.created_at,
+  });
+
+  const refreshGuardMessages = useCallback(async () => {
+    if (!currentUser || currentUser.role !== 'guard') return;
+
+    const applyRemote = (remote: GuardMessage[]) => {
+      setGuardMessages((prev) => {
+        const next = mergeGuardMessages(prev, remote);
+        if (
+          next.length === prev.length &&
+          next.every((message, index) => message.id === prev[index]?.id)
+        ) {
+          return prev;
+        }
+        saveGuardMessagesToStorage(next);
+        return next;
+      });
+    };
+
+    if (isDbConnected) {
+      try {
+        const { data, error } = await supabase
+          .from('guard_messages')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && data) {
+          applyRemote(data.map((row: any) => mapDbGuardMessageRow(row)));
+          return;
+        }
+        if (error) console.warn('Guard messages client refresh:', error.message);
+      } catch (err) {
+        console.warn('Guard messages client refresh:', err);
+      }
+    }
+
+    try {
+      const remote = await fetchGuardMessagesFromApi(currentUser);
+      applyRemote(remote);
+    } catch (err) {
+      console.warn('Guard messages API refresh:', err);
+    }
+  }, [currentUser, isDbConnected]);
+
+  const refreshGuardMessagesRef = useRef(refreshGuardMessages);
+  refreshGuardMessagesRef.current = refreshGuardMessages;
 
   const refreshStaffMessages = useCallback(async () => {
     if (!currentUser || !isStaffRole(currentUser.role)) return;
@@ -1459,6 +1549,18 @@ export default function App() {
         });
         if (isNew && !fromSelf) void playWalkieChirpSound();
       },
+      onGuardMessage: (message) => {
+        const fromSelf = message.senderId === currentUser?.id;
+        let isNew = false;
+        setGuardMessages((prev) => {
+          const next = appendGuardMessage(prev, message);
+          if (next === prev) return prev;
+          isNew = true;
+          saveGuardMessagesToStorage(next);
+          return next;
+        });
+        if (isNew && !fromSelf) void playWalkieChirpSound();
+      },
       onSupportMessage: (message) => {
         if (shouldSkipRealtimeSync()) return;
         const fromSelf = message.senderId === currentUser?.id;
@@ -1496,7 +1598,7 @@ export default function App() {
       return clientView === 'support' || (clientView === 'coverage' && openJobChat);
     }
     if (role === 'guard') {
-      return guardTab === 'myJobs' && openJobChat;
+      return guardTab === 'guardChat' || (guardTab === 'myJobs' && openJobChat);
     }
     if (role === 'staff') {
       return staffSection === 'team-chat' || staffSection === 'job-chats' || staffSection === 'support';
@@ -1511,12 +1613,16 @@ export default function App() {
         void refreshStaffMessagesRef.current();
         return;
       }
+      if (guardTab === 'guardChat' && currentUser?.role === 'guard') {
+        void refreshGuardMessagesRef.current();
+        return;
+      }
       if (!shouldSkipRealtimeSync()) {
         void loadRef.current();
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [isDbConnected, isInMessagingView, staffSection, currentUser]);
+  }, [isDbConnected, isInMessagingView, staffSection, guardTab, currentUser]);
 
   useEffect(() => {
     if (!isDbConnected || !currentUser) return;
@@ -4650,6 +4756,49 @@ export default function App() {
     }
   };
 
+  const persistGuardMessageToDb = async (message: GuardMessage) => {
+    let persisted = false;
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('guard_messages').upsert({
+          id: message.id,
+          sender_id: message.senderId,
+          sender_name: message.senderName,
+          sender_role: message.senderRole,
+          body: message.body,
+          created_at: message.createdAt,
+        });
+        if (!error) persisted = true;
+        else console.warn('Guard message DB sync:', error);
+      } catch (e) {
+        console.warn('Guard message DB sync:', e);
+      }
+    }
+    if (!persisted && currentUser && currentUser.role === 'guard') {
+      try {
+        await postGuardMessageToApi(currentUser, message);
+      } catch (e) {
+        console.warn('Guard message API sync:', e);
+      }
+    }
+  };
+
+  const handleSendGuardMessage = async (body: string) => {
+    if (!currentUser || !body.trim() || currentUser.role !== 'guard') return;
+    const message = buildGuardMessage(currentUser, body);
+    beginLocalMutation();
+    setGuardMessages((prev) => {
+      const next = [...prev, message];
+      saveGuardMessagesToStorage(next);
+      return next;
+    });
+    await persistGuardMessageToDb(message);
+    void reportPushEvent(currentUser, {
+      type: 'guard_message',
+      body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
+    });
+  };
+
   const ensureJobChatThread = async (req: SecurityRequest) => {
     if (!req.assignedGuardId) return null;
     const existing = threadForRequest(jobChatThreads, req.id);
@@ -5001,6 +5150,9 @@ export default function App() {
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           onSendJobChatMessage={handleSendJobChatMessage}
+          guardMessages={guardMessages}
+          onSendGuardMessage={handleSendGuardMessage}
+          onRefreshGuardMessages={refreshGuardMessages}
           jobChatRequestId={jobChatRequestId}
           openJobChat={openJobChat}
           onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}

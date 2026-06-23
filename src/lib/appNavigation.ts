@@ -53,6 +53,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   jobs: 'myJobs',
   earnings: 'earnings',
   pay: 'earnings',
+  'guard-chat': 'guardChat',
   support: 'support',
   profile: 'profile',
 };
@@ -61,6 +62,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   map: 'map',
   myJobs: 'my-jobs',
   earnings: 'earnings',
+  guardChat: 'guard-chat',
   support: 'support',
   profile: 'profile',
 };

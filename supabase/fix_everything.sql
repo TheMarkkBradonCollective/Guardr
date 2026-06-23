@@ -443,6 +443,15 @@ CREATE TABLE IF NOT EXISTS staff_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE IF NOT EXISTS guard_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 CREATE TABLE IF NOT EXISTS notification_preferences (
   user_id TEXT PRIMARY KEY,
   assignment BOOLEAN NOT NULL DEFAULT true,
@@ -452,6 +461,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   support_message BOOLEAN NOT NULL DEFAULT true,
   job_chat_message BOOLEAN NOT NULL DEFAULT true,
   staff_message BOOLEAN NOT NULL DEFAULT true,
+  guard_message BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -459,6 +469,7 @@ CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(r
 CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);
 CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);
 CREATE INDEX IF NOT EXISTS staff_messages_created_at_idx ON staff_messages(created_at);
+CREATE INDEX IF NOT EXISTS guard_messages_created_at_idx ON guard_messages(created_at);
 
 -- ── INDEXES ─────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_guards_email ON guards(email);
@@ -491,6 +502,7 @@ ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 
 DO $$
@@ -501,7 +513,7 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages', 'push_subscriptions',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'notification_preferences'
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'notification_preferences'
   ]
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', tbl || '_select', tbl);
@@ -531,7 +543,7 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages'
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN

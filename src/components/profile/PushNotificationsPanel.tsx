@@ -84,6 +84,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             supportMessage: data.support_message !== false,
             jobChatMessage: data.job_chat_message !== false,
             staffMessage: data.staff_message !== false,
+            guardMessage: data.guard_message !== false,
             updatedAt: data.updated_at ?? new Date().toISOString(),
           };
           setPrefs(loaded);

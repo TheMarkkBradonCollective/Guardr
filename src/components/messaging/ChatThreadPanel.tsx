@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { PlatformRole } from '../../types';
 import { isStaffSender, senderLabel } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
+import { guardChatSenderLabel } from '../../lib/guardMessenger';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone } from '../ui/app/AppPrimitives';
 
@@ -26,6 +27,8 @@ interface ChatThreadPanelProps {
   teamChat?: boolean;
   /** Staff chat labels: Guardr · Role · Name (staff messenger only) */
   staffChatLabels?: boolean;
+  /** Guard chat labels: Guardr · Guard · Name */
+  guardChatLabels?: boolean;
 }
 
 function formatChatTime(iso: string): string {
@@ -51,6 +54,16 @@ function bubbleTone(
   return 'incoming';
 }
 
+function messageSenderLabel(
+  msg: ChatBubbleMessage,
+  staffChatLabels: boolean,
+  guardChatLabels: boolean
+): string {
+  if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName);
+  if (guardChatLabels) return guardChatSenderLabel(msg.senderRole, msg.senderName);
+  return senderLabel(msg.senderRole, msg.senderName);
+}
+
 export function ChatThreadPanel({
   messages,
   currentUserId,
@@ -61,6 +74,7 @@ export function ChatThreadPanel({
   headerNote,
   teamChat = false,
   staffChatLabels = false,
+  guardChatLabels = false,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -105,11 +119,7 @@ export function ChatThreadPanel({
                 >
                   <AppChatBubble
                     tone={tone}
-                    senderLabel={
-                      staffChatLabels
-                        ? staffChatSenderLabel(msg.senderRole, msg.senderName)
-                        : senderLabel(msg.senderRole, msg.senderName)
-                    }
+                    senderLabel={messageSenderLabel(msg, staffChatLabels, guardChatLabels)}
                     body={msg.body}
                     timestamp={formatChatTime(msg.createdAt)}
                   />
@@ -120,18 +130,19 @@ export function ChatThreadPanel({
         )}
         <div ref={bottomRef} />
       </div>
-      {!readOnly ? (
+
+      {readOnly ? (
+        <p className="shrink-0 text-xs text-center text-brand-text-muted px-4 py-3 border-t border-brand-border">
+          {readOnlyMessage}
+        </p>
+      ) : (
         <AppChatComposer
           value={draft}
           onChange={setDraft}
-          onSend={handleSend}
+          onSend={() => void handleSend()}
           placeholder={placeholder}
-          submitting={submitting}
+          disabled={submitting}
         />
-      ) : (
-        <p className="shrink-0 text-sm text-brand-text-muted text-center p-4 border-t border-brand-border bg-brand-surface">
-          {readOnlyMessage}
-        </p>
       )}
     </div>
   );
