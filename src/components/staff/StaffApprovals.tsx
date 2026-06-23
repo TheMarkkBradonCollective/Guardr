@@ -27,6 +27,9 @@ import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
+import type { AddCertificationResult } from '../../lib/certUniqueness';
+import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { certDisplayName } from '../../lib/certCatalog';
 import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
@@ -63,6 +66,14 @@ interface StaffApprovalsProps {
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onAddCertification?: (guardId: string, cert: Partial<Certification>) => Promise<AddCertificationResult>;
+  onDeleteCertification?: (guardId: string, certId: string) => Promise<CertImageMutationResult>;
+  onAttachCertificationImage?: (guardId: string, certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
+  onUpdateCertification?: (
+    guardId: string,
+    certId: string,
+    payload: CertUpdatePayload
+  ) => Promise<CertUpdateResult>;
   onViewGuard?: (guardId: string) => void;
   canManageGuardAccounts?: boolean;
   canEditJobListing?: boolean;
@@ -137,6 +148,10 @@ export function StaffApprovals({
   onRequestIdentityResubmit,
   onRequestCertImageResubmit,
   onUpdateGuardIdImages,
+  onAddCertification,
+  onDeleteCertification,
+  onAttachCertificationImage,
+  onUpdateCertification,
   onViewGuard,
   canManageGuardAccounts = false,
   canEditJobListing = false,
@@ -592,6 +607,26 @@ export function StaffApprovals({
                   onSubmitIdentityVerification={
                     canManageGuardAccounts && onUpdateGuardIdImages
                       ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                      : undefined
+                  }
+                  onAddCertification={
+                    canManageGuardAccounts && onAddCertification
+                      ? (cert) => onAddCertification(guard.id, cert)
+                      : undefined
+                  }
+                  onDeleteCertification={
+                    canManageGuardAccounts && onDeleteCertification
+                      ? (certId) => onDeleteCertification(guard.id, certId)
+                      : undefined
+                  }
+                  onAttachCertificationImage={
+                    canManageGuardAccounts && onAttachCertificationImage
+                      ? (certId, imageUrl) => onAttachCertificationImage(guard.id, certId, imageUrl)
+                      : undefined
+                  }
+                  onUpdateCertification={
+                    onUpdateCertification
+                      ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
                       : undefined
                   }
                   staffIdReview={

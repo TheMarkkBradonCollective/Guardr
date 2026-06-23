@@ -11,6 +11,7 @@ import {
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { CredentialListStatusBadge, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
+import { staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
 import type {
@@ -109,9 +110,14 @@ export function GuardIdItemCard({
           <p className="uber-label flex items-center gap-2 flex-wrap">
             <IdCard className="w-4 h-4 text-brand-primary" />
             Government ID
-            {staffMode && uploadStatus === 'missing' && (
-              <CredentialSectionStatusBadge label="Missing" />
-            )}
+            {staffMode && uploadStatus === 'missing' &&
+              (canEdit ? (
+                <button type="button" onClick={() => setShowDetail(true)} className="inline-flex">
+                  <CredentialSectionStatusBadge label="Missing" />
+                </button>
+              ) : (
+                <CredentialSectionStatusBadge label="Missing" />
+              ))}
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
             Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
@@ -138,7 +144,7 @@ export function GuardIdItemCard({
                 onClick={() => setShowDetail(true)}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
               >
-                Upload government ID
+                {staffCredentialUploadLabel(staffMode, 'government ID')}
               </button>
             )}
           </>

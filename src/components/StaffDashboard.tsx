@@ -416,6 +416,10 @@ export function StaffDashboard({
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
+            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
+            onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
+            onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
+            onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
             canManageGuardAccounts={canManageGuardAccounts}
             canEditJobListing={canEditJobListing}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}

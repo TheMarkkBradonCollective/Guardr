@@ -635,6 +635,9 @@ export function StaffGuardDetailPanel({
                     ? (payload) => onUpdateGuardIdImages(guard.id, payload)
                     : undefined
                 }
+                onAddCertification={canManage ? onAddCertification : undefined}
+                onDeleteCertification={canManage ? onDeleteCertification : undefined}
+                onAttachCertificationImage={canManage ? onAttachCertificationImage : undefined}
                 onUpdateCertification={onUpdateCertification}
                 staffIdReview={
                   canManage ? (

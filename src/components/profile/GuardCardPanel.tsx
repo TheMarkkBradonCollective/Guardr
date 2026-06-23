@@ -15,6 +15,7 @@ import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
+import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -43,6 +44,7 @@ export function GuardCardPanel({
   const checklist = useMemo(() => getGuardActivationChecklist(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
   const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
 
   const [showForm, setShowForm] = useState(false);
   const [issuer, setIssuer] = useState('');
@@ -183,7 +185,7 @@ export function GuardCardPanel({
 
   const uploadSheet = (
     <AppFormSheet
-      open={showForm && editing}
+      open={showForm && canUpload}
       onClose={resetForm}
       title={items.length ? 'Add another guard card' : 'Upload guard card'}
       subtitle={`BSIS Guard Card — required before profile approval. ${CERT_IMAGE_POLICY_HINT}`}
@@ -207,9 +209,18 @@ export function GuardCardPanel({
             <p className="uber-label flex items-center gap-2 flex-wrap">
               <Shield className="w-4 h-4 text-brand-primary" />
               BSIS Guard Card
-              {staffMode && !guardMeetsLevel1(guard) && (
-                <CredentialSectionStatusBadge label="Missing" />
-              )}
+              {staffMode && !guardMeetsLevel1(guard) &&
+                (canUpload ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(true)}
+                    className="inline-flex"
+                  >
+                    <CredentialSectionStatusBadge label="Missing" />
+                  </button>
+                ) : (
+                  <CredentialSectionStatusBadge label="Missing" />
+                ))}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
               Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
@@ -237,7 +248,7 @@ export function GuardCardPanel({
               </div>
             )}
           </div>
-          {editing && onAddCertification && (
+          {canUpload && (
             <button
               type="button"
               onClick={() => setShowForm(true)}
@@ -249,9 +260,18 @@ export function GuardCardPanel({
         </div>
 
         {items.length === 0 ? (
-          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
-            No guard card on file yet.
-          </p>
+          <div className="border-t border-brand-border py-3 space-y-2">
+            <p className="text-xs text-brand-text-muted">No guard card on file yet.</p>
+            {canUpload && (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
+              >
+                {staffCredentialUploadLabel(staffMode, 'guard card')}
+              </button>
+            )}
+          </div>
         ) : (
           <div className="app-cert-item-stack border-t border-brand-border">
             {cardRows}

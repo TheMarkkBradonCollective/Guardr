@@ -22,6 +22,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { canUploadGuardCredentials, staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -57,6 +58,7 @@ export function GuardThirtyTwoHourPanel({
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
@@ -205,17 +207,18 @@ export function GuardThirtyTwoHourPanel({
             {rollupCerts.map((cert) => renderCertRow(cert))}
           </div>
         ) : (
-          <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
-        )}
-        {editing && onAddCertification && rollupCerts.length === 0 && (
-          <button
-            type="button"
-            onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline py-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add completion cert
-          </button>
+          <div className="py-2 space-y-2">
+            <p className="text-xs text-brand-text-muted">No 32-hour completion certificate on file.</p>
+            {canUpload && (
+              <button
+                type="button"
+                onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
+              >
+                {staffCredentialUploadLabel(staffMode, 'completion cert')}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -230,14 +233,23 @@ export function GuardThirtyTwoHourPanel({
 
           return (
             <div key={course.id} className="app-list-subrow space-y-2">
-              <div className="flex items-start justify-between gap-3">
-                <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
-                  {course.name}
-                </p>
-                {uploaded.length === 0 && (
+              {uploaded.length === 0 && canUpload ? (
+                <button
+                  type="button"
+                  onClick={() => startAdd(course.id)}
+                  className="flex w-full items-start justify-between gap-3 text-left"
+                >
+                  <p className="text-sm font-semibold text-brand-text-muted">{course.name}</p>
                   <CredentialListStatusBadge status={uploadStatus} />
-                )}
-              </div>
+                </button>
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <p className={`text-sm font-semibold ${onFile ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                    {course.name}
+                  </p>
+                  {uploaded.length === 0 && <CredentialListStatusBadge status={uploadStatus} />}
+                </div>
+              )}
 
               {uploaded.length > 0 && (
                 <div className="app-cert-item-stack !pt-0">
@@ -245,14 +257,14 @@ export function GuardThirtyTwoHourPanel({
                 </div>
               )}
 
-              {editing && onAddCertification && addingCatalogId !== course.id && (
+              {canUpload && addingCatalogId !== course.id && uploaded.length > 0 && (
                 <button
                   type="button"
                   onClick={() => startAdd(course.id)}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text-muted hover:text-brand-text"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  {uploaded.length > 0 ? 'Add another' : 'Upload course cert'}
+                  Add another
                 </button>
               )}
             </div>
@@ -261,7 +273,7 @@ export function GuardThirtyTwoHourPanel({
       </div>
 
       <AppFormSheet
-        open={Boolean(addingCatalogId && editing)}
+        open={Boolean(addingCatalogId && (editing || staffMode))}
         onClose={resetForm}
         title="Upload course certificate"
         subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
