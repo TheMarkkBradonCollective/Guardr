@@ -215,6 +215,18 @@ export function JobPaymentRow({
             </button>
           )}
 
+          {canCashGuard && (
+            <button
+              type="button"
+              onClick={() => run('guard', onMarkGuardPaidCash)}
+              disabled={busy !== null}
+              className={`${cashClientJob ? 'app-button-primary' : 'app-button-outline'} app-btn-sm gap-1.5`}
+            >
+              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Pay guard ${guardAmount.toFixed(2)} cash
+            </button>
+          )}
+
           {canReleaseFunds && (
             <button
               type="button"
@@ -224,18 +236,6 @@ export function JobPaymentRow({
             >
               {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
               {guardDepositLabel}
-            </button>
-          )}
-
-          {canCashGuard && (
-            <button
-              type="button"
-              onClick={() => run('guard', onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
-            >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Pay guard ${guardAmount.toFixed(2)} cash
             </button>
           )}
 
