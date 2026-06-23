@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
-import { ListDetailLayout } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -133,6 +133,8 @@ export function StaffGuardsPanel({
       return a.name.localeCompare(b.name);
     });
 
+  const { showDetailOnly } = useListDetailState(selectedId);
+
   function buildDetailProps(guard: SecurityGuard) {
     return {
       guard,
@@ -182,7 +184,9 @@ export function StaffGuardsPanel({
 
   return (
     <div className="animate-fade-in space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      {!showDetailOnly && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <p className="text-sm text-brand-text-muted flex-1">
           Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
         </p>
@@ -202,8 +206,10 @@ export function StaffGuardsPanel({
         placeholder="Search guards..."
         className="max-w-md"
       />
+        </>
+      )}
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !showDetailOnly ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {roster.length === 0
             ? 'No field guards yet. Use Add guard above to create the first profile.'
@@ -216,7 +222,7 @@ export function StaffGuardsPanel({
           onSelectId={setSelectedId}
           getItemId={(guard) => guard.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
-          renderItem={(guard, isActive, onSelect) => {
+          renderItem={(guard, onSelect) => {
             const activeShift = requests.find(
               (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
             );
@@ -250,15 +256,15 @@ export function StaffGuardsPanel({
                   </div>
                 }
                 onClick={onSelect}
-                className={isActive ? 'app-item-card-selected' : ''}
               />
             );
           }}
-          renderDetail={(guard) => (
+          renderDetail={(guard, { onBack }) => (
             <StaffGuardDetailPanel
               {...buildDetailProps(guard)}
               editing={staffEdit}
               onEditingChange={onStaffEditChange}
+              onBack={onBack}
             />
           )}
         />

@@ -3,8 +3,7 @@ import { OpsIncident } from '../../lib/staffOps';
 import { IncidentReportViewContext } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { WfBadge } from '../ui/wireframe';
-import { AppList } from '../ui/app/AppPrimitives';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 
 interface StaffIncidentsPanelProps {
   incidents: OpsIncident[];
@@ -24,7 +23,34 @@ export function StaffIncidentsPanel({
   incidentDetails = [],
   onOpenJob,
 }: StaffIncidentsPanelProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selectedIncident = selectedId ? incidents.find((inc) => inc.id === selectedId) ?? null : null;
+  const selectedDetail = selectedId ? incidentDetails.find((d) => d.id === selectedId) ?? null : null;
+
+  if (selectedIncident && selectedDetail) {
+    return (
+      <div className="animate-fade-in -mx-4 sm:-mx-5 app-full-page-detail">
+        <AppSubScreenHeader
+          title={selectedIncident.location}
+          onBack={() => setSelectedId(null)}
+          backLabel="Incidents"
+        />
+        <div className="px-4 sm:px-5 pb-8 space-y-4">
+          <IncidentReportDetailView report={selectedDetail} compact />
+          {onOpenJob && (
+            <button
+              type="button"
+              onClick={() => onOpenJob(selectedIncident.requestId)}
+              className="app-button-outline app-btn-sm"
+            >
+              Open job
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -39,9 +65,14 @@ export function StaffIncidentsPanel({
         <AppList>
           {incidents.map((inc) => {
             const detail = incidentDetails.find((d) => d.id === inc.id);
-            const expanded = expandedId === inc.id;
             return (
-              <div key={inc.id} className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2">
+              <button
+                key={inc.id}
+                type="button"
+                onClick={() => detail && setSelectedId(inc.id)}
+                disabled={!detail}
+                className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 text-left w-full disabled:opacity-60"
+              >
                 <p className="font-semibold text-sm">{inc.location}</p>
                 {inc.locationOnSite && (
                   <p className="text-xs text-brand-text-muted">On site: {inc.locationOnSite}</p>
@@ -60,41 +91,10 @@ export function StaffIncidentsPanel({
                   </span>
                 </div>
                 <p className="text-sm text-brand-text-muted leading-relaxed line-clamp-2">{inc.description}</p>
-
                 {detail && (
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(expanded ? null : inc.id)}
-                    className="app-button-outline app-btn-sm gap-1.5 self-start"
-                  >
-                    {expanded ? (
-                      <>
-                        <ChevronUp className="w-3.5 h-3.5" /> Hide full report
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-3.5 h-3.5" /> View full report
-                      </>
-                    )}
-                  </button>
+                  <span className="text-xs font-semibold text-brand-primary">View full report</span>
                 )}
-
-                {expanded && detail && (
-                  <div className="mt-1 rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4">
-                    <IncidentReportDetailView report={detail} compact />
-                  </div>
-                )}
-
-                {onOpenJob && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenJob(inc.requestId)}
-                    className="mt-1 app-button-outline app-btn-sm"
-                  >
-                    Open job
-                  </button>
-                )}
-              </div>
+              </button>
             );
           })}
         </AppList>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
-import { ListDetailLayout } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -56,7 +56,9 @@ export function StaffClientsPanel({
       (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
-  function renderClientDetail(client: Client) {
+  const { showDetailOnly } = useListDetailState(selectedId);
+
+  function renderClientDetail(client: Client, { onBack }: { onBack: () => void }) {
     return (
       <StaffClientDetailPanel
         client={client}
@@ -66,13 +68,16 @@ export function StaffClientsPanel({
         onRejectClient={onRejectClient}
         onDeleteClient={onDeleteClient}
         onOpenJob={onOpenJob}
+        onBack={onBack}
       />
     );
   }
 
   return (
     <div className="animate-fade-in space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      {!showDetailOnly && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <p className="text-sm text-brand-text-muted flex-1">
           Staff can add client accounts, approve them, and suspend or restore access.
         </p>
@@ -93,8 +98,10 @@ export function StaffClientsPanel({
         placeholder="Search clients..."
         className="max-w-md"
       />
+        </>
+      )}
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !showDetailOnly ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {clients.length === 0
             ? 'No clients yet. Use Add client above to onboard the first account.'
@@ -107,7 +114,7 @@ export function StaffClientsPanel({
           onSelectId={setSelectedId}
           getItemId={(client) => client.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
-          renderItem={(client, isActive, onSelect) => {
+          renderItem={(client, onSelect) => {
             const accountStatus = getClientAccountStatus(client);
             const activeJobs = requests.filter(
               (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status)
@@ -134,7 +141,6 @@ export function StaffClientsPanel({
                   </div>
                 }
                 onClick={onSelect}
-                className={isActive ? 'app-item-card-selected' : ''}
               />
             );
           }}

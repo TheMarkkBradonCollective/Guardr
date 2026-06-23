@@ -1,18 +1,24 @@
 import React from 'react';
-import { useDevice } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
+
+export interface ListDetailRenderOptions {
+  onBack?: () => void;
+}
 
 export interface ListDetailLayoutProps<T> {
   items: T[];
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
   getItemId: (item: T) => string;
-  renderItem: (item: T, isSelected: boolean, onSelect: () => void) => React.ReactNode;
-  renderDetail: (item: T) => React.ReactNode;
-  autoSelectFirst?: boolean;
+  renderItem: (item: T, onSelect: () => void) => React.ReactNode;
+  renderDetail: (item: T, options: ListDetailRenderOptions) => React.ReactNode;
   emptyDetail?: React.ReactNode;
   listScrollClassName?: string;
-  detailClassName?: string;
+}
+
+/** True when a list item is selected and the list should be hidden. */
+export function useListDetailState(selectedId: string | null) {
+  return { showDetailOnly: Boolean(selectedId) };
 }
 
 export function ListDetailLayout<T>({
@@ -22,63 +28,35 @@ export function ListDetailLayout<T>({
   getItemId,
   renderItem,
   renderDetail,
-  autoSelectFirst = true,
   emptyDetail,
-  listScrollClassName = 'max-h-[70vh] overflow-y-auto pr-1',
-  detailClassName = 'staff-detail-pane space-y-4',
+  listScrollClassName,
 }: ListDetailLayoutProps<T>) {
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+  const selected = selectedId ? items.find((item) => getItemId(item) === selectedId) ?? null : null;
 
-  const resolvedSelectedId =
-    selectedId ??
-    (splitView && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
-
-  const selected = items.find((item) => getItemId(item) === resolvedSelectedId) ?? null;
-
-  const handleSelect = (id: string) => {
-    if (!splitView && id === selectedId) {
-      onSelectId(null);
-      return;
-    }
-    onSelectId(id);
-  };
-
-  if (splitView) {
-    return (
-      <div className="tablet-split-panel">
-        <div className={listScrollClassName}>
-          <AppItemCardStack>
-            {items.map((item) => {
-              const id = getItemId(item);
-              const isSelected = resolvedSelectedId === id;
-              return (
-                <React.Fragment key={id}>
-                  {renderItem(item, isSelected, () => handleSelect(id))}
-                </React.Fragment>
-              );
-            })}
-          </AppItemCardStack>
-        </div>
-        <div className="min-h-0">
-          {selected ? renderDetail(selected) : emptyDetail}
-        </div>
-      </div>
-    );
+  if (selected) {
+    return renderDetail(selected, { onBack: () => onSelectId(null) });
   }
 
-  return (
+  if (items.length === 0 && emptyDetail) {
+    return emptyDetail;
+  }
+
+  const list = (
     <AppItemCardStack>
       {items.map((item) => {
         const id = getItemId(item);
-        const isSelected = selectedId === id;
         return (
-          <div key={id} className={isSelected ? 'space-y-4' : undefined}>
-            {renderItem(item, isSelected, () => handleSelect(id))}
-            {isSelected && <div className={detailClassName}>{renderDetail(item)}</div>}
-          </div>
+          <React.Fragment key={id}>
+            {renderItem(item, () => onSelectId(id))}
+          </React.Fragment>
         );
       })}
     </AppItemCardStack>
   );
+
+  if (listScrollClassName) {
+    return <div className={listScrollClassName}>{list}</div>;
+  }
+
+  return list;
 }

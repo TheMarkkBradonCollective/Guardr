@@ -18,7 +18,26 @@ export function MessagesHubLayout({
   emptyDetailTitle = 'Select a conversation',
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
 }: MessagesHubLayoutProps) {
-  const emptyDetail = (
+  if (hasSelection) {
+    return <div className="h-full flex flex-col min-h-0">{detail}</div>;
+  }
+
+  return (
+    <div className="h-full flex flex-col min-h-0">
+      {header}
+      {list}
+    </div>
+  );
+}
+
+export function MessagesHubEmptyDetail({
+  emptyDetailTitle = 'Select a conversation',
+  emptyDetailHint = 'Choose a chat from your inbox to view messages',
+}: {
+  emptyDetailTitle?: string;
+  emptyDetailHint?: string;
+}) {
+  return (
     <div className="app-messages-empty-detail">
       <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-35" strokeWidth={1.5} />
       <p className="text-sm font-semibold">{emptyDetailTitle}</p>
@@ -26,30 +45,5 @@ export function MessagesHubLayout({
         {emptyDetailHint}
       </p>
     </div>
-  );
-
-  return (
-    <>
-      <div className="lg:hidden h-full flex flex-col min-h-0">
-        {hasSelection ? (
-          detail
-        ) : (
-          <>
-            {header}
-            {list}
-          </>
-        )}
-      </div>
-
-      <div className="hidden lg:flex app-messages-split h-full min-h-0">
-        <div className="app-messages-split-list flex flex-col min-h-0">
-          {header}
-          <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
-        </div>
-        <div className="app-messages-split-detail flex flex-col min-h-0">
-          {hasSelection ? detail : emptyDetail}
-        </div>
-      </div>
-    </>
   );
 }
