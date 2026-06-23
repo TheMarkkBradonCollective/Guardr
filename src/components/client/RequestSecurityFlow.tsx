@@ -5,6 +5,7 @@ import {
   ClientServiceId,
   GUARD_COUNT_PRESETS,
   PAY_RATE_PRESETS,
+  resolveJobTitle,
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
@@ -67,7 +68,10 @@ export function RequestSecurityFlow({
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
-  const [customTitle, setCustomTitle] = useState('');
+  const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(
+    preset === 'recurring' ? 'construction' : 'standing-guard'
+  ));
+  const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
@@ -83,14 +87,18 @@ export function RequestSecurityFlow({
   const estimatedTotal = Math.round(durationHours * effectiveRate * effectiveGuards * 100) / 100;
 
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
-  const title =
-    serviceId === 'custom' && customTitle.trim()
-      ? customTitle.trim()
-      : serviceDefaultTitle(serviceId);
+  const title = resolveJobTitle(jobTitle, serviceId);
+
+  const selectService = (id: ClientServiceId) => {
+    setServiceId(id);
+    if (!jobTitleTouched) {
+      setJobTitle(serviceDefaultTitle(id));
+    }
+  };
 
   const canNext = (): boolean => {
     switch (step) {
-      case 1: return !!serviceId;
+      case 1: return !!serviceId && jobTitle.trim().length > 0;
       case 2: return address.trim().length > 3 && jobState.length === 2;
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveGuards >= 1;
@@ -187,7 +195,7 @@ export function RequestSecurityFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setServiceId(opt.id)}
+                  onClick={() => selectService(opt.id)}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/10' : ''
                   }`}
@@ -201,15 +209,22 @@ export function RequestSecurityFlow({
                 </button>
               ))}
             </div>
-            {serviceId === 'custom' && (
+            <div>
+              <label className="uber-label block mb-1.5">Job name</label>
               <input
                 type="text"
-                placeholder="Describe your job offer..."
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                className="uber-input mt-2"
+                placeholder={serviceDefaultTitle(serviceId)}
+                value={jobTitle}
+                onChange={(e) => {
+                  setJobTitleTouched(true);
+                  setJobTitle(e.target.value);
+                }}
+                className="uber-input rounded-xl"
               />
-            )}
+              <p className="text-xs text-brand-text-muted mt-1.5">
+                Shown to guards on your listing. You can customize it for any service type.
+              </p>
+            </div>
           </div>
         )}
 
