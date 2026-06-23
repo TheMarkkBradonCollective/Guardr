@@ -36,6 +36,7 @@ export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTION
 import { getGuardUserStatus, isGuardAccountActive, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
+  guardGraceWaivesTrainingCredential,
   guardHasActiveCredentialGrace,
 } from './guardCredentialGrace';
 import { getGuardActivationChecklist } from './guardAccountActivation';
@@ -125,7 +126,10 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     const jobState = state || 'CA';
     return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
   }
-  if (!guardMeetsPtaUofTraining(guard)) {
+  if (
+    !guardMeetsPtaUofTraining(guard) &&
+    !guardGraceWaivesTrainingCredential(guard, 'pta-uof', state)
+  ) {
     return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   return null;

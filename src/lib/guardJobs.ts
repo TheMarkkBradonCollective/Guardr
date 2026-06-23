@@ -4,6 +4,7 @@ import { estimateJobDistanceMiles, jobCoords } from './geo';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
+import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -115,11 +116,15 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
   checks.push(
     {
       label: '8-hour PTA & UOF (combined cert or separate PTA + UOF)',
-      met: guardMeetsPtaUofTraining(guard),
+      met:
+        guardMeetsPtaUofTraining(guard) ||
+        guardGraceWaivesTrainingCredential(guard, 'pta-uof', jobState),
     },
     {
       label: requirementLabel('bsis-32-hour-completed'),
-      met: guardMeets32HourBlock(guard),
+      met:
+        guardMeets32HourBlock(guard) ||
+        guardGraceWaivesTrainingCredential(guard, '32-hour', jobState),
     }
   );
 

@@ -1,5 +1,9 @@
 import { SecurityGuard } from '../types';
-import { getGuardMissingGraceCredentialLabels } from './guardMissingCredentials';
+import {
+  GRACE_CREDENTIAL_32_HOUR_LABEL,
+  GRACE_CREDENTIAL_PTA_UOF_LABEL,
+  getGuardMissingGraceCredentialLabels,
+} from './guardMissingCredentials';
 
 /** Hours staff-granted work grace when optional credentials are missing at activation. */
 export const CREDENTIAL_GRACE_PERIOD_HOURS = 48;
@@ -70,6 +74,29 @@ export function guardGraceCredentialsStillMissing(guard: SecurityGuard, state = 
   const current = getGuardMissingGraceCredentialLabels(guard, state);
   if (stored.length === 0) return current;
   return stored.filter((label) => current.includes(label));
+}
+
+export type GraceTrainingCredential = 'pta-uof' | '32-hour';
+
+function graceLabelFor(kind: GraceTrainingCredential): string {
+  return kind === 'pta-uof' ? GRACE_CREDENTIAL_PTA_UOF_LABEL : GRACE_CREDENTIAL_32_HOUR_LABEL;
+}
+
+/** During active grace, missing training covered by staff activation grace does not block work. */
+export function guardGraceWaivesTrainingCredential(
+  guard: SecurityGuard,
+  kind: GraceTrainingCredential,
+  state = 'CA'
+): boolean {
+  if (!guardHasActiveCredentialGrace(guard)) return false;
+  return guardGraceCredentialsStillMissing(guard, state).includes(graceLabelFor(kind));
+}
+
+export function guardIsTempActiveOnGrace(guard: SecurityGuard, state = 'CA'): boolean {
+  return (
+    guardHasActiveCredentialGrace(guard) &&
+    guardGraceCredentialsStillMissing(guard, state).length > 0
+  );
 }
 
 export function guardShouldClearCredentialGrace(guard: SecurityGuard, state = 'CA'): boolean {
