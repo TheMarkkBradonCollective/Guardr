@@ -106,6 +106,16 @@ export function activeJobChatCount(threads: JobChatThread[]): number {
   return threads.filter((t) => t.status === 'active').length;
 }
 
+export function threadsForClient(threads: JobChatThread[], clientId: string): JobChatThread[] {
+  return threads
+    .filter((t) => t.clientId === clientId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function clientActiveJobChatCount(threads: JobChatThread[], clientId: string): number {
+  return threads.filter((t) => t.clientId === clientId && t.status === 'active').length;
+}
+
 export function isStaffSender(role: PlatformRole): boolean {
   return isStaffRole(role);
 }

@@ -152,6 +152,7 @@ import {
   saveJobChatMessagesToStorage,
   saveJobChatThreadsToStorage,
   threadForRequest,
+  clientActiveJobChatCount,
 } from './lib/jobChat';
 import {
   buildGuardMessage,
@@ -426,12 +427,13 @@ export default function App() {
     setClientViewState(view);
     const nextGuardId = view === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = view === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
-    const nextJobChatId = view === 'coverage' ? jobChatRequestId ?? undefined : undefined;
+    const keepsJobChat = view === 'coverage' || view === 'messages' || view === 'map';
+    const nextJobChatId = keepsJobChat ? jobChatRequestId ?? undefined : undefined;
     const isSupportHome = view === 'support';
     const nextSupportId = isSupportHome ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
-    if (view !== 'coverage') {
+    if (!keepsJobChat) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
     }
@@ -448,7 +450,7 @@ export default function App() {
         clientGuardId: nextGuardId,
         clientDirectGuardId: nextDirectId,
         jobChatRequestId: nextJobChatId,
-        openJobChat: view === 'coverage' && openJobChat ? true : undefined,
+        openJobChat: keepsJobChat && openJobChat ? true : undefined,
         supportTicketId: nextSupportId,
         supportSection: view === 'support' ? supportSection : undefined,
         supportMode: undefined,
@@ -621,11 +623,13 @@ export default function App() {
       return;
     }
     if (role === 'client') {
-      setClientViewState('coverage');
+      const targetView =
+        clientView === 'map' ? 'map' : clientView === 'coverage' ? 'coverage' : 'messages';
+      setClientViewState(targetView);
       syncAppRoute(
         buildAppRoute({
           role: 'client',
-          clientView: 'coverage',
+          clientView: targetView,
           jobChatRequestId: requestId ?? undefined,
           openJobChat: options?.openChat ?? true,
         })
@@ -1636,7 +1640,12 @@ export default function App() {
     if (!currentUser) return false;
     const role = appRoleForUser(currentUser);
     if (role === 'client') {
-      return clientView === 'support' || (clientView === 'coverage' && openJobChat);
+      return (
+        clientView === 'support' ||
+        clientView === 'messages' ||
+        (clientView === 'coverage' && openJobChat) ||
+        (clientView === 'map' && openJobChat)
+      );
     }
     if (role === 'guard') {
       return guardTab === 'guardChat' || (guardTab === 'myJobs' && openJobChat);
@@ -5722,6 +5731,7 @@ export default function App() {
           onNavigate={handleClientNavigate}
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
+          messagesBadge={clientActiveJobChatCount(jobChatThreads, currentUser.id)}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -5783,6 +5793,9 @@ export default function App() {
                 setOpenJobChatState(open);
                 if (!open) setJobChatRequestId(null);
                 else if (jobChatRequestId) setJobChatRequestId(jobChatRequestId, { openChat: true });
+              }}
+              onOpenJobChat={(requestId) => {
+                setJobChatRequestId(requestId, { openChat: true });
               }}
               supportTicketId={supportTicketId}
               onSupportTicketIdChange={setSupportTicketId}

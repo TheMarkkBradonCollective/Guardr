@@ -4,7 +4,7 @@ import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText, BookOpen } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText, BookOpen } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -18,6 +18,7 @@ interface ClientAppLayoutProps {
   onNavigate?: (view: ClientView) => void;
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  messagesBadge?: number;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -28,6 +29,7 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 ];
 
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
+  { id: 'messages', label: 'Messages', icon: MessagesSquare },
   { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'guide', label: 'Workflow guide', icon: BookOpen },
@@ -48,6 +50,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   'direct-request': 'Request guard',
   reports: 'Reports',
   guide: 'Workflow guide',
+  messages: 'Messages',
 };
 
 export function ClientAppLayout({
@@ -60,6 +63,7 @@ export function ClientAppLayout({
   onNavigate,
   accountPending = false,
   onOpenLegal,
+  messagesBadge = 0,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
@@ -74,6 +78,10 @@ export function ClientAppLayout({
   const moreFooter = onOpenLegal ? (
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
   ) : undefined;
+
+  const overflowNav = OVERFLOW_NAV.map((item) =>
+    item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
+  );
 
   return (
     <RoleAppShell
@@ -90,7 +98,7 @@ export function ClientAppLayout({
         active: activeView === 'profile',
       }}
       navItems={PRIMARY_NAV}
-      overflowNavItems={OVERFLOW_NAV}
+      overflowNavItems={overflowNav}
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       moreMenuFooter={moreFooter}

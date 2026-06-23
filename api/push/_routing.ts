@@ -120,8 +120,8 @@ export function resolveNotificationUrlForRole(
     case 'job_chat_message':
       if (role === 'client') {
         return options.requestId
-          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}&chat=1`
-          : '/client/coverage';
+          ? `/client/map?jc=${encodeURIComponent(options.requestId)}&chat=1`
+          : '/client/messages';
       }
       if (role === 'guard') {
         return options.requestId
@@ -134,7 +134,7 @@ export function resolveNotificationUrlForRole(
     case 'emergency_alert':
       if (role === 'client') {
         return options.requestId
-          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}`
+          ? `/client/map?jc=${encodeURIComponent(options.requestId)}`
           : '/client/coverage';
       }
       if (role === 'guard') {
@@ -158,7 +158,7 @@ export function resolveNotificationUrlForRole(
       }
       if (role === 'client') {
         return options.requestId
-          ? `/client/coverage?jc=${encodeURIComponent(options.requestId)}`
+          ? `/client/map?jc=${encodeURIComponent(options.requestId)}`
           : '/client/coverage';
       }
       return options.requestId

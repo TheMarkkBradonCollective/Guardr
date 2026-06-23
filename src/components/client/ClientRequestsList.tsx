@@ -18,11 +18,14 @@ import {
   CheckCircle2,
   CreditCard,
   Loader2,
+  MessageCircle,
   Pencil,
   Shield,
   Star,
   X,
 } from 'lucide-react';
+import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
+import { JobChatMessage, JobChatThread, SessionUser } from '../../types';
 import {
   canClientCancelRequest,
   canClientEditJobListing,
@@ -54,6 +57,11 @@ interface ClientRequestsListProps {
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onRequestNew: () => void;
+  currentUser?: SessionUser;
+  jobChatThreads?: JobChatThread[];
+  jobChatMessages?: JobChatMessage[];
+  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  onOpenJobChat?: (requestId: string) => void;
 }
 
 function statusBadgeTone(status: JobStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
@@ -96,6 +104,10 @@ export function ClientRequestsList({
   onApprovePendingGuard,
   onDenyPendingGuard,
   onRequestNew,
+  currentUser,
+  jobChatThreads = [],
+  onSendJobChatMessage,
+  onOpenJobChat,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
@@ -417,13 +429,44 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'accepted' && hiredGuard && (
-                  <div className="border-t border-brand-border pt-3 w-full">
+                  <div className="border-t border-brand-border pt-3 w-full space-y-2">
                     <p className="text-sm text-brand-text-muted leading-relaxed">
                       <span className="font-medium text-brand-text">{hiredGuard.name}</span> is assigned.
                       They will start the shift on site with a self-audit when clock-in opens — you can confirm their photos here once the job is in progress.
                     </p>
+                    {onOpenJobChat && currentUser && onSendJobChatMessage && isJobChatEligible(req) && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenJobChat(req.id)}
+                        className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> Message guard
+                      </button>
+                    )}
                   </div>
                 )}
+
+                {req.status === 'in-progress' && hiredGuard && onOpenJobChat && currentUser && onSendJobChatMessage && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenJobChat(req.id)}
+                    className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> Message guard on shift
+                  </button>
+                )}
+
+                {(req.status === 'completed' || req.status === 'closed') &&
+                  onOpenJobChat &&
+                  threadForRequest(jobChatThreads, req.id) && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenJobChat(req.id)}
+                      className="app-button-outline !h-9 !text-xs w-full gap-1.5"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> View job chat history
+                    </button>
+                  )}
 
                 {onConfirmSelfAudit && (
                   <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />

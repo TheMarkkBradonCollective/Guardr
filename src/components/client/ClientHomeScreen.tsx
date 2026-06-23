@@ -26,9 +26,12 @@ import {
   ClipboardList,
   Users,
   Clock,
+  Map,
+  MessagesSquare,
 } from 'lucide-react';
+import { getClientLiveJobs } from '../../lib/clientShift';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards' | 'messages' | 'map';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -65,10 +68,35 @@ export function ClientHomeScreen({
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
   const openRequestCount = requests.filter((r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review').length;
+  const liveJobs = getClientLiveJobs(requests);
 
   return (
     <AppScreen>
       <AppDashboardHero kicker="Client workspace" title={companyName} />
+
+      {liveJobs.length > 0 && (
+        <AppHeroBand
+          label="Live shift dashboard"
+          icon={<Map className="w-4 h-4" />}
+          footer={
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button type="button" onClick={() => onAction('map')} className="app-button-primary !w-full sm:!w-auto">
+                Open shift map
+              </button>
+              <button type="button" onClick={() => onAction('messages')} className="app-button-outline !w-full sm:!w-auto gap-2">
+                <MessagesSquare className="w-4 h-4" />
+                Message guards
+              </button>
+            </div>
+          }
+        >
+          <div className="app-metric-grid-3">
+            <WfMetricTile label="Active sites" value={liveJobs.length} accent />
+            <WfMetricTile label="On duty" value={liveJobs.filter((j) => j.status === 'in-progress').length} />
+            <WfMetricTile label="Arriving" value={liveJobs.filter((j) => j.status === 'accepted').length} />
+          </div>
+        </AppHeroBand>
+      )}
 
       {accountPending && (
         <AppStatusBanner

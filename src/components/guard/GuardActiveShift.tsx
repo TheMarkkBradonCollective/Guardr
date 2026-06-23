@@ -12,8 +12,18 @@ import {
   shiftClockOutOpensAt,
 } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
+import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
-import { MapPin, Phone, FileText, AlertTriangle, Activity, Clock } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  FileText,
+  MapPin,
+  MessageCircle,
+  Navigation,
+} from 'lucide-react';
 
 interface GuardActiveShiftProps {
   job: GuardJobView;
@@ -77,19 +87,31 @@ export function GuardActiveShift({
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
-      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-4" />
+      <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
-        <div>
-          <p className="text-sm font-medium text-brand-primary mb-1">Active job</p>
-          <h2 className="text-xl font-bold">{job.title}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-brand-primary mb-1">Active shift</p>
+            <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
+            <p className="text-sm text-brand-text-muted mt-1 truncate">{job.clientName}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-xs text-brand-text-muted flex items-center justify-end gap-1">
+              <DollarSign className="w-3.5 h-3.5" />
+              Your pay
+            </p>
+            <div className="text-sm font-bold text-brand-primary mt-0.5">
+              <JobBillingSummaryFromGuardJob job={job} />
+            </div>
+          </div>
         </div>
 
         <div className="segmented-control segmented-control-full">
           {statusSteps.slice(0, 3).map((step) => (
             <span
               key={step}
-              className={`segmented-control-btn flex-1 text-center py-2 ${
+              className={`segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs ${
                 statusSteps.indexOf(step) <= currentIdx ? 'segmented-control-btn-active' : ''
               }`}
             >
@@ -98,30 +120,30 @@ export function GuardActiveShift({
           ))}
         </div>
 
-        <div className="space-y-4 py-2 border-t border-b border-brand-border">
+        {phase === 'on-duty' && (
+          <div className="text-center py-4 border-y border-brand-border bg-brand-primary/5">
+            <p className="text-xs text-brand-text-muted mb-1">Time on site</p>
+            <p className="text-3xl font-bold tracking-tight tabular-nums">{formatTimer(dutySeconds)}</p>
+            <p className="text-sm text-brand-text-muted mt-2">{formatDuration(job.durationHours)} scheduled</p>
+          </div>
+        )}
+
+        <div className="space-y-4 py-2 border-b border-brand-border">
           <div className="flex items-start gap-3 w-full">
-            <MapPin className="w-5 h-5 shrink-0 mt-0.5" strokeWidth={1.5} />
+            <MapPin className="w-5 h-5 shrink-0 mt-0.5 text-brand-primary" strokeWidth={1.5} />
             <div>
-              <p className="text-sm text-brand-text-muted">Location</p>
+              <p className="text-sm text-brand-text-muted">Site location</p>
               <p className="font-medium mt-0.5">{address}</p>
             </div>
           </div>
           <div className="flex items-start gap-3 w-full">
-            <Phone className="w-5 h-5 shrink-0 mt-0.5" strokeWidth={1.5} />
+            <Navigation className="w-5 h-5 shrink-0 mt-0.5 text-brand-primary" strokeWidth={1.5} />
             <div>
-              <p className="text-sm text-brand-text-muted">Client</p>
+              <p className="text-sm text-brand-text-muted">Client contact</p>
               <p className="font-medium mt-0.5">{job.clientName}</p>
             </div>
           </div>
         </div>
-
-        {phase === 'on-duty' && (
-          <div className="text-center py-5 border-b border-brand-border">
-            <p className="text-xs text-brand-text-muted mb-1">Time on site</p>
-            <p className="text-3xl font-bold tracking-tight">{formatTimer(dutySeconds)}</p>
-            <p className="text-sm text-brand-text-muted mt-2">{formatDuration(job.durationHours)} scheduled</p>
-          </div>
-        )}
 
         {job.siteInstructions && (
           <div className="py-2 border-b border-brand-border">
@@ -170,7 +192,8 @@ export function GuardActiveShift({
         )}
 
         {phase === 'upcoming' && clockInOpen && (
-          <p className="text-xs text-brand-text-muted text-center">
+          <p className="text-xs text-brand-text-muted text-center flex items-center justify-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
             Clock-in open from {clockInOpensLabel} until job ends
           </p>
         )}
@@ -188,10 +211,10 @@ export function GuardActiveShift({
                 type="button"
                 onClick={onOpenJobChat}
                 disabled={!onOpenJobChat}
-                className="app-button-outline app-btn-md gap-2 col-span-2 disabled:opacity-40"
+                className="app-button-primary app-btn-md gap-2 col-span-2 disabled:opacity-40"
                 style={{ gridColumn: '1 / -1' }}
               >
-                <Phone className="w-4 h-4" /> Message client
+                <MessageCircle className="w-4 h-4" /> Message client
               </button>
             </div>
             <SlideToConfirm
