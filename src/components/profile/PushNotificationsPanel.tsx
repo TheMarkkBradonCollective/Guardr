@@ -307,12 +307,26 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         {permission === 'granted' && !serverSynced && enabled
           ? ' — device subscribed locally but not synced to server yet.'
           : ''}
-        {permission === 'granted' && !enabled && !busy
+        {permission === 'granted' && !enabled && !busy && !message
           ? ' — turn on the toggle above to register this device.'
           : ''}
       </p>
 
-      {message && <p className="text-xs text-brand-text-muted">{message}</p>}
+      {message && (
+        <p
+          className={`text-xs ${
+            message.includes('unavailable') ||
+            message.includes('failed') ||
+            message.includes('not configured') ||
+            message.includes('Unauthorized') ||
+            message.includes('missing')
+              ? 'text-amber-600'
+              : 'text-brand-text-muted'
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </AppFormSection>
   );
 }

@@ -1,9 +1,30 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import {
-  resolvePlatformRole,
-  type PlatformRole,
-} from '../../lib/accountSessionAuth';
+
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+
+function resolvePlatformRole(input: {
+  isStaff?: boolean;
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  legacyRole?: string;
+}): PlatformRole {
+  if (input.legacyRole === 'client') return 'client';
+  if (input.isStaff && input.staffRole) {
+    switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
+      case 'Director':
+        return 'director';
+      case 'Administrator':
+        return 'administrator';
+      case 'Moderator':
+        return 'moderator';
+    }
+  }
+  if (input.legacyRole === 'auditor') return 'moderator';
+  if (input.legacyRole === 'staff') return 'administrator';
+  return 'guard';
+}
 
 interface StaffMessageRow {
   id: string;
