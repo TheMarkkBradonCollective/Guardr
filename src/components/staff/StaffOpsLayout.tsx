@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
@@ -26,17 +26,6 @@ import {
 } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
-type SidebarTheme = 'light' | 'grey' | 'dark';
-
-const SIDEBAR_THEME_KEY = 'guardr_sidebar_theme';
-
-function getSavedSidebarTheme(): SidebarTheme {
-  try {
-    const saved = localStorage.getItem(SIDEBAR_THEME_KEY);
-    if (saved === 'light' || saved === 'grey' || saved === 'dark') return saved;
-  } catch { /* ignore */ }
-  return 'light';
-}
 
 interface StaffOpsLayoutProps {
   children: React.ReactNode;
@@ -89,12 +78,6 @@ export function StaffOpsLayout({
   hideHeader = false,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [sidebarTheme, setSidebarThemeState] = useState<SidebarTheme>(getSavedSidebarTheme);
-
-  const setSidebarTheme = useCallback((t: SidebarTheme) => {
-    setSidebarThemeState(t);
-    try { localStorage.setItem(SIDEBAR_THEME_KEY, t); } catch { /* ignore */ }
-  }, []);
   const showFinance = canAccessFinancialControls(currentUser);
   const bleed =
     fullBleed ||
@@ -123,7 +106,7 @@ export function StaffOpsLayout({
     setMobileNavOpen(false);
   };
 
-  const isDarkSidebar = sidebarTheme === 'dark' || sidebarTheme === 'grey';
+  const isDarkSidebar = themeMode === 'dark' || themeMode === 'grey';
 
   const sidebar = (
     <div className="staff-sidebar-inner">
@@ -154,37 +137,10 @@ export function StaffOpsLayout({
           showFinance={showFinance}
         />
       </div>
-      <div className="staff-sidebar-footer space-y-3">
+      <div className="staff-sidebar-footer">
         {onOpenLegal && (
           <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
         )}
-        {/* Sidebar colour picker */}
-        <div className="sidebar-theme-toggle" aria-label="Sidebar colour">
-          <button
-            type="button"
-            onClick={() => setSidebarTheme('light')}
-            className={`sidebar-theme-swatch ${sidebarTheme === 'light' ? 'sidebar-theme-swatch-active' : ''}`}
-            style={{ background: '#ffffff', border: '2px solid #d1d5db' }}
-            title="Light sidebar"
-            aria-pressed={sidebarTheme === 'light'}
-          />
-          <button
-            type="button"
-            onClick={() => setSidebarTheme('grey')}
-            className={`sidebar-theme-swatch ${sidebarTheme === 'grey' ? 'sidebar-theme-swatch-active' : ''}`}
-            style={{ background: '#25282e', border: '2px solid #4b5563' }}
-            title="Grey sidebar"
-            aria-pressed={sidebarTheme === 'grey'}
-          />
-          <button
-            type="button"
-            onClick={() => setSidebarTheme('dark')}
-            className={`sidebar-theme-swatch ${sidebarTheme === 'dark' ? 'sidebar-theme-swatch-active' : ''}`}
-            style={{ background: '#050505', border: '2px solid #374151' }}
-            title="Dark sidebar"
-            aria-pressed={sidebarTheme === 'dark'}
-          />
-        </div>
       </div>
     </div>
   );
@@ -200,7 +156,7 @@ export function StaffOpsLayout({
         />
       )}
 
-      <aside className={`staff-sidebar staff-sidebar-${sidebarTheme} ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}>
+      <aside className={`staff-sidebar staff-sidebar-${themeMode} ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}>
         <button
           type="button"
           className="staff-sidebar-close lg:hidden"
