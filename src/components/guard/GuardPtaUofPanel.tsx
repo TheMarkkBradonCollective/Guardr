@@ -18,6 +18,7 @@ import {
   formatPtaUofProgressSummary,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
+import { CredentialCollapsibleSubsection } from '../credentials/CredentialCollapsibleSubsection';
 import { CredentialSectionAddButton, CredentialSectionStatusSummary } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -75,6 +76,7 @@ export function GuardPtaUofPanel({
   const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
+  const [combinedOpen, setCombinedOpen] = useState(true);
 
   const combinedCerts = useMemo(
     () => certsForCatalogId(guard, BSIS_PTA_UOF_COMBINED_ID),
@@ -83,8 +85,8 @@ export function GuardPtaUofPanel({
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
 
-  // Hide individual PTA/UOF rows when the combined 8-hour certificate is on file.
-  const showIndividualRows = !progress.combinedOnFile;
+  const hasCombinedCert = combinedCerts.length > 0;
+  const showIndividualRows = !hasCombinedCert;
   const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
 
   const resetForm = () => {
@@ -246,15 +248,16 @@ export function GuardPtaUofPanel({
         </div>
       </div>
 
-      <div className="border-t border-brand-border pt-3">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Combined certificate (optional)
-          </p>
-          {canUpload && (
+      <CredentialCollapsibleSubsection
+        title="Combined certificate (optional)"
+        open={combinedOpen}
+        onToggle={() => setCombinedOpen((open) => !open)}
+        actions={
+          canUpload ? (
             <CredentialSectionAddButton onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)} />
-          )}
-        </div>
+          ) : undefined
+        }
+      >
         {combinedCerts.length > 0 ? (
           <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
         ) : (
@@ -262,7 +265,7 @@ export function GuardPtaUofPanel({
             {combinedEntry?.description ?? 'Single 8-hour certificate covering both parts.'}
           </p>
         )}
-      </div>
+      </CredentialCollapsibleSubsection>
 
       {showIndividualRows && (
         <div className="border-t border-brand-border pt-3">
