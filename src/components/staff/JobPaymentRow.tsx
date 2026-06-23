@@ -16,7 +16,6 @@ import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { jobPaymentLedger, staffJobMoneySummary, PaymentLedgerStatus } from '../../lib/paymentDisplay';
 import { Payment, SecurityGuard, SecurityRequest } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
-import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { WfBadge } from '../ui/wireframe';
 
 const LEDGER_STATUS_TONE: Record<PaymentLedgerStatus, string> = {

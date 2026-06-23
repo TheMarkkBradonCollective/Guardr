@@ -131,7 +131,7 @@ export function buildGuardJobInboxRows({
   jobChatThreads,
   jobChatMessages,
 }: {
-  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate'>[];
+  jobs: Pick<SecurityRequest, 'id' | 'title' | 'siteName' | 'location' | 'status' | 'clientName' | 'startDate' | 'assignedGuardId'>[];
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
 }): InboxRow[] {
