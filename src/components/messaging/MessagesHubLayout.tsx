@@ -30,20 +30,24 @@ export function MessagesHubLayout({
 
   return (
     <>
+      {/* ── Mobile ── */}
       <div className="lg:hidden h-full flex flex-col min-h-0">
         {hasSelection ? (
           detail
         ) : (
           <>
-            {header}
-            {list}
+            {/* header contains the title strip + tab bar — fixed height, no scroll */}
+            <div className="flex-shrink-0">{header}</div>
+            {/* list is the scrollable area */}
+            <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
           </>
         )}
       </div>
 
+      {/* ── Desktop split ── */}
       <div className="hidden lg:flex app-messages-split h-full min-h-0">
         <div className="app-messages-split-list flex flex-col min-h-0">
-          {header}
+          <div className="flex-shrink-0">{header}</div>
           <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
         </div>
         <div className="app-messages-split-detail flex flex-col min-h-0">

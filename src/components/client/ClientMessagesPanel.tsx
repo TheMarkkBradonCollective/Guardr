@@ -8,10 +8,7 @@ import {
   SupportTicket,
 } from '../../types';
 import { threadForRequest } from '../../lib/jobChat';
-import {
-  buildClientInboxRows,
-  InboxRow,
-} from '../../lib/messagesInbox';
+import { buildClientInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
   categoryLabel,
   SUPPORT_STATUS_LABEL,
@@ -30,8 +27,10 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy } from 'lucide-react';
+import { Briefcase, FileText, LifeBuoy, MessageCircle } from 'lucide-react';
 import { guardForRequest } from '../../lib/clientShift';
+
+type InboxTab = 'jobs' | 'support';
 
 interface ClientMessagesPanelProps {
   requests: SecurityRequest[];
@@ -83,6 +82,10 @@ export function ClientMessagesPanel({
   const [chatOpen, setChatOpen] = useState(initialChatOpen);
   const [supportTicketId, setSupportTicketId] = useState<string | null>(initialSupportTicketId);
 
+  const [activeTab, setActiveTab] = useState<InboxTab>(() =>
+    initialSupportTicketId ? 'support' : 'jobs'
+  );
+
   useEffect(() => {
     setChatRequestId(initialChatRequestId);
     setChatOpen(initialChatOpen);
@@ -98,7 +101,7 @@ export function ClientMessagesPanel({
     [supportTickets, currentUser]
   );
 
-  const inboxRows = useMemo(
+  const allRows = useMemo(
     () =>
       buildClientInboxRows({
         currentUser,
@@ -111,6 +114,15 @@ export function ClientMessagesPanel({
     [currentUser, requests, guards, jobChatThreads, jobChatMessages, supportTickets]
   );
 
+  const jobRows    = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
+  const supportRowsAll = useMemo(
+    () => allRows.filter((r) => r.channel === 'support' || r.channel === 'report'),
+    [allRows]
+  );
+
+  const tabRows = activeTab === 'jobs' ? jobRows : supportRowsAll;
+
+  // ── Selection helpers ──────────────────────────────────
   const openJobChat = (requestId: string) => {
     setSupportTicketId(null);
     onSupportTicketIdChange?.(null);
@@ -139,28 +151,20 @@ export function ClientMessagesPanel({
   };
 
   const openRow = (row: InboxRow) => {
-    if (row.requestId) {
-      openJobChat(row.requestId);
-      return;
-    }
-    if (row.ticketId) {
-      openSupportThread(row.ticketId);
-    }
+    if (row.requestId) { openJobChat(row.requestId); return; }
+    if (row.ticketId)  { openSupportThread(row.ticketId); }
   };
 
-  const clearSelection = () => {
-    closeJobChat();
-    closeSupportThread();
-  };
+  const clearSelection = () => { closeJobChat(); closeSupportThread(); };
 
-  const chatRequest = chatRequestId ? requestById.get(chatRequestId) ?? null : null;
+  const chatRequest  = chatRequestId ? requestById.get(chatRequestId) ?? null : null;
   const activeTicket = supportTicketId
     ? myTickets.find((t) => t.id === supportTicketId) ?? null
     : null;
 
   const hasSelection = !!(chatOpen && chatRequest) || !!activeTicket;
 
-  const isRowSelected = (row: InboxRow): boolean => {
+  const isRowSelected = (row: InboxRow) => {
     if (row.requestId && chatOpen && chatRequestId === row.requestId) return true;
     if (row.ticketId && supportTicketId === row.ticketId) return true;
     return false;
@@ -168,7 +172,7 @@ export function ClientMessagesPanel({
 
   const renderInboxIcon = (row: InboxRow) => {
     if (row.channel === 'job') {
-      const req = row.requestId ? requestById.get(row.requestId) : null;
+      const req   = row.requestId ? requestById.get(row.requestId) : null;
       const guard = req ? guardForRequest(guards, req) : null;
       return (
         <ProfileAvatar
@@ -179,75 +183,92 @@ export function ClientMessagesPanel({
         />
       );
     }
-    if (row.channel === 'report') {
-      return <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
-    }
+    if (row.channel === 'report') return <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
+  // ── Header: title + tabs ───────────────────────────────
   const header = (
-    <>
+    <div>
       <div className="app-messages-hub-lead">
         <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Job chats and support conversations sorted by recent activity</p>
+        <p>Job chats and support conversations</p>
       </div>
-      <MessagesQuickActions
-        onContactSupport={onOpenCompose}
-        onFileReport={onOpenReport}
-        supportHint="Direct line to the Guardr operations team"
-        reportHint="Safety concern, dispute, or formal complaint"
-      />
-    </>
+      <div className="app-inbox-tabs" role="tablist">
+        {(
+          [
+            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,       icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy  className="w-3.5 h-3.5" strokeWidth={2} /> },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="app-inbox-tab-badge">{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 
+  // ── List: filtered by tab ──────────────────────────────
   const list = (
     <>
-      {inboxRows.length === 0 ? (
-        <p className="app-empty-state">
-          Job chats and support conversations appear here, sorted by recent activity.
-        </p>
+      {activeTab === 'support' && (
+        <MessagesQuickActions
+          onContactSupport={onOpenCompose}
+          onFileReport={onOpenReport}
+          supportHint="Direct line to the Guardr operations team"
+          reportHint="Safety concern, dispute, or formal complaint"
+        />
+      )}
+
+      {tabRows.length === 0 ? (
+        <div className="app-inbox-tab-empty">
+          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
+          <p className="app-inbox-tab-empty-title">
+            {activeTab === 'jobs' ? 'No job chats yet' : 'No support conversations'}
+          </p>
+          <p className="app-inbox-tab-empty-hint">
+            {activeTab === 'jobs'
+              ? 'Job chats appear here once a guard is assigned to your booking.'
+              : 'Use the buttons above to contact support or file a report.'}
+          </p>
+        </div>
       ) : (
         <AppInboxList>
-          {inboxRows.map((row, i) => {
-            const prevRow = i > 0 ? inboxRows[i - 1] : null;
-            const sectionChanged = prevRow && prevRow.channel !== row.channel;
-            const isFirstRow = i === 0;
-            const showSection = isFirstRow || sectionChanged;
-
-            const sectionLabel =
-              row.channel === 'job'
-                ? 'Job Chats'
-                : row.channel === 'support' || row.channel === 'report'
-                ? 'Support'
-                : null;
-
-            return (
-              <React.Fragment key={row.id}>
-                {showSection && sectionLabel && (
-                  <div className="app-inbox-section-head">{sectionLabel}</div>
-                )}
-                <AppInboxRow
-                  title={row.title}
-                  subtitle={row.subtitle}
-                  preview={row.preview}
-                  meta={formatInboxMeta(row.updatedAt)}
-                  leading={renderInboxIcon(row)}
-                  selected={isRowSelected(row)}
-                  badges={
-                    row.badge ? (
-                      <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge>
-                    ) : undefined
-                  }
-                  onClick={() => openRow(row)}
-                />
-              </React.Fragment>
-            );
-          })}
+          {tabRows.map((row) => (
+            <AppInboxRow
+              key={row.id}
+              title={row.title}
+              subtitle={row.subtitle}
+              preview={row.preview}
+              meta={formatInboxMeta(row.updatedAt)}
+              leading={renderInboxIcon(row)}
+              selected={isRowSelected(row)}
+              badges={
+                row.badge ? (
+                  <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge>
+                ) : undefined
+              }
+              onClick={() => openRow(row)}
+            />
+          ))}
         </AppInboxList>
       )}
     </>
   );
 
+  // ── Detail view ────────────────────────────────────────
   const detailView = (() => {
     if (chatOpen && chatRequest) {
       return (
