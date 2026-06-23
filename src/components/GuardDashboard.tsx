@@ -216,7 +216,6 @@ export function GuardDashboard({
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
   const [connectReady, setConnectReady] = useState(false);
-  const [dutySeconds, setDutySeconds] = useState(0);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
   const availableJobs = useMemo(
     () => requests.filter((r) => guardCanViewJob(guard, r)),
@@ -318,12 +317,6 @@ export function GuardDashboard({
     [setTab, onJobChatRequestIdChange, onJobChatOpenChange]
   );
 
-  useEffect(() => {
-    if (activePhase !== 'on-duty') return;
-    const t = setInterval(() => setDutySeconds((s) => s + 1), 1000);
-    return () => clearInterval(t);
-  }, [activePhase]);
-
   const updatePhase = useCallback((jobId: string, phase: ShiftPhase) => {
     saveShiftPhase(guard.id, jobId, phase);
     setShiftPhases((p) => ({ ...p, [jobId]: phase }));
@@ -424,7 +417,6 @@ export function GuardDashboard({
       },
     });
     updatePhase(activeShiftJob.id, 'on-duty');
-    setDutySeconds(0);
     setShowSelfAudit(false);
   };
 
@@ -472,7 +464,6 @@ export function GuardDashboard({
       },
     });
     updatePhase(activeShiftJob.id, 'on-duty');
-    setDutySeconds(0);
     })();
   };
 
@@ -620,7 +611,6 @@ export function GuardDashboard({
         <GuardActiveShift
           job={activeShiftJob}
           phase={activePhase}
-          dutySeconds={dutySeconds}
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}

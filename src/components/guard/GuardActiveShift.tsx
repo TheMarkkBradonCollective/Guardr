@@ -5,11 +5,13 @@ import { formatDuration } from '../../lib/dates';
 import {
   canGuardClockIn,
   canGuardClockOut,
+  computeShiftDutySeconds,
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
   shiftClockInOpensAt,
   shiftClockOutClosesAt,
   shiftClockOutOpensAt,
+  shiftDutyStartedAt,
 } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
@@ -29,7 +31,6 @@ import {
 interface GuardActiveShiftProps {
   job: GuardJobView;
   phase: ShiftPhase;
-  dutySeconds: number;
   onArrived: () => void;
   onBeginAudit: () => void;
   onSkipAudit: () => void;
@@ -60,7 +61,6 @@ function formatClockWindowTime(d: Date): string {
 export function GuardActiveShift({
   job,
   phase,
-  dutySeconds,
   onArrived,
   onBeginAudit,
   onSkipAudit,
@@ -70,10 +70,27 @@ export function GuardActiveShift({
   onOpenJobChat,
 }: GuardActiveShiftProps) {
   const [now, setNow] = useState(() => new Date());
+  const [dutySeconds, setDutySeconds] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (phase !== 'on-duty') {
+      setDutySeconds(0);
+      return;
+    }
+    const startedAt = shiftDutyStartedAt(job);
+    if (!startedAt) {
+      setDutySeconds(0);
+      return;
+    }
+    const tick = () => setDutySeconds(computeShiftDutySeconds(startedAt));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [phase, job.id, job.checkInAudit?.checkedAt]);
 
   const address = job.address || job.location;
   const statusSteps: ShiftPhase[] = ['upcoming', 'arrived', 'on-duty', 'complete'];
@@ -115,16 +132,25 @@ export function GuardActiveShift({
         />
 
         <div className="segmented-control segmented-control-full">
-          {statusSteps.slice(0, 3).map((step) => (
-            <span
-              key={step}
-              className={`segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs ${
-                statusSteps.indexOf(step) <= currentIdx ? 'segmented-control-btn-active' : ''
-              }`}
-            >
-              {PHASE_LABELS[step]}
-            </span>
-          ))}
+          {statusSteps.slice(0, 3).map((step) => {
+            const stepIdx = statusSteps.indexOf(step);
+            const isReached = stepIdx <= currentIdx;
+            const isCurrent = step === phase;
+            return (
+              <span
+                key={step}
+                className={[
+                  'segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs',
+                  isReached && 'segmented-control-btn-active',
+                  isCurrent && 'segmented-control-btn-current',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {PHASE_LABELS[step]}
+              </span>
+            );
+          })}
         </div>
 
         {phase === 'on-duty' && (

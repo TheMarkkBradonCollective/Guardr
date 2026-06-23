@@ -3333,6 +3333,21 @@ html.theme-light .staff-sidebar-brand .text-brand-text-muted {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 28%, transparent);
 }
 
+@keyframes shift-phase-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+  }
+  50% {
+    opacity: 0.88;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--brand-primary) 16%, transparent);
+  }
+}
+
+.segmented-control-btn-current {
+  animation: shift-phase-pulse 3s ease-in-out infinite;
+}
+
 html.theme-light .segmented-control-btn-active {
   background: var(--brand-primary);
   color: var(--brand-accent-text);
@@ -4602,7 +4617,8 @@ html.theme-light .staff-ops-btn-primary:hover {
   .animate-fade-in,
   .animate-slide-up,
   .animate-slide-down,
-  .account-menu-panel {
+  .account-menu-panel,
+  .segmented-control-btn-current {
     animation: none !important;
     transition: none !important;
   }

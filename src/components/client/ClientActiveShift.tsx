@@ -9,6 +9,7 @@ import {
   inferClientShiftPhase,
 } from '../../lib/clientShift';
 import { computeSiteStatus } from '../../lib/clientCoverage';
+import { computeShiftDutySeconds, shiftDutyStartedAt } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
@@ -66,8 +67,8 @@ export function ClientActiveShift({
       setDutySeconds(0);
       return;
     }
-    const startedAt = new Date(request.checkInAudit?.checkedAt ?? request.startDate).getTime();
-    const tick = () => setDutySeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    const startedAt = shiftDutyStartedAt(request) ?? request.startDate;
+    const tick = () => setDutySeconds(computeShiftDutySeconds(startedAt));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
