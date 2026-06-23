@@ -17,17 +17,21 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
 
   return (
     <AppScreen className="flex flex-col justify-center min-h-full">
-      <div className="px-5 py-8 text-center border-b border-brand-border">
+      <div className="px-5 py-10 text-center border-b border-brand-border">
         {approved ? (
-          <Check className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
+          <span className="w-14 h-14 rounded-full bg-brand-primary flex items-center justify-center mx-auto mb-5 shadow-[0_4px_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
+            <Check className="w-7 h-7 text-white" strokeWidth={2.5} />
+          </span>
         ) : (
-          <Clock className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+          <span className="w-14 h-14 rounded-full border-2 border-brand-border bg-brand-bg-sec flex items-center justify-center mx-auto mb-5">
+            <Clock className="w-7 h-7 text-brand-primary" />
+          </span>
         )}
         <AppPageLead
           kicker="Application status"
           title={approved ? 'Profile approved' : 'Pending approval'}
         />
-        <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left">
+        <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
           {isGuard
             ? approved
               ? 'Your profile is approved. Upload your BSIS Guard Card, PTA/UOF training, 32-hour BSIS courses, and any other credentials in your profile if you have not already — staff will verify your guard card and certs and activate your account so you can work jobs.'

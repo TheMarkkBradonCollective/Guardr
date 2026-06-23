@@ -100,18 +100,18 @@ export function InstallPrompt() {
             </button>
 
             <div className="flex items-start gap-3.5 pr-6">
-              <Logo size={36} className="text-brand-primary shrink-0 mt-0.5" />
+              <Logo size={40} className="text-brand-primary shrink-0 mt-0.5" />
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold text-brand-primary">Mobile compatible</span>
-                  <Sparkles size={12} className="text-brand-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-primary">Install app</span>
+                  <Sparkles size={11} className="text-brand-primary" />
                 </div>
-                <h4 className="text-sm font-semibold text-brand-text">
-                  Install Guardr App
+                <h4 className="text-base font-black tracking-tight text-brand-text">
+                  Add Guardr to your home screen
                 </h4>
-                <p className="text-xs text-brand-text-muted leading-snug">
-                  Get faster job updates, active field-tracking tools &amp; instant local notification coverage from your home screen.
+                <p className="text-xs text-brand-text-muted leading-relaxed font-medium">
+                  Faster updates, live shift tracking, and instant notifications — always one tap away.
                 </p>
               </div>
             </div>
