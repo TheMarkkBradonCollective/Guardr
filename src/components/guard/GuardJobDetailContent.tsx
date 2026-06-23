@@ -69,15 +69,17 @@ export function GuardJobDetailContent({
             <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
             <div className="space-y-3 border-t border-brand-border pt-3">
               <div>
-                <p className="text-sm font-medium text-brand-text-muted">Your qualification checklist</p>
-                <p className="text-xs text-brand-text-muted mt-0.5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Your qualification checklist</p>
+                <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
                   A valid guard card is required to apply. Training items marked as recommended are not required.
                 </p>
               </div>
               {checks.map((c) => (
-                <div key={c.label} className="flex items-center gap-2 text-sm">
+                <div key={c.label} className="flex items-center gap-2.5 text-sm py-0.5">
                   {c.met ? (
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
+                    <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    </span>
                   ) : c.recommended ? (
                     <span className="w-4 h-4 shrink-0 text-center text-brand-text-muted text-xs leading-4">·</span>
                   ) : (
@@ -98,7 +100,7 @@ export function GuardJobDetailContent({
               ))}
 
               {hasApplied && job.status === 'open' && job.pendingGuardId === guard.id && (
-                <p className="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
+                <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5 font-semibold">
                   Guardr approved you for this job — awaiting client confirmation.
                 </p>
               )}
