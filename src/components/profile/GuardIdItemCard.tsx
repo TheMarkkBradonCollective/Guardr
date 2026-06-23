@@ -5,14 +5,17 @@ import {
   formatIdSummaryLine,
   getGovernmentIdUploadStatus,
   getGovernmentIdUploadStatusSummary,
+  getGuardIdVerificationStatus,
   guardHasGovernmentIdOnFile,
   guardIdVerificationPhotosComplete,
   ID_VERIFICATION_POLICY_HINT,
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
+import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { CredentialListStatusBadge, CredentialSectionAddButton, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
+import { WfBadge } from '../ui/wireframe';
 import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
@@ -41,6 +44,22 @@ export function GuardIdItemCard({
   const hasOnFile = guardHasGovernmentIdOnFile(guard);
   const expired = isIdExpired(guard);
   const uploadStatus = getGovernmentIdUploadStatus(guard);
+  const checklist = getGuardActivationChecklist(guard);
+  const idStatus = getGuardIdVerificationStatus(guard);
+  const statusTone = checklist.idVerified
+    ? 'success'
+    : idStatus === 'rejected'
+      ? 'danger'
+      : checklist.idSubmitted
+        ? 'warning'
+        : 'default';
+  const statusLabel = checklist.idVerified
+    ? 'Verified'
+    : idStatus === 'rejected'
+      ? 'Resubmit requested'
+      : checklist.idSubmitted
+        ? 'Pending review'
+        : 'Not on file';
   const openInEditMode = canEdit && !hasOnFile;
 
   const detailModal =
@@ -129,6 +148,11 @@ export function GuardIdItemCard({
             >
               {getGovernmentIdUploadStatusSummary(guard, { staffMode })}
             </p>
+            {!staffMode && (
+              <div className="mt-2">
+                <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
+              </div>
+            )}
           </div>
           {canEdit && <CredentialSectionAddButton onClick={() => setShowDetail(true)} />}
         </div>
