@@ -20,13 +20,13 @@
       "maxDuration": 10
     },
     "api/push/events.ts": {
-      "includeFiles": "api/push/push-handlers.cjs"
+      "maxDuration": 15
     },
     "api/push/send.ts": {
-      "includeFiles": "api/push/push-handlers.cjs"
+      "maxDuration": 15
     },
     "api/cron/missed-checkins.ts": {
-      "includeFiles": "api/push/push-missed-checkins.cjs"
+      "maxDuration": 30
     }
   },
   "rewrites": [
