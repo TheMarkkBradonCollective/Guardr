@@ -38,7 +38,7 @@ export function BottomNavBar({
       }`}
       aria-label="Main navigation"
     >
-      <div className="bottom-nav-inner flex items-stretch justify-around max-w-lg mx-auto">
+      <div className="bottom-nav-inner flex items-stretch justify-around w-full">
         {slots.map(({ id, label, icon: Icon, badge }) => {
           const active = activeId === id;
           return (
