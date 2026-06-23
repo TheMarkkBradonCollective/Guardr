@@ -41,6 +41,14 @@ export function canGuardClockOut(
   return now.getTime() >= shiftClockOutOpensAt(job.endDate).getTime();
 }
 
+/** True when the guard is ending the shift after the scheduled end time. */
+export function isLateClockOut(
+  job: Pick<SecurityRequest, 'endDate'>,
+  now = new Date()
+): boolean {
+  return now.getTime() > shiftClockOutOpensAt(job.endDate).getTime();
+}
+
 function formatWhen(d: Date): string {
   return d.toLocaleString('en-US', {
     month: 'short',
