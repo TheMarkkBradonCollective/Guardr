@@ -1,5 +1,10 @@
 import type Stripe from 'stripe';
 
+import {
+  computeGuardPayoutCents,
+  LEGACY_PLATFORM_FEE_PER_HOUR,
+} from './platformFees';
+
 let stripe: Stripe | null | undefined;
 let stripePromise: Promise<Stripe | null> | undefined;
 
@@ -17,9 +22,7 @@ export async function getStripe(): Promise<Stripe | null> {
   return stripe;
 }
 
-export const GUARD_PAY_PLATFORM_FEE = 5;
+/** @deprecated Use per-job platform_fee_per_hour when available. */
+export const GUARD_PAY_PLATFORM_FEE = LEGACY_PLATFORM_FEE_PER_HOUR;
 
-export function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
-  const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
-  return Math.round(durationHours * guardPay * 100);
-}
+export { computeGuardPayoutCents };

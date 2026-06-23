@@ -5,12 +5,13 @@ import {
   ClientServiceId,
   GUARD_COUNT_PRESETS,
   PAY_RATE_PRESETS,
+  resolveJobTitle,
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -33,6 +34,7 @@ export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 
 interface RequestSecurityFlowProps {
   preset?: RequestFlowPreset;
+  feeConfig: PlatformFeeConfig;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -41,6 +43,7 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requi
 
 export function RequestSecurityFlow({
   preset = 'default',
+  feeConfig,
   onBack,
   onSubmit,
 }: RequestSecurityFlowProps) {
@@ -67,7 +70,10 @@ export function RequestSecurityFlow({
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
-  const [customTitle, setCustomTitle] = useState('');
+  const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(
+    preset === 'recurring' ? 'construction' : 'standing-guard'
+  ));
+  const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
@@ -78,19 +84,24 @@ export function RequestSecurityFlow({
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
-  const guardPay = computeGuardPay(effectiveRate);
-  const platformFeeTotal = computePlatformFee(durationHours) * effectiveGuards;
+  const platformFeePerHour = resolvePlatformFeePerHour(effectiveRate, feeConfig);
+  const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
+  const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour) * effectiveGuards;
   const estimatedTotal = Math.round(durationHours * effectiveRate * effectiveGuards * 100) / 100;
 
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
-  const title =
-    serviceId === 'custom' && customTitle.trim()
-      ? customTitle.trim()
-      : serviceDefaultTitle(serviceId);
+  const title = resolveJobTitle(jobTitle, serviceId);
+
+  const selectService = (id: ClientServiceId) => {
+    setServiceId(id);
+    if (!jobTitleTouched) {
+      setJobTitle(serviceDefaultTitle(id));
+    }
+  };
 
   const canNext = (): boolean => {
     switch (step) {
-      case 1: return !!serviceId;
+      case 1: return !!serviceId && jobTitle.trim().length > 0;
       case 2: return address.trim().length > 3 && jobState.length === 2;
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveGuards >= 1;
@@ -138,6 +149,7 @@ export function RequestSecurityFlow({
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
+      platformFeePerHour,
       estimatedPayout: estimatedTotal,
       description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
@@ -189,7 +201,7 @@ export function RequestSecurityFlow({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setServiceId(opt.id)}
+                  onClick={() => selectService(opt.id)}
                   className={`wf-list-card transition-all ${
                     serviceId === opt.id ? '!border-brand-primary bg-brand-primary/8' : ''
                   }`}
@@ -205,15 +217,22 @@ export function RequestSecurityFlow({
                 </button>
               ))}
             </div>
-            {serviceId === 'custom' && (
+            <div>
+              <label className="uber-label block mb-1.5">Job name</label>
               <input
                 type="text"
-                placeholder="Describe your job offer..."
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                className="uber-input mt-2"
+                placeholder={serviceDefaultTitle(serviceId)}
+                value={jobTitle}
+                onChange={(e) => {
+                  setJobTitleTouched(true);
+                  setJobTitle(e.target.value);
+                }}
+                className="uber-input rounded-xl"
               />
-            )}
+              <p className="text-xs text-brand-text-muted mt-1.5">
+                Shown to guards on your listing. You can customize it for any service type.
+              </p>
+            </div>
           </div>
         )}
 
@@ -395,7 +414,7 @@ export function RequestSecurityFlow({
               />
             </div>
             <p className="text-xs text-brand-text-muted">
-              Guard receives ${guardPay}/hr · Platform fee ${PLATFORM_FEE_PER_HOUR}/hr per guard
+              Guard receives ${guardPay}/hr · Platform fee ${platformFeePerHour}/hr per guard
             </p>
           </div>
         )}

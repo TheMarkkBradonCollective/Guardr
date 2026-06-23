@@ -21,6 +21,7 @@ export type StaffSection =
   | 'team'
   | 'clients'
   | 'incidents'
+  | 'messages'
   | 'support'
   | 'team-chat'
   | 'job-chats'
@@ -31,25 +32,33 @@ export type StaffSection =
   | 'guide'
   | 'profile';
 
+const LEGACY_MESSAGE_SECTIONS: StaffSection[] = ['support', 'team-chat', 'job-chats'];
+
+export function isStaffMessagesSection(section: StaffSection): boolean {
+  return section === 'messages' || LEGACY_MESSAGE_SECTIONS.includes(section);
+}
+
 export function isStaffOpsMapSection(section: StaffSection): boolean {
   return section === 'map';
 }
 
-/** Accept legacy deep links that still use live-jobs */
+/** Accept legacy deep links that still use live-jobs or split message sections */
 export function normalizeStaffSection(section?: string): StaffSection | undefined {
   if (!section) return undefined;
   if (section === 'live-jobs') return 'jobs';
-  if (section === 'messages') return 'team-chat';
+  if (section === 'messages' || section === 'team-chat' || section === 'job-chats' || section === 'support') {
+    return 'messages';
+  }
   const valid: StaffSection[] = [
     'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'clients',
-    'incidents', 'support', 'team-chat', 'job-chats', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile',
+    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }
 
 /** Legacy /staff/messages and ?mtab= deep links */
-export function staffSectionFromMessageTab(tab?: 'team' | 'jobs' | null): StaffSection {
-  return tab === 'jobs' ? 'job-chats' : 'team-chat';
+export function staffSectionFromMessageTab(_tab?: 'team' | 'jobs' | null): StaffSection {
+  return 'messages';
 }
 
 export function resolveStaffSection(
@@ -57,7 +66,9 @@ export function resolveStaffSection(
   messageTab?: 'team' | 'jobs' | null
 ): StaffSection | undefined {
   if (!section) return undefined;
-  if (section === 'messages') return staffSectionFromMessageTab(messageTab);
+  if (section === 'messages' || LEGACY_MESSAGE_SECTIONS.includes(section as StaffSection)) {
+    return 'messages';
+  }
   return section;
 }
 
@@ -476,7 +487,7 @@ export function buildOverviewActionQueue(
       title: 'Reply to support tickets',
       description: 'Clients or guards are waiting on staff',
       count: supportCount,
-      section: 'support',
+      section: 'messages',
       tone: 'normal',
     });
   }

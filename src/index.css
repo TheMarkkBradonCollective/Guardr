@@ -2358,6 +2358,21 @@ body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
   -webkit-overflow-scrolling: touch;
 }
 
+.app-full-page-screen,
+.app-full-page-detail {
+  height: 100%;
+  min-height: 0;
+  background: var(--brand-bg);
+}
+
+.app-full-page-detail .app-subscreen-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
+}
+
 .app-screen-title {
   font-size: 1.875rem;
   font-weight: 800;
@@ -3292,17 +3307,6 @@ html.theme-light .staff-sidebar-brand {
 
 html.theme-light .staff-sidebar-brand .text-brand-text-muted {
   color: var(--brand-chrome-muted);
-}
-
-.app-screen {
-  max-width: 42rem;
-}
-
-.app-screen-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
 }
 
 .app-list-row {

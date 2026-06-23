@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { MessagesSquare, Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText, BookOpen } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -19,21 +19,15 @@ interface ClientAppLayoutProps {
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   messagesBadge?: number;
+  hideHeader?: boolean;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
+  { id: 'messages', label: 'Messages', icon: MessagesSquare },
   { id: 'guards', label: 'Guards', icon: Users },
   { id: 'requests', label: 'Jobs', icon: ClipboardList },
-];
-
-const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'messages', label: 'Messages', icon: MessagesSquare },
-  { id: 'coverage', label: 'Coverage', icon: Radio },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'guide', label: 'Workflow guide', icon: BookOpen },
-  { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
@@ -42,7 +36,6 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   guards: 'Guards',
   coverage: 'Live coverage',
   requests: 'Jobs',
-  support: 'Support',
   'support-compose': 'Contact support',
   'support-report': 'File a report',
   profile: 'Profile',
@@ -51,6 +44,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   reports: 'Reports',
   guide: 'Workflow guide',
   messages: 'Messages',
+  support: 'Messages',
 };
 
 export function ClientAppLayout({
@@ -64,24 +58,29 @@ export function ClientAppLayout({
   accountPending = false,
   onOpenLegal,
   messagesBadge = 0,
+  hideHeader = false,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
   const fullBleed = activeView === 'map' || activeView === 'coverage';
-  const navHighlightView =
-    activeView === 'support-compose' || activeView === 'support-report'
-      ? 'support'
-      : accountPending && !['home', 'profile', 'support', 'support-compose', 'support-report', 'guide'].includes(activeView)
-        ? 'home'
-        : activeView;
+  const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
+  const navHighlightView = messagesViews.includes(activeView)
+    ? 'messages'
+    : accountPending && !['home', 'profile', 'guide', ...messagesViews].includes(activeView)
+      ? 'home'
+      : activeView;
 
-  const moreFooter = onOpenLegal ? (
+  const navItems = useMemo(
+    () =>
+      PRIMARY_NAV.map((item) =>
+        item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
+      ),
+    [messagesBadge]
+  );
+
+  const accountFooter = onOpenLegal ? (
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
   ) : undefined;
-
-  const overflowNav = OVERFLOW_NAV.map((item) =>
-    item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
-  );
 
   return (
     <RoleAppShell
@@ -96,14 +95,21 @@ export function ClientAppLayout({
         onOpenProfile: () => onNavigate?.('profile'),
         onSignOut,
         active: activeView === 'profile',
+        extraLinks: [
+          {
+            label: 'Workflow guide',
+            icon: BookOpen,
+            onClick: () => onNavigate?.('guide'),
+            active: activeView === 'guide',
+          },
+        ],
+        footer: accountFooter,
       }}
-      navItems={PRIMARY_NAV}
-      overflowNavItems={overflowNav}
+      navItems={navItems}
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
-      moreMenuFooter={moreFooter}
-      moreMenuTitle="More"
       fullBleed={fullBleed}
+      hideHeader={hideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
       experience="client"
     >

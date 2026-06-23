@@ -353,6 +353,7 @@ export function AppInboxRow({
   preview,
   meta,
   badges,
+  leading,
   selected = false,
   onClick,
 }: {
@@ -360,6 +361,7 @@ export function AppInboxRow({
   preview?: string;
   meta?: string;
   badges?: React.ReactNode;
+  leading?: React.ReactNode;
   selected?: boolean;
   onClick?: () => void;
 }) {
@@ -369,6 +371,7 @@ export function AppInboxRow({
       onClick={onClick}
       className={`app-inbox-row ${selected ? 'app-inbox-row-selected' : ''}`}
     >
+      {leading && <div className="app-inbox-row-leading shrink-0">{leading}</div>}
       <div className="app-inbox-row-main">
         <div className="app-inbox-row-top">
           <p className="app-inbox-row-title">{title}</p>

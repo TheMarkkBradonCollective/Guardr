@@ -243,9 +243,12 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_to_stripe BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_manually BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_paid_cash BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_available_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
@@ -474,8 +477,35 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
   payment_cash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  fee_config JSONB NOT NULL DEFAULT '{
+    "model": "flat",
+    "flatFeePerHour": 5,
+    "percentRate": 0.15,
+    "minFeePerHour": 4,
+    "maxFeePerHour": 12,
+    "tiers": [
+      { "minHourlyRate": 75, "feePerHour": 10 },
+      { "minHourlyRate": 50, "feePerHour": 8 },
+      { "minHourlyRate": 30, "feePerHour": 6 },
+      { "minHourlyRate": 0, "feePerHour": 5 }
+    ]
+  }'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL DEFAULT '{
+  "model": "flat",
+  "flatFeePerHour": 5,
+  "percentRate": 0.15,
+  "minFeePerHour": 4,
+  "maxFeePerHour": 12,
+  "tiers": [
+    { "minHourlyRate": 75, "feePerHour": 10 },
+    { "minHourlyRate": 50, "feePerHour": 8 },
+    { "minHourlyRate": 30, "feePerHour": 6 },
+    { "minHourlyRate": 0, "feePerHour": 5 }
+  ]
+}'::jsonb;
 
 INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 

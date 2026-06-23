@@ -13,7 +13,6 @@ import {
 import { isStaffRole } from '../../lib/permissions';
 import {
   AppChatHeader,
-  AppDashboardHero,
   AppDashboardZone,
   AppInboxList,
   AppInboxRow,
@@ -150,9 +149,7 @@ export function SupportScreen({
   return (
     <AppPageTransition motionKey={`home-${section}`} className="h-full min-h-0">
       <AppScreen className="pb-8">
-        <AppDashboardHero kicker="Help center" title="Support" />
-
-        <div className="px-5 mb-5">
+        <div className="px-5 pt-2 pb-4">
           <AppSegmentedControl
             options={[
               { id: 'support', label: 'Support' },

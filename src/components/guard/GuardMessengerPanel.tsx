@@ -27,12 +27,6 @@ export function GuardMessengerPanel({
 
   return (
     <div className="flex flex-col min-h-0 h-full">
-      <div className="shrink-0 px-4 py-3 border-b border-brand-border bg-brand-surface">
-        <h2 className="font-bold text-sm">Guard chat</h2>
-        <p className="text-xs text-brand-text-muted mt-1">
-          Community channel for all Guardr guards — not visible to clients or staff.
-        </p>
-      </div>
       <div className="flex-1 min-h-0">
         <ChatThreadPanel
           messages={sortedGuardMessages(messages)}

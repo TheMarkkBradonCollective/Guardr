@@ -21,6 +21,7 @@ interface StaffPaymentsPanelProps {
   isDirector: boolean;
   canManagePayments: boolean;
   paymentGates: ClientPaymentGates;
+  onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
@@ -28,6 +29,7 @@ interface StaffPaymentsPanelProps {
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
@@ -40,13 +42,13 @@ function PipelineSection({
   isDirector,
   canManagePayments,
   paymentGates,
-  onReleasePayout,
+  onMakeGuardPayoutAvailable,
   onRefundPayment,
   onMarkClientPaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
-  onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   readOnly = false,
   limit,
@@ -58,13 +60,13 @@ function PipelineSection({
   isDirector: boolean;
   canManagePayments: boolean;
   paymentGates: ClientPaymentGates;
-  onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
+  onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
-  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
@@ -91,13 +93,13 @@ function PipelineSection({
             canManagePayments={canManagePayments}
             paymentGates={paymentGates}
             readOnly={readOnly}
-            onReleasePayout={onReleasePayout}
+            onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
-            onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
+            onMarkCashDepositManually={onMarkCashDepositManually}
             onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
@@ -119,6 +121,7 @@ export function StaffPaymentsPanel({
   isDirector,
   canManagePayments,
   paymentGates,
+  onMakeGuardPayoutAvailable,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
@@ -126,6 +129,7 @@ export function StaffPaymentsPanel({
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
@@ -138,12 +142,11 @@ export function StaffPaymentsPanel({
     isDirector,
     canManagePayments,
     paymentGates,
-    onReleasePayout,
+    onMakeGuardPayoutAvailable,
     onRefundPayment,
     onMarkClientPaidCash,
     onApproveClientCashPayment,
     onRejectClientCashPayment,
-    onMarkGuardPaidCash,
     onMarkPlatformFeePaidCash,
     onDepositCashToStripe,
   };
@@ -158,7 +161,7 @@ export function StaffPaymentsPanel({
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <div className="px-4 sm:px-5 pb-5 border-b border-brand-border">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          Every job follows the same path: the client pays, the job runs, then you pay the guard.
+          Every job follows the same path: the client pays, the job runs, then the guard collects pay from their Pay screen.
           Jobs below are grouped by what needs to happen next.
         </p>
         <ol className="mt-4 space-y-1.5 text-xs text-brand-text-muted list-decimal list-inside">
@@ -185,7 +188,7 @@ export function StaffPaymentsPanel({
           <section className="space-y-3">
             <WfSectionHeader title="Guard payout invoices" count={openInvoices.length} />
             <p className="text-xs text-brand-text-muted leading-relaxed">
-              Guards submit these from Pay when they want cash pickup or a bank transfer. Pay each line item, then mark the invoice completed.
+              Guards submit these from Pay when they want cash pickup or a bank transfer. Fulfill each line item, then mark the invoice completed.
             </p>
             <AppItemCardStack className="-mx-4 sm:-mx-5 px-4 sm:px-5">
               {openInvoices.map((invoice) => (
@@ -207,6 +210,12 @@ export function StaffPaymentsPanel({
         <PipelineSection stage="awaiting-guard-payout" items={summary.awaitingGuardPayout} {...sectionProps} />
         <PipelineSection stage="cash-deposit-pending" items={summary.cashDepositPending} {...sectionProps} />
         <PipelineSection stage="awaiting-client" items={summary.awaitingClient} {...sectionProps} />
+        <PipelineSection
+          stage="guard-collection-pending"
+          items={summary.guardCollectionPending}
+          {...sectionProps}
+          readOnly
+        />
         <PipelineSection stage="client-paid-active" items={summary.clientPaidActive} {...sectionProps} readOnly />
         <PipelineSection
           stage="settled"
@@ -220,6 +229,7 @@ export function StaffPaymentsPanel({
           summary.awaitingClient.length === 0 &&
           summary.cashDepositPending.length === 0 &&
           summary.awaitingGuardPayout.length === 0 &&
+          summary.guardCollectionPending.length === 0 &&
           summary.clientPaidActive.length === 0 &&
           summary.settled.length === 0 && (
             <p className="staff-empty-state border-t border-brand-border">

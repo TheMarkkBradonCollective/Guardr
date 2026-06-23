@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, ROLE_LABELS } from '../../lib/permissions';
-import { isStaffOpsMapSection, StaffSection } from '../../lib/staffOps';
+import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
 import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
@@ -15,10 +15,8 @@ import {
   ClipboardCheck,
   DollarSign,
   LayoutDashboard,
-  LifeBuoy,
   Map,
   Menu,
-  MessageCircle,
   MessagesSquare,
   Scale,
   Settings,
@@ -41,6 +39,7 @@ interface StaffOpsLayoutProps {
   badges?: Partial<Record<StaffSection, number>>;
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  hideHeader?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -52,9 +51,10 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   team: 'Staff',
   clients: 'Clients',
   incidents: 'Client incidents',
-  support: 'Support inbox',
-  'team-chat': 'Staff chat',
-  'job-chats': 'Job chats',
+  messages: 'Messages',
+  support: 'Messages',
+  'team-chat': 'Messages',
+  'job-chats': 'Messages',
   payments: 'Payments',
   disputes: 'Disputes',
   analytics: 'Analytics',
@@ -75,15 +75,14 @@ export function StaffOpsLayout({
   badges = {},
   fullBleed = false,
   onOpenLegal,
+  hideHeader = false,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
   const bleed =
     fullBleed ||
     isStaffOpsMapSection(activeSection) ||
-    activeSection === 'support' ||
-    activeSection === 'team-chat' ||
-    activeSection === 'job-chats';
+    isStaffMessagesSection(activeSection);
 
   const navItems: StaffNavItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -93,10 +92,8 @@ export function StaffOpsLayout({
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'team', label: 'Staff', icon: Users },
-    { id: 'team-chat', label: 'Staff chat', icon: MessagesSquare, badge: badges['team-chat'] },
-    { id: 'job-chats', label: 'Job chats', icon: MessageCircle, badge: badges['job-chats'] },
+    { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
     { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, adminOnly: true },
-    { id: 'support', label: 'Support', icon: LifeBuoy, badge: badges.support },
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -125,7 +122,7 @@ export function StaffOpsLayout({
       <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <StaffSidebarNav
           items={navItems}
-          activeSection={activeSection}
+          activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
           onNavigate={navigate}
           showFinance={showFinance}
         />
@@ -162,30 +159,55 @@ export function StaffOpsLayout({
       </aside>
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0">
-        <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
-          <button
-            type="button"
-            className="lg:hidden p-2 -ml-2 text-brand-text"
-            onClick={() => setMobileNavOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">{SECTION_TITLES[activeSection]}</h1>
-            <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
-          </div>
-          <AccountMenu
-            userName={currentUser.name}
-            userSubtitle={ROLE_LABELS[currentUser.role]}
-            avatarUrl={currentUser.avatar}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
-            onOpenProfile={() => navigate('profile')}
-            onSignOut={onSignOut}
-            active={activeSection === 'profile'}
-          />
-        </header>
+        {hideHeader ? (
+          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 border-b border-brand-border lg:hidden">
+            <button
+              type="button"
+              className="p-2 -ml-2 text-brand-text"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={ROLE_LABELS[currentUser.role]}
+              avatarUrl={currentUser.avatar}
+              themeMode={themeMode}
+              onChangeTheme={onChangeTheme}
+              onOpenProfile={() => navigate('profile')}
+              onSignOut={onSignOut}
+              active={activeSection === 'profile'}
+            />
+          </header>
+        ) : (
+          <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
+            <button
+              type="button"
+              className="lg:hidden p-2 -ml-2 text-brand-text"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-black tracking-[-0.03em] leading-tight truncate">
+                {SECTION_TITLES[isStaffMessagesSection(activeSection) ? 'messages' : activeSection]}
+              </h1>
+              <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
+            </div>
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={ROLE_LABELS[currentUser.role]}
+              avatarUrl={currentUser.avatar}
+              themeMode={themeMode}
+              onChangeTheme={onChangeTheme}
+              onOpenProfile={() => navigate('profile')}
+              onSignOut={onSignOut}
+              active={activeSection === 'profile'}
+            />
+          </header>
+        )}
 
         <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
           <div className={`h-full max-w-full min-w-0 ${bleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>

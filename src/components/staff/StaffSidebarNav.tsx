@@ -24,11 +24,10 @@ const OPERATIONS_IDS: StaffSection[] = [
   'clients',
   'guards',
   'team',
-  'team-chat',
-  'job-chats',
+  'messages',
   'payments',
 ];
-const PEOPLE_IDS: StaffSection[] = ['support', 'incidents', 'disputes', 'analytics'];
+const PEOPLE_IDS: StaffSection[] = ['incidents', 'disputes', 'analytics'];
 const HELP_IDS: StaffSection[] = ['guide'];
 const PLATFORM_IDS: StaffSection[] = ['settings'];
 

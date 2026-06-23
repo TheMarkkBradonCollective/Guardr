@@ -547,6 +547,9 @@ export interface SecurityRequest {
   /** Guard requested physical cash from director for this job */
   guardCashPayoutRequested?: boolean;
   guardCashPayoutRequestedAt?: string;
+  /** Staff released pay — guard can collect via Pay (bank or cash pickup) */
+  guardPayoutAvailable?: boolean;
+  guardPayoutAvailableAt?: string;
   /** Client chose pay-in-cash — awaiting staff confirmation */
   clientCashPaymentRequested?: boolean;
   clientCashPaymentRequestedAt?: string;
@@ -555,6 +558,8 @@ export interface SecurityRequest {
   /** Dollars paid into Stripe (card) for cash-client jobs */
   cashDepositedAmount?: number;
   cashDepositedAt?: string;
+  /** Director recorded a cash-client deposit off-card (bank transfer, in-hand, etc.) */
+  cashDepositedManually?: boolean;
   /** Director manually deposited platform fee (off-Stripe) */
   platformFeePaidCash?: boolean;
   /** Staff approved this guard — awaiting client confirmation */

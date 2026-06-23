@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -7,6 +7,7 @@ import {
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates } from '../lib/platformSettings';
+import type { PlatformFeeConfig } from '../lib/payments';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
@@ -62,6 +63,7 @@ interface ClientDashboardProps {
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
+  feeConfig: PlatformFeeConfig;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -71,8 +73,12 @@ interface ClientDashboardProps {
   onJobChatRequestIdChange?: (requestId: string | null) => void;
   onJobChatOpenChange?: (open: boolean) => void;
   onOpenJobChat?: (requestId: string) => void;
+  supportTickets?: SupportTicket[];
+  onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   supportTicketId?: string | null;
   onSupportTicketIdChange?: (ticketId: string | null) => void;
+  onOpenSupportCompose?: () => void;
+  onOpenSupportReport?: () => void;
 }
 
 export function ClientDashboard({
@@ -100,6 +106,7 @@ export function ClientDashboard({
   onApprovePendingGuard,
   onDenyPendingGuard,
   paymentGates,
+  feeConfig,
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
@@ -109,8 +116,12 @@ export function ClientDashboard({
   onJobChatRequestIdChange,
   onJobChatOpenChange,
   onOpenJobChat,
+  supportTickets = [],
+  onSendSupportMessage,
   supportTicketId = null,
   onSupportTicketIdChange,
+  onOpenSupportCompose,
+  onOpenSupportReport,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -162,6 +173,18 @@ export function ClientDashboard({
     onViewChange?.(next);
   };
 
+  const openMessages = (requestId: string) => {
+    onJobChatRequestIdChange?.(requestId);
+    onJobChatOpenChange?.(true);
+    navigate('messages');
+  };
+
+  useEffect(() => {
+    if (openJobChat && jobChatRequestId && (view === 'map' || view === 'coverage')) {
+      navigate('messages');
+    }
+  }, [openJobChat, jobChatRequestId, view]);
+
   const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
   const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
 
@@ -207,7 +230,7 @@ export function ClientDashboard({
   };
 
   const wrap = (node: React.ReactNode) => (
-    <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">{node}</div>
+    <div className="h-full max-w-full min-w-0 overflow-hidden">{node}</div>
   );
 
   const page = (key: string, node: React.ReactNode) => (
@@ -216,7 +239,7 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'support' && view !== 'home') {
+  if (accountPending && view !== 'profile' && view !== 'messages' && view !== 'home') {
     return page(
       'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />
@@ -229,14 +252,10 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         currentUser={currentUser}
-        jobChatThreads={jobChatThreads}
-        jobChatMessages={jobChatMessages}
-        onSendJobChatMessage={onSendJobChatMessage}
         onOpenCoverage={() => navigate('coverage')}
+        onOpenJobChat={openMessages}
         initialLiveJobId={jobChatRequestId}
-        initialChatOpen={openJobChat}
         onLiveJobIdChange={onJobChatRequestIdChange}
-        onChatOpenChange={onJobChatOpenChange}
       />
     );
   }
@@ -246,6 +265,7 @@ export function ClientDashboard({
       'request',
       <RequestSecurityFlow
         preset={flowPreset}
+        feeConfig={feeConfig}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
@@ -260,6 +280,7 @@ export function ClientDashboard({
       `direct-request-${requestTargetGuard.id}`,
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
+        feeConfig={feeConfig}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');
@@ -292,7 +313,7 @@ export function ClientDashboard({
     );
   }
 
-  if (view === 'messages' && currentUser && onSendJobChatMessage) {
+  if (view === 'messages' && currentUser && onSendJobChatMessage && onSendSupportMessage) {
     return page(
       'messages',
       <ClientMessagesPanel
@@ -301,11 +322,17 @@ export function ClientDashboard({
         currentUser={currentUser}
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
+        supportTickets={supportTickets}
         onSendJobChatMessage={onSendJobChatMessage}
+        onSendSupportMessage={onSendSupportMessage}
         initialChatRequestId={jobChatRequestId}
         initialChatOpen={openJobChat}
         onChatRequestIdChange={onJobChatRequestIdChange}
         onChatOpenChange={onJobChatOpenChange}
+        initialSupportTicketId={supportTicketId}
+        onSupportTicketIdChange={onSupportTicketIdChange}
+        onOpenCompose={onOpenSupportCompose}
+        onOpenReport={onOpenSupportReport}
       />
     );
   }
@@ -318,15 +345,8 @@ export function ClientDashboard({
         guards={guards}
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
-        onBack={() => navigate('home')}
-        currentUser={currentUser}
         jobChatThreads={jobChatThreads}
-        jobChatMessages={jobChatMessages}
-        onSendJobChatMessage={onSendJobChatMessage}
-        initialChatRequestId={jobChatRequestId}
-        initialChatOpen={openJobChat}
-        onChatRequestIdChange={onJobChatRequestIdChange}
-        onChatOpenChange={onJobChatOpenChange}
+        onOpenJobChat={openMessages}
       />
     );
   }
@@ -366,7 +386,7 @@ export function ClientDashboard({
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
         onSendJobChatMessage={onSendJobChatMessage}
-        onOpenJobChat={onOpenJobChat}
+        onOpenJobChat={openMessages}
       />
     );
   }

@@ -54,6 +54,7 @@ export interface GuardJobView {
   payoutStatus?: GuardPayoutStatus;
   payoutMethod?: PaymentMethod;
   cashPayoutRequested?: boolean;
+  guardPayoutAvailable?: boolean;
 }
 
 export interface GuardPayoutView {
@@ -129,9 +130,15 @@ export function getShiftPayDisplay(
   }
 
   if (job.payoutStatus === 'processing') {
+    if (!job.guardPayoutAvailable) {
+      return {
+        headline: 'Pay pending release',
+        subtext: 'Platform staff will make your pay available to collect',
+      };
+    }
     return {
-      headline: 'Payout processing',
-      subtext: 'Stripe transfer is on the way',
+      headline: 'Ready to collect',
+      subtext: 'Send a bank or cash pickup invoice from Pay',
     };
   }
 
@@ -195,6 +202,7 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
     payoutMethod:
       req.paymentStatus === 'released' && req.guardPayoutMethod ? req.guardPayoutMethod : undefined,
     cashPayoutRequested: !!req.guardCashPayoutRequested,
+    guardPayoutAvailable: !!req.guardPayoutAvailable,
   };
 }
 

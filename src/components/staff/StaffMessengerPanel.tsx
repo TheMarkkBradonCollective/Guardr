@@ -27,12 +27,6 @@ export function StaffMessengerPanel({
 
   return (
     <div className="staff-split-pane-detail flex flex-col min-h-[420px] h-full">
-      <div className="staff-pane-header">
-        <h2 className="font-bold text-sm">Staff chat</h2>
-        <p className="text-xs text-brand-text-muted mt-1">
-          Internal staff-only channel — not visible to clients or guards.
-        </p>
-      </div>
       <div className="flex-1 min-h-0">
         <ChatThreadPanel
           messages={sortedStaffMessages(messages)}

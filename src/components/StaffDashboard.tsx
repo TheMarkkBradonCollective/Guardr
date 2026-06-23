@@ -43,6 +43,7 @@ import {
   computePlatformStats,
   computeWeeklyCompletedJobs,
   isStaffOpsMapSection,
+  isStaffMessagesSection,
   StaffSection,
   type ApprovalQueueId,
 } from '../lib/staffOps';
@@ -58,11 +59,9 @@ import { StaffTeamPanel } from './staff/StaffTeamPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
-import { StaffSupportPanel } from './staff/StaffSupportPanel';
-import { StaffJobChatsPanel } from './staff/StaffJobChatsPanel';
-import { StaffMessengerPanel } from './staff/StaffMessengerPanel';
+import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
-import { activeJobChatCount } from '../lib/jobChat';
+import { staffMessagesBadge } from '../lib/messagesInbox';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -119,6 +118,7 @@ interface StaffDashboardProps {
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
+  onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
@@ -126,6 +126,7 @@ interface StaffDashboardProps {
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
@@ -229,6 +230,7 @@ export function StaffDashboard({
   onDenyGuardApplication,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
+  onMakeGuardPayoutAvailable,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
@@ -236,6 +238,7 @@ export function StaffDashboard({
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
   isDbConnected,
@@ -379,12 +382,13 @@ export function StaffDashboard({
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
       support: openTicketCount(supportTickets),
-      'team-chat': undefined,
-      'job-chats': activeJobChatCount(jobChatThreads),
+      messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
     }),
     [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
+
+  const [messagesDetailOpen, setMessagesDetailOpen] = useState(false);
 
   const renderSection = () => {
     switch (section) {
@@ -468,6 +472,7 @@ export function StaffDashboard({
             onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
+            feeConfig={platformSettings.feeConfig}
           />
         );
       case 'guards':
@@ -545,42 +550,31 @@ export function StaffDashboard({
         );
       case 'incidents':
         return <StaffIncidentsPanel incidents={incidents} onOpenJob={openJob} />;
+      case 'messages':
       case 'support':
-        return onSendSupportMessage && onUpdateSupportStatus ? (
-          <StaffSupportPanel
-            tickets={supportTickets}
-            currentUser={currentUser}
-            onSendMessage={onSendSupportMessage}
-            onUpdateStatus={onUpdateSupportStatus}
-            selectedTicketId={selectedSupportTicketId}
-            onSelectedTicketIdChange={onSelectedSupportTicketIdChange}
-            initialSelectedTicketId={selectedSupportTicketId}
-          />
-        ) : null;
       case 'team-chat':
-        return onSendStaffMessage ? (
-          <div className="app-messages-hub h-full min-h-0">
-            <StaffMessengerPanel
-              messages={staffMessages}
-              currentUser={currentUser}
-              onSend={onSendStaffMessage}
-              onRefresh={onRefreshStaffMessages}
-            />
-          </div>
-        ) : null;
       case 'job-chats':
-        return onSendJobChat ? (
+        return onSendStaffMessage && onSendJobChat && onSendSupportMessage && onUpdateSupportStatus ? (
           <div className="app-messages-hub h-full min-h-0">
-            <StaffJobChatsPanel
+            <StaffMessagesPanel
               requests={requests}
               guards={guards}
               threads={jobChatThreads}
               messages={jobChatMessages}
+              staffMessages={staffMessages}
+              supportTickets={supportTickets}
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
-              selectedRequestId={selectedJobChatRequestId}
-              onSelectedRequestIdChange={onSelectedJobChatRequestIdChange}
-              initialSelectedRequestId={selectedJobChatRequestId}
+              onSendStaffMessage={onSendStaffMessage}
+              onSendSupportMessage={onSendSupportMessage}
+              onUpdateSupportStatus={onUpdateSupportStatus}
+              selectedJobChatRequestId={selectedJobChatRequestId}
+              onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
+              selectedSupportTicketId={selectedSupportTicketId}
+              onSelectedSupportTicketIdChange={onSelectedSupportTicketIdChange}
+              initialJobChatRequestId={selectedJobChatRequestId}
+              initialSupportTicketId={selectedSupportTicketId}
+              onDetailOpenChange={setMessagesDetailOpen}
             />
           </div>
         ) : null;
@@ -597,6 +591,7 @@ export function StaffDashboard({
               allowCash: platformSettings.paymentCashEnabled,
               allowStripe: platformSettings.paymentStripeEnabled,
             }}
+            onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
@@ -604,6 +599,7 @@ export function StaffDashboard({
             onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
+            onMarkCashDepositManually={onMarkCashDepositManually}
             onDepositCashToStripe={onDepositCashToStripe}
             onCompletePayoutInvoice={onCompletePayoutInvoice}
           />
@@ -665,6 +661,7 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
+      hideHeader={isStaffMessagesSection(section) && messagesDetailOpen}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}
