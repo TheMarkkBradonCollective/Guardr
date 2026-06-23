@@ -244,7 +244,7 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
-import { detectLateClockOutOvertime, applyOvertimePaidBilling } from './lib/shiftBilling';
+import { detectLateClockOutOvertime, applyOvertimePaidBilling, computeOvertimeAmount } from './lib/shiftBilling';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -1365,6 +1365,12 @@ export default function App() {
         overtimeStatus: r.overtime_status ?? undefined,
         overtimeGuardApprovedAt: r.overtime_guard_approved_at || undefined,
         overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
+        overtimeDisputeReason: r.overtime_dispute_reason || undefined,
+        overtimeDisputedAt: r.overtime_disputed_at || undefined,
+        overtimeDisputeResolvedAt: r.overtime_dispute_resolved_at || undefined,
+        overtimeDisputeResolution: r.overtime_dispute_resolution || undefined,
+        overtimeOriginalHours: r.overtime_original_hours != null ? Number(r.overtime_original_hours) : undefined,
+        overtimeOriginalAmount: r.overtime_original_amount != null ? Number(r.overtime_original_amount) : undefined,
         overtimePaymentStatus: r.overtime_payment_status ?? undefined,
         overtimeClientPaymentMethod: parsePaymentMethod(r.overtime_client_payment_method),
         overtimeClientCashPaymentRequested: !!r.overtime_client_cash_payment_requested,
@@ -4241,6 +4247,147 @@ export default function App() {
     appToast('Overtime approved. Pay the difference to settle the bill.', 'success');
   };
 
+  const handleClientDisputeOvertime = async (requestId: string, reason: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      appToast('Please explain why you are disputing this charge.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
+      appToast('This overtime charge cannot be disputed right now.', 'error');
+      return;
+    }
+    const disputedAt = new Date().toISOString();
+    const originalHours = req.overtimeHours ?? 0;
+    const originalAmount = req.overtimeAmount ?? 0;
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              overtimeStatus: 'disputed' as const,
+              overtimeDisputeReason: trimmed,
+              overtimeDisputedAt: disputedAt,
+              overtimeOriginalHours: originalHours,
+              overtimeOriginalAmount: originalAmount,
+            }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_status: 'disputed',
+          overtime_dispute_reason: trimmed,
+          overtime_disputed_at: disputedAt,
+          overtime_original_hours: originalHours,
+          overtime_original_amount: originalAmount,
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req.location,
+        body: `Client disputed $${originalAmount.toFixed(2)} late clock-out charge on "${req.title}".`,
+      });
+    }
+    appToast('Dispute submitted. Staff will review the evidence and update the charge.', 'success');
+  };
+
+  const handleStaffResolveOvertimeDispute = async (
+    requestId: string,
+    action: 'waive' | 'uphold' | 'adjust',
+    options?: { adjustedHours?: number; resolutionNote?: string }
+  ) => {
+    if (!currentUser || !isStaffRole(currentUser.role)) {
+      appToast('You do not have permission to resolve disputes.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'disputed') {
+      appToast('This overtime dispute cannot be resolved right now.', 'error');
+      return;
+    }
+
+    const resolvedAt = new Date().toISOString();
+    const resolutionNote =
+      options?.resolutionNote?.trim() ||
+      (action === 'waive' ? 'Charge waived' : action === 'uphold' ? 'Original charge upheld' : 'Charge adjusted');
+
+    let patch: Partial<SecurityRequest>;
+    const dbUpdate: Record<string, unknown> = {
+      overtime_dispute_resolved_at: resolvedAt,
+      overtime_dispute_resolution: resolutionNote,
+    };
+
+    if (action === 'waive') {
+      patch = {
+        overtimeStatus: 'waived',
+        overtimeHours: 0,
+        overtimeAmount: 0,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'waived',
+        overtime_hours: 0,
+        overtime_amount: 0,
+      });
+    } else if (action === 'uphold') {
+      const hours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
+      const amount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
+      patch = {
+        overtimeStatus: 'awaiting_payment',
+        overtimeHours: hours,
+        overtimeAmount: amount,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'awaiting_payment',
+        overtime_hours: hours,
+        overtime_amount: amount,
+      });
+    } else {
+      const hours = options?.adjustedHours;
+      if (!hours || hours <= 0) {
+        appToast('Enter valid adjusted overtime hours.', 'error');
+        return;
+      }
+      const amount = computeOvertimeAmount(hours, req.hourlyRate, req.guardsNeeded ?? 1);
+      patch = {
+        overtimeStatus: 'awaiting_payment',
+        overtimeHours: hours,
+        overtimeAmount: amount,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'awaiting_payment',
+        overtime_hours: hours,
+        overtime_amount: amount,
+      });
+    }
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, ...patch } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update(dbUpdate).eq('id', requestId);
+    }
+
+    const toastMessage =
+      action === 'waive'
+        ? 'Overtime charge waived.'
+        : action === 'uphold'
+          ? 'Original overtime charge upheld — client can pay.'
+          : `Overtime adjusted to ${patch.overtimeHours}h ($${(patch.overtimeAmount ?? 0).toFixed(2)}).`;
+    appToast(toastMessage, 'success');
+  };
+
   const handleClientRequestOvertimeCash = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     if (!platformAllowsCash(platformSettings)) {
@@ -6362,6 +6509,7 @@ export default function App() {
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}
+              onDisputeOvertime={handleClientDisputeOvertime}
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
@@ -6453,6 +6601,7 @@ export default function App() {
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
+          onResolveOvertimeDispute={handleStaffResolveOvertimeDispute}
           onApproveOvertimeCashPayment={handleApproveOvertimeCashPayment}
           onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
           onMarkOvertimeGuardPaidCash={handleMarkOvertimeGuardPaidCash}

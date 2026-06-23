@@ -1,7 +1,7 @@
 import { SecurityRequest } from '../types';
 import { computeGuardEarnings } from './payments';
 
-export type OvertimeStatus = 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
+export type OvertimeStatus = 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'disputed' | 'paid' | 'waived';
 
 /** @deprecated Use overtimeStatus === 'paid' */
 export type OvertimePaymentStatus = 'none' | 'unpaid' | 'paid';
@@ -29,6 +29,14 @@ export interface DetectedOvertime {
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+export function computeOvertimeAmount(
+  overtimeHours: number,
+  hourlyRate: number,
+  guardsNeeded = 1
+): number {
+  return roundMoney(overtimeHours * hourlyRate * guardsNeeded);
 }
 
 /** Record overtime on clock-out — does not change billed totals until client pays. */
@@ -77,6 +85,24 @@ export function canClientApproveOvertime(
   req: Pick<SecurityRequest, 'overtimeStatus' | 'overtimeGuardApprovedAt'>
 ): boolean {
   return req.overtimeStatus === 'pending_client' && !!req.overtimeGuardApprovedAt;
+}
+
+export function canClientDisputeOvertime(req: SecurityRequest): boolean {
+  return canClientApproveOvertime(req) && (req.overtimeAmount ?? 0) > 0;
+}
+
+export function isOvertimeDisputed(req: Pick<SecurityRequest, 'overtimeStatus'>): boolean {
+  return req.overtimeStatus === 'disputed';
+}
+
+export function isOvertimeWaived(req: Pick<SecurityRequest, 'overtimeStatus'>): boolean {
+  return req.overtimeStatus === 'waived';
+}
+
+export function canStaffResolveOvertimeDispute(
+  req: Pick<SecurityRequest, 'overtimeStatus'>
+): boolean {
+  return req.overtimeStatus === 'disputed';
 }
 
 export function isOvertimeAwaitingClientPayment(req: SecurityRequest): boolean {
@@ -173,8 +199,12 @@ export function overtimeStatusLabel(status?: OvertimeStatus): string {
       return 'Awaiting guard approval';
     case 'pending_client':
       return 'Awaiting client approval';
+    case 'disputed':
+      return 'Dispute under staff review';
     case 'awaiting_payment':
       return 'Awaiting client payment';
+    case 'waived':
+      return 'Overtime waived';
     case 'paid':
       return 'Overtime paid';
     default:
@@ -183,10 +213,16 @@ export function overtimeStatusLabel(status?: OvertimeStatus): string {
 }
 
 export function overtimePaymentLabel(req: SecurityRequest): string | undefined {
-  if (!hasOvertime(req)) return undefined;
+  if (!hasOvertime(req) && !isOvertimeWaived(req)) return undefined;
+  if (isOvertimeWaived(req)) {
+    return 'Late clock-out overtime — waived after dispute';
+  }
   const hoursLabel = req.overtimeHours ? `${req.overtimeHours}h` : 'extra time';
   if (isOvertimeClientPaid(req)) {
     return `Late clock-out (${hoursLabel}) — $${(req.overtimeAmount ?? 0).toFixed(2)} paid`;
+  }
+  if (isOvertimeDisputed(req)) {
+    return `Late clock-out (${hoursLabel}) — disputed, staff reviewing`;
   }
   if (isOvertimeAwaitingClientPayment(req)) {
     return `Late clock-out (${hoursLabel}) — $${(req.overtimeAmount ?? 0).toFixed(2)} due`;
