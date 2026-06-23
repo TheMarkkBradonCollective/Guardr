@@ -52,6 +52,7 @@ import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualif
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardMessengerPanel } from './guard/GuardMessengerPanel';
+import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';

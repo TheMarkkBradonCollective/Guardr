@@ -85,7 +85,7 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
           </p>
           <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
             Government ID, valid BSIS Guard Card, 8-hour PTA/UOF training, and the 32-hour BSIS course block are all
-            required to accept field jobs. Guardr verification is a trust badge for clients.
+            required on file to accept field jobs. Guardr verification is a trust badge for clients.
           </p>
         </div>
         <span className={`shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${levelBadge}`}>

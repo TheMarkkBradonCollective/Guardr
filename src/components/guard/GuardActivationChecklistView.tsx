@@ -6,7 +6,6 @@ import {
   formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   guardHasVerifiedIdForWork,
-  guardHasCredentialListed,
   guardMeets32HourBlock,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
@@ -106,15 +105,11 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               ? approved
                 ? 'Valid guard card on file — staff can activate your account'
                 : 'Valid guard card on file — staff will verify at activation'
-              : guardHasCredentialListed(guard, 'bsis-guard-card')
+              : checklist.guardCardSubmitted
                 ? approved
-                  ? 'Guard card listed — upload document photo so staff can activate your account'
-                  : 'Guard card listed — add document photo before activation'
-                : checklist.guardCardSubmitted
-                  ? approved
-                    ? 'On file — staff must confirm valid before activation'
-                    : 'On file — verified after profile approval'
-                  : 'Upload in the Guard Card section of your profile'
+                  ? 'On file — staff must confirm valid before activation'
+                  : 'On file — verified after profile approval'
+                : 'Upload in the Guard Card section of your profile'
           }
         />
         <StepRow
@@ -134,7 +129,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
               ? progress.thirtyTwoHourRollup
                 ? '32-hour completion certificate on file'
                 : `All ${progress.total32HourCourses} courses on file`
-              : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0 || progress.listed32HourCount > 0
+              : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0
                 ? `${formatThirtyTwoHourCourseProgressCounts(progress)} — finish in Credentials under 32-Hour BSIS Course Block`
                 : 'Upload in Credentials — all 9 individual course certificates or one 32-hour completion certificate.'
           }
@@ -152,9 +147,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       )}
       {approved && !guardMeetsLevel1(guard) && (
         <p className="text-xs text-amber-400 font-medium pt-3 border-t border-brand-border mt-3">
-          {guardHasCredentialListed(guard, 'bsis-guard-card')
-            ? 'Your guard card is listed but not on file — upload a document photo so staff can activate your account.'
-            : 'Upload a valid BSIS Guard Card so staff can activate your account.'}
+          Upload a valid BSIS Guard Card with document photos in Credentials so staff can activate your account.
         </p>
       )}
     </div>

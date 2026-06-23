@@ -93,7 +93,7 @@ export function CertItemCard({
         </button>
         <div className="app-cert-item-meta">
           {canAttachImage && <CertImageAttachButton compact onAttach={onAttachImage} />}
-          <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} />
+            <CredentialStatusBadges cert={cert} showUpload={showUploadBadge} staffMode={staffMode} />
           {cert.imageUrl && editing && !useModalEdit && cert.status !== 'rejected' && (
             <span className="inline-flex items-center gap-1 text-[10px] text-brand-text-muted" title="Photo locked">
               <Lock className="w-3 h-3" />

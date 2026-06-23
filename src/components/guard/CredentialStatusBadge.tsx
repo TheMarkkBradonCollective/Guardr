@@ -24,8 +24,19 @@ function Badge({ label, className }: { label: string; className: string }) {
   );
 }
 
-export function CredentialUploadBadge({ cert }: { cert: Certification }) {
-  return <Badge label={getCredentialUploadLabel(cert)} className={getCredentialUploadBadgeClass(cert)} />;
+export function CredentialUploadBadge({
+  cert,
+  staffMode = false,
+}: {
+  cert: Certification;
+  staffMode?: boolean;
+}) {
+  return (
+    <Badge
+      label={getCredentialUploadLabel(cert, { staffMode })}
+      className={getCredentialUploadBadgeClass(cert)}
+    />
+  );
 }
 
 export function CredentialVerificationBadge({ cert }: { cert: Certification }) {
@@ -38,16 +49,18 @@ export function CredentialStatusBadges({
   cert,
   showUpload = true,
   showVerification = true,
+  staffMode = false,
 }: {
   cert: Certification;
   showUpload?: boolean;
   showVerification?: boolean;
+  staffMode?: boolean;
 }) {
   const verified = cert.status === 'verified';
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
-      {showUpload && !verified && <CredentialUploadBadge cert={cert} />}
+      {showUpload && !verified && <CredentialUploadBadge cert={cert} staffMode={staffMode} />}
       {showVerification && <CredentialVerificationBadge cert={cert} />}
     </div>
   );

@@ -233,7 +233,9 @@ export function GuardCardPanel({
               {uploadStatus === 'missing'
                 ? 'Not on file'
                 : uploadStatus === 'listed'
-                  ? 'Listed — document photo required'
+                  ? staffMode
+                    ? 'Listed — document photo required'
+                    : 'Not on file'
                   : uploadStatus === 'expired'
                     ? 'On file · expired'
                     : checklist.guardCardVerified

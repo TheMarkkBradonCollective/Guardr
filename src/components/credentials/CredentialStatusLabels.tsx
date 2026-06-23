@@ -14,26 +14,40 @@ export function CredentialSectionStatusBadge({ label }: { label: string }) {
 
 export type CredentialListStatus = CourseUploadStatus | 'not-listed';
 
-export function credentialListStatusLabel(status: CredentialListStatus): string {
-  if (status === 'not-listed') return 'Not listed';
-  return getCourseUploadStatusLabel(status);
+export function credentialListStatusLabel(
+  status: CredentialListStatus,
+  options?: { staffMode?: boolean }
+): string {
+  if (status === 'not-listed') return options?.staffMode ? 'Not listed' : 'Missing';
+  return getCourseUploadStatusLabel(status, options);
 }
 
 /** Row-level upload status — matches 32-hour course rows; missing/not-listed use the same warning badge. */
-export function CredentialListStatusBadge({ status }: { status: CredentialListStatus }) {
+export function CredentialListStatusBadge({
+  status,
+  staffMode = false,
+}: {
+  status: CredentialListStatus;
+  staffMode?: boolean;
+}) {
   if (status === 'on-file') {
     return <span className="shrink-0 text-[10px] font-semibold text-brand-primary">On file</span>;
   }
   if (status === 'listed') {
-    return (
-      <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">Listed</span>
-    );
+    if (staffMode) {
+      return (
+        <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">Listed</span>
+      );
+    }
+    return <CredentialSectionStatusBadge label="Missing" />;
   }
   if (status === 'expired') {
     return <CredentialSectionStatusBadge label="On file · Expired" />;
   }
   if (status === 'not-listed') {
-    return <CredentialSectionStatusBadge label="Not listed" />;
+    return (
+      <CredentialSectionStatusBadge label={staffMode ? 'Not listed' : 'Missing'} />
+    );
   }
   return <CredentialSectionStatusBadge label="Missing" />;
 }

@@ -190,7 +190,7 @@ export function GuardThirtyTwoHourPanel({
                 : progress.thirtyTwoHourRollup
                   ? '32-hour block complete (rollup cert on file)'
                   : '32-hour block complete (all 9 courses on file)'
-              : formatThirtyTwoHourCourseProgressCounts(progress)}
+              : formatThirtyTwoHourCourseProgressCounts(progress, { staffMode })}
           </span>
           <span className="text-brand-text-muted">{progressPct}%</span>
         </div>
@@ -223,6 +223,7 @@ export function GuardThirtyTwoHourPanel({
         </p>
         {courses.map((course) => {
           const uploadStatus = getCourseUploadStatus(guard, course.id);
+          const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
           const uploaded = certsForCatalogId(guard, course.id);
 
           return (
@@ -230,16 +231,14 @@ export function GuardThirtyTwoHourPanel({
               <div className="flex items-start justify-between gap-3">
                 <p
                   className={`text-sm font-semibold min-w-0 ${
-                    uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'
+                    fullyOnFile ? 'text-brand-text' : 'text-brand-text-muted'
                   }`}
                 >
                   {course.name}
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
-                  <CredentialListStatusBadge status={uploadStatus} />
-                  {canUpload && (
-                    <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
-                  )}
+                  <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />
+                  {canUpload && <CredentialSectionAddButton onClick={() => startAdd(course.id)} />}
                 </div>
               </div>
 
