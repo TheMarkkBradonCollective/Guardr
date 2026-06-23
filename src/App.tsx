@@ -244,7 +244,13 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
-import { detectLateClockOutOvertime, applyOvertimePaidBilling, computeOvertimeAmount } from './lib/shiftBilling';
+import {
+  detectLateClockOutOvertime,
+  applyOvertimePaidBilling,
+  computeOvertimeAmount,
+  validateDisputeClaimedClockOut,
+  type OvertimeDisputeInput,
+} from './lib/shiftBilling';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -1367,6 +1373,7 @@ export default function App() {
         overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
         overtimeDisputeReason: r.overtime_dispute_reason || undefined,
         overtimeDisputedAt: r.overtime_disputed_at || undefined,
+        overtimeDisputeClaimedClockOutAt: r.overtime_dispute_claimed_clock_out_at || undefined,
         overtimeDisputeResolvedAt: r.overtime_dispute_resolved_at || undefined,
         overtimeDisputeResolution: r.overtime_dispute_resolution || undefined,
         overtimeOriginalHours: r.overtime_original_hours != null ? Number(r.overtime_original_hours) : undefined,
@@ -4247,9 +4254,9 @@ export default function App() {
     appToast('Overtime approved. Pay the difference to settle the bill.', 'success');
   };
 
-  const handleClientDisputeOvertime = async (requestId: string, reason: string) => {
+  const handleClientDisputeOvertime = async (requestId: string, input: OvertimeDisputeInput) => {
     if (!currentUser || currentUser.role !== 'client') return;
-    const trimmed = reason.trim();
+    const trimmed = input.reason.trim();
     if (!trimmed) {
       appToast('Please explain why you are disputing this charge.', 'error');
       return;
@@ -4257,6 +4264,11 @@ export default function App() {
     const req = requests.find((r) => r.id === requestId);
     if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
       appToast('This overtime charge cannot be disputed right now.', 'error');
+      return;
+    }
+    const clockOutError = validateDisputeClaimedClockOut(input.claimedClockOutAt, req);
+    if (clockOutError) {
+      appToast(clockOutError, 'error');
       return;
     }
     const disputedAt = new Date().toISOString();
@@ -4270,6 +4282,7 @@ export default function App() {
               overtimeStatus: 'disputed' as const,
               overtimeDisputeReason: trimmed,
               overtimeDisputedAt: disputedAt,
+              overtimeDisputeClaimedClockOutAt: input.claimedClockOutAt,
               overtimeOriginalHours: originalHours,
               overtimeOriginalAmount: originalAmount,
             }
@@ -4283,6 +4296,7 @@ export default function App() {
           overtime_status: 'disputed',
           overtime_dispute_reason: trimmed,
           overtime_disputed_at: disputedAt,
+          overtime_dispute_claimed_clock_out_at: input.claimedClockOutAt,
           overtime_original_hours: originalHours,
           overtime_original_amount: originalAmount,
         })

@@ -551,6 +551,7 @@ export interface SecurityRequest {
   overtimeClientApprovedAt?: string;
   overtimeDisputeReason?: string;
   overtimeDisputedAt?: string;
+  overtimeDisputeClaimedClockOutAt?: string;
   overtimeDisputeResolvedAt?: string;
   overtimeDisputeResolution?: string;
   overtimeOriginalHours?: number;

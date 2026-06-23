@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { computeLateClockOutHours, computeOvertimeAmount } from './shiftBilling';
 import {
   isSelfSubmittedClientAccount,
   isUserSubmittedPendingCert,
@@ -161,6 +162,9 @@ export interface OpsDispute {
   openedAt: string;
   scheduledEnd?: string;
   clockOutAt?: string;
+  clientClaimedClockOutAt?: string;
+  clientClaimedHours?: number;
+  clientClaimedAmount?: number;
   claimedHours?: number;
   claimedAmount?: number;
   hourlyRate?: number;
@@ -691,6 +695,15 @@ export function buildDisputes(
     const claimedHours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
     const claimedAmount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
     const clockOutAt = req.checkOutAudit?.checkedAt;
+    const clientClaimedClockOutAt = req.overtimeDisputeClaimedClockOutAt;
+    const clientClaimedHours =
+      clientClaimedClockOutAt != null
+        ? computeLateClockOutHours(clientClaimedClockOutAt, req.endDate)
+        : undefined;
+    const clientClaimedAmount =
+      clientClaimedHours != null
+        ? computeOvertimeAmount(clientClaimedHours, req.hourlyRate, req.guardsNeeded ?? 1)
+        : undefined;
     const guardApprovedAt = req.overtimeGuardApprovedAt;
 
     disputes.push({
@@ -708,6 +721,9 @@ export function buildDisputes(
       openedAt: req.overtimeDisputedAt ?? req.endDate,
       scheduledEnd: req.endDate,
       clockOutAt,
+      clientClaimedClockOutAt,
+      clientClaimedHours,
+      clientClaimedAmount,
       claimedHours,
       claimedAmount,
       hourlyRate: req.hourlyRate,

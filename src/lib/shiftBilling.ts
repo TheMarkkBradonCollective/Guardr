@@ -91,6 +91,27 @@ export function canClientDisputeOvertime(req: SecurityRequest): boolean {
   return canClientApproveOvertime(req) && (req.overtimeAmount ?? 0) > 0;
 }
 
+export interface OvertimeDisputeInput {
+  reason: string;
+  claimedClockOutAt: string;
+}
+
+/** Validate client-stated guard clock-out time during an overtime dispute. */
+export function validateDisputeClaimedClockOut(
+  claimedClockOutAt: string,
+  req: Pick<SecurityRequest, 'startDate' | 'endDate' | 'checkInAudit' | 'checkOutAudit'>
+): string | null {
+  const claimedMs = new Date(claimedClockOutAt).getTime();
+  if (Number.isNaN(claimedMs)) return 'Enter a valid clock-out time.';
+
+  const minMs = new Date(req.checkInAudit?.checkedAt ?? req.startDate).getTime();
+  const maxMs = new Date(req.checkOutAudit?.checkedAt ?? new Date().toISOString()).getTime();
+
+  if (claimedMs < minMs) return 'Clock-out time cannot be before the guard checked in.';
+  if (claimedMs > maxMs) return 'Clock-out time cannot be after the recorded clock-out.';
+  return null;
+}
+
 export function isOvertimeDisputed(req: Pick<SecurityRequest, 'overtimeStatus'>): boolean {
   return req.overtimeStatus === 'disputed';
 }

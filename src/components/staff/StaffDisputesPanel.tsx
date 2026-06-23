@@ -77,7 +77,9 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => {
           const isOvertime = d.type === 'overtime';
-          const adjustHoursRaw = adjustHoursById[d.id] ?? String(d.claimedHours ?? '');
+          const defaultAdjustHours =
+            d.clientClaimedHours != null ? d.clientClaimedHours : d.claimedHours ?? 0;
+          const adjustHoursRaw = adjustHoursById[d.id] ?? String(defaultAdjustHours);
           const adjustedHours = Number(adjustHoursRaw);
           const adjustedAmount =
             isOvertime && adjustedHours > 0 && d.hourlyRate != null
@@ -112,15 +114,21 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
                       {d.scheduledEnd ? formatWhen(d.scheduledEnd) : '—'}
                     </p>
                     <p>
-                      <span className="text-brand-text">Clock-out time:</span>{' '}
+                      <span className="text-brand-text">Recorded clock-out:</span>{' '}
                       {d.clockOutAt ? formatWhen(d.clockOutAt) : '—'}
                     </p>
                     <p>
-                      <span className="text-brand-text">Claimed overtime:</span> {d.claimedHours ?? 0}h
+                      <span className="text-brand-text">Client claimed clock-out:</span>{' '}
+                      {d.clientClaimedClockOutAt ? formatWhen(d.clientClaimedClockOutAt) : '—'}
                     </p>
                     <p>
-                      <span className="text-brand-text">Claimed charge:</span> $
-                      {(d.claimedAmount ?? 0).toFixed(2)}
+                      <span className="text-brand-text">Billed overtime:</span> {d.claimedHours ?? 0}h ($
+                      {(d.claimedAmount ?? 0).toFixed(2)})
+                    </p>
+                    <p>
+                      <span className="text-brand-text">Client claimed overtime:</span>{' '}
+                      {d.clientClaimedHours != null ? `${d.clientClaimedHours}h` : '—'}
+                      {d.clientClaimedAmount != null ? ` ($${d.clientClaimedAmount.toFixed(2)})` : ''}
                     </p>
                   </div>
                 </div>

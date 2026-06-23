@@ -3,12 +3,14 @@
 ALTER TABLE security_requests
   ADD COLUMN IF NOT EXISTS overtime_dispute_reason TEXT,
   ADD COLUMN IF NOT EXISTS overtime_disputed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS overtime_dispute_claimed_clock_out_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS overtime_dispute_resolved_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS overtime_dispute_resolution TEXT,
   ADD COLUMN IF NOT EXISTS overtime_original_hours NUMERIC(10, 2),
   ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
 
 COMMENT ON COLUMN security_requests.overtime_dispute_reason IS 'Client explanation when disputing late clock-out overtime';
+COMMENT ON COLUMN security_requests.overtime_dispute_claimed_clock_out_at IS 'Client-stated actual guard clock-out time when disputing overtime';
 COMMENT ON COLUMN security_requests.overtime_original_hours IS 'Overtime hours claimed when the client opened a dispute';
 COMMENT ON COLUMN security_requests.overtime_original_amount IS 'Overtime amount claimed when the client opened a dispute';
 
