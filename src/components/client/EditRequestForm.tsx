@@ -6,6 +6,7 @@ import { computeGuardPay } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { listingFieldsFromJob } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
+import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { operationalDetailsFromJob, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
@@ -162,21 +163,27 @@ export function EditRequestForm({
         <label className="uber-label block mb-1">Address</label>
         <input value={address} onChange={(e) => setAddress(e.target.value)} className="uber-input w-full" />
       </div>
-      {address.trim().length > 3 && state.length === 2 && (
-        <JobLocationCoordsFields
-          latitude={latitude}
-          longitude={longitude}
-          onCoordsChange={(coords) => {
-            if (coords) {
-              setLatitude(coords.lat);
-              setLongitude(coords.lng);
-            } else {
-              setLatitude(undefined);
-              setLongitude(undefined);
-            }
-          }}
-        />
-      )}
+      <UseCurrentLocationButton
+        onLocated={({ coords, addressLine, stateCode }) => {
+          setLatitude(coords.lat);
+          setLongitude(coords.lng);
+          if (addressLine) setAddress(addressLine);
+          if (stateCode) setState(stateCode);
+        }}
+      />
+      <JobLocationCoordsFields
+        latitude={latitude}
+        longitude={longitude}
+        onCoordsChange={(coords) => {
+          if (coords) {
+            setLatitude(coords.lat);
+            setLongitude(coords.lng);
+          } else {
+            setLatitude(undefined);
+            setLongitude(undefined);
+          }
+        }}
+      />
       {!scheduleLocked && (
         <>
           <div className="grid grid-cols-2 gap-3">

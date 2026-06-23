@@ -36,14 +36,15 @@ Every job offer moves through these statuses:
 
 1. Go to **Home → Post job offer** (or Jobs).
 2. Enter **address**, **state**, and optional **site name**.
-3. Optionally paste **latitude and longitude** from Google Maps or GPS. If you skip coordinates, the job is flagged and staff are notified to add them.
+3. Tap **Use current location** to fill GPS coordinates (and address when available), or paste latitude and longitude manually. If you skip coordinates, the job is flagged and staff are notified to add them.
 4. Enter schedule, requirements, and pay.
 5. Submit — status becomes **Pending review**.
 
 **Direct request** — hire a specific guard from their profile:
 
 1. Open **Guards**, pick a guard, tap **Request this guard**.
-2. Fill in shift details and submit.
+2. Fill in shift details — use **Use current location** on the address step when posting from the job site.
+3. Submit.
 
 ### 3. Staff approves the listing
 
@@ -160,7 +161,7 @@ When a job is **Accepted** and clock-in is open (15 minutes before start):
 
 ### 3. Jobs panel
 
-- Approve pending listings, edit title/location, assign guards.
+- Approve pending listings, edit title/location (including **Use current location**), assign guards.
 - Upload **self-audit** or **spot-check** photos when guards skipped audit or sent photos offline.
 - Monitor **No Self Audit** / **No Spot Check** flags.
 

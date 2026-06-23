@@ -49,7 +49,7 @@ export function JobLocationCoordsFields({
           Map coordinates (optional)
         </p>
         <p className="text-[11px] text-brand-text-muted mt-1 leading-snug">
-          Paste latitude and longitude from Google Maps or GPS. If left blank, staff will be notified to set the pin.
+          Coordinates are set automatically when you use current location, or enter them manually below.
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

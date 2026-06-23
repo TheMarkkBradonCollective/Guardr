@@ -17,6 +17,7 @@ import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
+import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -226,6 +227,14 @@ export function RequestSecurityFlow({
                 autoFocus
               />
             </div>
+            <UseCurrentLocationButton
+              onLocated={({ coords, addressLine, stateCode }) => {
+                setLatitude(coords.lat);
+                setLongitude(coords.lng);
+                if (addressLine) setAddress(addressLine);
+                if (stateCode) setJobState(stateCode);
+              }}
+            />
             <div>
               <label className="uber-label block mb-1.5">State</label>
               <select
@@ -250,21 +259,19 @@ export function RequestSecurityFlow({
                 className="uber-input rounded-xl"
               />
             </div>
-            {address.trim().length > 3 && jobState.length === 2 && (
-              <JobLocationCoordsFields
-                latitude={latitude}
-                longitude={longitude}
-                onCoordsChange={(coords) => {
-                  if (coords) {
-                    setLatitude(coords.lat);
-                    setLongitude(coords.lng);
-                  } else {
-                    setLatitude(undefined);
-                    setLongitude(undefined);
-                  }
-                }}
-              />
-            )}
+            <JobLocationCoordsFields
+              latitude={latitude}
+              longitude={longitude}
+              onCoordsChange={(coords) => {
+                if (coords) {
+                  setLatitude(coords.lat);
+                  setLongitude(coords.lng);
+                } else {
+                  setLatitude(undefined);
+                  setLongitude(undefined);
+                }
+              }}
+            />
           </div>
         )}
 
