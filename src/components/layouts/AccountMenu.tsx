@@ -1,9 +1,16 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, LogOut, User } from 'lucide-react';
+import { ChevronDown, LogOut, LucideIcon, User } from 'lucide-react';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+
+export interface AccountMenuLink {
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+  active?: boolean;
+}
 
 export interface AccountMenuProps {
   userName: string;
@@ -15,6 +22,8 @@ export interface AccountMenuProps {
   onSignOut: () => void;
   /** Highlight avatar when profile is the active screen */
   active?: boolean;
+  extraLinks?: AccountMenuLink[];
+  footer?: React.ReactNode;
 }
 
 function useMenuPosition(open: boolean, triggerRef: React.RefObject<HTMLButtonElement | null>) {
@@ -53,6 +62,8 @@ export function AccountMenu({
   onOpenProfile,
   onSignOut,
   active = false,
+  extraLinks = [],
+  footer,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -117,6 +128,30 @@ export function AccountMenu({
         </button>
       </div>
 
+      {extraLinks.length > 0 && (
+        <div className="p-2 border-b border-brand-border">
+          {extraLinks.map((link) => (
+            <button
+              key={link.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                link.onClick();
+                close();
+              }}
+              className={`account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
+                link.active
+                  ? 'text-brand-primary bg-brand-primary/10'
+                  : 'text-brand-text hover:bg-brand-bg-sec'
+              }`}
+            >
+              <link.icon className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+              {link.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="px-4 py-3 border-b border-brand-border">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Appearance</p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="w-full justify-center" />
@@ -133,6 +168,10 @@ export function AccountMenu({
           Sign out
         </button>
       </div>
+
+      {footer ? (
+        <div className="px-4 py-3 border-t border-brand-border bg-brand-bg-sec/40">{footer}</div>
+      ) : null}
     </div>
   ) : null;
 
