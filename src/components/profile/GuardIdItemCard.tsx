@@ -10,8 +10,7 @@ import {
   ID_VERIFICATION_POLICY_HINT,
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
-import { CredentialListStatusBadge, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
-import { staffCredentialUploadLabel } from '../../lib/guardCredentialUpload';
+import { CredentialListStatusBadge, CredentialSectionAddButton, CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
 import type {
@@ -106,48 +105,40 @@ export function GuardIdItemCard({
   if (asCredentialSection) {
     return (
       <section className="app-form-section space-y-3">
-        <div>
-          <p className="uber-label flex items-center gap-2 flex-wrap">
-            <IdCard className="w-4 h-4 text-brand-primary" />
-            Government ID
-            {staffMode && uploadStatus === 'missing' &&
-              (canEdit ? (
-                <button type="button" onClick={() => setShowDetail(true)} className="inline-flex">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="uber-label flex items-center gap-2 flex-wrap">
+              <IdCard className="w-4 h-4 text-brand-primary" />
+              Government ID
+              {staffMode && uploadStatus === 'missing' &&
+                (canEdit ? (
+                  <button type="button" onClick={() => setShowDetail(true)} className="inline-flex">
+                    <CredentialSectionStatusBadge label="Missing" />
+                  </button>
+                ) : (
                   <CredentialSectionStatusBadge label="Missing" />
-                </button>
-              ) : (
-                <CredentialSectionStatusBadge label="Missing" />
-              ))}
-          </p>
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
-          </p>
-          <p
-            className={`text-xs font-semibold mt-2 ${
-              uploadStatus === 'on-file' ? 'text-brand-primary' : 'text-brand-text-muted'
-            }`}
-          >
-            {getGovernmentIdUploadStatusSummary(guard)}
-          </p>
+                ))}
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
+            </p>
+            <p
+              className={`text-xs font-semibold mt-2 ${
+                uploadStatus === 'on-file' ? 'text-brand-primary' : 'text-brand-text-muted'
+              }`}
+            >
+              {getGovernmentIdUploadStatusSummary(guard)}
+            </p>
+          </div>
+          {canEdit && <CredentialSectionAddButton onClick={() => setShowDetail(true)} />}
         </div>
 
         {hasOnFile ? (
           <div className="app-cert-item-stack border-t border-brand-border">{cardBody}</div>
         ) : (
-          <>
-            <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
-              No government ID on file.
-            </p>
-            {canEdit && (
-              <button
-                type="button"
-                onClick={() => setShowDetail(true)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-text hover:underline"
-              >
-                {staffCredentialUploadLabel(staffMode, 'government ID')}
-              </button>
-            )}
-          </>
+          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+            No government ID on file.
+          </p>
         )}
 
         {guard.idVerificationRejectionReason && !hasOnFile && (
