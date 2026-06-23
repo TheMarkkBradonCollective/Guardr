@@ -85,15 +85,33 @@ export function JobBillingSummaryFromRequest({
   req: SecurityRequest;
   variant?: JobBillingVariant;
 }) {
+  const hasOvertime = (req.overtimeAmount ?? 0) > 0;
+  const scheduledPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
+
   return (
-    <JobBillingSummary
-      variant={variant}
-      hourlyRate={req.hourlyRate}
-      durationHours={req.durationHours}
-      estimatedPayout={req.estimatedPayout}
-      guardPay={req.guardPay}
-      platformFeePerHour={req.platformFeePerHour}
-    />
+    <div className="space-y-3">
+      <JobBillingSummary
+        variant={variant}
+        hourlyRate={req.hourlyRate}
+        durationHours={hasOvertime ? (req.scheduledDurationHours ?? req.durationHours) : req.durationHours}
+        estimatedPayout={hasOvertime ? scheduledPayout : req.estimatedPayout}
+        guardPay={req.guardPay}
+        platformFeePerHour={req.platformFeePerHour}
+      />
+      {hasOvertime && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
+          <span>
+            Late clock-out: <strong className="text-brand-text">+{req.overtimeHours}h</strong>
+          </span>
+          <span>
+            Overtime charge: <strong className="text-brand-text">+${(req.overtimeAmount ?? 0).toFixed(2)}</strong>
+          </span>
+          <span>
+            Total bill: <strong className="text-brand-primary">${req.estimatedPayout.toFixed(2)}</strong>
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 

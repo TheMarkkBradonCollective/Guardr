@@ -25,6 +25,7 @@ interface StaffPaymentsPanelProps {
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -44,6 +45,7 @@ function PipelineSection({
   onMakeGuardPayoutAvailable,
   onRefundPayment,
   onMarkClientPaidCash,
+  onMarkOvertimePaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
@@ -62,6 +64,7 @@ function PipelineSection({
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -95,6 +98,7 @@ function PipelineSection({
             onMakeGuardPayoutAvailable={onMakeGuardPayoutAvailable}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
@@ -124,6 +128,7 @@ export function StaffPaymentsPanel({
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onMarkOvertimePaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
@@ -143,6 +148,7 @@ export function StaffPaymentsPanel({
     onMakeGuardPayoutAvailable,
     onRefundPayment,
     onMarkClientPaidCash,
+    onMarkOvertimePaidCash,
     onApproveClientCashPayment,
     onRejectClientCashPayment,
     onMarkGuardPaidCash,

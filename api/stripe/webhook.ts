@@ -171,6 +171,55 @@ async function markCashDeposit(
   }
 }
 
+async function markOvertimePaid(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = await getSupabaseAdmin();
+  if (!db) return;
+
+  const amount = amountCents / 100;
+  const paidAt = new Date().toISOString();
+
+  await db
+    .from('security_requests')
+    .update({
+      overtime_payment_status: 'paid',
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount,
+        payment_method: 'stripe',
+        updated_at: paidAt,
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-overtime-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+  }
+}
+
 async function markJobReleased(jobId: string, transferId: string) {
   const db = await getSupabaseAdmin();
   if (!db) return;
@@ -203,6 +252,8 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
 
       if (session.metadata?.checkout_type === 'cash_deposit') {
         await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      } else if (session.metadata?.checkout_type === 'overtime') {
+        await markOvertimePaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else {
         await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       }
@@ -217,6 +268,28 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
       if (intent.metadata?.checkout_type === 'cash_deposit') {
         const db = await getSupabaseAdmin();
         if (db) {
+          await db
+            .from('payments')
+            .update({
+              status: 'paid',
+              stripe_payment_intent_id: intent.id,
+              amount: (intent.amount_received ?? intent.amount) / 100,
+              payment_method: 'stripe',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_payment_intent_id', intent.id);
+        }
+        break;
+      }
+
+      if (intent.metadata?.checkout_type === 'overtime') {
+        const db = await getSupabaseAdmin();
+        if (db) {
+          await db
+            .from('security_requests')
+            .update({ overtime_payment_status: 'paid' })
+            .eq('id', jobId);
+
           await db
             .from('payments')
             .update({

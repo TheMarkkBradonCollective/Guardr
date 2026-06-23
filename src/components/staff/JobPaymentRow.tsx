@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Banknote, Loader2, RotateCcw, Wallet } from 'lucide-react';
 import {
   canDirectorMarkClientPaidCash,
+  canDirectorMarkOvertimePaidCash,
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
   canDirectorPayGuardCash,
@@ -60,6 +61,7 @@ interface JobPaymentRowProps {
   onMakeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -78,6 +80,7 @@ export function JobPaymentRow({
   onMakeGuardPayoutAvailable,
   onRefundPayment,
   onMarkClientPaidCash,
+  onMarkOvertimePaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
@@ -85,7 +88,7 @@ export function JobPaymentRow({
   onMarkCashDepositManually,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'platformFee' | 'manualDeposit' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'overtime' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'platformFee' | 'manualDeposit' | null>(null);
 
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
@@ -104,6 +107,8 @@ export function JobPaymentRow({
     onRejectClientCashPayment;
   const canMarkClientCash =
     paymentGates.allowCash && isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
+  const canMarkOvertimeCash =
+    paymentGates.allowCash && isDirector && canDirectorMarkOvertimePaidCash(req) && onMarkOvertimePaidCash;
   const manualDepositDue = getManualCashDepositDue(req);
   const canManualDeposit =
     isDirector && canDirectorMarkCashDepositManually(req) && onMarkCashDepositManually;
@@ -177,7 +182,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canMarkOvertimeCash || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
             <button
@@ -212,6 +217,18 @@ export function JobPaymentRow({
             >
               {busy === 'client' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
               Client paid cash
+            </button>
+          )}
+
+          {canMarkOvertimeCash && (
+            <button
+              type="button"
+              onClick={() => run('overtime', onMarkOvertimePaidCash)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5"
+            >
+              {busy === 'overtime' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Overtime paid ${(req.overtimeAmount ?? 0).toFixed(2)}
             </button>
           )}
 

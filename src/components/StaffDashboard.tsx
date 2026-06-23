@@ -122,6 +122,7 @@ interface StaffDashboardProps {
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -233,6 +234,7 @@ export function StaffDashboard({
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onMarkOvertimePaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
@@ -590,6 +592,7 @@ export function StaffDashboard({
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}

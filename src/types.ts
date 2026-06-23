@@ -533,10 +533,20 @@ export interface SecurityRequest {
   startDate: string;
   endDate: string;
   durationHours: number;
+  /** Original scheduled duration before late clock-out billing adjustment */
+  scheduledDurationHours?: number;
   hourlyRate: number;
   guardPay?: number;
   platformFeePerHour?: number;
   estimatedPayout: number;
+  /** Original client bill before late clock-out billing adjustment */
+  scheduledEstimatedPayout?: number;
+  /** Extra hours billed when guard clocked out after scheduled end */
+  overtimeHours?: number;
+  /** Additional client charge for late clock-out */
+  overtimeAmount?: number;
+  /** Tracks whether the overtime difference has been collected */
+  overtimePaymentStatus?: 'none' | 'unpaid' | 'paid';
   status: JobStatus;
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;

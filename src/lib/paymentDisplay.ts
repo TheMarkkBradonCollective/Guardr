@@ -17,6 +17,7 @@ import {
   platformFeeLedgerLabel,
   stripeDepositLedgerLabel,
 } from './cashPayments';
+import { hasUnpaidOvertime } from './shiftBilling';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
 
 export type PaymentLedgerStatus = 'paid' | 'owed' | 'waiting' | 'na';
@@ -66,6 +67,16 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
     },
   ];
 
+  if ((req.overtimeAmount ?? 0) > 0) {
+    lines.push({
+      party: 'client',
+      label: 'Late clock-out',
+      amount: req.overtimeAmount ?? 0,
+      status: hasUnpaidOvertime(req) ? 'owed' : 'paid',
+      statusLabel: hasUnpaidOvertime(req) ? 'Overtime due' : 'Overtime paid',
+    });
+  }
+
   if (isCashClientPayment(req) && !clientUnpaid && !isPlatformFeeOnlyDeposit(req)) {
     const stripeSatisfied = isStripeDepositSatisfied(req);
     const stripeAmount = stripeSatisfied
@@ -104,10 +115,16 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
 /** Client-facing payment status — no internal ledger jargon */
 export function clientPaymentStatusLabel(
   status?: SecurityRequest['paymentStatus'],
-  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>
+  req?: Pick<
+    SecurityRequest,
+    'clientCashPaymentRequested' | 'paymentStatus' | 'overtimePaymentStatus' | 'overtimeAmount'
+  >
 ): string {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
     return 'Cash pending';
+  }
+  if (req && hasUnpaidOvertime(req as SecurityRequest)) {
+    return 'Overtime due';
   }
   switch (status) {
     case 'paid':
@@ -124,11 +141,17 @@ export function clientPaymentStatusLabel(
 export function clientPaymentStatusHint(
   status?: SecurityRequest['paymentStatus'],
   jobStatus?: SecurityRequest['status'],
-  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>,
+  req?: Pick<
+    SecurityRequest,
+    'clientCashPaymentRequested' | 'paymentStatus' | 'overtimePaymentStatus' | 'overtimeAmount'
+  >,
   gates?: { allowStripe: boolean; allowCash: boolean }
 ): string | undefined {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
     return 'Staff will confirm once your cash payment is received.';
+  }
+  if (req && hasUnpaidOvertime(req as SecurityRequest)) {
+    return `Your guard clocked out late. Pay the $${(req.overtimeAmount ?? 0).toFixed(2)} difference to settle the bill.`;
   }
   if (!status || status === 'unpaid') {
     if (jobStatus === 'pending-review') {
@@ -159,6 +182,13 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
   const stage = getPaymentPipelineStage(req);
   const guardPay = guardPayoutAmount(req);
   const clientBill = req.estimatedPayout;
+
+  if (hasUnpaidOvertime(req)) {
+    return {
+      headline: 'Late clock-out — overtime due',
+      detail: `Collect $${(req.overtimeAmount ?? 0).toFixed(2)} from the client for ${req.overtimeHours ?? 0}h past scheduled end.`,
+    };
+  }
 
   switch (stage) {
     case 'awaiting-client':

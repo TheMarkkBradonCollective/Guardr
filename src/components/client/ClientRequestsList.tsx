@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
-import { createCheckoutSession } from '../../lib/stripeApi';
+import { createCheckoutSession, createOvertimeCheckoutSession } from '../../lib/stripeApi';
+import { canClientPayOvertimeStripe } from '../../lib/cashPayments';
+import { hasUnpaidOvertime } from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -113,6 +115,7 @@ export function ClientRequestsList({
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
+  const [payingOvertimeJobId, setPayingOvertimeJobId] = useState<string | null>(null);
   const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -149,6 +152,26 @@ export function ClientRequestsList({
       showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
     } finally {
       setPayingJobId(null);
+    }
+  };
+
+  const handlePayOvertime = async (req: SecurityRequest) => {
+    setPayingOvertimeJobId(req.id);
+    try {
+      const amountCents = Math.round((req.overtimeAmount ?? 0) * 100);
+      const { url } = await createOvertimeCheckoutSession({
+        jobId: req.id,
+        clientEmail,
+        jobTitle: req.title,
+        amountCents,
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (e: unknown) {
+      showAppToast(e instanceof Error ? e.message : 'Unable to start overtime checkout', { tone: 'error' });
+    } finally {
+      setPayingOvertimeJobId(null);
     }
   };
 
@@ -466,6 +489,32 @@ export function ClientRequestsList({
                       <MessageCircle className="w-3.5 h-3.5" /> View job chat history
                     </button>
                   )}
+
+                {hasUnpaidOvertime(req) && (
+                  <div className="border-t border-brand-border pt-3 space-y-3 w-full">
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                      <p className="text-sm font-semibold text-amber-300">Late clock-out charge</p>
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end time.
+                        Pay the ${(req.overtimeAmount ?? 0).toFixed(2)} difference to settle the bill.
+                      </p>
+                    </div>
+                    {canClientPayOvertimeStripe(req) && (
+                      <button
+                        type="button"
+                        onClick={() => handlePayOvertime(req)}
+                        disabled={payingOvertimeJobId === req.id}
+                        className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
+                      >
+                        {payingOvertimeJobId === req.id ? (
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
+                        ) : (
+                          <><CreditCard className="w-3.5 h-3.5" /> Pay overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {onConfirmSelfAudit && (
                   <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />

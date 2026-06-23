@@ -35,6 +35,7 @@ import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from '
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorMarkClientPaidCash,
+  canDirectorMarkOvertimePaidCash,
   canDirectorPayGuardCash,
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
@@ -239,6 +240,7 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
+import { computeLateClockOutBilling } from './lib/shiftBilling';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -1352,6 +1354,11 @@ export default function App() {
         operationalDetails: normalizeJobOperationalDetails(r.operational_details),
         startDate: r.start_date, endDate: r.end_date,
         durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
+        scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
+        scheduledEstimatedPayout: r.scheduled_estimated_payout != null ? Number(r.scheduled_estimated_payout) : undefined,
+        overtimeHours: r.overtime_hours != null ? Number(r.overtime_hours) : undefined,
+        overtimeAmount: r.overtime_amount != null ? Number(r.overtime_amount) : undefined,
+        overtimePaymentStatus: r.overtime_payment_status ?? undefined,
         guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
         platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
         estimatedPayout: r.estimated_payout,
@@ -4112,6 +4119,61 @@ export default function App() {
     await applyClientPaidCash(requestId, req);
   };
 
+  const handleMarkOvertimePaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can record overtime cash payments.', 'error');
+      return;
+    }
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkOvertimePaidCash(req)) {
+      appToast('This job has no overtime balance to record.', 'error');
+      return;
+    }
+    const overtimeAmount = req.overtimeAmount ?? 0;
+    if (!(await showAppConfirm({
+      title: 'Record overtime payment?',
+      message: `Record client cash payment of $${overtimeAmount.toFixed(2)} for late clock-out on "${req.title}"?`,
+      confirmLabel: 'Record overtime paid',
+    }))) return;
+
+    const paymentId = `pay-overtime-cash-${Date.now()}`;
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, overtimePaymentStatus: 'paid' as const } : r
+      )
+    );
+    setPayments((prev) => [
+      ...prev,
+      {
+        id: paymentId,
+        jobId: requestId,
+        amount: overtimeAmount,
+        status: 'paid' as const,
+        paymentMethod: 'cash' as const,
+      },
+    ]);
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ overtime_payment_status: 'paid' })
+        .eq('id', requestId);
+      await supabase.from('payments').insert({
+        id: paymentId,
+        job_id: requestId,
+        amount: overtimeAmount,
+        status: 'paid',
+        payment_method: 'cash',
+      });
+    }
+
+    appToast(`Overtime payment of $${overtimeAmount.toFixed(2)} recorded.`, 'success');
+  };
+
   const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
     if (!currentUser || !canManagePlatformSettings(currentUser)) {
       appToast('Only the Owner can change platform settings.', 'error');
@@ -4863,12 +4925,27 @@ export default function App() {
     const completedGuardId =
       payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
 
+    const checkOutAt = payload.checkOutAudit?.checkedAt;
+    const lateBilling =
+      req && payload.status === 'completed' && checkOutAt
+        ? computeLateClockOutBilling(req, checkOutAt)
+        : null;
+
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
       if (payload.checkInAudit) updated.checkInAudit = payload.checkInAudit;
       if (nextMidShiftAudits) updated.midShiftAudits = nextMidShiftAudits;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
+      if (lateBilling) {
+        updated.scheduledDurationHours = lateBilling.scheduledDurationHours;
+        updated.scheduledEstimatedPayout = lateBilling.scheduledEstimatedPayout;
+        updated.overtimeHours = lateBilling.overtimeHours;
+        updated.overtimeAmount = lateBilling.overtimeAmount;
+        updated.durationHours = lateBilling.durationHours;
+        updated.estimatedPayout = lateBilling.estimatedPayout;
+        updated.overtimePaymentStatus = lateBilling.overtimePaymentStatus;
+      }
       if (payload.status) {
         updated.status = payload.status;
         if (payload.status === 'completed' && r.assignedGuardId) {
@@ -4887,6 +4964,15 @@ export default function App() {
       if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
       if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
+      if (lateBilling) {
+        updates.scheduled_duration_hours = lateBilling.scheduledDurationHours;
+        updates.scheduled_estimated_payout = lateBilling.scheduledEstimatedPayout;
+        updates.overtime_hours = lateBilling.overtimeHours;
+        updates.overtime_amount = lateBilling.overtimeAmount;
+        updates.duration_hours = lateBilling.durationHours;
+        updates.estimated_payout = lateBilling.estimatedPayout;
+        updates.overtime_payment_status = lateBilling.overtimePaymentStatus;
+      }
       if (payload.status) {
         updates.status = payload.status;
         if (payload.status === 'completed' && req?.paymentStatus === 'paid') {
@@ -4949,6 +5035,16 @@ export default function App() {
         guardName: guard?.name,
         location: req?.location,
         body: req?.checkOutAudit?.incidentReport?.description ?? 'Incident reported on active shift',
+      });
+    }
+
+    if (lateBilling && lateBilling.overtimeAmount > 0 && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req?.location,
+        body: `Late clock-out on "${req?.title}" — client owes $${lateBilling.overtimeAmount.toFixed(2)} for ${lateBilling.overtimeHours}h past scheduled end.`,
       });
     }
 
@@ -6113,6 +6209,7 @@ export default function App() {
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
+          onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
           onApproveClientCashPayment={handleApproveClientCashPayment}
           onRejectClientCashPayment={handleRejectClientCashPayment}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
