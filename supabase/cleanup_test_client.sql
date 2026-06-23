@@ -63,15 +63,11 @@ BEGIN
   DELETE FROM push_subscriptions
   WHERE  user_id = v_client_id;
 
-  -- ── 10. Push notification dedup log ──────────────────────────────
-  DELETE FROM push_notification_dedup
-  WHERE  user_id = v_client_id;
-
-  -- ── 11. Notification preferences ─────────────────────────────────
+  -- ── 10. Notification preferences ─────────────────────────────────
   DELETE FROM notification_preferences
   WHERE  user_id = v_client_id;
 
-  -- ── 12. Client row ────────────────────────────────────────────────
+  -- ── 11. Client row ────────────────────────────────────────────────
   DELETE FROM clients
   WHERE  id = v_client_id;
 
