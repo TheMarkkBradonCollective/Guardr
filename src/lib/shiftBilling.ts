@@ -1,18 +1,15 @@
 import { SecurityRequest } from '../types';
 import { computeGuardEarnings } from './payments';
-import { SHIFT_LATE_CLOCKOUT_MINUTES } from './shiftWindow';
 
 export type OvertimeStatus = 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
 
 /** @deprecated Use overtimeStatus === 'paid' */
 export type OvertimePaymentStatus = 'none' | 'unpaid' | 'paid';
 
-/** Milliseconds the guard clocked out after scheduled end (capped at late window). */
+/** Milliseconds the guard clocked out after scheduled end. */
 export function computeLateClockOutMs(checkOutAt: string, endDate: string): number {
   const lateMs = new Date(checkOutAt).getTime() - new Date(endDate).getTime();
-  if (lateMs <= 0) return 0;
-  const maxLateMs = SHIFT_LATE_CLOCKOUT_MINUTES * 60_000;
-  return Math.min(lateMs, maxLateMs);
+  return Math.max(0, lateMs);
 }
 
 /** Hours billed for late clock-out (0 when on time or early). */

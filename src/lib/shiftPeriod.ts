@@ -1,5 +1,4 @@
 import { computeDurationHours, formatDuration } from './dates';
-import { shiftClockOutClosesAt } from './shiftWindow';
 
 export interface ShiftPeriodSnapshot {
   totalMs: number;
@@ -35,7 +34,6 @@ export function getShiftPeriodSnapshot(
 ): ShiftPeriodSnapshot {
   const startMs = new Date(startDate).getTime();
   const endMs = new Date(endDate).getTime();
-  const windowEndMs = shiftClockOutClosesAt(endDate).getTime();
   const nowMs = now.getTime();
   const totalMs = Math.max(0, endMs - startMs);
   const totalHours = computeDurationHours(startDate, endDate);
@@ -62,6 +60,6 @@ export function getShiftPeriodSnapshot(
     progressPct,
     startsInMs,
     startsInLabel,
-    windowEndLabel: formatWindowEnd(new Date(windowEndMs)),
+    windowEndLabel: formatWindowEnd(new Date(endMs)),
   };
 }

@@ -9,7 +9,6 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
   shiftClockInOpensAt,
-  shiftClockOutClosesAt,
   shiftClockOutOpensAt,
   shiftDutyStartedAt,
 } from '../../lib/shiftWindow';
@@ -101,7 +100,6 @@ export function GuardActiveShift({
   const clockOutMsg = guardClockOutBlockedMessage(job, now);
   const clockInOpensLabel = formatClockWindowTime(shiftClockInOpensAt(job.startDate));
   const clockOutOpensLabel = formatClockWindowTime(shiftClockOutOpensAt(job.endDate));
-  const clockOutClosesLabel = formatClockWindowTime(shiftClockOutClosesAt(job.endDate));
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
@@ -257,14 +255,13 @@ export function GuardActiveShift({
               onConfirm={onEndShift}
               disabled={!clockOutOpen}
               disabledHint={
-                clockOutMsg ??
-                `Clock-out opens at ${clockOutOpensLabel} and closes at ${clockOutClosesLabel}.`
+                clockOutMsg ?? `Clock-out opens at ${clockOutOpensLabel} (scheduled end).`
               }
             />
             {clockOutOpen && (
               <p className="text-xs text-brand-text-muted text-center flex items-center justify-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                End window: {clockOutOpensLabel} – {clockOutClosesLabel}
+                Clock-out open from {clockOutOpensLabel}
               </p>
             )}
           </div>

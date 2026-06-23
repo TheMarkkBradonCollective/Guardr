@@ -3,19 +3,12 @@ import { SecurityRequest } from '../types';
 /** Guards may clock in this many minutes before scheduled start */
 export const SHIFT_EARLY_START_MINUTES = 15;
 
-/** Guards may clock out until this many minutes after scheduled end */
-export const SHIFT_LATE_CLOCKOUT_MINUTES = 15;
-
 export function shiftClockInOpensAt(startDate: string): Date {
   return new Date(new Date(startDate).getTime() - SHIFT_EARLY_START_MINUTES * 60_000);
 }
 
 export function shiftClockOutOpensAt(endDate: string): Date {
   return new Date(endDate);
-}
-
-export function shiftClockOutClosesAt(endDate: string): Date {
-  return new Date(new Date(endDate).getTime() + SHIFT_LATE_CLOCKOUT_MINUTES * 60_000);
 }
 
 /** ISO timestamp when the guard clocked in and went on duty. */
@@ -45,8 +38,7 @@ export function canGuardClockOut(
   job: Pick<SecurityRequest, 'endDate'>,
   now = new Date()
 ): boolean {
-  const t = now.getTime();
-  return t >= shiftClockOutOpensAt(job.endDate).getTime() && t <= shiftClockOutClosesAt(job.endDate).getTime();
+  return now.getTime() >= shiftClockOutOpensAt(job.endDate).getTime();
 }
 
 function formatWhen(d: Date): string {
@@ -70,13 +62,6 @@ export function guardClockOutBlockedMessage(
   job: Pick<SecurityRequest, 'endDate'>,
   now = new Date()
 ): string | null {
-  const t = now.getTime();
-  const end = shiftClockOutOpensAt(job.endDate).getTime();
-  if (t < end) {
-    return `Clock-out opens at scheduled end time (${formatWhen(shiftClockOutOpensAt(job.endDate))}).`;
-  }
-  if (t > shiftClockOutClosesAt(job.endDate).getTime()) {
-    return `Clock-out window closed (15 min after job end). Contact staff.`;
-  }
-  return null;
+  if (canGuardClockOut(job, now)) return null;
+  return `Clock-out opens at scheduled end time (${formatWhen(shiftClockOutOpensAt(job.endDate))}).`;
 }
