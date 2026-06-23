@@ -10,7 +10,7 @@ import {
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, computePlatformFee, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -34,6 +34,7 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Rate', 'Requirements', 
 
 interface DirectGuardRequestFlowProps {
   guard: SecurityGuard;
+  feeConfig: PlatformFeeConfig;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
 }
@@ -44,6 +45,7 @@ interface DirectGuardRequestFlowProps {
  */
 export function DirectGuardRequestFlow({
   guard,
+  feeConfig,
   onBack,
   onSubmit,
 }: DirectGuardRequestFlowProps) {
@@ -66,8 +68,9 @@ export function DirectGuardRequestFlow({
 
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
-  const guardPay = computeGuardPay(effectiveRate);
-  const platformFeeTotal = computePlatformFee(durationHours);
+  const platformFeePerHour = resolvePlatformFeePerHour(effectiveRate, feeConfig);
+  const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
+  const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour);
   const estimatedTotal = Math.round(durationHours * effectiveRate * 100) / 100;
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
   const title = serviceDefaultTitle(serviceId);
@@ -122,6 +125,7 @@ export function DirectGuardRequestFlow({
       durationHours,
       hourlyRate: effectiveRate,
       guardPay,
+      platformFeePerHour,
       estimatedPayout: estimatedTotal,
       description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
@@ -303,7 +307,7 @@ export function DirectGuardRequestFlow({
               <label className="uber-label block mb-1">Custom</label>
               <input type="number" min={20} placeholder="Custom $/hr" value={customRate} onChange={(e) => setCustomRate(e.target.value)} className="uber-input w-full" />
             </div>
-            <p className="text-xs text-brand-text-muted">Guard receives ${guardPay}/hr · Platform fee ${PLATFORM_FEE_PER_HOUR}/hr</p>
+            <p className="text-xs text-brand-text-muted">Guard receives ${guardPay}/hr · Platform fee ${platformFeePerHour}/hr</p>
           </div>
         )}
 

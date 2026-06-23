@@ -1,20 +1,19 @@
 import type { Express, Request, Response } from 'express';
 import express from 'express';
 import Stripe from 'stripe';
+import {
+  computeGuardPayoutCents,
+  LEGACY_PLATFORM_FEE_PER_HOUR,
+} from '../lib/platformFees';
 import { getSupabaseAdmin } from './supabaseAdmin';
 import { getSiteUrl } from './siteConfig';
 
-const GUARD_PAY_PLATFORM_FEE = 5;
+const GUARD_PAY_PLATFORM_FEE = LEGACY_PLATFORM_FEE_PER_HOUR;
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key || key === 'sk_test_placeholder') return null;
   return new Stripe(key);
-}
-
-function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
-  const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
-  return Math.round(durationHours * guardPay * 100);
 }
 
 async function markJobPaid(
@@ -584,11 +583,12 @@ export function registerStripeRoutes(app: Express) {
     }
 
     const db = getSupabaseAdmin();
+    let platformFeePerHour: number | undefined;
     if (db) {
       const { data: job } = await db
         .from('security_requests')
         .select(
-          'status, payment_status, assigned_guard_id, guard_payout_method, guard_cash_payout_requested'
+          'status, payment_status, assigned_guard_id, guard_payout_method, guard_cash_payout_requested, platform_fee_per_hour'
         )
         .eq('id', jobId)
         .maybeSingle();
@@ -616,9 +616,13 @@ export function registerStripeRoutes(app: Express) {
       if (job.guard_cash_payout_requested) {
         return res.status(400).json({ error: 'Guard requested cash payout for this job' });
       }
+
+      if (job.platform_fee_per_hour != null) {
+        platformFeePerHour = Number(job.platform_fee_per_hour);
+      }
     }
 
-    const amountCents = computeGuardPayoutCents(hourlyRate, durationHours);
+    const amountCents = computeGuardPayoutCents(hourlyRate, durationHours, platformFeePerHour);
     if (amountCents <= 0) {
       return res.status(400).json({ error: 'Invalid payout amount' });
     }

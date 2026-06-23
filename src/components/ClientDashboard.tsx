@@ -7,6 +7,7 @@ import {
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates } from '../lib/platformSettings';
+import type { PlatformFeeConfig } from '../lib/payments';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
@@ -62,6 +63,7 @@ interface ClientDashboardProps {
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
+  feeConfig: PlatformFeeConfig;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -100,6 +102,7 @@ export function ClientDashboard({
   onApprovePendingGuard,
   onDenyPendingGuard,
   paymentGates,
+  feeConfig,
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
@@ -246,6 +249,7 @@ export function ClientDashboard({
       'request',
       <RequestSecurityFlow
         preset={flowPreset}
+        feeConfig={feeConfig}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
@@ -260,6 +264,7 @@ export function ClientDashboard({
       `direct-request-${requestTargetGuard.id}`,
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
+        feeConfig={feeConfig}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');

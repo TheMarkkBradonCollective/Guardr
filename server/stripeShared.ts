@@ -1,7 +1,11 @@
 import Stripe from 'stripe';
+import {
+  computeGuardPayoutCents,
+  LEGACY_PLATFORM_FEE_PER_HOUR,
+} from '../lib/platformFees';
 import { getSupabaseAdmin } from './supabaseAdmin';
 
-const GUARD_PAY_PLATFORM_FEE = 5;
+const GUARD_PAY_PLATFORM_FEE = LEGACY_PLATFORM_FEE_PER_HOUR;
 
 export function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -9,10 +13,7 @@ export function getStripe(): Stripe | null {
   return new Stripe(key);
 }
 
-export function computeGuardPayoutCents(hourlyRate: number, durationHours: number): number {
-  const guardPay = Math.max(0, hourlyRate - GUARD_PAY_PLATFORM_FEE);
-  return Math.round(durationHours * guardPay * 100);
-}
+export { computeGuardPayoutCents };
 
 export async function markJobPaid(
   jobId: string,

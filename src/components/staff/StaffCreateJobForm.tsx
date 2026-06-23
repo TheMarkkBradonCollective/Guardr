@@ -16,7 +16,7 @@ import {
   getDefaultShiftStart,
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
+import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
@@ -59,11 +59,12 @@ interface StaffCreateJobFormProps {
   clients: Client[];
   guards: SecurityGuard[];
   requests: SecurityRequest[];
+  feeConfig: PlatformFeeConfig;
   onCreate: (input: StaffCreateJobInput) => Promise<string | void>;
   onCreated?: (jobId: string) => void;
 }
 
-export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCreated }: StaffCreateJobFormProps) {
+export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCreate, onCreated }: StaffCreateJobFormProps) {
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState('');
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
@@ -99,7 +100,8 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
       ? customTitle.trim()
       : serviceDefaultTitle(serviceId);
   const durationHours = computeDurationHours(startDate, endDate);
-  const guardPay = computeGuardPay(hourlyRate);
+  const platformFeePerHour = resolvePlatformFeePerHour(hourlyRate, feeConfig);
+  const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
   const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
   const scheduleError = validateShiftSchedule(startDate, endDate);
 
@@ -420,7 +422,7 @@ export function StaffCreateJobForm({ clients, guards, requests, onCreate, onCrea
 
       <p className="text-xs text-brand-text-muted">
         {title} · {formatDuration(durationHours)} · ${estimatedPayout.toFixed(2)} client bill · platform fee $
-        {PLATFORM_FEE_PER_HOUR}/hr
+        {platformFeePerHour}/hr
         {scheduleError ? ` · ${scheduleError}` : ''}
       </p>
 

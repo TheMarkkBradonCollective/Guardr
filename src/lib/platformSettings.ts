@@ -1,12 +1,26 @@
+import {
+  DEFAULT_PLATFORM_FEE_CONFIG,
+  normalizePlatformFeeConfig,
+  type PlatformFeeConfig,
+} from '../../lib/platformFees';
+
+export type { PlatformFeeConfig, PlatformFeeModel, PlatformFeeTier } from '../../lib/platformFees';
+export {
+  DEFAULT_PLATFORM_FEE_CONFIG,
+  TIERED_PLATFORM_FEE_PRESET,
+} from '../../lib/platformFees';
+
 export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
+  feeConfig: PlatformFeeConfig;
   updatedAt?: string;
 }
 
 export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   paymentCashEnabled: true,
   paymentStripeEnabled: true,
+  feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
 };
 
 const STORAGE_KEY = 'guardr_platform_settings';
@@ -39,7 +53,7 @@ export function platformPaymentModeDescription(settings: PlatformSettings): stri
   return 'Enable at least one payment method in Settings.';
 }
 
-/** At least one method must stay enabled. */
+/** At least one payment method must stay enabled. */
 export function normalizePlatformSettings(
   input: Partial<PlatformSettings>
 ): PlatformSettings | null {
@@ -49,20 +63,24 @@ export function normalizePlatformSettings(
   return {
     paymentCashEnabled: cash,
     paymentStripeEnabled: stripe,
-    updatedAt: new Date().toISOString(),
+    feeConfig: normalizePlatformFeeConfig(input.feeConfig),
+    updatedAt: input.updatedAt ?? new Date().toISOString(),
   };
 }
 
 export function loadPlatformSettingsFromStorage(): PlatformSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_PLATFORM_SETTINGS };
+    if (!raw) return { ...DEFAULT_PLATFORM_SETTINGS, feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG } };
     const parsed = JSON.parse(raw) as Partial<PlatformSettings>;
     return (
-      normalizePlatformSettings(parsed) ?? { ...DEFAULT_PLATFORM_SETTINGS }
+      normalizePlatformSettings(parsed) ?? {
+        ...DEFAULT_PLATFORM_SETTINGS,
+        feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
+      }
     );
   } catch {
-    return { ...DEFAULT_PLATFORM_SETTINGS };
+    return { ...DEFAULT_PLATFORM_SETTINGS, feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG } };
   }
 }
 
@@ -77,14 +95,21 @@ export function savePlatformSettingsToStorage(settings: PlatformSettings): void 
 export function platformSettingsFromDbRow(row: {
   payment_cash_enabled?: boolean | null;
   payment_stripe_enabled?: boolean | null;
+  fee_config?: unknown;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
     normalizePlatformSettings({
       paymentCashEnabled: row.payment_cash_enabled ?? true,
       paymentStripeEnabled: row.payment_stripe_enabled ?? true,
+      feeConfig: normalizePlatformFeeConfig(
+        row.fee_config as Partial<PlatformFeeConfig> | null | undefined
+      ),
       updatedAt: row.updated_at ?? undefined,
-    }) ?? { ...DEFAULT_PLATFORM_SETTINGS }
+    }) ?? {
+      ...DEFAULT_PLATFORM_SETTINGS,
+      feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
+    }
   );
 }
 
@@ -93,6 +118,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     id: 'default',
     payment_cash_enabled: settings.paymentCashEnabled,
     payment_stripe_enabled: settings.paymentStripeEnabled,
+    fee_config: settings.feeConfig,
     updated_at: settings.updatedAt ?? new Date().toISOString(),
   };
 }

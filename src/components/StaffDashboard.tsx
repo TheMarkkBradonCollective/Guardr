@@ -468,6 +468,7 @@ export function StaffDashboard({
             onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
+            feeConfig={platformSettings.feeConfig}
           />
         );
       case 'guards':

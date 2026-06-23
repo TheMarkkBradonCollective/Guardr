@@ -70,8 +70,20 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 
 ## Payments Model
 
-| Role | Example |
-|------|---------|
+Platform fees are configurable in **Staff → Settings → Platform fees** (Owner/Director). Three models:
+
+| Model | How it works |
+|-------|----------------|
+| **Flat** | Fixed $/hr (legacy default: $5/hr) |
+| **Tiered** | Fee scales with client hourly rate bands |
+| **Percent** | % of client rate with min/max caps |
+
+Each job **snapshots** its fee at creation (`platform_fee_per_hour`). Existing jobs are unchanged when you update settings.
+
+Example at $35/hr client rate (flat $5 model):
+
+| Role | Amount |
+|------|--------|
 | Client rate | $35/hr |
 | Guard pay | $30/hr |
 | Platform fee | $5/hr |
