@@ -119,7 +119,7 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
 
   if (isCashClientPayment(req)) {
     if (req.guardPayoutAvailable) return false;
-    return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
+    return ['paid', 'held'].includes(req.paymentStatus);
   }
 
   return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
