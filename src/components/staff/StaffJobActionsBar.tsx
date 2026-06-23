@@ -71,7 +71,7 @@ export function StaffJobActionsBar({
             }`}
           >
             <MapPin className="w-3 h-3 inline" />
-            {spotCheckOpen ? 'Hide spot check' : spotCheckFlagged ? 'Upload spot check — flagged' : 'Upload spot check'}
+            {spotCheckOpen ? 'Hide spot check' : 'Upload spot check'}
           </button>
         )}
       </div>
