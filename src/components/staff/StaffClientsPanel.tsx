@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
-import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
@@ -56,9 +56,9 @@ export function StaffClientsPanel({
       (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const { showDetailOnly } = useListDetailState(selectedId);
+  const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
-  function renderClientDetail(client: Client, { onBack }: { onBack: () => void }) {
+  function renderClientDetail(client: Client, options?: { onBack?: () => void }) {
     return (
       <StaffClientDetailPanel
         client={client}
@@ -68,7 +68,7 @@ export function StaffClientsPanel({
         onRejectClient={onRejectClient}
         onDeleteClient={onDeleteClient}
         onOpenJob={onOpenJob}
-        onBack={onBack}
+        onBack={options?.onBack}
       />
     );
   }
@@ -78,30 +78,30 @@ export function StaffClientsPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <p className="text-sm text-brand-text-muted flex-1">
-          Staff can add client accounts, approve them, and suspend or restore access.
-        </p>
-        {canManage && onAddClient && (
-          <StaffAddClientForm
-            onAdd={onAddClient}
-            onCreated={(clientId) => {
-              setSearch('');
-              setSelectedId(clientId);
-            }}
-          />
-        )}
-      </div>
+            <p className="text-sm text-brand-text-muted flex-1">
+              Staff can add client accounts, approve them, and suspend or restore access.
+            </p>
+            {canManage && onAddClient && (
+              <StaffAddClientForm
+                onAdd={onAddClient}
+                onCreated={(clientId) => {
+                  setSearch('');
+                  setSelectedId(clientId);
+                }}
+              />
+            )}
+          </div>
 
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search clients..."
-        className="max-w-md"
-      />
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search clients..."
+            className="max-w-md"
+          />
         </>
       )}
 
-      {filtered.length === 0 && !showDetailOnly ? (
+      {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {clients.length === 0
             ? 'No clients yet. Use Add client above to onboard the first account.'
@@ -114,7 +114,7 @@ export function StaffClientsPanel({
           onSelectId={setSelectedId}
           getItemId={(client) => client.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
-          renderItem={(client, onSelect) => {
+          renderItem={(client, isActive, onSelect) => {
             const accountStatus = getClientAccountStatus(client);
             const activeJobs = requests.filter(
               (r) => r.clientId === client.id && ['accepted', 'in-progress', 'open'].includes(r.status)
@@ -141,10 +141,12 @@ export function StaffClientsPanel({
                   </div>
                 }
                 onClick={onSelect}
+                className={isActive ? 'app-item-card-selected' : ''}
               />
             );
           }}
           renderDetail={renderClientDetail}
+          mobilePresentation="page"
         />
       )}
     </div>

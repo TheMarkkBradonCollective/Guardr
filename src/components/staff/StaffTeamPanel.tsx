@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
-import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -60,39 +60,39 @@ export function StaffTeamPanel({
       (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
+  const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
-  const { showDetailOnly } = useListDetailState(selectedId);
 
   return (
     <div className="animate-fade-in space-y-4">
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <p className="text-sm text-brand-text-muted flex-1">
-          Guardr platform staff — operations and administration only, not field jobs.
-          {!canManageStaff && ' Directors and Owners manage staff accounts; you have view-only access here.'}
-        </p>
-        {canManageStaff && onAddStaff && assignableRoles.length > 0 && (
-          <StaffAddStaffForm
-            assignableRoles={assignableRoles}
-            onAdd={onAddStaff}
-            onCreated={(staffId) => {
-              setSearch('');
-              setSelectedId(staffId);
-            }}
+            <p className="text-sm text-brand-text-muted flex-1">
+              Guardr platform staff — operations and administration only, not field jobs.
+              {!canManageStaff && ' Directors and Owners manage staff accounts; you have view-only access here.'}
+            </p>
+            {canManageStaff && onAddStaff && assignableRoles.length > 0 && (
+              <StaffAddStaffForm
+                assignableRoles={assignableRoles}
+                onAdd={onAddStaff}
+                onCreated={(staffId) => {
+                  setSearch('');
+                  setSelectedId(staffId);
+                }}
+              />
+            )}
+          </div>
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search staff..."
+            className="max-w-md"
           />
-        )}
-      </div>
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search staff..."
-        className="max-w-md"
-      />
         </>
       )}
 
-      {filtered.length === 0 && !showDetailOnly ? (
+      {filtered.length === 0 ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {roster.length === 0
             ? 'No staff accounts yet. Directors and Owners can use Add staff above.'
@@ -105,7 +105,7 @@ export function StaffTeamPanel({
           onSelectId={setSelectedId}
           getItemId={(member) => member.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
-          renderItem={(member, onSelect) => {
+          renderItem={(member, isActive, onSelect) => {
             const accountStatus = member.userStatus || 'active';
 
             return (
@@ -121,10 +121,11 @@ export function StaffTeamPanel({
                   </div>
                 }
                 onClick={onSelect}
+                className={isActive ? 'app-item-card-selected' : ''}
               />
             );
           }}
-          renderDetail={(member, { onBack }) => (
+          renderDetail={(member, options) => (
             <StaffTeamDetailPanel
               member={member}
               currentUserId={currentUserId}
@@ -132,9 +133,10 @@ export function StaffTeamPanel({
               canManageStaff={canManageStaff}
               onUpdateUserStatus={onUpdateUserStatus}
               onUpdateStaffRole={onUpdateStaffRole}
-              onBack={onBack}
+              onBack={options?.onBack}
             />
           )}
+          mobilePresentation="page"
         />
       )}
     </div>
