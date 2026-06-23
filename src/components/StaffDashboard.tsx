@@ -122,6 +122,10 @@ interface StaffDashboardProps {
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
+  onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
+  onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
+  onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -233,6 +237,10 @@ export function StaffDashboard({
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onMarkOvertimePaidCash,
+  onApproveOvertimeCashPayment,
+  onMakeOvertimeGuardPayoutAvailable,
+  onMarkOvertimeGuardPaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
@@ -590,6 +598,10 @@ export function StaffDashboard({
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onMarkOvertimePaidCash={onMarkOvertimePaidCash}
+            onApproveOvertimeCashPayment={onApproveOvertimeCashPayment}
+            onMakeOvertimeGuardPayoutAvailable={onMakeOvertimeGuardPayoutAvailable}
+            onMarkOvertimeGuardPaidCash={onMarkOvertimeGuardPaidCash}
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}

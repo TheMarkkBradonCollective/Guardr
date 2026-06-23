@@ -35,6 +35,11 @@ import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from '
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorMarkClientPaidCash,
+  canDirectorMarkOvertimePaidCash,
+  canDirectorPayOvertimeGuardCash,
+  canMakeOvertimeGuardPayoutAvailable,
+  canStaffApproveOvertimeCashPayment,
+  overtimeGuardEarnings,
   canDirectorPayGuardCash,
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
@@ -239,6 +244,7 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
+import { detectLateClockOutOvertime, applyOvertimePaidBilling } from './lib/shiftBilling';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -1352,6 +1358,20 @@ export default function App() {
         operationalDetails: normalizeJobOperationalDetails(r.operational_details),
         startDate: r.start_date, endDate: r.end_date,
         durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
+        scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
+        scheduledEstimatedPayout: r.scheduled_estimated_payout != null ? Number(r.scheduled_estimated_payout) : undefined,
+        overtimeHours: r.overtime_hours != null ? Number(r.overtime_hours) : undefined,
+        overtimeAmount: r.overtime_amount != null ? Number(r.overtime_amount) : undefined,
+        overtimeStatus: r.overtime_status ?? undefined,
+        overtimeGuardApprovedAt: r.overtime_guard_approved_at || undefined,
+        overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
+        overtimePaymentStatus: r.overtime_payment_status ?? undefined,
+        overtimeClientPaymentMethod: parsePaymentMethod(r.overtime_client_payment_method),
+        overtimeClientCashPaymentRequested: !!r.overtime_client_cash_payment_requested,
+        overtimeClientCashPaymentRequestedAt: r.overtime_client_cash_payment_requested_at || undefined,
+        overtimeGuardPayoutAvailable: !!r.overtime_guard_payout_available,
+        overtimeGuardPayoutAvailableAt: r.overtime_guard_payout_available_at || undefined,
+        overtimeGuardPayoutMethod: parsePaymentMethod(r.overtime_guard_payout_method),
         guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
         platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
         estimatedPayout: r.estimated_payout,
@@ -4112,6 +4132,290 @@ export default function App() {
     await applyClientPaidCash(requestId, req);
   };
 
+  const applyOvertimeClientPaid = async (
+    requestId: string,
+    req: SecurityRequest,
+    method: 'cash' | 'stripe',
+    paymentRecord?: Payment
+  ) => {
+    const billing = applyOvertimePaidBilling(req);
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              ...billing,
+              overtimeClientPaymentMethod: method,
+              overtimeClientCashPaymentRequested: false,
+              overtimeClientCashPaymentRequestedAt: undefined,
+            }
+          : r
+      )
+    );
+    if (paymentRecord) {
+      setPayments((prev) => [...prev, paymentRecord]);
+    }
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          duration_hours: billing.durationHours,
+          estimated_payout: billing.estimatedPayout,
+          overtime_status: billing.overtimeStatus,
+          overtime_payment_status: billing.overtimePaymentStatus,
+          overtime_client_payment_method: method,
+          overtime_client_cash_payment_requested: false,
+          overtime_client_cash_payment_requested_at: null,
+        })
+        .eq('id', requestId);
+      if (paymentRecord) {
+        await supabase.from('payments').insert({
+          id: paymentRecord.id,
+          job_id: requestId,
+          amount: paymentRecord.amount,
+          status: paymentRecord.status,
+          payment_method: paymentRecord.paymentMethod,
+        });
+      }
+    }
+  };
+
+  const handleGuardApproveOvertime = async (requestId: string) => {
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'pending_guard') {
+      appToast('This overtime request cannot be approved right now.', 'error');
+      return;
+    }
+    const approvedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, overtimeGuardApprovedAt: approvedAt, overtimeStatus: 'pending_client' as const }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_guard_approved_at: approvedAt,
+          overtime_status: 'pending_client',
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req.location,
+        body: `Guard approved ${req.overtimeHours ?? 0}h overtime on "${req.title}" — client approval required.`,
+      });
+    }
+    appToast('Overtime submitted for client approval.', 'success');
+  };
+
+  const handleClientApproveOvertime = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
+      appToast('This overtime request cannot be approved right now.', 'error');
+      return;
+    }
+    const approvedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, overtimeClientApprovedAt: approvedAt, overtimeStatus: 'awaiting_payment' as const }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_client_approved_at: approvedAt,
+          overtime_status: 'awaiting_payment',
+        })
+        .eq('id', requestId);
+    }
+    appToast('Overtime approved. Pay the difference to settle the bill.', 'success');
+  };
+
+  const handleClientRequestOvertimeCash = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    const gates = clientPaymentGates(platformSettings);
+    if (!req || req.overtimeStatus !== 'awaiting_payment') {
+      appToast('Overtime is not ready for payment yet.', 'error');
+      return;
+    }
+    if (!gates.allowCash) {
+      appToast('Cash payments are not enabled.', 'error');
+      return;
+    }
+    const overtimeAmount = req.overtimeAmount ?? 0;
+    if (!(await showAppConfirm({
+      title: 'Pay overtime in cash?',
+      message: `Request to pay $${overtimeAmount.toFixed(2)} in cash for late clock-out on "${req.title}"? Staff will confirm once payment is received.`,
+      confirmLabel: 'Request cash payment',
+    }))) return;
+
+    const requestedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              overtimeClientCashPaymentRequested: true,
+              overtimeClientCashPaymentRequestedAt: requestedAt,
+            }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_client_cash_payment_requested: true,
+          overtime_client_cash_payment_requested_at: requestedAt,
+        })
+        .eq('id', requestId);
+    }
+    appToast('Overtime cash payment requested — staff will confirm once received.', 'success');
+  };
+
+  const handleApproveOvertimeCashPayment = async (requestId: string) => {
+    if (!currentUser || !canAccessFinancialControls(currentUser)) {
+      appToast('You do not have permission to approve cash payments.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canStaffApproveOvertimeCashPayment(req)) {
+      appToast('This overtime cash payment cannot be approved.', 'error');
+      return;
+    }
+    const overtimeAmount = req.overtimeAmount ?? 0;
+    if (!(await showAppConfirm({
+      title: 'Approve overtime cash payment?',
+      message: `Confirm the client paid $${overtimeAmount.toFixed(2)} in cash for overtime on "${req.title}"?`,
+      confirmLabel: 'Approve payment',
+    }))) return;
+
+    const paymentId = `pay-overtime-cash-${Date.now()}`;
+    await applyOvertimeClientPaid(requestId, req, 'cash', {
+      id: paymentId,
+      jobId: requestId,
+      amount: overtimeAmount,
+      status: 'paid',
+      paymentMethod: 'cash',
+    });
+    appToast('Overtime cash payment approved.', 'success');
+  };
+
+  const handleMarkOvertimePaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can record overtime cash payments.', 'error');
+      return;
+    }
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkOvertimePaidCash(req)) {
+      appToast('This job has no overtime balance to record.', 'error');
+      return;
+    }
+    const overtimeAmount = req.overtimeAmount ?? 0;
+    if (!(await showAppConfirm({
+      title: 'Record overtime payment?',
+      message: `Record client cash payment of $${overtimeAmount.toFixed(2)} for late clock-out on "${req.title}"?`,
+      confirmLabel: 'Record overtime paid',
+    }))) return;
+
+    const paymentId = `pay-overtime-cash-${Date.now()}`;
+    await applyOvertimeClientPaid(requestId, req, 'cash', {
+      id: paymentId,
+      jobId: requestId,
+      amount: overtimeAmount,
+      status: 'paid',
+      paymentMethod: 'cash',
+    });
+    appToast(`Overtime payment of $${overtimeAmount.toFixed(2)} recorded.`, 'success');
+  };
+
+  const handleMakeOvertimeGuardPayoutAvailable = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can release overtime guard pay.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canMakeOvertimeGuardPayoutAvailable(req)) {
+      appToast('Overtime guard pay is not ready to release.', 'error');
+      return;
+    }
+    const amount = overtimeGuardEarnings(req);
+    if (!(await showAppConfirm({
+      title: 'Release overtime guard pay?',
+      message: `Make $${amount.toFixed(2)} available for overtime on "${req.title}"? The guard can collect via Pay after client overtime is paid.`,
+      confirmLabel: 'Make available',
+    }))) return;
+
+    const releasedAt = new Date().toISOString();
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, overtimeGuardPayoutAvailable: true, overtimeGuardPayoutAvailableAt: releasedAt }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_guard_payout_available: true,
+          overtime_guard_payout_available_at: releasedAt,
+        })
+        .eq('id', requestId);
+    }
+    appToast(`$${amount.toFixed(2)} overtime pay is available for the guard.`, 'success');
+  };
+
+  const handleMarkOvertimeGuardPaidCash = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can record cash guard payouts.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorPayOvertimeGuardCash(req)) {
+      appToast('Overtime guard cash payout is not available for this job.', 'error');
+      return;
+    }
+    const amount = overtimeGuardEarnings(req);
+    if (!(await showAppConfirm({
+      title: 'Record overtime cash payout?',
+      message: `Record $${amount.toFixed(2)} paid in cash to the guard for overtime on "${req.title}"?`,
+      confirmLabel: 'Record payout',
+    }))) return;
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId ? { ...r, overtimeGuardPayoutMethod: 'cash' as const } : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ overtime_guard_payout_method: 'cash' })
+        .eq('id', requestId);
+    }
+    appToast(`Overtime cash payout of $${amount.toFixed(2)} recorded.`, 'success');
+  };
+
   const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
     if (!currentUser || !canManagePlatformSettings(currentUser)) {
       appToast('Only the Owner can change platform settings.', 'error');
@@ -4863,12 +5167,26 @@ export default function App() {
     const completedGuardId =
       payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
 
+    const checkOutAt = payload.checkOutAudit?.checkedAt;
+    const detectedOvertime =
+      req && payload.status === 'completed' && checkOutAt
+        ? detectLateClockOutOvertime(req, checkOutAt)
+        : null;
+
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
       const updated = { ...r };
       if (payload.checkInAudit) updated.checkInAudit = payload.checkInAudit;
       if (nextMidShiftAudits) updated.midShiftAudits = nextMidShiftAudits;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
+      if (detectedOvertime) {
+        updated.scheduledDurationHours = detectedOvertime.scheduledDurationHours;
+        updated.scheduledEstimatedPayout = detectedOvertime.scheduledEstimatedPayout;
+        updated.overtimeHours = detectedOvertime.overtimeHours;
+        updated.overtimeAmount = detectedOvertime.overtimeAmount;
+        updated.overtimeStatus = detectedOvertime.overtimeStatus;
+        updated.overtimePaymentStatus = 'unpaid';
+      }
       if (payload.status) {
         updated.status = payload.status;
         if (payload.status === 'completed' && r.assignedGuardId) {
@@ -4887,6 +5205,14 @@ export default function App() {
       if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
       if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
+      if (detectedOvertime) {
+        updates.scheduled_duration_hours = detectedOvertime.scheduledDurationHours;
+        updates.scheduled_estimated_payout = detectedOvertime.scheduledEstimatedPayout;
+        updates.overtime_hours = detectedOvertime.overtimeHours;
+        updates.overtime_amount = detectedOvertime.overtimeAmount;
+        updates.overtime_status = detectedOvertime.overtimeStatus;
+        updates.overtime_payment_status = 'unpaid';
+      }
       if (payload.status) {
         updates.status = payload.status;
         if (payload.status === 'completed' && req?.paymentStatus === 'paid') {
@@ -4949,6 +5275,16 @@ export default function App() {
         guardName: guard?.name,
         location: req?.location,
         body: req?.checkOutAudit?.incidentReport?.description ?? 'Incident reported on active shift',
+      });
+    }
+
+    if (detectedOvertime && detectedOvertime.overtimeAmount > 0 && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req?.location,
+        body: `Late clock-out on "${req?.title}" — guard must approve ${detectedOvertime.overtimeHours}h overtime before billing.`,
       });
     }
 
@@ -5887,6 +6223,7 @@ export default function App() {
           }
           onAcceptJob={handleApplyToJob}
           onUpdateJobAudit={handleUpdateJobAudit}
+          onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
           onUpdateStripeAccount={handleUpdateGuardStripeAccount}
           onSignOut={handleSignOut}
@@ -6024,6 +6361,8 @@ export default function App() {
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
+              onApproveOvertime={handleClientApproveOvertime}
+              onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
               paymentGates={clientPaymentGatesMemo}
@@ -6113,6 +6452,10 @@ export default function App() {
           onReleasePayout={handleReleasePayout}
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
+          onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
+          onApproveOvertimeCashPayment={handleApproveOvertimeCashPayment}
+          onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
+          onMarkOvertimeGuardPaidCash={handleMarkOvertimeGuardPaidCash}
           onApproveClientCashPayment={handleApproveClientCashPayment}
           onRejectClientCashPayment={handleRejectClientCashPayment}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}

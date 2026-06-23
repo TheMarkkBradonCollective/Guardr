@@ -270,6 +270,18 @@ export function guardPayoutAmount(req: SecurityRequest): number {
   return computeGuardEarnings(req.durationHours, req.hourlyRate);
 }
 
+export {
+  canClientPayOvertimeStripe,
+  canClientRequestOvertimeCash,
+  canDirectorMarkOvertimePaidCash,
+  canDirectorPayOvertimeGuardCash,
+  canMakeOvertimeGuardPayoutAvailable,
+  canStaffApproveOvertimeCashPayment,
+  isOvertimeCashPaymentPendingApproval,
+  isOvertimeClientPaid,
+  overtimeGuardEarnings,
+} from './shiftBilling';
+
 export function parsePaymentMethod(value: unknown): PaymentMethod | undefined {
   return value === 'stripe' || value === 'cash' ? value : undefined;
 }
