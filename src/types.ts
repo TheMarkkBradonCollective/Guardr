@@ -555,6 +555,9 @@ export interface SecurityRequest {
   cashDepositedAt?: string;
   /** Director manually deposited platform fee (off-Stripe) */
   platformFeePaidCash?: boolean;
+  /** Staff approved this guard — awaiting client confirmation */
+  pendingGuardId?: string | null;
+  staffApprovedGuardAt?: string;
   assignedGuardId: string | null;
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;

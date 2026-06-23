@@ -114,6 +114,11 @@ import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
 import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
+import {
+  isAwaitingClientGuardApproval,
+  removeGuardFromApplicants,
+  shouldSkipClientGuardApproval,
+} from './lib/guardAssignment';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isClientAccountPending } from './lib/accountStatus';
@@ -1216,6 +1221,8 @@ export default function App() {
         estimatedPayout: r.estimated_payout,
         status: normalizeJobStatus(r.status),
         assignedGuardId: r.assigned_guard_id,
+        pendingGuardId: r.pending_guard_id ?? undefined,
+        staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
         requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
         targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
         requiredCertifications: r.required_certifications || [],
@@ -3683,7 +3690,7 @@ export default function App() {
       return;
     }
 
-    await assignGuardToJob(requestId, guardId);
+    await proposeGuardForClientApproval(requestId, guardId);
   };
 
   const handleJobPaymentStatus = async (requestId: string, paymentStatus: PaymentStatus) => {
@@ -4280,17 +4287,31 @@ export default function App() {
       appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
       return;
     }
+    const nextApplicants = [...new Set([...job.applicants, guardId])];
     setRequests((prev) =>
       prev.map((r) =>
         r.id === requestId
-          ? { ...r, status: 'accepted', assignedGuardId: guardId, applicants: [...new Set([...r.applicants, guardId])] }
+          ? {
+              ...r,
+              status: 'accepted',
+              assignedGuardId: guardId,
+              pendingGuardId: undefined,
+              staffApprovedGuardAt: undefined,
+              applicants: nextApplicants,
+            }
           : r
       )
     );
     if (isDbConnected) {
       await supabase
         .from('security_requests')
-        .update({ status: 'accepted', assigned_guard_id: guardId, applicants: [...new Set([...job.applicants, guardId])] })
+        .update({
+          status: 'accepted',
+          assigned_guard_id: guardId,
+          pending_guard_id: null,
+          staff_approved_guard_at: null,
+          applicants: nextApplicants,
+        })
         .eq('id', requestId);
     }
     if (currentUser && guardId !== currentUser.id) {
@@ -4303,6 +4324,173 @@ export default function App() {
       });
     }
     await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
+  };
+
+  const proposeGuardForClientApproval = async (requestId: string, guardId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    const guard = guards.find((g) => g.id === guardId);
+    if (!job || !guard) return;
+    if (job.assignedGuardId) {
+      appToast('A guard has already picked up this job.', 'error');
+      return;
+    }
+    if (job.status !== 'open') {
+      appToast('This job is not open for guard placement.', 'error');
+      return;
+    }
+    const workBlocked = guardWorkBlockedMessage(guard, job.state);
+    if (workBlocked) {
+      appToast(workBlocked, 'error');
+      return;
+    }
+    const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
+    if (!canAccept) {
+      appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
+      return;
+    }
+    if (shouldSkipClientGuardApproval(job, guardId)) {
+      await assignGuardToJob(requestId, guardId);
+      return;
+    }
+    if (job.pendingGuardId) {
+      if (job.pendingGuardId === guardId) {
+        appToast('This guard is already waiting for client approval.', 'error');
+        return;
+      }
+      appToast('Another guard is awaiting client approval. Decline them first or wait for the client.', 'error');
+      return;
+    }
+
+    const approvedAt = new Date().toISOString();
+    const nextApplicants = [...new Set([...job.applicants, guardId])];
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              pendingGuardId: guardId,
+              staffApprovedGuardAt: approvedAt,
+              applicants: nextApplicants,
+            }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          pending_guard_id: guardId,
+          staff_approved_guard_at: approvedAt,
+          applicants: nextApplicants,
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId,
+        guardName: guard.name,
+        title: 'Approve your guard',
+        body: `Guardr approved ${guard.name} for "${job.title}". Confirm to hire them.`,
+      });
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
+      });
+    }
+    appToast(`${guard.name} sent to ${job.clientName} for approval.`, 'success');
+  };
+
+  const denyGuardApplication = async (
+    requestId: string,
+    guardId: string,
+    opts?: { deniedBy: 'staff' | 'client' }
+  ) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const wasPending = job.pendingGuardId === guardId;
+    const nextApplicants = removeGuardFromApplicants(job.applicants, guardId);
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              applicants: nextApplicants,
+              pendingGuardId: wasPending ? undefined : r.pendingGuardId,
+              staffApprovedGuardAt: wasPending ? undefined : r.staffApprovedGuardAt,
+            }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          applicants: nextApplicants,
+          ...(wasPending ? { pending_guard_id: null, staff_approved_guard_at: null } : {}),
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body:
+          opts?.deniedBy === 'client'
+            ? `The client declined you for "${job.title}". You can apply to other open jobs.`
+            : `Your application for "${job.title}" was not selected.`,
+      });
+    }
+    appToast(
+      opts?.deniedBy === 'client'
+        ? 'Guard declined — job is open for other applicants.'
+        : 'Application removed.',
+      'success'
+    );
+  };
+
+  const handleClientApprovePendingGuard = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.clientId !== currentUser.id) {
+      appToast('You cannot approve guards on this job.', 'error');
+      return;
+    }
+    if (!isAwaitingClientGuardApproval(job) || !job.pendingGuardId) {
+      appToast('No guard is waiting for your approval on this job.', 'error');
+      return;
+    }
+    await assignGuardToJob(requestId, job.pendingGuardId);
+    appToast('Guard confirmed for this job.', 'success');
+  };
+
+  const handleClientDenyPendingGuard = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.clientId !== currentUser.id) {
+      appToast('You cannot update this job.', 'error');
+      return;
+    }
+    if (!job.pendingGuardId) {
+      appToast('No guard is waiting for your approval.', 'error');
+      return;
+    }
+    if (
+      !(await showAppConfirm({
+        title: 'Decline this guard?',
+        message: `Send "${job.title}" back to the applicant list so Guardr can recommend someone else.`,
+        confirmLabel: 'Decline guard',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    await denyGuardApplication(requestId, job.pendingGuardId, { deniedBy: 'client' });
   };
 
   // ── Guard applies to open job offer (staff approves best fit) ──
@@ -4355,7 +4543,7 @@ export default function App() {
         body: `${activeGuard.name} applied for "${job.title}"`,
       });
     }
-    appToast('Application submitted. Guardr staff will review applicants and approve the best fit.', 'success');
+    appToast('Application submitted. Guardr staff will review applicants and send the best fit for client approval.', 'success');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
@@ -4372,7 +4560,34 @@ export default function App() {
       appToast('This guard has not applied for the job.', 'error');
       return;
     }
-    await assignGuardToJob(requestId, guardId);
+    await proposeGuardForClientApproval(requestId, guardId);
+  };
+
+  const handleStaffDenyGuardApplication = async (requestId: string, guardId: string) => {
+    if (!currentUser || !isStaffRole(currentUser.role)) {
+      appToast('Only staff can decline guard applications.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.status !== 'open') {
+      appToast('This job is not open for guard applications.', 'error');
+      return;
+    }
+    if (!job.applicants.includes(guardId)) {
+      appToast('This guard has not applied for the job.', 'error');
+      return;
+    }
+    if (
+      !(await showAppConfirm({
+        title: 'Decline application?',
+        message: 'Remove this guard from the applicant list for this job.',
+        confirmLabel: 'Decline',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    await denyGuardApplication(requestId, guardId, { deniedBy: 'staff' });
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
@@ -5549,6 +5764,8 @@ export default function App() {
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
+              onApprovePendingGuard={handleClientApprovePendingGuard}
+              onDenyPendingGuard={handleClientDenyPendingGuard}
               paymentGates={clientPaymentGatesMemo}
               currentUser={currentUser}
               jobChatThreads={jobChatThreads}
@@ -5647,6 +5864,7 @@ export default function App() {
           onUploadSpotCheck={handleStaffUploadSpotCheck}
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
+          onDenyGuardApplication={handleStaffDenyGuardApplication}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

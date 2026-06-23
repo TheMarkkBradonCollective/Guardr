@@ -4,6 +4,7 @@ import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../type
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { useDevice } from '../../lib/platform';
@@ -46,6 +47,7 @@ interface StaffJobsPanelProps {
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
@@ -97,6 +99,7 @@ function JobDetailPanel({
   canUploadSpotCheck,
   onEditJobListing,
   onApproveGuardApplication,
+  onDenyGuardApplication,
   onBack,
   staffRole,
 }: {
@@ -114,6 +117,7 @@ function JobDetailPanel({
   onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onBack?: () => void;
 }) {
   const [assignGuardId, setAssignGuardId] = useState('');
@@ -142,10 +146,13 @@ function JobDetailPanel({
   const workflowLabel = JOB_STATUS_LABELS[req.status];
   const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== workflowLabel;
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
+  const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
+  const awaitingClientGuard = isAwaitingClientGuardApproval(req);
   const canAssign =
     canManageJobs &&
     onAssignGuard &&
     !req.assignedGuardId &&
+    !awaitingClientGuard &&
     (req.status === 'open' || req.status === 'pending-review');
   const assignableGuards = useMemo(
     () =>
@@ -235,12 +242,23 @@ function JobDetailPanel({
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
             Guard applications ({rankedApplicants.length})
           </p>
-          <p className="text-xs text-brand-text-muted">
-            Review applicants — approve who picks up this job.
-          </p>
+          {awaitingClientGuard && pendingGuard ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+              <p className="text-sm font-medium text-amber-300">Awaiting client approval</p>
+              <p className="text-xs text-brand-text-muted mt-1">
+                {pendingGuard.name} was sent to {req.clientName} for confirmation.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-brand-text-muted">
+              Review applicants — send the best fit to the client for approval.
+            </p>
+          )}
           <div className="space-y-2">
             {rankedApplicants.map((guard, index) => {
               const meets = guardMeetsJobRequirements(guard, req);
+              const isPending = req.pendingGuardId === guard.id;
+              const anotherPending = !!req.pendingGuardId && !isPending;
               return (
                 <WfListCard
                   key={guard.id}
@@ -252,19 +270,46 @@ function JobDetailPanel({
                   }
                   subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
                   meta={
-                    <span className={meets ? 'text-emerald-400' : 'text-amber-400'}>
-                      {meets ? 'Meets job requirements' : 'Missing required credentials'}
+                    <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
+                      {isPending
+                        ? 'Awaiting client approval'
+                        : meets
+                          ? 'Meets job requirements'
+                          : 'Missing required credentials'}
                     </span>
                   }
                   action={
-                    <button
-                      type="button"
-                      onClick={() => onApproveGuardApplication(req.id, guard.id)}
-                      disabled={!meets}
-                      className="app-button-primary app-btn-sm shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Approve guard
-                    </button>
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                      {isPending ? (
+                        onDenyGuardApplication && (
+                          <button
+                            type="button"
+                            onClick={() => onDenyGuardApplication(req.id, guard.id)}
+                            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                          >
+                            Withdraw
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onApproveGuardApplication(req.id, guard.id)}
+                          disabled={!meets || anotherPending}
+                          className="app-button-primary app-btn-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          Send to client
+                        </button>
+                      )}
+                      {!isPending && onDenyGuardApplication && (
+                        <button
+                          type="button"
+                          onClick={() => onDenyGuardApplication(req.id, guard.id)}
+                          className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                        >
+                          Decline
+                        </button>
+                      )}
+                    </div>
                   }
                 />
               );
@@ -352,6 +397,7 @@ export function StaffJobsPanel({
   onEditJobListing,
   canEditJobListing = false,
   onApproveGuardApplication,
+  onDenyGuardApplication,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
@@ -480,6 +526,7 @@ export function StaffJobsPanel({
           canUploadSpotCheck={canUploadSpotCheck}
           onEditJobListing={onEditJobListing}
           onApproveGuardApplication={onApproveGuardApplication}
+          onDenyGuardApplication={onDenyGuardApplication}
           onBack={() => setSelectedId(null)}
           staffRole={staffRole}
         />
@@ -505,6 +552,7 @@ export function StaffJobsPanel({
               canUploadSpotCheck={canUploadSpotCheck}
               onEditJobListing={onEditJobListing}
               onApproveGuardApplication={onApproveGuardApplication}
+          onDenyGuardApplication={onDenyGuardApplication}
               staffRole={staffRole}
             />
           )}

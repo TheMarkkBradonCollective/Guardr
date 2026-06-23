@@ -248,6 +248,8 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_request
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS staff_approved_guard_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_in_audit JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS spot_checks JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS mid_shift_audits JSONB NOT NULL DEFAULT '[]'::jsonb;

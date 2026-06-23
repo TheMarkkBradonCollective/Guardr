@@ -39,6 +39,7 @@ export interface GuardJobView {
   guardPay: number;
   status: SecurityRequest['status'];
   assignedGuardId: string | null;
+  pendingGuardId?: string | null;
   requestType?: SecurityRequest['requestType'];
   targetGuardId?: string | null;
   requiredCertifications: string[];
@@ -178,6 +179,7 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
     guardPay,
     status: req.status,
     assignedGuardId: req.assignedGuardId,
+    pendingGuardId: req.pendingGuardId,
     requestType: req.requestType,
     targetGuardId: req.targetGuardId,
     requiredCertifications: req.requiredCertifications,

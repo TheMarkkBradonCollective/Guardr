@@ -55,6 +55,8 @@ interface ClientDashboardProps {
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
+  onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
+  onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
@@ -90,6 +92,8 @@ export function ClientDashboard({
   onConfirmSelfAudit,
   onConfirmSpotCheck,
   onRequestCashPayment,
+  onApprovePendingGuard,
+  onDenyPendingGuard,
   paymentGates,
   currentUser,
   jobChatThreads = [],
@@ -308,6 +312,8 @@ export function ClientDashboard({
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestCashPayment={onRequestCashPayment}
+        onApprovePendingGuard={onApprovePendingGuard}
+        onDenyPendingGuard={onDenyPendingGuard}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

@@ -114,6 +114,7 @@ interface StaffDashboardProps {
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
+  onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -224,6 +225,7 @@ export function StaffDashboard({
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
+  onDenyGuardApplication,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onReleasePayout,
@@ -417,6 +419,7 @@ export function StaffDashboard({
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onApproveGuardApplication={onApproveGuardApplication}
+            onDenyGuardApplication={onDenyGuardApplication}
             onApproveClient={onApproveClient}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
             onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
@@ -459,6 +462,7 @@ export function StaffDashboard({
             onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={onApproveGuardApplication}
+            onDenyGuardApplication={onDenyGuardApplication}
             selectedId={selectedJobId}
             onSelectedIdChange={setSelectedJobId}
             initialSelectedId={selectedJobId}
