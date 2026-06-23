@@ -223,7 +223,7 @@ function MarkdownDoc({ source }: { source: string }) {
     return elements;
   }, [source]);
 
-  return <article className="workflow-doc">{blocks}</article>;
+  return <article className="guide-doc">{blocks}</article>;
 }
 
 export { MarkdownDoc };

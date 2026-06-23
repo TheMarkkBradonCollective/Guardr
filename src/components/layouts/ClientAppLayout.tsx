@@ -39,7 +39,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
-  guide: 'Workflow guide',
+  guide: 'General guide',
   messages: 'Messages',
   support: 'Messages',
 };
@@ -91,7 +91,7 @@ export function ClientAppLayout({
         active: activeView === 'profile' || activeView === 'settings',
         extraLinks: [
           {
-            label: 'Workflow guide',
+            label: 'General guide',
             icon: BookOpen,
             onClick: () => onNavigate?.('guide'),
             active: activeView === 'guide',

@@ -144,8 +144,8 @@ function JobDetailPanel({
     !!canUploadSpotCheck && !!onUploadSpotCheck && canStaffAddSpotCheck(req);
   const jobStatus = getLiveJobStatus(req);
   const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
-  const workflowLabel = JOB_STATUS_LABELS[req.status];
-  const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== workflowLabel;
+  const requestStatusLabel = JOB_STATUS_LABELS[req.status];
+  const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== requestStatusLabel;
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isAwaitingClientGuardApproval(req);
@@ -190,7 +190,7 @@ function JobDetailPanel({
         {showLiveBadge && (
           <WfBadge tone="primary">{statusCfg.emoji} {statusCfg.label}</WfBadge>
         )}
-        <WfBadge tone={statusBadgeTone(req.status)}>{workflowLabel}</WfBadge>
+        <WfBadge tone={statusBadgeTone(req.status)}>{requestStatusLabel}</WfBadge>
         {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
         {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
         {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}

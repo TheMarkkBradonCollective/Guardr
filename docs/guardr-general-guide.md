@@ -1,8 +1,8 @@
-# Guardr — Full App Workflow (Start to Finish)
+# Guardr — General Guide (Start to Finish)
 
 _Last updated: June 2026_
 
-Guardr connects **clients** who need security coverage with **licensed guards** through a marketplace operated by Guardr staff. This guide explains the complete workflow, including which page to open, where the action appears, what button or slider to use, and what status changes after each step.
+Guardr connects **clients** who need security coverage with **licensed guards** through a marketplace operated by Guardr staff. This general guide explains the complete process, including which page to open, where the action appears, what button or slider to use, and what status changes after each step.
 
 Use it as the operating manual for the whole app:
 
@@ -14,17 +14,17 @@ Use it as the operating manual for the whole app:
 
 | Role | How to open it | Page title |
 |------|----------------|------------|
-| **Client** | Open the account menu in the header, then select **Workflow guide** | **Workflow guide** |
-| **Guard** | Open the account menu in the header, then select **Workflow guide** | **Workflow guide** |
-| **Staff** | Use the left sidebar and select **Workflow guide** | **Workflow guide** |
+| **Client** | Open the account menu in the header, then select **General guide** | **General guide** |
+| **Guard** | Open the account menu in the header, then select **General guide** | **General guide** |
+| **Staff** | Use the left sidebar and select **General guide** | **General guide** |
 
 ### Main navigation by role
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **Workflow guide** |
-| **Guard** | **Map**, **My jobs**, **Pay**, **Messages**, plus account menu pages like **Profile** and **Workflow guide** |
-| **Staff** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Staff**, **Messages**, **Payments**, **Incidents**, **Disputes**, **Analytics**, **Workflow guide**, **Settings** |
+| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **General guide** |
+| **Guard** | **Map**, **My jobs**, **Pay**, **Messages**, plus account menu pages like **Profile** and **General guide** |
+| **Staff** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Staff**, **Messages**, **Payments**, **Incidents**, **Disputes**, **Analytics**, **General guide**, **Settings** |
 
 ---
 
@@ -63,9 +63,9 @@ Every job offer moves through these statuses:
 3. Staff and payment controls still apply as configured.
 4. The job moves to **Accepted** once the direct assignment is confirmed.
 
-### Workflow charts
+### Process charts
 
-These charts show the same workflow visually. Use them when you need to know "who has the next action?" quickly.
+These charts show the same process visually. Use them when you need to know "who has the next action?" quickly.
 
 #### Marketplace job chart
 
@@ -182,7 +182,7 @@ Issue or exception
 
 ---
 
-## Client workflow
+## Client guide
 
 ### Client page map
 
@@ -194,7 +194,7 @@ Issue or exception
 | **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
 | **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
 | **Profile** | Account menu | Company/contact profile details |
-| **Workflow guide** | Account menu | This guide |
+| **General guide** | Account menu | This guide |
 
 ### 1. Sign up, finish the profile, and wait for approval
 
@@ -203,7 +203,7 @@ Issue or exception
 3. Watch **Home** for the pending approval state:
    - A pending client sees **Account pending approval** on **Home**.
    - Most operational pages are blocked until staff approves the account.
-   - While pending, clients can still use **Home**, **Profile**, **Messages**, and **Workflow guide**.
+   - While pending, clients can still use **Home**, **Profile**, **Messages**, and **General guide**.
 4. Staff approve the account from **Approvals → Profile approval** or the **Clients** roster.
 5. After approval, the full client dashboard opens.
 
@@ -386,7 +386,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 
 ---
 
-## Guard workflow
+## Guard guide
 
 ### Guard page map
 
@@ -397,7 +397,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 | **Pay** | Bottom navigation | Stripe setup, earnings, payouts, cash pickup |
 | **Messages** | Bottom navigation | Job chats, support tickets, support reports |
 | **Profile** | Account menu | Personal profile, credentials, ID, resume, certifications |
-| **Workflow guide** | Account menu | This guide |
+| **General guide** | Account menu | This guide |
 
 ### 1. Sign up, upload credentials, and get activated
 
@@ -412,7 +412,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 4. While your account is not active:
    - You may see **Pending approval** or **Profile approved** gating screens.
    - **Map**, **My jobs**, and **Pay** may be blocked.
-   - **Profile**, **Messages**, and **Workflow guide** remain available.
+   - **Profile**, **Messages**, and **General guide** remain available.
 5. Staff verify your profile from **Approvals → Profile approval** and credentials from **Approvals → Guard credentials**.
 6. Staff approve your profile and activate the account when requirements are met.
 
@@ -531,7 +531,7 @@ Late clock-out:
 2. Open the job with **Late clock-out overtime**.
 3. Review the overtime amount and details.
 4. Select **Approve overtime** if the overtime is correct.
-5. If client approval/payment is also required, wait for the client and staff payment workflow.
+5. If client approval/payment is also required, wait for the client and staff payment process.
 
 ### 10. Collect payouts
 
@@ -561,7 +561,7 @@ Payouts depend on:
 
 ---
 
-## Staff workflow
+## Staff guide
 
 ### Staff page map
 
@@ -579,7 +579,7 @@ Payouts depend on:
 | **Incidents** | Left sidebar | Client incident and field report review |
 | **Disputes** | Left sidebar | Payment/overtime dispute handling |
 | **Analytics** | Left sidebar | Operational and financial metrics |
-| **Workflow guide** | Left sidebar | This guide |
+| **General guide** | Left sidebar | This guide |
 | **Settings** | Left sidebar, finance/admin roles | Payment modes, platform fees, staff configuration |
 
 ### 1. Start from Overview
@@ -601,7 +601,7 @@ Payouts depend on:
 3. Find the client account.
 4. Review company/contact information.
 5. Select **Approve client** when the account is valid.
-6. The client gains access to the full client workflow.
+6. The client gains access to the full client experience.
 
 Client accounts can also be reviewed from:
 
@@ -807,9 +807,9 @@ Client opens Home or Jobs
 
 ## Quick reference by role
 
-| Workflow step | Client page/action | Guard page/action | Staff page/action |
+| Guide step | Client page/action | Guard page/action | Staff page/action |
 |---------------|--------------------|-------------------|-------------------|
-| Open this guide | Account menu → **Workflow guide** | Account menu → **Workflow guide** | Sidebar → **Workflow guide** |
+| Open this guide | Account menu → **General guide** | Account menu → **General guide** | Sidebar → **General guide** |
 | Account approval | **Home** pending banner; account menu → **Profile** | Account menu → **Profile** | **Approvals → Profile approval**; **Clients**; **Guards** |
 | Post marketplace job | **Home → Post job offer** or **Jobs → + Post offer** | — | **Approvals → Job offers** |
 | Direct guard request | **Guards → guard profile → Send assignment request to [name]** | **Map → Slide to claim job** | **Jobs** |
@@ -833,4 +833,4 @@ Client opens Home or Jobs
 - **Clients:** Open **Messages**, then choose **Contact support** or **File a report**. Use job chat for job-specific questions.
 - **Guards:** Open **Messages**, then choose **Contact support** or **File a report**. During a shift, use **Message client** for the active job chat.
 - **Staff:** Open **Messages** for support tickets, job chats, and staff chat. Use **Incidents** and **Disputes** for escalations.
-- **This guide:** Clients and guards open the account menu and select **Workflow guide**. Staff select **Workflow guide** in the left sidebar.
+- **This guide:** Clients and guards open the account menu and select **General guide**. Staff select **General guide** in the left sidebar.

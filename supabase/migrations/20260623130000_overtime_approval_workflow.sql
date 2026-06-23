@@ -1,4 +1,4 @@
--- Overtime approval workflow: guard + client approve before payment; separate guard overtime payout.
+-- Overtime approval process: guard + client approve before payment; separate guard overtime payout.
 
 ALTER TABLE security_requests
   ADD COLUMN IF NOT EXISTS overtime_status TEXT,
