@@ -427,7 +427,8 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
       />
       {showSection(refresherItems.length) && (
-      <section className="app-form-section space-y-3">
+      <div className="mt-8 pt-6 border-t border-brand-border">
+      <section className="app-form-section space-y-3 !pt-0 !border-t-0">
         <CredentialRowHeader
           rawTitle
           title={
@@ -438,7 +439,8 @@ export function GuardCredentialsPanel({
           }
           subtitle={
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              {refresherEntry?.description ?? 'Upload when applicable for guard card renewals.'}
+              Separate from the 32-hour block —{' '}
+              {refresherEntry?.description ?? 'upload when applicable for guard card renewals.'}
             </p>
           }
           action={
@@ -469,6 +471,7 @@ export function GuardCredentialsPanel({
           </div>
         )}
       </section>
+      </div>
       )}
       {showSection(otherBsisItems.length) && (
       <section className="app-form-section space-y-3">
