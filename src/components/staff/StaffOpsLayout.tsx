@@ -6,6 +6,7 @@ import { StaffSidebarNav, StaffNavItem } from './StaffSidebarNav';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AccountMenu } from '../layouts/AccountMenu';
+import { Logo } from '../Logo';
 import {
   AlertTriangle,
   BarChart3,
@@ -112,6 +113,7 @@ export function StaffOpsLayout({
     <div className="staff-sidebar-inner">
       <div className="staff-sidebar-brand">
         <div className="flex items-center gap-2.5">
+          <Logo size={24} className="shrink-0" />
           <span
             className="font-black text-xl tracking-[-0.04em] leading-none"
             style={{ color: isDarkSidebar ? '#ffffff' : undefined }}
