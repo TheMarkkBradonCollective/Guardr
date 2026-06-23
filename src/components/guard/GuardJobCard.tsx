@@ -42,7 +42,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
               {job.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
               {job.requestType === 'direct' && <WfBadge tone="primary">Direct</WfBadge>}
             </div>
-            <p className="font-semibold leading-snug">{job.title}</p>
+            <p className="font-bold leading-snug tracking-tight">{job.title}</p>
             <p className="text-sm text-brand-text-muted mt-1">{job.clientName}</p>
             <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
               <MapPin className="w-3 h-3 shrink-0" />
@@ -54,7 +54,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-lg font-bold text-brand-primary">${hourlyPay}/hr</p>
+            <p className="text-xl font-black text-brand-primary tracking-tight">${hourlyPay}/hr</p>
             <p className="text-xs text-brand-text-muted">${estimated} est.</p>
           </div>
         </div>

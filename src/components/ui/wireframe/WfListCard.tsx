@@ -34,9 +34,9 @@ export function WfListCard({
         {avatar && <div className="shrink-0">{avatar}</div>}
         <div className="min-w-0 flex-1 text-left">
           {typeof title === 'string' ? (
-            <p className="font-semibold text-[0.9375rem] leading-snug truncate">{title}</p>
+            <p className="font-bold text-[0.9375rem] leading-snug truncate tracking-tight">{title}</p>
           ) : (
-            <div className="font-semibold text-[0.9375rem] leading-snug min-w-0">{title}</div>
+            <div className="font-bold text-[0.9375rem] leading-snug min-w-0 tracking-tight">{title}</div>
           )}
           {subtitle && (
             <p className="text-sm text-brand-text-muted mt-0.5 leading-snug line-clamp-2">{subtitle}</p>

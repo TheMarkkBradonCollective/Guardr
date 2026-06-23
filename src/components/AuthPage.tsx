@@ -4,7 +4,7 @@ import {
   Shield,
   Mail,
   ArrowLeft,
-  ChevronRight,
+  ArrowRight,
   Eye,
   EyeOff,
   User,
@@ -389,39 +389,46 @@ export function AuthPage({
       className={`page-shell min-h-screen flex flex-col auth-experience-${role}`}
       id="guardr-auth-root"
     >
-      <div className="auth-hero relative h-40 sm:h-48 shrink-0 overflow-hidden">
+      <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
         <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-10 bg-brand-bg rounded-t-[2.5rem]" />
         <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={onBackToHome}
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium"
+            className="flex items-center gap-1.5 text-white/75 hover:text-white transition-colors text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
           <div className="flex items-center gap-2 text-white">
             <Logo size={26} className="text-white" />
-            <span className="font-semibold text-base">Guardr</span>
+            <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
           </div>
           <div className="w-14" />
         </header>
+        {/* Ambient glow in auth hero */}
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl"
+            style={{ background: 'radial-gradient(circle, rgba(107,143,110,0.4) 0%, transparent 70%)' }}
+          />
+        </div>
       </div>
 
       <div className="flex flex-1 items-start justify-center px-5 py-6 sm:py-10">
         <div className="w-full max-w-md animate-fade-in">
-          <div className="mb-6">
+          <div className="mb-7">
             <p className="experience-badge">
               {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
             </p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-[-0.04em] leading-tight mt-1">
               {isSignUp
                 ? role === 'guard'
                   ? 'Create your guard account'
                   : 'Create your client account'
                 : 'Sign in'}
             </h1>
-            <p className="text-brand-text-muted text-sm mt-2 leading-relaxed">
+            <p className="text-brand-text-muted text-sm mt-2.5 leading-relaxed font-medium">
               {isSignUp
                 ? role === 'guard'
                   ? 'Independent contractors manage credentials, jobs, and pay here.'
@@ -613,9 +620,9 @@ export function AuthPage({
                 </label>
               )}
 
-              <button type="submit" className="app-button-primary mt-2">
+              <button type="submit" className="app-button-primary mt-3">
                 {isSignUp ? 'Create account' : 'Sign in'}
-                <ChevronRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           </div>

@@ -57,7 +57,7 @@ export function MapOfferCard({
               <WfBadge tone="primary">Direct</WfBadge>
             )}
           </div>
-          <p className="font-semibold text-sm leading-snug truncate">{job.title}</p>
+          <p className="font-bold text-sm leading-snug truncate tracking-tight">{job.title}</p>
           <p className="text-xs text-brand-text-muted mt-0.5 truncate">
             {clientName || job.siteName || job.location}
           </p>

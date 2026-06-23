@@ -101,7 +101,7 @@ export function AccountMenu({
       style={{ top: position.top, right: position.right }}
     >
       <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec/60">
-        <p className="font-semibold text-sm truncate">{userName}</p>
+        <p className="font-bold text-sm truncate tracking-tight">{userName}</p>
         {userSubtitle && <p className="text-xs text-brand-text-muted truncate mt-0.5">{userSubtitle}</p>}
       </div>
 
