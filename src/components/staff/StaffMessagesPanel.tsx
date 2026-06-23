@@ -23,12 +23,22 @@ import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { AppChatHeader, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy, MessagesSquare, Trash2 } from 'lucide-react';
+import {
+  Briefcase,
+  FileText,
+  LifeBuoy,
+  MessageCircle,
+  MessagesSquare,
+  Trash2,
+  Users,
+} from 'lucide-react';
 
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
   | { kind: 'job'; requestId: string }
   | { kind: 'support'; ticketId: string };
+
+type InboxTab = 'team' | 'jobs' | 'support';
 
 interface StaffMessagesPanelProps {
   requests: SecurityRequest[];
@@ -84,8 +94,14 @@ export function StaffMessagesPanel({
 }: StaffMessagesPanelProps) {
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
-    if (initialSupportTicketId) return { kind: 'support', ticketId: initialSupportTicketId };
+    if (initialSupportTicketId)  return { kind: 'support', ticketId: initialSupportTicketId };
     return null;
+  });
+
+  const [activeTab, setActiveTab] = useState<InboxTab>(() => {
+    if (initialJobChatRequestId) return 'jobs';
+    if (initialSupportTicketId)  return 'support';
+    return 'team';
   });
 
   const staffUpdatedAt = useMemo(() => {
@@ -93,7 +109,7 @@ export function StaffMessagesPanel({
     return sorted[sorted.length - 1]?.createdAt;
   }, [staffMessages]);
 
-  const inboxRows = useMemo(
+  const allRows = useMemo(
     () =>
       buildStaffInboxRows({
         requests,
@@ -105,6 +121,21 @@ export function StaffMessagesPanel({
       }),
     [requests, guards, threads, messages, supportTickets, staffUpdatedAt]
   );
+
+  const teamRows    = useMemo(() => allRows.filter((r) => r.channel === 'staff-community'), [allRows]);
+  const jobRows     = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
+  const supportRowsAll = useMemo(
+    () => allRows.filter((r) => r.channel === 'support' || r.channel === 'report'),
+    [allRows]
+  );
+
+  const tabRows = useMemo((): InboxRow[] => {
+    switch (activeTab) {
+      case 'team':    return teamRows;
+      case 'jobs':    return jobRows;
+      case 'support': return supportRowsAll;
+    }
+  }, [activeTab, teamRows, jobRows, supportRowsAll]);
 
   const selectRow = (row: InboxRow) => {
     if (row.channel === 'staff-community') {
@@ -132,15 +163,15 @@ export function StaffMessagesPanel({
     onSelectedSupportTicketIdChange?.(null);
   };
 
-  const controlledJobId = selectedJobChatRequestId ?? (selection?.kind === 'job' ? selection.requestId : null);
+  const controlledJobId =
+    selectedJobChatRequestId ?? (selection?.kind === 'job' ? selection.requestId : null);
   const controlledSupportId =
     selectedSupportTicketId ?? (selection?.kind === 'support' ? selection.ticketId : null);
-  const effectiveSelection: StaffMessageSelection | null =
-    controlledSupportId
-      ? { kind: 'support', ticketId: controlledSupportId }
-      : controlledJobId
-        ? { kind: 'job', requestId: controlledJobId }
-        : selection;
+  const effectiveSelection: StaffMessageSelection | null = controlledSupportId
+    ? { kind: 'support', ticketId: controlledSupportId }
+    : controlledJobId
+    ? { kind: 'job', requestId: controlledJobId }
+    : selection;
 
   useEffect(() => {
     onDetailOpenChange?.(!!effectiveSelection);
@@ -148,68 +179,93 @@ export function StaffMessagesPanel({
 
   const hasSelection = !!effectiveSelection;
 
-  const isRowSelected = (row: InboxRow): boolean => {
+  const isRowSelected = (row: InboxRow) => {
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
-    if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) {
-      return true;
-    }
-    if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) {
-      return true;
-    }
+    if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
+    if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) return true;
     return false;
   };
 
+  // ── Header: title + tabs ───────────────────────────────
+  const header = (
+    <div>
+      <div className="app-messages-hub-lead">
+        <h2 className="text-base font-bold tracking-tight">Messages</h2>
+        <p>Staff, job chats, and support sorted by recent activity</p>
+      </div>
+      <div className="app-inbox-tabs" role="tablist">
+        {(
+          [
+            { id: 'team'    as InboxTab, label: 'Team',    count: 1,                    icon: <Users      className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,        icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy   className="w-3.5 h-3.5" strokeWidth={2} /> },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="app-inbox-tab-badge">{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── List ───────────────────────────────────────────────
   const list = (
     <>
-      {inboxRows.length === 0 ? (
-        <p className="staff-empty-state">No conversations yet.</p>
+      {tabRows.length === 0 ? (
+        <div className="app-inbox-tab-empty">
+          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
+          <p className="app-inbox-tab-empty-title">
+            {activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'Team channel'}
+          </p>
+          <p className="app-inbox-tab-empty-hint">
+            {activeTab === 'jobs'
+              ? 'Job chats appear here when a guard is assigned to a booking.'
+              : activeTab === 'support'
+              ? 'Support and report tickets from users will appear here.'
+              : 'The staff team channel will appear here.'}
+          </p>
+        </div>
       ) : (
         <AppInboxList>
-          {inboxRows.map((row, i) => {
-            const prevRow = i > 0 ? inboxRows[i - 1] : null;
-            const sectionChanged = prevRow && prevRow.channel !== row.channel;
-            const isFirstRow = i === 0;
-            const showSection =
-              (isFirstRow && row.channel !== 'staff-community') || sectionChanged;
-
-            const sectionLabel =
-              row.channel === 'job'
-                ? 'Job Chats'
-                : row.channel === 'support' || row.channel === 'report'
-                ? 'Support'
-                : null;
-
-            return (
-              <React.Fragment key={row.id}>
-                {showSection && sectionLabel && (
-                  <div className="app-inbox-section-head">{sectionLabel}</div>
-                )}
-                <AppInboxRow
-                  title={row.title}
-                  subtitle={row.subtitle}
-                  preview={row.preview}
-                  meta={formatInboxMeta(row.updatedAt)}
-                  selected={isRowSelected(row)}
-                  leading={
-                    row.channel === 'staff-community' ? (
-                      <MessagesSquare className="w-5 h-5 text-brand-primary" />
-                    ) : row.channel === 'report' ? (
-                      <FileText className="w-5 h-5 text-brand-primary" />
-                    ) : row.channel === 'support' ? (
-                      <LifeBuoy className="w-5 h-5 text-brand-primary" />
-                    ) : undefined
-                  }
-                  badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
-                  onClick={() => selectRow(row)}
-                />
-              </React.Fragment>
-            );
-          })}
+          {tabRows.map((row) => (
+            <AppInboxRow
+              key={row.id}
+              title={row.title}
+              subtitle={row.subtitle}
+              preview={row.preview}
+              meta={formatInboxMeta(row.updatedAt)}
+              selected={isRowSelected(row)}
+              leading={
+                row.channel === 'staff-community' ? (
+                  <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'report' ? (
+                  <FileText className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'support' ? (
+                  <LifeBuoy className="w-5 h-5 text-brand-primary" />
+                ) : undefined
+              }
+              badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
+              onClick={() => selectRow(row)}
+            />
+          ))}
         </AppInboxList>
       )}
     </>
   );
 
+  // ── Detail view ────────────────────────────────────────
   const detailView = (() => {
     if (!effectiveSelection) return null;
 
@@ -294,20 +350,24 @@ export function StaffMessagesPanel({
               )}
               <select
                 value={ticket.status}
-                onChange={(e) => void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)}
+                onChange={(e) =>
+                  void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)
+                }
                 className="uber-input text-xs py-1.5 max-w-[8.5rem]"
               >
-              {(Object.keys(
-                ticket.kind === 'report'
-                  ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
-                  : SUPPORT_STATUS_LABEL
-              ) as SupportTicketStatus[]).map((s) => (
-                <option key={s} value={s}>
-                  {ticket.kind === 'report'
-                    ? supportStatusLabel({ kind: 'report', status: s })
-                    : SUPPORT_STATUS_LABEL[s]}
-                </option>
-              ))}
+                {(
+                  Object.keys(
+                    ticket.kind === 'report'
+                      ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
+                      : SUPPORT_STATUS_LABEL
+                  ) as SupportTicketStatus[]
+                ).map((s) => (
+                  <option key={s} value={s}>
+                    {ticket.kind === 'report'
+                      ? supportStatusLabel({ kind: 'report', status: s })
+                      : SUPPORT_STATUS_LABEL[s]}
+                  </option>
+                ))}
               </select>
             </div>
           }
@@ -334,12 +394,7 @@ export function StaffMessagesPanel({
 
   return (
     <MessagesHubLayout
-      header={
-        <div className="app-messages-hub-lead">
-          <h2 className="text-base font-bold tracking-tight">Messages</h2>
-          <p>Staff, job, and support chats sorted by recent activity</p>
-        </div>
-      }
+      header={header}
       list={list}
       detail={detailView ?? <div />}
       hasSelection={hasSelection && !!detailView}

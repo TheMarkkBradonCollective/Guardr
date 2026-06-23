@@ -24,8 +24,10 @@ export function MessagesHubLayout({
 
   return (
     <div className="h-full flex flex-col min-h-0">
-      {header}
-      {list}
+      {/* header (title strip + tab bar) stays fixed */}
+      {header && <div className="flex-shrink-0">{header}</div>}
+      {/* list scrolls independently */}
+      <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
     </div>
   );
 }
