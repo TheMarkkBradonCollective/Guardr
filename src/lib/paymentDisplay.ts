@@ -186,8 +186,8 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       }
       if (isPlatformFeeCollected(req)) {
         return {
-          headline: 'Client paid cash · guard Stripe deposit pending',
-          detail: `Platform fee deposited — pay guard $${due.toFixed(2)} with card to fund payout.`,
+          headline: 'Client paid cash · guard pay due',
+          detail: `Platform fee deposited — pay guard $${due.toFixed(2)} with card or hand cash on site.`,
         };
       }
       return {

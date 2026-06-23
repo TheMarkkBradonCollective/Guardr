@@ -3,7 +3,7 @@ import { Banknote, CreditCard, Loader2, RotateCcw } from 'lucide-react';
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
-  canDirectorMarkGuardPaidCash,
+  canDirectorPayGuardCash,
   canDirectorMarkPlatformFeePaidCash,
   canStaffApproveClientCashPayment,
   canStripePayGuard,
@@ -114,7 +114,7 @@ export function JobPaymentRow({
   const canCashGuard =
     paymentGates.allowCash &&
     isDirector &&
-    canDirectorMarkGuardPaidCash(req) &&
+    canDirectorPayGuardCash(req) &&
     onMarkGuardPaidCash &&
     !readOnly;
   const canRefund =
@@ -220,6 +220,18 @@ export function JobPaymentRow({
             </button>
           )}
 
+          {canCashGuard && (
+            <button
+              type="button"
+              onClick={() => run('guard', onMarkGuardPaidCash)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5"
+            >
+              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Pay guard ${guardAmount.toFixed(2)} cash
+            </button>
+          )}
+
           {canPlatformFeeCash && (
             <button
               type="button"
@@ -248,18 +260,6 @@ export function JobPaymentRow({
               }
               onConfirm={() => run('stripe', onReleasePayout)}
             />
-          )}
-
-          {canCashGuard && (
-            <button
-              type="button"
-              onClick={() => run('guard', onMarkGuardPaidCash)}
-              disabled={busy !== null}
-              className="app-button-outline app-btn-sm gap-1.5"
-            >
-              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
-              Mark guard paid in cash
-            </button>
           )}
 
           {isDirector && canPayGuard && onReleasePayout && stripePayAllowed && !readOnly && (
