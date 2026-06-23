@@ -181,6 +181,10 @@ const LEGACY_UOF_ID = 'bsis-appropriate-use-of-force';
 /** Second half of modern 2-part 8-hr course when issued as a separate WMD cert. */
 export const BSIS_WMD_AWARENESS_ID = 'bsis-wmd-awareness';
 
+export { LEGACY_PTA_ID, LEGACY_UOF_ID };
+
+export const PTA_UOF_SEPARATE_PART_COUNT = 2;
+
 /** Catalog IDs on the Inactive→Active pathway — not shown as supplemental badges. */
 export function getRequiredPathwayCatalogIds(): readonly string[] {
   return [
@@ -229,6 +233,83 @@ export function getPtaUofCatalogEntries() {
   return [BSIS_PTA_UOF_COMBINED_ID, LEGACY_PTA_ID, LEGACY_UOF_ID, BSIS_WMD_AWARENESS_ID]
     .map((id) => getCertCatalogEntry(id))
     .filter((entry): entry is NonNullable<typeof entry> => !!entry);
+}
+
+export function guardPtaUofUsingCombinedPath(guard: SecurityGuard): boolean {
+  return guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID);
+}
+
+export function guardPtaUofSecondPartOnFile(guard: SecurityGuard): boolean {
+  return (
+    guardHasCredentialOnFile(guard, LEGACY_UOF_ID) ||
+    guardHasCredentialOnFile(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
+export function guardPtaUofSecondPartListed(guard: SecurityGuard): boolean {
+  return (
+    guardHasCredentialListed(guard, LEGACY_UOF_ID) ||
+    guardHasCredentialListed(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
+export function computePtaUofProgress(guard: SecurityGuard) {
+  const combinedOnFile = guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
+  const combinedListed =
+    guardHasCredentialListed(guard, BSIS_PTA_UOF_COMBINED_ID) && !combinedOnFile;
+  const ptaOnFile = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
+  const ptaListed = guardHasCredentialListed(guard, LEGACY_PTA_ID) && !ptaOnFile;
+  const secondOnFile = guardPtaUofSecondPartOnFile(guard);
+  const secondListed = guardPtaUofSecondPartListed(guard) && !secondOnFile;
+  const complete = guardMeetsPtaUofTraining(guard);
+  const usingCombinedPath = guardPtaUofUsingCombinedPath(guard);
+
+  let progressPercent = 0;
+  if (complete) {
+    progressPercent = 100;
+  } else if (combinedListed) {
+    progressPercent = 50;
+  } else {
+    const ptaWeight = ptaOnFile ? 1 : ptaListed ? 0.5 : 0;
+    const secondWeight = secondOnFile ? 1 : secondListed ? 0.5 : 0;
+    progressPercent = Math.round(((ptaWeight + secondWeight) / PTA_UOF_SEPARATE_PART_COUNT) * 100);
+  }
+
+  return {
+    complete,
+    progressPercent,
+    combinedOnFile,
+    combinedListed,
+    ptaOnFile,
+    ptaListed,
+    secondOnFile,
+    secondListed,
+    usingCombinedPath,
+  };
+}
+
+export function formatPtaUofProgressSummary(guard: SecurityGuard): string {
+  const progress = computePtaUofProgress(guard);
+  if (progress.combinedOnFile) {
+    return 'Combined 8-hour certificate on file';
+  }
+  if (progress.complete) {
+    return progress.ptaOnFile && progress.secondOnFile
+      ? 'Power to Arrest and second part on file'
+      : '8-hour training on file';
+  }
+  if (progress.usingCombinedPath && progress.combinedListed) {
+    return 'Combined certificate listed — document photo required';
+  }
+  const partsOnFile =
+    (progress.ptaOnFile ? 1 : 0) + (progress.secondOnFile ? 1 : 0);
+  const partsListed =
+    (progress.ptaListed ? 1 : 0) + (progress.secondListed ? 1 : 0);
+  const base = `${partsOnFile} of ${PTA_UOF_SEPARATE_PART_COUNT} parts on file`;
+  if (partsListed > 0) {
+    return `${base} · ${partsListed} listed`;
+  }
+  return partsOnFile === 0 && partsListed === 0 ? 'Not on file' : base;
 }
 
 export function isRequiredPathwayCredential(catalogId: string | undefined): boolean {
@@ -459,6 +540,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     guardHasCredentialOnFile(guard, id)
   );
   const thirtyTwoHourBlockComplete = guardMeets32HourBlock(guard);
+  const ptaUofProgress = computePtaUofProgress(guard);
 
   return {
     level: getGuardQualificationLevel(guard, jobState),
@@ -485,6 +567,8 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
       listed32HourCount,
       total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     }),
+    ...ptaUofProgress,
+    ptaUofProgressPercent: ptaUofProgress.progressPercent,
     total32HourCourses: THIRTY_TWO_HOUR_COURSE_IDS.length,
     trainingPathwayComplete: guardMeetsLevel2Training(guard),
     /** @deprecated */
