@@ -17,15 +17,18 @@ import {
 import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
-  CredentialSectionAddButton,
+  CredentialRowAction,
+  CredentialRowHeader,
   CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 const ROLLUP_COMPLETION_CATALOG_ID = 'bsis-32-hour-completed';
@@ -153,7 +156,12 @@ export function GuardThirtyTwoHourPanel({
         return;
       }
     }
-    if (!window.confirm('Remove this credential from your profile?')) return;
+    if (!(await showAppConfirm({
+      title: 'Remove credential?',
+      message: 'Remove this credential from your profile?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    }))) return;
     const result = await onDeleteCertification(certId);
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
@@ -190,21 +198,19 @@ export function GuardThirtyTwoHourPanel({
     uploaded: Certification[];
   }) => (
     <div className="app-list-subrow space-y-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-sm font-semibold ${
-              uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'
-            }`}
-          >
-            {label}
-          </p>
-          {subtitle && (
-            <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
-          )}
-        </div>
-        {canUpload && <CredentialSectionAddButton onClick={() => startAdd(catalogId)} />}
-      </div>
+      <CredentialRowHeader
+        title={label}
+        subtitle={subtitle}
+        titleMuted={uploaded.length === 0}
+        action={
+          <CredentialRowAction
+            staffMode={staffMode}
+            uploadStatus={getCourseUploadStatus(guard, catalogId)}
+            canUpload={canUpload}
+            onAdd={() => startAdd(catalogId)}
+          />
+        }
+      />
 
       {uploaded.length > 0 && (
         <div className="app-cert-item-stack !pt-0">
@@ -250,14 +256,22 @@ export function GuardThirtyTwoHourPanel({
 
       {uploadPath === 'combined' ? (
         <div className="border-t border-brand-border pt-3 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-              32-hour completion certificate
-            </p>
-            {canUpload && (
-              <CredentialSectionAddButton onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)} />
-            )}
-          </div>
+          <CredentialRowHeader
+            rawTitle
+            title={
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+                32-hour completion certificate
+              </span>
+            }
+            action={
+              <CredentialRowAction
+                staffMode={staffMode}
+                uploadStatus={getCourseUploadStatus(guard, ROLLUP_COMPLETION_CATALOG_ID)}
+                canUpload={canUpload}
+                onAdd={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+              />
+            }
+          />
           {rollupCerts.length > 0 ? (
             <div className="app-cert-item-stack !pt-0">
               {rollupCerts.map((cert) => renderCertRow(cert))}

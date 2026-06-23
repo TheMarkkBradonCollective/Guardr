@@ -50,6 +50,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const db = await getSupabaseAdmin();
     if (db) {
+      const { data: settings } = await db
+        .from('platform_settings')
+        .select('payment_stripe_enabled')
+        .eq('id', 'default')
+        .maybeSingle();
+
+      if (settings && settings.payment_stripe_enabled === false) {
+        return res.status(400).json({ error: 'Online card payments are not enabled on this platform' });
+      }
+
       const { data: job } = await db
         .from('security_requests')
         .select('payment_status, status')

@@ -545,6 +545,9 @@ export interface SecurityRequest {
   /** Guard requested physical cash from director for this job */
   guardCashPayoutRequested?: boolean;
   guardCashPayoutRequestedAt?: string;
+  /** Client chose pay-in-cash — awaiting staff confirmation */
+  clientCashPaymentRequested?: boolean;
+  clientCashPaymentRequestedAt?: string;
   /** Director paid client cash into Stripe via card checkout */
   cashDepositedToStripe?: boolean;
   /** Dollars paid into Stripe (card) for cash-client jobs */

@@ -182,6 +182,11 @@ export function isOwner(user: Pick<SessionUser, 'role'>): boolean {
   return user.role === 'owner';
 }
 
+/** Owner-only platform configuration (payment modes, etc.) */
+export function canManagePlatformSettings(user: Pick<SessionUser, 'role'>): boolean {
+  return isOwner(user);
+}
+
 /** Director and Owner share executive payment and ops controls */
 export function hasExecutivePaymentControls(user: Pick<SessionUser, 'role'>): boolean {
   return user.role === 'director' || user.role === 'owner';

@@ -137,20 +137,20 @@ export function summarizeCredentialSlotStatuses(
   };
 }
 
-/** e.g. "5 not listed or on file and another 1 listed and another 3 on file" */
+/** e.g. "5 missing · 1 listed · 3 on file" */
 export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCounts): string {
   const segments: string[] = [];
   if (counts.missing > 0) {
-    segments.push(`${counts.missing} ${CREDENTIAL_NOT_LISTED_OR_ON_FILE_COUNT_LABEL}`);
+    segments.push(`${counts.missing} missing`);
   }
   if (counts.listed > 0) {
-    segments.push(segments.length > 0 ? `another ${counts.listed} listed` : `${counts.listed} listed`);
+    segments.push(`${counts.listed} listed`);
   }
   if (counts.onFile > 0) {
-    segments.push(segments.length > 0 ? `another ${counts.onFile} on file` : `${counts.onFile} on file`);
+    segments.push(`${counts.onFile} on file`);
   }
   if (segments.length === 0) return 'On file';
-  return segments.join(' and ');
+  return segments.join(' · ');
 }
 
 export function countThirtyTwoHourCourseSlotStatuses(guard: SecurityGuard): CredentialSlotStatusCounts {

@@ -15,14 +15,18 @@ export function CredentialSectionStatusBadge({
   tone?: WfBadgeTone;
 }) {
   return (
-    <WfBadge tone={tone} className="!text-[10px] normal-case tracking-normal">
+    <WfBadge tone={tone} className="credential-status-badge !text-[10px] normal-case tracking-normal">
       {label}
     </WfBadge>
   );
 }
 
 export function CredentialSectionStatusDisplay({ status }: { status: CredentialSectionStatus }) {
-  return <CredentialSectionStatusBadge label={status.label} tone={status.tone} />;
+  return (
+    <div className="credential-section-status">
+      <CredentialSectionStatusBadge label={status.label} tone={status.tone} />
+    </div>
+  );
 }
 
 export type CredentialListStatus = CourseUploadStatus | 'not-listed';
@@ -54,6 +58,75 @@ export function CredentialListStatusBadge({
 }) {
   const label = credentialListStatusLabel(status, { staffMode });
   return <CredentialSectionStatusBadge label={label} tone={listStatusTone(status, staffMode)} />;
+}
+
+export function credentialNeedsUploadAction(status: CredentialListStatus): boolean {
+  return status === 'missing' || status === 'listed';
+}
+
+/** Title + subtitle block with optional action — wraps cleanly on narrow screens. */
+export function CredentialRowHeader({
+  title,
+  subtitle,
+  action,
+  titleMuted = false,
+  rawTitle = false,
+}: {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  action?: React.ReactNode;
+  titleMuted?: boolean;
+  /** When true, title is rendered as-is (for section labels with custom styling). */
+  rawTitle?: boolean;
+}) {
+  return (
+    <div className="credential-row-header">
+      <div className="credential-row-header__main">
+        {rawTitle ? (
+          title
+        ) : (
+          <div
+            className={`text-sm font-semibold leading-snug break-words ${
+              titleMuted ? 'text-brand-text-muted' : 'text-brand-text'
+            }`}
+          >
+            {title}
+          </div>
+        )}
+        {subtitle ? (
+          typeof subtitle === 'string' ? (
+            <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug break-words">{subtitle}</p>
+          ) : (
+            <div className="mt-0.5">{subtitle}</div>
+          )
+        ) : null}
+      </div>
+      {action ? <div className="credential-row-header__action">{action}</div> : null}
+    </div>
+  );
+}
+
+/**
+ * Per-row / per-section header action: staff always sees status; guards see Add only while upload is still needed.
+ */
+export function CredentialRowAction({
+  staffMode = false,
+  uploadStatus,
+  canUpload,
+  onAdd,
+}: {
+  staffMode?: boolean;
+  uploadStatus: CredentialListStatus;
+  canUpload: boolean;
+  onAdd: () => void;
+}) {
+  if (staffMode || !credentialNeedsUploadAction(uploadStatus)) {
+    return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
+  }
+  if (canUpload) {
+    return <CredentialSectionAddButton onClick={onAdd} />;
+  }
+  return <CredentialListStatusBadge status={uploadStatus} staffMode={staffMode} />;
 }
 
 /** Consistent section-header action for credential uploads. */

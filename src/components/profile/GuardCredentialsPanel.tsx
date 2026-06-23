@@ -29,8 +29,9 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { CredentialSectionAddButton } from '../credentials/CredentialStatusLabels';
+import { CredentialRowAction, CredentialRowHeader } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import {
   CERT_IMAGE_POLICY_HINT,
   guardCertificationCanEdit,
@@ -40,6 +41,7 @@ import {
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 
@@ -179,7 +181,12 @@ export function GuardCredentialsPanel({
         return;
       }
     }
-    if (!window.confirm('Remove this credential from your profile?')) return;
+    if (!(await showAppConfirm({
+      title: 'Remove credential?',
+      message: 'Remove this credential from your profile?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    }))) return;
     const result = await onDeleteCertification(certId);
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
@@ -421,22 +428,34 @@ export function GuardCredentialsPanel({
       />
       {showSection(refresherItems.length) && (
       <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="uber-label flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-brand-primary" />
+        <CredentialRowHeader
+          rawTitle
+          title={
+            <p className="uber-label flex items-center gap-2 flex-wrap">
+              <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
               {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
             </p>
-            <p className="text-xs text-brand-text-muted mt-1">
+          }
+          subtitle={
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
               {refresherEntry?.description ?? 'Upload when applicable for guard card renewals.'}
             </p>
-          </div>
-          {canUpload && (
-            <CredentialSectionAddButton
-              onClick={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
-            />
-          )}
-        </div>
+          }
+          action={
+            canUpload ? (
+              <CredentialRowAction
+                staffMode={staffMode}
+                uploadStatus={
+                  refresherItems.length > 0
+                    ? 'on-file'
+                    : getCourseUploadStatus(guard, BSIS_REFRESHER_CATALOG_ID)
+                }
+                canUpload={canUpload}
+                onAdd={() => openCredentialAddSheet('bsis-refresher', BSIS_REFRESHER_CATALOG_ID)}
+              />
+            ) : undefined
+          }
+        />
 
         {refresherItems.length === 0 ? (
           canUpload || editing ? (
@@ -453,22 +472,34 @@ export function GuardCredentialsPanel({
       )}
       {showSection(otherBsisItems.length) && (
       <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="uber-label flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-brand-primary" />
+        <CredentialRowHeader
+          rawTitle
+          title={
+            <p className="uber-label flex items-center gap-2 flex-wrap">
+              <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
               Other BSIS Training
             </p>
-            <p className="text-xs text-brand-text-muted mt-1">
+          }
+          subtitle={
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
               Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
             </p>
-          </div>
-          {canUpload && otherBsisCatalogOptions.length > 0 && (
-            <CredentialSectionAddButton
-              onClick={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
-            />
-          )}
-        </div>
+          }
+          action={
+            canUpload && otherBsisCatalogOptions.length > 0 ? (
+              <CredentialRowAction
+                staffMode={staffMode}
+                uploadStatus={
+                  otherBsisItems.length > 0
+                    ? 'on-file'
+                    : getCourseUploadStatus(guard, otherBsisCatalogOptions[0]?.id ?? '')
+                }
+                canUpload={canUpload}
+                onAdd={() => openCredentialAddSheet('bsis-training', otherBsisCatalogOptions[0]?.id ?? '')}
+              />
+            ) : undefined
+          }
+        />
 
         {otherBsisItems.length === 0 ? (
           canUpload || editing ? (
@@ -491,20 +522,28 @@ export function GuardCredentialsPanel({
 
         const sectionCard = (
           <section key={category} className="app-form-section space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="uber-label flex items-center gap-2">
-                  <Icon className="w-4 h-4 text-brand-primary" />
+            <CredentialRowHeader
+              rawTitle
+              title={
+                <p className="uber-label flex items-center gap-2 flex-wrap">
+                  <Icon className="w-4 h-4 text-brand-primary shrink-0" />
                   {title}
                 </p>
-                <p className="text-xs text-brand-text-muted mt-1">{subtitle}</p>
-              </div>
-              {canUpload && catalogOptions.length > 0 && (
-                <CredentialSectionAddButton
-                  onClick={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
-                />
-              )}
-            </div>
+              }
+              subtitle={<p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{subtitle}</p>}
+              action={
+                canUpload && catalogOptions.length > 0 ? (
+                  <CredentialRowAction
+                    staffMode={staffMode}
+                    uploadStatus={
+                      items.length > 0 ? 'on-file' : getCourseUploadStatus(guard, catalogOptions[0]?.id ?? '')
+                    }
+                    canUpload={canUpload}
+                    onAdd={() => openCredentialAddSheet(category, catalogOptions[0]?.id ?? '')}
+                  />
+                ) : undefined
+              }
+            />
 
             {items.length === 0 ? (
               canUpload || editing ? (

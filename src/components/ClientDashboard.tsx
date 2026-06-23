@@ -6,6 +6,7 @@ import {
 } from '../lib/clientCoverage';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
+import type { ClientPaymentGates } from '../lib/platformSettings';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
@@ -53,6 +54,8 @@ interface ClientDashboardProps {
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
+  onRequestCashPayment?: (requestId: string) => void | Promise<void>;
+  paymentGates: ClientPaymentGates;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -86,6 +89,8 @@ export function ClientDashboard({
   onAddReview,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
+  onRequestCashPayment,
+  paymentGates,
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
@@ -295,12 +300,14 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         clientEmail={clientEmail}
+        paymentGates={paymentGates}
         onCancelRequest={onCancelRequest}
         onEditRequest={onEditRequest}
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
+        onRequestCashPayment={onRequestCashPayment}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

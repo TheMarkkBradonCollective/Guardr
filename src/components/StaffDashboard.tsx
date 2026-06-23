@@ -64,6 +64,7 @@ import { StaffMessengerPanel } from './staff/StaffMessengerPanel';
 import { openTicketCount } from '../lib/support';
 import { activeJobChatCount } from '../lib/jobChat';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
+import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -119,12 +120,16 @@ interface StaffDashboardProps {
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
+  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
+  platformSettings: PlatformSettings;
+  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   onAddStaffProfile: (
     name: string,
     email: string,
@@ -224,12 +229,16 @@ export function StaffDashboard({
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onApproveClientCashPayment,
+  onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
   isDbConnected,
   currentUser,
+  platformSettings,
+  onUpdatePlatformSettings,
   onAddStaffProfile,
   onUpdateStaffRole,
   onAddGuardProfile,
@@ -578,9 +587,16 @@ export function StaffDashboard({
             payments={payments}
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
+            canManagePayments={showFinance}
+            paymentGates={{
+              allowCash: platformSettings.paymentCashEnabled,
+              allowStripe: platformSettings.paymentStripeEnabled,
+            }}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onApproveClientCashPayment={onApproveClientCashPayment}
+            onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
@@ -610,6 +626,8 @@ export function StaffDashboard({
         return showFinance ? (
           <StaffSettingsPanel
             currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
             showStaffOnboard={canManageStaff}
             onAddStaffProfile={onAddStaffProfile}
           />

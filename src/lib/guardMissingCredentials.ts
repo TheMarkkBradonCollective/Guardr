@@ -1,3 +1,4 @@
+import { showAppConfirm, showAppPrompt } from '../components/ui/AppConfirm';
 import { showAppToast } from '../components/ui/AppToast';
 import { SecurityGuard } from '../types';
 import {
@@ -60,19 +61,23 @@ export function guardHasMissingWorkCredentials(guard: SecurityGuard, state = 'CA
 }
 
 /** Staff sets grace hours when activating without optional credentials listed on profile. */
-export function promptStaffGuardActivationGrace(
+export async function promptStaffGuardActivationGrace(
   guard: SecurityGuard,
   state = 'CA'
-): StaffActivationGraceChoice {
+): Promise<StaffActivationGraceChoice> {
   const missing = getGuardMissingGraceCredentialLabels(guard, state);
   if (missing.length === 0) {
     return { proceed: true, missingLabels: [] };
   }
 
   const list = formatMissingCredentialList(missing);
-  const hoursInput = window.prompt(
-    `${list} is not listed or on file for this guard.\n\nEnter grace period in hours (time to upload before deactivation), or Cancel to abort:`
-  );
+  const hoursInput = await showAppPrompt({
+    title: 'Grace period required',
+    message: `${list} is not listed or on file for this guard.\n\nEnter how many hours they have to upload before deactivation.`,
+    placeholder: 'Hours (e.g. 24, 48, 72)',
+    inputType: 'number',
+    confirmLabel: 'Continue',
+  });
   if (hoursInput === null) {
     return { proceed: false, missingLabels: missing };
   }
@@ -83,9 +88,11 @@ export function promptStaffGuardActivationGrace(
     return { proceed: false, missingLabels: missing };
   }
 
-  const confirmed = window.confirm(
-    `Activate with ${graceHours} hour${graceHours === 1 ? '' : 's'} for the guard to upload ${list}?`
-  );
+  const confirmed = await showAppConfirm({
+    title: 'Confirm activation',
+    message: `Activate with ${graceHours} hour${graceHours === 1 ? '' : 's'} for the guard to upload ${list}?`,
+    confirmLabel: 'Activate account',
+  });
   return {
     proceed: confirmed,
     graceHours: confirmed ? graceHours : undefined,
@@ -94,6 +101,6 @@ export function promptStaffGuardActivationGrace(
 }
 
 /** @deprecated Use promptStaffGuardActivationGrace */
-export function promptStaffGuardProfileApproval(guard: SecurityGuard, state = 'CA'): boolean {
-  return promptStaffGuardActivationGrace(guard, state).proceed;
+export async function promptStaffGuardProfileApproval(guard: SecurityGuard, state = 'CA'): Promise<boolean> {
+  return (await promptStaffGuardActivationGrace(guard, state)).proceed;
 }

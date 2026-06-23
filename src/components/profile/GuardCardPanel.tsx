@@ -5,15 +5,17 @@ import { getGuardCardSectionStatus } from '../../lib/credentialSectionStatus';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { CredentialSectionAddButton, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import { CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { Shield } from 'lucide-react';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import { CERT_IMAGE_POLICY_HINT, guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { canUploadGuardCredentials } from '../../lib/guardCredentialUpload';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 interface GuardCardPanelProps {
@@ -40,6 +42,10 @@ export function GuardCardPanel({
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
   const sectionStatus = useMemo(() => getGuardCardSectionStatus(guard, staffMode), [guard, staffMode]);
+  const guardCardUploadStatus = useMemo(() => {
+    if (items.length > 0) return 'on-file' as const;
+    return getCourseUploadStatus(guard, catalogOptions[0]?.id ?? 'bsis-guard-card');
+  }, [guard, catalogOptions, items.length]);
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
 
   const [showForm, setShowForm] = useState(false);
@@ -101,7 +107,12 @@ export function GuardCardPanel({
         return;
       }
     }
-    if (!window.confirm('Remove this guard card from your profile?')) return;
+    if (!(await showAppConfirm({
+      title: 'Remove guard card?',
+      message: 'Remove this guard card from your profile?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    }))) return;
     const result = await onDeleteCertification(certId);
     if (result.ok === false) showAppToast(result.error, { tone: 'error' });
   };
@@ -189,21 +200,33 @@ export function GuardCardPanel({
   return (
     <>
       <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
+        <CredentialRowHeader
+          rawTitle
+          title={
             <p className="uber-label flex items-center gap-2 flex-wrap">
-              <Shield className="w-4 h-4 text-brand-primary" />
+              <Shield className="w-4 h-4 text-brand-primary shrink-0" />
               BSIS Guard Card
             </p>
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
-            </p>
-            <div className="mt-2">
-              <CredentialSectionStatusDisplay status={sectionStatus} />
-            </div>
-          </div>
-          {canUpload && <CredentialSectionAddButton onClick={() => setShowForm(true)} />}
-        </div>
+          }
+          subtitle={
+            <>
+              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
+              </p>
+              <div className="mt-2">
+                <CredentialSectionStatusDisplay status={sectionStatus} />
+              </div>
+            </>
+          }
+          action={
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={guardCardUploadStatus}
+              canUpload={canUpload}
+              onAdd={() => setShowForm(true)}
+            />
+          }
+        />
 
         {items.length === 0 ? (
           <div className="border-t border-brand-border py-3">

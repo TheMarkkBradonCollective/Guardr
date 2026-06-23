@@ -246,6 +246,8 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_amount NUM
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_paid_cash BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_in_audit JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS spot_checks JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS mid_shift_audits JSONB NOT NULL DEFAULT '[]'::jsonb;
@@ -285,6 +287,7 @@ UPDATE security_requests SET spot_checks = '[]'::jsonb WHERE spot_checks IS NULL
 UPDATE security_requests SET mid_shift_audits = '[]'::jsonb WHERE mid_shift_audits IS NULL;
 UPDATE security_requests SET platform_fee_paid_cash = FALSE WHERE platform_fee_paid_cash IS NULL;
 UPDATE security_requests SET guard_cash_payout_requested = FALSE WHERE guard_cash_payout_requested IS NULL;
+UPDATE security_requests SET client_cash_payment_requested = FALSE WHERE client_cash_payment_requested IS NULL;
 
 -- Legacy status values → current app values
 UPDATE security_requests SET status = 'accepted' WHERE status = 'assigned';
@@ -464,6 +467,15 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   guard_message BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  payment_cash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
 CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(request_id);
 CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);

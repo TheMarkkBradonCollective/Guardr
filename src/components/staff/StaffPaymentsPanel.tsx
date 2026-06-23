@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { openGuardPayoutInvoices } from '../../lib/guardPayoutInvoiceStorage';
 import { PIPELINE_FLOW_STEPS } from '../../lib/paymentDisplay';
 import {
@@ -18,9 +19,13 @@ interface StaffPaymentsPanelProps {
   payments: Payment[];
   payoutInvoices?: GuardPayoutInvoice[];
   isDirector: boolean;
+  canManagePayments: boolean;
+  paymentGates: ClientPaymentGates;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
+  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -33,9 +38,13 @@ function PipelineSection({
   guards,
   payments,
   isDirector,
+  canManagePayments,
+  paymentGates,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onApproveClientCashPayment,
+  onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
@@ -47,9 +56,13 @@ function PipelineSection({
   guards: SecurityGuard[];
   payments: Payment[];
   isDirector: boolean;
+  canManagePayments: boolean;
+  paymentGates: ClientPaymentGates;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
+  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -75,10 +88,14 @@ function PipelineSection({
             guard={guards.find((g) => g.id === req.assignedGuardId)}
             payment={payments.find((p) => p.jobId === req.id)}
             isDirector={isDirector}
+            canManagePayments={canManagePayments}
+            paymentGates={paymentGates}
             readOnly={readOnly}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onApproveClientCashPayment={onApproveClientCashPayment}
+            onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
@@ -100,9 +117,13 @@ export function StaffPaymentsPanel({
   payments,
   payoutInvoices = [],
   isDirector,
+  canManagePayments,
+  paymentGates,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onApproveClientCashPayment,
+  onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
@@ -115,9 +136,13 @@ export function StaffPaymentsPanel({
     guards,
     payments,
     isDirector,
+    canManagePayments,
+    paymentGates,
     onReleasePayout,
     onRefundPayment,
     onMarkClientPaidCash,
+    onApproveClientCashPayment,
+    onRejectClientCashPayment,
     onMarkGuardPaidCash,
     onMarkPlatformFeePaidCash,
     onDepositCashToStripe,

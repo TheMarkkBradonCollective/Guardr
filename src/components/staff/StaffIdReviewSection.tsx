@@ -45,16 +45,20 @@ export function StaffIdReviewSection({
 
   const requestSlot = (slot: IdVerificationSlot) => {
     if (!onRequestResubmit) return;
-    const note = promptStaffResubmitNote(ID_VERIFICATION_SLOT_LABELS[slot]);
-    if (note === null) return;
-    void onRequestResubmit(guard.id, [slot], note);
+    void (async () => {
+      const note = await promptStaffResubmitNote(ID_VERIFICATION_SLOT_LABELS[slot]);
+      if (note === null) return;
+      void onRequestResubmit(guard.id, [slot], note);
+    })();
   };
 
   const requestAll = () => {
     if (!onRequestResubmit) return;
-    const note = promptStaffResubmitNote('ID front, ID back, and identity selfie');
-    if (note === null) return;
-    void onRequestResubmit(guard.id, ['front', 'back', 'selfie'], note);
+    void (async () => {
+      const note = await promptStaffResubmitNote('ID front, ID back, and identity selfie');
+      if (note === null) return;
+      void onRequestResubmit(guard.id, ['front', 'back', 'selfie'], note);
+    })();
   };
 
   return (
@@ -124,9 +128,11 @@ export function StaffIdReviewSection({
           <button
             type="button"
             onClick={() => {
-              const reason = promptRejectGuardApplicationNote();
-              if (reason === null) return;
-              void onReject(guard.id, reason);
+              void (async () => {
+                const reason = await promptRejectGuardApplicationNote();
+                if (reason === null) return;
+                void onReject(guard.id, reason);
+              })();
             }}
             className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
           >

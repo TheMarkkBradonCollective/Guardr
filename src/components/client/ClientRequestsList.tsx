@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
@@ -12,6 +14,7 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
   Activity,
   Award,
+  Banknote,
   Check,
   CheckCircle2,
   CreditCard,
@@ -26,9 +29,11 @@ import {
   canClientEditJobListing,
   canClientEditRequest,
   canClientPayForJob,
+  canClientRequestCashPayment,
   isJobScheduleLocked,
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
+import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
@@ -37,12 +42,14 @@ interface ClientRequestsListProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
+  paymentGates: ClientPaymentGates;
   onCancelRequest: (requestId: string) => void;
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
+  onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onRequestNew: () => void;
 }
 
@@ -58,7 +65,11 @@ function statusBadgeTone(status: JobStatus): 'default' | 'primary' | 'success' |
   }
 }
 
-function paymentBadgeTone(status?: SecurityRequest['paymentStatus']): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+function paymentBadgeTone(
+  status?: SecurityRequest['paymentStatus'],
+  req?: SecurityRequest
+): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+  if (req && isClientCashPaymentPendingApproval(req)) return 'warning';
   switch (status) {
     case 'paid': return 'success';
     case 'held': return 'warning';
@@ -71,18 +82,21 @@ export function ClientRequestsList({
   requests,
   guards,
   clientEmail,
+  paymentGates,
   onCancelRequest,
   onEditRequest,
   onUpdateStatus,
   onAddReview,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
+  onRequestCashPayment,
   onRequestNew,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
+  const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -117,6 +131,16 @@ export function ClientRequestsList({
       showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
     } finally {
       setPayingJobId(null);
+    }
+  };
+
+  const handleRequestCashPayment = async (req: SecurityRequest) => {
+    if (!onRequestCashPayment) return;
+    setCashRequestJobId(req.id);
+    try {
+      await onRequestCashPayment(req.id);
+    } finally {
+      setCashRequestJobId(null);
     }
   };
 
@@ -169,7 +193,7 @@ export function ClientRequestsList({
                         {jobPostingTypeLabel(req.requestType)}
                       </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                     </div>
                   }
                   onClick={() => setExpandedId(req.id)}
@@ -189,7 +213,7 @@ export function ClientRequestsList({
                         {jobPostingTypeLabel(req.requestType)}
                       </WfBadge>
                       <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                      <WfBadge tone={paymentBadgeTone(req.paymentStatus)}>{clientPaymentStatusLabel(req.paymentStatus)}</WfBadge>
+                      <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                     </div>
                   }
                   onClick={() => setExpandedId(null)}
@@ -223,7 +247,18 @@ export function ClientRequestsList({
                     {canClientCancelRequest(req) && (
                       <button
                         type="button"
-                        onClick={() => { if (window.confirm(`Cancel "${req.title}"?`)) onCancelRequest(req.id); }}
+                        onClick={() => {
+                          void (async () => {
+                            if (await showAppConfirm({
+                              title: 'Cancel job?',
+                              message: `Cancel "${req.title}"?`,
+                              confirmLabel: 'Cancel job',
+                              tone: 'danger',
+                            })) {
+                              onCancelRequest(req.id);
+                            }
+                          })();
+                        }}
                         className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
                       >
                         <X className="w-3 h-3 inline" /> Cancel
@@ -242,33 +277,59 @@ export function ClientRequestsList({
 
                 {req.status === 'open' && (
                   <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                    {canClientPayForJob(req) && (
+                    {isClientCashPaymentPendingApproval(req) && (
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                        <p className="text-sm font-semibold text-amber-300">Cash payment pending approval</p>
+                        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                          {clientPaymentStatusHint(req.paymentStatus, req.status, req)}
+                        </p>
+                      </div>
+                    )}
+                    {(canClientPayForJob(req, paymentGates) || canClientRequestCashPayment(req, paymentGates)) && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
-                            {clientPaymentStatusHint(req.paymentStatus, req.status)} Total: ${req.estimatedPayout.toFixed(2)}.
+                            {clientPaymentStatusHint(req.paymentStatus, req.status, req, paymentGates)} Total: ${req.estimatedPayout.toFixed(2)}.
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handlePayNow(req)}
-                          disabled={payingJobId === req.id}
-                          className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 shrink-0 disabled:opacity-50"
-                        >
-                          {payingJobId === req.id ? (
-                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
-                          ) : (
-                            <><CreditCard className="w-3.5 h-3.5" /> Pay Now</>
+                        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                          {canClientPayForJob(req, paymentGates) && (
+                            <button
+                              type="button"
+                              onClick={() => handlePayNow(req)}
+                              disabled={payingJobId === req.id || cashRequestJobId === req.id}
+                              className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
+                            >
+                              {payingJobId === req.id ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
+                              ) : (
+                                <><CreditCard className="w-3.5 h-3.5" /> Pay Now</>
+                              )}
+                            </button>
                           )}
-                        </button>
+                          {canClientRequestCashPayment(req, paymentGates) && onRequestCashPayment && (
+                            <button
+                              type="button"
+                              onClick={() => handleRequestCashPayment(req)}
+                              disabled={payingJobId === req.id || cashRequestJobId === req.id}
+                              className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
+                            >
+                              {cashRequestJobId === req.id ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
+                              ) : (
+                                <><Banknote className="w-3.5 h-3.5" /> Pay in Cash</>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                     {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
                       <p className="text-xs text-emerald-400/90 flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {clientPaymentStatusLabel(req.paymentStatus)}
-                        {clientPaymentStatusHint(req.paymentStatus, req.status) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status)}` : ''}
+                        {clientPaymentStatusLabel(req.paymentStatus, req)}
+                        {clientPaymentStatusHint(req.paymentStatus, req.status, req) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status, req)}` : ''}
                       </p>
                     )}
                     <p className="text-sm text-brand-text-muted">

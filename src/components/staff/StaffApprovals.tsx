@@ -180,9 +180,11 @@ export function StaffApprovals({
             <button
               type="button"
               onClick={() => {
-                const note = promptStaffResubmitNote(`${cert.name} photo`);
-                if (note === null) return;
-                onRequestCertImageResubmit(guard.id, cert.id, note);
+                void (async () => {
+                  const note = await promptStaffResubmitNote(`${cert.name} photo`);
+                  if (note === null) return;
+                  onRequestCertImageResubmit(guard.id, cert.id, note);
+                })();
               }}
               className="app-button-outline app-btn-sm gap-1"
             >
@@ -484,10 +486,12 @@ export function StaffApprovals({
                   <button
                     type="button"
                     onClick={() => {
-                      const note = promptStaffResubmitNote(`${cert.name} photo`);
-                      if (note === null) return;
-                      onRequestCertImageResubmit(guard.id, cert.id, note);
-                      setActiveItemId(null);
+                      void (async () => {
+                        const note = await promptStaffResubmitNote(`${cert.name} photo`);
+                        if (note === null) return;
+                        onRequestCertImageResubmit(guard.id, cert.id, note);
+                        setActiveItemId(null);
+                      })();
                     }}
                     className="app-button-outline app-btn-sm"
                   >
@@ -691,7 +695,7 @@ export function StaffApprovals({
                       onClick={() => {
                         void (async () => {
                           if (!canTakeAction) return;
-                          const graceChoice = promptStaffGuardActivationGrace(guard);
+                          const graceChoice = await promptStaffGuardActivationGrace(guard);
                           if (!graceChoice.proceed) return;
                           try {
                             await onActivateGuardAccount(guard.id, {

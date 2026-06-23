@@ -1,4 +1,5 @@
 import { showAppToast } from '../ui/AppToast';
+import { showAppConfirm } from '../ui/AppConfirm';
 import React, { useMemo, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
@@ -50,7 +51,12 @@ export function StaffClientDetailPanel({
 
   const handleDelete = async () => {
     if (!onDeleteClient) return;
-    if (!window.confirm(`Delete client account for ${client.companyName || client.name}? This cannot be undone.`)) {
+    if (!(await showAppConfirm({
+      title: 'Delete client account?',
+      message: `Delete client account for ${client.companyName || client.name}? This cannot be undone.`,
+      confirmLabel: 'Delete account',
+      tone: 'danger',
+    }))) {
       return;
     }
     setDeleting(true);

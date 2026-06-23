@@ -9,6 +9,7 @@ import {
   guardPayoutDisplay,
   isCashClientPayment,
   isCashGuardPayout,
+  isClientCashPaymentPendingApproval,
   isPlatformFeeOnlyDeposit,
   isPlatformFeePaidCash,
   isStripeDepositSatisfied,
@@ -95,7 +96,13 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
 }
 
 /** Client-facing payment status — no internal ledger jargon */
-export function clientPaymentStatusLabel(status?: SecurityRequest['paymentStatus']): string {
+export function clientPaymentStatusLabel(
+  status?: SecurityRequest['paymentStatus'],
+  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>
+): string {
+  if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
+    return 'Cash pending';
+  }
   switch (status) {
     case 'paid':
       return 'Paid';
@@ -110,11 +117,22 @@ export function clientPaymentStatusLabel(status?: SecurityRequest['paymentStatus
 
 export function clientPaymentStatusHint(
   status?: SecurityRequest['paymentStatus'],
-  jobStatus?: SecurityRequest['status']
+  jobStatus?: SecurityRequest['status'],
+  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>,
+  gates?: { allowStripe: boolean; allowCash: boolean }
 ): string | undefined {
+  if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
+    return 'Staff will confirm once your cash payment is received.';
+  }
   if (!status || status === 'unpaid') {
     if (jobStatus === 'pending-review') {
       return 'Staff must approve this job offer before you can pay.';
+    }
+    if (gates?.allowStripe && !gates?.allowCash) {
+      return 'Pay by card to unlock hiring a guard for this job.';
+    }
+    if (gates?.allowCash && !gates?.allowStripe) {
+      return 'Request cash payment — staff will confirm when received.';
     }
     return 'Pay to unlock hiring a guard for this job.';
   }
@@ -138,6 +156,12 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 
   switch (stage) {
     case 'awaiting-client':
+      if (isClientCashPaymentPendingApproval(req)) {
+        return {
+          headline: 'Client requested to pay in cash',
+          detail: `Confirm $${clientBill.toFixed(2)} was received before assigning a guard.`,
+        };
+      }
       return {
         headline: 'Client has not paid yet',
         detail: `Client owes $${clientBill.toFixed(2)} before the job can proceed.`,
@@ -186,7 +210,7 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 }
 
 export const PIPELINE_FLOW_STEPS = [
-  { step: 1, label: 'Client pays', description: 'Card checkout or staff records cash on site' },
+  { step: 1, label: 'Client pays', description: 'Card checkout, cash request, or staff records cash on site' },
   { step: 2, label: 'Job in progress', description: 'Funds stay secured until the job is complete' },
   { step: 3, label: 'Guard gets paid', description: 'Stripe transfer or staff hands cash to the guard' },
 ] as const;
