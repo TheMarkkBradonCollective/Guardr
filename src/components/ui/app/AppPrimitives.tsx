@@ -350,6 +350,7 @@ export function AppInboxList({ children, className = '' }: { children: React.Rea
 
 export function AppInboxRow({
   title,
+  subtitle,
   preview,
   meta,
   badges,
@@ -358,6 +359,7 @@ export function AppInboxRow({
   onClick,
 }: {
   title: string;
+  subtitle?: string;
   preview?: string;
   meta?: string;
   badges?: React.ReactNode;
@@ -377,10 +379,11 @@ export function AppInboxRow({
           <p className="app-inbox-row-title">{title}</p>
           {meta && <span className="app-inbox-row-meta">{meta}</span>}
         </div>
+        {subtitle && <p className="app-inbox-row-subtitle">{subtitle}</p>}
         {preview && <p className="app-inbox-row-preview">{preview}</p>}
         {badges && <div className="app-inbox-row-badges">{badges}</div>}
       </div>
-      <ChevronRight className="w-4 h-4 shrink-0 text-brand-text-muted app-inbox-row-chevron" strokeWidth={1.75} />
+      <ChevronRight className="w-4 h-4 shrink-0 text-brand-text-muted app-inbox-row-chevron lg:hidden" strokeWidth={1.75} />
     </button>
   );
 }
@@ -390,16 +393,23 @@ export function AppChatHeader({
   subtitle,
   onBack,
   trailing,
+  hideBackOnDesktop = false,
 }: {
   title: string;
   subtitle?: string;
   onBack?: () => void;
   trailing?: React.ReactNode;
+  hideBackOnDesktop?: boolean;
 }) {
   return (
     <div className="app-chat-header">
       {onBack && (
-        <button type="button" onClick={onBack} className="app-chat-header-back" aria-label="Back">
+        <button
+          type="button"
+          onClick={onBack}
+          className={`app-chat-header-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
+          aria-label="Back"
+        >
           <ArrowLeft className="w-5 h-5" strokeWidth={1.75} />
         </button>
       )}
@@ -414,12 +424,20 @@ export function AppChatHeader({
 
 export type AppChatBubbleTone = 'outgoing' | 'incoming' | 'staff' | 'system';
 
+export type AppChatSender = {
+  name: string;
+  roleLabel?: string;
+  showBrand?: boolean;
+};
+
 export function AppChatBubble({
+  sender,
   senderLabel,
   body,
   timestamp,
   tone,
 }: {
+  sender?: AppChatSender;
   senderLabel?: string;
   body: string;
   timestamp?: string;
@@ -427,7 +445,19 @@ export function AppChatBubble({
 }) {
   return (
     <div className={`app-chat-bubble app-chat-bubble-${tone}`}>
-      {senderLabel && <p className="app-chat-bubble-sender">{senderLabel}</p>}
+      {(sender || senderLabel) && (
+        <div className="app-chat-bubble-sender">
+          {sender ? (
+            <>
+              {sender.showBrand && <span className="app-chat-bubble-brand">Guardr</span>}
+              <span className="app-chat-bubble-name">{sender.name}</span>
+              {sender.roleLabel && <span className="app-chat-bubble-role">{sender.roleLabel}</span>}
+            </>
+          ) : (
+            <span className="app-chat-bubble-name">{senderLabel}</span>
+          )}
+        </div>
+      )}
       <p className="app-chat-bubble-body whitespace-pre-wrap">{body}</p>
       {timestamp && <p className="app-chat-bubble-time">{timestamp}</p>}
     </div>
@@ -449,25 +479,47 @@ export function AppChatComposer({
   disabled?: boolean;
   submitting?: boolean;
 }) {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const resizeComposer = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  };
+
+  React.useEffect(() => {
+    resizeComposer();
+  }, [value]);
+
   return (
     <div className="app-chat-composer">
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void onSend()}
-        placeholder={placeholder}
-        disabled={disabled || submitting}
-        className="app-chat-composer-input"
-      />
-      <button
-        type="button"
-        onClick={() => void onSend()}
-        disabled={disabled || submitting || !value.trim()}
-        className="app-chat-composer-send"
-        aria-label="Send message"
-      >
-        <Send className="w-4 h-4" />
-      </button>
+      <div className="app-chat-composer-field">
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              void onSend();
+            }
+          }}
+          placeholder={placeholder}
+          disabled={disabled || submitting}
+          className="app-chat-composer-input"
+        />
+        <button
+          type="button"
+          onClick={() => void onSend()}
+          disabled={disabled || submitting || !value.trim()}
+          className="app-chat-composer-send"
+          aria-label="Send message"
+        >
+          <Send className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }

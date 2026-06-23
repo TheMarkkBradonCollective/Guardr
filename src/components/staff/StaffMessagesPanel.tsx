@@ -12,7 +12,6 @@ import {
 import { threadForRequest } from '../../lib/jobChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
-  categoryLabel,
   SUPPORT_STATUS_LABEL,
   supportStatusLabel,
 } from '../../lib/support';
@@ -20,9 +19,10 @@ import { ROLE_LABELS } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { AppChatHeader, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy, MessageCircle, MessagesSquare } from 'lucide-react';
+import { FileText, LifeBuoy, MessagesSquare } from 'lucide-react';
 
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
@@ -48,6 +48,15 @@ interface StaffMessagesPanelProps {
   initialJobChatRequestId?: string | null;
   initialSupportTicketId?: string | null;
   onDetailOpenChange?: (open: boolean) => void;
+}
+
+function formatInboxMeta(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function StaffMessagesPanel({
@@ -134,58 +143,53 @@ export function StaffMessagesPanel({
     onDetailOpenChange?.(!!effectiveSelection);
   }, [effectiveSelection, onDetailOpenChange]);
 
-  const listView = (
-    <div className="staff-split-pane-list flex flex-col min-h-0 h-full">
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {inboxRows.length === 0 ? (
-          <p className="staff-empty-state">No conversations yet.</p>
-        ) : (
-          <AppInboxList>
-            {inboxRows.map((row) => (
-              <AppInboxRow
-                key={row.id}
-                title={row.title}
-                preview={row.preview}
-                meta={new Date(row.updatedAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-                selected={
-                  (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') ||
-                  (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) ||
-                  (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId)
-                }
-                leading={
-                  row.channel === 'staff-community' ? (
-                    <MessagesSquare className="w-5 h-5 text-brand-primary" />
-                  ) : row.channel === 'report' ? (
-                    <FileText className="w-5 h-5 text-brand-primary" />
-                  ) : row.channel === 'support' ? (
-                    <LifeBuoy className="w-5 h-5 text-brand-primary" />
-                  ) : undefined
-                }
-                badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
-                onClick={() => selectRow(row)}
-              />
-            ))}
-          </AppInboxList>
-        )}
-      </div>
-    </div>
+  const hasSelection = !!effectiveSelection;
+
+  const isRowSelected = (row: InboxRow): boolean => {
+    if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
+    if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) {
+      return true;
+    }
+    if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) {
+      return true;
+    }
+    return false;
+  };
+
+  const list = (
+    <>
+      {inboxRows.length === 0 ? (
+        <p className="staff-empty-state">No conversations yet.</p>
+      ) : (
+        <AppInboxList>
+          {inboxRows.map((row) => (
+            <AppInboxRow
+              key={row.id}
+              title={row.title}
+              subtitle={row.subtitle}
+              preview={row.preview}
+              meta={formatInboxMeta(row.updatedAt)}
+              selected={isRowSelected(row)}
+              leading={
+                row.channel === 'staff-community' ? (
+                  <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'report' ? (
+                  <FileText className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'support' ? (
+                  <LifeBuoy className="w-5 h-5 text-brand-primary" />
+                ) : undefined
+              }
+              badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
+              onClick={() => selectRow(row)}
+            />
+          ))}
+        </AppInboxList>
+      )}
+    </>
   );
 
   const detailView = (() => {
-    if (!effectiveSelection) {
-      return (
-        <div className="staff-empty-state flex-1 flex items-center justify-center h-full">
-          <div className="text-center px-6">
-            <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p className="text-sm font-semibold">Select a conversation</p>
-            <p className="text-xs text-brand-text-muted mt-1">Staff, job, and support chats sorted by activity</p>
-          </div>
-        </div>
-      );
-    }
+    if (!effectiveSelection) return null;
 
     if (effectiveSelection.kind === 'staff-channel') {
       return (
@@ -194,6 +198,7 @@ export function StaffMessagesPanel({
             title="Staff chat"
             subtitle="Internal team channel"
             onBack={clearSelection}
+            hideBackOnDesktop
           />
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
@@ -219,6 +224,7 @@ export function StaffMessagesPanel({
           currentUser={currentUser}
           onSend={(body) => onSendJobChat(request.id, body)}
           onBack={clearSelection}
+          hideBackOnDesktop
         />
       );
     }
@@ -239,6 +245,7 @@ export function StaffMessagesPanel({
           title={ticket.subject}
           subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
           onBack={clearSelection}
+          hideBackOnDesktop
           trailing={
             <select
               value={ticket.status}
@@ -280,10 +287,18 @@ export function StaffMessagesPanel({
   })();
 
   return (
-    <>
-      <div className="h-full flex flex-col min-h-0">
-        {effectiveSelection ? detailView : listView}
-      </div>
-    </>
+    <MessagesHubLayout
+      header={
+        <div className="app-messages-hub-lead">
+          <h2 className="text-base font-bold tracking-tight">Messages</h2>
+          <p>Staff, job, and support chats sorted by recent activity</p>
+        </div>
+      }
+      list={list}
+      detail={detailView ?? <div />}
+      hasSelection={hasSelection && !!detailView}
+      emptyDetailTitle="Select a conversation"
+      emptyDetailHint="Staff, job, and support chats sorted by activity"
+    />
   );
 }

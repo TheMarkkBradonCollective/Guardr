@@ -21,17 +21,16 @@ import {
 import { isStaffRole } from '../../lib/permissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
+import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
 import {
   AppChatHeader,
   AppInboxList,
   AppInboxRow,
-  AppItemCard,
-  AppItemCardStack,
-  AppScreen,
 } from '../ui/app/AppPrimitives';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
-import { ChevronRight, FileText, LifeBuoy } from 'lucide-react';
+import { FileText, LifeBuoy } from 'lucide-react';
 import { guardForRequest } from '../../lib/clientShift';
 
 interface ClientMessagesPanelProps {
@@ -51,6 +50,15 @@ interface ClientMessagesPanelProps {
   onSupportTicketIdChange?: (ticketId: string | null) => void;
   onOpenCompose?: () => void;
   onOpenReport?: () => void;
+}
+
+function formatInboxMeta(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export function ClientMessagesPanel({
@@ -140,63 +148,23 @@ export function ClientMessagesPanel({
     }
   };
 
+  const clearSelection = () => {
+    closeJobChat();
+    closeSupportThread();
+  };
+
   const chatRequest = chatRequestId ? requestById.get(chatRequestId) ?? null : null;
   const activeTicket = supportTicketId
     ? myTickets.find((t) => t.id === supportTicketId) ?? null
     : null;
 
-  if (chatOpen && chatRequest) {
-    return (
-      <div className="h-full flex flex-col min-h-0 app-full-page-screen">
-        <JobChatPanel
-          request={chatRequest}
-          thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
-          messages={jobChatMessages}
-          currentUser={currentUser}
-          onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
-          onBack={closeJobChat}
-        />
-      </div>
-    );
-  }
+  const hasSelection = !!(chatOpen && chatRequest) || !!activeTicket;
 
-  if (activeTicket) {
-    const isReport = activeTicket.kind === 'report';
-    const threadSubtitle = isReport
-      ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
-      : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
-
-    return (
-      <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
-        <AppChatHeader
-          title={activeTicket.subject}
-          subtitle={threadSubtitle}
-          onBack={closeSupportThread}
-        />
-        <div className="flex-1 min-h-0">
-          <ChatThreadPanel
-            messages={activeTicket.messages.map((msg) => ({
-              id: msg.id,
-              senderId: msg.senderId,
-              senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
-              senderRole: msg.senderRole,
-              body: msg.body,
-              createdAt: msg.createdAt,
-            }))}
-            currentUserId={currentUser.id}
-            onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
-            placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
-            readOnly={activeTicket.status === 'resolved'}
-            readOnlyMessage={
-              isReport
-                ? 'This report is closed. File a new report if you need further help.'
-                : 'This conversation is resolved. Contact support again if you need more help.'
-            }
-          />
-        </div>
-      </div>
-    );
-  }
+  const isRowSelected = (row: InboxRow): boolean => {
+    if (row.requestId && chatOpen && chatRequestId === row.requestId) return true;
+    if (row.ticketId && supportTicketId === row.ticketId) return true;
+    return false;
+  };
 
   const renderInboxIcon = (row: InboxRow) => {
     if (row.channel === 'job') {
@@ -217,29 +185,17 @@ export function ClientMessagesPanel({
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
-  return (
-    <AppScreen>
-      <div className="px-5 pt-2 pb-4 border-b border-brand-border">
-        <AppItemCardStack>
-          <AppItemCard onClick={() => onOpenCompose?.()}>
-            <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
-            <div className="flex-1 min-w-0 text-left">
-              <p className="font-semibold text-sm">Contact support</p>
-              <p className="text-sm text-brand-text-muted mt-0.5">Direct line to the Guardr operations team</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-          </AppItemCard>
-          <AppItemCard onClick={() => onOpenReport?.()}>
-            <FileText className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
-            <div className="flex-1 min-w-0 text-left">
-              <p className="font-semibold text-sm">File a report</p>
-              <p className="text-sm text-brand-text-muted mt-0.5">Safety concern, dispute, or formal complaint</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-          </AppItemCard>
-        </AppItemCardStack>
-      </div>
+  const header = (
+    <MessagesQuickActions
+      onContactSupport={onOpenCompose}
+      onFileReport={onOpenReport}
+      supportHint="Direct line to the Guardr operations team"
+      reportHint="Safety concern, dispute, or formal complaint"
+    />
+  );
 
+  const list = (
+    <>
       {inboxRows.length === 0 ? (
         <p className="app-empty-state">
           Job chats and support conversations appear here, sorted by recent activity.
@@ -250,12 +206,11 @@ export function ClientMessagesPanel({
             <AppInboxRow
               key={row.id}
               title={row.title}
+              subtitle={row.subtitle}
               preview={row.preview}
-              meta={new Date(row.updatedAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
+              meta={formatInboxMeta(row.updatedAt)}
               leading={renderInboxIcon(row)}
+              selected={isRowSelected(row)}
               badges={
                 row.badge ? (
                   <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge>
@@ -266,6 +221,78 @@ export function ClientMessagesPanel({
           ))}
         </AppInboxList>
       )}
-    </AppScreen>
+    </>
+  );
+
+  const detailView = (() => {
+    if (chatOpen && chatRequest) {
+      return (
+        <div className="h-full flex flex-col min-h-0 app-full-page-screen">
+          <JobChatPanel
+            request={chatRequest}
+            thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
+            messages={jobChatMessages}
+            currentUser={currentUser}
+            onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
+            onBack={clearSelection}
+            hideBackOnDesktop
+          />
+        </div>
+      );
+    }
+
+    if (activeTicket) {
+      const isReport = activeTicket.kind === 'report';
+      const threadSubtitle = isReport
+        ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
+        : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
+
+      return (
+        <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
+          <AppChatHeader
+            title={activeTicket.subject}
+            subtitle={threadSubtitle}
+            onBack={clearSelection}
+            hideBackOnDesktop
+          />
+          <div className="flex-1 min-h-0">
+            <ChatThreadPanel
+              messages={activeTicket.messages.map((msg) => ({
+                id: msg.id,
+                senderId: msg.senderId,
+                senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+                senderRole: msg.senderRole,
+                body: msg.body,
+                createdAt: msg.createdAt,
+              }))}
+              currentUserId={currentUser.id}
+              onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
+              placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
+              readOnly={activeTicket.status === 'resolved'}
+              readOnlyMessage={
+                isReport
+                  ? 'This report is closed. File a new report if you need further help.'
+                  : 'This conversation is resolved. Contact support again if you need more help.'
+              }
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  })();
+
+  return (
+    <div className="app-messages-hub h-full min-h-0">
+      <MessagesHubLayout
+        header={header}
+        list={list}
+        detail={detailView ?? <div />}
+        hasSelection={hasSelection}
+        emptyDetailTitle="Your conversations"
+        emptyDetailHint="Select a job chat or support thread from the inbox"
+      />
+    </div>
   );
 }
