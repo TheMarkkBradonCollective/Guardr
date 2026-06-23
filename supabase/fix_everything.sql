@@ -243,6 +243,7 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_to_stripe BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_manually BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_paid_cash BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested_at TIMESTAMPTZ;

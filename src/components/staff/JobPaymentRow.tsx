@@ -3,10 +3,12 @@ import { Banknote, CreditCard, Loader2, RotateCcw, Wallet } from 'lucide-react';
 import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
+  canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
   canMakeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
   getCashDepositedAmount,
+  getManualCashDepositDue,
   getPlatformFeeAmount,
   guardPayoutAmount,
   isClientCashPaymentPendingApproval,
@@ -61,6 +63,7 @@ interface JobPaymentRowProps {
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
 }
@@ -78,10 +81,11 @@ export function JobPaymentRow({
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'refund' | 'deposit' | 'platformFee' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'refund' | 'deposit' | 'platformFee' | 'manualDeposit' | null>(null);
 
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
@@ -99,7 +103,10 @@ export function JobPaymentRow({
     onRejectClientCashPayment;
   const canMarkClientCash =
     paymentGates.allowCash && isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
+  const manualDepositDue = getManualCashDepositDue(req);
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
+  const canManualDeposit =
+    isDirector && canDirectorMarkCashDepositManually(req) && onMarkCashDepositManually;
   const canPlatformFeeCash =
     isDirector && canDirectorMarkPlatformFeePaidCash(req) && onMarkPlatformFeePaidCash;
   const canReleaseFunds =
@@ -141,7 +148,8 @@ export function JobPaymentRow({
           )}
           {getCashDepositedAmount(req) > 0 && (
             <p className="text-xs text-emerald-400/80 mt-1.5">
-              ${getCashDepositedAmount(req).toFixed(2)} already deposited to Stripe
+              ${getCashDepositedAmount(req).toFixed(2)} already recorded
+              {req.cashDepositedManually ? ' (manual)' : ' in Stripe'}
               {req.cashDepositedAt ? ` · ${new Date(req.cashDepositedAt).toLocaleString()}` : ''}
             </p>
           )}
@@ -160,7 +168,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canPlatformFeeCash || canReleaseFunds || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
             <button
@@ -207,6 +215,22 @@ export function JobPaymentRow({
             >
               {busy === 'deposit' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
               {stripeDepositLabel(req)}
+            </button>
+          )}
+
+          {canManualDeposit && (
+            <button
+              type="button"
+              onClick={() => run('manualDeposit', onMarkCashDepositManually)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5"
+            >
+              {busy === 'manualDeposit' ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Banknote className="w-3 h-3" />
+              )}
+              Manually record ${manualDepositDue.toFixed(2)} deposited
             </button>
           )}
 

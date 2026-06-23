@@ -558,6 +558,8 @@ export interface SecurityRequest {
   /** Dollars paid into Stripe (card) for cash-client jobs */
   cashDepositedAmount?: number;
   cashDepositedAt?: string;
+  /** Director recorded a cash-client deposit off-card (bank transfer, in-hand, etc.) */
+  cashDepositedManually?: boolean;
   /** Director manually deposited platform fee (off-Stripe) */
   platformFeePaidCash?: boolean;
   /** Staff approved this guard — awaiting client confirmation */

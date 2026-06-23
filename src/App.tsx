@@ -37,9 +37,11 @@ import {
   canDirectorDepositCashToStripe,
   canDirectorMarkClientPaidCash,
   canDirectorPayGuardCash,
+  canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
   canMakeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
+  getManualCashDepositDue,
   getPlatformFeeAmount,
   getRemainingStripeDeposit,
   getRequiredStripeDeposit,
@@ -1260,6 +1262,7 @@ export default function App() {
         cashDepositedToStripe: !!r.cash_deposited_to_stripe,
         cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
         cashDepositedAt: r.cash_deposited_at || undefined,
+        cashDepositedManually: !!r.cash_deposited_manually,
         platformFeePaidCash: !!r.platform_fee_paid_cash,
         guardCashPayoutRequested: !!r.guard_cash_payout_requested,
         guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
@@ -4168,6 +4171,7 @@ export default function App() {
           ? {
               ...r,
               platformFeePaidCash: true,
+              cashDepositedManually: true,
               cashDepositedAmount: newDeposited,
               cashDepositedToStripe: fullySatisfied,
               cashDepositedAt: depositedAt,
@@ -4181,6 +4185,7 @@ export default function App() {
         .from('security_requests')
         .update({
           platform_fee_paid_cash: true,
+          cash_deposited_manually: true,
           cash_deposited_amount: newDeposited,
           cash_deposited_to_stripe: fullySatisfied,
           cash_deposited_at: depositedAt,
@@ -4208,6 +4213,79 @@ export default function App() {
     }
 
     appToast(`Manually deposited $${feeAmount.toFixed(2)} platform fee.`, 'success');
+  };
+
+  const handleMarkCashDepositManually = async (requestId: string) => {
+    if (!currentUser || !canRecordCashPayments(currentUser)) {
+      appToast('Only Directors and Owners can manually record cash deposits.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || !canDirectorMarkCashDepositManually(req)) {
+      appToast('This job does not have a deposit ready to record manually.', 'error');
+      return;
+    }
+    const depositAmount = getManualCashDepositDue(req);
+    if (!(await showAppConfirm({
+      title: 'Record manual deposit?',
+      message: `Record $${depositAmount.toFixed(2)} deposited for "${req.title}"? Use this when you moved money outside card checkout (bank transfer, in-hand, etc.).`,
+      confirmLabel: 'Record deposit',
+    }))) {
+      return;
+    }
+
+    const depositedAt = new Date().toISOString();
+    const previousDeposited = req.cashDepositedAmount ?? 0;
+    const newDeposited = Math.round((previousDeposited + depositAmount) * 100) / 100;
+    const remaining = Math.max(0, getRequiredStripeDeposit(req) - newDeposited);
+    const fullySatisfied = remaining <= 0;
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              cashDepositedManually: true,
+              cashDepositedAmount: newDeposited,
+              cashDepositedToStripe: fullySatisfied,
+              cashDepositedAt: depositedAt,
+            }
+          : r
+      )
+    );
+
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          cash_deposited_manually: true,
+          cash_deposited_amount: newDeposited,
+          cash_deposited_to_stripe: fullySatisfied,
+          cash_deposited_at: depositedAt,
+        })
+        .eq('id', requestId);
+
+      const paymentId = `pay-cash-deposit-${Date.now()}`;
+      await supabase.from('payments').insert({
+        id: paymentId,
+        job_id: requestId,
+        amount: depositAmount,
+        status: 'paid',
+        payment_method: 'cash',
+      });
+      setPayments((prev) => [
+        ...prev,
+        {
+          id: paymentId,
+          jobId: requestId,
+          amount: depositAmount,
+          status: 'paid',
+          paymentMethod: 'cash',
+        },
+      ]);
+    }
+
+    appToast(`Recorded $${depositAmount.toFixed(2)} manual deposit.`, 'success');
   };
 
   const handleDepositCashToStripe = async (requestId: string) => {
@@ -5934,6 +6012,7 @@ export default function App() {
           onRejectClientCashPayment={handleRejectClientCashPayment}
           onMarkGuardPaidCash={handleMarkGuardPaidCash}
           onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
+          onMarkCashDepositManually={handleMarkCashDepositManually}
           onDepositCashToStripe={handleDepositCashToStripe}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
           platformSettings={platformSettings}
