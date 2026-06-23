@@ -34,7 +34,7 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
 
   return (
     <AppPageTransition motionKey="support-compose" className="h-full min-h-0">
-      <div className="max-w-lg mx-auto h-full flex flex-col animate-fade-in client-content-shell">
+      <div className="h-full flex flex-col animate-fade-in client-content-shell client-form-shell">
         <div className="flex items-center gap-3 mb-4 shrink-0">
           <button
             type="button"

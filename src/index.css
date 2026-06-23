@@ -19,9 +19,9 @@
   --color-brand-elevated: var(--brand-elevated);
 
   --radius-app: 0px;
-  --radius-app-lg: 0px;
-  --radius-app-xl: 0px;
-  --radius-pill: 0px;
+  --radius-app-lg: 12px;
+  --radius-app-xl: 16px;
+  --radius-pill: 9999px;
 
   --color-gray-50:  #f7f7f7;
   --color-gray-100: #eeeeee;
@@ -1836,6 +1836,17 @@ body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
   overflow-x: hidden;
 }
 
+.client-form-shell {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+body[data-form-factor="tablet"] .client-form-shell,
+body[data-form-factor="desktop"] .client-form-shell {
+  max-width: min(40rem, 100%);
+}
+
 .app-screen-header {
   position: relative;
   z-index: 1200;
@@ -1997,18 +2008,19 @@ body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
 }
 
 body[data-form-factor="tablet"] .guard-map-layout .guardr-map-root {
-  right: min(380px, 40vw);
+  right: min(400px, 38vw);
 }
 
 body[data-form-factor="desktop"] .guard-map-layout .guardr-map-root {
-  right: min(420px, 38vw);
+  right: min(400px, 38vw);
 }
 
 body[data-form-factor="tablet"] .guard-side-panel,
 body[data-form-factor="desktop"] .guard-side-panel {
   bottom: 0;
   top: 0;
-  border-top-left-radius: 1.25rem;
+  width: min(400px, 38vw);
+  border-top-left-radius: 0;
 }
 
 body[data-form-factor="tablet"] .client-content-shell {
@@ -2037,6 +2049,90 @@ body[data-form-factor="desktop"] .tablet-card-lg {
 
 body[data-form-factor="desktop"] .staff-ops-root main {
   max-width: 1400px;
+}
+
+/* ─── UBER MIRROR — RESPONSIVE ROLE SHELLS ─────────────────── */
+/* Full-bleed lists on every form factor; map + panel split on tablet/desktop */
+
+body[data-form-factor="tablet"] .bottom-nav-inner,
+body[data-form-factor="desktop"] .bottom-nav-inner {
+  max-width: 100%;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+body[data-form-factor="tablet"] .role-app-shell .app-screen,
+body[data-form-factor="desktop"] .role-app-shell .app-screen {
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+body[data-form-factor="tablet"] .client-map-layout .guardr-map-root,
+body[data-form-factor="desktop"] .client-map-layout .guardr-map-root {
+  right: min(400px, 38vw);
+}
+
+body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset,
+body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset {
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: 0;
+  width: min(400px, 38vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card,
+body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card {
+  margin: 0;
+  max-height: min(72dvh, 640px);
+}
+
+body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
+body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
+  left: 1rem;
+  transform: none;
+  max-width: min(calc(62vw - 2rem), 20rem);
+}
+
+@media (min-width: 1024px) {
+  .app-dashboard-zone-body .app-item-card-stack .app-item-card,
+  .app-dashboard-zone-body .app-item-card-stack .wf-list-card {
+    border-radius: 0 !important;
+  }
+
+  .app-tile-grid-2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .app-quick-action-tile {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .app-quick-action-row {
+    overflow-x: visible;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-tile-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-quick-action-tile {
+    flex: 1 1 calc(33.333% - 1px);
+    min-width: 8.5rem;
+  }
+
+  .app-quick-action-row {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 /* ═══ WIREFRAME DESIGN SYSTEM (global) ═══════════════════════ */
@@ -2208,8 +2304,9 @@ body[data-form-factor="desktop"] .staff-ops-root main {
 }
 
 .panel-screen {
-  max-width: 42rem;
-  margin-inline: auto;
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
 }
 
 /* ─── HEALTH APP — FULL-SCREEN FLAT LAYOUT (NO CARDS) ──────── */
@@ -3286,7 +3383,7 @@ html.theme-light .staff-ops-btn-primary {
 }
 
 /* ─── UBER BASE SHARP LAYER (Guardr sage on Uber geometry) ─── */
-/* Inspired by Uber Base Web: flat surfaces, 0px radii, hairline dividers, bold type */
+/* Flat list surfaces + hairline dividers; rounded sheets, pills, and map cards stay Uber-native */
 
 .app-card,
 .app-card-interactive,
@@ -3297,12 +3394,14 @@ html.theme-light .staff-ops-btn-primary {
 .client-coverage-card,
 .staff-ops-card,
 .wf-metric-tile,
-.app-card-elevated,
-.app-form-section,
-.app-item-card,
-.wf-list-card {
+.app-form-section {
   border-radius: 0 !important;
   box-shadow: none !important;
+}
+
+.app-card-elevated {
+  border-radius: var(--radius-app-xl) !important;
+  box-shadow: var(--shadow-float) !important;
 }
 
 .app-card-interactive:hover,
@@ -3310,6 +3409,12 @@ html.theme-light .staff-ops-btn-primary {
 button.app-item-card:hover,
 a.app-item-card:hover {
   transform: none !important;
+  box-shadow: none !important;
+}
+
+.app-item-card,
+.wf-list-card {
+  border-radius: 0 !important;
   box-shadow: none !important;
 }
 
@@ -3344,7 +3449,7 @@ a.app-item-card:hover {
 .staff-ops-btn-primary,
 .staff-ops-btn-outline,
 .staff-ops-btn-danger {
-  border-radius: 0 !important;
+  border-radius: var(--radius-pill) !important;
   box-shadow: none !important;
   transform: none !important;
   min-height: 3rem;
@@ -3395,7 +3500,7 @@ html.theme-light .staff-ops-btn-primary:hover {
 .uber-input,
 .uber-select,
 .inline-search-input {
-  border-radius: 0 !important;
+  border-radius: var(--radius-app-lg) !important;
   border-width: 1px !important;
 }
 
@@ -3404,25 +3509,16 @@ html.theme-light .staff-ops-btn-primary:hover {
 .badge-assigned,
 .badge-active,
 .badge-done {
-  border-radius: 0 !important;
+  border-radius: var(--radius-pill) !important;
 }
 
 .segmented-control {
-  border-radius: 0 !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  display: flex !important;
+  border-radius: var(--radius-pill) !important;
 }
 
 .segmented-control button,
 .segmented-control-btn-active {
-  border-radius: 0 !important;
-  flex: 1;
-  border-right: 1px solid var(--brand-border);
-}
-
-.segmented-control button:last-child {
-  border-right: none;
+  border-radius: var(--radius-pill) !important;
 }
 
 .uber-side-nav-item {
@@ -3440,23 +3536,33 @@ html.theme-light .staff-ops-btn-primary:hover {
   box-shadow: inset 3px 0 0 var(--brand-primary);
 }
 
+.guardr-bottom-sheet-uber,
+.map-offer-card,
+.more-menu-panel,
+.map-route-banner {
+  border-radius: revert !important;
+}
+
+.guardr-bottom-sheet-uber {
+  border-top-left-radius: 1.5rem !important;
+  border-top-right-radius: 1.5rem !important;
+}
+
+.map-offer-card {
+  border-radius: 1.25rem !important;
+}
+
 .more-menu-panel {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
+  border-top-left-radius: 1.5rem !important;
+  border-top-right-radius: 1.5rem !important;
+}
+
+.map-route-banner {
+  border-radius: 999px !important;
 }
 
 .bottom-nav-bar {
   box-shadow: none !important;
-}
-
-.bottom-nav-item[aria-current='page']::before {
-  border-radius: 0 !important;
-  width: 100% !important;
-  height: 2px !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  transform: none !important;
 }
 
 .role-app-shell main {
@@ -3508,14 +3614,15 @@ html.theme-light .staff-ops-btn-primary:hover {
 }
 
 .auth-hero-curve {
-  border-radius: 0 !important;
+  border-bottom-left-radius: 2rem !important;
+  border-bottom-right-radius: 2rem !important;
 }
 
 /* ─── UBER PAGE LAYOUT RHYTHM ─────────────────────────────── */
 .app-screen {
-  max-width: 42rem;
-  margin-inline: auto;
+  max-width: 100%;
   width: 100%;
+  margin-inline: 0;
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 

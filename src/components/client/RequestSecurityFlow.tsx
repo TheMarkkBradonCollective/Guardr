@@ -158,7 +158,7 @@ export function RequestSecurityFlow({
   };
 
   return (
-    <div className="max-w-lg mx-auto h-full flex flex-col animate-fade-in client-content-shell">
+    <div className="h-full flex flex-col animate-fade-in client-content-shell client-form-shell">
       <div className="flex items-center gap-3 mb-6 shrink-0">
         <button type="button" onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface transition-colors" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
@@ -462,7 +462,7 @@ export function RequestSecurityFlow({
       </div>
 
       <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 p-4 bg-brand-bg/95 backdrop-blur border-t border-brand-border lg:static lg:bottom-auto lg:p-0 lg:bg-transparent lg:border-0 lg:backdrop-blur-none">
-        <div className="max-w-lg mx-auto">
+        <div className="client-form-shell mx-auto">
           {step < 9 ? (
             <button
               type="button"

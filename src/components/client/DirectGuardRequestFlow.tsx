@@ -141,7 +141,7 @@ export function DirectGuardRequestFlow({
   };
 
   return (
-    <div className="h-full flex flex-col client-content-shell max-w-lg mx-auto animate-fade-in">
+    <div className="h-full flex flex-col client-content-shell client-form-shell animate-fade-in">
       <div className="shrink-0 px-4 pt-4 space-y-4">
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-2 border-brand-primary/30 bg-brand-primary/10">
           <p className="text-xs font-semibold text-brand-primary">Direct assignment request</p>
