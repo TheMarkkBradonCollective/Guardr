@@ -115,16 +115,25 @@ export function GuardActiveShift({
         />
 
         <div className="segmented-control segmented-control-full">
-          {statusSteps.slice(0, 3).map((step) => (
-            <span
-              key={step}
-              className={`segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs ${
-                statusSteps.indexOf(step) <= currentIdx ? 'segmented-control-btn-active' : ''
-              }`}
-            >
-              {PHASE_LABELS[step]}
-            </span>
-          ))}
+          {statusSteps.slice(0, 3).map((step) => {
+            const stepIdx = statusSteps.indexOf(step);
+            const isReached = stepIdx <= currentIdx;
+            const isCurrent = step === phase;
+            return (
+              <span
+                key={step}
+                className={[
+                  'segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs',
+                  isReached && 'segmented-control-btn-active',
+                  isCurrent && 'segmented-control-btn-current',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {PHASE_LABELS[step]}
+              </span>
+            );
+          })}
         </div>
 
         {phase === 'on-duty' && (
