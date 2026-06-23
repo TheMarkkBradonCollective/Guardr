@@ -8,14 +8,13 @@ import {
   SiteStatusLevel,
 } from '../../lib/clientCoverage';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppList, AppListRow } from '../ui/app/AppPrimitives';
+import { AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { hasSpotChecksForClientReview } from '../../lib/spotChecks';
-import { ArrowLeft } from 'lucide-react';
 
 interface LiveCoverageScreenProps {
   requests: SecurityRequest[];
@@ -55,7 +54,6 @@ export function LiveCoverageScreen({
   guards,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
-  onBack,
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
@@ -113,28 +111,18 @@ export function LiveCoverageScreen({
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-8">
-      <div className="flex items-center gap-3">
-        <button type="button" onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface" aria-label="Back">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold">Live Coverage</h1>
-          <p className="text-sm text-brand-text-muted">Security Operations Dashboard</p>
-        </div>
-      </div>
-
-      <div className={`rounded-2xl border p-6 text-center ${statusCfg.className}`}>
+    <AppScreen className="pb-8">
+      <div className={`mx-5 mt-2 rounded-2xl border p-6 text-center ${statusCfg.className}`}>
         <p className="text-4xl mb-2">{statusCfg.emoji}</p>
         <WfBadge tone={statusCfg.tone} className="!text-base !px-4 !py-1.5">{statusCfg.label}</WfBadge>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 px-5 mt-6">
         <WfMetricTile label="Active guards" value={guardRows.length} accent />
         <WfMetricTile label="Activity events" value={feed.length} />
       </div>
 
-      <section>
+      <section className="mt-8">
         <WfSectionHeader title="Active Guards" count={guardRows.length} />
         {guardRows.length === 0 ? (
           <p className="app-empty-state text-sm">
@@ -178,9 +166,9 @@ export function LiveCoverageScreen({
       </section>
 
       {onConfirmSelfAudit && liveRequests.some((r) => r.checkInAudit) && (
-        <section>
+        <section className="mt-8">
           <WfSectionHeader title="Self-audit review" />
-          <div className="space-y-4">
+          <div className="space-y-4 px-5">
             {liveRequests.filter((r) => r.checkInAudit).map((req) => (
               <div key={req.id} className="staff-detail-pane">
                 <p className="text-sm font-semibold mb-2">{req.title}</p>
@@ -192,9 +180,9 @@ export function LiveCoverageScreen({
       )}
 
       {onConfirmSpotCheck && liveRequests.some((r) => hasSpotChecksForClientReview(r)) && (
-        <section>
+        <section className="mt-8">
           <WfSectionHeader title="Spot check review" />
-          <div className="space-y-4">
+          <div className="space-y-4 px-5">
             {liveRequests.filter((r) => hasSpotChecksForClientReview(r)).map((req) => (
               <div key={req.id} className="staff-detail-pane">
                 <p className="text-sm font-semibold mb-2">{req.title}</p>
@@ -205,7 +193,7 @@ export function LiveCoverageScreen({
         </section>
       )}
 
-      <section>
+      <section className="mt-8">
         <WfSectionHeader title="Activity Feed" count={feed.length} />
         {feed.length === 0 ? (
           <p className="app-empty-state text-sm">
@@ -222,6 +210,6 @@ export function LiveCoverageScreen({
           </AppList>
         )}
       </section>
-    </div>
+    </AppScreen>
   );
 }

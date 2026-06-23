@@ -1,7 +1,7 @@
 import React from 'react';
 import { MarkdownDoc } from './MarkdownDoc';
-import { getWorkflowMarkdown, WORKFLOW_SOURCE_PATH, WORKFLOW_TITLE, type WorkflowAudience } from '../../lib/appWorkflow';
-import { AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
+import { getWorkflowMarkdown, WORKFLOW_SOURCE_PATH, type WorkflowAudience } from '../../lib/appWorkflow';
+import { AppScreen, AppSection } from '../ui/app/AppPrimitives';
 
 interface AppWorkflowPageProps {
   audience?: WorkflowAudience;
@@ -20,10 +20,7 @@ export function AppWorkflowPage({ audience = 'all' }: AppWorkflowPageProps) {
 
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
-      <AppPageLead
-        title={audience === 'all' ? WORKFLOW_TITLE : 'Workflow guide'}
-        subtitle={subtitle}
-      />
+      <p className="text-sm text-brand-text-muted px-5 pt-2 pb-4">{subtitle}</p>
       <AppSection title="How Guardr works">
         <MarkdownDoc source={markdown} />
         <p className="mt-10 pt-6 border-t border-brand-border text-xs text-brand-text-muted leading-relaxed">

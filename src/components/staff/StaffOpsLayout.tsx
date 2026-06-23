@@ -41,6 +41,7 @@ interface StaffOpsLayoutProps {
   badges?: Partial<Record<StaffSection, number>>;
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  hideHeader?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -75,6 +76,7 @@ export function StaffOpsLayout({
   badges = {},
   fullBleed = false,
   onOpenLegal,
+  hideHeader = false,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
@@ -161,30 +163,53 @@ export function StaffOpsLayout({
       </aside>
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0">
-        <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
-          <button
-            type="button"
-            className="lg:hidden p-2 -ml-2 text-brand-text"
-            onClick={() => setMobileNavOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-semibold truncate">{SECTION_TITLES[activeSection]}</h1>
-            <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
-          </div>
-          <AccountMenu
-            userName={currentUser.name}
-            userSubtitle={ROLE_LABELS[currentUser.role]}
-            avatarUrl={currentUser.avatar}
-            themeMode={themeMode}
-            onChangeTheme={onChangeTheme}
-            onOpenProfile={() => navigate('profile')}
-            onSignOut={onSignOut}
-            active={activeSection === 'profile'}
-          />
-        </header>
+        {hideHeader ? (
+          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 border-b border-brand-border lg:hidden">
+            <button
+              type="button"
+              className="p-2 -ml-2 text-brand-text"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={ROLE_LABELS[currentUser.role]}
+              avatarUrl={currentUser.avatar}
+              themeMode={themeMode}
+              onChangeTheme={onChangeTheme}
+              onOpenProfile={() => navigate('profile')}
+              onSignOut={onSignOut}
+              active={activeSection === 'profile'}
+            />
+          </header>
+        ) : (
+          <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
+            <button
+              type="button"
+              className="lg:hidden p-2 -ml-2 text-brand-text"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg font-semibold truncate">{SECTION_TITLES[activeSection]}</h1>
+              <p className="text-xs text-brand-text-muted truncate">{currentUser.name}</p>
+            </div>
+            <AccountMenu
+              userName={currentUser.name}
+              userSubtitle={ROLE_LABELS[currentUser.role]}
+              avatarUrl={currentUser.avatar}
+              themeMode={themeMode}
+              onChangeTheme={onChangeTheme}
+              onOpenProfile={() => navigate('profile')}
+              onSignOut={onSignOut}
+              active={activeSection === 'profile'}
+            />
+          </header>
+        )}
 
         <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
           <div className={`h-full max-w-full min-w-0 ${bleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>

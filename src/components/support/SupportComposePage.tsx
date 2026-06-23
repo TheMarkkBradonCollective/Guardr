@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreateSupportTicketInput } from '../../types';
 import { AppPageTransition } from '../ui/motion/AppMotion';
-import { ArrowLeft } from 'lucide-react';
+import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 
 interface SupportComposePageProps {
   onBack: () => void;
@@ -34,23 +34,14 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
 
   return (
     <AppPageTransition motionKey="support-compose" className="h-full min-h-0">
-      <div className="h-full flex flex-col animate-fade-in client-content-shell client-form-shell">
-        <div className="flex items-center gap-3 mb-4 shrink-0">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full hover:bg-brand-surface transition-colors"
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </div>
+      <AppScreen className="client-form-shell">
+        <AppSubScreenHeader title="Contact support" onBack={onBack} />
 
-        <p className="text-sm text-brand-text-muted mb-6">
+        <p className="text-sm text-brand-text-muted px-5 mb-6">
           Tell the Guardr team what you need — we will reply in this thread.
         </p>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 pb-24">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 px-5 pb-24">
           <div>
             <label className="uber-label block mb-1">Subject</label>
             <input
@@ -75,7 +66,7 @@ export function SupportComposePage({ onBack, onCreateTicket, onCreated }: Suppor
             Send to Guardr staff
           </button>
         </form>
-      </div>
+      </AppScreen>
     </AppPageTransition>
   );
 }

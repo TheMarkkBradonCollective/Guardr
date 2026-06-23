@@ -4,7 +4,7 @@ import { filterGuardsByQuery, getBrowsableGuards } from '../../lib/guardDirector
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppItemCardStack, AppPageLead, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
 import { Star } from 'lucide-react';
@@ -23,15 +23,7 @@ export function GuardDirectoryScreen({ guards, onSelectGuard, onBack }: GuardDir
 
   return (
     <AppScreen>
-      {onBack ? (
-        <AppSubScreenHeader title="Find a guard" onBack={onBack} />
-      ) : (
-        <AppPageLead
-          kicker="Guard directory"
-          subtitle="Browse licensed professionals"
-          title="Find a guard"
-        />
-      )}
+      {onBack && <AppSubScreenHeader title="Find a guard" onBack={onBack} />}
 
       <div className="px-5 pb-3 space-y-2 border-b border-brand-border">
         <WfSearchBar
