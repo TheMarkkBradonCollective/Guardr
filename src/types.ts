@@ -128,8 +128,8 @@ export interface Client {
 
   /** Business entity type, e.g. LLC, Corporation, Sole Proprietor */
   businessType?: string;
-  /** Industry / sector, e.g. retail, hospitality, construction */
-  industry?: string;
+  /** Industries / sectors — multi-select */
+  industries?: string[];
   /** Business license number or EIN / Tax ID */
   businessLicense?: string;
   /** Company website URL */
@@ -143,8 +143,8 @@ export interface Client {
   estimatedGuardsNeeded?: number;
   /** Armed vs unarmed preference */
   armedPreference?: 'armed' | 'unarmed' | 'no-preference';
-  /** Engagement frequency */
-  serviceFrequency?: 'one-time' | 'recurring' | 'temporary';
+  /** Engagement frequency — multi-select, clients may need more than one type */
+  serviceFrequencies?: string[];
   /** Approximate start date or timeframe */
   estimatedStartDate?: string;
   /** Rough budget tier */
@@ -154,8 +154,8 @@ export interface Client {
   serviceCity?: string;
   /** US state where coverage is needed */
   serviceState?: string;
-  /** Type of property, e.g. retail, office, warehouse */
-  propertyType?: string;
+  /** Types of property — multi-select, clients may cover more than one site type */
+  propertyTypes?: string[];
 
   /** Freehand name of the guard or staff member who referred this client */
   referredBy?: string;

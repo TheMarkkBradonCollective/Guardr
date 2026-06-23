@@ -57,6 +57,27 @@ const PROPERTY_TYPE_OPTIONS = [
   'Other',
 ] as const;
 
+const INDUSTRY_OPTIONS = [
+  'Retail',
+  'Hospitality & events',
+  'Construction',
+  'Healthcare',
+  'Education',
+  'Corporate / office',
+  'Government',
+  'Logistics / warehouse',
+  'Entertainment & nightlife',
+  'Real estate / property',
+  'Non-profit',
+  'Other',
+] as const;
+
+const ENGAGEMENT_TYPE_OPTIONS = [
+  { value: 'one-time', label: 'One-time event' },
+  { value: 'recurring', label: 'Ongoing / recurring' },
+  { value: 'temporary', label: 'Temporary / short-term' },
+] as const;
+
 const BUSINESS_TYPE_OPTIONS = [
   'LLC',
   'Corporation',
@@ -170,19 +191,19 @@ export function AuthPage({
 
   // Client intake fields
   const [businessType, setBusinessType] = useState('');
-  const [industry, setIndustry] = useState('');
+  const [industries, setIndustries] = useState<string[]>([]);
   const [businessLicense, setBusinessLicense] = useState('');
   const [website, setWebsite] = useState('');
   const [serviceDescription, setServiceDescription] = useState('');
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
   const [estimatedGuardsNeeded, setEstimatedGuardsNeeded] = useState('');
   const [armedPreference, setArmedPreference] = useState('');
-  const [serviceFrequency, setServiceFrequency] = useState('');
+  const [serviceFrequencies, setServiceFrequencies] = useState<string[]>([]);
   const [estimatedStartDate, setEstimatedStartDate] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
   const [serviceCity, setServiceCity] = useState('');
   const [serviceState, setServiceState] = useState('');
-  const [propertyType, setPropertyType] = useState('');
+  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [referredByText, setReferredByText] = useState('');
   const [referredById, setReferredById] = useState('');
   const [referralSuggestionsOpen, setReferralSuggestionsOpen] = useState(false);
@@ -254,19 +275,19 @@ export function AuthPage({
           accountStatus: 'pending',
 
           businessType: businessType || undefined,
-          industry: industry.trim() || undefined,
+          industries: industries.length > 0 ? industries : undefined,
           businessLicense: businessLicense.trim() || undefined,
           website: website.trim() || undefined,
           serviceDescription: serviceDescription.trim() || undefined,
           serviceTypes: serviceTypes.length > 0 ? serviceTypes : undefined,
           estimatedGuardsNeeded: estimatedGuardsNeeded ? parseInt(estimatedGuardsNeeded) : undefined,
           armedPreference: (armedPreference as Client['armedPreference']) || undefined,
-          serviceFrequency: (serviceFrequency as Client['serviceFrequency']) || undefined,
+          serviceFrequencies: serviceFrequencies.length > 0 ? serviceFrequencies : undefined,
           estimatedStartDate: estimatedStartDate.trim() || undefined,
           budgetRange: budgetRange || undefined,
           serviceCity: serviceCity.trim() || undefined,
           serviceState: serviceState.trim() || undefined,
-          propertyType: propertyType || undefined,
+          propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
           referredBy: referredByText.trim() || undefined,
           referredById: referredById || undefined,
           howHeardAboutUs: howHeardAboutUs || undefined,
@@ -701,32 +722,43 @@ export function AuthPage({
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="uber-label block mb-2">Business type <span className="font-normal">(optional)</span></label>
-                      <div className="relative">
-                        <select
-                          value={businessType}
-                          onChange={(e) => setBusinessType(e.target.value)}
-                          className="uber-input appearance-none pr-8"
-                        >
-                          <option value="">Select…</option>
-                          {BUSINESS_TYPE_OPTIONS.map((o) => (
-                            <option key={o} value={o}>{o}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
-                      </div>
+                  <div>
+                    <label className="uber-label block mb-2">Business type <span className="font-normal">(optional)</span></label>
+                    <div className="relative">
+                      <select
+                        value={businessType}
+                        onChange={(e) => setBusinessType(e.target.value)}
+                        className="uber-input appearance-none pr-8"
+                      >
+                        <option value="">Select…</option>
+                        {BUSINESS_TYPE_OPTIONS.map((o) => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                     </div>
-                    <div>
-                      <label className="uber-label block mb-2">Industry <span className="font-normal">(optional)</span></label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Retail, Events…"
-                        value={industry}
-                        onChange={(e) => setIndustry(e.target.value)}
-                        className="uber-input"
-                      />
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Industry <span className="font-normal">(optional — select all that apply)</span></label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() =>
+                            setIndustries((prev) =>
+                              prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            industries.includes(opt)
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -821,33 +853,38 @@ export function AuthPage({
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="uber-label block mb-2">Engagement type <span className="font-normal">(optional)</span></label>
-                      <div className="relative">
-                        <select
-                          value={serviceFrequency}
-                          onChange={(e) => setServiceFrequency(e.target.value)}
-                          className="uber-input appearance-none pr-8"
+                  <div>
+                    <label className="uber-label block mb-2">Engagement type <span className="font-normal">(optional — select all that apply)</span></label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {ENGAGEMENT_TYPE_OPTIONS.map(({ value, label }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setServiceFrequencies((prev) =>
+                              prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            serviceFrequencies.includes(value)
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
                         >
-                          <option value="">Select…</option>
-                          <option value="one-time">One-time event</option>
-                          <option value="recurring">Ongoing / recurring</option>
-                          <option value="temporary">Temporary / short-term</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
-                      </div>
+                          {label}
+                        </button>
+                      ))}
                     </div>
-                    <div>
-                      <label className="uber-label block mb-2">Estimated start <span className="font-normal">(optional)</span></label>
-                      <input
-                        type="text"
-                        placeholder="e.g. July 2026, ASAP…"
-                        value={estimatedStartDate}
-                        onChange={(e) => setEstimatedStartDate(e.target.value)}
-                        className="uber-input"
-                      />
-                    </div>
+                  </div>
+                  <div>
+                    <label className="uber-label block mb-2">Estimated start <span className="font-normal">(optional)</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. July 2026, ASAP…"
+                      value={estimatedStartDate}
+                      onChange={(e) => setEstimatedStartDate(e.target.value)}
+                      className="uber-input"
+                    />
                   </div>
                   <div>
                     <label className="uber-label block mb-2">Budget range <span className="font-normal">(optional)</span></label>
@@ -898,19 +935,26 @@ export function AuthPage({
                     </div>
                   </div>
                   <div>
-                    <label className="uber-label block mb-2">Property type <span className="font-normal">(optional)</span></label>
-                    <div className="relative">
-                      <select
-                        value={propertyType}
-                        onChange={(e) => setPropertyType(e.target.value)}
-                        className="uber-input appearance-none pr-8"
-                      >
-                        <option value="">Select…</option>
-                        {PROPERTY_TYPE_OPTIONS.map((o) => (
-                          <option key={o} value={o}>{o}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                    <label className="uber-label block mb-2">Property type <span className="font-normal">(optional — select all that apply)</span></label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() =>
+                            setPropertyTypes((prev) =>
+                              prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            propertyTypes.includes(opt)
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
                     </div>
                   </div>
 

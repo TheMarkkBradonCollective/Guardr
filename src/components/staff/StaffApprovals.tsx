@@ -827,7 +827,7 @@ export function StaffApprovals({
                 </section>
 
                 {/* ── Business info ── */}
-                {(client.businessType || client.industry || client.businessLicense) && (
+                {(client.businessType || (client.industries && client.industries.length > 0) || client.businessLicense) && (
                   <section className="space-y-2 pt-3 border-t border-brand-border">
                     <p className="uber-label text-xs">Business</p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
@@ -837,12 +837,6 @@ export function StaffApprovals({
                           <span>{client.businessType}</span>
                         </>
                       )}
-                      {client.industry && (
-                        <>
-                          <span className="text-brand-text-muted">Industry</span>
-                          <span>{client.industry}</span>
-                        </>
-                      )}
                       {client.businessLicense && (
                         <>
                           <span className="text-brand-text-muted">License / EIN</span>
@@ -850,6 +844,18 @@ export function StaffApprovals({
                         </>
                       )}
                     </div>
+                    {client.industries && client.industries.length > 0 && (
+                      <div>
+                        <p className="text-xs text-brand-text-muted mb-1.5">Industry</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {client.industries.map((ind) => (
+                            <span key={ind} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
+                              {ind}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </section>
                 )}
 
@@ -883,12 +889,12 @@ export function StaffApprovals({
                         <span>{armedLabel[client.armedPreference] ?? client.armedPreference}</span>
                       </>
                     )}
-                    {client.serviceFrequency && (
-                      <>
-                        <span className="text-brand-text-muted">Engagement type</span>
-                        <span>{frequencyLabel[client.serviceFrequency] ?? client.serviceFrequency}</span>
-                      </>
-                    )}
+                    {client.serviceFrequencies && client.serviceFrequencies.length > 0 && (
+                        <>
+                          <span className="text-brand-text-muted">Engagement type</span>
+                          <span>{client.serviceFrequencies.map((f) => frequencyLabel[f] ?? f).join(', ')}</span>
+                        </>
+                      )}
                     {client.estimatedStartDate && (
                       <>
                         <span className="text-brand-text-muted">Est. start</span>
@@ -905,23 +911,27 @@ export function StaffApprovals({
                 </section>
 
                 {/* ── Location ── */}
-                {(client.serviceCity || client.serviceState || client.propertyType) && (
+                {(client.serviceCity || client.serviceState || (client.propertyTypes && client.propertyTypes.length > 0)) && (
                   <section className="space-y-2 pt-3 border-t border-brand-border">
                     <p className="uber-label text-xs">Location</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                      {(client.serviceCity || client.serviceState) && (
-                        <>
-                          <span className="text-brand-text-muted flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> City / State</span>
-                          <span>{[client.serviceCity, client.serviceState].filter(Boolean).join(', ')}</span>
-                        </>
-                      )}
-                      {client.propertyType && (
-                        <>
-                          <span className="text-brand-text-muted">Property type</span>
-                          <span>{client.propertyType}</span>
-                        </>
-                      )}
-                    </div>
+                    {(client.serviceCity || client.serviceState) && (
+                      <p className="text-sm flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-brand-text-muted shrink-0" />
+                        {[client.serviceCity, client.serviceState].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {client.propertyTypes && client.propertyTypes.length > 0 && (
+                      <div>
+                        <p className="text-xs text-brand-text-muted mb-1.5">Property type</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {client.propertyTypes.map((pt) => (
+                            <span key={pt} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
+                              {pt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </section>
                 )}
 
