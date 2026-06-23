@@ -5,10 +5,12 @@ import {
   canDirectorMarkClientPaidCash,
   canDirectorMarkGuardPaidCash,
   canDirectorMarkPlatformFeePaidCash,
+  canStaffApproveClientCashPayment,
   canStripePayGuard,
   getCashDepositedAmount,
   getPlatformFeeAmount,
   guardPayoutAmount,
+  isClientCashPaymentPendingApproval,
   stripeDepositLabel,
 } from '../../lib/cashPayments';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
@@ -53,9 +55,12 @@ interface JobPaymentRowProps {
   guard?: SecurityGuard;
   payment?: Payment;
   isDirector: boolean;
+  canManagePayments: boolean;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
+  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -67,20 +72,28 @@ export function JobPaymentRow({
   guard,
   payment: _payment,
   isDirector,
+  canManagePayments,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onApproveClientCashPayment,
+  onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | 'platformFee' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'guard' | 'stripe' | 'force' | 'refund' | 'deposit' | 'platformFee' | null>(null);
 
   const stage = getPaymentPipelineStage(req);
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
   const guardAmount = guardPayoutAmount(req);
+  const cashPending = isClientCashPaymentPendingApproval(req);
+  const canApproveCash =
+    canManagePayments && canStaffApproveClientCashPayment(req) && onApproveClientCashPayment;
+  const canRejectCash =
+    canManagePayments && canStaffApproveClientCashPayment(req) && onRejectClientCashPayment;
   const canMarkClientCash = isDirector && canDirectorMarkClientPaidCash(req) && onMarkClientPaidCash;
   const canDeposit = isDirector && canDirectorDepositCashToStripe(req) && onDepositCashToStripe;
   const canPlatformFeeCash =
@@ -142,8 +155,32 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canMarkClientCash || canDeposit || canPlatformFeeCash || canStripeRelease || canCashGuard || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canPlatformFeeCash || canStripeRelease || canCashGuard || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
+          {canApproveCash && (
+            <button
+              type="button"
+              onClick={() => run('approveCash', onApproveClientCashPayment)}
+              disabled={busy !== null}
+              className="app-button-primary app-btn-sm gap-1.5"
+            >
+              {busy === 'approveCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Approve cash payment
+            </button>
+          )}
+
+          {canRejectCash && (
+            <button
+              type="button"
+              onClick={() => run('rejectCash', onRejectClientCashPayment)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5 text-red-400 border-red-500/40"
+            >
+              {busy === 'rejectCash' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+              Decline request
+            </button>
+          )}
+
           {canMarkClientCash && (
             <button
               type="button"

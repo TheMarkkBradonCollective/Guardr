@@ -6,6 +6,7 @@ import {
   isCashAwaitingStripeDeposit,
   isCashClientPayment,
   isCashGuardPayout,
+  isClientCashPaymentPendingApproval,
   isPlatformFeeOnlyDeposit,
   isStripeDepositSatisfied,
 } from './cashPayments';
@@ -47,7 +48,8 @@ export const PIPELINE_SECTION_META: Record<
   },
   'awaiting-client': {
     title: 'Waiting on the client',
-    description: 'The client has not paid yet. You can mark cash received if they paid on site.',
+    description:
+      'The client has not paid yet. Approve cash payment requests or mark cash received if they paid on site.',
   },
   'client-paid-active': {
     title: 'Paid — job in progress',
@@ -135,9 +137,18 @@ export function paymentAttentionSummary(requests: SecurityRequest[]): {
   const s = paymentPipelineSummary(requests);
   const lines: string[] = [];
 
-  if (s.awaitingClient.length > 0) {
+  const pendingCashApprovals = s.awaitingClient.filter(isClientCashPaymentPendingApproval);
+  if (pendingCashApprovals.length > 0) {
+    const pendingTotal = pendingCashApprovals.reduce((sum, r) => sum + r.estimatedPayout, 0);
     lines.push(
-      `${s.awaitingClient.length} job${s.awaitingClient.length === 1 ? '' : 's'}: client still owes $${s.awaitingClientTotal.toFixed(2)}`
+      `${pendingCashApprovals.length} cash payment request${pendingCashApprovals.length === 1 ? '' : 's'} awaiting approval ($${pendingTotal.toFixed(2)})`
+    );
+  }
+  const unpaidWithoutCashRequest = s.awaitingClient.filter((r) => !isClientCashPaymentPendingApproval(r));
+  if (unpaidWithoutCashRequest.length > 0) {
+    const unpaidTotal = unpaidWithoutCashRequest.reduce((sum, r) => sum + r.estimatedPayout, 0);
+    lines.push(
+      `${unpaidWithoutCashRequest.length} job${unpaidWithoutCashRequest.length === 1 ? '' : 's'}: client still owes $${unpaidTotal.toFixed(2)}`
     );
   }
   if (s.awaitingGuardPayout.length > 0) {

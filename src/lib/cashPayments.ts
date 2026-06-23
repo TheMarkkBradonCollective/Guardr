@@ -62,8 +62,24 @@ export function isCashAwaitingStripeDeposit(req: SecurityRequest): boolean {
   );
 }
 
+export function isClientCashPaymentRequested(
+  req: Pick<SecurityRequest, 'clientCashPaymentRequested'>
+): boolean {
+  return !!req.clientCashPaymentRequested;
+}
+
+export function isClientCashPaymentPendingApproval(req: SecurityRequest): boolean {
+  return (
+    (!req.paymentStatus || req.paymentStatus === 'unpaid') && isClientCashPaymentRequested(req)
+  );
+}
+
 export function canDirectorMarkClientPaidCash(req: SecurityRequest): boolean {
-  return !req.paymentStatus || req.paymentStatus === 'unpaid';
+  return (!req.paymentStatus || req.paymentStatus === 'unpaid') && !isClientCashPaymentRequested(req);
+}
+
+export function canStaffApproveClientCashPayment(req: SecurityRequest): boolean {
+  return isClientCashPaymentPendingApproval(req);
 }
 
 export function isPlatformFeePaidCash(req: Pick<SecurityRequest, 'platformFeePaidCash'>): boolean {

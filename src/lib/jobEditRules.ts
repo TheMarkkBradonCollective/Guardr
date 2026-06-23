@@ -26,8 +26,17 @@ export function isJobPaid(req: Pick<SecurityRequest, 'paymentStatus'>): boolean 
 }
 
 /** Client checkout is only available after staff approves the job offer */
-export function canClientPayForJob(req: Pick<SecurityRequest, 'status' | 'paymentStatus'>): boolean {
-  return req.status === 'open' && !isJobPaid(req);
+export function canClientPayForJob(
+  req: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'clientCashPaymentRequested'>
+): boolean {
+  return req.status === 'open' && !isJobPaid(req) && !req.clientCashPaymentRequested;
+}
+
+/** Client may request to pay in cash on open unpaid jobs */
+export function canClientRequestCashPayment(
+  req: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'clientCashPaymentRequested'>
+): boolean {
+  return req.status === 'open' && !isJobPaid(req) && !req.clientCashPaymentRequested;
 }
 
 export function canEditJobTitleAndLocation(req: SecurityRequest): boolean {

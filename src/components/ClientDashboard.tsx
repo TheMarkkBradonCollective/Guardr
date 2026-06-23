@@ -53,6 +53,7 @@ interface ClientDashboardProps {
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
+  onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -86,6 +87,7 @@ export function ClientDashboard({
   onAddReview,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
+  onRequestCashPayment,
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
@@ -301,6 +303,7 @@ export function ClientDashboard({
         onAddReview={onAddReview}
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
+        onRequestCashPayment={onRequestCashPayment}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

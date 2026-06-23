@@ -119,6 +119,8 @@ interface StaffDashboardProps {
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
+  onApproveClientCashPayment?: (requestId: string) => Promise<void>;
+  onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -224,6 +226,8 @@ export function StaffDashboard({
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
+  onApproveClientCashPayment,
+  onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onDepositCashToStripe,
@@ -578,9 +582,12 @@ export function StaffDashboard({
             payments={payments}
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
+            canManagePayments={showFinance}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
+            onApproveClientCashPayment={onApproveClientCashPayment}
+            onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onDepositCashToStripe={onDepositCashToStripe}
