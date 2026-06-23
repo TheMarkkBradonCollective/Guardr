@@ -341,6 +341,8 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_paym
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_method TEXT;
+
+-- Overtime dispute: client contests late clock-out charge; staff reviews and adjusts.
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_reason TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_disputed_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_claimed_clock_out_at TIMESTAMPTZ;
