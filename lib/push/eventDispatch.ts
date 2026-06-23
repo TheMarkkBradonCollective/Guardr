@@ -25,6 +25,24 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
       ? `${event.guardName} checked in${event.location ? ` at ${event.location}` : ''}`
       : 'A guard completed a check-in',
   }),
+  guard_clockout: (event) => ({
+    title: 'Guard clock-out',
+    body: event.guardName
+      ? `${event.guardName} clocked out${event.location ? ` at ${event.location}` : ''}`
+      : 'A guard clocked out',
+  }),
+  guard_break_start: (event) => ({
+    title: 'Guard on break',
+    body: event.guardName
+      ? `${event.guardName} started a break${event.location ? ` at ${event.location}` : ''}`
+      : 'A guard started a break',
+  }),
+  guard_break_end: (event) => ({
+    title: 'Guard back on duty',
+    body: event.guardName
+      ? `${event.guardName} ended break and is back on duty${event.location ? ` at ${event.location}` : ''}`
+      : 'A guard ended a break',
+  }),
   missed_checkin: (event) => ({
     title: 'Missed check-in',
     body: event.guardName
@@ -220,7 +238,7 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, role: 'guard' }];
   }
 
-  if (event.type === 'guard_checkin') {
+  if (event.type === 'guard_checkin' || event.type === 'guard_clockout' || event.type === 'guard_break_start' || event.type === 'guard_break_end') {
     return [{ ...payload, role: 'dispatch' }];
   }
 

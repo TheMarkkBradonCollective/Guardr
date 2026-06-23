@@ -72,6 +72,9 @@ export async function authorizePushEvent(
       return session.platformRole === 'guard' ? null : 'Only guards can post to guard chat';
 
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
     case 'missed_checkin':
       if (isStaffSession(session)) return null;
       if (event.guardId && event.guardId === session.userId) return null;

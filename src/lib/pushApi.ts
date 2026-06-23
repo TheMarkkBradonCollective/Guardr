@@ -96,6 +96,9 @@ export async function sendTestPush(user: SessionUser, siteId?: string): Promise<
 
 export type PushEventType =
   | 'guard_checkin'
+  | 'guard_clockout'
+  | 'guard_break_start'
+  | 'guard_break_end'
   | 'missed_checkin'
   | 'assignment'
   | 'emergency_alert'

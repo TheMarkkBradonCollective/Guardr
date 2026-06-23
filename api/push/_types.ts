@@ -3,6 +3,9 @@ export type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
 export type PushNotificationType =
   | 'missed_checkin'
   | 'guard_checkin'
+  | 'guard_clockout'
+  | 'guard_break_start'
+  | 'guard_break_end'
   | 'assignment'
   | 'emergency_alert'
   | 'support_message'

@@ -3,6 +3,14 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { ShiftPhase } from '../../lib/guardJobs';
 import { formatDuration } from '../../lib/dates';
 import {
+  activeShiftBreak,
+  breakMinutesRemaining,
+  canGuardEndBreak,
+  canGuardStartBreak,
+  guardBreakBlockedMessage,
+  totalBreakMinutesUsed,
+} from '../../lib/shiftBreaks';
+import {
   canGuardClockIn,
   canGuardClockOut,
   computeShiftDutySeconds,
@@ -17,6 +25,7 @@ import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
 import {
+  Coffee,
   Activity,
   AlertTriangle,
   Clock,
@@ -36,6 +45,8 @@ interface GuardActiveShiftProps {
   onIncidentReport: () => void;
   onActivityReport: () => void;
   onEndShift: () => void;
+  onStartBreak?: () => void;
+  onEndBreak?: () => void;
   onOpenJobChat?: () => void;
 }
 
@@ -66,6 +77,8 @@ export function GuardActiveShift({
   onIncidentReport,
   onActivityReport,
   onEndShift,
+  onStartBreak,
+  onEndBreak,
   onOpenJobChat,
 }: GuardActiveShiftProps) {
   const [now, setNow] = useState(() => new Date());
@@ -100,6 +113,10 @@ export function GuardActiveShift({
   const clockOutMsg = guardClockOutBlockedMessage(job, now);
   const clockInOpensLabel = formatClockWindowTime(shiftClockInOpensAt(job.startDate));
   const clockOutOpensLabel = formatClockWindowTime(shiftClockOutOpensAt(job.endDate));
+  const onBreak = !!activeShiftBreak(job);
+  const breakRemaining = breakMinutesRemaining(job);
+  const breakAllowed = (job.breakMinutes ?? 0) > 0;
+  const breakBlocked = guardBreakBlockedMessage(job);
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
@@ -231,6 +248,45 @@ export function GuardActiveShift({
 
         {phase === 'on-duty' && (
           <div className="space-y-3">
+            {breakAllowed && (
+              <div className="rounded-xl border border-brand-border bg-brand-bg-sec/60 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <Coffee className="w-4 h-4 text-brand-primary" />
+                      {onBreak ? 'On break' : 'Scheduled breaks'}
+                    </p>
+                    <p className="text-xs text-brand-text-muted mt-1">
+                      {onBreak
+                        ? `${Math.ceil(totalBreakMinutesUsed(job) / 1)}m used · ${breakRemaining}m remaining`
+                        : `${breakRemaining} of ${job.breakMinutes} minutes available`}
+                    </p>
+                  </div>
+                </div>
+                {onBreak ? (
+                  <button
+                    type="button"
+                    onClick={onEndBreak}
+                    disabled={!canGuardEndBreak(job) || !onEndBreak}
+                    className="w-full app-button-primary app-btn-md disabled:opacity-40"
+                  >
+                    End break · back on duty
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onStartBreak}
+                    disabled={!canGuardStartBreak(job) || !onStartBreak}
+                    className="w-full app-button-outline app-btn-md disabled:opacity-40"
+                  >
+                    Start break
+                  </button>
+                )}
+                {breakBlocked && !onBreak && (
+                  <p className="text-xs text-brand-text-muted text-center">{breakBlocked}</p>
+                )}
+              </div>
+            )}
             <div className="app-action-row--2">
               <button type="button" onClick={onIncidentReport} className="app-button-outline app-btn-md gap-2">
                 <AlertTriangle className="w-4 h-4" /> Report incident

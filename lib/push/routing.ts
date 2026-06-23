@@ -37,6 +37,9 @@ export function resolveNotificationUrl(
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
@@ -160,6 +163,9 @@ export function resolveNotificationUrlForRole(
       return '/staff/incidents';
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       if (role === 'guard') {
         return options.requestId
           ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -222,6 +228,9 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       return ['dispatch', 'admin'];
     case 'assignment':
       return ['guard'];
