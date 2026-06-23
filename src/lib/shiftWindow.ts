@@ -18,6 +18,22 @@ export function shiftClockOutClosesAt(endDate: string): Date {
   return new Date(new Date(endDate).getTime() + SHIFT_LATE_CLOCKOUT_MINUTES * 60_000);
 }
 
+/** ISO timestamp when the guard clocked in and went on duty. */
+export function shiftDutyStartedAt(
+  job: Pick<SecurityRequest, 'checkInAudit'>
+): string | null {
+  return job.checkInAudit?.checkedAt ?? null;
+}
+
+/** Elapsed on-duty seconds since clock-in, based on persisted checkedAt. */
+export function computeShiftDutySeconds(
+  startedAt: string | null | undefined,
+  now = Date.now()
+): number {
+  if (!startedAt) return 0;
+  return Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
+}
+
 export function canGuardClockIn(
   job: Pick<SecurityRequest, 'startDate'>,
   now = new Date()
