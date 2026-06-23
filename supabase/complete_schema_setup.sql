@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS guards (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS failed_audits INTEGER NOT NULL DEFAULT 0;
+UPDATE guards SET failed_audits = 0 WHERE failed_audits IS NULL;
+
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS headline TEXT DEFAULT '';
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS summary TEXT DEFAULT '';
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS about TEXT DEFAULT '';
@@ -166,6 +169,7 @@ END
 WHERE account_status IS NULL;
 ALTER TABLE clients ALTER COLUMN account_status SET DEFAULT 'pending';
 UPDATE clients SET account_status = 'active' WHERE account_status IS NULL;
+ALTER TABLE clients ALTER COLUMN account_status SET NOT NULL;
 
 ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_status_check;
 ALTER TABLE clients ADD CONSTRAINT clients_account_status_check
@@ -682,6 +686,7 @@ ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE
@@ -691,7 +696,8 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages', 'push_subscriptions',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'notification_preferences'
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'notification_preferences',
+    'platform_settings'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NULL THEN
@@ -862,6 +868,20 @@ WHERE table_schema = 'public'
     'check_in_audit', 'spot_checks', 'mid_shift_audits', 'check_out_audit',
     'pending_guard_id', 'staff_approved_guard_at'
   )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'clients'
+  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'platform_settings'
+  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'fee_config')
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
