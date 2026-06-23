@@ -55,8 +55,8 @@ export const NOTIFICATION_TYPE_OPTIONS: {
   {
     key: 'staffMessage',
     type: 'staff_message',
-    label: 'Staff team chat',
-    description: 'Internal messages between Guardr staff.',
+    label: 'Staff chat',
+    description: 'Internal messages between Guardr staff members.',
     roles: ['staff'],
   },
 ];

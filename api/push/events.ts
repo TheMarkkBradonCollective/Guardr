@@ -317,7 +317,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         body: body.body || 'New message on an active job',
       },
       staff_message: {
-        title: 'Staff team chat',
+        title: 'Staff chat',
         body: body.body || 'New message from the Guardr team',
       },
     };

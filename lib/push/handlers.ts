@@ -182,7 +182,7 @@ export async function handlePushEvent(
       body: body.body || 'New message on an active job',
     },
     staff_message: {
-      title: 'Staff team chat',
+      title: 'Staff chat',
       body: body.body || 'New message from the Guardr team',
     },
   };
