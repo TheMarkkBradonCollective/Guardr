@@ -323,6 +323,31 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_name TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_phone TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS parking_instructions TEXT;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS access_instructions TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS scheduled_duration_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS scheduled_estimated_payout NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_payment_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_approved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_approved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_payment_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_payment_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_method TEXT;
+
+COMMENT ON COLUMN security_requests.scheduled_duration_hours IS 'Original scheduled shift length before late clock-out adjustment';
+COMMENT ON COLUMN security_requests.scheduled_estimated_payout IS 'Original client bill before late clock-out adjustment';
+COMMENT ON COLUMN security_requests.overtime_hours IS 'Extra hours billed when guard clocked out after scheduled end';
+COMMENT ON COLUMN security_requests.overtime_amount IS 'Additional client charge for late clock-out';
+COMMENT ON COLUMN security_requests.overtime_payment_status IS 'none | unpaid | paid — tracks collection of overtime difference';
+COMMENT ON COLUMN security_requests.overtime_status IS 'none | pending_guard | pending_client | awaiting_payment | paid';
+COMMENT ON COLUMN security_requests.overtime_guard_approved_at IS 'When the guard confirmed late clock-out overtime';
+COMMENT ON COLUMN security_requests.overtime_client_approved_at IS 'When the client approved paying overtime';
+COMMENT ON COLUMN security_requests.overtime_client_payment_method IS 'stripe | cash — how the client paid overtime';
+COMMENT ON COLUMN security_requests.overtime_guard_payout_method IS 'stripe | cash — how the guard was paid for overtime';
 
 UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
 UPDATE security_requests SET cash_deposited_amount = estimated_payout
@@ -352,6 +377,8 @@ UPDATE security_requests SET platform_fee_paid_cash = FALSE WHERE platform_fee_p
 UPDATE security_requests SET guard_cash_payout_requested = FALSE WHERE guard_cash_payout_requested IS NULL;
 UPDATE security_requests SET client_cash_payment_requested = FALSE WHERE client_cash_payment_requested IS NULL;
 UPDATE security_requests SET guard_payout_available = FALSE WHERE guard_payout_available IS NULL;
+UPDATE security_requests SET overtime_client_cash_payment_requested = FALSE WHERE overtime_client_cash_payment_requested IS NULL;
+UPDATE security_requests SET overtime_guard_payout_available = FALSE WHERE overtime_guard_payout_available IS NULL;
 UPDATE security_requests
 SET
   guard_payout_available = TRUE,
@@ -390,6 +417,24 @@ ALTER TABLE security_requests ADD CONSTRAINT security_requests_client_payment_me
 ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_guard_payout_method_check;
 ALTER TABLE security_requests ADD CONSTRAINT security_requests_guard_payout_method_check
   CHECK (guard_payout_method IS NULL OR guard_payout_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_payment_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_payment_status_check
+  CHECK (overtime_payment_status IS NULL OR overtime_payment_status IN ('none', 'unpaid', 'paid'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_status_check
+  CHECK (overtime_status IS NULL OR overtime_status IN (
+    'none', 'pending_guard', 'pending_client', 'awaiting_payment', 'paid'
+  ));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_client_payment_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_client_payment_method_check
+  CHECK (overtime_client_payment_method IS NULL OR overtime_client_payment_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_guard_payout_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_guard_payout_method_check
+  CHECK (overtime_guard_payout_method IS NULL OR overtime_guard_payout_method IN ('stripe', 'cash'));
 
 DO $$
 BEGIN
@@ -808,6 +853,12 @@ WHERE table_schema = 'public'
     'parking_instructions', 'access_instructions', 'operational_details',
     'platform_fee_paid_cash', 'cash_deposited_amount', 'cash_deposited_manually',
     'guard_payout_available', 'guard_payout_available_at',
+    'scheduled_duration_hours', 'scheduled_estimated_payout',
+    'overtime_hours', 'overtime_amount', 'overtime_payment_status', 'overtime_status',
+    'overtime_guard_approved_at', 'overtime_client_approved_at',
+    'overtime_client_payment_method', 'overtime_client_cash_payment_requested',
+    'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
+    'overtime_guard_payout_method',
     'check_in_audit', 'spot_checks', 'mid_shift_audits', 'check_out_audit',
     'pending_guard_id', 'staff_approved_guard_at'
   )
