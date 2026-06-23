@@ -16,6 +16,7 @@ interface JobChatPanelProps {
   onSend: (body: string) => void | Promise<void>;
   onBack?: () => void;
   compact?: boolean;
+  hideBackOnDesktop?: boolean;
 }
 
 export function JobChatPanel({
@@ -26,6 +27,7 @@ export function JobChatPanel({
   onSend,
   onBack,
   compact = false,
+  hideBackOnDesktop = false,
 }: JobChatPanelProps) {
   const canChat = canParticipateInJobChat(currentUser, request);
   const readOnly = isJobChatReadOnly(request) || thread?.status === 'archived';
@@ -50,6 +52,7 @@ export function JobChatPanel({
           title={request.title}
           subtitle={headerSubtitle}
           onBack={onBack}
+          hideBackOnDesktop={hideBackOnDesktop}
         />
       )}
       <ChatThreadPanel
