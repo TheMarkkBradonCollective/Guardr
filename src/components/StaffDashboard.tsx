@@ -68,6 +68,7 @@ import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
+import { AppWorkflowPage } from './docs/AppWorkflowPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 
@@ -626,6 +627,8 @@ export function StaffDashboard({
             showFinancials={showFinance}
           />
         );
+      case 'guide':
+        return <AppWorkflowPage audience="staff" />;
       case 'settings':
         return showFinance ? (
           <StaffSettingsPanel

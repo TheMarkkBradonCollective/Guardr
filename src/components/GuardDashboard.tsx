@@ -31,9 +31,10 @@ import { SupportReportPage } from './support/SupportReportPage';
 import { JobChatPanel } from './messaging/JobChatPanel';
 import { threadForRequest } from '../lib/jobChat';
 import { RoleAppShell } from './layouts/RoleAppShell';
+import { AppWorkflowPage } from './docs/AppWorkflowPage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy, MessagesSquare } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, LifeBuoy, MessagesSquare, BookOpen } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -122,7 +123,7 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'guardChat' | 'support' | 'profile';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'guardChat' | 'support' | 'profile' | 'guide';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
@@ -132,6 +133,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   guardChat: 'Guard chat',
   support: 'Support',
   profile: 'Profile',
+  guide: 'Workflow guide',
 };
 
 export function GuardDashboard({
@@ -571,6 +573,10 @@ export function GuardDashboard({
     { id: 'support', icon: LifeBuoy, label: 'Support' },
   ];
 
+  const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
+    { id: 'guide', icon: BookOpen, label: 'Workflow guide' },
+  ];
+
   const guardMainPanel = (
     <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {!accountPreActive && activeTab !== 'profile' && (
@@ -741,6 +747,12 @@ export function GuardDashboard({
             </div>
           )}
 
+          {activeTab === 'guide' && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <AppWorkflowPage audience="guard" />
+            </div>
+          )}
+
           {activeTab === 'profile' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <UserProfileScreen
@@ -848,7 +860,7 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support' && activeTab !== 'guardChat';
+  const showPendingGate = accountPreActive && activeTab !== 'profile' && activeTab !== 'support' && activeTab !== 'guardChat' && activeTab !== 'guide';
   const shellFullBleed = !showPendingGate && activeTab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
@@ -888,7 +900,8 @@ export function GuardDashboard({
         active: activeTab === 'profile',
       }}
       navItems={NAV_TABS}
-      activeNavId={activeTab === 'profile' ? '' : activeTab}
+      overflowNavItems={OVERFLOW_NAV}
+      activeNavId={activeTab === 'profile' || activeTab === 'guide' ? activeTab : activeTab}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}

@@ -27,6 +27,7 @@ export type StaffSection =
   | 'disputes'
   | 'analytics'
   | 'settings'
+  | 'guide'
   | 'profile';
 
 export function isStaffOpsMapSection(section: StaffSection): boolean {
@@ -40,7 +41,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   if (section === 'messages') return 'team-chat';
   const valid: StaffSection[] = [
     'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'clients',
-    'incidents', 'support', 'team-chat', 'job-chats', 'payments', 'disputes', 'analytics', 'settings', 'profile',
+    'incidents', 'support', 'team-chat', 'job-chats', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }

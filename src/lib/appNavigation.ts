@@ -56,6 +56,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   'guard-chat': 'guardChat',
   support: 'support',
   profile: 'profile',
+  guide: 'guide',
 };
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
@@ -65,6 +66,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   guardChat: 'guard-chat',
   support: 'support',
   profile: 'profile',
+  guide: 'guide',
 };
 
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
@@ -80,6 +82,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   reports: 'reports',
   requests: 'requests',
   guards: 'guards',
+  guide: 'guide',
 };
 
 const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
@@ -95,6 +98,7 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   reports: 'reports',
   requests: 'requests',
   guards: 'guards',
+  guide: 'guide',
 };
 
 function parsePath(url: string): { pathname: string; searchParams: URLSearchParams } {
