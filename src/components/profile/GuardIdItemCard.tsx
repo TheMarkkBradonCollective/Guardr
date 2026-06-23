@@ -8,6 +8,7 @@ import {
 } from '../../lib/guardIdentityVerification';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
+import { WfBadge } from '../ui/wireframe';
 import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
@@ -45,6 +46,46 @@ export function GuardIdItemCard({
   const expired = isIdExpired(guard);
   const openInEditMode = canEdit && !hasOnFile;
 
+  const detailModal =
+    showDetail && onSubmit ? (
+      <GuardIdDetailModal
+        guard={guard}
+        guardName={guardName}
+        canEdit={canEdit}
+        staffMode={staffMode}
+        initialEditMode={openInEditMode}
+        onSubmit={onSubmit}
+        onClose={() => setShowDetail(false)}
+      />
+    ) : null;
+
+  if (!hasOnFile) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setShowDetail(true)}
+          className="flex items-center justify-between gap-2 py-2 border-b border-brand-border w-full text-left"
+        >
+          <p className="text-xs text-brand-text-muted">Government ID</p>
+          {staffMode || !canEdit ? (
+            <WfBadge tone="warning" className="!text-[10px]">
+              Missing
+            </WfBadge>
+          ) : (
+            <span className="text-[10px] font-medium text-brand-primary">Tap to add</span>
+          )}
+        </button>
+        {guard.idVerificationRejectionReason && (
+          <p className="text-xs text-amber-500 pt-1 leading-snug line-clamp-2">
+            {guard.idVerificationRejectionReason}
+          </p>
+        )}
+        {detailModal}
+      </>
+    );
+  }
+
   return (
     <>
       <div className="app-cert-item">
@@ -62,21 +103,10 @@ export function GuardIdItemCard({
           )}
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm leading-snug">Government ID</p>
-            {hasOnFile ? (
-              <>
-                <p className={`text-xs mt-1 ${expired ? 'text-amber-600' : 'text-brand-text-muted'}`}>
-                  {formatIdSummaryLine(guard)}
-                </p>
-                <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-brand-text-muted mt-1">Not uploaded yet</p>
-                <p className="text-[10px] text-brand-primary mt-1">
-                  {canEdit ? 'Tap to add your ID' : 'No ID on file'}
-                </p>
-              </>
-            )}
+            <p className={`text-xs mt-1 ${expired ? 'text-amber-600' : 'text-brand-text-muted'}`}>
+              {formatIdSummaryLine(guard)}
+            </p>
+            <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
             {guard.idVerificationRejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug line-clamp-2">
                 {guard.idVerificationRejectionReason}
@@ -100,17 +130,7 @@ export function GuardIdItemCard({
         </div>
       </div>
 
-      {showDetail && onSubmit && (
-        <GuardIdDetailModal
-          guard={guard}
-          guardName={guardName}
-          canEdit={canEdit}
-          staffMode={staffMode}
-          initialEditMode={openInEditMode}
-          onSubmit={onSubmit}
-          onClose={() => setShowDetail(false)}
-        />
-      )}
+      {detailModal}
     </>
   );
 }
