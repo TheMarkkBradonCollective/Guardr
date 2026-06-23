@@ -1,6 +1,7 @@
-import { SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { JobType, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import { isGuardAccountActive } from './accountStatus';
 import { guardCanWorkFieldJobs } from './guardQualification';
+import { JOB_TYPE_LABELS } from './guardJobs';
 
 /** Match a session user to their guard row (staff often share one email across roles). */
 export function findGuardProfileForUser(
@@ -20,6 +21,30 @@ export interface GuardWorkHistoryItem {
   status: SecurityRequest['status'];
   ratingGiven?: number;
   reviewText?: string;
+}
+
+/** Completed platform work shown to clients browsing a guard profile (other clients anonymized). */
+export interface GuardPlatformHistoryItem {
+  requestId: string;
+  jobType: JobType;
+  jobTypeLabel: string;
+  locationLabel: string;
+  startDate: string;
+  endDate: string;
+  armedRequired: boolean;
+  clientRating?: number;
+  clientReview?: string;
+}
+
+const PLATFORM_HISTORY_STATUSES: SecurityRequest['status'][] = ['completed', 'closed'];
+
+function formatPlatformHistoryLocation(
+  req: Pick<SecurityRequest, 'location' | 'state'>
+): string {
+  if (req.state?.trim()) return req.state.trim();
+  const parts = req.location.split(',').map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) return parts.slice(-2).join(', ');
+  return parts[0] || 'On platform';
 }
 
 /** Guards with a valid guard card on file — clients may browse, hire, and send direct requests */
@@ -92,6 +117,33 @@ export function getGuardHistoryWithClient(
       status: r.status,
       ratingGiven: r.ratingGiven,
       reviewText: r.reviewText,
+    }))
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+}
+
+/** Completed assignments with other clients — anonymized for guard directory profiles. */
+export function getGuardPlatformHistory(
+  guardId: string,
+  requests: SecurityRequest[],
+  excludeClientId?: string
+): GuardPlatformHistoryItem[] {
+  return requests
+    .filter(
+      (r) =>
+        r.assignedGuardId === guardId &&
+        PLATFORM_HISTORY_STATUSES.includes(r.status) &&
+        (!excludeClientId || r.clientId !== excludeClientId)
+    )
+    .map((r) => ({
+      requestId: r.id,
+      jobType: r.type,
+      jobTypeLabel: JOB_TYPE_LABELS[r.type] || r.type,
+      locationLabel: formatPlatformHistoryLocation(r),
+      startDate: r.startDate,
+      endDate: r.endDate,
+      armedRequired: r.armedRequired,
+      clientRating: r.ratingGiven,
+      clientReview: r.reviewText,
     }))
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 }

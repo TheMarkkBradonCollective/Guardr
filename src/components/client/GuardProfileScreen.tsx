@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
-import { getGuardHistoryWithClient } from '../../lib/guardDirectory';
+import { getGuardHistoryWithClient, getGuardPlatformHistory } from '../../lib/guardDirectory';
 import {
   canOpenJobChatForRequest,
   findMessageableRequestForGuard,
@@ -36,6 +36,7 @@ interface GuardProfileScreenProps {
   guard: SecurityGuard;
   clientId: string;
   requests: SecurityRequest[];
+  platformRequests?: SecurityRequest[];
   onBack: () => void;
   onRequestGuard: (guard: SecurityGuard) => void;
   jobChatThreads?: JobChatThread[];
@@ -58,6 +59,7 @@ export function GuardProfileScreen({
   guard,
   clientId,
   requests,
+  platformRequests = [],
   onBack,
   onRequestGuard,
   jobChatThreads = [],
@@ -69,6 +71,13 @@ export function GuardProfileScreen({
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
     [guard.id, clientId, requests]
   );
+
+  const platformHistory = useMemo(
+    () => getGuardPlatformHistory(guard.id, platformRequests, clientId),
+    [guard.id, platformRequests, clientId]
+  );
+
+  const guardFirstName = guard.name.split(' ')[0];
 
   const messageableRequest = useMemo(
     () => findMessageableRequestForGuard(clientId, guard.id, requests, jobChatThreads),
@@ -215,7 +224,7 @@ export function GuardProfileScreen({
           )}
 
           <section>
-            <WfSectionHeader title={`Your history with ${guard.name.split(' ')[0]}`} className="mb-2" />
+            <WfSectionHeader title={`Your history with ${guardFirstName}`} className="mb-2" />
             {history.length === 0 ? (
               <div className="wf-list-card text-sm text-brand-text-muted justify-center">
                 You have not worked with this guard on Guardr yet.
@@ -258,6 +267,40 @@ export function GuardProfileScreen({
               </div>
             )}
           </section>
+
+          <section>
+            <WfSectionHeader title={`${guardFirstName}'s work with other clients`} className="mb-2" />
+            {platformHistory.length === 0 ? (
+              <div className="wf-list-card text-sm text-brand-text-muted justify-center">
+                No other completed assignments to show yet.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {platformHistory.map((item) => (
+                  <div
+                    key={item.requestId}
+                    className="wf-list-card flex-col items-stretch !flex !flex-col gap-1"
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <p className="font-semibold text-sm">{item.jobTypeLabel}</p>
+                      <WfBadge className="shrink-0">Completed</WfBadge>
+                    </div>
+                    <p className="text-xs text-brand-text-muted">Private client · {item.locationLabel}</p>
+                    <p className="text-sm text-brand-primary">{formatShiftRange(item.startDate, item.endDate)}</p>
+                    {item.armedRequired && (
+                      <p className="text-xs text-brand-text-muted">Armed assignment</p>
+                    )}
+                    {item.clientRating != null && (
+                      <p className="text-xs text-brand-text-muted">
+                        Client rating: {item.clientRating}/5
+                        {item.clientReview ? ` — "${item.clientReview}"` : ''}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
       <div className="shrink-0 p-4 border-t border-brand-border bg-brand-bg/95 backdrop-blur-xl max-w-3xl mx-auto w-full space-y-2">
@@ -276,7 +319,7 @@ export function GuardProfileScreen({
           onClick={() => onRequestGuard(guard)}
           className="app-button-primary"
         >
-          Send assignment request to {guard.name.split(' ')[0]}
+          Send assignment request to {guardFirstName}
         </button>
         <p className="text-center text-xs text-brand-text-muted mt-2">
           Separate from posting a general job to all guards

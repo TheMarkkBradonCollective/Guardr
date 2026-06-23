@@ -6676,6 +6676,7 @@ export default function App() {
               accountStatus={clientRecord?.accountStatus}
               approved={clientRecord?.approved}
               requests={myRequests}
+              platformRequests={requests}
               guards={hireableGuards}
               clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
