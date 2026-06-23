@@ -4,7 +4,6 @@ import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog
 import {
   countThirtyTwoHourCourseSlotStatuses,
   formatCredentialSlotStatusSummary,
-  getCourseUploadStatus,
 } from '../../lib/certStatus';
 import { getAggregateSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
@@ -179,6 +178,44 @@ export function GuardThirtyTwoHourPanel({
     </div>
   );
 
+  const renderCourseRow = ({
+    catalogId,
+    label,
+    subtitle,
+    uploaded,
+  }: {
+    catalogId: string;
+    label: string;
+    subtitle?: string;
+    uploaded: Certification[];
+  }) => (
+    <div className="app-list-subrow space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            className={`text-sm font-semibold ${
+              uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'
+            }`}
+          >
+            {label}
+          </p>
+          {subtitle && (
+            <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
+          )}
+        </div>
+        {canUpload && <CredentialSectionAddButton onClick={() => startAdd(catalogId)} />}
+      </div>
+
+      {uploaded.length > 0 && (
+        <div className="app-cert-item-stack !pt-0">
+          {uploaded.map((cert) => renderCertRow(cert))}
+        </div>
+      )}
+    </div>
+  );
+
+  const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
+
   return (
     <section className="app-form-section space-y-4">
       <div>
@@ -226,7 +263,10 @@ export function GuardThirtyTwoHourPanel({
               {rollupCerts.map((cert) => renderCertRow(cert))}
             </div>
           ) : (
-            <p className="text-xs text-brand-text-muted py-2">No 32-hour completion certificate on file.</p>
+            <p className="text-xs text-brand-text-muted py-2">
+              {rollupEntry?.description ??
+                'Single completion certificate covering all 9 mandatory BSIS courses.'}
+            </p>
           )}
         </div>
       ) : (
@@ -234,34 +274,14 @@ export function GuardThirtyTwoHourPanel({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
             Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
           </p>
-          {courses.map((course) => {
-            const uploadStatus = getCourseUploadStatus(guard, course.id);
-            const fullyOnFile = uploadStatus === 'on-file' || uploadStatus === 'expired';
-            const uploaded = certsForCatalogId(guard, course.id);
-
-            return (
-              <div key={course.id} className="app-list-subrow space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <p
-                    className={`text-sm font-semibold min-w-0 ${
-                      fullyOnFile ? 'text-brand-text' : 'text-brand-text-muted'
-                    }`}
-                  >
-                    {course.name}
-                  </p>
-                  {canUpload && (
-                    <CredentialSectionAddButton onClick={() => startAdd(course.id)} />
-                  )}
-                </div>
-
-                {uploaded.length > 0 && (
-                  <div className="app-cert-item-stack !pt-0">
-                    {uploaded.map((cert) => renderCertRow(cert))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {courses.map((course) =>
+            renderCourseRow({
+              catalogId: course.id,
+              label: course.name,
+              subtitle: course.description,
+              uploaded: certsForCatalogId(guard, course.id),
+            })
+          )}
         </div>
       )}
 
