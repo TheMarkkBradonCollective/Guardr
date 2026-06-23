@@ -49,14 +49,14 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     shortLabel: 'PTA & UOF (8 hr)',
     category: 'bsis-training',
     description:
-      'Single certificate covering both parts — highly recommended by Guardr. You may also upload Power to Arrest and Appropriate Use of Force as two separate certs.',
+      'Single certificate covering both parts — required to work. You may also upload Power to Arrest and Appropriate Use of Force as two separate certs.',
   },
   {
     id: 'bsis-32-hour-completed',
     name: '32-Hour BSIS Training Completed',
     shortLabel: '32-Hr BSIS',
     category: 'bsis-training',
-    description: 'Completion certificate for the mandatory 32-hour course block — highly recommended by Guardr.',
+    description: 'Completion certificate for the mandatory 32-hour course block — required to work field jobs.',
   },
   {
     id: 'bsis-40-hour-completed',

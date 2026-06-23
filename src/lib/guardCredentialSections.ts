@@ -65,7 +65,7 @@ const SECTION_META: Record<
   },
   'bsis-32-hour': {
     title: '32-Hour BSIS Training Block',
-    subtitle: 'Mandatory course block or completion certificate.',
+    subtitle: 'Required to work field jobs — all 9 courses or one completion certificate.',
     category: 'bsis-training',
   },
   'bsis-refresher': {
