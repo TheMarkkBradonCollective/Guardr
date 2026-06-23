@@ -1,6 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { scanAndNotifyMissedCheckins } from '../_push/missedCheckins';
-import { withPushHandler } from '../_push/vercelAdapter';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { scanAndNotifyMissedCheckins } = require('./push-missed-checkins.cjs') as typeof import('../_push/missedCheckins');
+
+async function getSupabaseAdmin() {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -12,8 +25,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized — cron secret required' });
   }
 
-  return withPushHandler(req, res, ['GET', 'POST'], async (db) => {
+  try {
+    const db = await getSupabaseAdmin();
+    if (!db) {
+      return res.status(503).json({ error: 'Database is not configured' });
+    }
     const result = await scanAndNotifyMissedCheckins(db);
-    return { status: 200, body: { ok: true, ...result } };
-  });
+    return res.status(200).json({ ok: true, ...result });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Missed check-in cron failed';
+    console.error('Missed check-in cron error:', message, err);
+    return res.status(500).json({ error: message });
+  }
 }

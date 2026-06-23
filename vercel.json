@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "vite build",
+  "buildCommand": "vite build && node scripts/bundle-push-handlers.mjs",
   "outputDirectory": "dist",
   "framework": null,
   "crons": [
@@ -20,13 +20,13 @@
       "maxDuration": 10
     },
     "api/push/events.ts": {
-      "includeFiles": "api/_push/**"
+      "includeFiles": "api/push/push-handlers.cjs"
     },
     "api/push/send.ts": {
-      "includeFiles": "api/_push/**"
+      "includeFiles": "api/push/push-handlers.cjs"
     },
     "api/cron/missed-checkins.ts": {
-      "includeFiles": "api/_push/**"
+      "includeFiles": "api/push/push-missed-checkins.cjs"
     }
   },
   "rewrites": [
