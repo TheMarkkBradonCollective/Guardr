@@ -87,14 +87,15 @@ export function JobBillingSummaryFromRequest({
 }) {
   const hasOvertime = (req.overtimeAmount ?? 0) > 0;
   const scheduledPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
+  const overtimeSettled = req.overtimeStatus === 'paid';
 
   return (
     <div className="space-y-3">
       <JobBillingSummary
         variant={variant}
         hourlyRate={req.hourlyRate}
-        durationHours={hasOvertime ? (req.scheduledDurationHours ?? req.durationHours) : req.durationHours}
-        estimatedPayout={hasOvertime ? scheduledPayout : req.estimatedPayout}
+        durationHours={hasOvertime && !overtimeSettled ? (req.scheduledDurationHours ?? req.durationHours) : req.durationHours}
+        estimatedPayout={hasOvertime && !overtimeSettled ? scheduledPayout : req.estimatedPayout}
         guardPay={req.guardPay}
         platformFeePerHour={req.platformFeePerHour}
       />
@@ -106,9 +107,13 @@ export function JobBillingSummaryFromRequest({
           <span>
             Overtime charge: <strong className="text-brand-text">+${(req.overtimeAmount ?? 0).toFixed(2)}</strong>
           </span>
-          <span>
-            Total bill: <strong className="text-brand-primary">${req.estimatedPayout.toFixed(2)}</strong>
-          </span>
+          {!overtimeSettled ? (
+            <span className="text-amber-400">Pending guard and client approval</span>
+          ) : (
+            <span>
+              Total bill: <strong className="text-brand-primary">${req.estimatedPayout.toFixed(2)}</strong>
+            </span>
+          )}
         </div>
       )}
     </div>

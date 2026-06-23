@@ -183,10 +183,29 @@ async function markOvertimePaid(
   const amount = amountCents / 100;
   const paidAt = new Date().toISOString();
 
+  const { data: job } = await db
+    .from('security_requests')
+    .select(
+      'scheduled_duration_hours, scheduled_estimated_payout, overtime_hours, overtime_amount, duration_hours, estimated_payout'
+    )
+    .eq('id', jobId)
+    .maybeSingle();
+
+  const scheduledDuration = Number(job?.scheduled_duration_hours ?? job?.duration_hours ?? 0);
+  const scheduledPayout = Number(job?.scheduled_estimated_payout ?? job?.estimated_payout ?? 0);
+  const overtimeHours = Number(job?.overtime_hours ?? 0);
+  const overtimeAmount = Number(job?.overtime_amount ?? 0);
+
   await db
     .from('security_requests')
     .update({
       overtime_payment_status: 'paid',
+      overtime_status: 'paid',
+      overtime_client_payment_method: 'stripe',
+      overtime_client_cash_payment_requested: false,
+      overtime_client_cash_payment_requested_at: null,
+      duration_hours: Math.round((scheduledDuration + overtimeHours) * 100) / 100,
+      estimated_payout: Math.round((scheduledPayout + overtimeAmount) * 100) / 100,
     })
     .eq('id', jobId);
 
@@ -285,9 +304,28 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
       if (intent.metadata?.checkout_type === 'overtime') {
         const db = await getSupabaseAdmin();
         if (db) {
+          const { data: job } = await db
+            .from('security_requests')
+            .select(
+              'scheduled_duration_hours, scheduled_estimated_payout, overtime_hours, overtime_amount, duration_hours, estimated_payout'
+            )
+            .eq('id', jobId)
+            .maybeSingle();
+
+          const scheduledDuration = Number(job?.scheduled_duration_hours ?? job?.duration_hours ?? 0);
+          const scheduledPayout = Number(job?.scheduled_estimated_payout ?? job?.estimated_payout ?? 0);
+          const overtimeHours = Number(job?.overtime_hours ?? 0);
+          const overtimeAmount = Number(job?.overtime_amount ?? 0);
+
           await db
             .from('security_requests')
-            .update({ overtime_payment_status: 'paid' })
+            .update({
+              overtime_payment_status: 'paid',
+              overtime_status: 'paid',
+              overtime_client_payment_method: 'stripe',
+              duration_hours: Math.round((scheduledDuration + overtimeHours) * 100) / 100,
+              estimated_payout: Math.round((scheduledPayout + overtimeAmount) * 100) / 100,
+            })
             .eq('id', jobId);
 
           await db

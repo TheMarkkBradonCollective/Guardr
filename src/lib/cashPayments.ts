@@ -1,6 +1,5 @@
 import { PaymentMethod, SecurityRequest } from '../types';
 import { computeGuardEarnings, PLATFORM_FEE_PER_HOUR } from './payments';
-import { hasUnpaidOvertime } from './shiftBilling';
 
 export function isCashClientPayment(req: Pick<SecurityRequest, 'clientPaymentMethod'>): boolean {
   return req.clientPaymentMethod === 'cash';
@@ -271,13 +270,17 @@ export function guardPayoutAmount(req: SecurityRequest): number {
   return computeGuardEarnings(req.durationHours, req.hourlyRate);
 }
 
-export function canDirectorMarkOvertimePaidCash(req: SecurityRequest): boolean {
-  return hasUnpaidOvertime(req) && isCashClientPayment(req);
-}
-
-export function canClientPayOvertimeStripe(req: SecurityRequest): boolean {
-  return hasUnpaidOvertime(req) && !isCashClientPayment(req);
-}
+export {
+  canClientPayOvertimeStripe,
+  canClientRequestOvertimeCash,
+  canDirectorMarkOvertimePaidCash,
+  canDirectorPayOvertimeGuardCash,
+  canMakeOvertimeGuardPayoutAvailable,
+  canStaffApproveOvertimeCashPayment,
+  isOvertimeCashPaymentPendingApproval,
+  isOvertimeClientPaid,
+  overtimeGuardEarnings,
+} from './shiftBilling';
 
 export function parsePaymentMethod(value: unknown): PaymentMethod | undefined {
   return value === 'stripe' || value === 'cash' ? value : undefined;

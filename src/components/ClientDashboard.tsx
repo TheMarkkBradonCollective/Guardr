@@ -60,6 +60,8 @@ interface ClientDashboardProps {
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
+  onApproveOvertime?: (requestId: string) => void | Promise<void>;
+  onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
@@ -103,6 +105,8 @@ export function ClientDashboard({
   onConfirmSelfAudit,
   onConfirmSpotCheck,
   onRequestCashPayment,
+  onApproveOvertime,
+  onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
   paymentGates,
@@ -376,6 +380,8 @@ export function ClientDashboard({
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestCashPayment={onRequestCashPayment}
+        onApproveOvertime={onApproveOvertime}
+        onRequestOvertimeCash={onRequestOvertimeCash}
         onApprovePendingGuard={onApprovePendingGuard}
         onDenyPendingGuard={onDenyPendingGuard}
         onRequestNew={() => {

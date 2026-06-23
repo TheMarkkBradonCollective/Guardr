@@ -79,6 +79,7 @@ interface GuardDashboardProps {
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onAcceptJob: (requestId: string) => void;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
+  onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
   onSignOut: () => void;
@@ -148,6 +149,7 @@ export function GuardDashboard({
   onSubmitIdentityVerification,
   onAcceptJob,
   onUpdateJobAudit,
+  onApproveOvertime,
   onRecordAuditViolation,
   onUpdateStripeAccount,
   onSignOut,
@@ -682,6 +684,7 @@ export function GuardDashboard({
                 initialSelectedJobId={jobChatRequestId}
                 onSelectedJobIdChange={onJobChatRequestIdChange}
                 onOpenMessages={openMessagesForJob}
+                onApproveOvertime={onApproveOvertime}
               />
             </div>
           )}

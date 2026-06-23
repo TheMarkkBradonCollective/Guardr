@@ -545,8 +545,18 @@ export interface SecurityRequest {
   overtimeHours?: number;
   /** Additional client charge for late clock-out */
   overtimeAmount?: number;
-  /** Tracks whether the overtime difference has been collected */
+  /** Workflow: none → pending_guard → pending_client → awaiting_payment → paid */
+  overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
+  overtimeGuardApprovedAt?: string;
+  overtimeClientApprovedAt?: string;
+  /** Tracks whether the overtime difference has been collected from the client */
   overtimePaymentStatus?: 'none' | 'unpaid' | 'paid';
+  overtimeClientPaymentMethod?: 'cash' | 'stripe';
+  overtimeClientCashPaymentRequested?: boolean;
+  overtimeClientCashPaymentRequestedAt?: string;
+  overtimeGuardPayoutAvailable?: boolean;
+  overtimeGuardPayoutAvailableAt?: string;
+  overtimeGuardPayoutMethod?: 'cash' | 'stripe';
   status: JobStatus;
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;

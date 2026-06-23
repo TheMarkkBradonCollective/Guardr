@@ -62,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { data: job } = await db
         .from('security_requests')
-        .select('status, overtime_payment_status, overtime_amount, client_payment_method')
+        .select('status, overtime_status, overtime_amount, overtime_guard_approved_at, overtime_client_approved_at')
         .eq('id', jobId)
         .maybeSingle();
 
@@ -74,17 +74,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Overtime can only be paid after the shift is complete' });
       }
 
-      if (job.overtime_payment_status !== 'unpaid') {
-        return res.status(400).json({ error: 'This job has no unpaid overtime balance' });
+      if (job.overtime_status !== 'awaiting_payment') {
+        return res.status(400).json({ error: 'Overtime must be approved by guard and client before payment' });
+      }
+
+      if (!job.overtime_guard_approved_at || !job.overtime_client_approved_at) {
+        return res.status(400).json({ error: 'Guard and client must approve overtime before payment' });
       }
 
       const expectedCents = Math.round(Number(job.overtime_amount ?? 0) * 100);
       if (expectedCents > 0 && amountCents !== expectedCents) {
         return res.status(400).json({ error: 'Amount does not match the overtime balance due' });
-      }
-
-      if (job.client_payment_method === 'cash') {
-        return res.status(400).json({ error: 'Cash clients must pay overtime through staff' });
       }
     }
 

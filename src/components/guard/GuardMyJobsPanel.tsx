@@ -4,9 +4,10 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
+import { canGuardApproveOvertime } from '../../lib/shiftBilling';
 import { AppItemCard, AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
-import { MessageCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
 
 interface GuardMyJobsPanelProps {
   upcomingJobs: GuardJobView[];
@@ -17,6 +18,7 @@ interface GuardMyJobsPanelProps {
   initialSelectedJobId?: string | null;
   onSelectedJobIdChange?: (jobId: string | null) => void;
   onOpenMessages?: (jobId: string) => void;
+  onApproveOvertime?: (requestId: string) => void | Promise<void>;
 }
 
 export function GuardMyJobsPanel({
@@ -27,8 +29,10 @@ export function GuardMyJobsPanel({
   initialSelectedJobId = null,
   onSelectedJobIdChange,
   onOpenMessages,
+  onApproveOvertime,
 }: GuardMyJobsPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedJobId);
+  const [overtimeApproveId, setOvertimeApproveId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialSelectedJobId) {
@@ -55,6 +59,34 @@ export function GuardMyJobsPanel({
         <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} />
         <div className="px-5 pb-8 space-y-4">
           <GuardJobCard job={selectedJob} guard={guard} compact />
+          {canGuardApproveOvertime(selectedJob) && onApproveOvertime && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 space-y-3">
+              <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>
+              <p className="text-xs text-brand-text-muted leading-relaxed">
+                You clocked out {(selectedJob.overtimeHours ?? 0)}h after scheduled end.
+                Confirm to request ${(selectedJob.overtimeGuardEarnings ?? 0).toFixed(2)} in additional pay.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setOvertimeApproveId(selectedJob.id);
+                  try {
+                    await onApproveOvertime(selectedJob.id);
+                  } finally {
+                    setOvertimeApproveId(null);
+                  }
+                }}
+                disabled={overtimeApproveId === selectedJob.id}
+                className="w-full app-button-primary !h-10 gap-1.5 disabled:opacity-50"
+              >
+                {overtimeApproveId === selectedJob.id ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> Approve overtime</>
+                )}
+              </button>
+            </div>
+          )}
           {onOpenMessages && hasChat && (
             <button
               type="button"

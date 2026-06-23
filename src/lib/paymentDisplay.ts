@@ -17,7 +17,7 @@ import {
   platformFeeLedgerLabel,
   stripeDepositLedgerLabel,
 } from './cashPayments';
-import { hasUnpaidOvertime } from './shiftBilling';
+import { hasOvertime, hasUnpaidOvertime, isOvertimeCashPaymentPendingApproval, overtimeStatusLabel } from './shiftBilling';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
 
 export type PaymentLedgerStatus = 'paid' | 'owed' | 'waiting' | 'na';
@@ -68,12 +68,20 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
   ];
 
   if ((req.overtimeAmount ?? 0) > 0) {
+    let overtimeLedgerStatus: PaymentLedgerStatus = 'waiting';
+    if (req.overtimeStatus === 'paid') overtimeLedgerStatus = 'paid';
+    else if (hasUnpaidOvertime(req) || isOvertimeCashPaymentPendingApproval(req)) overtimeLedgerStatus = 'owed';
     lines.push({
       party: 'client',
       label: 'Late clock-out',
       amount: req.overtimeAmount ?? 0,
-      status: hasUnpaidOvertime(req) ? 'owed' : 'paid',
-      statusLabel: hasUnpaidOvertime(req) ? 'Overtime due' : 'Overtime paid',
+      status: overtimeLedgerStatus,
+      statusLabel:
+        req.overtimeStatus === 'paid'
+          ? 'Overtime paid'
+          : isOvertimeCashPaymentPendingApproval(req)
+            ? 'Cash pending approval'
+            : overtimeStatusLabel(req.overtimeStatus) || 'Pending',
     });
   }
 
@@ -117,12 +125,18 @@ export function clientPaymentStatusLabel(
   status?: SecurityRequest['paymentStatus'],
   req?: Pick<
     SecurityRequest,
-    'clientCashPaymentRequested' | 'paymentStatus' | 'overtimePaymentStatus' | 'overtimeAmount'
+    | 'clientCashPaymentRequested'
+    | 'paymentStatus'
+    | 'overtimePaymentStatus'
+    | 'overtimeAmount'
+    | 'overtimeStatus'
   >
 ): string {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
     return 'Cash pending';
   }
+  if (req?.overtimeStatus === 'pending_guard') return 'Overtime pending guard';
+  if (req?.overtimeStatus === 'pending_client') return 'Overtime pending approval';
   if (req && hasUnpaidOvertime(req as SecurityRequest)) {
     return 'Overtime due';
   }
@@ -143,15 +157,25 @@ export function clientPaymentStatusHint(
   jobStatus?: SecurityRequest['status'],
   req?: Pick<
     SecurityRequest,
-    'clientCashPaymentRequested' | 'paymentStatus' | 'overtimePaymentStatus' | 'overtimeAmount'
+    | 'clientCashPaymentRequested'
+    | 'paymentStatus'
+    | 'overtimePaymentStatus'
+    | 'overtimeAmount'
+    | 'overtimeStatus'
   >,
   gates?: { allowStripe: boolean; allowCash: boolean }
 ): string | undefined {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
     return 'Staff will confirm once your cash payment is received.';
   }
+  if (req?.overtimeStatus === 'pending_guard') {
+    return 'Your guard must confirm the late clock-out before you can approve overtime.';
+  }
+  if (req?.overtimeStatus === 'pending_client') {
+    return `Approve the $${(req.overtimeAmount ?? 0).toFixed(2)} overtime charge to unlock payment.`;
+  }
   if (req && hasUnpaidOvertime(req as SecurityRequest)) {
-    return `Your guard clocked out late. Pay the $${(req.overtimeAmount ?? 0).toFixed(2)} difference to settle the bill.`;
+    return `Overtime approved — pay $${(req.overtimeAmount ?? 0).toFixed(2)} by card or cash.`;
   }
   if (!status || status === 'unpaid') {
     if (jobStatus === 'pending-review') {
@@ -186,7 +210,21 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
   if (hasUnpaidOvertime(req)) {
     return {
       headline: 'Late clock-out — overtime due',
-      detail: `Collect $${(req.overtimeAmount ?? 0).toFixed(2)} from the client for ${req.overtimeHours ?? 0}h past scheduled end.`,
+      detail: `Collect $${(req.overtimeAmount ?? 0).toFixed(2)} from the client after guard and client approval.`,
+    };
+  }
+
+  if (isOvertimeCashPaymentPendingApproval(req)) {
+    return {
+      headline: 'Overtime cash payment pending',
+      detail: `Approve $${(req.overtimeAmount ?? 0).toFixed(2)} overtime cash from the client.`,
+    };
+  }
+
+  if (req.overtimeStatus === 'pending_guard' || req.overtimeStatus === 'pending_client') {
+    return {
+      headline: 'Late clock-out — approvals pending',
+      detail: overtimeStatusLabel(req.overtimeStatus),
     };
   }
 

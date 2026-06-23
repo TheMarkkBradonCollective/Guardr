@@ -1,6 +1,10 @@
 import { SecurityRequest } from '../types';
+import { computeGuardEarnings } from './payments';
 import { SHIFT_LATE_CLOCKOUT_MINUTES } from './shiftWindow';
 
+export type OvertimeStatus = 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
+
+/** @deprecated Use overtimeStatus === 'paid' */
 export type OvertimePaymentStatus = 'none' | 'unpaid' | 'paid';
 
 /** Milliseconds the guard clocked out after scheduled end (capped at late window). */
@@ -18,71 +22,177 @@ export function computeLateClockOutHours(checkOutAt: string, endDate: string): n
   return Math.round((lateMs / 3_600_000) * 100) / 100;
 }
 
-export interface LateClockOutBilling {
+export interface DetectedOvertime {
   scheduledDurationHours: number;
   scheduledEstimatedPayout: number;
   overtimeHours: number;
   overtimeAmount: number;
-  durationHours: number;
-  estimatedPayout: number;
-  overtimePaymentStatus: OvertimePaymentStatus;
+  overtimeStatus: 'pending_guard';
 }
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-/** Compute billing adjustment when a guard clocks out after scheduled end. */
-export function computeLateClockOutBilling(
+/** Record overtime on clock-out — does not change billed totals until client pays. */
+export function detectLateClockOutOvertime(
   req: Pick<
     SecurityRequest,
-    | 'durationHours'
-    | 'estimatedPayout'
-    | 'hourlyRate'
-    | 'guardsNeeded'
-    | 'endDate'
-    | 'scheduledDurationHours'
-    | 'scheduledEstimatedPayout'
-    | 'overtimePaymentStatus'
+    'durationHours' | 'estimatedPayout' | 'hourlyRate' | 'guardsNeeded' | 'endDate' | 'overtimeStatus'
   >,
   checkOutAt: string
-): LateClockOutBilling | null {
+): DetectedOvertime | null {
+  if (req.overtimeStatus && req.overtimeStatus !== 'none') return null;
+
   const overtimeHours = computeLateClockOutHours(checkOutAt, req.endDate);
   if (overtimeHours <= 0) return null;
 
   const guards = req.guardsNeeded ?? 1;
   const overtimeAmount = roundMoney(overtimeHours * req.hourlyRate * guards);
-  const scheduledDurationHours = req.scheduledDurationHours ?? req.durationHours;
-  const scheduledEstimatedPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
 
   return {
-    scheduledDurationHours,
-    scheduledEstimatedPayout,
+    scheduledDurationHours: req.durationHours,
+    scheduledEstimatedPayout: req.estimatedPayout,
     overtimeHours,
     overtimeAmount,
-    durationHours: roundMoney(scheduledDurationHours + overtimeHours),
-    estimatedPayout: roundMoney(scheduledEstimatedPayout + overtimeAmount),
-    overtimePaymentStatus:
-      req.overtimePaymentStatus === 'paid' ? 'paid' : overtimeAmount > 0 ? 'unpaid' : 'none',
+    overtimeStatus: 'pending_guard',
   };
 }
 
-export function hasUnpaidOvertime(
-  req: Pick<SecurityRequest, 'overtimePaymentStatus' | 'overtimeAmount'>
-): boolean {
-  return req.overtimePaymentStatus === 'unpaid' && (req.overtimeAmount ?? 0) > 0;
+export function overtimeGuardEarnings(
+  req: Pick<SecurityRequest, 'overtimeHours' | 'hourlyRate' | 'guardPay'>
+): number {
+  if (!req.overtimeHours || req.overtimeHours <= 0) return 0;
+  return computeGuardEarnings(req.overtimeHours, req.hourlyRate, req.guardPay);
 }
 
-export function overtimePaymentLabel(
-  req: Pick<SecurityRequest, 'overtimePaymentStatus' | 'overtimeAmount' | 'overtimeHours'>
-): string | undefined {
-  if (!req.overtimeAmount || req.overtimeAmount <= 0) return undefined;
+export function hasOvertime(req: Pick<SecurityRequest, 'overtimeStatus' | 'overtimeHours'>): boolean {
+  return !!req.overtimeStatus && req.overtimeStatus !== 'none' && (req.overtimeHours ?? 0) > 0;
+}
+
+export function canGuardApproveOvertime(
+  req: Pick<SecurityRequest, 'overtimeStatus' | 'overtimeHours'>
+): boolean {
+  return req.overtimeStatus === 'pending_guard' && (req.overtimeHours ?? 0) > 0;
+}
+
+export function canClientApproveOvertime(
+  req: Pick<SecurityRequest, 'overtimeStatus' | 'overtimeGuardApprovedAt'>
+): boolean {
+  return req.overtimeStatus === 'pending_client' && !!req.overtimeGuardApprovedAt;
+}
+
+export function isOvertimeAwaitingClientPayment(req: SecurityRequest): boolean {
+  return req.overtimeStatus === 'awaiting_payment';
+}
+
+export function isOvertimeCashPaymentPendingApproval(req: SecurityRequest): boolean {
+  return (
+    req.overtimeStatus === 'awaiting_payment' &&
+    !!req.overtimeClientCashPaymentRequested &&
+    req.overtimePaymentStatus !== 'paid'
+  );
+}
+
+export function hasUnpaidOvertime(req: SecurityRequest): boolean {
+  return isOvertimeAwaitingClientPayment(req) && !isOvertimeCashPaymentPendingApproval(req);
+}
+
+export function canClientPayOvertimeStripe(
+  req: SecurityRequest,
+  gates: { allowStripe: boolean }
+): boolean {
+  return hasUnpaidOvertime(req) && gates.allowStripe;
+}
+
+export function canClientRequestOvertimeCash(
+  req: SecurityRequest,
+  gates: { allowCash: boolean }
+): boolean {
+  return (
+    hasUnpaidOvertime(req) &&
+    gates.allowCash &&
+    !req.overtimeClientCashPaymentRequested
+  );
+}
+
+export function canStaffApproveOvertimeCashPayment(req: SecurityRequest): boolean {
+  return isOvertimeCashPaymentPendingApproval(req);
+}
+
+export function canDirectorMarkOvertimePaidCash(req: SecurityRequest): boolean {
+  return (
+    isOvertimeAwaitingClientPayment(req) &&
+    !req.overtimeClientCashPaymentRequested &&
+    req.overtimePaymentStatus !== 'paid'
+  );
+}
+
+export function isOvertimeClientPaid(req: SecurityRequest): boolean {
+  return req.overtimeStatus === 'paid' || req.overtimePaymentStatus === 'paid';
+}
+
+export function canMakeOvertimeGuardPayoutAvailable(req: SecurityRequest): boolean {
+  return (
+    isOvertimeClientPaid(req) &&
+    !req.overtimeGuardPayoutAvailable &&
+    !req.overtimeGuardPayoutMethod &&
+    !!req.assignedGuardId
+  );
+}
+
+export function canDirectorPayOvertimeGuardCash(req: SecurityRequest): boolean {
+  return (
+    isOvertimeClientPaid(req) &&
+    !req.overtimeGuardPayoutMethod &&
+    !!req.assignedGuardId
+  );
+}
+
+export function isOvertimeGuardPaid(req: SecurityRequest): boolean {
+  return !!req.overtimeGuardPayoutMethod;
+}
+
+/** Apply billed totals once the client has paid overtime. */
+export function applyOvertimePaidBilling(
+  req: Pick<
+    SecurityRequest,
+    'scheduledDurationHours' | 'scheduledEstimatedPayout' | 'overtimeHours' | 'overtimeAmount' | 'durationHours' | 'estimatedPayout'
+  >
+): Pick<SecurityRequest, 'durationHours' | 'estimatedPayout' | 'overtimeStatus' | 'overtimePaymentStatus'> {
+  const scheduledDurationHours = req.scheduledDurationHours ?? req.durationHours;
+  const scheduledEstimatedPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
+  return {
+    durationHours: roundMoney(scheduledDurationHours + (req.overtimeHours ?? 0)),
+    estimatedPayout: roundMoney(scheduledEstimatedPayout + (req.overtimeAmount ?? 0)),
+    overtimeStatus: 'paid',
+    overtimePaymentStatus: 'paid',
+  };
+}
+
+export function overtimeStatusLabel(status?: OvertimeStatus): string {
+  switch (status) {
+    case 'pending_guard':
+      return 'Awaiting guard approval';
+    case 'pending_client':
+      return 'Awaiting client approval';
+    case 'awaiting_payment':
+      return 'Awaiting client payment';
+    case 'paid':
+      return 'Overtime paid';
+    default:
+      return '';
+  }
+}
+
+export function overtimePaymentLabel(req: SecurityRequest): string | undefined {
+  if (!hasOvertime(req)) return undefined;
   const hoursLabel = req.overtimeHours ? `${req.overtimeHours}h` : 'extra time';
-  if (req.overtimePaymentStatus === 'paid') {
-    return `Late clock-out (${hoursLabel}) — $${req.overtimeAmount.toFixed(2)} paid`;
+  if (isOvertimeClientPaid(req)) {
+    return `Late clock-out (${hoursLabel}) — $${(req.overtimeAmount ?? 0).toFixed(2)} paid`;
   }
-  if (req.overtimePaymentStatus === 'unpaid') {
-    return `Late clock-out (${hoursLabel}) — $${req.overtimeAmount.toFixed(2)} due`;
+  if (isOvertimeAwaitingClientPayment(req)) {
+    return `Late clock-out (${hoursLabel}) — $${(req.overtimeAmount ?? 0).toFixed(2)} due`;
   }
-  return undefined;
+  return `Late clock-out (${hoursLabel}) — pending approval`;
 }

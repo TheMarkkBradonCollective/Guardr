@@ -2,6 +2,7 @@ import { JobOperationalDetails, Payment, PaymentMethod, PaymentStatus, SecurityG
 import { computeGuardPay, computeGuardEarnings } from './payments';
 import { guardCanViewJob } from './guardJobs';
 import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
+import { overtimeGuardEarnings } from './shiftBilling';
 
 /** Guard-safe payout state — no internal payment pipeline details */
 export type GuardPayoutStatus = 'pending' | 'processing' | 'paid';
@@ -55,6 +56,9 @@ export interface GuardJobView {
   payoutMethod?: PaymentMethod;
   cashPayoutRequested?: boolean;
   guardPayoutAvailable?: boolean;
+  overtimeHours?: number;
+  overtimeGuardEarnings?: number;
+  overtimeStatus?: SecurityRequest['overtimeStatus'];
 }
 
 export interface GuardPayoutView {
@@ -203,6 +207,9 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
       req.paymentStatus === 'released' && req.guardPayoutMethod ? req.guardPayoutMethod : undefined,
     cashPayoutRequested: !!req.guardCashPayoutRequested,
     guardPayoutAvailable: !!req.guardPayoutAvailable,
+    overtimeHours: req.overtimeHours,
+    overtimeGuardEarnings: req.overtimeHours ? overtimeGuardEarnings(req) : undefined,
+    overtimeStatus: req.overtimeStatus,
   };
 }
 

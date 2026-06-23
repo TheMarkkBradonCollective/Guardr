@@ -3,8 +3,14 @@ import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession, createOvertimeCheckoutSession } from '../../lib/stripeApi';
-import { canClientPayOvertimeStripe } from '../../lib/cashPayments';
-import { hasUnpaidOvertime } from '../../lib/shiftBilling';
+import {
+  canClientApproveOvertime,
+  canClientPayOvertimeStripe,
+  canClientRequestOvertimeCash,
+  hasOvertime,
+  hasUnpaidOvertime,
+  isOvertimeCashPaymentPendingApproval,
+} from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -56,6 +62,8 @@ interface ClientRequestsListProps {
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
+  onApproveOvertime?: (requestId: string) => void | Promise<void>;
+  onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onRequestNew: () => void;
@@ -103,6 +111,8 @@ export function ClientRequestsList({
   onConfirmSelfAudit,
   onConfirmSpotCheck,
   onRequestCashPayment,
+  onApproveOvertime,
+  onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
   onRequestNew,
@@ -117,6 +127,8 @@ export function ClientRequestsList({
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [payingOvertimeJobId, setPayingOvertimeJobId] = useState<string | null>(null);
   const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
+  const [overtimeCashRequestJobId, setOvertimeCashRequestJobId] = useState<string | null>(null);
+  const [overtimeApproveJobId, setOvertimeApproveJobId] = useState<string | null>(null);
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -490,28 +502,85 @@ export function ClientRequestsList({
                     </button>
                   )}
 
-                {hasUnpaidOvertime(req) && (
+                {hasOvertime(req) && (
                   <div className="border-t border-brand-border pt-3 space-y-3 w-full">
                     <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                      <p className="text-sm font-semibold text-amber-300">Late clock-out charge</p>
+                      <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>
                       <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                        Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end time.
-                        Pay the ${(req.overtimeAmount ?? 0).toFixed(2)} difference to settle the bill.
+                        Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end.
+                        {req.overtimeStatus === 'pending_guard' && ' Waiting for the guard to confirm overtime.'}
+                        {req.overtimeStatus === 'pending_client' && ` Additional charge: $${(req.overtimeAmount ?? 0).toFixed(2)} — approve to proceed.`}
+                        {req.overtimeStatus === 'awaiting_payment' && ` Approved charge: $${(req.overtimeAmount ?? 0).toFixed(2)}.`}
+                        {req.overtimeStatus === 'paid' && ` Overtime of $${(req.overtimeAmount ?? 0).toFixed(2)} has been paid.`}
                       </p>
                     </div>
-                    {canClientPayOvertimeStripe(req) && (
+
+                    {canClientApproveOvertime(req) && onApproveOvertime && (
                       <button
                         type="button"
-                        onClick={() => handlePayOvertime(req)}
-                        disabled={payingOvertimeJobId === req.id}
+                        onClick={async () => {
+                          setOvertimeApproveJobId(req.id);
+                          try {
+                            await onApproveOvertime(req.id);
+                          } finally {
+                            setOvertimeApproveJobId(null);
+                          }
+                        }}
+                        disabled={overtimeApproveJobId === req.id}
                         className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
                       >
-                        {payingOvertimeJobId === req.id ? (
-                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
+                        {overtimeApproveJobId === req.id ? (
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
                         ) : (
-                          <><CreditCard className="w-3.5 h-3.5" /> Pay overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
+                          <><CheckCircle2 className="w-3.5 h-3.5" /> Approve overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
                         )}
                       </button>
+                    )}
+
+                    {isOvertimeCashPaymentPendingApproval(req) && (
+                      <p className="text-xs text-amber-400/90">
+                        Cash overtime payment pending staff approval.
+                      </p>
+                    )}
+
+                    {hasUnpaidOvertime(req) && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {canClientPayOvertimeStripe(req, paymentGates) && (
+                          <button
+                            type="button"
+                            onClick={() => handlePayOvertime(req)}
+                            disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
+                            className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                          >
+                            {payingOvertimeJobId === req.id ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
+                            ) : (
+                              <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} by card</>
+                            )}
+                          </button>
+                        )}
+                        {canClientRequestOvertimeCash(req, paymentGates) && onRequestOvertimeCash && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setOvertimeCashRequestJobId(req.id);
+                              try {
+                                await onRequestOvertimeCash(req.id);
+                              } finally {
+                                setOvertimeCashRequestJobId(null);
+                              }
+                            }}
+                            disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
+                            className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                          >
+                            {overtimeCashRequestJobId === req.id ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
+                            ) : (
+                              <><Banknote className="w-3.5 h-3.5" /> Pay in cash</>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
