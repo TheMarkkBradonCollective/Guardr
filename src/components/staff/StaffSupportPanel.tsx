@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SupportTicket, SupportTicketStatus, SessionUser } from '../../types';
 import {
   categoryLabel,
-  openTicketCount,
   priorityLabel,
   SUPPORT_STATUS_LABEL,
   supportStatusLabel,
@@ -94,21 +93,9 @@ export function StaffSupportPanel({
     }
   };
 
-  const openSupportCount = openTicketCount(sectionTickets);
 
   const listView = (
     <div className="flex flex-col min-h-0 h-full px-4 sm:px-5 py-4">
-      <div className="app-messages-hub-lead mb-4">
-        <h2 className="text-base font-bold tracking-tight">
-          {section === 'support' ? 'Support chats' : 'Reports'}
-        </h2>
-        <p>
-          {section === 'support'
-            ? `${openSupportCount} open · ${sectionTickets.length} total`
-            : `${sectionTickets.length} report${sectionTickets.length === 1 ? '' : 's'}`}
-        </p>
-      </div>
-
       <AppSegmentedControl
         options={[
           { id: 'support', label: 'Support' },

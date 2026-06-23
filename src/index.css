@@ -3277,17 +3277,6 @@ html.theme-light .staff-sidebar-brand .text-brand-text-muted {
   color: var(--brand-chrome-muted);
 }
 
-.app-screen {
-  max-width: 42rem;
-}
-
-.app-screen-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-}
-
 .app-list-row {
   min-height: 3.75rem;
   padding: 1rem 0;

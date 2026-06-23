@@ -885,10 +885,16 @@ export function GuardDashboard({
         ? 'File a report'
         : GUARD_TAB_TITLES[activeTab];
 
+  const shellHideHeader =
+    (activeTab === 'support' &&
+      (!!supportTicketId || supportMode === 'compose' || supportMode === 'report')) ||
+    (activeTab === 'myJobs' && openJobChat);
+
   return (
     <RoleAppShell
       title={guardScreenTitle}
       locationLabel={guard.name}
+      hideHeader={shellHideHeader}
       accountMenu={{
         userName: guard.name,
         userSubtitle: currentUser.email,

@@ -19,6 +19,7 @@ interface ClientAppLayoutProps {
   accountPending?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   messagesBadge?: number;
+  hideHeader?: boolean;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -64,6 +65,7 @@ export function ClientAppLayout({
   accountPending = false,
   onOpenLegal,
   messagesBadge = 0,
+  hideHeader = false,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
@@ -104,6 +106,7 @@ export function ClientAppLayout({
       moreMenuFooter={moreFooter}
       moreMenuTitle="More"
       fullBleed={fullBleed}
+      hideHeader={hideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
       experience="client"
     >

@@ -665,6 +665,10 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
+      hideHeader={
+        (section === 'support' && !!selectedSupportTicketId) ||
+        (section === 'job-chats' && !!selectedJobChatRequestId)
+      }
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}

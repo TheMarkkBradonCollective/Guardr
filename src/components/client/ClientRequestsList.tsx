@@ -9,7 +9,7 @@ import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
-import { AppItemCardStack, AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
+import { AppItemCardStack, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
   Award,
@@ -164,12 +164,11 @@ export function ClientRequestsList({
 
   return (
     <AppScreen>
-      <div className="flex items-center justify-between gap-4 px-5 pt-2 pb-4 border-b border-brand-border">
-        <AppPageLead kicker="Jobs" subtitle="Offers, requests, payments & reviews" title="Your jobs" />
+      <div className="flex items-center justify-end gap-4 px-5 pt-2 pb-4 border-b border-brand-border">
         <button
           type="button"
           onClick={onRequestNew}
-          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0 self-start mt-2"
+          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0"
         >
           + Post offer
         </button>

@@ -4,7 +4,7 @@ import { isJobChatEligible, isJobChatReadOnly, threadForRequest, threadsForClien
 import { guardForRequest } from '../../lib/clientShift';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppItemCard, AppItemCardStack, AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { MessageCircle } from 'lucide-react';
 
@@ -132,12 +132,6 @@ export function ClientMessagesPanel({
 
   return (
     <AppScreen>
-      <AppPageLead
-        kicker="Job messaging"
-        subtitle="Chat with guards on active shifts"
-        title="Messages"
-      />
-
       {eligibleWithoutThread.length > 0 && (
         <AppSection title="Ready to message">
           <AppItemCardStack>

@@ -207,7 +207,7 @@ export function ClientDashboard({
   };
 
   const wrap = (node: React.ReactNode) => (
-    <div className="h-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">{node}</div>
+    <div className="h-full max-w-full min-w-0 overflow-hidden">{node}</div>
   );
 
   const page = (key: string, node: React.ReactNode) => (

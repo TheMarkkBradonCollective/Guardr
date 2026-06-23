@@ -5713,6 +5713,12 @@ export default function App() {
       setClientView(view);
     };
 
+    const clientHideHeader =
+      (clientView === 'support' && !!supportTicketId) ||
+      clientView === 'support-compose' ||
+      clientView === 'support-report' ||
+      (openJobChat && ['messages', 'coverage', 'map'].includes(clientView));
+
     const supportInbox = (
       <SupportScreen
         currentUser={currentUser}
@@ -5738,6 +5744,7 @@ export default function App() {
           accountPending={clientAccountPending}
           onOpenLegal={openLegalPage}
           messagesBadge={clientActiveJobChatCount(jobChatThreads, currentUser.id)}
+          hideHeader={clientHideHeader}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
