@@ -47,6 +47,7 @@ function PipelineSection({
   onMarkClientPaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
+  onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
   onDepositCashToStripe,
@@ -65,6 +66,7 @@ function PipelineSection({
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -98,6 +100,7 @@ function PipelineSection({
             onMarkClientPaidCash={onMarkClientPaidCash}
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
+            onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onMarkCashDepositManually={onMarkCashDepositManually}
             onDepositCashToStripe={onDepositCashToStripe}
@@ -147,7 +150,9 @@ export function StaffPaymentsPanel({
     onMarkClientPaidCash,
     onApproveClientCashPayment,
     onRejectClientCashPayment,
+    onMarkGuardPaidCash,
     onMarkPlatformFeePaidCash,
+    onMarkCashDepositManually,
     onDepositCashToStripe,
   };
 

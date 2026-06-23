@@ -5,6 +5,7 @@ import {
   canDirectorMarkClientPaidCash,
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
+  canDirectorPayGuardCash,
   canMakeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
   getCashDepositedAmount,
@@ -62,6 +63,7 @@ interface JobPaymentRowProps {
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
+  onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
@@ -80,12 +82,13 @@ export function JobPaymentRow({
   onMarkClientPaidCash,
   onApproveClientCashPayment,
   onRejectClientCashPayment,
+  onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
   onDepositCashToStripe,
   readOnly = false,
 }: JobPaymentRowProps) {
-  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'refund' | 'deposit' | 'platformFee' | 'manualDeposit' | null>(null);
+  const [busy, setBusy] = useState<'client' | 'approveCash' | 'rejectCash' | 'release' | 'guard' | 'refund' | 'deposit' | 'platformFee' | 'manualDeposit' | null>(null);
 
   const summary = staffJobMoneySummary(req);
   const ledger = jobPaymentLedger(req);
@@ -113,6 +116,12 @@ export function JobPaymentRow({
     isDirector &&
     canMakeGuardPayoutAvailable(req) &&
     onMakeGuardPayoutAvailable &&
+    !readOnly;
+  const canCashGuard =
+    paymentGates.allowCash &&
+    isDirector &&
+    canDirectorPayGuardCash(req) &&
+    onMarkGuardPaidCash &&
     !readOnly;
   const canRefund =
     isDirector &&
@@ -168,7 +177,7 @@ export function JobPaymentRow({
       </div>
 
       {!readOnly &&
-        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canRefund) && (
+        (canApproveCash || canRejectCash || canMarkClientCash || canDeposit || canManualDeposit || canPlatformFeeCash || canReleaseFunds || canCashGuard || canRefund) && (
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
           {canApproveCash && (
             <button
@@ -259,6 +268,18 @@ export function JobPaymentRow({
             >
               {busy === 'release' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wallet className="w-3 h-3" />}
               Make ${guardAmount.toFixed(2)} available to guard
+            </button>
+          )}
+
+          {canCashGuard && (
+            <button
+              type="button"
+              onClick={() => run('guard', onMarkGuardPaidCash)}
+              disabled={busy !== null}
+              className="app-button-outline app-btn-sm gap-1.5"
+            >
+              {busy === 'guard' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Banknote className="w-3 h-3" />}
+              Pay guard ${guardAmount.toFixed(2)} cash
             </button>
           )}
 
