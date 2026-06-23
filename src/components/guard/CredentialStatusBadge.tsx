@@ -17,7 +17,7 @@ import {
 function Badge({ label, className }: { label: string; className: string }) {
   return (
     <span
-      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border h-fit ${className}`}
+      className={`text-[10px] font-semibold normal-case px-2 py-0.5 rounded border leading-snug whitespace-normal text-center max-w-full break-words ${className}`}
     >
       {label}
     </span>

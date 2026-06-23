@@ -21,6 +21,7 @@ import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
 import {
   CredentialRowAction,
+  CredentialRowHeader,
   CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
@@ -195,26 +196,19 @@ export function GuardPtaUofPanel({
     alternateLabel?: string;
   }) => (
     <div className="app-list-subrow space-y-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
-            className={`text-sm font-semibold ${
-              uploaded.length > 0 ? 'text-brand-text' : 'text-brand-text-muted'
-            }`}
-          >
-            {label}
-          </p>
-          {subtitle && (
-            <p className="text-[10px] text-brand-text-muted mt-0.5 leading-snug">{subtitle}</p>
-          )}
-        </div>
-        <CredentialRowAction
-          staffMode={staffMode}
-          uploadStatus={getCourseUploadStatus(guard, catalogId)}
-          canUpload={canUpload}
-          onAdd={() => startAdd(catalogId)}
-        />
-      </div>
+      <CredentialRowHeader
+        title={label}
+        subtitle={subtitle}
+        titleMuted={uploaded.length === 0}
+        action={
+          <CredentialRowAction
+            staffMode={staffMode}
+            uploadStatus={getCourseUploadStatus(guard, catalogId)}
+            canUpload={canUpload}
+            onAdd={() => startAdd(catalogId)}
+          />
+        }
+      />
 
       {uploaded.length > 0 && (
         <div className="app-cert-item-stack !pt-0">
@@ -270,17 +264,22 @@ export function GuardPtaUofPanel({
 
       {uploadPath === 'combined' ? (
         <div className="border-t border-brand-border pt-3 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-              Combined 8-hour certificate
-            </p>
-            <CredentialRowAction
-              staffMode={staffMode}
-              uploadStatus={getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID)}
-              canUpload={canUpload}
-              onAdd={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
-            />
-          </div>
+          <CredentialRowHeader
+            rawTitle
+            title={
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
+                Combined 8-hour certificate
+              </span>
+            }
+            action={
+              <CredentialRowAction
+                staffMode={staffMode}
+                uploadStatus={getCourseUploadStatus(guard, BSIS_PTA_UOF_COMBINED_ID)}
+                canUpload={canUpload}
+                onAdd={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
+              />
+            }
+          />
           {combinedCerts.length > 0 ? (
             <div className="app-cert-item-stack !pt-0">{combinedCerts.map((cert) => renderCertRow(cert))}</div>
           ) : (

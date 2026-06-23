@@ -5,7 +5,7 @@ import { getGuardCardSectionStatus } from '../../lib/credentialSectionStatus';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
-import { CredentialRowAction, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import { CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { Shield } from 'lucide-react';
@@ -194,26 +194,33 @@ export function GuardCardPanel({
   return (
     <>
       <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
+        <CredentialRowHeader
+          rawTitle
+          title={
             <p className="uber-label flex items-center gap-2 flex-wrap">
-              <Shield className="w-4 h-4 text-brand-primary" />
+              <Shield className="w-4 h-4 text-brand-primary shrink-0" />
               BSIS Guard Card
             </p>
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
-            </p>
-            <div className="mt-2">
-              <CredentialSectionStatusDisplay status={sectionStatus} />
-            </div>
-          </div>
-          <CredentialRowAction
-            staffMode={staffMode}
-            uploadStatus={guardCardUploadStatus}
-            canUpload={canUpload}
-            onAdd={() => setShowForm(true)}
-          />
-        </div>
+          }
+          subtitle={
+            <>
+              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
+              </p>
+              <div className="mt-2">
+                <CredentialSectionStatusDisplay status={sectionStatus} />
+              </div>
+            </>
+          }
+          action={
+            <CredentialRowAction
+              staffMode={staffMode}
+              uploadStatus={guardCardUploadStatus}
+              canUpload={canUpload}
+              onAdd={() => setShowForm(true)}
+            />
+          }
+        />
 
         {items.length === 0 ? (
           <div className="border-t border-brand-border py-3">

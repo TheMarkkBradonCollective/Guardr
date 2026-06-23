@@ -16,7 +16,7 @@ export function CredentialPathToggle({
   individualLabel,
 }: CredentialPathToggleProps) {
   return (
-    <div className="segmented-control segmented-control-full" role="group" aria-label="Upload path">
+    <div className="segmented-control segmented-control-full credential-path-toggle" role="group" aria-label="Upload path">
       <button
         type="button"
         onClick={() => onChange('combined')}

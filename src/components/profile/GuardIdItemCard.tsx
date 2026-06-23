@@ -10,7 +10,7 @@ import {
   isIdExpired,
 } from '../../lib/guardIdentityVerification';
 import { getGovernmentIdSectionStatus } from '../../lib/credentialSectionStatus';
-import { CredentialListStatusBadge, CredentialRowAction, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
+import { CredentialListStatusBadge, CredentialRowAction, CredentialRowHeader, CredentialSectionStatusDisplay } from '../credentials/CredentialStatusLabels';
 import { IdCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardIdDetailModal } from './GuardIdDetailModal';
 import type {
@@ -106,28 +106,35 @@ export function GuardIdItemCard({
   if (asCredentialSection) {
     return (
       <section className="app-form-section space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
+        <CredentialRowHeader
+          rawTitle
+          title={
             <p className="uber-label flex items-center gap-2 flex-wrap">
-              <IdCard className="w-4 h-4 text-brand-primary" />
+              <IdCard className="w-4 h-4 text-brand-primary shrink-0" />
               Government ID
             </p>
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
-            </p>
-            <div className="mt-2">
-              <CredentialSectionStatusDisplay status={sectionStatus} />
-            </div>
-          </div>
-          {(canEdit || staffMode) && (
-            <CredentialRowAction
-              staffMode={staffMode}
-              uploadStatus={uploadStatus}
-              canUpload={canEdit}
-              onAdd={() => setShowDetail(true)}
-            />
-          )}
-        </div>
+          }
+          subtitle={
+            <>
+              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                Required before profile approval. {ID_VERIFICATION_POLICY_HINT}
+              </p>
+              <div className="mt-2">
+                <CredentialSectionStatusDisplay status={sectionStatus} />
+              </div>
+            </>
+          }
+          action={
+            (canEdit || staffMode) ? (
+              <CredentialRowAction
+                staffMode={staffMode}
+                uploadStatus={uploadStatus}
+                canUpload={canEdit}
+                onAdd={() => setShowDetail(true)}
+              />
+            ) : undefined
+          }
+        />
 
         {hasOnFile ? (
           <div className="app-cert-item-stack border-t border-brand-border">{cardBody}</div>

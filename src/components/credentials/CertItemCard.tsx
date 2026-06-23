@@ -73,8 +73,8 @@ export function CertItemCard({
                 <CredentialCategoryBadge cert={cert} />
               </div>
             )}
-            <p className="font-semibold text-sm leading-snug">{title}</p>
-            <p className="text-xs text-brand-text-muted mt-1">
+            <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+            <p className="text-xs text-brand-text-muted mt-1 break-words">
               {cert.state ? `${formatStateName(cert.state)} · ` : ''}
               {cert.issuer} · #{cert.number}
             </p>
