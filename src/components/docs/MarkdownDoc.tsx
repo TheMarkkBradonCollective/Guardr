@@ -71,6 +71,16 @@ function MarkdownDoc({ source }: { source: string }) {
         continue;
       }
 
+      if (line.startsWith('#### ')) {
+        elements.push(
+          <h4 key={key++} className="text-sm font-semibold text-brand-text mt-5">
+            {line.slice(5)}
+          </h4>
+        );
+        i += 1;
+        continue;
+      }
+
       if (line.startsWith('|')) {
         const tableLines: string[] = [];
         while (i < lines.length && lines[i].startsWith('|')) {

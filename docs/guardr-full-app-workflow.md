@@ -63,6 +63,123 @@ Every job offer moves through these statuses:
 3. Staff and payment controls still apply as configured.
 4. The job moves to **Accepted** once the direct assignment is confirmed.
 
+### Workflow charts
+
+These charts show the same workflow visually. Use them when you need to know "who has the next action?" quickly.
+
+#### Marketplace job chart
+
+```
+CLIENT                         STAFF                         GUARD
+  |                              |                             |
+  | Post job offer               |                             |
+  |----------------------------->|                             |
+  | Status: Pending review       |                             |
+  |                              | Review job offer            |
+  |                              | Approve listing             |
+  |<-----------------------------|                             |
+  | Status: Open                 |                             |
+  | Pay Now / Pay in Cash        |                             |
+  |----------------------------->|                             |
+  |                              | Cash approval if needed      |
+  |                              |                             |
+  |                              |                             | Map: apply for job
+  |                              |<----------------------------|
+  |                              | Review applications          |
+  |                              | Send to client               |
+  |<-----------------------------|                             |
+  | Approve guard / Decline      |                             |
+  |----------------------------->|                             |
+  | Status: Accepted             |---------------------------->|
+  |                              |                             | Arrive on site
+  |                              |                             | Start shift + self-audit
+  |<-----------------------------------------------------------|
+  | Confirm self-audit photos    |                             |
+  |                              | Monitor live job             |
+  |                              |                             | End shift
+  |<-----------------------------------------------------------|
+  | Status: Completed            |                             |
+  | Review/rate/report           |                             |
+  |                              | Release payout / cash close  |
+```
+
+#### Direct request chart
+
+```
+CLIENT                         GUARD                         STAFF
+  |                              |                             |
+  | Guards page                  |                             |
+  | Select guard profile         |                             |
+  | Send assignment request      |                             |
+  |----------------------------->|                             |
+  |                              | Map: direct request appears  |
+  |                              | Slide to claim job           |
+  |<-----------------------------|---------------------------->|
+  | Status: Accepted             |                             | Monitor job/payment
+  |                              | Arrive -> Start -> Audit     |
+  |<-----------------------------|                             |
+  | Confirm audit / message      |                             |
+  |                              | End shift                    |
+  |<-----------------------------|---------------------------->|
+  | Review completed job         | Pay tab                      | Payments closeout
+```
+
+#### Payment and payout chart
+
+```
+CLIENT PAYMENT
+  |
+  |-- Card enabled
+  |     -> Client Jobs page: Pay Now
+  |     -> Stripe checkout
+  |     -> Staff Payments: release guard payout after completion
+  |
+  |-- Cash enabled
+        -> Client Jobs page: Pay in Cash
+        -> Staff Payments: Approve cash payment after cash is received
+        -> Job can continue based on cash approval/payment state
+        -> Staff marks guard paid cash or closes cash payout
+
+GUARD PAYOUT
+  |
+  |-- Stripe payout
+  |     -> Guard Pay page: Connect bank account
+  |     -> Staff Payments: release payout
+  |     -> Guard Pay page: Send to my bank when available
+  |
+  |-- Cash payout
+        -> Guard Pay page: Request cash pickup
+        -> Staff Payments: complete payout invoice / mark paid cash
+```
+
+#### Exception and escalation chart
+
+```
+Issue or exception
+  |
+  |-- Missing location coordinates
+  |     -> Staff Jobs: add/verify location or use current location
+  |
+  |-- Guard skips self-audit
+  |     -> Job flagged No Self Audit
+  |     -> Staff Jobs: follow up or upload self-audit photos
+  |     -> Client Jobs/Live coverage: confirm photos when available
+  |
+  |-- Incident or activity report
+  |     -> Guard active shift: Report incident / Activity report
+  |     -> Staff Incidents: review full report
+  |     -> Client Home: Reports
+  |
+  |-- Late clock-out overtime
+  |     -> Guard My jobs: Approve overtime
+  |     -> Client Jobs: Approve overtime or Dispute charge
+  |     -> Staff Payments or Disputes: settle and close
+  |
+  |-- Support question
+        -> Client/Guard Messages: Contact support or File a report
+        -> Staff Messages: support inbox / job chat / staff chat
+```
+
 ---
 
 ## Client workflow
