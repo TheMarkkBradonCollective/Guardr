@@ -240,7 +240,11 @@ export function parseAppRoute(url: string): AppRoute | null {
 }
 
 export function readLegalPageFromWindow(): LegalPageId | null {
-  const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+  return readLegalPageFromUrl(window.location.pathname);
+}
+
+export function readLegalPageFromUrl(url: string): LegalPageId | null {
+  const { pathname } = parsePath(url);
   if (pathname === '/legal/terms') return 'terms';
   if (pathname === '/legal/privacy') return 'privacy';
   return null;
@@ -253,14 +257,21 @@ export function buildLegalPath(page: LegalPageId): string {
 export function syncLegalPage(page: LegalPageId | null, replace = false): void {
   const nextPath = page ? buildLegalPath(page) : '/';
   const current = window.location.pathname.replace(/\/$/, '') || '/';
-  if (current === nextPath) return;
-
   const state = { legalPage: page };
-  if (replace) {
+  const pathMatches = current === nextPath;
+  const hasLegalState =
+    page != null
+      ? (window.history.state as { legalPage?: LegalPageId } | null)?.legalPage === page
+      : (window.history.state as { legalPage?: LegalPageId } | null)?.legalPage == null;
+
+  if (pathMatches && hasLegalState) return;
+
+  if (replace || pathMatches) {
     window.history.replaceState(state, '', nextPath);
-  } else {
-    window.history.pushState(state, '', nextPath);
+    return;
   }
+
+  window.history.pushState(state, '', nextPath);
 }
 
 export function buildAppPath(route: AppRoute): string {
@@ -299,16 +310,52 @@ function currentBrowserPath(): string {
   return path + window.location.search;
 }
 
+function historyHasAppRouteState(): boolean {
+  return (window.history.state as { appRoute?: AppRoute } | null)?.appRoute != null;
+}
+
+/** True when the route only represents the logged-out auth screen at `/`. */
+export function isAuthOnlyRoute(route: AppRoute): boolean {
+  return !!route.authView && !route.clientView && !route.guardTab && !route.staffSection;
+}
+
+/** Query params that external flows append; strip before persisting in-app routes. */
+const EPHEMERAL_QUERY_KEYS = [
+  'payment',
+  'job_id',
+  'deposit',
+  'stripe_connect',
+] as const;
+
+export function stripEphemeralQueryParams(url: string): string {
+  const { pathname, searchParams } = parsePath(url);
+  const params = new URLSearchParams(searchParams.toString());
+  for (const key of EPHEMERAL_QUERY_KEYS) {
+    params.delete(key);
+  }
+  const qs = params.toString();
+  return qs ? `${pathname}?${qs}` : pathname;
+}
+
+export function readAppRouteFromPopState(event?: PopStateEvent): AppRoute | null {
+  const fromState = (event?.state as { appRoute?: AppRoute } | null)?.appRoute;
+  if (fromState) return fromState;
+  return parseAppRoute(stripEphemeralQueryParams(window.location.pathname + window.location.search));
+}
+
 export function syncAppRoute(route: AppRoute, replace = false): void {
   const nextPath = buildAppPath(route);
-  if (currentBrowserPath() === nextPath) return;
-
   const state = { appRoute: route };
-  if (replace) {
+  const pathMatches = currentBrowserPath() === nextPath;
+
+  if (pathMatches && historyHasAppRouteState()) return;
+
+  if (replace || pathMatches) {
     window.history.replaceState(state, '', nextPath);
-  } else {
-    window.history.pushState(state, '', nextPath);
+    return;
   }
+
+  window.history.pushState(state, '', nextPath);
 }
 
 export function defaultRouteForRole(role: AppRoute['role']): AppRoute {

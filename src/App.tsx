@@ -180,9 +180,13 @@ import { reportPushEvent } from './lib/pushApi';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
   defaultRouteForRole,
+  isAuthOnlyRoute,
   parseAppRoute,
+  readAppRouteFromPopState,
   readAppRouteFromWindow,
+  readLegalPageFromUrl,
   readLegalPageFromWindow,
+  stripEphemeralQueryParams,
   syncAppRoute,
   syncLegalPage,
   type AppRole,
@@ -850,7 +854,7 @@ export default function App() {
   const closeAuthView = () => {
     setIsAuthView(false);
     if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/');
+      window.history.replaceState({ home: true }, '', '/');
     }
   };
 
@@ -896,64 +900,137 @@ export default function App() {
   applyAppRouteRef.current = applyAppRoute;
   const currentUserRef = useRef(currentUser);
   currentUserRef.current = currentUser;
+  const loggedInUserIdRef = useRef<string | null>(currentUser?.id ?? null);
+
+  const navigateFromLocation = (
+    url: string,
+    options: { source: 'boot' | 'deeplink' | 'popstate'; event?: PopStateEvent }
+  ) => {
+    const legal =
+      options.source === 'popstate'
+        ? ((options.event?.state?.legalPage as LegalPageId | undefined) ??
+          readLegalPageFromUrl(url))
+        : readLegalPageFromUrl(url);
+
+    if (legal) {
+      setLegalPageState(legal);
+      setIsAuthView(false);
+      return;
+    }
+    setLegalPageState(null);
+
+    const strippedUrl = stripEphemeralQueryParams(url);
+    const route =
+      options.source === 'popstate'
+        ? readAppRouteFromPopState(options.event)
+        : parseAppRoute(strippedUrl);
+
+    const user = currentUserRef.current;
+
+    if (route?.authView) {
+      if (!user) {
+        setIsAuthView(true);
+        setInitialAuthRole(route.authRole ?? 'client');
+        setInitialAuthMode(route.authView);
+        if (options.source !== 'popstate') {
+          syncAppRoute(route, true);
+        }
+        return;
+      }
+      const role = appRoleForUser(user);
+      if (role) {
+        const fallback = defaultRouteForRole(role);
+        applyAppRouteRef.current(fallback);
+        if (options.source !== 'popstate') {
+          syncAppRoute(fallback, true);
+        }
+      }
+      return;
+    }
+
+    if (!route) {
+      if (!user) {
+        setIsAuthView(false);
+        return;
+      }
+      const role = appRoleForUser(user);
+      if (!role) return;
+      const fallback = defaultRouteForRole(role);
+      applyAppRouteRef.current(fallback);
+      if (options.source !== 'popstate') {
+        syncAppRoute(fallback, true);
+      }
+      return;
+    }
+
+    if (user && !routeMatchesUser(route, user)) {
+      return;
+    }
+
+    applyAppRouteRef.current(route);
+    if (options.source !== 'popstate') {
+      syncAppRoute(route, true);
+    }
+  };
 
   useNativeBackButtonBootstrap(!!currentUser);
 
   useEffect(() => {
-    const applyDeepLink = (url: string) => {
-      const legal = readLegalPageFromWindow();
-      if (legal) {
-        setLegalPageState(legal);
-        setIsAuthView(false);
-        return;
-      }
-      setLegalPageState(null);
-
-      const route = parseAppRoute(url);
-      if (!route) return;
-
-      const user = currentUserRef.current;
-      if (route.authView) {
-        if (!user) {
-          setIsAuthView(true);
-          setInitialAuthRole(route.authRole ?? 'client');
-          setInitialAuthMode(route.authView);
-        }
-        return;
-      }
-
-      if (user && !routeMatchesUser(route, user)) {
-        return;
-      }
-
-      applyAppRouteRef.current(route);
-      syncAppRoute(route, true);
-    };
-
-    applyDeepLink(window.location.pathname + window.location.search);
+    navigateFromLocation(window.location.pathname + window.location.search, { source: 'boot' });
 
     const onPopState = (event: PopStateEvent) => {
-      const legal =
-        (event.state?.legalPage as LegalPageId | undefined) ?? readLegalPageFromWindow();
-      if (legal) {
-        setLegalPageState(legal);
-        setIsAuthView(false);
-        return;
-      }
-      setLegalPageState(null);
-
-      const route =
-        (event.state?.appRoute as AppRoute | undefined) ?? readAppRouteFromWindow();
-      if (route) applyAppRouteRef.current(route);
+      navigateFromLocation(window.location.pathname + window.location.search, {
+        source: 'popstate',
+        event,
+      });
     };
     window.addEventListener('popstate', onPopState);
 
-    const unsubscribe = listenForPushNavigation(applyDeepLink);
+    const unsubscribe = listenForPushNavigation((url) => {
+      navigateFromLocation(url, { source: 'deeplink' });
+    });
     return () => {
       window.removeEventListener('popstate', onPopState);
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      loggedInUserIdRef.current = null;
+      return;
+    }
+    const role = appRoleForUser(currentUser);
+    if (!role) return;
+
+    const isFreshLogin = loggedInUserIdRef.current !== currentUser.id;
+    loggedInUserIdRef.current = currentUser.id;
+
+    const route = parseAppRoute(
+      stripEphemeralQueryParams(window.location.pathname + window.location.search)
+    );
+
+    if (route && isAuthOnlyRoute(route)) {
+      const fallback = defaultRouteForRole(role);
+      applyAppRouteRef.current(fallback);
+      syncAppRoute(fallback, true);
+      return;
+    }
+
+    if (route && routeMatchesUser(route, currentUser)) {
+      if (isFreshLogin) {
+        applyAppRouteRef.current(route);
+      }
+      syncAppRoute(route, true);
+      return;
+    }
+
+    if (isFreshLogin || !route) {
+      const fallback = defaultRouteForRole(role);
+      applyAppRouteRef.current(fallback);
+      syncAppRoute(fallback, true);
+    }
+  }, [currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -967,23 +1044,6 @@ export default function App() {
     });
     return unsubscribe;
   }, [currentUser?.id, currentUser?.email, currentUser?.role]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const role = appRoleForUser(currentUser);
-    if (!role) return;
-
-    const route = readAppRouteFromWindow();
-    if (route && routeMatchesUser(route, currentUser)) {
-      applyAppRouteRef.current(route);
-      syncAppRoute(route, true);
-      return;
-    }
-
-    const fallback = defaultRouteForRole(role);
-    applyAppRouteRef.current(fallback);
-    syncAppRoute(fallback, true);
-  }, [currentUser?.id, currentUser?.role]);
 
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
@@ -1820,7 +1880,7 @@ export default function App() {
     setLegalPageState(null);
     setLegalReturnAuth(false);
     if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/');
+      window.history.replaceState({ home: true }, '', '/');
     }
   };
 
@@ -5217,14 +5277,17 @@ export default function App() {
     const paymentResult = params.get('payment');
     const jobId = params.get('job_id');
     const depositResult = params.get('deposit');
+    const stripeConnect = params.get('stripe_connect');
 
-    const clearPaymentQuery = () => {
-      const route = readAppRouteFromWindow();
+    const clearEphemeralQuery = () => {
+      const route = parseAppRoute(
+        stripEphemeralQueryParams(window.location.pathname + window.location.search)
+      );
       if (route) {
         syncAppRoute(route, true);
         return;
       }
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState(window.history.state ?? { home: true }, '', window.location.pathname);
     };
 
     if (paymentResult === 'success' && jobId) {
@@ -5244,10 +5307,10 @@ export default function App() {
         body: 'Your job status will update shortly.',
         tone: 'success',
       });
-      clearPaymentQuery();
+      clearEphemeralQuery();
     } else if (paymentResult === 'cancelled') {
       showAppToast('Payment cancelled', { tone: 'info' });
-      clearPaymentQuery();
+      clearEphemeralQuery();
     }
 
     if (depositResult === 'success' && jobId) {
@@ -5260,10 +5323,29 @@ export default function App() {
         body: 'Stripe balance will update for this job shortly.',
         tone: 'success',
       });
-      clearPaymentQuery();
+      clearEphemeralQuery();
     } else if (depositResult === 'cancelled') {
       showAppToast('Deposit cancelled', { tone: 'info' });
-      clearPaymentQuery();
+      clearEphemeralQuery();
+    }
+
+    if (stripeConnect === 'success' || stripeConnect === 'refresh') {
+      void loadFromSupabase();
+      if (currentUser?.role === 'guard') {
+        setGuardTabState('earnings');
+        syncAppRoute({ role: 'guard', guardTab: 'earnings' }, true);
+      }
+      showAppToast(
+        stripeConnect === 'success' ? 'Stripe connected' : 'Continue Stripe setup',
+        {
+          body:
+            stripeConnect === 'success'
+              ? 'Your payout account is linked. Earnings will update shortly.'
+              : 'Return to earnings to finish connecting your payout account.',
+          tone: stripeConnect === 'success' ? 'success' : 'info',
+        }
+      );
+      clearEphemeralQuery();
     }
   }, [currentUser]);
 
