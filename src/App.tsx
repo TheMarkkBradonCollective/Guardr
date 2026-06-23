@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -206,6 +206,17 @@ import {
   sanitizeJobListingUpdates,
   validateShiftSchedule,
 } from './lib/jobEditRules';
+import {
+  clientPaymentGates,
+  loadPlatformSettingsFromStorage,
+  normalizePlatformSettings,
+  platformAllowsCash,
+  platformAllowsStripe,
+  platformSettingsFromDbRow,
+  platformSettingsToDbRow,
+  savePlatformSettingsToStorage,
+  type PlatformSettings,
+} from './lib/platformSettings';
 import { canEditJobListingDetails } from './lib/permissions';
 import {
   canGuardClockIn,
@@ -286,6 +297,9 @@ export default function App() {
   const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
   const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
     loadGuardPayoutInvoicesFromStorage()
+  );
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() =>
+    loadPlatformSettingsFromStorage()
   );
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [loading,  setLoading]  = useState(true);
@@ -1040,6 +1054,11 @@ export default function App() {
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
         .from('guard_payout_invoices')
         .select('*');
+      const { data: dbPlatformSettings, error: platformSettingsErr } = await supabase
+        .from('platform_settings')
+        .select('*')
+        .eq('id', 'default')
+        .maybeSingle();
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
       if (supportTicketsErr || supportMessagesErr) {
@@ -1056,6 +1075,9 @@ export default function App() {
       }
       if (payoutInvoicesErr) {
         console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
+      }
+      if (platformSettingsErr && platformSettingsErr.code !== '42P01') {
+        console.warn('Platform settings load (run migration if missing):', platformSettingsErr);
       }
       if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
@@ -1344,6 +1366,12 @@ export default function App() {
         });
       }
 
+      if (!platformSettingsErr && dbPlatformSettings) {
+        const loaded = platformSettingsFromDbRow(dbPlatformSettings);
+        setPlatformSettings(loaded);
+        savePlatformSettingsToStorage(loaded);
+      }
+
       setIsDbConnected(true);
     } catch (err) {
       console.error('Supabase load error:', err);
@@ -1610,6 +1638,11 @@ export default function App() {
     }
     return false;
   }, [currentUser, clientView, guardTab, staffSection, openJobChat]);
+
+  const clientPaymentGatesMemo = useMemo(
+    () => clientPaymentGates(platformSettings),
+    [platformSettings]
+  );
 
   useEffect(() => {
     if (!isDbConnected || !isInMessagingView) return;
@@ -3727,8 +3760,13 @@ export default function App() {
 
   const handleClientRequestCashPayment = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
+      return;
+    }
     const req = requests.find((r) => r.id === requestId);
-    if (!req || !canClientRequestCashPayment(req)) {
+    const gates = clientPaymentGates(platformSettings);
+    if (!req || !canClientRequestCashPayment(req, gates)) {
       appToast('This job cannot be marked for cash payment right now.', 'error');
       return;
     }
@@ -3761,6 +3799,10 @@ export default function App() {
   const handleApproveClientCashPayment = async (requestId: string) => {
     if (!currentUser || !canAccessFinancialControls(currentUser)) {
       appToast('You do not have permission to approve cash payments.', 'error');
+      return;
+    }
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -3819,6 +3861,10 @@ export default function App() {
       appToast('Only Directors and Owners can record cash client payments.', 'error');
       return;
     }
+    if (!platformAllowsCash(platformSettings)) {
+      appToast('Cash payments are not enabled on this platform.', 'error');
+      return;
+    }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canDirectorMarkClientPaidCash(req)) {
       appToast('This job cannot be marked as paid in cash.', 'error');
@@ -3831,6 +3877,24 @@ export default function App() {
     }))) return;
 
     await applyClientPaidCash(requestId, req);
+  };
+
+  const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
+    if (!currentUser || !canManagePlatformSettings(currentUser)) {
+      appToast('Only the Owner can change platform settings.', 'error');
+      return;
+    }
+    const normalized = normalizePlatformSettings(next);
+    if (!normalized) {
+      appToast('Enable at least one payment method.', 'error');
+      return;
+    }
+    setPlatformSettings(normalized);
+    savePlatformSettingsToStorage(normalized);
+    if (isDbConnected) {
+      await supabase.from('platform_settings').upsert(platformSettingsToDbRow(normalized));
+    }
+    appToast('Platform settings saved.', 'success');
   };
 
   const handleMarkGuardPaidCash = async (requestId: string) => {
@@ -5396,6 +5460,7 @@ export default function App() {
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
+              paymentGates={clientPaymentGatesMemo}
               currentUser={currentUser}
               jobChatThreads={jobChatThreads}
               jobChatMessages={jobChatMessages}
@@ -5479,6 +5544,8 @@ export default function App() {
           onMarkPlatformFeePaidCash={handleMarkPlatformFeePaidCash}
           onDepositCashToStripe={handleDepositCashToStripe}
           onCompletePayoutInvoice={handleCompletePayoutInvoice}
+          platformSettings={platformSettings}
+          onUpdatePlatformSettings={handleUpdatePlatformSettings}
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}

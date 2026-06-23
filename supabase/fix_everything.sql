@@ -468,6 +468,15 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  payment_cash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
+
 CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(request_id);
 CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);
 CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);

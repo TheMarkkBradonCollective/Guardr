@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { showAppToast } from '../ui/AppToast';
@@ -41,6 +42,7 @@ interface ClientRequestsListProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
+  paymentGates: ClientPaymentGates;
   onCancelRequest: (requestId: string) => void;
   onEditRequest: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
@@ -80,6 +82,7 @@ export function ClientRequestsList({
   requests,
   guards,
   clientEmail,
+  paymentGates,
   onCancelRequest,
   onEditRequest,
   onUpdateStatus,
@@ -282,16 +285,16 @@ export function ClientRequestsList({
                         </p>
                       </div>
                     )}
-                    {(canClientPayForJob(req) || canClientRequestCashPayment(req)) && (
+                    {(canClientPayForJob(req, paymentGates) || canClientRequestCashPayment(req, paymentGates)) && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
                           <p className="text-xs text-brand-text-muted mt-0.5">
-                            {clientPaymentStatusHint(req.paymentStatus, req.status, req)} Total: ${req.estimatedPayout.toFixed(2)}.
+                            {clientPaymentStatusHint(req.paymentStatus, req.status, req, paymentGates)} Total: ${req.estimatedPayout.toFixed(2)}.
                           </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-                          {canClientPayForJob(req) && (
+                          {canClientPayForJob(req, paymentGates) && (
                             <button
                               type="button"
                               onClick={() => handlePayNow(req)}
@@ -305,7 +308,7 @@ export function ClientRequestsList({
                               )}
                             </button>
                           )}
-                          {canClientRequestCashPayment(req) && onRequestCashPayment && (
+                          {canClientRequestCashPayment(req, paymentGates) && onRequestCashPayment && (
                             <button
                               type="button"
                               onClick={() => handleRequestCashPayment(req)}

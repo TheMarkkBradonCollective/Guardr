@@ -64,6 +64,7 @@ import { StaffMessengerPanel } from './staff/StaffMessengerPanel';
 import { openTicketCount } from '../lib/support';
 import { activeJobChatCount } from '../lib/jobChat';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
+import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
@@ -127,6 +128,8 @@ interface StaffDashboardProps {
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
   isDbConnected: boolean;
   currentUser: SessionUser;
+  platformSettings: PlatformSettings;
+  onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   onAddStaffProfile: (
     name: string,
     email: string,
@@ -234,6 +237,8 @@ export function StaffDashboard({
   onCompletePayoutInvoice,
   isDbConnected,
   currentUser,
+  platformSettings,
+  onUpdatePlatformSettings,
   onAddStaffProfile,
   onUpdateStaffRole,
   onAddGuardProfile,
@@ -583,6 +588,10 @@ export function StaffDashboard({
             payoutInvoices={guardPayoutInvoices}
             isDirector={hasExecutivePaymentControls(currentUser)}
             canManagePayments={showFinance}
+            paymentGates={{
+              allowCash: platformSettings.paymentCashEnabled,
+              allowStripe: platformSettings.paymentStripeEnabled,
+            }}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
             onMarkClientPaidCash={onMarkClientPaidCash}
@@ -617,6 +626,8 @@ export function StaffDashboard({
         return showFinance ? (
           <StaffSettingsPanel
             currentUser={currentUser}
+            platformSettings={platformSettings}
+            onUpdatePlatformSettings={onUpdatePlatformSettings}
             showStaffOnboard={canManageStaff}
             onAddStaffProfile={onAddStaffProfile}
           />

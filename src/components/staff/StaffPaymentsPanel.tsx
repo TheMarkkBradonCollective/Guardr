@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { GuardPayoutInvoice, Payment, SecurityGuard, SecurityRequest } from '../../types';
+import type { ClientPaymentGates } from '../../lib/platformSettings';
 import { openGuardPayoutInvoices } from '../../lib/guardPayoutInvoiceStorage';
 import { PIPELINE_FLOW_STEPS } from '../../lib/paymentDisplay';
 import {
@@ -19,6 +20,7 @@ interface StaffPaymentsPanelProps {
   payoutInvoices?: GuardPayoutInvoice[];
   isDirector: boolean;
   canManagePayments: boolean;
+  paymentGates: ClientPaymentGates;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
@@ -37,6 +39,7 @@ function PipelineSection({
   payments,
   isDirector,
   canManagePayments,
+  paymentGates,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
@@ -54,6 +57,7 @@ function PipelineSection({
   payments: Payment[];
   isDirector: boolean;
   canManagePayments: boolean;
+  paymentGates: ClientPaymentGates;
   onReleasePayout?: (requestId: string, force?: boolean) => Promise<void>;
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
@@ -85,6 +89,7 @@ function PipelineSection({
             payment={payments.find((p) => p.jobId === req.id)}
             isDirector={isDirector}
             canManagePayments={canManagePayments}
+            paymentGates={paymentGates}
             readOnly={readOnly}
             onReleasePayout={onReleasePayout}
             onRefundPayment={onRefundPayment}
@@ -113,6 +118,7 @@ export function StaffPaymentsPanel({
   payoutInvoices = [],
   isDirector,
   canManagePayments,
+  paymentGates,
   onReleasePayout,
   onRefundPayment,
   onMarkClientPaidCash,
@@ -131,6 +137,7 @@ export function StaffPaymentsPanel({
     payments,
     isDirector,
     canManagePayments,
+    paymentGates,
     onReleasePayout,
     onRefundPayment,
     onMarkClientPaidCash,

@@ -118,7 +118,8 @@ export function clientPaymentStatusLabel(
 export function clientPaymentStatusHint(
   status?: SecurityRequest['paymentStatus'],
   jobStatus?: SecurityRequest['status'],
-  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>
+  req?: Pick<SecurityRequest, 'clientCashPaymentRequested' | 'paymentStatus'>,
+  gates?: { allowStripe: boolean; allowCash: boolean }
 ): string | undefined {
   if (req && isClientCashPaymentPendingApproval(req as SecurityRequest)) {
     return 'Staff will confirm once your cash payment is received.';
@@ -126,6 +127,12 @@ export function clientPaymentStatusHint(
   if (!status || status === 'unpaid') {
     if (jobStatus === 'pending-review') {
       return 'Staff must approve this job offer before you can pay.';
+    }
+    if (gates?.allowStripe && !gates?.allowCash) {
+      return 'Pay by card to unlock hiring a guard for this job.';
+    }
+    if (gates?.allowCash && !gates?.allowStripe) {
+      return 'Request cash payment — staff will confirm when received.';
     }
     return 'Pay to unlock hiring a guard for this job.';
   }
