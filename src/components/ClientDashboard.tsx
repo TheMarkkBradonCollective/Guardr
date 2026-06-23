@@ -17,6 +17,7 @@ import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
 import { ClientMapScreen } from './client/ClientMapScreen';
 import { AppPageTransition } from './ui/motion/AppMotion';
+import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppWorkflowPage } from './docs/AppWorkflowPage';
 
 export type ClientView =
@@ -25,6 +26,7 @@ export type ClientView =
   | 'request'
   | 'direct-request'
   | 'coverage'
+  | 'messages'
   | 'reports'
   | 'requests'
   | 'guards'
@@ -68,6 +70,7 @@ interface ClientDashboardProps {
   openJobChat?: boolean;
   onJobChatRequestIdChange?: (requestId: string | null) => void;
   onJobChatOpenChange?: (open: boolean) => void;
+  onOpenJobChat?: (requestId: string) => void;
   supportTicketId?: string | null;
   onSupportTicketIdChange?: (ticketId: string | null) => void;
 }
@@ -105,6 +108,7 @@ export function ClientDashboard({
   openJobChat = false,
   onJobChatRequestIdChange,
   onJobChatOpenChange,
+  onOpenJobChat,
   supportTicketId = null,
   onSupportTicketIdChange,
 }: ClientDashboardProps) {
@@ -188,6 +192,12 @@ export function ClientDashboard({
         setSelectedGuard(null);
         navigate('guards');
         break;
+      case 'messages':
+        navigate('messages');
+        break;
+      case 'map':
+        navigate('map');
+        break;
     }
   };
 
@@ -214,7 +224,21 @@ export function ClientDashboard({
   }
 
   if (view === 'map') {
-    return <ClientMapScreen requests={requests} />;
+    return (
+      <ClientMapScreen
+        requests={requests}
+        guards={guards}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        jobChatMessages={jobChatMessages}
+        onSendJobChatMessage={onSendJobChatMessage}
+        onOpenCoverage={() => navigate('coverage')}
+        initialLiveJobId={jobChatRequestId}
+        initialChatOpen={openJobChat}
+        onLiveJobIdChange={onJobChatRequestIdChange}
+        onChatOpenChange={onJobChatOpenChange}
+      />
+    );
   }
 
   if (view === 'request') {
@@ -265,6 +289,24 @@ export function ClientDashboard({
     return page(
       'guards',
       <GuardDirectoryScreen guards={guards} onSelectGuard={setSelectedGuard} />
+    );
+  }
+
+  if (view === 'messages' && currentUser && onSendJobChatMessage) {
+    return page(
+      'messages',
+      <ClientMessagesPanel
+        requests={requests}
+        guards={guards}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        jobChatMessages={jobChatMessages}
+        onSendJobChatMessage={onSendJobChatMessage}
+        initialChatRequestId={jobChatRequestId}
+        initialChatOpen={openJobChat}
+        onChatRequestIdChange={onJobChatRequestIdChange}
+        onChatOpenChange={onJobChatOpenChange}
+      />
     );
   }
 
@@ -320,6 +362,11 @@ export function ClientDashboard({
           setFlowPreset('default');
           navigate('request');
         }}
+        currentUser={currentUser}
+        jobChatThreads={jobChatThreads}
+        jobChatMessages={jobChatMessages}
+        onSendJobChatMessage={onSendJobChatMessage}
+        onOpenJobChat={onOpenJobChat}
       />
     );
   }

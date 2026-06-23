@@ -99,7 +99,7 @@ export function LiveCoverageScreen({
 
   if (chatRequest && currentUser && onSendJobChatMessage) {
     return (
-      <div className="max-w-2xl mx-auto h-[calc(100vh-8rem)] animate-fade-in pb-8">
+      <div className="h-full flex flex-col min-h-0 animate-fade-in">
         <JobChatPanel
           request={chatRequest}
           thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
@@ -113,7 +113,7 @@ export function LiveCoverageScreen({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-fade-in pb-8">
+    <div className="space-y-8 animate-fade-in pb-8">
       <div className="flex items-center gap-3">
         <button type="button" onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-brand-surface" aria-label="Back">
           <ArrowLeft className="w-5 h-5" />
