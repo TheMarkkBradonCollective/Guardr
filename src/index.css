@@ -4450,6 +4450,27 @@ html.theme-light .staff-ops-btn-primary:hover {
   flex-shrink: 0;
 }
 
+.app-chat-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--brand-text-muted);
+  border-radius: 0.5rem;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.app-chat-header-action:hover {
+  color: var(--brand-text);
+  background: var(--brand-elevated);
+}
+
+.app-chat-header-action-danger:hover {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 10%, var(--brand-surface));
+}
+
 .app-chat-header-title {
   font-size: 0.9375rem;
   font-weight: 700;
