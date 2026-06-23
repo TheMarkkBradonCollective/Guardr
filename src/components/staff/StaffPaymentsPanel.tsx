@@ -29,6 +29,7 @@ interface StaffPaymentsPanelProps {
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
@@ -47,6 +48,7 @@ function PipelineSection({
   onApproveClientCashPayment,
   onRejectClientCashPayment,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   readOnly = false,
   limit,
@@ -64,6 +66,7 @@ function PipelineSection({
   onApproveClientCashPayment?: (requestId: string) => Promise<void>;
   onRejectClientCashPayment?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
+  onMarkCashDepositManually?: (requestId: string) => Promise<void>;
   onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
@@ -96,6 +99,7 @@ function PipelineSection({
             onApproveClientCashPayment={onApproveClientCashPayment}
             onRejectClientCashPayment={onRejectClientCashPayment}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
+            onMarkCashDepositManually={onMarkCashDepositManually}
             onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
@@ -125,6 +129,7 @@ export function StaffPaymentsPanel({
   onRejectClientCashPayment,
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
+  onMarkCashDepositManually,
   onDepositCashToStripe,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {

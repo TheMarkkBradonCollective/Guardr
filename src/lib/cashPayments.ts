@@ -95,6 +95,19 @@ export function canDirectorMarkPlatformFeePaidCash(req: SecurityRequest): boolea
   return getPlatformFeeCashDue(req) > 0;
 }
 
+/** Remaining cash-client balance staff can record without a card checkout */
+export function getManualCashDepositDue(req: SecurityRequest): number {
+  if (!isCashAwaitingStripeDeposit(req)) return 0;
+  const remaining = getRemainingStripeDeposit(req);
+  if (remaining <= 0) return 0;
+  if (isPlatformFeeOnlyDeposit(req) && !isPlatformFeeCollected(req)) return 0;
+  return remaining;
+}
+
+export function canDirectorMarkCashDepositManually(req: SecurityRequest): boolean {
+  return getManualCashDepositDue(req) > 0;
+}
+
 export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
   return isCashAwaitingStripeDeposit(req) && getRemainingStripeDeposit(req) > 0;
 }
@@ -184,7 +197,7 @@ export function stripeDepositLedgerLabel(req: SecurityRequest): string {
   const deposited = getCashDepositedAmount(req);
 
   if (isStripeDepositSatisfied(req)) {
-    if (isPlatformFeePaidCash(req) && isCashGuardPayout(req)) {
+    if (req.cashDepositedManually || (isPlatformFeePaidCash(req) && isCashGuardPayout(req))) {
       return 'Manually deposited';
     }
     return 'Deposited via card';
