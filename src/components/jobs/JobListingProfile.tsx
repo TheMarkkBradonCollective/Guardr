@@ -10,6 +10,7 @@ import {
   User,
   Wrench,
   Car,
+  Coffee,
   DoorOpen,
   FileText,
 } from 'lucide-react';
@@ -136,6 +137,12 @@ export function JobListingProfile({
           </p>
           <p className="text-sm font-medium">{formatShiftRange(job.startDate, job.endDate)}</p>
           <p className="text-xs text-brand-text-muted">{formatDuration(job.durationHours)} coverage</p>
+          {(job.breakMinutes ?? 0) > 0 && (
+            <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
+              <Coffee className="w-3.5 h-3.5 text-brand-primary" />
+              {job.breakMinutes} min unpaid break
+            </p>
+          )}
         </div>
       </div>
 

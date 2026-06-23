@@ -187,6 +187,11 @@ import {
   syncPushSubscriptionWithServer,
 } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
+import {
+  notifyDisputeResolution,
+  notifySupportTicketCreated,
+  notifySupportTicketStatus,
+} from './lib/supportNotifications';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
   clearPersistedAppRoute,
@@ -249,6 +254,7 @@ import {
   guardClockInBlockedMessage,
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
+import { activeShiftBreak } from './lib/shiftBreaks';
 import {
   detectLateClockOutOvertime,
   applyOvertimePaidBilling,
@@ -1422,6 +1428,8 @@ export default function App() {
         checkInAudit: r.check_in_audit ?? undefined,
         spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
         midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
+        breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
+        shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
         checkOutAudit: r.check_out_audit ?? undefined,
       })));
 
@@ -3623,6 +3631,7 @@ export default function App() {
       requiredCertifications: newRequest.requiredCertifications || [],
       minGuardQualification: newRequest.minGuardQualification ?? 'pending',
       applicants: [],
+      breakMinutes: newRequest.breakMinutes ?? 0,
     };
 
     setRequests((prev) => [freshJob, ...prev]);
@@ -3702,6 +3711,8 @@ export default function App() {
           required_certifications: freshJob.requiredCertifications,
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
+          break_minutes: freshJob.breakMinutes ?? 0,
+          shift_breaks: [],
           ...listingDetailDbColumns(freshJob),
           operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
@@ -3804,6 +3815,7 @@ export default function App() {
       requiredCertifications: [],
       minGuardQualification: 'pending',
       applicants: assignedGuardId ? [assignedGuardId] : [],
+      breakMinutes: input.breakMinutes ?? 0,
     };
 
     setRequests((prev) => [freshJob, ...prev]);
@@ -3866,6 +3878,8 @@ export default function App() {
           required_certifications: freshJob.requiredCertifications,
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
+          break_minutes: freshJob.breakMinutes ?? 0,
+          shift_breaks: [],
           ...listingDetailDbColumns(freshJob),
           operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
         });
@@ -5306,7 +5320,7 @@ export default function App() {
   };
 
   // ── Audit lifecycle ────────────────────────────────────────
-  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; status?: SecurityRequest['status']; }) => {
+  const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; status?: SecurityRequest['status']; }) => {
     const req = requests.find((r) => r.id === requestId);
     if (req && payload.status === 'in-progress' && payload.checkInAudit) {
       const workBlocked = guardWorkBlockedMessage(activeGuard, req.state);
@@ -5330,6 +5344,7 @@ export default function App() {
       : undefined;
 
     const previousRequest = req ? (JSON.parse(JSON.stringify(req)) as SecurityRequest) : null;
+    const previousActiveBreak = req ? activeShiftBreak(req) : null;
     const completedGuardId =
       payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
 
@@ -5344,6 +5359,7 @@ export default function App() {
       const updated = { ...r };
       if (payload.checkInAudit) updated.checkInAudit = payload.checkInAudit;
       if (nextMidShiftAudits) updated.midShiftAudits = nextMidShiftAudits;
+      if (payload.shiftBreaks) updated.shiftBreaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
       if (detectedOvertime) {
         updated.scheduledDurationHours = detectedOvertime.scheduledDurationHours;
@@ -5370,6 +5386,7 @@ export default function App() {
       const updates: Record<string, unknown> = {};
       if (payload.checkInAudit) updates.check_in_audit = payload.checkInAudit;
       if (nextMidShiftAudits) updates.mid_shift_audits = nextMidShiftAudits;
+      if (payload.shiftBreaks) updates.shift_breaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
       if (detectedOvertime) {
         updates.scheduled_duration_hours = detectedOvertime.scheduledDurationHours;
@@ -5428,6 +5445,43 @@ export default function App() {
       });
       if (req?.assignedGuardId) {
         void ensureJobChatThread({ ...req, status: 'in-progress' });
+      }
+    }
+
+    if (payload.status === 'completed' && payload.checkOutAudit && currentUser) {
+      const req = requests.find((r) => r.id === requestId);
+      const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+      void reportPushEvent(currentUser, {
+        type: 'guard_clockout',
+        guardId: guard?.id ?? req?.assignedGuardId,
+        guardName: guard?.name ?? currentUser.name,
+        requestId,
+        siteId: req?.siteName || undefined,
+        location: req?.location,
+      });
+    }
+
+    if (payload.shiftBreaks && currentUser && req) {
+      const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
+      const nextActiveBreak = activeShiftBreak({ ...req, shiftBreaks: payload.shiftBreaks });
+      if (!previousActiveBreak && nextActiveBreak) {
+        void reportPushEvent(currentUser, {
+          type: 'guard_break_start',
+          guardId: guard?.id ?? req.assignedGuardId,
+          guardName: guard?.name ?? currentUser.name,
+          requestId,
+          siteId: req.siteName || undefined,
+          location: req.location,
+        });
+      } else if (previousActiveBreak && !nextActiveBreak) {
+        void reportPushEvent(currentUser, {
+          type: 'guard_break_end',
+          guardId: guard?.id ?? req.assignedGuardId,
+          guardName: guard?.name ?? currentUser.name,
+          requestId,
+          siteId: req.siteName || undefined,
+          location: req.location,
+        });
       }
     }
 
@@ -6182,6 +6236,15 @@ export default function App() {
         ticketId: ticket.id,
         body: `${ticket.userName} (${ticket.userRole}): ${body.slice(0, 100)}`,
       });
+      if (ticket.kind === 'report' && ['payment', 'job-issue'].includes(ticket.category)) {
+        void reportPushEvent(currentUser, {
+          type: 'dispute_update',
+          ticketId: ticket.id,
+          requestId: ticket.relatedRequestId,
+          title: 'Dispute update',
+          body: `${ticket.userName} added to dispute report: ${body.slice(0, 100)}`,
+        });
+      }
       if (ticket.category === 'safety' && ticket.priority === 'urgent') {
         void reportPushEvent(currentUser, {
           type: 'emergency_alert',
@@ -6294,10 +6357,7 @@ export default function App() {
       return next;
     });
     await persistSupportTicketToDb(ticket);
-    const latest = ticket.messages[ticket.messages.length - 1];
-    if (latest) {
-      await notifySupportParticipants(ticket, currentUser, latest.body);
-    }
+    notifySupportTicketCreated(currentUser, ticket);
     return ticket.id;
   };
 
@@ -6320,6 +6380,8 @@ export default function App() {
   };
 
   const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
+    const ticket = supportTickets.find((t) => t.id === ticketId);
+    const previousStatus = ticket?.status;
     const now = new Date().toISOString();
     setSupportTickets((prev) => {
       const next = prev.map((t) => (t.id === ticketId ? { ...t, status, updatedAt: now } : t));
@@ -6332,6 +6394,25 @@ export default function App() {
       } catch (e) {
         console.warn('Support status DB sync:', e);
       }
+    }
+    if (currentUser && ticket && previousStatus !== status) {
+      notifySupportTicketStatus(currentUser, { ...ticket, status, updatedAt: now }, status);
+    }
+  };
+
+  const handleResolveDispute = async (
+    dispute: import('./lib/staffOps').OpsDispute,
+    action: import('./lib/staffOps').DisputeResolutionAction
+  ) => {
+    if (!currentUser) return;
+    notifyDisputeResolution(currentUser, dispute, action);
+    if (!dispute.ticketId) return;
+    if (action === 'hold_funds') {
+      await handleUpdateSupportTicketStatus(dispute.ticketId, 'in-progress');
+      return;
+    }
+    if (action === 'approve_payout') {
+      await handleUpdateSupportTicketStatus(dispute.ticketId, 'resolved');
     }
   };
 
@@ -6705,6 +6786,7 @@ export default function App() {
           onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
+          onResolveDispute={handleResolveDispute}
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           staffMessages={staffMessages}

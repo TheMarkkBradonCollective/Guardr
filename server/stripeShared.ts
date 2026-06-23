@@ -60,6 +60,16 @@ export async function markJobPaid(
       status: 'paid',
     });
   }
+
+  try {
+    const { notifyPaymentAttention } = await import('../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: 'Client card payment received — job may be ready for guard assignment',
+    });
+  } catch (err) {
+    console.warn('Payment push notification failed:', err);
+  }
 }
 
 export async function markJobHeld(jobId: string) {
@@ -151,6 +161,18 @@ export async function markCashDeposit(
       payment_method: 'stripe',
     });
   }
+
+  if (fullyDeposited) {
+    try {
+      const { notifyPaymentAttention } = await import('../lib/push/paymentNotifications');
+      await notifyPaymentAttention(db, {
+        requestId: jobId,
+        body: `Cash deposit completed for job — $${newDeposited.toFixed(2)} received via Stripe`,
+      });
+    } catch (err) {
+      console.warn('Cash deposit push notification failed:', err);
+    }
+  }
 }
 
 export async function markJobReleased(jobId: string, transferId: string) {
@@ -169,6 +191,16 @@ export async function markJobReleased(jobId: string, transferId: string) {
       updated_at: new Date().toISOString(),
     })
     .eq('job_id', jobId);
+
+  try {
+    const { notifyPaymentAttention } = await import('../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: 'Guard payout released via Stripe',
+    });
+  } catch (err) {
+    console.warn('Payout release push notification failed:', err);
+  }
 }
 
 export async function processStripeWebhookEvent(event: Stripe.Event) {

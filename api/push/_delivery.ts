@@ -10,6 +10,9 @@ import type { PushNotificationType, PushRole, PushSendPayload } from './_types';
 const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   assignment: 'assignment',
   guard_checkin: 'guard_checkin',
+  guard_clockout: 'guard_clockout',
+  guard_break_start: 'guard_break_start',
+  guard_break_end: 'guard_break_end',
   missed_checkin: 'missed_checkin',
   emergency_alert: 'emergency_alert',
   support_message: 'support_message',
@@ -165,6 +168,9 @@ async function deliverToSubscriptions(
   const filtered: typeof subscriptions = [];
 
   for (const sub of subscriptions) {
+    if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
+      continue;
+    }
     if (!sub.user_id) {
       filtered.push(sub);
       continue;

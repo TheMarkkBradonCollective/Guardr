@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Loader2, Scale } from 'lucide-react';
-import { OpsDispute } from '../../lib/staffOps';
+import { DisputeResolutionAction, OpsDispute } from '../../lib/staffOps';
 import { computeOvertimeAmount } from '../../lib/shiftBilling';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 
 interface StaffDisputesPanelProps {
   disputes: OpsDispute[];
+  onResolveDispute?: (dispute: OpsDispute, action: DisputeResolutionAction) => void | Promise<void>;
   onResolveOvertimeDispute?: (
     requestId: string,
     action: 'waive' | 'uphold' | 'adjust',
@@ -23,16 +24,35 @@ function formatWhen(iso: string): string {
   });
 }
 
-export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: StaffDisputesPanelProps) {
-  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+export function StaffDisputesPanel({
+  disputes,
+  onResolveDispute,
+  onResolveOvertimeDispute,
+}: StaffDisputesPanelProps) {
+  const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [adjustHoursById, setAdjustHoursById] = useState<Record<string, string>>({});
   const [resolutionNoteById, setResolutionNoteById] = useState<Record<string, string>>({});
 
   const openDisputes = useMemo(
-    () => disputes.filter((d) => d.status === 'open' && !resolvedIds.has(d.id)),
-    [disputes, resolvedIds]
+    () =>
+      disputes.filter((d) => {
+        const status = statusMap[d.id] ?? d.status;
+        return status === 'open';
+      }),
+    [disputes, statusMap]
   );
+
+  const resolveTicketDispute = (
+    dispute: OpsDispute,
+    status: OpsDispute['status'],
+    action: DisputeResolutionAction,
+    message: string
+  ) => {
+    setStatusMap((m) => ({ ...m, [dispute.id]: status }));
+    void onResolveDispute?.(dispute, action);
+    showAppToast(message, { tone: status === 'resolved' ? 'success' : 'info' });
+  };
 
   const resolveOvertime = async (
     dispute: OpsDispute,
@@ -46,7 +66,7 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
         adjustedHours,
         resolutionNote: resolutionNoteById[dispute.id],
       });
-      setResolvedIds((prev) => new Set(prev).add(dispute.id));
+      setStatusMap((m) => ({ ...m, [dispute.id]: 'resolved' }));
     } catch (e) {
       showAppToast(e instanceof Error ? e.message : 'Unable to resolve dispute', { tone: 'error' });
     } finally {
@@ -61,7 +81,7 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
           <Scale className="w-10 h-10 text-brand-text-muted mx-auto mb-3" strokeWidth={1.5} />
           <p className="font-semibold text-sm">No open disputes</p>
           <p className="text-sm text-brand-text-muted mt-1 max-w-xs mx-auto">
-            Late clock-out charge disputes will appear here when a client contests overtime billing.
+            Overtime billing disputes and guard vs client conflicts will appear here when they need staff review.
           </p>
         </div>
       </div>
@@ -71,12 +91,13 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">
-        Review evidence and resolve contested late clock-out charges.
+        Review evidence and resolve contested charges or conflicts.
       </p>
 
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => {
           const isOvertime = d.type === 'overtime';
+          const status = statusMap[d.id] ?? d.status;
           const defaultAdjustHours =
             d.clientClaimedHours != null ? d.clientClaimedHours : d.claimedHours ?? 0;
           const adjustHoursRaw = adjustHoursById[d.id] ?? String(defaultAdjustHours);
@@ -102,7 +123,9 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
                     Opened {formatWhen(d.openedAt)}
                   </p>
                 </div>
-                <WfBadge tone="warning">open</WfBadge>
+                <WfBadge tone={status === 'open' ? 'warning' : status === 'resolved' ? 'success' : 'default'}>
+                  {status}
+                </WfBadge>
               </div>
 
               {isOvertime && (
@@ -211,6 +234,39 @@ export function StaffDisputesPanel({ disputes, onResolveOvertimeDispute }: Staff
                       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply adjustment'}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {!isOvertime && status === 'open' && onResolveDispute && (
+                <div className="app-action-row--equal pt-4">
+                  <button
+                    type="button"
+                    onClick={() => resolveTicketDispute(d, 'resolved', 'approve_payout', 'Payout approved.')}
+                    className="app-button-primary app-btn-sm"
+                  >
+                    Approve Payout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => resolveTicketDispute(d, 'held', 'hold_funds', 'Funds held pending review.')}
+                    className="app-button-outline app-btn-sm"
+                  >
+                    Hold Funds
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => resolveTicketDispute(d, 'resolved', 'partial_payout', 'Partial payout issued.')}
+                    className="app-button-outline app-btn-sm"
+                  >
+                    Partial Payout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => resolveTicketDispute(d, 'resolved', 'cancel_payout', 'Job payout cancelled.')}
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                  >
+                    Cancel Payout
+                  </button>
                 </div>
               )}
             </div>

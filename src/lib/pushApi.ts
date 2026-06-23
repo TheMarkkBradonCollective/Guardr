@@ -96,6 +96,9 @@ export async function sendTestPush(user: SessionUser, siteId?: string): Promise<
 
 export type PushEventType =
   | 'guard_checkin'
+  | 'guard_clockout'
+  | 'guard_break_start'
+  | 'guard_break_end'
   | 'missed_checkin'
   | 'assignment'
   | 'emergency_alert'
@@ -108,7 +111,10 @@ export type PushEventType =
   | 'guard_pending_approval'
   | 'client_pending_approval'
   | 'credential_pending'
-  | 'payment_attention';
+  | 'payment_attention'
+  | 'support_ticket'
+  | 'support_ticket_status'
+  | 'dispute_update';
 
 export async function reportPushEvent(
   user: SessionUser,
@@ -123,6 +129,7 @@ export async function reportPushEvent(
     location?: string;
     recipientUserId?: string;
     ticketId?: string;
+    clientId?: string;
   }
 ): Promise<void> {
   try {

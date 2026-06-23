@@ -37,6 +37,9 @@ export function resolveNotificationUrl(
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
@@ -84,6 +87,15 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
         : '/staff/payments';
+    case 'support_ticket':
+    case 'support_ticket_status':
+      return options.ticketId
+        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages?mtab=support';
+    case 'dispute_update':
+      return options.ticketId
+        ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/disputes';
     case 'test':
       return '/';
     default:
@@ -151,6 +163,9 @@ export function resolveNotificationUrlForRole(
       return '/staff/incidents';
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       if (role === 'guard') {
         return options.requestId
           ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -168,6 +183,35 @@ export function resolveNotificationUrlForRole(
       return '/staff/messages?mtab=team';
     case 'guard_message':
       return '/guard/guard-chat';
+    case 'support_ticket':
+    case 'support_ticket_status':
+      if (role === 'client') {
+        return options.ticketId
+          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/support';
+      }
+      if (role === 'guard') {
+        return options.ticketId
+          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/support';
+      }
+      return options.ticketId
+        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages?mtab=support';
+    case 'dispute_update':
+      if (role === 'client') {
+        return options.ticketId
+          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/support';
+      }
+      if (role === 'guard') {
+        return options.ticketId
+          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/support';
+      }
+      return options.ticketId
+        ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/disputes';
     case 'assignment':
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -184,11 +228,14 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
   switch (type) {
     case 'missed_checkin':
     case 'guard_checkin':
+    case 'guard_clockout':
+    case 'guard_break_start':
+    case 'guard_break_end':
       return ['dispatch', 'admin'];
     case 'assignment':
       return ['guard'];
     case 'emergency_alert':
-      return ['guard', 'dispatch', 'admin'];
+      return ['guard', 'client', 'dispatch', 'admin'];
     case 'support_message':
       return ['dispatch', 'admin', 'client', 'guard'];
     case 'job_chat_message':
@@ -204,6 +251,12 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'credential_pending':
     case 'payment_attention':
       return ['dispatch', 'admin'];
+    case 'support_ticket':
+      return ['dispatch', 'admin'];
+    case 'support_ticket_status':
+      return ['client', 'guard'];
+    case 'dispute_update':
+      return ['dispatch', 'admin', 'client', 'guard'];
     case 'test':
       return [];
     default:

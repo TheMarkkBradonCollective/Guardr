@@ -641,6 +641,14 @@ export interface SecurityRequest {
     uniformVerified: boolean;
     equipmentVerified: boolean;
   }>;
+  /** Total unpaid break minutes allowed during the shift (set by client). */
+  breakMinutes?: number;
+  /** Guard break sessions during an active shift. */
+  shiftBreaks?: Array<{
+    id: string;
+    startedAt: string;
+    endedAt?: string;
+  }>;
   checkOutAudit?: {
     checkedAt: string;
     completed: boolean;
@@ -758,6 +766,9 @@ export interface NotificationPreferences {
   userId: string;
   assignment: boolean;
   guardCheckin: boolean;
+  guardClockout: boolean;
+  guardBreakStart: boolean;
+  guardBreakEnd: boolean;
   missedCheckin: boolean;
   emergencyAlert: boolean;
   supportMessage: boolean;
@@ -770,6 +781,9 @@ export interface NotificationPreferences {
   clientPendingApproval: boolean;
   credentialPending: boolean;
   paymentAttention: boolean;
+  supportTicket: boolean;
+  supportTicketStatus: boolean;
+  disputeUpdate: boolean;
   updatedAt: string;
 }
 

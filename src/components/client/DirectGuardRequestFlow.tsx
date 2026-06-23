@@ -28,6 +28,7 @@ import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -67,6 +68,8 @@ export function DirectGuardRequestFlow({
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
+  const [breakMinutes, setBreakMinutes] = useState(30);
+  const [customBreakMinutes, setCustomBreakMinutes] = useState('');
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
 
@@ -76,6 +79,9 @@ export function DirectGuardRequestFlow({
   const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
   const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour);
   const estimatedTotal = Math.round(durationHours * effectiveRate * 100) / 100;
+  const effectiveBreakMinutes = customBreakMinutes
+    ? Math.max(0, parseInt(customBreakMinutes, 10) || 0)
+    : breakMinutes;
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
   const title = resolveJobTitle(jobTitle, serviceId);
 
@@ -152,6 +158,7 @@ export function DirectGuardRequestFlow({
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
       operationalDetails: normalizeJobOperationalDetails(operational),
+      breakMinutes: effectiveBreakMinutes,
     });
   };
 
@@ -310,6 +317,29 @@ export function DirectGuardRequestFlow({
               {validateShiftSchedule(startDate, endDate) ??
                 (durationHours <= 0 ? 'End must be after start' : formatDuration(durationHours))}
             </p>
+            <div>
+              <h3 className="text-lg font-bold">Scheduled breaks</h3>
+              <p className="text-sm text-brand-text-muted mt-1">
+                Unpaid break minutes for this shift. Staff are notified when breaks start and end.
+              </p>
+            </div>
+            <div className="segmented-control segmented-control-full">
+              {BREAK_MINUTE_PRESETS.map((minutes) => (
+                <button
+                  key={minutes}
+                  type="button"
+                  onClick={() => {
+                    setBreakMinutes(minutes);
+                    setCustomBreakMinutes('');
+                  }}
+                  className={`segmented-control-btn flex-1 py-2 text-sm ${
+                    breakMinutes === minutes && !customBreakMinutes ? 'segmented-control-btn-active' : ''
+                  }`}
+                >
+                  {minutes === 0 ? 'None' : `${minutes}m`}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -398,6 +428,7 @@ export function DirectGuardRequestFlow({
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'direct',
                 status: 'draft',
+                breakMinutes: effectiveBreakMinutes,
                 operationalDetails: normalizeJobOperationalDetails(operational),
               }}
             />

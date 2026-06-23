@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import { registerCronRoutes } from './cronRoutes';
 import { registerPushRoutes } from './pushRoutes';
 import { registerStripeRoutes, registerStripeWebhook } from './stripe';
 
@@ -13,6 +14,7 @@ export function createApiApp(): Express {
 
   registerStripeRoutes(app);
   registerPushRoutes(app);
+  registerCronRoutes(app);
 
   app.get('/api/health', (_req, res) => {
     res.json({

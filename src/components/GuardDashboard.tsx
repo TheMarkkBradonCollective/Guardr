@@ -65,6 +65,12 @@ import {
   guardClockOutBlockedMessage,
   isLateClockOut,
 } from '../lib/shiftWindow';
+import {
+  activeShiftBreak,
+  canGuardEndBreak,
+  canGuardStartBreak,
+  guardBreakBlockedMessage,
+} from '../lib/shiftBreaks';
 import type { IncidentReportFormInput } from '../lib/incidentReports';
 
 interface GuardDashboardProps {
@@ -477,6 +483,34 @@ export function GuardDashboard({
     })();
   };
 
+  const handleStartBreak = () => {
+    if (!activeShiftJob) return;
+    const blocked = guardBreakBlockedMessage(activeShiftJob);
+    if (!canGuardStartBreak(activeShiftJob)) {
+      showAppToast(blocked ?? 'Cannot start a break right now.', { tone: 'error' });
+      return;
+    }
+    const id = crypto.randomUUID();
+    const shiftBreaks = [...(activeShiftJob.shiftBreaks ?? []), { id, startedAt: new Date().toISOString() }];
+    onUpdateJobAudit(activeShiftJob.id, { shiftBreaks });
+    showAppToast('Break started', { body: 'Staff have been notified.', tone: 'info' });
+  };
+
+  const handleEndBreak = () => {
+    if (!activeShiftJob) return;
+    const active = activeShiftBreak(activeShiftJob);
+    if (!active || !canGuardEndBreak(activeShiftJob)) {
+      showAppToast('No active break to end.', { tone: 'error' });
+      return;
+    }
+    const endedAt = new Date().toISOString();
+    const shiftBreaks = (activeShiftJob.shiftBreaks ?? []).map((brk) =>
+      brk.id === active.id ? { ...brk, endedAt } : brk
+    );
+    onUpdateJobAudit(activeShiftJob.id, { shiftBreaks });
+    showAppToast('Back on duty', { body: 'Staff have been notified.', tone: 'info' });
+  };
+
   const handleEndShift = () => {
     if (!activeShiftJob) return;
     const blocked = guardClockOutBlockedMessage(activeShiftJob);
@@ -649,6 +683,8 @@ export function GuardDashboard({
           onIncidentReport={() => setShowIncidentReport(true)}
           onActivityReport={() => setShowActivityLog(true)}
           onEndShift={handleEndShift}
+          onStartBreak={handleStartBreak}
+          onEndBreak={handleEndBreak}
           onOpenJobChat={
             onSendJobChatMessage ? () => openMessagesForJob(activeShiftJob.id) : undefined
           }

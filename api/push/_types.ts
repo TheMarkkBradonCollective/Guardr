@@ -3,6 +3,9 @@ export type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
 export type PushNotificationType =
   | 'missed_checkin'
   | 'guard_checkin'
+  | 'guard_clockout'
+  | 'guard_break_start'
+  | 'guard_break_end'
   | 'assignment'
   | 'emergency_alert'
   | 'support_message'
@@ -15,6 +18,9 @@ export type PushNotificationType =
   | 'client_pending_approval'
   | 'credential_pending'
   | 'payment_attention'
+  | 'support_ticket'
+  | 'support_ticket_status'
+  | 'dispute_update'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
@@ -46,6 +52,7 @@ export interface PushSendPayload {
   requestId?: string;
   ticketId?: string;
   priority?: 'normal' | 'high';
+  excludeUserId?: string;
 }
 
 export interface SessionCredentials {

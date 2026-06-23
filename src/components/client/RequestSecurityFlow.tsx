@@ -25,6 +25,7 @@ import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
 
@@ -80,6 +81,8 @@ export function RequestSecurityFlow({
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
+  const [breakMinutes, setBreakMinutes] = useState(30);
+  const [customBreakMinutes, setCustomBreakMinutes] = useState('');
 
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
@@ -88,6 +91,9 @@ export function RequestSecurityFlow({
   const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
   const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour) * effectiveGuards;
   const estimatedTotal = Math.round(durationHours * effectiveRate * effectiveGuards * 100) / 100;
+  const effectiveBreakMinutes = customBreakMinutes
+    ? Math.max(0, parseInt(customBreakMinutes, 10) || 0)
+    : breakMinutes;
 
   const selectedService = CLIENT_SERVICE_OPTIONS.find((s) => s.id === serviceId)!;
   const title = resolveJobTitle(jobTitle, serviceId);
@@ -165,6 +171,7 @@ export function RequestSecurityFlow({
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
       operationalDetails: normalizeJobOperationalDetails(operational),
+      breakMinutes: effectiveBreakMinutes,
     });
     onBack();
   };
@@ -345,6 +352,41 @@ export function RequestSecurityFlow({
                   ? 'End must be after start'
                   : `Guardr calculated ${formatDuration(durationHours)} total coverage`)}
             </div>
+            <div>
+              <h3 className="text-lg font-bold tracking-tight">Scheduled breaks</h3>
+              <p className="text-brand-text-muted text-sm mt-1 font-medium">
+                Unpaid break time guards can take during the shift. Staff are notified when breaks start and end.
+              </p>
+            </div>
+            <div className="segmented-control segmented-control-full">
+              {BREAK_MINUTE_PRESETS.map((minutes) => (
+                <button
+                  key={minutes}
+                  type="button"
+                  onClick={() => {
+                    setBreakMinutes(minutes);
+                    setCustomBreakMinutes('');
+                  }}
+                  className={`segmented-control-btn flex-1 py-3 text-sm ${
+                    breakMinutes === minutes && !customBreakMinutes ? 'segmented-control-btn-active' : ''
+                  }`}
+                >
+                  {minutes === 0 ? 'None' : `${minutes}m`}
+                </button>
+              ))}
+            </div>
+            <div>
+              <label className="uber-label block mb-1.5">Custom break minutes</label>
+              <input
+                type="number"
+                min={0}
+                max={180}
+                placeholder="Optional override"
+                value={customBreakMinutes}
+                onChange={(e) => setCustomBreakMinutes(e.target.value)}
+                className="uber-input rounded-xl"
+              />
+            </div>
           </div>
         )}
 
@@ -486,6 +528,7 @@ export function RequestSecurityFlow({
                 requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
                 requestType: 'marketplace',
                 status: 'draft',
+                breakMinutes: effectiveBreakMinutes,
                 operationalDetails: normalizeJobOperationalDetails(operational),
               }}
             />

@@ -50,6 +50,8 @@ export interface GuardJobView {
   reviewText?: string;
   checkInAudit?: SecurityRequest['checkInAudit'];
   midShiftAudits?: SecurityRequest['midShiftAudits'];
+  breakMinutes?: number;
+  shiftBreaks?: SecurityRequest['shiftBreaks'];
   checkOutAudit?: SecurityRequest['checkOutAudit'];
   reports?: SecurityRequest['reports'];
   payoutStatus?: GuardPayoutStatus;
@@ -200,6 +202,8 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
     reviewText: req.reviewText,
     checkInAudit: req.checkInAudit,
     midShiftAudits: req.midShiftAudits,
+    breakMinutes: req.breakMinutes,
+    shiftBreaks: req.shiftBreaks,
     checkOutAudit: req.checkOutAudit,
     reports: req.reports,
     payoutStatus: mapPayoutStatus(req.paymentStatus),

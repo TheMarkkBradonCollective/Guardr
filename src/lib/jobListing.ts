@@ -48,6 +48,7 @@ export type JobListingLike = Pick<
   | 'requiredCertifications'
   | 'requestType'
   | 'status'
+  | 'breakMinutes'
 >;
 
 export const EMPTY_LISTING_FIELDS: JobListingFields = {

@@ -25,6 +25,7 @@ import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
+import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface StaffCreateJobInput {
@@ -53,6 +54,7 @@ export interface StaffCreateJobInput {
   latitude?: number;
   longitude?: number;
   operationalDetails?: JobOperationalDetails;
+  breakMinutes?: number;
 }
 
 interface StaffCreateJobFormProps {
@@ -81,6 +83,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
+  const [breakMinutes, setBreakMinutes] = useState(30);
+  const [customBreakMinutes, setCustomBreakMinutes] = useState('');
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [saving, setSaving] = useState(false);
@@ -104,6 +108,9 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
   const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
   const scheduleError = validateShiftSchedule(startDate, endDate);
+  const effectiveBreakMinutes = customBreakMinutes.trim()
+    ? Math.max(0, Math.min(180, parseInt(customBreakMinutes, 10) || 0))
+    : breakMinutes;
 
   const reset = () => {
     setClientId('');
@@ -121,6 +128,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
     setOperational(EMPTY_JOB_OPERATIONAL_DETAILS);
     setLatitude(undefined);
     setLongitude(undefined);
+    setBreakMinutes(30);
+    setCustomBreakMinutes('');
     setError('');
     setMsg('');
   };
@@ -173,6 +182,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         latitude,
         longitude,
         operationalDetails: normalizeJobOperationalDetails(operational),
+        breakMinutes: effectiveBreakMinutes,
       });
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
@@ -350,6 +360,39 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             onChange={(e) => setEndDate(e.target.value)}
             className="uber-input w-full"
             required
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="uber-label block mb-1">Scheduled breaks (minutes)</label>
+          <p className="text-xs text-brand-text-muted mb-2">
+            Unpaid break time guards can take during the shift.
+          </p>
+          <div className="segmented-control segmented-control-full">
+            {BREAK_MINUTE_PRESETS.map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                onClick={() => {
+                  setBreakMinutes(minutes);
+                  setCustomBreakMinutes('');
+                }}
+                className={`segmented-control-btn flex-1 py-2 text-sm ${
+                  breakMinutes === minutes && !customBreakMinutes ? 'segmented-control-btn-active' : ''
+                }`}
+              >
+                {minutes === 0 ? 'None' : `${minutes}m`}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number"
+            min={0}
+            max={180}
+            placeholder="Custom break minutes (optional)"
+            value={customBreakMinutes}
+            onChange={(e) => setCustomBreakMinutes(e.target.value)}
+            className="uber-input w-full mt-2"
           />
         </div>
 
