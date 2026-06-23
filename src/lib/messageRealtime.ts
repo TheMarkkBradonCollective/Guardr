@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { JobChatMessage, StaffMessage, SupportMessage } from '../types';
+import type { JobChatMessage, StaffMessage, GuardMessage, SupportMessage } from '../types';
 import { supabase } from './supabase';
 
 function mapDbJobChatMessage(row: Record<string, unknown>): JobChatMessage {
@@ -25,6 +25,17 @@ function mapDbStaffMessage(row: Record<string, unknown>): StaffMessage {
   };
 }
 
+function mapDbGuardMessage(row: Record<string, unknown>): GuardMessage {
+  return {
+    id: String(row.id),
+    senderId: String(row.sender_id),
+    senderName: String(row.sender_name),
+    senderRole: row.sender_role as GuardMessage['senderRole'],
+    body: String(row.body),
+    createdAt: String(row.created_at),
+  };
+}
+
 function mapDbSupportMessage(row: Record<string, unknown>): SupportMessage {
   return {
     id: String(row.id),
@@ -40,6 +51,7 @@ function mapDbSupportMessage(row: Record<string, unknown>): SupportMessage {
 export interface MessageRealtimeHandlers {
   onJobChatMessage: (message: JobChatMessage) => void;
   onStaffMessage: (message: StaffMessage) => void;
+  onGuardMessage: (message: GuardMessage) => void;
   onSupportMessage: (message: SupportMessage) => void;
 }
 
@@ -69,6 +81,14 @@ export function useMessageRealtimeSync(handlers: MessageRealtimeHandlers, enable
       { event: 'INSERT', schema: 'public', table: 'staff_messages' },
       (payload) => {
         handlersRef.current.onStaffMessage(mapDbStaffMessage(payload.new as Record<string, unknown>));
+      }
+    );
+
+    channel.on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'guard_messages' },
+      (payload) => {
+        handlersRef.current.onGuardMessage(mapDbGuardMessage(payload.new as Record<string, unknown>));
       }
     );
 

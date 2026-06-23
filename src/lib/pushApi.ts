@@ -101,7 +101,8 @@ export type PushEventType =
   | 'emergency_alert'
   | 'support_message'
   | 'job_chat_message'
-  | 'staff_message';
+  | 'staff_message'
+  | 'guard_message';
 
 export async function reportPushEvent(
   user: SessionUser,

@@ -8,6 +8,7 @@ export type PushNotificationType =
   | 'support_message'
   | 'job_chat_message'
   | 'staff_message'
+  | 'guard_message'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

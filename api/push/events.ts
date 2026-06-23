@@ -11,6 +11,7 @@ type PushNotificationType =
   | 'support_message'
   | 'job_chat_message'
   | 'staff_message'
+  | 'guard_message'
   | 'test';
 type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 
@@ -102,6 +103,8 @@ function resolveNotificationUrl(
         : '/staff/messages?mtab=jobs';
     case 'staff_message':
       return '/staff/messages?mtab=team';
+    case 'guard_message':
+      return '/guard/guard-chat';
     default:
       return '/';
   }
@@ -122,6 +125,8 @@ function rolesForNotificationType(type: PushNotificationType): PushRole[] {
       return ['client', 'guard', 'dispatch', 'admin'];
     case 'staff_message':
       return ['dispatch', 'admin'];
+    case 'guard_message':
+      return ['guard'];
     default:
       return ['guard', 'dispatch'];
   }
@@ -135,6 +140,7 @@ function notificationTag(
   if (options.ticketId) return `guardr-${type}-${options.ticketId}`;
   if (options.siteId) return `guardr-${type}-${options.siteId}`;
   if (type === 'staff_message') return 'guardr-staff-team';
+  if (type === 'guard_message') return 'guardr-guard-chat';
   return `guardr-${type}`;
 }
 
@@ -320,6 +326,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         title: 'Staff team chat',
         body: body.body || 'New message from the Guardr team',
       },
+      guard_message: {
+        title: 'Guard chat',
+        body: body.body || 'New message from another guard',
+      },
     };
 
     const fallback = defaults[body.type] ?? {
@@ -350,10 +360,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dispatchPayload.userId = body.recipientUserId;
     } else if (
       body.type === 'staff_message' ||
+      body.type === 'guard_message' ||
       (body.type === 'support_message' && !body.recipientUserId) ||
       (body.type === 'job_chat_message' && !body.recipientUserId)
     ) {
-      dispatchPayload.role = 'dispatch';
+      dispatchPayload.role = body.type === 'guard_message' ? 'guard' : 'dispatch';
     }
 
     const result = await dispatchPushNotification(db, dispatchPayload, session.userId);

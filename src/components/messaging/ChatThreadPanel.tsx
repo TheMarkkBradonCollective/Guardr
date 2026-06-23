@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { PlatformRole } from '../../types';
 import { isStaffSender, senderLabel } from '../../lib/jobChat';
+import { guardChatSenderLabel } from '../../lib/guardMessenger';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone } from '../ui/app/AppPrimitives';
 
@@ -23,6 +24,8 @@ interface ChatThreadPanelProps {
   headerNote?: string;
   /** Staff team channel — show sent/received instead of job-chat staff styling */
   teamChat?: boolean;
+  /** Guard chat labels: Guardr · Guard · Name */
+  guardChatLabels?: boolean;
 }
 
 function formatChatTime(iso: string): string {
@@ -57,6 +60,7 @@ export function ChatThreadPanel({
   readOnlyMessage = 'This conversation is closed.',
   headerNote,
   teamChat = false,
+  guardChatLabels = false,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -101,7 +105,11 @@ export function ChatThreadPanel({
                 >
                   <AppChatBubble
                     tone={tone}
-                    senderLabel={senderLabel(msg.senderRole, msg.senderName)}
+                    senderLabel={
+                      guardChatLabels
+                        ? guardChatSenderLabel(msg.senderRole, msg.senderName)
+                        : senderLabel(msg.senderRole, msg.senderName)
+                    }
                     body={msg.body}
                     timestamp={formatChatTime(msg.createdAt)}
                   />

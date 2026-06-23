@@ -659,6 +659,15 @@ export interface StaffMessage {
   createdAt: string;
 }
 
+export interface GuardMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: PlatformRole;
+  body: string;
+  createdAt: string;
+}
+
 export interface NotificationPreferences {
   userId: string;
   assignment: boolean;
@@ -668,6 +677,7 @@ export interface NotificationPreferences {
   supportMessage: boolean;
   jobChatMessage: boolean;
   staffMessage: boolean;
+  guardMessage: boolean;
   updatedAt: string;
 }
 

@@ -53,6 +53,13 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     roles: ['client', 'guard', 'staff'],
   },
   {
+    key: 'guardMessage',
+    type: 'guard_message',
+    label: 'Guard chat',
+    description: 'Messages in the all-guards community channel.',
+    roles: ['guard'],
+  },
+  {
     key: 'staffMessage',
     type: 'staff_message',
     label: 'Staff team chat',
@@ -72,6 +79,7 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     supportMessage: true,
     jobChatMessage: true,
     staffMessage: true,
+    guardMessage: true,
     updatedAt: now,
   };
 }
@@ -135,6 +143,7 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     support_message: prefs.supportMessage,
     job_chat_message: prefs.jobChatMessage,
     staff_message: prefs.staffMessage,
+    guard_message: prefs.guardMessage,
     updated_at: prefs.updatedAt,
   };
 }
@@ -149,6 +158,7 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     supportMessage: row.support_message !== false,
     jobChatMessage: row.job_chat_message !== false,
     staffMessage: row.staff_message !== false,
+    guardMessage: row.guard_message !== false,
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
 }

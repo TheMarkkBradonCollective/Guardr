@@ -10,6 +10,7 @@ type PushNotificationType =
   | 'support_message'
   | 'job_chat_message'
   | 'staff_message'
+  | 'guard_message'
   | 'test';
 
 interface PushSendPayload {
@@ -55,6 +56,8 @@ function rolesForNotificationType(type: PushNotificationType): PushRole[] {
       return ['client', 'guard', 'dispatch', 'admin'];
     case 'staff_message':
       return ['dispatch', 'admin'];
+    case 'guard_message':
+      return ['guard'];
     default:
       return ['guard', 'dispatch'];
   }
