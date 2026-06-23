@@ -1,9 +1,177 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handlePushUnsubscribe } from '../../lib/push/handlers';
-import { withPushHandler } from '../../lib/push/vercelAdapter';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
+
+interface VerifiedSession {
+  userId: string;
+  email: string;
+  role: string;
+  platformRole: PlatformRole;
+}
+
+const STAFF_PLATFORM_ROLES = new Set([
+  'owner',
+  'director',
+  'administrator',
+  'moderator',
+  'staff',
+  'auditor',
+]);
+
+function resolvePlatformRole(input: {
+  isStaff?: boolean;
+  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  legacyRole?: string;
+}): PlatformRole {
+  if (input.legacyRole === 'client') return 'client';
+  if (input.isStaff && input.staffRole) {
+    switch (input.staffRole) {
+      case 'Owner':
+        return 'owner';
+      case 'Director':
+        return 'director';
+      case 'Administrator':
+        return 'administrator';
+      case 'Moderator':
+        return 'moderator';
+    }
+  }
+  if (input.legacyRole === 'auditor') return 'moderator';
+  if (input.legacyRole === 'staff') return 'administrator';
+  return 'guard';
+}
+
+function parseRequestBody(req: VercelRequest): Record<string, unknown> {
+  const raw = req.body;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+  return raw as Record<string, unknown>;
+}
+
+async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+  if (!url || !serviceKey) return null;
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+async function verifySession(
+  db: SupabaseClient,
+  credentials: { userId: string; email: string; role: string } | null | undefined
+): Promise<VerifiedSession | null> {
+  if (!credentials?.userId || !credentials?.email || !credentials?.role) return null;
+  const email = credentials.email.trim().toLowerCase();
+  const { userId, role } = credentials;
+
+  if (role === 'client') {
+    let { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
+    if (!data) {
+      const byEmail = await db.from('clients').select('id, email').eq('email', email).maybeSingle();
+      data = byEmail.data ?? null;
+    }
+    if (!data || data.email?.toLowerCase() !== email) return null;
+    return { userId: data.id, email, role: 'client', platformRole: 'client' };
+  }
+
+  if (STAFF_PLATFORM_ROLES.has(role)) {
+    let { data } = await db.from('staff').select('id, email, staff_role').eq('id', userId).maybeSingle();
+    if (!data) {
+      const byEmail = await db.from('staff').select('id, email, staff_role').eq('email', email).maybeSingle();
+      data = byEmail.data ?? null;
+    }
+    if (data?.email?.toLowerCase() === email) {
+      const platformRole = resolvePlatformRole({
+        isStaff: true,
+        staffRole: data.staff_role ?? undefined,
+        legacyRole: 'staff',
+      });
+      return { userId: data.id, email, role: platformRole, platformRole };
+    }
+  }
+
+  let { data } = await db
+    .from('guards')
+    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!data) {
+    const byEmail = await db
+      .from('guards')
+      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .eq('email', email)
+      .maybeSingle();
+    data = byEmail.data ?? null;
+  }
+  if (!data || data.email?.toLowerCase() !== email || data.migrated_to_staff_at) return null;
+  const platformRole = resolvePlatformRole({
+    isStaff: data.is_staff,
+    staffRole: data.staff_role ?? undefined,
+    legacyRole: data.is_staff ? 'staff' : 'guard',
+  });
+  return { userId: data.id, email, role: platformRole, platformRole };
+}
+
+async function removePushSubscription(
+  db: SupabaseClient,
+  userId: string,
+  endpoint?: string
+): Promise<void> {
+  let query = db.from('push_subscriptions').delete().eq('user_id', userId);
+  if (endpoint) query = query.eq('endpoint', endpoint);
+  const { error } = await query;
+  if (error) throw new Error(error.message);
+}
+
+function jsonError(res: VercelResponse, status: number, message: string) {
+  return res.status(status).json({ error: message });
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  return withPushHandler(req, res, ['POST'], async (db, request) =>
-    handlePushUnsubscribe(db, (request.body ?? {}) as Parameters<typeof handlePushUnsubscribe>[1])
-  );
+  if (req.method !== 'POST') {
+    return jsonError(res, 405, 'Method not allowed');
+  }
+
+  try {
+    const db = await getSupabaseAdmin();
+    if (!db) {
+      return jsonError(res, 503, 'Database is not configured');
+    }
+
+    const body = parseRequestBody(req) as {
+      userId?: string;
+      email?: string;
+      role?: string;
+      endpoint?: string;
+    };
+
+    const session = await verifySession(db, {
+      userId: body.userId ?? '',
+      email: body.email ?? '',
+      role: body.role ?? '',
+    });
+    if (!session) {
+      return jsonError(res, 401, 'Unauthorized — sign in again and retry');
+    }
+
+    await removePushSubscription(db, session.userId, body.endpoint);
+    return res.status(200).json({ ok: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Push unsubscribe failed';
+    console.error('Push unsubscribe error:', message, err);
+    return jsonError(res, 500, message);
+  }
 }

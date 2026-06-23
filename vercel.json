@@ -11,22 +11,22 @@
   ],
   "functions": {
     "api/push/subscribe.ts": {
-      "includeFiles": "lib/push/**"
+      "maxDuration": 10
     },
     "api/push/unsubscribe.ts": {
-      "includeFiles": "lib/push/**"
+      "maxDuration": 10
     },
     "api/push/test.ts": {
-      "includeFiles": "lib/push/**"
+      "maxDuration": 10
     },
     "api/push/events.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "api/_push/**"
     },
     "api/push/send.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "api/_push/**"
     },
     "api/cron/missed-checkins.ts": {
-      "includeFiles": "lib/push/**"
+      "includeFiles": "api/_push/**"
     }
   },
   "rewrites": [

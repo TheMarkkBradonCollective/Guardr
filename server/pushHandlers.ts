@@ -1,1 +1,1 @@
-export * from '../lib/push/handlers';
+export * from '../api/_push/handlers';
