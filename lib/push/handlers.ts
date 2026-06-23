@@ -1,6 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { isPushConfigured } from './config';
-import { buildNotificationData, platformRoleToPushRole, resolveNotificationUrl } from './routing';
+import { claimNotificationDedup, missedCheckinDedupKey } from './dedup';
+import { dispatchPushNotification } from './delivery';
+import { buildEventDispatchPayloads } from './eventDispatch';
+import { authorizePushEvent } from './eventAuth';
+import { buildNotificationData, platformRoleToPushRole } from './routing';
 import { isInternalPushAuthorized, verifySession } from './sessionAuth';
 import { removePushSubscription, upsertPushSubscription } from './subscriptions';
 import type { PushSendPayload, PushSubscriptionPayload, SessionCredentials } from './types';
@@ -90,7 +94,6 @@ export async function handlePushSend(
     return pushNotConfiguredResponse();
   }
 
-  const { dispatchPushNotification } = await import('./delivery');
   const result = await dispatchPushNotification(db, body);
   return { status: 200, body: { ok: true, ...result } };
 }
@@ -108,7 +111,6 @@ export async function handlePushTest(
     return pushNotConfiguredResponse();
   }
 
-  const { dispatchPushNotification } = await import('./delivery');
   const data = buildNotificationData('test', { siteId: body.siteId });
   const result = await dispatchPushNotification(db, {
     userId: session.userId,
@@ -122,21 +124,80 @@ export async function handlePushTest(
   return { status: 200, body: { ok: true, ...result } };
 }
 
-export async function handlePushEvent(
+export interface PushEventBody extends SessionCredentials {
+  type?: PushSendPayload['type'];
+  title?: string;
+  body?: string;
+  guardId?: string;
+  requestId?: string;
+  siteId?: string;
+  guardName?: string;
+  location?: string;
+  recipientUserId?: string;
+  ticketId?: string;
+}
+
+export async function dispatchPushEvent(
   db: SupabaseClient,
-  body: SessionCredentials & {
-    type?: PushSendPayload['type'];
-    title?: string;
-    body?: string;
-    guardId?: string;
-    requestId?: string;
-    siteId?: string;
-    guardName?: string;
-    location?: string;
-    recipientUserId?: string;
-    ticketId?: string;
+  event: PushEventBody,
+  options?: { skipAuth?: boolean }
+): Promise<{ sent: number; failed: number }> {
+  if (!event.type) {
+    throw new Error('Notification type is required');
   }
-) {
+
+  if (!isPushConfigured()) {
+    throw new Error('Web Push is not configured');
+  }
+
+  const session = await verifySession(db, event);
+  if (!session && !options?.skipAuth) {
+    throw new Error('Unauthorized — invalid session');
+  }
+
+  if (session && !options?.skipAuth) {
+    const authError = await authorizePushEvent(db, session, {
+      type: event.type,
+      guardId: event.guardId,
+      requestId: event.requestId,
+      recipientUserId: event.recipientUserId,
+      ticketId: event.ticketId,
+    });
+    if (authError) {
+      throw new Error(authError);
+    }
+  }
+
+  if (event.type === 'missed_checkin' && event.requestId) {
+    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+    const dedupKey = missedCheckinDedupKey(event.requestId, hourBucket);
+    const alreadySent = await claimNotificationDedup(db, dedupKey, 'missed_checkin');
+    if (alreadySent) {
+      return { sent: 0, failed: 0 };
+    }
+  }
+
+  const excludeUserId =
+    event.type === 'guard_message' || event.type === 'staff_message' ? session?.userId : undefined;
+
+  const payloads = await buildEventDispatchPayloads(db, {
+    ...event,
+    type: event.type,
+    excludeUserId,
+  });
+
+  let sent = 0;
+  let failed = 0;
+  for (const payload of payloads) {
+    const result = await dispatchPushNotification(db, payload);
+    sent += result.sent;
+    failed += result.failed;
+  }
+
+  return { sent, failed };
+}
+
+export async function handlePushEvent(db: SupabaseClient, body: PushEventBody) {
   const session = await verifySession(db, body);
   if (!session) {
     return { status: 401, body: { error: 'Unauthorized — invalid session' } };
@@ -150,113 +211,12 @@ export async function handlePushEvent(
     return pushNotConfiguredResponse();
   }
 
-  const defaults: Record<string, { title: string; body: string }> = {
-    guard_checkin: {
-      title: 'Guard check-in',
-      body: body.guardName
-        ? `${body.guardName} checked in${body.location ? ` at ${body.location}` : ''}`
-        : 'A guard completed a check-in',
-    },
-    missed_checkin: {
-      title: 'Missed check-in',
-      body: body.guardName
-        ? `${body.guardName} missed an hourly check-in`
-        : 'A guard missed an hourly check-in',
-    },
-    assignment: {
-      title: 'New assignment',
-      body: body.location
-        ? `You have a new assignment at ${body.location}`
-        : 'You have a new assignment update',
-    },
-    emergency_alert: {
-      title: 'Emergency alert',
-      body: body.body || 'Immediate attention required on an active shift',
-    },
-    support_message: {
-      title: 'Support message',
-      body: body.body || 'You have a new support message',
-    },
-    job_chat_message: {
-      title: 'Job chat',
-      body: body.body || 'New message on an active job',
-    },
-    staff_message: {
-      title: 'Staff chat',
-      body: body.body || 'New message from the Guardr team',
-    },
-    guard_message: {
-      title: 'Guard chat',
-      body: body.body || 'New message from another guard',
-    },
-    job_submitted: {
-      title: 'New job request',
-      body: body.body || 'A client submitted a job awaiting staff review',
-    },
-    guard_application: {
-      title: 'Guard application',
-      body: body.body || 'A guard applied to an open job offer',
-    },
-    guard_pending_approval: {
-      title: 'Guard pending approval',
-      body: body.body || 'A guard account needs staff review',
-    },
-    client_pending_approval: {
-      title: 'Client pending approval',
-      body: body.body || 'A client account needs staff review',
-    },
-    credential_pending: {
-      title: 'Credential review',
-      body: body.body || 'A guard submitted credentials for review',
-    },
-    payment_attention: {
-      title: 'Payment attention',
-      body: body.body || 'A payment or payout needs staff action',
-    },
-  };
-
-  const fallback = defaults[body.type] ?? { title: 'Guardr alert', body: body.body || 'Operational update' };
-  const url = resolveNotificationUrl(body.type, {
-    guardId: body.guardId,
-    requestId: body.requestId,
-    ticketId: body.ticketId,
-  });
-
-  const dispatchPayload: PushSendPayload = {
-    title: body.title ?? fallback.title,
-    body: body.body ?? fallback.body,
-    type: body.type,
-    url,
-    guardId: body.guardId,
-    requestId: body.requestId,
-    ticketId: body.ticketId,
-    siteId: body.siteId,
-    priority: body.type === 'emergency_alert' ? 'high' : 'normal',
-  };
-
-  if (body.type === 'assignment' && body.guardId) {
-    dispatchPayload.userId = body.guardId;
-  } else if (body.type === 'support_message' && body.recipientUserId) {
-    dispatchPayload.userId = body.recipientUserId;
-  } else if (body.type === 'job_chat_message' && body.recipientUserId) {
-    dispatchPayload.userId = body.recipientUserId;
-  } else if (
-    body.type === 'staff_message' ||
-    body.type === 'guard_message' ||
-    body.type === 'job_submitted' ||
-    body.type === 'guard_application' ||
-    body.type === 'guard_pending_approval' ||
-    body.type === 'client_pending_approval' ||
-    body.type === 'credential_pending' ||
-    body.type === 'payment_attention' ||
-    (body.type === 'support_message' && !body.recipientUserId) ||
-    (body.type === 'job_chat_message' && !body.recipientUserId)
-  ) {
-    dispatchPayload.role = body.type === 'guard_message' ? 'guard' : 'dispatch';
+  try {
+    const result = await dispatchPushEvent(db, body);
+    return { status: 200, body: { ok: true, ...result } };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Push event failed';
+    const status = message.startsWith('Unauthorized') || message.includes('Not authorized') ? 403 : 500;
+    return { status, body: { error: message } };
   }
-
-  const { dispatchPushNotification } = await import('./delivery');
-  const result = await dispatchPushNotification(db, dispatchPayload);
-
-  return { status: 200, body: { ok: true, ...result } };
 }

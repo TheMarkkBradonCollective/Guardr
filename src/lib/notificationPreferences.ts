@@ -36,7 +36,7 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     type: 'emergency_alert',
     label: 'Emergency alerts',
     description: 'Urgent safety incidents on active shifts.',
-    roles: ['guard', 'staff'],
+    roles: ['client', 'guard', 'staff'],
   },
   {
     key: 'supportMessage',

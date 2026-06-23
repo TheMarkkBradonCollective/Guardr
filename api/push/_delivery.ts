@@ -165,6 +165,9 @@ async function deliverToSubscriptions(
   const filtered: typeof subscriptions = [];
 
   for (const sub of subscriptions) {
+    if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
+      continue;
+    }
     if (!sub.user_id) {
       filtered.push(sub);
       continue;

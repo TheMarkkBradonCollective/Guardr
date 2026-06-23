@@ -46,6 +46,7 @@ export interface PushSendPayload {
   requestId?: string;
   ticketId?: string;
   priority?: 'normal' | 'high';
+  excludeUserId?: string;
 }
 
 export interface SessionCredentials {

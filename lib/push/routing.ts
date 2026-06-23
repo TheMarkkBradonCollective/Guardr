@@ -188,7 +188,7 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'assignment':
       return ['guard'];
     case 'emergency_alert':
-      return ['guard', 'dispatch', 'admin'];
+      return ['guard', 'client', 'dispatch', 'admin'];
     case 'support_message':
       return ['dispatch', 'admin', 'client', 'guard'];
     case 'job_chat_message':

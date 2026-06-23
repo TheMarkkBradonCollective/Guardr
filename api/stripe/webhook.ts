@@ -87,6 +87,16 @@ async function markJobPaid(
       status: 'paid',
     });
   }
+
+  try {
+    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: 'Client card payment received — job may be ready for guard assignment',
+    });
+  } catch (err) {
+    console.warn('Payment push notification failed:', err);
+  }
 }
 
 import { LEGACY_PLATFORM_FEE_PER_HOUR } from '../../lib/platformFees';
@@ -169,6 +179,18 @@ async function markCashDeposit(
       payment_method: 'stripe',
     });
   }
+
+  if (fullyDeposited) {
+    try {
+      const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+      await notifyPaymentAttention(db, {
+        requestId: jobId,
+        body: `Cash deposit completed for job — $${newDeposited.toFixed(2)} received via Stripe`,
+      });
+    } catch (err) {
+      console.warn('Cash deposit push notification failed:', err);
+    }
+  }
 }
 
 async function markOvertimePaid(
@@ -237,6 +259,16 @@ async function markOvertimePaid(
       payment_method: 'stripe',
     });
   }
+
+  try {
+    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: `Overtime payment received — $${amount.toFixed(2)}`,
+    });
+  } catch (err) {
+    console.warn('Overtime payment push notification failed:', err);
+  }
 }
 
 async function markJobReleased(jobId: string, transferId: string) {
@@ -255,6 +287,16 @@ async function markJobReleased(jobId: string, transferId: string) {
       updated_at: new Date().toISOString(),
     })
     .eq('job_id', jobId);
+
+  try {
+    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: 'Guard payout released via Stripe',
+    });
+  } catch (err) {
+    console.warn('Payout release push notification failed:', err);
+  }
 }
 
 async function processStripeWebhookEvent(event: Stripe.Event) {

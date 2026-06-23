@@ -52,6 +52,8 @@ export interface PushSendPayload {
   requestId?: string;
   ticketId?: string;
   priority?: 'normal' | 'high';
+  /** Skip subscriptions for this user (e.g. message sender). */
+  excludeUserId?: string;
 }
 
 export interface SessionCredentials {
