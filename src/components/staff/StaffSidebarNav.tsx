@@ -11,6 +11,8 @@ export interface StaffNavItem {
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
   settingsOnly?: boolean;
+  /** Visible to Administrator and above (dispute resolution) */
+  disputesOnly?: boolean;
 }
 
 interface StaffSidebarNavProps {
@@ -19,6 +21,7 @@ interface StaffSidebarNavProps {
   onNavigate: (section: StaffSection) => void;
   showFinance: boolean;
   showSettings: boolean;
+  showDisputes: boolean;
 }
 
 const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
@@ -89,10 +92,12 @@ export function StaffSidebarNav({
   onNavigate,
   showFinance,
   showSettings,
+  showDisputes,
 }: StaffSidebarNavProps) {
   const visibleItems = items.filter((item) => {
     if (item.financeOnly) return showFinance;
     if (item.settingsOnly) return showSettings;
+    if (item.disputesOnly) return showDisputes;
     return true;
   });
 

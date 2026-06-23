@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -2766,6 +2766,11 @@ export default function App() {
   const handleUpdateGuardUserStatus = async (guardId: string, status: 'active' | 'suspended' | 'blocked') => {
     const target = guards.find((g) => g.id === guardId);
     if (!target) return;
+    if (!currentUser) return;
+    if (status !== 'active' && !canSuspendUsers(currentUser)) {
+      appToast('You do not have permission to suspend or block accounts.', 'error');
+      return;
+    }
     if (target.isStaff && currentUser) {
       if (guardId === currentUser.id) {
         appToast('You cannot change your own account status.', 'error');
@@ -3061,6 +3066,10 @@ export default function App() {
   };
 
   const handleApproveClient = async (clientId: string) => {
+    if (!currentUser || !canManageClients(currentUser)) {
+      appToast('You do not have permission to approve client accounts.', 'error');
+      return;
+    }
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId ? { ...c, approved: true, accountStatus: 'active' as const } : c
@@ -3072,6 +3081,10 @@ export default function App() {
   };
 
   const handleRejectClient = async (clientId: string) => {
+    if (!currentUser || !canManageClients(currentUser)) {
+      appToast('You do not have permission to reject client accounts.', 'error');
+      return;
+    }
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId ? { ...c, approved: false, accountStatus: 'suspended' as const } : c
@@ -3083,6 +3096,10 @@ export default function App() {
   };
 
   const handleApproveGuardAccount = async (guardId: string) => {
+    if (!currentUser || !canManageGuards(currentUser)) {
+      appToast('You do not have permission to approve guard accounts.', 'error');
+      return;
+    }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountApprovalBlockers(guard);
@@ -3121,6 +3138,10 @@ export default function App() {
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
+    if (!currentUser || !canManageGuards(currentUser)) {
+      appToast('You do not have permission to activate guard accounts.', 'error');
+      return;
+    }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountActivationBlockers(guard);
@@ -3256,6 +3277,10 @@ export default function App() {
   };
 
   const handleApproveGuardIdentityVerification = async (guardId: string) => {
+    if (!currentUser || !canManageGuards(currentUser)) {
+      appToast('You do not have permission to approve guard identity verification.', 'error');
+      return;
+    }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     if (!staffCanApproveIdVerification(guard)) {
@@ -3519,6 +3544,10 @@ export default function App() {
   };
 
   const handleDeleteGuardAccount = async (guardId: string) => {
+    if (!currentUser || !canManageGuards(currentUser)) {
+      appToast('You do not have permission to delete guard accounts.', 'error');
+      return;
+    }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     if (guard.isStaff) throw new Error('Use the Team panel to manage staff accounts.');
@@ -4906,11 +4935,19 @@ export default function App() {
   };
 
   const handleApproveRequest = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to approve job requests.', 'error');
+      return;
+    }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'open' }).eq('id', requestId);
   };
 
   const handleDenyRequest = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to decline job requests.', 'error');
+      return;
+    }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
   };
@@ -5278,8 +5315,8 @@ export default function App() {
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
-    if (!currentUser || !isStaffRole(currentUser.role)) {
-      appToast('Only staff can approve guard applications.', 'error');
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to approve guard applications.', 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
@@ -5295,8 +5332,8 @@ export default function App() {
   };
 
   const handleStaffDenyGuardApplication = async (requestId: string, guardId: string) => {
-    if (!currentUser || !isStaffRole(currentUser.role)) {
-      appToast('Only staff can decline guard applications.', 'error');
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to decline guard applications.', 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
@@ -6445,6 +6482,10 @@ export default function App() {
     action: import('./lib/staffOps').DisputeResolutionAction
   ) => {
     if (!currentUser) return;
+    if (!canHandleDisputes(currentUser)) {
+      appToast('You do not have permission to resolve disputes.', 'error');
+      return;
+    }
     notifyDisputeResolution(currentUser, dispute, action);
     if (!dispute.ticketId) return;
     if (action === 'hold_funds') {

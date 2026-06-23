@@ -1,6 +1,6 @@
 import { PlatformRole } from '../types';
-import { ROLE_LABELS } from './permissions';
-import type { OverviewActionItem, OverviewMetricCell, StaffSection } from './staffOps';
+import { canHandleDisputes, canManageClients, canManageGuards, canReviewCertifications, canReviewJobRequests, ROLE_LABELS } from './permissions';
+import type { OverviewActionItem, OverviewMetricCell, StaffSection, ApprovalQueueId } from './staffOps';
 
 export type StaffOverviewLayout = 'compact' | 'standard' | 'executive';
 
@@ -50,7 +50,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   moderator: {
     roleLabel: ROLE_LABELS.moderator,
     workspaceKicker: 'Moderator workspace',
-    focusLine: 'Approvals, live coverage, and incident follow-up — no financial controls.',
+    focusLine: 'Credential review, live coverage, and incident follow-up — no account or job approvals.',
     layout: 'compact',
     metricLabels: [...MODERATOR_METRICS],
     showPaymentsInQueue: false,
@@ -62,8 +62,8 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showWeeklyInsight: true,
     showActivityFeed: true,
     emptyAttentionCopy:
-      'No approvals, incidents, or support tickets waiting. Open the map to watch live coverage.',
-    quickLinkSections: ['approvals', 'map', 'guards', 'incidents', 'messages'],
+      'No credentials or incidents waiting. Open the map to watch live coverage.',
+    quickLinkSections: ['map', 'guards', 'incidents', 'messages'],
   },
   administrator: {
     roleLabel: ROLE_LABELS.administrator,
@@ -140,6 +140,21 @@ export function filterOverviewMetrics(
 
 const JOB_COORDS_ACTION_IDS = new Set(['jobs-missing-coords']);
 
+function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boolean {
+  if (!queue) return true;
+  switch (queue) {
+    case 'credentials':
+      return canReviewCertifications({ role });
+    case 'job-offers':
+    case 'applications':
+      return canReviewJobRequests({ role });
+    case 'accounts':
+      return canManageGuards({ role }) || canManageClients({ role });
+    default:
+      return false;
+  }
+}
+
 export function filterOverviewActionItems(
   items: OverviewActionItem[],
   role: PlatformRole
@@ -147,6 +162,8 @@ export function filterOverviewActionItems(
   const config = getStaffOverviewConfig(role);
   return items.filter((item) => {
     if (item.section === 'payments' && !config.showPaymentsInQueue) return false;
+    if (item.section === 'disputes' && !canHandleDisputes({ role })) return false;
+    if (item.section === 'approvals' && !canActOnApprovalQueue(role, item.approvalQueue)) return false;
     if (JOB_COORDS_ACTION_IDS.has(item.id) && role === 'moderator') return false;
     return true;
   });
