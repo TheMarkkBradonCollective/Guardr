@@ -1,5 +1,8 @@
 import React from 'react';
+import { useDevice } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
+
+export type ListDetailMobilePresentation = 'inline' | 'page';
 
 export interface ListDetailRenderOptions {
   onBack?: () => void;
@@ -10,15 +13,24 @@ export interface ListDetailLayoutProps<T> {
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
   getItemId: (item: T) => string;
-  renderItem: (item: T, onSelect: () => void) => React.ReactNode;
-  renderDetail: (item: T, options: ListDetailRenderOptions) => React.ReactNode;
+  renderItem: (item: T, isSelected: boolean, onSelect: () => void) => React.ReactNode;
+  renderDetail: (item: T, options?: ListDetailRenderOptions) => React.ReactNode;
+  autoSelectFirst?: boolean;
   emptyDetail?: React.ReactNode;
   listScrollClassName?: string;
+  detailClassName?: string;
+  mobilePresentation?: ListDetailMobilePresentation;
 }
 
-/** True when a list item is selected and the list should be hidden. */
-export function useListDetailState(selectedId: string | null) {
-  return { showDetailOnly: Boolean(selectedId) };
+export function useSplitListDetail(
+  selectedId: string | null,
+  mobilePresentation: ListDetailMobilePresentation = 'inline'
+) {
+  const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+  const showDetailOnly = mobilePresentation === 'page' && Boolean(selectedId && !splitView);
+
+  return { splitView, showDetailOnly };
 }
 
 export function ListDetailLayout<T>({
@@ -28,35 +40,67 @@ export function ListDetailLayout<T>({
   getItemId,
   renderItem,
   renderDetail,
+  autoSelectFirst = true,
   emptyDetail,
-  listScrollClassName,
+  listScrollClassName = 'max-h-[70vh] overflow-y-auto pr-1',
+  detailClassName = 'staff-detail-pane space-y-4',
+  mobilePresentation = 'inline',
 }: ListDetailLayoutProps<T>) {
-  const selected = selectedId ? items.find((item) => getItemId(item) === selectedId) ?? null : null;
+  const { splitView, showDetailOnly } = useSplitListDetail(selectedId, mobilePresentation);
 
-  if (selected) {
+  const resolvedSelectedId =
+    selectedId ??
+    (splitView && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
+
+  const selected = items.find((item) => getItemId(item) === resolvedSelectedId) ?? null;
+
+  const handleSelect = (id: string) => {
+    if (mobilePresentation === 'inline' && !splitView && id === selectedId) {
+      onSelectId(null);
+      return;
+    }
+    onSelectId(id);
+  };
+
+  if (splitView) {
+    return (
+      <div className="tablet-split-panel">
+        <div className={listScrollClassName}>
+          <AppItemCardStack>
+            {items.map((item) => {
+              const id = getItemId(item);
+              const isSelected = resolvedSelectedId === id;
+              return (
+                <React.Fragment key={id}>
+                  {renderItem(item, isSelected, () => handleSelect(id))}
+                </React.Fragment>
+              );
+            })}
+          </AppItemCardStack>
+        </div>
+        <div className="min-h-0">
+          {selected ? renderDetail(selected) : emptyDetail}
+        </div>
+      </div>
+    );
+  }
+
+  if (showDetailOnly && selected) {
     return renderDetail(selected, { onBack: () => onSelectId(null) });
   }
 
-  if (items.length === 0 && emptyDetail) {
-    return emptyDetail;
-  }
-
-  const list = (
+  return (
     <AppItemCardStack>
       {items.map((item) => {
         const id = getItemId(item);
+        const isSelected = selectedId === id;
         return (
-          <React.Fragment key={id}>
-            {renderItem(item, () => onSelectId(id))}
-          </React.Fragment>
+          <div key={id} className={isSelected ? 'space-y-4' : undefined}>
+            {renderItem(item, isSelected, () => handleSelect(id))}
+            {isSelected && <div className={detailClassName}>{renderDetail(item)}</div>}
+          </div>
         );
       })}
     </AppItemCardStack>
   );
-
-  if (listScrollClassName) {
-    return <div className={listScrollClassName}>{list}</div>;
-  }
-
-  return list;
 }

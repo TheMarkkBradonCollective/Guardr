@@ -9,7 +9,7 @@ import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -434,7 +434,7 @@ export function StaffJobsPanel({
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [requests, filter, search]);
 
-  const { showDetailOnly } = useListDetailState(selectedId);
+  const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
   const filters: { id: JobsFilter; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -443,7 +443,7 @@ export function StaffJobsPanel({
     { id: 'complete', label: 'Complete' },
   ];
 
-  function renderJobDetail(req: SecurityRequest, { onBack }: { onBack: () => void }) {
+  function renderJobDetail(req: SecurityRequest, options?: { onBack?: () => void }) {
     return (
       <JobDetailPanel
         req={req}
@@ -460,7 +460,7 @@ export function StaffJobsPanel({
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}
-        onBack={onBack}
+        onBack={options?.onBack}
         staffRole={staffRole}
       />
     );
@@ -506,7 +506,7 @@ export function StaffJobsPanel({
         </>
       )}
 
-      {filtered.length === 0 && !showDetailOnly ? (
+      {filtered.length === 0 ? (
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
       ) : (
         <ListDetailLayout
@@ -514,7 +514,7 @@ export function StaffJobsPanel({
           selectedId={selectedId}
           onSelectId={setSelectedId}
           getItemId={(req) => req.id}
-          renderItem={(req, onSelect) => {
+          renderItem={(req, isActive, onSelect) => {
             const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
             return (
               <JobListCard
@@ -533,11 +533,13 @@ export function StaffJobsPanel({
                   </div>
                 }
                 onClick={onSelect}
+                selected={isActive}
                 showStatus={false}
               />
             );
           }}
           renderDetail={renderJobDetail}
+          mobilePresentation="page"
         />
       )}
     </div>
