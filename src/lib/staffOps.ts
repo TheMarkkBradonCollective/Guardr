@@ -37,7 +37,8 @@ export type StaffSection =
   | 'analytics'
   | 'settings'
   | 'guide'
-  | 'profile';
+  | 'profile'
+  | 'preferences';
 
 const LEGACY_MESSAGE_SECTIONS: StaffSection[] = ['support', 'team-chat', 'job-chats'];
 
@@ -58,7 +59,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   }
   const valid: StaffSection[] = [
     'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'clients',
-    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile',
+    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }

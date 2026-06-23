@@ -34,6 +34,7 @@ export type ClientView =
   | 'requests'
   | 'guards'
   | 'profile'
+  | 'settings'
   | 'support'
   | 'support-compose'
   | 'support-report'
@@ -252,7 +253,7 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'messages' && view !== 'home') {
+  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home') {
     return page(
       'pending',
       <AccountPendingScreen role="client" onOpenProfile={() => navigate('profile')} />

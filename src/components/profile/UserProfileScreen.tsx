@@ -8,11 +8,7 @@ import { ProfileAvatar } from './ProfileAvatar';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
 import { GuardResumeEditor, GuardResumeSavePayload } from './GuardResumeEditor';
 import { Experience, GuardEducation } from '../../types';
-import { PushNotificationsPanel } from './PushNotificationsPanel';
 import { AppFormSection, AppScreen } from '../ui/app/AppPrimitives';
-import { LegalInfoCards } from '../legal/LegalInfoCards';
-import type { LegalPageId } from '../../lib/legalContent';
-import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import {
@@ -53,8 +49,6 @@ interface UserProfileScreenProps {
   onSubmitIdentityVerification?: (
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
-  isDbConnected?: boolean;
-  onOpenLegal?: (page: LegalPageId) => void;
 }
 
 export function UserProfileScreen({
@@ -69,8 +63,6 @@ export function UserProfileScreen({
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
-  isDbConnected = false,
-  onOpenLegal,
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -297,17 +289,6 @@ export function UserProfileScreen({
           onSubmitIdentityVerification={onSubmitIdentityVerification}
         />
         </section>
-      )}
-
-      <section className="border-b border-brand-border">
-        <PushNotificationsPanel currentUser={currentUser} isDbConnected={isDbConnected} />
-      </section>
-
-      {onOpenLegal && (
-        <AppFormSection title="Legal">
-          <p className="text-xs text-brand-text-muted leading-relaxed mb-4 -mt-2">{LEGAL_DISCLAIMER_SHORT}</p>
-          <LegalInfoCards onOpenLegal={onOpenLegal} />
-        </AppFormSection>
       )}
     </AppScreen>
   );

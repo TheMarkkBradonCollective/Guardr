@@ -71,6 +71,7 @@ import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { AppWorkflowPage } from './docs/AppWorkflowPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
+import { UserSettingsScreen } from './profile/UserSettingsScreen';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -669,6 +670,15 @@ export function StaffDashboard({
             currentUser={currentUser}
             guard={guards.find((g) => g.id === currentUser.id) ?? null}
             onSave={(payload) => onUpdateGuardProfile(currentUser.id, payload)}
+          />
+        );
+      case 'preferences':
+        return (
+          <UserSettingsScreen
+            currentUser={currentUser}
+            themeMode={themeMode}
+            onChangeTheme={onChangeTheme}
+            isDbConnected={isDbConnected}
             onOpenLegal={onOpenLegal}
           />
         );
