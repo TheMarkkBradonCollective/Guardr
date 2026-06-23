@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
 import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { MessagesSquare, Home, Map, ClipboardList, Users, Radio, FileText, BookOpen } from 'lucide-react';
+import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -25,15 +25,9 @@ interface ClientAppLayoutProps {
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
+  { id: 'messages', label: 'Messages', icon: MessagesSquare },
   { id: 'guards', label: 'Guards', icon: Users },
   { id: 'requests', label: 'Jobs', icon: ClipboardList },
-];
-
-const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'messages', label: 'Messages', icon: MessagesSquare },
-  { id: 'coverage', label: 'Coverage', icon: Radio },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'guide', label: 'Workflow guide', icon: BookOpen },
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
@@ -76,13 +70,17 @@ export function ClientAppLayout({
       ? 'home'
       : activeView;
 
-  const moreFooter = onOpenLegal ? (
+  const navItems = useMemo(
+    () =>
+      PRIMARY_NAV.map((item) =>
+        item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
+      ),
+    [messagesBadge]
+  );
+
+  const accountFooter = onOpenLegal ? (
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
   ) : undefined;
-
-  const overflowNav = OVERFLOW_NAV.map((item) =>
-    item.id === 'messages' && messagesBadge > 0 ? { ...item, badge: messagesBadge } : item
-  );
 
   return (
     <RoleAppShell
@@ -97,13 +95,19 @@ export function ClientAppLayout({
         onOpenProfile: () => onNavigate?.('profile'),
         onSignOut,
         active: activeView === 'profile',
+        extraLinks: [
+          {
+            label: 'Workflow guide',
+            icon: BookOpen,
+            onClick: () => onNavigate?.('guide'),
+            active: activeView === 'guide',
+          },
+        ],
+        footer: accountFooter,
       }}
-      navItems={PRIMARY_NAV}
-      overflowNavItems={overflowNav}
+      navItems={navItems}
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
-      moreMenuFooter={moreFooter}
-      moreMenuTitle="More"
       fullBleed={fullBleed}
       hideHeader={hideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}

@@ -586,10 +586,6 @@ export function GuardDashboard({
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
   ];
 
-  const OVERFLOW_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'guide', icon: BookOpen, label: 'Workflow guide' },
-  ];
-
   const guardMainPanel = (
     <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {!accountPreActive && activeTab !== 'profile' && (
@@ -902,9 +898,16 @@ export function GuardDashboard({
         onOpenProfile: () => setTab('profile'),
         onSignOut,
         active: activeTab === 'profile',
+        extraLinks: [
+          {
+            label: 'Workflow guide',
+            icon: BookOpen,
+            onClick: () => setTab('guide'),
+            active: tab === 'guide',
+          },
+        ],
       }}
       navItems={NAV_TABS}
-      overflowNavItems={OVERFLOW_NAV}
       activeNavId={tab}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
