@@ -25,12 +25,12 @@ export function StaffPaymentSummary({ summary }: StaffPaymentSummaryProps) {
         accent={summary.awaitingClient.length > 0}
       />
       <StaffSummaryCell
-        label="Guard pay still due"
+        label="Guard pay to release"
         value={`$${summary.guardPayoutDue.toFixed(2)}`}
         sub={
           summary.awaitingGuardPayout.length === 0
-            ? 'No finished jobs waiting on guard payout'
-            : `${summary.awaitingGuardPayout.length} finished job${summary.awaitingGuardPayout.length === 1 ? '' : 's'} — pay via Stripe or cash`
+            ? 'No finished jobs waiting on release'
+            : `${summary.awaitingGuardPayout.length} finished job${summary.awaitingGuardPayout.length === 1 ? '' : 's'} — make funds available for guard collection`
         }
         accent={summary.awaitingGuardPayout.length > 0}
       />

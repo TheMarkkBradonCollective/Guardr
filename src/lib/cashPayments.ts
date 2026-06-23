@@ -103,14 +103,19 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
+  if (!req.guardPayoutAvailable) return false;
 
-  // Client paid cash — hand guard pay on site instead of a Stripe card deposit
-  if (isCashClientPayment(req)) {
-    return ['paid', 'held'].includes(req.paymentStatus);
-  }
-
-  // Card client — guard cash only after the job is complete
+  // Staff records cash only after the guard requested pickup via a payout invoice
   return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
+}
+
+/** Staff releases pay so the guard can choose bank transfer or cash pickup from Pay */
+export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
+  if (!req.assignedGuardId) return false;
+  if (req.guardPayoutAvailable) return false;
+  if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
+  if (isCashGuardPayout(req)) return false;
+  return req.status === 'completed';
 }
 
 /** @deprecated Use canDirectorPayGuardCash */
@@ -143,7 +148,7 @@ export function stripeDepositLabel(req: SecurityRequest): string {
     return `Pay $${remaining} platform fee (card)`;
   }
   if (isPlatformFeeCollected(req)) {
-    return `Pay guard $${remaining} with card`;
+    return `Deposit $${remaining} to Stripe`;
   }
   return `Pay $${remaining} with card`;
 }
@@ -233,13 +238,16 @@ export function platformFundsDisplay(req: SecurityRequest): string {
 }
 
 export function guardPayoutDisplay(req: SecurityRequest): string {
-  if (req.paymentStatus !== 'released') {
-    if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus || '')) {
-      return 'Payout pending';
-    }
-    return '—';
+  if (req.paymentStatus === 'released') {
+    return isCashGuardPayout(req) ? 'Paid cash' : 'Paid via Stripe';
   }
-  return isCashGuardPayout(req) ? 'Paid cash' : 'Paid via Stripe';
+  if (req.guardPayoutAvailable && req.status === 'completed') {
+    return 'Available to collect';
+  }
+  if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus || '')) {
+    return 'Awaiting release';
+  }
+  return '—';
 }
 
 export function guardPayoutAmount(req: SecurityRequest): number {

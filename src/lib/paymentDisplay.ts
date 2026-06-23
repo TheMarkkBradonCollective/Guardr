@@ -41,7 +41,7 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
 
   let guardStatus: PaymentLedgerStatus = 'waiting';
   if (req.paymentStatus === 'released') guardStatus = 'paid';
-  else if (stage === 'awaiting-guard-payout') guardStatus = 'owed';
+  else if (stage === 'awaiting-guard-payout' || stage === 'guard-collection-pending') guardStatus = 'owed';
   else if (clientUnpaid || stage === 'awaiting-client') guardStatus = 'na';
 
   let platformStatus: PaymentLedgerStatus = 'na';
@@ -186,8 +186,8 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
       }
       if (isPlatformFeeCollected(req)) {
         return {
-          headline: 'Client paid cash · guard pay due',
-          detail: `Platform fee deposited — pay guard $${due.toFixed(2)} with card or hand cash on site.`,
+          headline: 'Client paid cash · guard pay ready to release',
+          detail: `Platform fee deposited — make $${guardPay.toFixed(2)} available for the guard to collect.`,
         };
       }
       return {
@@ -201,15 +201,14 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
         detail: `Guard earns $${guardPay.toFixed(2)} after the job is marked complete.`,
       };
     case 'awaiting-guard-payout':
-      if (isCashGuardPayout(req)) {
-        return {
-          headline: 'Job done · pay guard in cash',
-          detail: `Hand $${guardPay.toFixed(2)} to the guard and mark paid.`,
-        };
-      }
       return {
-        headline: 'Job done · send guard pay via Stripe',
-        detail: `$${guardPay.toFixed(2)} ready to transfer to the guard's connected account.`,
+        headline: 'Job done · release guard pay',
+        detail: `Make $${guardPay.toFixed(2)} available so the guard can collect from Pay.`,
+      };
+    case 'guard-collection-pending':
+      return {
+        headline: 'Funds available · waiting on guard',
+        detail: `$${guardPay.toFixed(2)} is ready for the guard to request bank transfer or cash pickup.`,
       };
     case 'settled':
       return {
@@ -224,7 +223,7 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 export const PIPELINE_FLOW_STEPS = [
   { step: 1, label: 'Client pays', description: 'Card checkout, cash request, or staff records cash on site' },
   { step: 2, label: 'Job in progress', description: 'Funds stay secured until the job is complete' },
-  { step: 3, label: 'Guard gets paid', description: 'Stripe transfer or staff hands cash to the guard' },
+  { step: 3, label: 'Guard collects pay', description: 'Staff releases funds; the guard chooses bank transfer or cash pickup' },
 ] as const;
 
 export function pipelineStageUrgency(stage: PaymentPipelineStage): number {
@@ -233,8 +232,10 @@ export function pipelineStageUrgency(stage: PaymentPipelineStage): number {
       return 0;
     case 'cash-deposit-pending':
       return 1;
-    case 'awaiting-client':
+    case 'guard-collection-pending':
       return 2;
+    case 'awaiting-client':
+      return 3;
     case 'client-paid-active':
       return 3;
     case 'settled':
