@@ -32,6 +32,11 @@ import {
   selfAuditPhotosComplete,
 } from './lib/selfAuditPhotos';
 import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from './lib/spotChecks';
+import {
+  createIncidentReportDetail,
+  incidentChatSummary,
+  IncidentReportFormInput,
+} from './lib/incidentReports';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorMarkClientPaidCash,
@@ -250,7 +255,13 @@ import {
   guardClockOutBlockedMessage,
 } from './lib/shiftWindow';
 import { activeShiftBreak } from './lib/shiftBreaks';
-import { detectLateClockOutOvertime, applyOvertimePaidBilling } from './lib/shiftBilling';
+import {
+  detectLateClockOutOvertime,
+  applyOvertimePaidBilling,
+  computeOvertimeAmount,
+  validateDisputeClaimedClockOut,
+  type OvertimeDisputeInput,
+} from './lib/shiftBilling';
 
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
@@ -1371,6 +1382,13 @@ export default function App() {
         overtimeStatus: r.overtime_status ?? undefined,
         overtimeGuardApprovedAt: r.overtime_guard_approved_at || undefined,
         overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
+        overtimeDisputeReason: r.overtime_dispute_reason || undefined,
+        overtimeDisputedAt: r.overtime_disputed_at || undefined,
+        overtimeDisputeClaimedClockOutAt: r.overtime_dispute_claimed_clock_out_at || undefined,
+        overtimeDisputeResolvedAt: r.overtime_dispute_resolved_at || undefined,
+        overtimeDisputeResolution: r.overtime_dispute_resolution || undefined,
+        overtimeOriginalHours: r.overtime_original_hours != null ? Number(r.overtime_original_hours) : undefined,
+        overtimeOriginalAmount: r.overtime_original_amount != null ? Number(r.overtime_original_amount) : undefined,
         overtimePaymentStatus: r.overtime_payment_status ?? undefined,
         overtimeClientPaymentMethod: parsePaymentMethod(r.overtime_client_payment_method),
         overtimeClientCashPaymentRequested: !!r.overtime_client_cash_payment_requested,
@@ -4255,6 +4273,154 @@ export default function App() {
     appToast('Overtime approved. Pay the difference to settle the bill.', 'success');
   };
 
+  const handleClientDisputeOvertime = async (requestId: string, input: OvertimeDisputeInput) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const trimmed = input.reason.trim();
+    if (!trimmed) {
+      appToast('Please explain why you are disputing this charge.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
+      appToast('This overtime charge cannot be disputed right now.', 'error');
+      return;
+    }
+    const clockOutError = validateDisputeClaimedClockOut(input.claimedClockOutAt, req);
+    if (clockOutError) {
+      appToast(clockOutError, 'error');
+      return;
+    }
+    const disputedAt = new Date().toISOString();
+    const originalHours = req.overtimeHours ?? 0;
+    const originalAmount = req.overtimeAmount ?? 0;
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              overtimeStatus: 'disputed' as const,
+              overtimeDisputeReason: trimmed,
+              overtimeDisputedAt: disputedAt,
+              overtimeDisputeClaimedClockOutAt: input.claimedClockOutAt,
+              overtimeOriginalHours: originalHours,
+              overtimeOriginalAmount: originalAmount,
+            }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          overtime_status: 'disputed',
+          overtime_dispute_reason: trimmed,
+          overtime_disputed_at: disputedAt,
+          overtime_dispute_claimed_clock_out_at: input.claimedClockOutAt,
+          overtime_original_hours: originalHours,
+          overtime_original_amount: originalAmount,
+        })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: req.location,
+        body: `Client disputed $${originalAmount.toFixed(2)} late clock-out charge on "${req.title}".`,
+      });
+    }
+    appToast('Dispute submitted. Staff will review the evidence and update the charge.', 'success');
+  };
+
+  const handleStaffResolveOvertimeDispute = async (
+    requestId: string,
+    action: 'waive' | 'uphold' | 'adjust',
+    options?: { adjustedHours?: number; resolutionNote?: string }
+  ) => {
+    if (!currentUser || !isStaffRole(currentUser.role)) {
+      appToast('You do not have permission to resolve disputes.', 'error');
+      return;
+    }
+    const req = requests.find((r) => r.id === requestId);
+    if (!req || req.overtimeStatus !== 'disputed') {
+      appToast('This overtime dispute cannot be resolved right now.', 'error');
+      return;
+    }
+
+    const resolvedAt = new Date().toISOString();
+    const resolutionNote =
+      options?.resolutionNote?.trim() ||
+      (action === 'waive' ? 'Charge waived' : action === 'uphold' ? 'Original charge upheld' : 'Charge adjusted');
+
+    let patch: Partial<SecurityRequest>;
+    const dbUpdate: Record<string, unknown> = {
+      overtime_dispute_resolved_at: resolvedAt,
+      overtime_dispute_resolution: resolutionNote,
+    };
+
+    if (action === 'waive') {
+      patch = {
+        overtimeStatus: 'waived',
+        overtimeHours: 0,
+        overtimeAmount: 0,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'waived',
+        overtime_hours: 0,
+        overtime_amount: 0,
+      });
+    } else if (action === 'uphold') {
+      const hours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
+      const amount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
+      patch = {
+        overtimeStatus: 'awaiting_payment',
+        overtimeHours: hours,
+        overtimeAmount: amount,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'awaiting_payment',
+        overtime_hours: hours,
+        overtime_amount: amount,
+      });
+    } else {
+      const hours = options?.adjustedHours;
+      if (!hours || hours <= 0) {
+        appToast('Enter valid adjusted overtime hours.', 'error');
+        return;
+      }
+      const amount = computeOvertimeAmount(hours, req.hourlyRate, req.guardsNeeded ?? 1);
+      patch = {
+        overtimeStatus: 'awaiting_payment',
+        overtimeHours: hours,
+        overtimeAmount: amount,
+        overtimeDisputeResolvedAt: resolvedAt,
+        overtimeDisputeResolution: resolutionNote,
+      };
+      Object.assign(dbUpdate, {
+        overtime_status: 'awaiting_payment',
+        overtime_hours: hours,
+        overtime_amount: amount,
+      });
+    }
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, ...patch } : r)));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update(dbUpdate).eq('id', requestId);
+    }
+
+    const toastMessage =
+      action === 'waive'
+        ? 'Overtime charge waived.'
+        : action === 'uphold'
+          ? 'Original overtime charge upheld — client can pay.'
+          : `Overtime adjusted to ${patch.overtimeHours}h ($${(patch.overtimeAmount ?? 0).toFixed(2)}).`;
+    appToast(toastMessage, 'success');
+  };
+
   const handleClientRequestOvertimeCash = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     if (!platformAllowsCash(platformSettings)) {
@@ -5319,17 +5485,23 @@ export default function App() {
       }
     }
 
-    if (payload.checkOutAudit?.incidentReport?.hasIncident && currentUser) {
-      const req = requests.find((r) => r.id === requestId);
-      const guard = guards.find((g) => g.id === req?.assignedGuardId);
-      void reportPushEvent(currentUser, {
-        type: 'emergency_alert',
-        requestId,
-        guardId: guard?.id,
-        guardName: guard?.name,
-        location: req?.location,
-        body: req?.checkOutAudit?.incidentReport?.description ?? 'Incident reported on active shift',
-      });
+    if (currentUser && payload.checkOutAudit?.incidentReports) {
+      const prevCount =
+        req?.checkOutAudit?.incidentReports?.length ??
+        (req?.checkOutAudit?.incidentReport?.hasIncident ? 1 : 0);
+      const newCount = payload.checkOutAudit.incidentReports.length;
+      if (newCount > prevCount) {
+        const latest = payload.checkOutAudit.incidentReports[newCount - 1];
+        const guard = guards.find((g) => g.id === req?.assignedGuardId);
+        void reportPushEvent(currentUser, {
+          type: 'emergency_alert',
+          requestId,
+          guardId: guard?.id,
+          guardName: guard?.name,
+          location: req?.location,
+          body: latest?.description ?? 'Incident reported on active shift',
+        });
+      }
     }
 
     if (detectedOvertime && detectedOvertime.overtimeAmount > 0 && currentUser) {
@@ -6082,22 +6254,62 @@ export default function App() {
     }
   };
 
-  const handleReportIncident = async (requestId: string) => {
+  const handleSubmitIncidentReport = async (requestId: string, input: IncidentReportFormInput) => {
     if (!currentUser) return;
     const req = requests.find((r) => r.id === requestId);
-    const guard = guards.find((g) => g.id === req?.assignedGuardId);
-    await handleSendJobChatMessage(
-      requestId,
-      'Incident reported — requesting immediate staff attention.'
-    );
-    void reportPushEvent(currentUser, {
-      type: 'emergency_alert',
-      requestId,
-      guardId: guard?.id,
-      guardName: guard?.name ?? currentUser.name,
-      location: req?.location,
-      body: `Incident reported by ${guard?.name ?? currentUser.name} at ${req?.location ?? 'active job'}`,
+    if (!req) return;
+    const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
+    if (!guard) return;
+
+    const detail = createIncidentReportDetail(input, { id: guard.id, name: guard.name });
+    const stamp = new Date().toISOString();
+    const existing = req.checkOutAudit;
+    const priorReports = existing?.incidentReports ?? [];
+    const incidentReports = [...priorReports, detail];
+
+    const incidentReport = {
+      hasIncident: true,
+      incidentType: detail.incidentType,
+      priority: detail.priority,
+      occurredAt: detail.occurredAt,
+      locationOnSite: detail.locationOnSite,
+      description: detail.description,
+      partiesInvolved: detail.partiesInvolved,
+      witnesses: detail.witnesses,
+      causeOrTrigger: detail.causeOrTrigger,
+      actionsTaken: detail.actionsTaken,
+      authoritiesNotified: detail.authoritiesNotified,
+      authorityDetails: detail.authorityDetails,
+      injuryInvolved: detail.injuryInvolved,
+      propertyDamageInvolved: detail.propertyDamageInvolved,
+      injuryDetails: detail.injuryDetails,
+      propertyDamageDetails: detail.propertyDamageDetails,
+      followUpRequired: detail.followUpRequired,
+      followUpNotes: detail.followUpNotes,
+      evidenceNotes: detail.evidenceNotes,
+      submittedAt: detail.submittedAt,
+      submittedByGuardId: detail.submittedByGuardId,
+      submittedByGuardName: detail.submittedByGuardName,
+    };
+
+    await handleUpdateJobAudit(requestId, {
+      checkOutAudit: {
+        checkedAt: existing?.checkedAt ?? stamp,
+        completed: existing?.completed ?? false,
+        noViolations: existing?.noViolations ?? true,
+        noEquipmentIssues: existing?.noEquipmentIssues ?? true,
+        dailyActivityReport: existing?.dailyActivityReport ?? '',
+        incidentReport,
+        incidentReports,
+        clientNotes: existing?.clientNotes ?? '',
+        endSelfie: existing?.endSelfie,
+        attachments: existing?.attachments,
+        leftEarlier: existing?.leftEarlier,
+      },
     });
+
+    const chatBody = incidentChatSummary(detail, guard.name, req.location);
+    await handleSendJobChatMessage(requestId, chatBody);
   };
 
   const persistSupportTicketToDb = async (ticket: SupportTicket) => {
@@ -6337,7 +6549,7 @@ export default function App() {
           onOpenSupportCompose={openGuardSupportCompose}
           onOpenSupportReport={openGuardSupportReport}
           onCloseSupportForm={closeGuardSupportForm}
-          onReportIncident={handleReportIncident}
+          onSubmitIncidentReport={handleSubmitIncidentReport}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
@@ -6443,6 +6655,7 @@ export default function App() {
               onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}
+              onDisputeOvertime={handleClientDisputeOvertime}
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
@@ -6534,6 +6747,7 @@ export default function App() {
           onRefundPayment={handleRefundPayment}
           onMarkClientPaidCash={handleMarkClientPaidCash}
           onMarkOvertimePaidCash={handleMarkOvertimePaidCash}
+          onResolveOvertimeDispute={handleStaffResolveOvertimeDispute}
           onApproveOvertimeCashPayment={handleApproveOvertimeCashPayment}
           onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
           onMarkOvertimeGuardPaidCash={handleMarkOvertimeGuardPaidCash}

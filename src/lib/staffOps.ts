@@ -1,4 +1,11 @@
 import { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../types';
+import { computeLateClockOutHours, computeOvertimeAmount } from './shiftBilling';
+import {
+  buildIncidentReportViews,
+  incidentCategoryLabel,
+  listIncidentReportsForRequest,
+  requestHasOpenIncident,
+} from './incidentReports';
 import {
   isSelfSubmittedClientAccount,
   isUserSubmittedPendingCert,
@@ -140,10 +147,21 @@ export interface OpsIncident {
   id: string;
   requestId: string;
   severity: IncidentSeverity;
+  incidentType?: string;
   location: string;
+  locationOnSite?: string;
   guardName: string;
   clientName: string;
   description: string;
+  partiesInvolved?: string;
+  witnesses?: string;
+  causeOrTrigger?: string;
+  actionsTaken?: string;
+  authoritiesNotified?: boolean;
+  authorityDetails?: string;
+  injuryInvolved?: boolean;
+  propertyDamageInvolved?: boolean;
+  occurredAt?: string;
   timestamp: string;
   status: 'open' | 'reviewing' | 'resolved';
 }
@@ -160,7 +178,7 @@ export interface OpsDispute {
   requestId?: string;
   guardId?: string;
   clientId?: string;
-  type: 'payment' | 'no-show' | 'safety' | 'service';
+  type: 'payment' | 'no-show' | 'safety' | 'service' | 'overtime';
   jobTitle: string;
   guardName: string;
   clientName: string;
@@ -168,10 +186,19 @@ export interface OpsDispute {
   clientStatement: string;
   status: 'open' | 'held' | 'resolved';
   openedAt: string;
+  scheduledEnd?: string;
+  clockOutAt?: string;
+  clientClaimedClockOutAt?: string;
+  clientClaimedHours?: number;
+  clientClaimedAmount?: number;
+  claimedHours?: number;
+  claimedAmount?: number;
+  hourlyRate?: number;
+  guardsNeeded?: number;
 }
 
 export function getLiveJobStatus(req: SecurityRequest): LiveJobStatus {
-  if (req.checkOutAudit?.incidentReport?.hasIncident && req.status === 'in-progress') {
+  if (requestHasOpenIncident(req) && req.status === 'in-progress') {
     return 'incident-flagged';
   }
   if (req.status === 'completed' || req.status === 'closed') return 'completed';
@@ -618,12 +645,12 @@ export function buildPlatformActivityFeed(
         }
       }
     }
-    if (req.checkOutAudit?.incidentReport?.hasIncident) {
+    for (const incident of listIncidentReportsForRequest(req)) {
       items.push({
-        id: `${req.id}-incident`,
-        timestamp: req.checkOutAudit.checkedAt,
+        id: `${req.id}-incident-${incident.id}`,
+        timestamp: incident.submittedAt,
         message: `Client incident report filed — ${site}`,
-        sortKey: new Date(req.checkOutAudit.checkedAt).getTime(),
+        sortKey: new Date(incident.submittedAt).getTime(),
       });
     }
     if (req.checkOutAudit?.dailyActivityReport) {
@@ -651,25 +678,38 @@ export function buildIncidents(
   requests: SecurityRequest[],
   guards: SecurityGuard[]
 ): OpsIncident[] {
-  const incidents: OpsIncident[] = [];
+  return buildIncidentReportViews(requests, guards).map((view) => ({
+    id: view.id,
+    requestId: view.requestId,
+    severity: (view.detail.priority as IncidentSeverity) ?? 'medium',
+    incidentType: incidentCategoryLabel(view.detail.incidentType),
+    location: view.jobLocation,
+    locationOnSite: view.detail.locationOnSite,
+    guardName: view.guardName,
+    clientName: view.clientName,
+    description: view.detail.description ?? 'Incident reported during job.',
+    partiesInvolved: view.detail.partiesInvolved,
+    witnesses: view.detail.witnesses,
+    causeOrTrigger: view.detail.causeOrTrigger,
+    actionsTaken: view.detail.actionsTaken,
+    authoritiesNotified: view.detail.authoritiesNotified,
+    authorityDetails: view.detail.authorityDetails,
+    injuryInvolved: view.detail.injuryInvolved,
+    propertyDamageInvolved: view.detail.propertyDamageInvolved,
+    occurredAt: view.detail.occurredAt,
+    timestamp: view.detail.submittedAt,
+    status:
+      requests.find((r) => r.id === view.requestId)?.status === 'completed' ? 'resolved' : 'open',
+  }));
+}
 
-  for (const req of requests) {
-    const ir = req.checkOutAudit?.incidentReport;
-    if (!ir?.hasIncident) continue;
-    incidents.push({
-      id: `inc-${req.id}`,
-      requestId: req.id,
-      severity: (ir.priority as IncidentSeverity) ?? 'medium',
-      location: req.location,
-      guardName: guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown',
-      clientName: req.clientName,
-      description: ir.description ?? 'Incident reported during job.',
-      timestamp: req.checkOutAudit?.checkedAt ?? req.endDate,
-      status: req.status === 'completed' ? 'resolved' : 'open',
-    });
-  }
-
-  return incidents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+function formatDisputeWhen(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function buildDisputes(
@@ -678,6 +718,49 @@ export function buildDisputes(
   tickets: SupportTicket[] = []
 ): OpsDispute[] {
   const disputes: OpsDispute[] = [];
+
+  for (const req of requests) {
+    if (req.overtimeStatus !== 'disputed') continue;
+
+    const guardName = guards.find((g) => g.id === req.assignedGuardId)?.name ?? 'Unknown guard';
+    const claimedHours = req.overtimeOriginalHours ?? req.overtimeHours ?? 0;
+    const claimedAmount = req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0;
+    const clockOutAt = req.checkOutAudit?.checkedAt;
+    const clientClaimedClockOutAt = req.overtimeDisputeClaimedClockOutAt;
+    const clientClaimedHours =
+      clientClaimedClockOutAt != null
+        ? computeLateClockOutHours(clientClaimedClockOutAt, req.endDate)
+        : undefined;
+    const clientClaimedAmount =
+      clientClaimedHours != null
+        ? computeOvertimeAmount(clientClaimedHours, req.hourlyRate, req.guardsNeeded ?? 1)
+        : undefined;
+    const guardApprovedAt = req.overtimeGuardApprovedAt;
+
+    disputes.push({
+      id: `ot-dispute-${req.id}`,
+      type: 'overtime',
+      requestId: req.id,
+      jobTitle: req.title,
+      guardName,
+      clientName: req.clientName,
+      guardStatement: guardApprovedAt
+        ? `Confirmed ${claimedHours}h late clock-out on ${formatDisputeWhen(guardApprovedAt)}.`
+        : `Confirmed ${claimedHours}h late clock-out.`,
+      clientStatement: req.overtimeDisputeReason?.trim() || 'No reason provided.',
+      status: 'open',
+      openedAt: req.overtimeDisputedAt ?? req.endDate,
+      scheduledEnd: req.endDate,
+      clockOutAt,
+      clientClaimedClockOutAt,
+      clientClaimedHours,
+      clientClaimedAmount,
+      claimedHours,
+      claimedAmount,
+      hourlyRate: req.hourlyRate,
+      guardsNeeded: req.guardsNeeded ?? 1,
+    });
+  }
 
   for (const ticket of tickets) {
     if (ticket.status === 'resolved' || ticket.kind !== 'report') continue;
@@ -756,7 +839,7 @@ export function computeAnalytics(
   const incidentRate =
     completed.length > 0
       ? Math.round(
-          (completed.filter((r) => r.checkOutAudit?.incidentReport?.hasIncident).length / completed.length) * 100
+          (completed.filter((r) => requestHasOpenIncident(r)).length / completed.length) * 100
         )
       : 0;
   const avgGuardEarnings =

@@ -22,6 +22,7 @@ import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
+import { GuardIncidentReportModal } from './guard/GuardIncidentReportModal';
 import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
@@ -70,6 +71,7 @@ import {
   canGuardStartBreak,
   guardBreakBlockedMessage,
 } from '../lib/shiftBreaks';
+import type { IncidentReportFormInput } from '../lib/incidentReports';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
@@ -105,7 +107,7 @@ interface GuardDashboardProps {
   guardMessages?: GuardMessage[];
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
-  onReportIncident?: (requestId: string) => void | Promise<void>;
+  onSubmitIncidentReport?: (requestId: string, input: IncidentReportFormInput) => void | Promise<void>;
   onRequestCashPayout?: () => Promise<void>;
   onRequestStripePayout?: () => Promise<void>;
   jobChatRequestId?: string | null;
@@ -175,7 +177,7 @@ export function GuardDashboard({
   guardMessages = [],
   onSendGuardMessage,
   onRefreshGuardMessages,
-  onReportIncident,
+  onSubmitIncidentReport,
   onRequestCashPayout,
   onRequestStripePayout,
   jobChatRequestId = null,
@@ -224,6 +226,7 @@ export function GuardDashboard({
   const [pendingClockOutAt, setPendingClockOutAt] = useState<string | null>(null);
   const [pendingLeftEarlier, setPendingLeftEarlier] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
+  const [showIncidentReport, setShowIncidentReport] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
   const [cashRequestPending, setCashRequestPending] = useState(false);
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
@@ -539,6 +542,8 @@ export function GuardDashboard({
       return;
     }
     const checkedAt = pendingClockOutAt ?? new Date().toISOString();
+    const existing = activeShiftJob.checkOutAudit;
+    const hasIncidents = (existing?.incidentReports?.length ?? 0) > 0 || existing?.incidentReport?.hasIncident;
     onUpdateJobAudit(activeShiftJob.id, {
       status: 'completed',
       checkOutAudit: {
@@ -546,9 +551,12 @@ export function GuardDashboard({
         completed: true,
         noViolations: true,
         noEquipmentIssues: true,
-        dailyActivityReport: 'Job completed. No incidents to report.',
-        incidentReport: { hasIncident: false },
-        clientNotes: '',
+        dailyActivityReport:
+          existing?.dailyActivityReport ||
+          (hasIncidents ? 'Shift completed with incident report(s) on file.' : 'Job completed. No incidents to report.'),
+        incidentReport: existing?.incidentReport ?? { hasIncident: false },
+        incidentReports: existing?.incidentReports,
+        clientNotes: existing?.clientNotes ?? '',
         leftEarlier: pendingLeftEarlier || undefined,
       },
     });
@@ -672,13 +680,7 @@ export function GuardDashboard({
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}
-          onIncidentReport={() => {
-            void onReportIncident?.(activeShiftJob.id);
-            showAppToast('Incident reported', {
-              body: 'Client and staff have been notified.',
-              tone: 'info',
-            });
-          }}
+          onIncidentReport={() => setShowIncidentReport(true)}
           onActivityReport={() => setShowActivityLog(true)}
           onEndShift={handleEndShift}
           onStartBreak={handleStartBreak}
@@ -891,12 +893,28 @@ export function GuardDashboard({
               noEquipmentIssues: existing?.noEquipmentIssues ?? true,
               dailyActivityReport: existing?.dailyActivityReport ?? 'Job completed.',
               incidentReport: existing?.incidentReport ?? { hasIncident: false },
+              incidentReports: existing?.incidentReports,
               clientNotes: `Guard rated client ${rating}/5: ${note}`,
             },
           });
           setRatingJob(null);
         }}
       />
+
+      {activeShiftJob && (
+        <GuardIncidentReportModal
+          open={showIncidentReport}
+          onClose={() => setShowIncidentReport(false)}
+          siteName={activeShiftJob.siteName || activeShiftJob.location}
+          onSubmit={(input) => {
+            void onSubmitIncidentReport?.(activeShiftJob.id, input);
+            showAppToast('Incident report filed', {
+              body: 'Full details shared with the client and staff.',
+              tone: 'success',
+            });
+          }}
+        />
+      )}
 
       {activeShiftJob && (
         <GuardActivityLogModal
@@ -914,6 +932,7 @@ export function GuardDashboard({
                 noEquipmentIssues: activeShiftJob.checkOutAudit?.noEquipmentIssues ?? true,
                 dailyActivityReport: prior ? `${prior}\n${entry}` : entry,
                 incidentReport: activeShiftJob.checkOutAudit?.incidentReport ?? { hasIncident: false },
+                incidentReports: activeShiftJob.checkOutAudit?.incidentReports,
                 clientNotes: activeShiftJob.checkOutAudit?.clientNotes ?? '',
               },
             });

@@ -5,12 +5,19 @@ import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession, createOvertimeCheckoutSession } from '../../lib/stripeApi';
 import {
   canClientApproveOvertime,
+  canClientDisputeOvertime,
   canClientPayOvertimeStripe,
   canClientRequestOvertimeCash,
+  computeLateClockOutHours,
+  computeOvertimeAmount,
   hasOvertime,
   hasUnpaidOvertime,
   isOvertimeCashPaymentPendingApproval,
+  isOvertimeDisputed,
+  isOvertimeWaived,
+  type OvertimeDisputeInput,
 } from '../../lib/shiftBilling';
+import { toDatetimeLocal } from '../../lib/dates';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -63,6 +70,7 @@ interface ClientRequestsListProps {
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
+  onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
@@ -112,6 +120,7 @@ export function ClientRequestsList({
   onConfirmSpotCheck,
   onRequestCashPayment,
   onApproveOvertime,
+  onDisputeOvertime,
   onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
@@ -129,6 +138,10 @@ export function ClientRequestsList({
   const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
   const [overtimeCashRequestJobId, setOvertimeCashRequestJobId] = useState<string | null>(null);
   const [overtimeApproveJobId, setOvertimeApproveJobId] = useState<string | null>(null);
+  const [overtimeDisputeJobId, setOvertimeDisputeJobId] = useState<string | null>(null);
+  const [overtimeDisputeReason, setOvertimeDisputeReason] = useState('');
+  const [overtimeDisputeClockOutLocal, setOvertimeDisputeClockOutLocal] = useState('');
+  const [overtimeDisputingJobId, setOvertimeDisputingJobId] = useState<string | null>(null);
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -136,6 +149,23 @@ export function ClientRequestsList({
 
   const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
   const reviewingRequest = reviewingId ? requests.find((r) => r.id === reviewingId) ?? null : null;
+  const disputeRequest = overtimeDisputeJobId
+    ? requests.find((r) => r.id === overtimeDisputeJobId) ?? null
+    : null;
+  const disputeClockOutIso = overtimeDisputeClockOutLocal
+    ? new Date(overtimeDisputeClockOutLocal).toISOString()
+    : null;
+  const disputeClaimedHours =
+    disputeRequest && disputeClockOutIso
+      ? computeLateClockOutHours(disputeClockOutIso, disputeRequest.endDate)
+      : 0;
+  const disputeClaimedAmount = disputeRequest
+    ? computeOvertimeAmount(
+        disputeClaimedHours,
+        disputeRequest.hourlyRate,
+        disputeRequest.guardsNeeded ?? 1
+      )
+    : 0;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -510,31 +540,65 @@ export function ClientRequestsList({
                         Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end.
                         {req.overtimeStatus === 'pending_guard' && ' Waiting for the guard to confirm overtime.'}
                         {req.overtimeStatus === 'pending_client' && ` Additional charge: $${(req.overtimeAmount ?? 0).toFixed(2)} — approve to proceed.`}
+                        {isOvertimeDisputed(req) && (
+                          <>
+                            {' Staff is reviewing your dispute.'}
+                            {req.overtimeDisputeClaimedClockOutAt && (
+                              <>
+                                {' You claimed the guard left at '}
+                                {new Date(req.overtimeDisputeClaimedClockOutAt).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                                .
+                              </>
+                            )}
+                          </>
+                        )}
+                        {isOvertimeWaived(req) && ' Overtime charge was waived after your dispute.'}
                         {req.overtimeStatus === 'awaiting_payment' && ` Approved charge: $${(req.overtimeAmount ?? 0).toFixed(2)}.`}
                         {req.overtimeStatus === 'paid' && ` Overtime of $${(req.overtimeAmount ?? 0).toFixed(2)} has been paid.`}
                       </p>
                     </div>
 
                     {canClientApproveOvertime(req) && onApproveOvertime && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setOvertimeApproveJobId(req.id);
-                          try {
-                            await onApproveOvertime(req.id);
-                          } finally {
-                            setOvertimeApproveJobId(null);
-                          }
-                        }}
-                        disabled={overtimeApproveJobId === req.id}
-                        className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
-                      >
-                        {overtimeApproveJobId === req.id ? (
-                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                        ) : (
-                          <><CheckCircle2 className="w-3.5 h-3.5" /> Approve overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setOvertimeApproveJobId(req.id);
+                            try {
+                              await onApproveOvertime(req.id);
+                            } finally {
+                              setOvertimeApproveJobId(null);
+                            }
+                          }}
+                          disabled={overtimeApproveJobId === req.id || overtimeDisputingJobId === req.id}
+                          className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                        >
+                          {overtimeApproveJobId === req.id ? (
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                          ) : (
+                            <><CheckCircle2 className="w-3.5 h-3.5" /> Approve overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
+                          )}
+                        </button>
+                        {onDisputeOvertime && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOvertimeDisputeJobId(req.id);
+                              setOvertimeDisputeReason('');
+                              setOvertimeDisputeClockOutLocal(toDatetimeLocal(req.endDate));
+                            }}
+                            disabled={overtimeApproveJobId === req.id || overtimeDisputingJobId === req.id}
+                            className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                          >
+                            Dispute charge
+                          </button>
                         )}
-                      </button>
+                      </div>
                     )}
 
                     {isOvertimeCashPaymentPendingApproval(req) && (
@@ -625,6 +689,103 @@ export function ClientRequestsList({
         onSave={onEditRequest}
         onClose={() => setEditingId(null)}
       />
+
+      <AppFormSheet
+        open={!!overtimeDisputeJobId}
+        onClose={() => {
+          if (overtimeDisputingJobId) return;
+          setOvertimeDisputeJobId(null);
+          setOvertimeDisputeReason('');
+          setOvertimeDisputeClockOutLocal('');
+        }}
+        title="Dispute late clock-out charge"
+        subtitle="Set when the guard actually left and explain why the billed overtime is wrong. Staff will review both times before adjusting the bill."
+      >
+        <div className="space-y-4">
+          {disputeRequest && (
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-brand-text-muted">
+                Guard&apos;s actual clock-out time
+              </span>
+              <input
+                type="datetime-local"
+                value={overtimeDisputeClockOutLocal}
+                min={toDatetimeLocal(disputeRequest.checkInAudit?.checkedAt ?? disputeRequest.startDate)}
+                max={toDatetimeLocal(
+                  disputeRequest.checkOutAudit?.checkedAt ?? new Date().toISOString()
+                )}
+                onChange={(e) => setOvertimeDisputeClockOutLocal(e.target.value)}
+                className="uber-input w-full"
+              />
+              <p className="text-xs text-brand-text-muted leading-relaxed">
+                Recorded clock-out:{' '}
+                {disputeRequest.checkOutAudit?.checkedAt
+                  ? new Date(disputeRequest.checkOutAudit.checkedAt).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })
+                  : '—'}
+                . Your claim implies {disputeClaimedHours}h overtime (${disputeClaimedAmount.toFixed(2)}).
+              </p>
+            </label>
+          )}
+          <textarea
+            placeholder="e.g. The guard left at the scheduled end time, or the billed hours are incorrect..."
+            value={overtimeDisputeReason}
+            onChange={(e) => setOvertimeDisputeReason(e.target.value)}
+            className="uber-input w-full min-h-[120px] resize-y"
+            rows={4}
+          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              disabled={!!overtimeDisputingJobId}
+              onClick={() => {
+                setOvertimeDisputeJobId(null);
+                setOvertimeDisputeReason('');
+                setOvertimeDisputeClockOutLocal('');
+              }}
+              className="app-button-outline flex-1 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={
+                !overtimeDisputeReason.trim() ||
+                !overtimeDisputeClockOutLocal ||
+                !overtimeDisputeJobId ||
+                !onDisputeOvertime ||
+                !!overtimeDisputingJobId
+              }
+              onClick={async () => {
+                if (!overtimeDisputeJobId || !onDisputeOvertime || !disputeClockOutIso) return;
+                setOvertimeDisputingJobId(overtimeDisputeJobId);
+                try {
+                  await onDisputeOvertime(overtimeDisputeJobId, {
+                    reason: overtimeDisputeReason,
+                    claimedClockOutAt: disputeClockOutIso,
+                  });
+                  setOvertimeDisputeJobId(null);
+                  setOvertimeDisputeReason('');
+                  setOvertimeDisputeClockOutLocal('');
+                } finally {
+                  setOvertimeDisputingJobId(null);
+                }
+              }}
+              className="app-button-primary flex-1 disabled:opacity-50 gap-1.5"
+            >
+              {overtimeDisputingJobId ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting...</>
+              ) : (
+                'Submit dispute'
+              )}
+            </button>
+          </div>
+        </div>
+      </AppFormSheet>
 
       <AppFormSheet
         open={!!reviewingRequest}

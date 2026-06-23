@@ -2,6 +2,11 @@ import { SecurityGuard, SecurityRequest } from '../types';
 import { formatDuration } from './dates';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasUnconfirmedSpotChecks, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
+import {
+  incidentSummaryLine,
+  listIncidentReportsForRequest,
+  requestHasOpenIncident,
+} from './incidentReports';
 
 export interface CoverageSummary {
   activeAssignments: number;
@@ -36,6 +41,7 @@ export interface ClientReportCard {
   summary: string;
   submittedAt: string;
   siteName: string;
+  incidentId?: string;
 }
 
 const ACTIVE_STATUSES = new Set<SecurityRequest['status']>(['accepted', 'in-progress']);
@@ -63,7 +69,7 @@ export function computeCoverageSummary(requests: SecurityRequest[]): CoverageSum
 
 export function computeSiteStatus(requests: SecurityRequest[]): SiteStatusLevel {
   const live = requests.filter((r) => r.status === 'in-progress');
-  if (live.some((r) => r.checkOutAudit?.incidentReport?.hasIncident)) return 'incident';
+  if (live.some((r) => requestHasOpenIncident(r))) return 'incident';
   if (live.some((r) => isNoSelfAuditFlagged(r))) return 'attention';
   if (live.some((r) => selfAuditPhotosComplete(r.checkInAudit) && !r.checkInAudit?.clientConfirmedAt)) return 'attention';
   if (live.some((r) => hasUnconfirmedSpotChecks(r))) return 'attention';
@@ -156,13 +162,13 @@ export function buildActivityFeed(
         });
       }
     }
-    if (req.checkOutAudit?.incidentReport?.hasIncident) {
+    for (const incident of listIncidentReportsForRequest(req)) {
       items.push({
-        id: `${req.id}-incident`,
-        timestamp: req.checkOutAudit.checkedAt,
+        id: `${req.id}-incident-${incident.id}`,
+        timestamp: incident.submittedAt,
         label: 'Incident report submitted',
         requestId: req.id,
-        sortKey: new Date(req.checkOutAudit.checkedAt).getTime(),
+        sortKey: new Date(incident.submittedAt).getTime(),
       });
     }
     if (req.checkOutAudit?.dailyActivityReport) {
@@ -202,15 +208,16 @@ export function buildRecentReports(requests: SecurityRequest[]): ClientReportCar
 
   for (const req of requests) {
     const site = req.siteName || req.location;
-    if (req.checkOutAudit?.incidentReport?.hasIncident) {
+    for (const incident of listIncidentReportsForRequest(req)) {
       cards.push({
-        id: `${req.id}-inc`,
+        id: `${req.id}-inc-${incident.id}`,
         requestId: req.id,
         title: req.title,
         type: 'incident',
-        summary: req.checkOutAudit.incidentReport.description || 'Incident logged during job.',
-        submittedAt: req.checkOutAudit.checkedAt,
+        summary: incidentSummaryLine(incident),
+        submittedAt: incident.submittedAt,
         siteName: site,
+        incidentId: incident.id,
       });
     }
     if (req.checkOutAudit?.dailyActivityReport) {

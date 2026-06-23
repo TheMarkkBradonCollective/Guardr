@@ -47,6 +47,7 @@ import {
   StaffSection,
   type ApprovalQueueId,
 } from '../lib/staffOps';
+import { buildIncidentReportViews } from '../lib/incidentReports';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
@@ -123,6 +124,11 @@ interface StaffDashboardProps {
   onRefundPayment?: (requestId: string) => Promise<void>;
   onMarkClientPaidCash?: (requestId: string) => Promise<void>;
   onMarkOvertimePaidCash?: (requestId: string) => Promise<void>;
+  onResolveOvertimeDispute?: (
+    requestId: string,
+    action: 'waive' | 'uphold' | 'adjust',
+    options?: { adjustedHours?: number; resolutionNote?: string }
+  ) => Promise<void>;
   onApproveOvertimeCashPayment?: (requestId: string) => Promise<void>;
   onMakeOvertimeGuardPayoutAvailable?: (requestId: string) => Promise<void>;
   onMarkOvertimeGuardPaidCash?: (requestId: string) => Promise<void>;
@@ -242,6 +248,7 @@ export function StaffDashboard({
   onRefundPayment,
   onMarkClientPaidCash,
   onMarkOvertimePaidCash,
+  onResolveOvertimeDispute,
   onApproveOvertimeCashPayment,
   onMakeOvertimeGuardPayoutAvailable,
   onMarkOvertimeGuardPaidCash,
@@ -370,6 +377,7 @@ export function StaffDashboard({
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
+  const incidentDetails = useMemo(() => buildIncidentReportViews(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards, supportTickets), [requests, guards, supportTickets]);
   const overviewActions = useMemo(
     () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
@@ -557,7 +565,7 @@ export function StaffDashboard({
           />
         );
       case 'incidents':
-        return <StaffIncidentsPanel incidents={incidents} onOpenJob={openJob} />;
+        return <StaffIncidentsPanel incidents={incidents} incidentDetails={incidentDetails} onOpenJob={openJob} />;
       case 'messages':
       case 'support':
       case 'team-chat':
@@ -624,7 +632,13 @@ export function StaffDashboard({
           </div>
         );
       case 'disputes':
-        return <StaffDisputesPanel disputes={disputes} onResolveDispute={onResolveDispute} />;
+        return (
+          <StaffDisputesPanel
+            disputes={disputes}
+            onResolveDispute={onResolveDispute}
+            onResolveOvertimeDispute={onResolveOvertimeDispute}
+          />
+        );
       case 'analytics':
         return (
           <StaffAnalyticsPanel

@@ -342,14 +342,30 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_ava
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_method TEXT;
 
+-- Overtime dispute: client contests late clock-out charge; staff reviews and adjusts.
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_reason TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_disputed_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_claimed_clock_out_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolution TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
+
 COMMENT ON COLUMN security_requests.scheduled_duration_hours IS 'Original scheduled shift length before late clock-out adjustment';
 COMMENT ON COLUMN security_requests.scheduled_estimated_payout IS 'Original client bill before late clock-out adjustment';
 COMMENT ON COLUMN security_requests.overtime_hours IS 'Extra hours billed when guard clocked out after scheduled end';
 COMMENT ON COLUMN security_requests.overtime_amount IS 'Additional client charge for late clock-out';
 COMMENT ON COLUMN security_requests.overtime_payment_status IS 'none | unpaid | paid — tracks collection of overtime difference';
-COMMENT ON COLUMN security_requests.overtime_status IS 'none | pending_guard | pending_client | awaiting_payment | paid';
+COMMENT ON COLUMN security_requests.overtime_status IS 'none | pending_guard | pending_client | awaiting_payment | disputed | paid | waived';
 COMMENT ON COLUMN security_requests.overtime_guard_approved_at IS 'When the guard confirmed late clock-out overtime';
 COMMENT ON COLUMN security_requests.overtime_client_approved_at IS 'When the client approved paying overtime';
+COMMENT ON COLUMN security_requests.overtime_dispute_reason IS 'Client explanation when disputing late clock-out overtime';
+COMMENT ON COLUMN security_requests.overtime_disputed_at IS 'When the client opened an overtime dispute';
+COMMENT ON COLUMN security_requests.overtime_dispute_claimed_clock_out_at IS 'Client-stated actual guard clock-out time when disputing overtime';
+COMMENT ON COLUMN security_requests.overtime_dispute_resolved_at IS 'When staff resolved an overtime dispute';
+COMMENT ON COLUMN security_requests.overtime_dispute_resolution IS 'Staff note describing how an overtime dispute was resolved';
+COMMENT ON COLUMN security_requests.overtime_original_hours IS 'Overtime hours claimed when the client opened a dispute';
+COMMENT ON COLUMN security_requests.overtime_original_amount IS 'Overtime amount claimed when the client opened a dispute';
 COMMENT ON COLUMN security_requests.overtime_client_payment_method IS 'stripe | cash — how the client paid overtime';
 COMMENT ON COLUMN security_requests.overtime_guard_payout_method IS 'stripe | cash — how the guard was paid for overtime';
 
@@ -429,7 +445,7 @@ ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_payment_
 ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_status_check;
 ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_status_check
   CHECK (overtime_status IS NULL OR overtime_status IN (
-    'none', 'pending_guard', 'pending_client', 'awaiting_payment', 'paid'
+    'none', 'pending_guard', 'pending_client', 'awaiting_payment', 'disputed', 'paid', 'waived'
   ));
 
 ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_client_payment_method_check;
@@ -862,6 +878,9 @@ WHERE table_schema = 'public'
     'scheduled_duration_hours', 'scheduled_estimated_payout',
     'overtime_hours', 'overtime_amount', 'overtime_payment_status', 'overtime_status',
     'overtime_guard_approved_at', 'overtime_client_approved_at',
+    'overtime_dispute_reason', 'overtime_disputed_at', 'overtime_dispute_claimed_clock_out_at',
+    'overtime_dispute_resolved_at',
+    'overtime_dispute_resolution', 'overtime_original_hours', 'overtime_original_amount',
     'overtime_client_payment_method', 'overtime_client_cash_payment_requested',
     'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
     'overtime_guard_payout_method',

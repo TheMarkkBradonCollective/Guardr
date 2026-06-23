@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { JobChatThread, SecurityGuard, SessionUser } from '../../types';
+import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { canGuardApproveOvertime } from '../../lib/shiftBilling';
+import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
+import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { AppItemCard, AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
 import { CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
@@ -53,12 +55,25 @@ export function GuardMyJobsPanel({
   if (selectedJob) {
     const chatEligible = isJobChatEligible(selectedJob);
     const hasChat = chatEligible || threadForRequest(jobChatThreads, selectedJob.id);
+    const jobAsRequest = selectedJob as unknown as SecurityRequest;
+    const jobIncidents = buildIncidentReportViews([jobAsRequest], [guard]);
+    const hasIncidents = listIncidentReportsForRequest(jobAsRequest).length > 0;
 
     return (
       <AppScreen className="app-full-page-detail">
         <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} />
         <div className="px-5 pb-8 space-y-4">
           <GuardJobCard job={selectedJob} guard={guard} compact />
+          {hasIncidents && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">Incident reports filed</p>
+              {jobIncidents.map((incident) => (
+                <div key={incident.id} className="rounded-xl border border-red-500/25 bg-red-500/5 p-4">
+                  <IncidentReportDetailView report={incident} compact />
+                </div>
+              ))}
+            </div>
+          )}
           {canGuardApproveOvertime(selectedJob) && onApproveOvertime && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 space-y-3">
               <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>

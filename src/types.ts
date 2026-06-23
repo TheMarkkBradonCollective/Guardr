@@ -545,10 +545,17 @@ export interface SecurityRequest {
   overtimeHours?: number;
   /** Additional client charge for late clock-out */
   overtimeAmount?: number;
-  /** Workflow: none → pending_guard → pending_client → awaiting_payment → paid */
-  overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'paid';
+  /** Workflow: none → pending_guard → pending_client → awaiting_payment | disputed → paid | waived */
+  overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'disputed' | 'paid' | 'waived';
   overtimeGuardApprovedAt?: string;
   overtimeClientApprovedAt?: string;
+  overtimeDisputeReason?: string;
+  overtimeDisputedAt?: string;
+  overtimeDisputeClaimedClockOutAt?: string;
+  overtimeDisputeResolvedAt?: string;
+  overtimeDisputeResolution?: string;
+  overtimeOriginalHours?: number;
+  overtimeOriginalAmount?: number;
   /** Tracks whether the overtime difference has been collected from the client */
   overtimePaymentStatus?: 'none' | 'unpaid' | 'paid';
   overtimeClientPaymentMethod?: 'cash' | 'stripe';
@@ -652,9 +659,53 @@ export interface SecurityRequest {
     incidentReport: {
       hasIncident: boolean;
       incidentType?: string;
-      priority?: 'low' | 'medium' | 'high';
+      priority?: 'low' | 'medium' | 'high' | 'critical';
+      occurredAt?: string;
+      locationOnSite?: string;
       description?: string;
+      partiesInvolved?: string;
+      witnesses?: string;
+      causeOrTrigger?: string;
+      actionsTaken?: string;
+      authoritiesNotified?: boolean;
+      authorityDetails?: string;
+      injuryInvolved?: boolean;
+      propertyDamageInvolved?: boolean;
+      injuryDetails?: string;
+      propertyDamageDetails?: string;
+      followUpRequired?: boolean;
+      followUpNotes?: string;
+      evidenceNotes?: string;
+      submittedAt?: string;
+      submittedByGuardId?: string;
+      submittedByGuardName?: string;
     };
+    /** All incident reports filed during this shift (mid-shift and checkout). */
+    incidentReports?: Array<{
+      id: string;
+      hasIncident: boolean;
+      incidentType?: string;
+      priority?: 'low' | 'medium' | 'high' | 'critical';
+      occurredAt?: string;
+      locationOnSite?: string;
+      description?: string;
+      partiesInvolved?: string;
+      witnesses?: string;
+      causeOrTrigger?: string;
+      actionsTaken?: string;
+      authoritiesNotified?: boolean;
+      authorityDetails?: string;
+      injuryInvolved?: boolean;
+      propertyDamageInvolved?: boolean;
+      injuryDetails?: string;
+      propertyDamageDetails?: string;
+      followUpRequired?: boolean;
+      followUpNotes?: string;
+      evidenceNotes?: string;
+      submittedAt: string;
+      submittedByGuardId?: string;
+      submittedByGuardName?: string;
+    }>;
     clientNotes: string;
     attachments?: string[];
     /** Guard corrected departure time after forgetting to clock out on time */

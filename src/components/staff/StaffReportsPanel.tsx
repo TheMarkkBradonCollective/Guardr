@@ -4,6 +4,8 @@ import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
+import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
+import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
@@ -105,10 +107,14 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                     <p className="text-brand-text-muted italic">"{req.checkOutAudit.dailyActivityReport}"</p>
                   </div>
                 )}
-                {req.checkOutAudit?.incidentReport?.hasIncident && (
-                  <div className="text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3 w-full">
-                    <p className="text-brand-text-muted font-semibold text-xs">Client incident</p>
-                    <p className="mt-1">{req.checkOutAudit.incidentReport.description}</p>
+                {listIncidentReportsForRequest(req).length > 0 && (
+                  <div className="text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3 w-full space-y-3">
+                    <p className="text-brand-text-muted font-semibold text-xs">Incident report(s)</p>
+                    {buildIncidentReportViews([req], guards).map((view, idx) => (
+                      <div key={view.id} className={idx > 0 ? 'pt-3 border-t border-red-500/20' : ''}>
+                        <IncidentReportDetailView report={view} compact />
+                      </div>
+                    ))}
                   </div>
                 )}
               </AppListRow>

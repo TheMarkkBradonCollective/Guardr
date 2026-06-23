@@ -4,10 +4,12 @@ import {
   buildRecentReports,
   computeCoverageSummary,
 } from '../lib/clientCoverage';
+import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates } from '../lib/platformSettings';
 import type { PlatformFeeConfig } from '../lib/payments';
+import type { OvertimeDisputeInput } from '../lib/shiftBilling';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
@@ -61,6 +63,7 @@ interface ClientDashboardProps {
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
+  onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
@@ -106,6 +109,7 @@ export function ClientDashboard({
   onConfirmSpotCheck,
   onRequestCashPayment,
   onApproveOvertime,
+  onDisputeOvertime,
   onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
@@ -131,6 +135,7 @@ export function ClientDashboard({
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [internalProfileGuardId, setInternalProfileGuardId] = useState<string | null>(null);
   const [internalDirectGuardId, setInternalDirectGuardId] = useState<string | null>(null);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
 
   const effectiveProfileGuardId =
     profileGuardId !== undefined ? profileGuardId : internalProfileGuardId;
@@ -191,6 +196,7 @@ export function ClientDashboard({
 
   const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
   const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
+  const incidentDetails = useMemo(() => buildIncidentReportViews(requests, guards), [requests, guards]);
 
   const handleHomeAction = (action: ClientHomeAction) => {
     switch (action) {
@@ -207,6 +213,7 @@ export function ClientDashboard({
         navigate('request');
         break;
       case 'reports':
+        setSelectedIncidentId(null);
         navigate('reports');
         break;
       case 'coverage':
@@ -360,7 +367,13 @@ export function ClientDashboard({
       'reports',
       <ClientReportsScreen
         reports={recentReports}
-        onBack={() => navigate('home')}
+        incidentDetails={incidentDetails}
+        selectedIncidentId={selectedIncidentId}
+        onSelectIncident={setSelectedIncidentId}
+        onBack={() => {
+          setSelectedIncidentId(null);
+          navigate('home');
+        }}
       />
     );
   }
@@ -381,6 +394,7 @@ export function ClientDashboard({
         onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestCashPayment={onRequestCashPayment}
         onApproveOvertime={onApproveOvertime}
+        onDisputeOvertime={onDisputeOvertime}
         onRequestOvertimeCash={onRequestOvertimeCash}
         onApprovePendingGuard={onApprovePendingGuard}
         onDenyPendingGuard={onDenyPendingGuard}

@@ -17,7 +17,7 @@ import {
   platformFeeLedgerLabel,
   stripeDepositLedgerLabel,
 } from './cashPayments';
-import { hasOvertime, hasUnpaidOvertime, isOvertimeCashPaymentPendingApproval, overtimeStatusLabel } from './shiftBilling';
+import { hasOvertime, hasUnpaidOvertime, isOvertimeCashPaymentPendingApproval, isOvertimeDisputed, isOvertimeWaived, overtimeStatusLabel } from './shiftBilling';
 import { getPaymentPipelineStage, PaymentPipelineStage } from './paymentPipeline';
 
 export type PaymentLedgerStatus = 'paid' | 'owed' | 'waiting' | 'na';
@@ -67,21 +67,25 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
     },
   ];
 
-  if ((req.overtimeAmount ?? 0) > 0) {
+  if ((req.overtimeAmount ?? 0) > 0 || isOvertimeWaived(req) || isOvertimeDisputed(req)) {
     let overtimeLedgerStatus: PaymentLedgerStatus = 'waiting';
     if (req.overtimeStatus === 'paid') overtimeLedgerStatus = 'paid';
+    else if (isOvertimeWaived(req)) overtimeLedgerStatus = 'na';
+    else if (isOvertimeDisputed(req)) overtimeLedgerStatus = 'waiting';
     else if (hasUnpaidOvertime(req) || isOvertimeCashPaymentPendingApproval(req)) overtimeLedgerStatus = 'owed';
     lines.push({
       party: 'client',
       label: 'Late clock-out',
-      amount: req.overtimeAmount ?? 0,
+      amount: isOvertimeWaived(req) ? req.overtimeOriginalAmount ?? 0 : req.overtimeAmount ?? 0,
       status: overtimeLedgerStatus,
       statusLabel:
         req.overtimeStatus === 'paid'
           ? 'Overtime paid'
-          : isOvertimeCashPaymentPendingApproval(req)
-            ? 'Cash pending approval'
-            : overtimeStatusLabel(req.overtimeStatus) || 'Pending',
+          : isOvertimeWaived(req)
+            ? 'Waived after dispute'
+            : isOvertimeCashPaymentPendingApproval(req)
+              ? 'Cash pending approval'
+              : overtimeStatusLabel(req.overtimeStatus) || 'Pending',
     });
   }
 
@@ -137,6 +141,8 @@ export function clientPaymentStatusLabel(
   }
   if (req?.overtimeStatus === 'pending_guard') return 'Overtime pending guard';
   if (req?.overtimeStatus === 'pending_client') return 'Overtime pending approval';
+  if (req?.overtimeStatus === 'disputed') return 'Overtime disputed';
+  if (req?.overtimeStatus === 'waived') return 'Overtime waived';
   if (req && hasUnpaidOvertime(req as SecurityRequest)) {
     return 'Overtime due';
   }
@@ -172,7 +178,13 @@ export function clientPaymentStatusHint(
     return 'Your guard must confirm the late clock-out before you can approve overtime.';
   }
   if (req?.overtimeStatus === 'pending_client') {
-    return `Approve the $${(req.overtimeAmount ?? 0).toFixed(2)} overtime charge to unlock payment.`;
+    return `Approve the $${(req.overtimeAmount ?? 0).toFixed(2)} overtime charge, or dispute it if the hours are wrong.`;
+  }
+  if (req?.overtimeStatus === 'disputed') {
+    return 'Staff is reviewing your dispute. You will be notified when the charge is updated.';
+  }
+  if (req?.overtimeStatus === 'waived') {
+    return 'Late clock-out overtime was waived after your dispute.';
   }
   if (req && hasUnpaidOvertime(req as SecurityRequest)) {
     return `Overtime approved — pay $${(req.overtimeAmount ?? 0).toFixed(2)} by card or cash.`;
@@ -206,6 +218,20 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
   const stage = getPaymentPipelineStage(req);
   const guardPay = guardPayoutAmount(req);
   const clientBill = req.estimatedPayout;
+
+  if (req.overtimeStatus === 'disputed') {
+    return {
+      headline: 'Late clock-out — dispute open',
+      detail: `Client disputed $${(req.overtimeOriginalAmount ?? req.overtimeAmount ?? 0).toFixed(2)}. Review evidence in Disputes.`,
+    };
+  }
+
+  if (req.overtimeStatus === 'waived') {
+    return {
+      headline: 'Late clock-out — overtime waived',
+      detail: req.overtimeDisputeResolution || 'Staff waived the overtime charge after a client dispute.',
+    };
+  }
 
   if (hasUnpaidOvertime(req)) {
     return {
