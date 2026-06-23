@@ -12,7 +12,6 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppItemCardStack, AppPageLead, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
-  Activity,
   Award,
   Banknote,
   Check,
@@ -418,9 +417,12 @@ export function ClientRequestsList({
                 )}
 
                 {req.status === 'accepted' && hiredGuard && (
-                  <button type="button" onClick={() => onUpdateStatus(req.id, 'in-progress')} className="app-button-primary !h-9 !text-xs w-full">
-                    <Activity className="w-3.5 h-3.5 inline" /> Start Deployment
-                  </button>
+                  <div className="border-t border-brand-border pt-3 w-full">
+                    <p className="text-sm text-brand-text-muted leading-relaxed">
+                      <span className="font-medium text-brand-text">{hiredGuard.name}</span> is assigned.
+                      They will start the shift on site with a self-audit when clock-in opens — you can confirm their photos here once the job is in progress.
+                    </p>
+                  </div>
                 )}
 
                 {onConfirmSelfAudit && (

@@ -9,6 +9,7 @@ import { AccountMenu } from '../layouts/AccountMenu';
 import {
   AlertTriangle,
   BarChart3,
+  BookOpen,
   Building2,
   Briefcase,
   ClipboardCheck,
@@ -58,6 +59,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   disputes: 'Disputes',
   analytics: 'Analytics',
   settings: 'System Settings',
+  guide: 'Workflow guide',
   profile: 'Profile',
 };
 
@@ -98,6 +100,7 @@ export function StaffOpsLayout({
     { id: 'incidents', label: 'Incidents', icon: AlertTriangle, badge: badges.incidents },
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'guide', label: 'Workflow guide', icon: BookOpen },
     { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
   ];
 

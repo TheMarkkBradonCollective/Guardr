@@ -4,7 +4,7 @@ import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
-import { Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText } from 'lucide-react';
+import { Home, Map, ClipboardList, Users, LifeBuoy, Radio, FileText, BookOpen } from 'lucide-react';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -30,6 +30,7 @@ const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
 const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
   { id: 'coverage', label: 'Coverage', icon: Radio },
   { id: 'reports', label: 'Reports', icon: FileText },
+  { id: 'guide', label: 'Workflow guide', icon: BookOpen },
   { id: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
@@ -46,6 +47,7 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
+  guide: 'Workflow guide',
 };
 
 export function ClientAppLayout({
@@ -65,7 +67,7 @@ export function ClientAppLayout({
   const navHighlightView =
     activeView === 'support-compose' || activeView === 'support-report'
       ? 'support'
-      : accountPending && !['home', 'profile', 'support', 'support-compose', 'support-report'].includes(activeView)
+      : accountPending && !['home', 'profile', 'support', 'support-compose', 'support-report', 'guide'].includes(activeView)
         ? 'home'
         : activeView;
 

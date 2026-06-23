@@ -17,6 +17,7 @@ import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
 import { ClientMapScreen } from './client/ClientMapScreen';
 import { AppPageTransition } from './ui/motion/AppMotion';
+import { AppWorkflowPage } from './docs/AppWorkflowPage';
 
 export type ClientView =
   | 'map'
@@ -30,7 +31,8 @@ export type ClientView =
   | 'profile'
   | 'support'
   | 'support-compose'
-  | 'support-report';
+  | 'support-report'
+  | 'guide';
 
 interface ClientDashboardProps {
   companyName: string;
@@ -320,6 +322,10 @@ export function ClientDashboard({
         }}
       />
     );
+  }
+
+  if (view === 'guide') {
+    return page('guide', <AppWorkflowPage audience="client" />);
   }
 
   return page(

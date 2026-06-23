@@ -3702,21 +3702,6 @@ export default function App() {
 
   const handleUpdateStatus = async (requestId: string, status: SecurityRequest['status']) => {
     const req = requests.find(r => r.id === requestId);
-    if (req && status === 'in-progress' && req.assignedGuardId) {
-      const assigned = guards.find((g) => g.id === req.assignedGuardId);
-      const workBlocked = assigned ? guardWorkBlockedMessage(assigned, req.state) : 'Guard on job not found.';
-      if (workBlocked) {
-        appToast(workBlocked, 'error');
-        return;
-      }
-    }
-    if (req && status === 'in-progress') {
-      const blocked = guardClockInBlockedMessage(req);
-      if (blocked) {
-        appToast(blocked, 'error');
-        return;
-      }
-    }
     if (req && status === 'completed') {
       const blocked = guardClockOutBlockedMessage(req);
       if (blocked) {
