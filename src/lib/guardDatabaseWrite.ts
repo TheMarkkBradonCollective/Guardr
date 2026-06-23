@@ -3,7 +3,11 @@ import { guardAccountDatabaseErrorMessage } from './accountStatus';
 
 type GuardRow = Record<string, unknown>;
 
-const OPTIONAL_GUARD_COLUMNS = ['credential_grace_deadline', 'credential_grace_missing'] as const;
+const OPTIONAL_GUARD_COLUMNS = [
+  'credential_grace_deadline',
+  'credential_grace_missing',
+  'credential_grace_hours',
+] as const;
 
 function parseMissingColumn(message?: string): string | null {
   if (!message) return null;

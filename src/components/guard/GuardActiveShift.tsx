@@ -14,6 +14,7 @@ import {
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
+import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
 import {
   Activity,
   AlertTriangle,
@@ -106,6 +107,12 @@ export function GuardActiveShift({
             </div>
           </div>
         </div>
+
+        <ShiftPeriodStatusBar
+          startDate={job.startDate}
+          endDate={job.endDate}
+          live={phase === 'on-duty'}
+        />
 
         <div className="segmented-control segmented-control-full">
           {statusSteps.slice(0, 3).map((step) => (

@@ -61,11 +61,12 @@ export function buildCredentialGraceDeadlineFromHours(
 
 export function guardCredentialGraceFieldsCleared(): Pick<
   SecurityGuard,
-  'credentialGraceDeadline' | 'credentialGraceMissing'
+  'credentialGraceDeadline' | 'credentialGraceMissing' | 'credentialGraceHours'
 > {
   return {
     credentialGraceDeadline: undefined,
     credentialGraceMissing: undefined,
+    credentialGraceHours: undefined,
   };
 }
 
@@ -126,14 +127,14 @@ export function guardCredentialGracePatchForActivation(
   guard: SecurityGuard,
   state = 'CA',
   graceHours?: number
-): Pick<SecurityGuard, 'credentialGraceDeadline' | 'credentialGraceMissing'> {
+): Pick<SecurityGuard, 'credentialGraceDeadline' | 'credentialGraceMissing' | 'credentialGraceHours'> {
   const missing = getGuardMissingGraceCredentialLabels(guard, state);
   if (missing.length === 0) return guardCredentialGraceFieldsCleared();
+  const hours = graceHours ?? CREDENTIAL_GRACE_PERIOD_HOURS;
   return {
-    credentialGraceDeadline: buildCredentialGraceDeadlineFromHours(
-      graceHours ?? CREDENTIAL_GRACE_PERIOD_HOURS
-    ),
+    credentialGraceDeadline: buildCredentialGraceDeadlineFromHours(hours),
     credentialGraceMissing: missing,
+    credentialGraceHours: hours,
   };
 }
 
@@ -159,15 +160,26 @@ export function syncGuardCredentialGraceState(guard: SecurityGuard, state = 'CA'
 export function guardCredentialGraceNotice(
   guard: SecurityGuard,
   state = 'CA'
-): { missing: string[]; deadline: Date; timeRemainingLabel: string } | null {
+): {
+  missing: string[];
+  deadline: Date;
+  timeRemainingLabel: string;
+  periodHours: number;
+  elapsedLabel: string;
+} | null {
   if (!guardHasActiveCredentialGrace(guard)) return null;
   const missing = getGuardMissingGraceCredentialLabels(guard, state);
   if (missing.length === 0) return null;
   const deadline = guardCredentialGraceDeadline(guard);
   if (!deadline) return null;
+  const periodHours = guard.credentialGraceHours ?? CREDENTIAL_GRACE_PERIOD_HOURS;
+  const remainingMs = guardCredentialGraceMsRemaining(guard);
+  const elapsedMs = Math.max(0, periodHours * 60 * 60 * 1000 - remainingMs);
   return {
     missing,
     deadline,
-    timeRemainingLabel: formatCredentialGraceTimeRemaining(guardCredentialGraceMsRemaining(guard)),
+    timeRemainingLabel: formatCredentialGraceTimeRemaining(remainingMs),
+    periodHours,
+    elapsedLabel: formatCredentialGraceTimeRemaining(elapsedMs),
   };
 }

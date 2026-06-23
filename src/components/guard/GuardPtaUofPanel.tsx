@@ -24,6 +24,7 @@ import {
   CredentialRowHeader,
   CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
+import { CredentialGracePeriodStatusBar } from '../credentials/CredentialGracePeriodStatusBar';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -244,8 +245,9 @@ export function GuardPtaUofPanel({
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
         </p>
-        <div className="mt-2">
+        <div className="mt-2 space-y-2">
           <CredentialSectionStatusDisplay status={sectionStatus} />
+          <CredentialGracePeriodStatusBar guard={guard} kind="pta-uof" />
         </div>
       </div>
 

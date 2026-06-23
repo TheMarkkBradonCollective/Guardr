@@ -230,6 +230,8 @@ export interface SecurityGuard {
   credentialGraceDeadline?: string;
   /** Credential labels missing when grace period started */
   credentialGraceMissing?: string[];
+  /** Staff-granted grace window length in hours (set at activation) */
+  credentialGraceHours?: number;
 }
 
 export interface StaffSpotCheck {

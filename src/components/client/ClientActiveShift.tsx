@@ -11,6 +11,7 @@ import {
 import { computeSiteStatus } from '../../lib/clientCoverage';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
 import {
   Activity,
   AlertTriangle,
@@ -99,6 +100,12 @@ export function ClientActiveShift({
             </button>
           )}
         </div>
+
+        <ShiftPeriodStatusBar
+          startDate={request.startDate}
+          endDate={request.endDate}
+          live={phase === 'on-duty'}
+        />
 
         <div className="segmented-control segmented-control-full">
           {CLIENT_SHIFT_STEPS.map((step) => (

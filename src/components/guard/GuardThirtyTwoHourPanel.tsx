@@ -21,6 +21,7 @@ import {
   CredentialRowHeader,
   CredentialSectionStatusDisplay,
 } from '../credentials/CredentialStatusLabels';
+import { CredentialGracePeriodStatusBar } from '../credentials/CredentialGracePeriodStatusBar';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { getCourseUploadStatus } from '../../lib/certStatus';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
@@ -233,8 +234,9 @@ export function GuardThirtyTwoHourPanel({
           Required to work field jobs. Upload all 9 individual course certificates, or a single 32-hour completion
           certificate if your training provider issued one.
         </p>
-        <div className="mt-2">
+        <div className="mt-2 space-y-2">
           <CredentialSectionStatusDisplay status={sectionStatus} />
+          <CredentialGracePeriodStatusBar guard={guard} kind="32-hour" />
         </div>
       </div>
 

@@ -3800,6 +3800,18 @@ html.theme-light .staff-ops-btn-primary:hover {
   align-items: flex-start;
 }
 
+.shift-period-status-bar {
+  border-radius: var(--radius-app-lg);
+}
+
+.shift-period-progress-track {
+  border-radius: var(--radius-pill);
+}
+
+.shift-period-progress-fill {
+  border-radius: var(--radius-pill);
+}
+
 .app-checklist-panel {
   border-top: 1px solid var(--brand-border);
   border-bottom: 1px solid var(--brand-border);

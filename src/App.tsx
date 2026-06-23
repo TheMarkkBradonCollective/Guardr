@@ -1146,6 +1146,8 @@ export default function App() {
         credentialGraceMissing: Array.isArray(g.credential_grace_missing)
           ? (g.credential_grace_missing as string[])
           : undefined,
+        credentialGraceHours:
+          typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1554,6 +1556,7 @@ export default function App() {
                 user_status: after.userStatus,
                 credential_grace_deadline: after.credentialGraceDeadline ?? null,
                 credential_grace_missing: after.credentialGraceMissing ?? null,
+                credential_grace_hours: after.credentialGraceHours ?? null,
               })
               .eq('id', after.id);
           }
@@ -2381,6 +2384,7 @@ export default function App() {
           {
             credential_grace_deadline: after.credentialGraceDeadline ?? null,
             credential_grace_missing: after.credentialGraceMissing ?? null,
+            credential_grace_hours: after.credentialGraceHours ?? null,
           },
           'activate'
         );
@@ -2920,6 +2924,7 @@ export default function App() {
           verified: true,
           credential_grace_deadline: null,
           credential_grace_missing: null,
+          credential_grace_hours: null,
         },
         'approve'
       );
@@ -2964,6 +2969,7 @@ export default function App() {
           verified: true,
           credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
           credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
+          credential_grace_hours: gracePatch.credentialGraceHours ?? null,
         },
         'activate'
       );
