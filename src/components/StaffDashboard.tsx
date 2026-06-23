@@ -359,11 +359,8 @@ export function StaffDashboard({
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
   const overviewActions = useMemo(
-    () => {
-      const items = buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients);
-      return showFinance ? items : items.filter((item) => item.section !== 'payments');
-    },
-    [stats, requests, incidents, supportTickets, guards, clients, showFinance]
+    () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
+    [stats, requests, incidents, supportTickets, guards, clients]
   );
   const overviewLiveJobs = useMemo(() => buildOverviewLiveJobs(guards, requests), [guards, requests]);
   const overviewWeeklyTrend = useMemo(() => computeWeeklyCompletedJobs(requests), [requests]);
@@ -406,7 +403,7 @@ export function StaffDashboard({
             onOpenJob={openJob}
             canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
-            showDirectorFinancials={hasExecutivePaymentControls(currentUser)}
+            staffRole={currentUser.role}
           />
         );
       case 'map':
