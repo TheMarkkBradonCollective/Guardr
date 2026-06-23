@@ -74,7 +74,7 @@ export function GuardProfileScreen({
                   <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">{getGuardDisplaySummary(guard)}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                     <WfMetricTile label="Rating" value={guard.rating.toFixed(1)} accent />
-                    <WfMetricTile label="Jobs" value={guard.jobsCompleted} />
+                    <WfMetricTile label="Completed" value={guard.jobsCompleted} />
                     {guard.yearsExperience != null && guard.yearsExperience > 0 && (
                       <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
