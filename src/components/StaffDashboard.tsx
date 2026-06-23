@@ -47,6 +47,7 @@ import {
   StaffSection,
   type ApprovalQueueId,
 } from '../lib/staffOps';
+import { buildIncidentReportViews } from '../lib/incidentReports';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
@@ -365,6 +366,7 @@ export function StaffDashboard({
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
+  const incidentDetails = useMemo(() => buildIncidentReportViews(requests, guards), [requests, guards]);
   const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
   const overviewActions = useMemo(
     () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
@@ -552,7 +554,7 @@ export function StaffDashboard({
           />
         );
       case 'incidents':
-        return <StaffIncidentsPanel incidents={incidents} onOpenJob={openJob} />;
+        return <StaffIncidentsPanel incidents={incidents} incidentDetails={incidentDetails} onOpenJob={openJob} />;
       case 'messages':
       case 'support':
       case 'team-chat':

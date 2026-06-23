@@ -32,6 +32,11 @@ import {
   selfAuditPhotosComplete,
 } from './lib/selfAuditPhotos';
 import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from './lib/spotChecks';
+import {
+  createIncidentReportDetail,
+  incidentChatSummary,
+  IncidentReportFormInput,
+} from './lib/incidentReports';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
 import {
   canDirectorMarkClientPaidCash,
@@ -5265,17 +5270,23 @@ export default function App() {
       }
     }
 
-    if (payload.checkOutAudit?.incidentReport?.hasIncident && currentUser) {
-      const req = requests.find((r) => r.id === requestId);
-      const guard = guards.find((g) => g.id === req?.assignedGuardId);
-      void reportPushEvent(currentUser, {
-        type: 'emergency_alert',
-        requestId,
-        guardId: guard?.id,
-        guardName: guard?.name,
-        location: req?.location,
-        body: req?.checkOutAudit?.incidentReport?.description ?? 'Incident reported on active shift',
-      });
+    if (currentUser && payload.checkOutAudit?.incidentReports) {
+      const prevCount =
+        req?.checkOutAudit?.incidentReports?.length ??
+        (req?.checkOutAudit?.incidentReport?.hasIncident ? 1 : 0);
+      const newCount = payload.checkOutAudit.incidentReports.length;
+      if (newCount > prevCount) {
+        const latest = payload.checkOutAudit.incidentReports[newCount - 1];
+        const guard = guards.find((g) => g.id === req?.assignedGuardId);
+        void reportPushEvent(currentUser, {
+          type: 'emergency_alert',
+          requestId,
+          guardId: guard?.id,
+          guardName: guard?.name,
+          location: req?.location,
+          body: latest?.description ?? 'Incident reported on active shift',
+        });
+      }
     }
 
     if (detectedOvertime && detectedOvertime.overtimeAmount > 0 && currentUser) {
@@ -6019,22 +6030,62 @@ export default function App() {
     }
   };
 
-  const handleReportIncident = async (requestId: string) => {
+  const handleSubmitIncidentReport = async (requestId: string, input: IncidentReportFormInput) => {
     if (!currentUser) return;
     const req = requests.find((r) => r.id === requestId);
-    const guard = guards.find((g) => g.id === req?.assignedGuardId);
-    await handleSendJobChatMessage(
-      requestId,
-      'Incident reported — requesting immediate staff attention.'
-    );
-    void reportPushEvent(currentUser, {
-      type: 'emergency_alert',
-      requestId,
-      guardId: guard?.id,
-      guardName: guard?.name ?? currentUser.name,
-      location: req?.location,
-      body: `Incident reported by ${guard?.name ?? currentUser.name} at ${req?.location ?? 'active job'}`,
+    if (!req) return;
+    const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
+    if (!guard) return;
+
+    const detail = createIncidentReportDetail(input, { id: guard.id, name: guard.name });
+    const stamp = new Date().toISOString();
+    const existing = req.checkOutAudit;
+    const priorReports = existing?.incidentReports ?? [];
+    const incidentReports = [...priorReports, detail];
+
+    const incidentReport = {
+      hasIncident: true,
+      incidentType: detail.incidentType,
+      priority: detail.priority,
+      occurredAt: detail.occurredAt,
+      locationOnSite: detail.locationOnSite,
+      description: detail.description,
+      partiesInvolved: detail.partiesInvolved,
+      witnesses: detail.witnesses,
+      causeOrTrigger: detail.causeOrTrigger,
+      actionsTaken: detail.actionsTaken,
+      authoritiesNotified: detail.authoritiesNotified,
+      authorityDetails: detail.authorityDetails,
+      injuryInvolved: detail.injuryInvolved,
+      propertyDamageInvolved: detail.propertyDamageInvolved,
+      injuryDetails: detail.injuryDetails,
+      propertyDamageDetails: detail.propertyDamageDetails,
+      followUpRequired: detail.followUpRequired,
+      followUpNotes: detail.followUpNotes,
+      evidenceNotes: detail.evidenceNotes,
+      submittedAt: detail.submittedAt,
+      submittedByGuardId: detail.submittedByGuardId,
+      submittedByGuardName: detail.submittedByGuardName,
+    };
+
+    await handleUpdateJobAudit(requestId, {
+      checkOutAudit: {
+        checkedAt: existing?.checkedAt ?? stamp,
+        completed: existing?.completed ?? false,
+        noViolations: existing?.noViolations ?? true,
+        noEquipmentIssues: existing?.noEquipmentIssues ?? true,
+        dailyActivityReport: existing?.dailyActivityReport ?? '',
+        incidentReport,
+        incidentReports,
+        clientNotes: existing?.clientNotes ?? '',
+        endSelfie: existing?.endSelfie,
+        attachments: existing?.attachments,
+        leftEarlier: existing?.leftEarlier,
+      },
     });
+
+    const chatBody = incidentChatSummary(detail, guard.name, req.location);
+    await handleSendJobChatMessage(requestId, chatBody);
   };
 
   const persistSupportTicketToDb = async (ticket: SupportTicket) => {
@@ -6256,7 +6307,7 @@ export default function App() {
           onOpenSupportCompose={openGuardSupportCompose}
           onOpenSupportReport={openGuardSupportReport}
           onCloseSupportForm={closeGuardSupportForm}
-          onReportIncident={handleReportIncident}
+          onSubmitIncidentReport={handleSubmitIncidentReport}
           guardPayoutInvoices={guardPayoutInvoices}
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}

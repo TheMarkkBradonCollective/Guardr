@@ -4,6 +4,7 @@ import {
   buildRecentReports,
   computeCoverageSummary,
 } from '../lib/clientCoverage';
+import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates } from '../lib/platformSettings';
@@ -131,6 +132,7 @@ export function ClientDashboard({
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
   const [internalProfileGuardId, setInternalProfileGuardId] = useState<string | null>(null);
   const [internalDirectGuardId, setInternalDirectGuardId] = useState<string | null>(null);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
 
   const effectiveProfileGuardId =
     profileGuardId !== undefined ? profileGuardId : internalProfileGuardId;
@@ -191,6 +193,7 @@ export function ClientDashboard({
 
   const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
   const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
+  const incidentDetails = useMemo(() => buildIncidentReportViews(requests, guards), [requests, guards]);
 
   const handleHomeAction = (action: ClientHomeAction) => {
     switch (action) {
@@ -207,6 +210,7 @@ export function ClientDashboard({
         navigate('request');
         break;
       case 'reports':
+        setSelectedIncidentId(null);
         navigate('reports');
         break;
       case 'coverage':
@@ -360,7 +364,13 @@ export function ClientDashboard({
       'reports',
       <ClientReportsScreen
         reports={recentReports}
-        onBack={() => navigate('home')}
+        incidentDetails={incidentDetails}
+        selectedIncidentId={selectedIncidentId}
+        onSelectIncident={setSelectedIncidentId}
+        onBack={() => {
+          setSelectedIncidentId(null);
+          navigate('home');
+        }}
       />
     );
   }
