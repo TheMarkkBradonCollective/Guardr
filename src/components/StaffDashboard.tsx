@@ -179,6 +179,7 @@ interface StaffDashboardProps {
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   onResolveDispute?: (
     dispute: import('../lib/staffOps').OpsDispute,
     action: import('../lib/staffOps').DisputeResolutionAction
@@ -283,6 +284,7 @@ export function StaffDashboard({
   onAddEducation,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  onDeleteSupportTicket,
   onResolveDispute,
   onSendStaffMessage,
   onRefreshStaffMessages,
@@ -584,6 +586,7 @@ export function StaffDashboard({
               onSendStaffMessage={onSendStaffMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
+              onDeleteSupportTicket={onDeleteSupportTicket}
               selectedJobChatRequestId={selectedJobChatRequestId}
               onSelectedJobChatRequestIdChange={onSelectedJobChatRequestIdChange}
               selectedSupportTicketId={selectedSupportTicketId}

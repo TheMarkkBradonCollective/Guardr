@@ -47,6 +47,13 @@ export function supportStatusLabel(ticket: Pick<SupportTicket, 'kind' | 'status'
   return SUPPORT_STATUS_LABEL[ticket.status];
 }
 
+/** Resolved support chats may be permanently deleted by senior staff */
+export function isDeletableResolvedSupportChat(
+  ticket: Pick<SupportTicket, 'kind' | 'status'>
+): boolean {
+  return ticket.kind === 'chat' && ticket.status === 'resolved';
+}
+
 export function categoryLabel(category: SupportTicketCategory): string {
   return SUPPORT_CATEGORY_OPTIONS.find((o) => o.id === category)?.label ?? category;
 }

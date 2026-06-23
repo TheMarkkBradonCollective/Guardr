@@ -13,16 +13,17 @@ import { threadForRequest } from '../../lib/jobChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
   SUPPORT_STATUS_LABEL,
+  isDeletableResolvedSupportChat,
   supportStatusLabel,
 } from '../../lib/support';
-import { ROLE_LABELS } from '../../lib/permissions';
+import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { AppChatHeader, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy, MessagesSquare } from 'lucide-react';
+import { FileText, LifeBuoy, MessagesSquare, Trash2 } from 'lucide-react';
 
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
@@ -41,6 +42,7 @@ interface StaffMessagesPanelProps {
   onSendStaffMessage: (body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (requestId: string | null) => void;
   selectedSupportTicketId?: string | null;
@@ -71,6 +73,7 @@ export function StaffMessagesPanel({
   onSendStaffMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  onDeleteSupportTicket,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
   selectedSupportTicketId,
@@ -239,6 +242,17 @@ export function StaffMessagesPanel({
       }
     };
 
+    const canDelete =
+      !!onDeleteSupportTicket &&
+      canDeleteResolvedSupportChat(currentUser) &&
+      isDeletableResolvedSupportChat(ticket);
+
+    const handleDelete = async () => {
+      if (!onDeleteSupportTicket) return;
+      await onDeleteSupportTicket(ticket.id);
+      clearSelection();
+    };
+
     return (
       <div className="flex flex-col h-full min-h-0 bg-brand-bg app-full-page-screen">
         <AppChatHeader
@@ -247,11 +261,23 @@ export function StaffMessagesPanel({
           onBack={clearSelection}
           hideBackOnDesktop
           trailing={
-            <select
-              value={ticket.status}
-              onChange={(e) => void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)}
-              className="uber-input text-xs py-1.5 max-w-[8.5rem]"
-            >
+            <div className="flex items-center gap-2 shrink-0">
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => void handleDelete()}
+                  className="app-chat-header-action app-chat-header-action-danger"
+                  aria-label="Delete resolved conversation"
+                  title="Delete conversation"
+                >
+                  <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              )}
+              <select
+                value={ticket.status}
+                onChange={(e) => void onUpdateSupportStatus(ticket.id, e.target.value as SupportTicketStatus)}
+                className="uber-input text-xs py-1.5 max-w-[8.5rem]"
+              >
               {(Object.keys(
                 ticket.kind === 'report'
                   ? { open: 'Submitted', 'in-progress': 'Under review', resolved: 'Closed' }
@@ -263,7 +289,8 @@ export function StaffMessagesPanel({
                     : SUPPORT_STATUS_LABEL[s]}
                 </option>
               ))}
-            </select>
+              </select>
+            </div>
           }
         />
         <div className="flex-1 min-h-0">

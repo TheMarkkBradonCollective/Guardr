@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -151,6 +151,7 @@ import { SupportReportPage } from './components/support/SupportReportPage';
 import {
   appendMessage,
   buildNewTicket,
+  isDeletableResolvedSupportChat,
   loadSupportTicketsFromStorage,
   saveSupportTicketsToStorage,
 } from './lib/support';
@@ -6379,6 +6380,44 @@ export default function App() {
     await notifySupportParticipants(updated, currentUser, body.trim());
   };
 
+  const handleDeleteSupportTicket = async (ticketId: string) => {
+    if (!currentUser) return;
+    const ticket = supportTickets.find((t) => t.id === ticketId);
+    if (!ticket) return;
+    if (!canDeleteResolvedSupportChat(currentUser) || !isDeletableResolvedSupportChat(ticket)) {
+      appToast('You can only delete resolved support conversations.', 'error');
+      return;
+    }
+    if (
+      !(await showAppConfirm({
+        title: 'Delete support conversation?',
+        message: `Permanently delete "${ticket.subject}"? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+
+    beginLocalMutation();
+    setSupportTickets((prev) => {
+      const next = prev.filter((t) => t.id !== ticketId);
+      saveSupportTicketsToStorage(next);
+      return next;
+    });
+    if (supportTicketId === ticketId) {
+      setSupportTicketId(null);
+    }
+    if (isDbConnected) {
+      try {
+        await supabase.from('support_tickets').delete().eq('id', ticketId);
+      } catch (e) {
+        console.warn('Support ticket delete DB sync:', e);
+      }
+    }
+    appToast('Support conversation deleted.', 'success');
+  };
+
   const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
     const ticket = supportTickets.find((t) => t.id === ticketId);
     const previousStatus = ticket?.status;
@@ -6786,6 +6825,7 @@ export default function App() {
           onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
+          onDeleteSupportTicket={handleDeleteSupportTicket}
           onResolveDispute={handleResolveDispute}
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
