@@ -2998,6 +2998,12 @@ html.theme-dark .role-experience-client {
 .role-experience-client .bottom-nav-item,
 .role-experience-guard .bottom-nav-item {
   position: relative;
+  color: var(--brand-text-muted);
+}
+
+.role-experience-client .bottom-nav-item:hover,
+.role-experience-guard .bottom-nav-item:hover {
+  color: var(--brand-text);
 }
 
 .role-experience-client .bottom-nav-item[aria-current="page"],
@@ -3224,8 +3230,8 @@ html.theme-light .app-button-primary:hover {
   background: var(--brand-primary-hover);
 }
 
-.role-experience-client .app-screen-header,
-.role-experience-guard .app-screen-header {
+.role-experience-client .app-screen-header:not(.app-screen-header--map),
+.role-experience-guard .app-screen-header:not(.app-screen-header--map) {
   background: var(--uber-chrome-bg);
   color: var(--uber-chrome-text);
   border-bottom-color: var(--uber-chrome-border);
@@ -3238,33 +3244,16 @@ html.theme-light .app-button-primary:hover {
   letter-spacing: -0.03em;
 }
 
-.role-experience-client .app-screen-header p,
-.role-experience-guard .app-screen-header p,
-.role-experience-client .app-screen-header button,
-.role-experience-guard .app-screen-header button {
+.role-experience-client .app-screen-header:not(.app-screen-header--map) p,
+.role-experience-guard .app-screen-header:not(.app-screen-header--map) p,
+.role-experience-client .app-screen-header:not(.app-screen-header--map) button,
+.role-experience-guard .app-screen-header:not(.app-screen-header--map) button {
   color: var(--uber-chrome-muted);
 }
 
-.role-experience-client .app-screen-header .border-brand-border,
-.role-experience-guard .app-screen-header .border-brand-border {
+.role-experience-client .app-screen-header:not(.app-screen-header--map) .border-brand-border,
+.role-experience-guard .app-screen-header:not(.app-screen-header--map) .border-brand-border {
   border-color: var(--uber-chrome-border);
-}
-
-.role-experience-client .bottom-nav-bar,
-.role-experience-guard .bottom-nav-bar {
-  background: var(--uber-chrome-bg);
-  border-top-color: var(--uber-chrome-border);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
-}
-
-html.theme-light .role-experience-client .bottom-nav-item,
-html.theme-light .role-experience-guard .bottom-nav-item {
-  color: var(--brand-chrome-muted);
-}
-
-html.theme-light .role-experience-client .bottom-nav-item[aria-current="page"],
-html.theme-light .role-experience-guard .bottom-nav-item[aria-current="page"] {
-  color: var(--brand-chrome-text);
 }
 
 .role-experience-client .bottom-nav-item[aria-current="page"]::before,
@@ -6611,45 +6600,67 @@ html.theme-dark .app-item-card {
 }
 
 /* ─── ALL THEMES: BOTTOM NAV REFINEMENT ─────────────────── */
-.bottom-nav-bar {
+.role-experience-client .bottom-nav-bar,
+.role-experience-guard .bottom-nav-bar {
   background: var(--brand-bg) !important;
+  border-top-color: var(--brand-border) !important;
+  box-shadow: var(--shadow-nav);
 }
 
-html.theme-light .bottom-nav-bar {
-  background: #ffffff !important;
-  border-top-color: #e8e8e8 !important;
+html.theme-light .role-experience-client .bottom-nav-bar,
+html.theme-light .role-experience-guard .bottom-nav-bar {
+  background: var(--brand-bg) !important;
+  border-top-color: var(--brand-border) !important;
 }
 
-html.theme-dark .bottom-nav-bar {
-  background: #0a0a0a !important;
-  border-top-color: #1c1c1c !important;
+html.theme-dark .role-experience-client .bottom-nav-bar,
+html.theme-dark .role-experience-guard .bottom-nav-bar {
+  background: var(--brand-bg-sec) !important;
+  border-top-color: var(--brand-border) !important;
+}
+
+html.theme-grey .role-experience-client .bottom-nav-bar,
+html.theme-grey .role-experience-guard .bottom-nav-bar {
+  background: var(--brand-surface) !important;
+  border-top-color: var(--brand-border) !important;
 }
 
 /* ─── EXPERIENCE-SPECIFIC NAV: SAGE-GREEN CHROME HEADER ── */
-/* Light mode: the sage green header with white text is VERY Uber Driver */
-html.theme-light .role-experience-client .app-screen-header,
-html.theme-light .role-experience-guard .app-screen-header {
+/* Light mode: sage green header with white text (non-map screens) */
+html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) {
   background: var(--brand-primary) !important;
   color: #ffffff !important;
 }
 
-html.theme-light .role-experience-client .app-screen-header h1,
-html.theme-light .role-experience-guard .app-screen-header h1 {
+html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map) h1,
+html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) h1 {
   color: #ffffff !important;
 }
 
-html.theme-light .role-experience-client .app-screen-header p,
-html.theme-light .role-experience-guard .app-screen-header p {
-  color: rgba(255,255,255,0.75) !important;
+html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map) p,
+html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map) p {
+  color: rgba(255, 255, 255, 0.75) !important;
 }
 
-/* ─── GUARD MAP: NAV HEADER TRANSPARENT ────────────────── */
-/* Uber Driver map has transparent overlay header */
-.guard-map-layout .app-screen-header,
-.client-map-layout .app-screen-header {
+/* Map screens: frosted overlay header (all themes) */
+.app-screen-header--map {
   background: color-mix(in srgb, var(--brand-bg) 85%, transparent) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
+  color: var(--brand-text) !important;
+  border-bottom-color: var(--brand-border) !important;
+}
+
+.app-screen-header--map h1,
+.app-screen-header--map button,
+.app-screen-header--map .text-brand-text {
+  color: var(--brand-text) !important;
+}
+
+.app-screen-header--map p,
+.app-screen-header--map .text-brand-text-muted {
+  color: var(--brand-text-muted) !important;
 }
 
 /* ─── AUTH PAGE: LARGER FORM ON DESKTOP ─────────────────── */
