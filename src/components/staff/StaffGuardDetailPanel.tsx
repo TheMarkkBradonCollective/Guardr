@@ -177,6 +177,12 @@ export function StaffGuardDetailPanel({
   const activationChecklist = getGuardActivationChecklist(guard);
   const groupedCerts = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
 
+  const completedJobsCount = useMemo(
+    () =>
+      requests.filter((r) => r.assignedGuardId === guard.id && r.status === 'completed').length,
+    [requests, guard.id]
+  );
+
   const guardJobs = useMemo(
     () =>
       requests
@@ -459,8 +465,8 @@ export function StaffGuardDetailPanel({
                 <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
               </div>
               <div>
-                <p className="wf-metric-label">Jobs</p>
-                <p className="wf-metric-value">{guard.jobsCompleted}</p>
+                <p className="wf-metric-label">Completed</p>
+                <p className="wf-metric-value">{completedJobsCount}</p>
               </div>
             </div>
           )}
