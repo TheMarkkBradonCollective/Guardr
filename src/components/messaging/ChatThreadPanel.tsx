@@ -7,6 +7,46 @@ import { ROLE_LABELS } from '../../lib/permissions';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone, AppChatSender } from '../ui/app/AppPrimitives';
 
+// ── Message grouping helpers ──────────────────────────────────────
+
+const GROUP_BREAK_MS = 5 * 60 * 1000; // 5 minutes = new group
+
+function isFirstInGroup(messages: ChatBubbleMessage[], index: number): boolean {
+  if (index === 0) return true;
+  const prev = messages[index - 1];
+  const curr = messages[index];
+  if (prev.senderId !== curr.senderId) return true;
+  const gap = new Date(curr.createdAt).getTime() - new Date(prev.createdAt).getTime();
+  return gap > GROUP_BREAK_MS;
+}
+
+function isLastInGroup(messages: ChatBubbleMessage[], index: number): boolean {
+  if (index === messages.length - 1) return true;
+  const curr = messages[index];
+  const next = messages[index + 1];
+  if (curr.senderId !== next.senderId) return true;
+  const gap = new Date(next.createdAt).getTime() - new Date(curr.createdAt).getTime();
+  return gap > GROUP_BREAK_MS;
+}
+
+function isSameDayAsPrev(messages: ChatBubbleMessage[], index: number): boolean {
+  if (index === 0) return false;
+  const prev = new Date(messages[index - 1].createdAt);
+  const curr = new Date(messages[index].createdAt);
+  return prev.toDateString() === curr.toDateString();
+}
+
+function dateSeparatorLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
 export interface ChatBubbleMessage {
   id: string;
   senderId: string;
@@ -134,27 +174,69 @@ export function ChatThreadPanel({
           </div>
         ) : (
           <div className="app-chat-thread">
-            {messages.map((msg) => {
+            {messages.map((msg, index) => {
               const tone = bubbleTone(msg, currentUserId, teamChat);
               const mine = msg.senderId === currentUserId;
-              const structuredSender = messageSender(msg, staffChatLabels, guardChatLabels);
+              const firstInGrp = isFirstInGroup(messages, index);
+              const lastInGrp = isLastInGroup(messages, index);
+              const showDateSep = !isSameDayAsPrev(messages, index);
+              const isStaff = tone === 'staff';
+
+              const structuredSender = firstInGrp
+                ? messageSender(msg, staffChatLabels, guardChatLabels)
+                : undefined;
               const label =
-                !structuredSender && !mine
+                firstInGrp && !structuredSender && !mine
                   ? messageSenderLabel(msg, staffChatLabels, guardChatLabels)
                   : undefined;
+
+              const groupClass = !firstInGrp && !lastInGrp
+                ? 'app-chat-bubble-gmid'
+                : !firstInGrp
+                ? 'app-chat-bubble-glast'
+                : !lastInGrp
+                ? 'app-chat-bubble-gfirst'
+                : '';
+
+              const rowClass = [
+                'app-chat-row',
+                mine ? 'app-chat-row-outgoing' : 'app-chat-row-incoming',
+                // date separator already provides spacing; only add extra margin when no sep precedes this group
+                firstInGrp && !showDateSep ? 'app-chat-row-group-first' : '',
+                !firstInGrp ? 'app-chat-row-chained' : '',
+              ].filter(Boolean).join(' ');
+
+              const avatarInitial = msg.senderName
+                ? msg.senderName.trim().charAt(0).toUpperCase()
+                : '?';
+
               return (
-                <div
-                  key={msg.id}
-                  className={`app-chat-row ${mine ? 'app-chat-row-outgoing' : 'app-chat-row-incoming'}`}
-                >
-                  <AppChatBubble
-                    tone={tone}
-                    sender={structuredSender}
-                    senderLabel={label}
-                    body={msg.body}
-                    timestamp={formatChatTime(msg.createdAt)}
-                  />
-                </div>
+                <React.Fragment key={msg.id}>
+                  {showDateSep && (
+                    <div className="app-chat-date-sep">
+                      <span>{dateSeparatorLabel(msg.createdAt)}</span>
+                    </div>
+                  )}
+                  <div className={rowClass}>
+                    {!mine && (
+                      <div className="app-chat-row-avatar">
+                        {firstInGrp ? (
+                          <div className={`app-chat-avatar${isStaff ? ' app-chat-avatar-staff' : ''}`}>
+                            {avatarInitial}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                    <AppChatBubble
+                      tone={tone}
+                      sender={structuredSender}
+                      senderLabel={label}
+                      body={msg.body}
+                      timestamp={lastInGrp ? formatChatTime(msg.createdAt) : undefined}
+                      groupClass={groupClass}
+                    />
+                  </div>
+                </React.Fragment>
               );
             })}
           </div>

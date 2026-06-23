@@ -436,22 +436,30 @@ export function AppChatBubble({
   body,
   timestamp,
   tone,
+  groupClass = '',
 }: {
   sender?: AppChatSender;
   senderLabel?: string;
   body: string;
   timestamp?: string;
   tone: AppChatBubbleTone;
+  /** CSS modifier class for grouped messages (app-chat-bubble-gfirst/gmid/glast) */
+  groupClass?: string;
 }) {
+  const hasSender = !!(sender || senderLabel);
   return (
-    <div className={`app-chat-bubble app-chat-bubble-${tone}`}>
-      {(sender || senderLabel) && (
+    <div className={`app-chat-bubble app-chat-bubble-${tone}${groupClass ? ` ${groupClass}` : ''}`}>
+      {hasSender && (
         <div className="app-chat-bubble-sender">
           {sender ? (
             <>
-              {sender.showBrand && <span className="app-chat-bubble-brand">Guardr</span>}
               <span className="app-chat-bubble-name">{sender.name}</span>
-              {sender.roleLabel && <span className="app-chat-bubble-role">{sender.roleLabel}</span>}
+              {sender.roleLabel && (
+                <span className="app-chat-bubble-role">{sender.roleLabel}</span>
+              )}
+              {sender.showBrand && (
+                <span className="app-chat-bubble-brand">via Guardr</span>
+              )}
             </>
           ) : (
             <span className="app-chat-bubble-name">{senderLabel}</span>
