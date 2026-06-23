@@ -3,7 +3,6 @@ import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
   getCourseUploadStatus,
-  getCourseUploadStatusLabel,
 } from '../../lib/certStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
@@ -15,7 +14,10 @@ import {
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import { BookOpen, Plus } from 'lucide-react';
-import { WfBadge } from '../ui/wireframe';
+import {
+  CredentialListStatusBadge,
+  CredentialSectionStatusBadge,
+} from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import { guardCertificationCanEdit, validateCertDeletion, validateCertSubmission } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
@@ -165,9 +167,7 @@ export function GuardThirtyTwoHourPanel({
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           32-Hour BSIS Course Block
           {staffMode && !progress.thirtyTwoHourBlockComplete && (
-            <WfBadge tone="warning" className="!text-[10px]">
-              Missing
-            </WfBadge>
+            <CredentialSectionStatusBadge label="Missing" />
           )}
         </p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
@@ -235,9 +235,7 @@ export function GuardThirtyTwoHourPanel({
                   {course.name}
                 </p>
                 {uploaded.length === 0 && (
-                  <span className="shrink-0 text-[10px] font-bold uppercase text-brand-text-muted">
-                    {getCourseUploadStatusLabel(uploadStatus)}
-                  </span>
+                  <CredentialListStatusBadge status={uploadStatus} />
                 )}
               </div>
 

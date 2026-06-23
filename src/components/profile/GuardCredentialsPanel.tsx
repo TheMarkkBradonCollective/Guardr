@@ -34,7 +34,7 @@ import {
   guardIdVerificationCanEdit,
 } from '../../lib/guardIdentityVerification';
 import { Award, BookOpen, Shield } from 'lucide-react';
-import { WfBadge } from '../ui/wireframe';
+import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import {
   CERT_IMAGE_POLICY_HINT,
@@ -394,23 +394,19 @@ export function GuardCredentialsPanel({
         </p>
       )}
 
-      {!guard.isStaff && (
-        <div className="app-cert-item-stack">
-          {onSubmitIdentityVerification && (
-            <div className="space-y-3">
-              <GuardIdItemCard
-                guard={guard}
-                canEdit={staffMode || canEditId}
-                staffMode={staffMode}
-                onSubmit={onSubmitIdentityVerification}
-              />
-              {staffIdReview}
-            </div>
-          )}
+      {!guard.isStaff && onSubmitIdentityVerification && (
+        <>
+          <GuardIdItemCard
+            guard={guard}
+            canEdit={staffMode || canEditId}
+            staffMode={staffMode}
+            asCredentialSection
+            onSubmit={onSubmitIdentityVerification}
+          />
+          {staffIdReview && <div className="-mt-2">{staffIdReview}</div>}
           <GuardCardPanel
             guard={guard}
             editing={editing}
-            nested
             staffMode={staffMode}
             renderCertActions={renderCertActions}
             onAddCertification={onAddCertification}
@@ -418,7 +414,7 @@ export function GuardCredentialsPanel({
             onAttachCertificationImage={onAttachCertificationImage}
             onUpdateCertification={onUpdateCertification}
           />
-        </div>
+        </>
       )}
 
       <section className="app-form-section space-y-3">
@@ -428,9 +424,7 @@ export function GuardCredentialsPanel({
               <BookOpen className="w-4 h-4 text-brand-primary" />
               Power to Arrest &amp; Appropriate Use of Force
               {staffMode && !guardMeetsPtaUofTrainingListed(guard) && (
-                <WfBadge tone="warning" className="!text-[10px]">
-                  Not listed
-                </WfBadge>
+                <CredentialSectionStatusBadge label="Not listed" />
               )}
             </p>
             <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">

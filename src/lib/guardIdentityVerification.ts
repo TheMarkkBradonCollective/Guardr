@@ -61,6 +61,52 @@ export function guardIdVerificationPhotosComplete(
   return Boolean(guard.idFrontUrl?.trim() && guard.idBackUrl?.trim() && guard.idSelfieUrl?.trim());
 }
 
+export function guardHasGovernmentIdOnFile(
+  guard: Pick<
+    SecurityGuard,
+    'idState' | 'idNumber' | 'idExpiryDate' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+  >
+): boolean {
+  return Boolean(
+    guard.idState?.trim() ||
+      guard.idNumber?.trim() ||
+      guard.idExpiryDate?.trim() ||
+      guard.idFrontUrl?.trim() ||
+      guard.idBackUrl?.trim() ||
+      guard.idSelfieUrl?.trim()
+  );
+}
+
+export function getGovernmentIdUploadStatus(
+  guard: Pick<
+    SecurityGuard,
+    | 'idState'
+    | 'idNumber'
+    | 'idExpiryDate'
+    | 'idFrontUrl'
+    | 'idBackUrl'
+    | 'idSelfieUrl'
+    | 'idVerificationStatus'
+  >
+): 'missing' | 'listed' | 'on-file' | 'expired' {
+  if (!guardHasGovernmentIdOnFile(guard)) return 'missing';
+  if (!guardIdVerificationSubmissionReady(guard)) return 'listed';
+  if (isIdExpired(guard)) return 'expired';
+  return 'on-file';
+}
+
+export function getGovernmentIdUploadStatusSummary(guard: SecurityGuard): string {
+  const status = getGovernmentIdUploadStatus(guard);
+  if (status === 'missing') return 'Not on file';
+  if (status === 'listed') return 'Incomplete — finish upload';
+  if (status === 'expired') return 'On file · expired';
+  const verification = getGuardIdVerificationStatus(guard);
+  if (verification === 'verified') return 'Verified — on file';
+  if (verification === 'pending') return 'Submitted — pending staff review';
+  if (verification === 'rejected') return 'Resubmit requested';
+  return 'On file';
+}
+
 export function guardIdVerificationSubmissionReady(
   guard: Pick<SecurityGuard, 'idState' | 'idNumber' | 'idExpiryDate' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
 ): boolean {

@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
+import { getCourseUploadStatus } from '../../lib/certStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import { getGuardLicenses } from '../../lib/guardResume';
 import { guardMeetsLevel1 } from '../../lib/guardQualification';
 import { US_STATES } from '../../lib/states';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { CredentialSectionStatusBadge } from '../credentials/CredentialStatusLabels';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { WfBadge } from '../ui/wireframe';
@@ -23,10 +25,7 @@ interface GuardCardPanelProps {
   onDeleteCertification?: (certId: string) => Promise<CertImageMutationResult>;
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
-  /** Staff viewing a guard profile — enables credential edit in the detail modal. */
   staffMode?: boolean;
-  /** Render inside the credentials stack without a separate section header. */
-  nested?: boolean;
   renderCertActions?: (cert: Certification) => React.ReactNode;
 }
 
@@ -38,12 +37,12 @@ export function GuardCardPanel({
   onAttachCertificationImage,
   onUpdateCertification,
   staffMode = false,
-  nested = false,
   renderCertActions,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const checklist = useMemo(() => getGuardActivationChecklist(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
+  const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
 
   const [showForm, setShowForm] = useState(false);
   const [issuer, setIssuer] = useState('');
@@ -131,7 +130,7 @@ export function GuardCardPanel({
     ? 'Verified'
     : checklist.guardCardSubmitted
       ? 'Pending review'
-      : 'Not uploaded';
+      : 'Not on file';
 
   const uploadForm = (
     <form onSubmit={submitGuardCard} className="space-y-3">
@@ -200,82 +199,66 @@ export function GuardCardPanel({
     </div>
   ));
 
-  if (nested) {
-    return (
-      <>
-        {staffMode && !editing && items.length === 0 && (
-          <div className="flex items-center justify-between gap-2 py-2 border-b border-brand-border">
-            <p className="text-xs text-brand-text-muted">BSIS Guard Card</p>
-            <WfBadge tone="warning" className="!text-[10px]">
-              Missing
-            </WfBadge>
-          </div>
-        )}
-        {cardRows}
-        {editing && onAddCertification && (
-          <div className="pt-2 space-y-2">
-            <div className="flex items-center justify-between gap-2 px-1">
-              <p className="text-xs text-brand-text-muted">
-                BSIS Guard Card — required before profile approval. {CERT_IMAGE_POLICY_HINT}
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowForm(true)}
-                className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-              >
-                {items.length ? 'Add another' : 'Upload'}
-              </button>
-            </div>
-          </div>
-        )}
-        {uploadSheet}
-      </>
-    );
-  }
-
   return (
     <>
-    <section className="app-form-section space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="uber-label flex items-center gap-2 flex-wrap">
-            <Shield className="w-4 h-4 text-brand-primary" />
-            BSIS Guard Card
-            {staffMode && !guardMeetsLevel1(guard) && (
-              <WfBadge tone="warning" className="!text-[10px]">
-                Missing
-              </WfBadge>
+      <section className="app-form-section space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="uber-label flex items-center gap-2 flex-wrap">
+              <Shield className="w-4 h-4 text-brand-primary" />
+              BSIS Guard Card
+              {staffMode && !guardMeetsLevel1(guard) && (
+                <CredentialSectionStatusBadge label="Missing" />
+              )}
+            </p>
+            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+              Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
+            </p>
+            <p
+              className={`text-xs font-semibold mt-2 ${
+                uploadStatus === 'on-file' ? 'text-brand-primary' : 'text-brand-text-muted'
+              }`}
+            >
+              {uploadStatus === 'missing'
+                ? 'Not on file'
+                : uploadStatus === 'listed'
+                  ? 'Listed — document photo required'
+                  : uploadStatus === 'expired'
+                    ? 'On file · expired'
+                    : checklist.guardCardVerified
+                      ? 'Verified — on file'
+                      : checklist.guardCardSubmitted
+                        ? 'Submitted — pending staff review'
+                        : 'On file'}
+            </p>
+            {!staffMode && (
+              <div className="mt-2">
+                <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
+              </div>
             )}
-          </p>
-          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-            Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
-          </p>
-          <div className="mt-2">
-            <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
           </div>
+          {editing && onAddCertification && (
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
+            >
+              {items.length ? 'Add another' : 'Upload'}
+            </button>
+          )}
         </div>
-        {editing && onAddCertification && (
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="app-button-primary !w-auto !h-8 !px-3 !text-xs shrink-0"
-          >
-            {items.length ? 'Add another' : 'Upload'}
-          </button>
-        )}
-      </div>
 
-      {items.length === 0 ? (
-        <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
-          No guard card on file yet.
-        </p>
-      ) : (
-        <div className="app-cert-item-stack border-t border-brand-border">
-          {cardRows}
-        </div>
-      )}
-    </section>
-    {uploadSheet}
+        {items.length === 0 ? (
+          <p className="text-xs text-brand-text-muted py-3 border-t border-brand-border">
+            No guard card on file yet.
+          </p>
+        ) : (
+          <div className="app-cert-item-stack border-t border-brand-border">
+            {cardRows}
+          </div>
+        )}
+      </section>
+      {uploadSheet}
     </>
   );
 }
