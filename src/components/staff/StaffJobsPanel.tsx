@@ -32,7 +32,7 @@ import { canStaffAddSpotCheck, hasSpotChecks, isNoSpotCheckFlagged } from '../..
 import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 
-type JobsFilter = 'all' | 'open' | 'active' | 'done';
+type JobsFilter = 'all' | 'open' | 'active' | 'complete';
 
 interface StaffJobsPanelProps {
   requests: SecurityRequest[];
@@ -64,7 +64,7 @@ function matchesFilter(req: SecurityRequest, filter: JobsFilter): boolean {
       return req.status === 'open' || req.status === 'pending-review';
     case 'active':
       return req.status === 'accepted' || req.status === 'in-progress';
-    case 'done':
+    case 'complete':
       return req.status === 'completed' || req.status === 'closed';
     default:
       return true;
@@ -445,7 +445,7 @@ export function StaffJobsPanel({
     { id: 'all', label: 'All' },
     { id: 'open', label: 'Open' },
     { id: 'active', label: 'Active' },
-    { id: 'done', label: 'Done' },
+    { id: 'complete', label: 'Complete' },
   ];
 
   function renderJobCard(req: SecurityRequest, isActive: boolean) {
