@@ -18,7 +18,7 @@ import { ArrowLeft, ArrowRight, Search } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
 import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
-import { JobLocationPinPicker } from '../jobs/JobLocationPinPicker';
+import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -219,10 +219,7 @@ export function DirectGuardRequestFlow({
               <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
             </div>
             {address.trim().length > 3 && jobState.length === 2 && (
-              <JobLocationPinPicker
-                address={address}
-                state={jobState}
-                siteName={siteName}
+              <JobLocationCoordsFields
                 latitude={latitude}
                 longitude={longitude}
                 onCoordsChange={(coords) => {

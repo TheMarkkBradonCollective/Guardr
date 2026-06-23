@@ -1,6 +1,7 @@
 import { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { GuardJobView } from './guardJobView';
-import { estimateJobDistanceMiles, jobCoords } from './geo';
+import { estimateJobDistanceMiles } from './geo';
+import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
 import { requirementLabel } from './certCatalog';
@@ -74,8 +75,12 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
 
 export function getJobDistance(
   job: Pick<GuardJobLike, 'location' | 'id'> & { latitude?: number; longitude?: number }
-): number {
-  return estimateJobDistanceMiles(job.location, job.id, undefined, jobCoords(job));
+): number | null {
+  if (!hasJobCoordinates(job)) return null;
+  return estimateJobDistanceMiles(job.location, job.id, undefined, {
+    lat: job.latitude!,
+    lng: job.longitude!,
+  });
 }
 
 export function getGuardHourlyPay(job: Pick<GuardJobView, 'guardPay'>): number {
@@ -220,8 +225,14 @@ export function guardCanApplyToJob(guard: SecurityGuard, job: GuardJobVisibility
 export function sortJobs<T extends GuardJobLike>(jobs: T[], sortBy: JobSortKey): T[] {
   return [...jobs].sort((a, b) => {
     switch (sortBy) {
-      case 'distance':
-        return getJobDistance(a) - getJobDistance(b);
+      case 'distance': {
+        const da = getJobDistance(a);
+        const db = getJobDistance(b);
+        if (da == null && db == null) return 0;
+        if (da == null) return 1;
+        if (db == null) return -1;
+        return da - db;
+      }
       case 'pay':
         return getGuardHourlyPay(b) - getGuardHourlyPay(a);
       case 'startTime':

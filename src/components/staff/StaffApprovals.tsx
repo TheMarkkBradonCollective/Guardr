@@ -9,6 +9,7 @@ import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
+import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
 import {
   getApprovedGuardsAwaitingActivation,
@@ -35,7 +36,7 @@ import { certDisplayName } from '../../lib/certCatalog';
 import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
-import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
+import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, MapPin, Pencil, Shield, UserCheck, X } from 'lucide-react';

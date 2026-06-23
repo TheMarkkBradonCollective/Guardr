@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { jobCoords, METRO_CENTER } from '../../lib/geo';
+import { hasJobCoordinates } from '../../lib/jobLocation';
 import { useUserLocation } from '../../lib/useUserLocation';
 import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
@@ -64,10 +65,12 @@ export function ShiftMap({
 
   const jobPins = useMemo(
     () =>
-      jobs.map((job) => ({
-        job,
-        coords: jobCoords(job),
-      })),
+      jobs
+        .filter((job) => hasJobCoordinates(job))
+        .map((job) => ({
+          job,
+          coords: jobCoords(job),
+        })),
     [jobs]
   );
 

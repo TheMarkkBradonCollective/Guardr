@@ -3,7 +3,7 @@ import {
   isSelfSubmittedClientAccount,
   isUserSubmittedPendingCert,
 } from './approvalSubmissions';
-import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
+import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
@@ -356,6 +356,18 @@ export function buildOverviewActionQueue(
       count: stats.pendingJobApprovals,
       section: 'approvals',
       approvalQueue: 'job-offers',
+      tone: 'urgent',
+    });
+  }
+
+  const jobsMissingCoords = jobsMissingMapCoordinates(requests);
+  if (jobsMissingCoords.length > 0) {
+    items.push({
+      id: 'jobs-missing-coords',
+      title: 'Jobs missing map coordinates',
+      description: 'Add latitude and longitude so guards see the correct map pin',
+      count: jobsMissingCoords.length,
+      section: 'jobs',
       tone: 'urgent',
     });
   }
