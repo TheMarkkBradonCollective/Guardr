@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import React from 'react';
+import { SecurityGuard, SecurityRequest } from '../../types';
 import {
   ActivityFeedItem,
   buildActivityFeed,
@@ -12,8 +12,8 @@ import { AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
 import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
-import { JobChatPanel } from '../messaging/JobChatPanel';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
+import { JobChatThread } from '../../types';
 import { hasSpotChecksForClientReview } from '../../lib/spotChecks';
 
 interface LiveCoverageScreenProps {
@@ -21,15 +21,8 @@ interface LiveCoverageScreenProps {
   guards: SecurityGuard[];
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
-  onBack: () => void;
-  currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
-  jobChatMessages?: JobChatMessage[];
-  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
-  initialChatRequestId?: string | null;
-  initialChatOpen?: boolean;
-  onChatRequestIdChange?: (requestId: string | null) => void;
-  onChatOpenChange?: (open: boolean) => void;
+  onOpenJobChat?: (requestId: string) => void;
 }
 
 const SITE_STATUS_CONFIG: Record<
@@ -54,61 +47,14 @@ export function LiveCoverageScreen({
   guards,
   onConfirmSelfAudit,
   onConfirmSpotCheck,
-  currentUser,
   jobChatThreads = [],
-  jobChatMessages = [],
-  onSendJobChatMessage,
-  initialChatRequestId = null,
-  initialChatOpen = false,
-  onChatRequestIdChange,
-  onChatOpenChange,
+  onOpenJobChat,
 }: LiveCoverageScreenProps) {
-  const [chatRequestId, setChatRequestId] = useState<string | null>(initialChatRequestId);
   const liveRequests = requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
   const guardRows = buildGuardRows(liveRequests, guards);
   const feed = buildActivityFeed(liveRequests, guards);
   const siteStatus = computeSiteStatus(requests);
   const statusCfg = SITE_STATUS_CONFIG[siteStatus];
-
-  const chatRequest = chatRequestId ? liveRequests.find((r) => r.id === chatRequestId) ?? null : null;
-
-  useEffect(() => {
-    if (!initialChatRequestId) return;
-    setChatRequestId(initialChatRequestId);
-  }, [initialChatRequestId]);
-
-  useEffect(() => {
-    if (initialChatOpen && initialChatRequestId) {
-      setChatRequestId(initialChatRequestId);
-    }
-  }, [initialChatOpen, initialChatRequestId]);
-
-  const openChat = (requestId: string) => {
-    setChatRequestId(requestId);
-    onChatRequestIdChange?.(requestId);
-    onChatOpenChange?.(true);
-  };
-
-  const closeChat = () => {
-    setChatRequestId(null);
-    onChatRequestIdChange?.(null);
-    onChatOpenChange?.(false);
-  };
-
-  if (chatRequest && currentUser && onSendJobChatMessage) {
-    return (
-      <div className="h-full flex flex-col min-h-0 animate-fade-in">
-        <JobChatPanel
-          request={chatRequest}
-          thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
-          messages={jobChatMessages}
-          currentUser={currentUser}
-          onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
-          onBack={() => closeChat()}
-        />
-      </div>
-    );
-  }
 
   return (
     <AppScreen className="pb-8">
@@ -148,10 +94,10 @@ export function LiveCoverageScreen({
                     ) : (
                       <p className="text-xs text-brand-text-muted">Scheduled {formatStartedTime(request.startDate)}</p>
                     )}
-                    {onSendJobChatMessage && currentUser && (isJobChatEligible(request) || threadForRequest(jobChatThreads, request.id)) && (
+                    {onOpenJobChat && (isJobChatEligible(request) || threadForRequest(jobChatThreads, request.id)) && (
                       <button
                         type="button"
-                        onClick={() => openChat(request.id)}
+                        onClick={() => onOpenJobChat(request.id)}
                         className="text-xs font-medium text-brand-primary mt-2"
                       >
                         {isJobChatEligible(request) ? 'Message guard' : 'View job chat'}

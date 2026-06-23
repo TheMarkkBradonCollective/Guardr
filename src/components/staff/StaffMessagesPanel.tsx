@@ -47,6 +47,7 @@ interface StaffMessagesPanelProps {
   onSelectedSupportTicketIdChange?: (ticketId: string | null) => void;
   initialJobChatRequestId?: string | null;
   initialSupportTicketId?: string | null;
+  onDetailOpenChange?: (open: boolean) => void;
 }
 
 export function StaffMessagesPanel({
@@ -67,6 +68,7 @@ export function StaffMessagesPanel({
   onSelectedSupportTicketIdChange,
   initialJobChatRequestId = null,
   initialSupportTicketId = null,
+  onDetailOpenChange,
 }: StaffMessagesPanelProps) {
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };
@@ -128,6 +130,10 @@ export function StaffMessagesPanel({
         ? { kind: 'job', requestId: controlledJobId }
         : selection;
 
+  useEffect(() => {
+    onDetailOpenChange?.(!!effectiveSelection);
+  }, [effectiveSelection, onDetailOpenChange]);
+
   const listView = (
     <div className="staff-split-pane-list flex flex-col min-h-0 h-full">
       <div className="flex-1 min-h-0 overflow-y-auto">
@@ -183,7 +189,7 @@ export function StaffMessagesPanel({
 
     if (effectiveSelection.kind === 'staff-channel') {
       return (
-        <div className="flex flex-col h-full min-h-0">
+        <div className="flex flex-col h-full min-h-0 app-full-page-screen">
           <AppChatHeader
             title="Staff chat"
             subtitle="Internal team channel"
@@ -228,7 +234,7 @@ export function StaffMessagesPanel({
     };
 
     return (
-      <div className="flex flex-col h-full min-h-0 bg-brand-bg">
+      <div className="flex flex-col h-full min-h-0 bg-brand-bg app-full-page-screen">
         <AppChatHeader
           title={ticket.subject}
           subtitle={`${ticket.userName} · ${ROLE_LABELS[ticket.userRole]}`}
@@ -275,12 +281,8 @@ export function StaffMessagesPanel({
 
   return (
     <>
-      <div className="lg:hidden h-full flex flex-col min-h-0">
+      <div className="h-full flex flex-col min-h-0">
         {effectiveSelection ? detailView : listView}
-      </div>
-      <div className="hidden lg:flex staff-split-pane h-full">
-        {listView}
-        <div className="staff-split-pane-detail flex flex-col min-h-0">{detailView}</div>
       </div>
     </>
   );

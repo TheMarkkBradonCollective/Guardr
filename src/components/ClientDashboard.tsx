@@ -170,6 +170,18 @@ export function ClientDashboard({
     onViewChange?.(next);
   };
 
+  const openMessages = (requestId: string) => {
+    onJobChatRequestIdChange?.(requestId);
+    onJobChatOpenChange?.(true);
+    navigate('messages');
+  };
+
+  useEffect(() => {
+    if (openJobChat && jobChatRequestId && (view === 'map' || view === 'coverage')) {
+      navigate('messages');
+    }
+  }, [openJobChat, jobChatRequestId, view]);
+
   const coverage = useMemo(() => computeCoverageSummary(requests), [requests]);
   const recentReports = useMemo(() => buildRecentReports(requests), [requests]);
 
@@ -237,14 +249,10 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         currentUser={currentUser}
-        jobChatThreads={jobChatThreads}
-        jobChatMessages={jobChatMessages}
-        onSendJobChatMessage={onSendJobChatMessage}
         onOpenCoverage={() => navigate('coverage')}
+        onOpenJobChat={openMessages}
         initialLiveJobId={jobChatRequestId}
-        initialChatOpen={openJobChat}
         onLiveJobIdChange={onJobChatRequestIdChange}
-        onChatOpenChange={onJobChatOpenChange}
       />
     );
   }
@@ -332,15 +340,8 @@ export function ClientDashboard({
         guards={guards}
         onConfirmSelfAudit={onConfirmSelfAudit}
         onConfirmSpotCheck={onConfirmSpotCheck}
-        onBack={() => navigate('home')}
-        currentUser={currentUser}
         jobChatThreads={jobChatThreads}
-        jobChatMessages={jobChatMessages}
-        onSendJobChatMessage={onSendJobChatMessage}
-        initialChatRequestId={jobChatRequestId}
-        initialChatOpen={openJobChat}
-        onChatRequestIdChange={onJobChatRequestIdChange}
-        onChatOpenChange={onJobChatOpenChange}
+        onOpenJobChat={openMessages}
       />
     );
   }
@@ -380,7 +381,7 @@ export function ClientDashboard({
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
         onSendJobChatMessage={onSendJobChatMessage}
-        onOpenJobChat={onOpenJobChat}
+        onOpenJobChat={openMessages}
       />
     );
   }

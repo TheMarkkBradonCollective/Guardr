@@ -1,47 +1,36 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import { SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import { ShiftMap } from '../guard/ShiftMap';
 import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { ClientActiveShift } from './ClientActiveShift';
-import { JobChatPanel } from '../messaging/JobChatPanel';
-import { threadForRequest } from '../../lib/jobChat';
 import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest } from '../../lib/clientShift';
 
 interface ClientMapScreenProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   currentUser?: SessionUser;
-  jobChatThreads?: JobChatThread[];
-  jobChatMessages?: JobChatMessage[];
-  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onOpenCoverage?: () => void;
+  onOpenJobChat?: (requestId: string) => void;
   initialLiveJobId?: string | null;
-  initialChatOpen?: boolean;
   onLiveJobIdChange?: (requestId: string | null) => void;
-  onChatOpenChange?: (open: boolean) => void;
 }
 
 export function ClientMapScreen({
   requests,
   guards,
   currentUser,
-  jobChatThreads = [],
-  jobChatMessages = [],
-  onSendJobChatMessage,
   onOpenCoverage,
+  onOpenJobChat,
   initialLiveJobId = null,
-  initialChatOpen = false,
   onLiveJobIdChange,
-  onChatOpenChange,
 }: ClientMapScreenProps) {
   const liveJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
   const primaryLiveJob = useMemo(() => getPrimaryClientLiveJob(requests), [requests]);
   const [selectedLiveJobId, setSelectedLiveJobId] = useState<string | null>(
     initialLiveJobId ?? primaryLiveJob?.id ?? null
   );
-  const [showJobChat, setShowJobChat] = useState(initialChatOpen);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
@@ -74,28 +63,12 @@ export function ClientMapScreen({
   }, [initialLiveJobId, primaryLiveJob?.id]);
 
   useEffect(() => {
-    if (initialChatOpen) setShowJobChat(true);
-  }, [initialChatOpen]);
-
-  useEffect(() => {
     if (showShiftOverlay) setSelectedOfferId(null);
   }, [showShiftOverlay, activeLiveJob?.id]);
 
   const switchLiveJob = (requestId: string) => {
     setSelectedLiveJobId(requestId);
     onLiveJobIdChange?.(requestId);
-    setShowJobChat(false);
-    onChatOpenChange?.(false);
-  };
-
-  const openJobChat = () => {
-    setShowJobChat(true);
-    onChatOpenChange?.(true);
-  };
-
-  const closeJobChat = () => {
-    setShowJobChat(false);
-    onChatOpenChange?.(false);
   };
 
   return (
@@ -120,29 +93,17 @@ export function ClientMapScreen({
         onRouteLoadingChange={setRouteLoading}
       />
 
-      {showShiftOverlay && activeLiveJob && activeGuard && !showJobChat && (
+      {showShiftOverlay && activeLiveJob && activeGuard && (
         <ClientActiveShift
           request={activeLiveJob}
           guard={activeGuard}
           allLiveRequests={liveJobs}
-          onOpenJobChat={onSendJobChatMessage && currentUser ? openJobChat : undefined}
+          onOpenJobChat={
+            onOpenJobChat && currentUser ? () => onOpenJobChat(activeLiveJob.id) : undefined
+          }
           onOpenCoverage={onOpenCoverage}
           onSwitchJob={liveJobs.length > 1 ? switchLiveJob : undefined}
         />
-      )}
-
-      {showShiftOverlay && activeLiveJob && showJobChat && currentUser && onSendJobChatMessage && (
-        <div className="absolute inset-x-0 bottom-0 z-[1002] h-[70vh] rounded-t-2xl border border-brand-border bg-brand-bg shadow-xl overflow-hidden">
-          <JobChatPanel
-            request={activeLiveJob}
-            thread={threadForRequest(jobChatThreads, activeLiveJob.id) ?? null}
-            messages={jobChatMessages}
-            currentUser={currentUser}
-            onSend={(body) => onSendJobChatMessage(activeLiveJob.id, body)}
-            onBack={closeJobChat}
-            compact
-          />
-        </div>
       )}
 
       {!showShiftOverlay && (
