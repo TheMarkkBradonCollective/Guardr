@@ -227,7 +227,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
         </div>
       </header>
 
-      <section className="landing-hero-dark relative overflow-hidden">
+      <section className="landing-hero relative overflow-hidden">
         <div className="landing-hero-glow" aria-hidden="true">
           <div className="landing-hero-glow-a" />
           <div className="landing-hero-glow-b" />
@@ -248,7 +248,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.04 }}
-              className="landing-hero-title font-black tracking-[-0.04em] text-white"
+              className="landing-hero-title font-black tracking-[-0.04em]"
             >
               {isMobile ? (
                 <>Security, when you need it.</>
@@ -265,7 +265,7 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="landing-hero-subcopy text-white/72 font-medium"
+              className="landing-hero-subcopy font-medium"
             >
               Clients post jobs. Licensed guards choose assignments.
               Maps, messaging, and payments — all in one place.
