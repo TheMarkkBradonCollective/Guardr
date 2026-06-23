@@ -3335,19 +3335,17 @@ html.theme-light .staff-sidebar-brand .text-brand-text-muted {
 
 @keyframes shift-phase-pulse {
   0%, 100% {
+    opacity: 1;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 28%, transparent);
-    filter: brightness(1);
   }
   50% {
-    box-shadow:
-      0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent),
-      0 2px 14px color-mix(in srgb, var(--brand-primary) 50%, transparent);
-    filter: brightness(1.12);
+    opacity: 0.88;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--brand-primary) 16%, transparent);
   }
 }
 
 .segmented-control-btn-current {
-  animation: shift-phase-pulse 2s ease-in-out infinite;
+  animation: shift-phase-pulse 3s ease-in-out infinite;
 }
 
 html.theme-light .segmented-control-btn-active {
