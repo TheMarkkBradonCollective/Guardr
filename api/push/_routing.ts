@@ -84,6 +84,15 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
         : '/staff/payments';
+    case 'support_ticket':
+    case 'support_ticket_status':
+      return options.ticketId
+        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages?mtab=support';
+    case 'dispute_update':
+      return options.ticketId
+        ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/disputes';
     case 'test':
       return '/';
     default:
@@ -168,6 +177,35 @@ export function resolveNotificationUrlForRole(
       return '/staff/messages?mtab=team';
     case 'guard_message':
       return '/guard/guard-chat';
+    case 'support_ticket':
+    case 'support_ticket_status':
+      if (role === 'client') {
+        return options.ticketId
+          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/support';
+      }
+      if (role === 'guard') {
+        return options.ticketId
+          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/support';
+      }
+      return options.ticketId
+        ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/messages?mtab=support';
+    case 'dispute_update':
+      if (role === 'client') {
+        return options.ticketId
+          ? `/client/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/client/support';
+      }
+      if (role === 'guard') {
+        return options.ticketId
+          ? `/guard/support?st=${encodeURIComponent(options.ticketId)}`
+          : '/guard/support';
+      }
+      return options.ticketId
+        ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
+        : '/staff/disputes';
     case 'assignment':
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -204,6 +242,12 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'credential_pending':
     case 'payment_attention':
       return ['dispatch', 'admin'];
+    case 'support_ticket':
+      return ['dispatch', 'admin'];
+    case 'support_ticket_status':
+      return ['client', 'guard'];
+    case 'dispute_update':
+      return ['dispatch', 'admin', 'client', 'guard'];
     case 'test':
       return [];
     default:

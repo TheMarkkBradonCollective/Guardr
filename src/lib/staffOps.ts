@@ -1,4 +1,4 @@
-import { Client, SecurityGuard, SecurityRequest } from '../types';
+import { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../types';
 import {
   isSelfSubmittedClientAccount,
   isUserSubmittedPendingCert,
@@ -148,8 +148,18 @@ export interface OpsIncident {
   status: 'open' | 'reviewing' | 'resolved';
 }
 
+export type DisputeResolutionAction =
+  | 'approve_payout'
+  | 'hold_funds'
+  | 'partial_payout'
+  | 'cancel_payout';
+
 export interface OpsDispute {
   id: string;
+  ticketId?: string;
+  requestId?: string;
+  guardId?: string;
+  clientId?: string;
   type: 'payment' | 'no-show' | 'safety' | 'service';
   jobTitle: string;
   guardName: string;
@@ -663,10 +673,51 @@ export function buildIncidents(
 }
 
 export function buildDisputes(
-  _requests: SecurityRequest[],
-  _guards: SecurityGuard[]
+  requests: SecurityRequest[],
+  guards: SecurityGuard[],
+  tickets: SupportTicket[] = []
 ): OpsDispute[] {
-  return [];
+  const disputes: OpsDispute[] = [];
+
+  for (const ticket of tickets) {
+    if (ticket.status === 'resolved' || ticket.kind !== 'report') continue;
+    if (!['payment', 'job-issue', 'safety'].includes(ticket.category)) continue;
+
+    const relatedJob = ticket.relatedRequestId
+      ? requests.find((r) => r.id === ticket.relatedRequestId)
+      : undefined;
+    const assignedGuard = relatedJob?.assignedGuardId
+      ? guards.find((g) => g.id === relatedJob.assignedGuardId)
+      : undefined;
+
+    const type =
+      ticket.category === 'payment'
+        ? 'payment'
+        : ticket.category === 'safety'
+          ? 'safety'
+          : 'service';
+
+    disputes.push({
+      id: ticket.id,
+      ticketId: ticket.id,
+      requestId: ticket.relatedRequestId,
+      guardId: assignedGuard?.id ?? (ticket.userRole === 'guard' ? ticket.userId : undefined),
+      clientId: relatedJob?.clientId ?? (ticket.userRole === 'client' ? ticket.userId : undefined),
+      type,
+      jobTitle: relatedJob?.title ?? ticket.subject,
+      guardName:
+        assignedGuard?.name ?? (ticket.userRole === 'guard' ? ticket.userName : 'Pending guard'),
+      clientName: relatedJob?.clientName ?? (ticket.userRole === 'client' ? ticket.userName : 'Pending client'),
+      guardStatement: ticket.userRole === 'guard' ? ticket.messages[0]?.body ?? '' : '—',
+      clientStatement: ticket.userRole === 'client' ? ticket.messages[0]?.body ?? '' : '—',
+      status: ticket.status === 'in-progress' ? 'held' : 'open',
+      openedAt: ticket.createdAt,
+    });
+  }
+
+  return disputes.sort(
+    (a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()
+  );
 }
 
 export function computeWeeklyCompletedJobs(requests: SecurityRequest[]): number[] {

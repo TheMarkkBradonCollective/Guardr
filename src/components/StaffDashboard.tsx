@@ -173,6 +173,10 @@ interface StaffDashboardProps {
   onAddEducation?: (guardId: string, edu: Omit<GuardEducation, 'id'>) => void | Promise<void>;
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus?: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
+  onResolveDispute?: (
+    dispute: import('../lib/staffOps').OpsDispute,
+    action: import('../lib/staffOps').DisputeResolutionAction
+  ) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
@@ -272,6 +276,7 @@ export function StaffDashboard({
   onAddEducation,
   onSendSupportMessage,
   onUpdateSupportStatus,
+  onResolveDispute,
   onSendStaffMessage,
   onRefreshStaffMessages,
   onSendJobChat,
@@ -365,7 +370,7 @@ export function StaffDashboard({
   const stats = useMemo(() => computePlatformStats(guards, clients, requests), [guards, clients, requests]);
   const activityFeed = useMemo(() => buildPlatformActivityFeed(guards, clients, requests), [guards, clients, requests]);
   const incidents = useMemo(() => buildIncidents(requests, guards), [requests, guards]);
-  const disputes = useMemo(() => buildDisputes(requests, guards), [requests, guards]);
+  const disputes = useMemo(() => buildDisputes(requests, guards, supportTickets), [requests, guards, supportTickets]);
   const overviewActions = useMemo(
     () => buildOverviewActionQueue(stats, requests, incidents, openTicketCount(supportTickets), guards, clients),
     [stats, requests, incidents, supportTickets, guards, clients]
@@ -619,7 +624,7 @@ export function StaffDashboard({
           </div>
         );
       case 'disputes':
-        return <StaffDisputesPanel disputes={disputes} />;
+        return <StaffDisputesPanel disputes={disputes} onResolveDispute={onResolveDispute} />;
       case 'analytics':
         return (
           <StaffAnalyticsPanel

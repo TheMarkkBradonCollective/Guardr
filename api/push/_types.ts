@@ -15,6 +15,9 @@ export type PushNotificationType =
   | 'client_pending_approval'
   | 'credential_pending'
   | 'payment_attention'
+  | 'support_ticket'
+  | 'support_ticket_status'
+  | 'dispute_update'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

@@ -182,6 +182,11 @@ import {
   syncPushSubscriptionWithServer,
 } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
+import {
+  notifyDisputeResolution,
+  notifySupportTicketCreated,
+  notifySupportTicketStatus,
+} from './lib/supportNotifications';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
   clearPersistedAppRoute,
@@ -6010,6 +6015,15 @@ export default function App() {
         ticketId: ticket.id,
         body: `${ticket.userName} (${ticket.userRole}): ${body.slice(0, 100)}`,
       });
+      if (ticket.kind === 'report' && ['payment', 'job-issue'].includes(ticket.category)) {
+        void reportPushEvent(currentUser, {
+          type: 'dispute_update',
+          ticketId: ticket.id,
+          requestId: ticket.relatedRequestId,
+          title: 'Dispute update',
+          body: `${ticket.userName} added to dispute report: ${body.slice(0, 100)}`,
+        });
+      }
       if (ticket.category === 'safety' && ticket.priority === 'urgent') {
         void reportPushEvent(currentUser, {
           type: 'emergency_alert',
@@ -6082,10 +6096,7 @@ export default function App() {
       return next;
     });
     await persistSupportTicketToDb(ticket);
-    const latest = ticket.messages[ticket.messages.length - 1];
-    if (latest) {
-      await notifySupportParticipants(ticket, currentUser, latest.body);
-    }
+    notifySupportTicketCreated(currentUser, ticket);
     return ticket.id;
   };
 
@@ -6108,6 +6119,8 @@ export default function App() {
   };
 
   const handleUpdateSupportTicketStatus = async (ticketId: string, status: SupportTicketStatus) => {
+    const ticket = supportTickets.find((t) => t.id === ticketId);
+    const previousStatus = ticket?.status;
     const now = new Date().toISOString();
     setSupportTickets((prev) => {
       const next = prev.map((t) => (t.id === ticketId ? { ...t, status, updatedAt: now } : t));
@@ -6120,6 +6133,25 @@ export default function App() {
       } catch (e) {
         console.warn('Support status DB sync:', e);
       }
+    }
+    if (currentUser && ticket && previousStatus !== status) {
+      notifySupportTicketStatus(currentUser, { ...ticket, status, updatedAt: now }, status);
+    }
+  };
+
+  const handleResolveDispute = async (
+    dispute: import('./lib/staffOps').OpsDispute,
+    action: import('./lib/staffOps').DisputeResolutionAction
+  ) => {
+    if (!currentUser) return;
+    notifyDisputeResolution(currentUser, dispute, action);
+    if (!dispute.ticketId) return;
+    if (action === 'hold_funds') {
+      await handleUpdateSupportTicketStatus(dispute.ticketId, 'in-progress');
+      return;
+    }
+    if (action === 'approve_payout') {
+      await handleUpdateSupportTicketStatus(dispute.ticketId, 'resolved');
     }
   };
 
@@ -6491,6 +6523,7 @@ export default function App() {
           onAddEducation={handleAddEducation}
           onSendSupportMessage={handleSendSupportMessage}
           onUpdateSupportStatus={handleUpdateSupportTicketStatus}
+          onResolveDispute={handleResolveDispute}
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           staffMessages={staffMessages}

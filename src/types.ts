@@ -719,6 +719,9 @@ export interface NotificationPreferences {
   clientPendingApproval: boolean;
   credentialPending: boolean;
   paymentAttention: boolean;
+  supportTicket: boolean;
+  supportTicketStatus: boolean;
+  disputeUpdate: boolean;
   updatedAt: string;
 }
 

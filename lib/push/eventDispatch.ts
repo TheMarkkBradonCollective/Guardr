@@ -14,6 +14,8 @@ export interface PushEventInput {
   recipientUserId?: string;
   ticketId?: string;
   excludeUserId?: string;
+  clientId?: string;
+  priority?: 'normal' | 'high';
 }
 
 const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string; body: string }> = {
@@ -80,6 +82,18 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Payment attention',
     body: event.body || 'A payment or payout needs staff action',
   }),
+  support_ticket: (event) => ({
+    title: 'Support ticket',
+    body: event.body || 'A new support ticket needs staff attention',
+  }),
+  support_ticket_status: (event) => ({
+    title: 'Support update',
+    body: event.body || 'Your support ticket status changed',
+  }),
+  dispute_update: (event) => ({
+    title: 'Dispute update',
+    body: event.body || 'A dispute needs your attention',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -101,7 +115,7 @@ function basePayload(event: PushEventInput): PushSendPayload {
     requestId: event.requestId,
     ticketId: event.ticketId,
     siteId: event.siteId,
-    priority: event.type === 'emergency_alert' ? 'high' : 'normal',
+    priority: event.type === 'emergency_alert' ? 'high' : event.priority ?? 'normal',
     excludeUserId: event.excludeUserId,
   };
 }
@@ -169,6 +183,22 @@ export async function buildEventDispatchPayloads(
           : 'You missed your hourly check-in — please check in now',
       });
     }
+    return payloads;
+  }
+
+  if (event.type === 'support_ticket_status' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'support_ticket') {
+    return [{ ...payload, role: 'dispatch' }];
+  }
+
+  if (event.type === 'dispute_update') {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.guardId) payloads.push({ ...payload, userId: event.guardId });
+    if (event.clientId) payloads.push({ ...payload, userId: event.clientId });
+    else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
     return payloads;
   }
 

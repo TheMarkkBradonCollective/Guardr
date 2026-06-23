@@ -46,6 +46,27 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     roles: ['client', 'guard', 'staff'],
   },
   {
+    key: 'supportTicket',
+    type: 'support_ticket',
+    label: 'New support tickets',
+    description: 'When someone opens a support chat or files a report (staff).',
+    roles: ['staff'],
+  },
+  {
+    key: 'supportTicketStatus',
+    type: 'support_ticket_status',
+    label: 'Support status updates',
+    description: 'When staff starts reviewing or closes your ticket.',
+    roles: ['client', 'guard'],
+  },
+  {
+    key: 'disputeUpdate',
+    type: 'dispute_update',
+    label: 'Disputes',
+    description: 'Payment or job disputes and staff resolutions.',
+    roles: ['client', 'guard', 'staff'],
+  },
+  {
     key: 'jobChatMessage',
     type: 'job_chat_message',
     label: 'Job chat',
@@ -128,6 +149,9 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     clientPendingApproval: true,
     credentialPending: true,
     paymentAttention: true,
+    supportTicket: true,
+    supportTicketStatus: true,
+    disputeUpdate: true,
     updatedAt: now,
   };
 }
@@ -200,6 +224,9 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     client_pending_approval: prefs.clientPendingApproval,
     credential_pending: prefs.credentialPending,
     payment_attention: prefs.paymentAttention,
+    support_ticket: prefs.supportTicket,
+    support_ticket_status: prefs.supportTicketStatus,
+    dispute_update: prefs.disputeUpdate,
     updated_at: prefs.updatedAt,
   };
 }
@@ -221,6 +248,9 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     clientPendingApproval: row.client_pending_approval !== false,
     credentialPending: row.credential_pending !== false,
     paymentAttention: row.payment_attention !== false,
+    supportTicket: row.support_ticket !== false,
+    supportTicketStatus: row.support_ticket_status !== false,
+    disputeUpdate: row.dispute_update !== false,
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
 }

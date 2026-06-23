@@ -135,6 +135,8 @@ export interface PushEventBody extends SessionCredentials {
   location?: string;
   recipientUserId?: string;
   ticketId?: string;
+  clientId?: string;
+  priority?: 'normal' | 'high';
 }
 
 export async function dispatchPushEvent(
@@ -184,6 +186,8 @@ export async function dispatchPushEvent(
     ...event,
     type: event.type,
     excludeUserId,
+    clientId: event.clientId,
+    priority: event.priority,
   });
 
   let sent = 0;

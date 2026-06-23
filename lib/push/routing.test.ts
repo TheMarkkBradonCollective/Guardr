@@ -21,6 +21,15 @@ describe('rolesForNotificationType', () => {
   it('routes staff operational alerts to dispatch', () => {
     assert.deepEqual(rolesForNotificationType('payment_attention'), ['dispatch', 'admin']);
   });
+
+  it('routes dispute updates to all parties by default', () => {
+    assert.deepEqual(rolesForNotificationType('dispute_update'), [
+      'dispatch',
+      'admin',
+      'client',
+      'guard',
+    ]);
+  });
 });
 
 describe('resolveNotificationUrlForRole', () => {

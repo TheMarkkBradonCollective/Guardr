@@ -24,6 +24,9 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   client_pending_approval: 'client_pending_approval',
   credential_pending: 'credential_pending',
   payment_attention: 'payment_attention',
+  support_ticket: 'support_ticket',
+  support_ticket_status: 'support_ticket_status',
+  dispute_update: 'dispute_update',
 };
 
 async function isTypeEnabledForUser(

@@ -114,6 +114,26 @@ export async function authorizePushEvent(
       }
       return 'Not authorized to send job chat messages for this job';
 
+    case 'support_ticket':
+      if (isStaffSession(session)) return null;
+      if (event.ticketId && (await isSupportTicketParticipant(db, event.ticketId, session.userId))) {
+        return null;
+      }
+      return 'Not authorized to file this support ticket';
+
+    case 'support_ticket_status':
+      return isStaffSession(session) ? null : 'Only staff can send support status updates';
+
+    case 'dispute_update':
+      if (isStaffSession(session)) return null;
+      if (event.ticketId && (await isSupportTicketParticipant(db, event.ticketId, session.userId))) {
+        return null;
+      }
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Not authorized to send dispute updates for this context';
+
     default:
       return 'Unknown notification type';
   }

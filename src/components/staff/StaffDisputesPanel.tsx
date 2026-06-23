@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { Scale } from 'lucide-react';
-import { OpsDispute } from '../../lib/staffOps';
+import { DisputeResolutionAction, OpsDispute } from '../../lib/staffOps';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
 
 interface StaffDisputesPanelProps {
   disputes: OpsDispute[];
+  onResolveDispute?: (dispute: OpsDispute, action: DisputeResolutionAction) => void | Promise<void>;
 }
 
-export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
+export function StaffDisputesPanel({ disputes, onResolveDispute }: StaffDisputesPanelProps) {
   const [statusMap, setStatusMap] = useState<Record<string, OpsDispute['status']>>({});
 
-  const resolveDispute = (id: string, status: OpsDispute['status'], message: string) => {
-    setStatusMap((m) => ({ ...m, [id]: status }));
+  const resolveDispute = (dispute: OpsDispute, status: OpsDispute['status'], action: DisputeResolutionAction, message: string) => {
+    setStatusMap((m) => ({ ...m, [dispute.id]: status }));
+    void onResolveDispute?.(dispute, action);
     showAppToast(message, { tone: status === 'resolved' ? 'success' : 'info' });
   };
 
@@ -64,28 +66,28 @@ export function StaffDisputesPanel({ disputes }: StaffDisputesPanelProps) {
                 <div className="app-action-row--equal pt-4">
                   <button
                     type="button"
-                    onClick={() => resolveDispute(d.id, 'resolved', 'Payout approved.')}
+                    onClick={() => resolveDispute(d, 'resolved', 'approve_payout', 'Payout approved.')}
                     className="app-button-primary app-btn-sm"
                   >
                     Approve Payout
                   </button>
                   <button
                     type="button"
-                    onClick={() => resolveDispute(d.id, 'held', 'Funds held pending review.')}
+                    onClick={() => resolveDispute(d, 'held', 'hold_funds', 'Funds held pending review.')}
                     className="app-button-outline app-btn-sm"
                   >
                     Hold Funds
                   </button>
                   <button
                     type="button"
-                    onClick={() => showAppToast('Partial payout issued.', { tone: 'info' })}
+                    onClick={() => resolveDispute(d, 'resolved', 'partial_payout', 'Partial payout issued.')}
                     className="app-button-outline app-btn-sm"
                   >
                     Partial Payout
                   </button>
                   <button
                     type="button"
-                    onClick={() => showAppToast('Job payout cancelled.', { tone: 'info' })}
+                    onClick={() => resolveDispute(d, 'resolved', 'cancel_payout', 'Job payout cancelled.')}
                     className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                   >
                     Cancel Payout

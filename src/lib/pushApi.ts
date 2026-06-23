@@ -108,7 +108,10 @@ export type PushEventType =
   | 'guard_pending_approval'
   | 'client_pending_approval'
   | 'credential_pending'
-  | 'payment_attention';
+  | 'payment_attention'
+  | 'support_ticket'
+  | 'support_ticket_status'
+  | 'dispute_update';
 
 export async function reportPushEvent(
   user: SessionUser,
@@ -123,6 +126,7 @@ export async function reportPushEvent(
     location?: string;
     recipientUserId?: string;
     ticketId?: string;
+    clientId?: string;
   }
 ): Promise<void> {
   try {

@@ -79,6 +79,45 @@ describe('buildEventDispatchPayloads', () => {
     assert.match(payloads[1].body ?? '', /missed your hourly check-in/i);
   });
 
+  it('notifies ticket owner on support status changes', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'support_ticket_status',
+      recipientUserId: 'client-2',
+      ticketId: 'ticket-1',
+      body: 'Your ticket was marked resolved.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'client-2');
+  });
+
+  it('notifies staff on new support tickets', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'support_ticket',
+      ticketId: 'ticket-9',
+      body: 'New formal report from Alex',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].role, 'dispatch');
+  });
+
+  it('notifies guard, client, and staff on dispute updates', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'dispute_update',
+      ticketId: 'ticket-3',
+      guardId: 'guard-1',
+      clientId: 'client-2',
+      body: 'Payout approved for Warehouse shift',
+    });
+
+    assert.equal(payloads.length, 3);
+    assert.deepEqual(
+      payloads.map((p) => p.userId ?? p.role),
+      ['dispatch', 'guard-1', 'client-2']
+    );
+  });
+
   it('broadcasts guard chat to all guards with sender exclusion support', async () => {
     const payloads = await buildEventDispatchPayloads(mockDb(), {
       type: 'guard_message',
