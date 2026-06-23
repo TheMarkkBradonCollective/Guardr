@@ -4876,6 +4876,113 @@ html.theme-light .staff-ops-btn-primary:hover {
   line-height: 1.4;
 }
 
+/* ── Inbox tab bar ────────────────────────────────────────── */
+.app-inbox-tabs {
+  display: flex;
+  background: var(--brand-surface);
+  border-bottom: 2px solid var(--brand-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.app-inbox-tabs::-webkit-scrollbar { display: none; }
+
+.app-inbox-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3125rem;
+  padding: 0.8125rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+  min-width: 4.5rem;
+  letter-spacing: -0.01em;
+}
+
+.app-inbox-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.app-inbox-tab:hover {
+  color: var(--brand-text);
+  background: var(--brand-bg-sec);
+}
+
+.app-inbox-tab-active {
+  color: var(--brand-text);
+  font-weight: 700;
+}
+
+.app-inbox-tab-active::after {
+  background: var(--brand-primary);
+}
+
+.app-inbox-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 0.5625rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  background: var(--brand-elevated);
+  color: var(--brand-text-muted);
+  line-height: 1;
+}
+
+.app-inbox-tab-active .app-inbox-tab-badge {
+  background: color-mix(in srgb, var(--brand-primary) 15%, var(--brand-surface));
+  color: var(--brand-primary);
+}
+
+/* ── Inbox empty state inside a tab ──────────────────────── */
+.app-inbox-tab-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--brand-text-muted);
+  gap: 0.5rem;
+}
+
+.app-inbox-tab-empty-icon {
+  opacity: 0.35;
+  margin-bottom: 0.25rem;
+}
+
+.app-inbox-tab-empty-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+.app-inbox-tab-empty-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  max-width: 16rem;
+}
+
 /* Section header label within the inbox list */
 .app-inbox-section-head {
   display: flex;

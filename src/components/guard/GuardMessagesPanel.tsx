@@ -14,7 +14,6 @@ import {
   buildGuardJobInboxRows,
   buildGuardSupportInboxRows,
   InboxRow,
-  sortInboxRows,
 } from '../../lib/messagesInbox';
 import {
   categoryLabel,
@@ -34,13 +33,15 @@ import {
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { FileText, LifeBuoy, MessagesSquare } from 'lucide-react';
+import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare } from 'lucide-react';
 
 type ActiveView =
   | { kind: 'list' }
   | { kind: 'guard-channel' }
   | { kind: 'job'; requestId: string }
   | { kind: 'support'; ticketId: string };
+
+type InboxTab = 'chats' | 'jobs' | 'support';
 
 interface GuardMessagesPanelProps {
   upcomingJobs: GuardJobView[];
@@ -106,6 +107,12 @@ export function GuardMessagesPanel({
     return { kind: 'list' };
   });
 
+  const [activeTab, setActiveTab] = useState<InboxTab>(() => {
+    if (initialJobChatOpen || initialJobChatRequestId) return 'jobs';
+    if (initialSupportTicketId) return 'support';
+    return 'chats';
+  });
+
   const allJobs = useMemo(() => [...upcomingJobs, ...pastJobs], [upcomingJobs, pastJobs]);
   const jobById = useMemo(() => new Map(allJobs.map((j) => [j.id, j])), [allJobs]);
   const myTickets = useMemo(
@@ -118,27 +125,35 @@ export function GuardMessagesPanel({
     return sorted[sorted.length - 1]?.createdAt ?? new Date(0).toISOString();
   }, [guardMessages]);
 
-  const inboxRows = useMemo(() => {
-    const rows: InboxRow[] = [
-      {
-        id: 'guard-community',
-        channel: 'guard-community',
-        title: 'Guard chat',
-        subtitle: 'Community channel for all guards',
-        preview: 'Message other guards on active shifts',
-        updatedAt: guardChannelUpdatedAt,
-        badge: 'Community',
-        badgeTone: 'primary',
-      },
-      ...buildGuardJobInboxRows({
-        jobs: allJobs,
-        jobChatThreads,
-        jobChatMessages,
-      }),
-      ...buildGuardSupportInboxRows({ currentUser, supportTickets }),
-    ];
-    return sortInboxRows(rows);
-  }, [allJobs, jobChatThreads, jobChatMessages, supportTickets, currentUser, guardChannelUpdatedAt]);
+  const communityRow: InboxRow = {
+    id: 'guard-community',
+    channel: 'guard-community',
+    title: 'Guard chat',
+    subtitle: 'Community channel for all guards',
+    preview: 'Message other guards on active shifts',
+    updatedAt: guardChannelUpdatedAt,
+    badge: 'Community',
+    badgeTone: 'primary',
+  };
+
+  const jobRows = useMemo(
+    () =>
+      buildGuardJobInboxRows({ jobs: allJobs, jobChatThreads, jobChatMessages }),
+    [allJobs, jobChatThreads, jobChatMessages]
+  );
+
+  const supportRows = useMemo(
+    () => buildGuardSupportInboxRows({ currentUser, supportTickets }),
+    [currentUser, supportTickets]
+  );
+
+  const tabRows = useMemo((): InboxRow[] => {
+    switch (activeTab) {
+      case 'chats':   return [communityRow];
+      case 'jobs':    return jobRows;
+      case 'support': return supportRows;
+    }
+  }, [activeTab, communityRow, jobRows, supportRows]);
 
   const openRow = (row: InboxRow) => {
     if (row.channel === 'guard-community') {
@@ -176,70 +191,94 @@ export function GuardMessagesPanel({
 
   const hasSelection = activeView.kind !== 'list';
 
+  // ── Header: title + tab bar ──────────────────────────────
   const header = (
-    <>
+    <div>
       <div className="app-messages-hub-lead">
         <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Guard chat, job threads, and support sorted by recent activity</p>
+        <p>Guard chat, job threads, and support</p>
       </div>
-      <MessagesQuickActions
-        onContactSupport={onOpenSupportCompose}
-        onFileReport={onOpenSupportReport}
-      />
-    </>
+      <div className="app-inbox-tabs" role="tablist">
+        {(
+          [
+            { id: 'chats'   as InboxTab, label: 'Chats',   count: 1,              icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,  icon: <Briefcase      className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'support' as InboxTab, label: 'Support', count: supportRows.length, icon: <LifeBuoy   className="w-3.5 h-3.5" strokeWidth={2} /> },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="app-inbox-tab-badge">{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 
+  // ── List: filtered by active tab ─────────────────────────
   const list = (
     <>
-      {inboxRows.length === 0 ? (
-        <p className="app-empty-state">Conversations appear here sorted by recent activity.</p>
+      {/* Quick actions shown on Support tab */}
+      {activeTab === 'support' && (
+        <MessagesQuickActions
+          onContactSupport={onOpenSupportCompose}
+          onFileReport={onOpenSupportReport}
+        />
+      )}
+
+      {tabRows.length === 0 ? (
+        <div className="app-inbox-tab-empty">
+          <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
+          <p className="app-inbox-tab-empty-title">
+            {activeTab === 'jobs' ? 'No job chats yet' : 'No conversations yet'}
+          </p>
+          <p className="app-inbox-tab-empty-hint">
+            {activeTab === 'jobs'
+              ? 'Job chats open once you are assigned to an active job.'
+              : activeTab === 'support'
+              ? 'Contact support or file a report using the buttons above.'
+              : 'Community messages will appear here.'}
+          </p>
+        </div>
       ) : (
         <AppInboxList>
-          {inboxRows.map((row, i) => {
-            const prevRow = i > 0 ? inboxRows[i - 1] : null;
-            const sectionChanged = prevRow && prevRow.channel !== row.channel;
-            const isFirstRow = i === 0;
-            const showSection =
-              (isFirstRow && row.channel !== 'guard-community') || sectionChanged;
-
-            const sectionLabel =
-              row.channel === 'job'
-                ? 'Job Chats'
-                : row.channel === 'support' || row.channel === 'report'
-                ? 'Support'
-                : null;
-
-            return (
-              <React.Fragment key={row.id}>
-                {showSection && sectionLabel && (
-                  <div className="app-inbox-section-head">{sectionLabel}</div>
-                )}
-                <AppInboxRow
-                  title={row.title}
-                  subtitle={row.subtitle}
-                  preview={row.preview}
-                  meta={formatInboxMeta(row.updatedAt)}
-                  selected={isRowSelected(row)}
-                  leading={
-                    row.channel === 'guard-community' ? (
-                      <MessagesSquare className="w-5 h-5 text-brand-primary" />
-                    ) : row.channel === 'report' ? (
-                      <FileText className="w-5 h-5 text-brand-primary" />
-                    ) : row.channel === 'support' ? (
-                      <LifeBuoy className="w-5 h-5 text-brand-primary" />
-                    ) : undefined
-                  }
-                  badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
-                  onClick={() => openRow(row)}
-                />
-              </React.Fragment>
-            );
-          })}
+          {tabRows.map((row) => (
+            <AppInboxRow
+              key={row.id}
+              title={row.title}
+              subtitle={row.subtitle}
+              preview={row.preview}
+              meta={formatInboxMeta(row.updatedAt)}
+              selected={isRowSelected(row)}
+              leading={
+                row.channel === 'guard-community' ? (
+                  <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'report' ? (
+                  <FileText className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'support' ? (
+                  <LifeBuoy className="w-5 h-5 text-brand-primary" />
+                ) : undefined
+              }
+              badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
+              onClick={() => openRow(row)}
+            />
+          ))}
         </AppInboxList>
       )}
     </>
   );
 
+  // ── Detail view ──────────────────────────────────────────
   const detailView = (() => {
     if (activeView.kind === 'guard-channel' && onSendGuardMessage) {
       return (
