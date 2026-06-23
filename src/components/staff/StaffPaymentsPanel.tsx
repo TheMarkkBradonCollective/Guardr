@@ -30,7 +30,6 @@ interface StaffPaymentsPanelProps {
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
-  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   onCompletePayoutInvoice?: (invoiceId: string) => Promise<void>;
 }
 
@@ -50,7 +49,6 @@ function PipelineSection({
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
-  onDepositCashToStripe,
   readOnly = false,
   limit,
 }: {
@@ -69,7 +67,6 @@ function PipelineSection({
   onMarkGuardPaidCash?: (requestId: string) => Promise<void>;
   onMarkPlatformFeePaidCash?: (requestId: string) => Promise<void>;
   onMarkCashDepositManually?: (requestId: string) => Promise<void>;
-  onDepositCashToStripe?: (requestId: string) => Promise<void>;
   readOnly?: boolean;
   limit?: number;
 }) {
@@ -103,7 +100,6 @@ function PipelineSection({
             onMarkGuardPaidCash={onMarkGuardPaidCash}
             onMarkPlatformFeePaidCash={onMarkPlatformFeePaidCash}
             onMarkCashDepositManually={onMarkCashDepositManually}
-            onDepositCashToStripe={onDepositCashToStripe}
           />
         ))}
       </AppItemCardStack>
@@ -133,7 +129,6 @@ export function StaffPaymentsPanel({
   onMarkGuardPaidCash,
   onMarkPlatformFeePaidCash,
   onMarkCashDepositManually,
-  onDepositCashToStripe,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
   const summary = paymentPipelineSummary(requests);
@@ -153,7 +148,6 @@ export function StaffPaymentsPanel({
     onMarkGuardPaidCash,
     onMarkPlatformFeePaidCash,
     onMarkCashDepositManually,
-    onDepositCashToStripe,
   };
 
   const actionCount =
