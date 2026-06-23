@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import { getAssignableStaffRoles } from '../../lib/permissions';
-import { ListDetailLayout } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -61,10 +61,13 @@ export function StaffTeamPanel({
   );
 
   const assignableRoles = getAssignableStaffRoles(currentUserRole);
+  const { showDetailOnly } = useListDetailState(selectedId);
 
   return (
     <div className="animate-fade-in space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      {!showDetailOnly && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <p className="text-sm text-brand-text-muted flex-1">
           Guardr platform staff — operations and administration only, not field jobs.
           {!canManageStaff && ' Directors and Owners manage staff accounts; you have view-only access here.'}
@@ -86,8 +89,10 @@ export function StaffTeamPanel({
         placeholder="Search staff..."
         className="max-w-md"
       />
+        </>
+      )}
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !showDetailOnly ? (
         <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
           {roster.length === 0
             ? 'No staff accounts yet. Directors and Owners can use Add staff above.'
@@ -100,7 +105,7 @@ export function StaffTeamPanel({
           onSelectId={setSelectedId}
           getItemId={(member) => member.id}
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
-          renderItem={(member, isActive, onSelect) => {
+          renderItem={(member, onSelect) => {
             const accountStatus = member.userStatus || 'active';
 
             return (
@@ -116,11 +121,10 @@ export function StaffTeamPanel({
                   </div>
                 }
                 onClick={onSelect}
-                className={isActive ? 'app-item-card-selected' : ''}
               />
             );
           }}
-          renderDetail={(member) => (
+          renderDetail={(member, { onBack }) => (
             <StaffTeamDetailPanel
               member={member}
               currentUserId={currentUserId}
@@ -128,6 +132,7 @@ export function StaffTeamPanel({
               canManageStaff={canManageStaff}
               onUpdateUserStatus={onUpdateUserStatus}
               onUpdateStaffRole={onUpdateStaffRole}
+              onBack={onBack}
             />
           )}
         />

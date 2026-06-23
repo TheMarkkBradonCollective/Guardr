@@ -7,9 +7,8 @@ import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { canGuardApproveOvertime } from '../../lib/shiftBilling';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
-import { AppItemCard, AppItemCardStack, AppScreen, AppSection } from '../ui/app/AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
-import { useDevice } from '../../lib/platform';
 import { CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
 
 interface GuardMyJobsPanelProps {
@@ -45,7 +44,7 @@ function GuardMyJobDetail({
   const hasIncidents = listIncidentReportsForRequest(jobAsRequest).length > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="px-5 pb-8 space-y-4">
       <GuardJobCard job={job} guard={guard} compact />
       {hasIncidents && (
         <div className="space-y-3">
@@ -101,7 +100,6 @@ function GuardMyJobDetail({
 
 function renderJobRow(
   job: GuardJobView,
-  isSelected: boolean,
   onSelect: () => void,
   accent = false
 ) {
@@ -110,7 +108,6 @@ function renderJobRow(
       key={job.id}
       onClick={onSelect}
       className={accent ? 'border-brand-primary/30 bg-brand-primary/8' : undefined}
-      selected={isSelected}
     >
       <div className="min-w-0 flex-1 text-left">
         <p className="font-semibold truncate">{job.title}</p>
@@ -138,8 +135,6 @@ export function GuardMyJobsPanel({
   onApproveOvertime,
 }: GuardMyJobsPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedJobId);
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
   useEffect(() => {
     if (initialSelectedJobId) {
@@ -153,106 +148,46 @@ export function GuardMyJobsPanel({
   };
 
   const allJobs = useMemo(() => [...upcomingJobs, ...pastJobs], [upcomingJobs, pastJobs]);
+  const selectedJob = allJobs.find((j) => j.id === selectedId) ?? null;
 
-  const resolvedSelectedId =
-    selectedId ??
-    (splitView && allJobs.length > 0 ? allJobs[0].id : null);
-
-  const selectedJob = allJobs.find((j) => j.id === resolvedSelectedId) ?? null;
-
-  const handleSelect = (jobId: string) => {
-    if (!splitView && jobId === selectedId) {
-      updateSelectedId(null);
-      return;
-    }
-    updateSelectedId(jobId);
-  };
-
-  const renderJobSection = (
-    title: string,
-    jobs: GuardJobView[],
-    emptyMessage: string,
-    accent = false
-  ) => (
-    <AppSection title={title}>
-      {jobs.length === 0 ? (
-        <p className="app-empty-state">{emptyMessage}</p>
-      ) : (
-        <AppItemCardStack>
-          {jobs.map((job) => {
-            const isSelected = !splitView && selectedId === job.id;
-            return (
-              <div key={job.id} className={isSelected ? 'space-y-4' : undefined}>
-                {renderJobRow(job, isSelected, () => handleSelect(job.id), accent)}
-                {isSelected && selectedJob && (
-                  <div className="staff-detail-pane">
-                    <GuardMyJobDetail
-                      job={selectedJob}
-                      guard={guard}
-                      jobChatThreads={jobChatThreads}
-                      onOpenMessages={onOpenMessages}
-                      onApproveOvertime={onApproveOvertime}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </AppItemCardStack>
-      )}
-    </AppSection>
-  );
-
-  const jobList = (
-    <>
-      {renderJobSection('Upcoming', upcomingJobs, 'No upcoming jobs.', true)}
-      {renderJobSection('Past', pastJobs, 'No completed jobs yet.')}
-    </>
-  );
-
-  if (splitView) {
+  if (selectedJob) {
     return (
-      <AppScreen>
-        <div className="tablet-split-panel">
-          <div className="max-h-[75vh] overflow-y-auto pr-1 space-y-4">
-            <AppSection title="Upcoming">
-              {upcomingJobs.length === 0 ? (
-                <p className="app-empty-state">No upcoming jobs.</p>
-              ) : (
-                <AppItemCardStack>
-                  {upcomingJobs.map((job) =>
-                    renderJobRow(job, resolvedSelectedId === job.id, () => handleSelect(job.id), true)
-                  )}
-                </AppItemCardStack>
-              )}
-            </AppSection>
-            <AppSection title="Past">
-              {pastJobs.length === 0 ? (
-                <p className="app-empty-state">No completed jobs yet.</p>
-              ) : (
-                <AppItemCardStack>
-                  {pastJobs.map((job) =>
-                    renderJobRow(job, resolvedSelectedId === job.id, () => handleSelect(job.id))
-                  )}
-                </AppItemCardStack>
-              )}
-            </AppSection>
-          </div>
-          {selectedJob && (
-            <div className="staff-detail-pane">
-              <GuardMyJobDetail
-                job={selectedJob}
-                guard={guard}
-                jobChatThreads={jobChatThreads}
-                onOpenMessages={onOpenMessages}
-                onApproveOvertime={onApproveOvertime}
-              />
-            </div>
-          )}
-        </div>
+      <AppScreen className="app-full-page-detail">
+        <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} />
+        <GuardMyJobDetail
+          job={selectedJob}
+          guard={guard}
+          jobChatThreads={jobChatThreads}
+          onOpenMessages={onOpenMessages}
+          onApproveOvertime={onApproveOvertime}
+        />
       </AppScreen>
     );
   }
 
-  return <AppScreen>{jobList}</AppScreen>;
+  return (
+    <AppScreen>
+      <AppSection title="Upcoming">
+        {upcomingJobs.length === 0 ? (
+          <p className="app-empty-state">No upcoming jobs.</p>
+        ) : (
+          <AppItemCardStack>
+            {upcomingJobs.map((job) =>
+              renderJobRow(job, () => updateSelectedId(job.id), true)
+            )}
+          </AppItemCardStack>
+        )}
+      </AppSection>
+
+      <AppSection title="Past">
+        {pastJobs.length === 0 ? (
+          <p className="app-empty-state">No completed jobs yet.</p>
+        ) : (
+          <AppItemCardStack>
+            {pastJobs.map((job) => renderJobRow(job, () => updateSelectedId(job.id)))}
+          </AppItemCardStack>
+        )}
+      </AppSection>
+    </AppScreen>
+  );
 }

@@ -9,7 +9,7 @@ import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ListDetailLayout } from '../ui/app/ListDetailLayout';
+import { ListDetailLayout, useListDetailState } from '../ui/app/ListDetailLayout';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -434,6 +434,8 @@ export function StaffJobsPanel({
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [requests, filter, search]);
 
+  const { showDetailOnly } = useListDetailState(selectedId);
+
   const filters: { id: JobsFilter; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'open', label: 'Open' },
@@ -441,7 +443,7 @@ export function StaffJobsPanel({
     { id: 'complete', label: 'Complete' },
   ];
 
-  function renderJobDetail(req: SecurityRequest) {
+  function renderJobDetail(req: SecurityRequest, { onBack }: { onBack: () => void }) {
     return (
       <JobDetailPanel
         req={req}
@@ -458,6 +460,7 @@ export function StaffJobsPanel({
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}
+        onBack={onBack}
         staffRole={staffRole}
       />
     );
@@ -465,7 +468,7 @@ export function StaffJobsPanel({
 
   return (
     <div className="animate-fade-in space-y-4">
-      {canManageJobs && onCreateJob && (
+      {canManageJobs && onCreateJob && !showDetailOnly && (
         <StaffCreateJobForm
           clients={clients}
           guards={guards}
@@ -475,31 +478,35 @@ export function StaffJobsPanel({
           onCreated={(jobId) => setSelectedId(jobId)}
         />
       )}
-      <div className="app-action-row--equal">
-        {filters.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              filter === f.id
-                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {!showDetailOnly && (
+        <>
+          <div className="app-action-row--equal">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  filter === f.id
+                    ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
+                    : 'border-brand-border text-brand-text-muted hover:text-brand-text'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
 
-      <WfSearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search client, location, title..."
-        className="max-w-md"
-      />
+          <WfSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search client, location, title..."
+            className="max-w-md"
+          />
+        </>
+      )}
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !showDetailOnly ? (
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
       ) : (
         <ListDetailLayout
@@ -507,7 +514,7 @@ export function StaffJobsPanel({
           selectedId={selectedId}
           onSelectId={setSelectedId}
           getItemId={(req) => req.id}
-          renderItem={(req, isActive, onSelect) => {
+          renderItem={(req, onSelect) => {
             const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
             return (
               <JobListCard
@@ -526,7 +533,6 @@ export function StaffJobsPanel({
                   </div>
                 }
                 onClick={onSelect}
-                selected={isActive}
                 showStatus={false}
               />
             );

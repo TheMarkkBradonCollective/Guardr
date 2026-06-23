@@ -89,7 +89,6 @@ export function GuardBottomSheet({
       onSelectCategory={onSelectCategory}
       onSelectJob={onSelectJob}
       onAcceptJob={onAcceptJob}
-      splitView={isSidePanel}
     />
   );
 
