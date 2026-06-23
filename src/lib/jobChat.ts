@@ -102,6 +102,49 @@ export function threadForRequest(threads: JobChatThread[], requestId: string): J
   return threads.find((t) => t.requestId === requestId);
 }
 
+export function canOpenJobChatForRequest(
+  req: Pick<SecurityRequest, 'id' | 'status' | 'assignedGuardId'>,
+  jobChatThreads: JobChatThread[]
+): boolean {
+  return (
+    isJobChatEligible(req) ||
+    (isJobChatReadOnly(req) && !!threadForRequest(jobChatThreads, req.id))
+  );
+}
+
+export function jobChatActionLabel(req: Pick<SecurityRequest, 'status'>): string {
+  if (req.status === 'in-progress') return 'Message guard on shift';
+  if (req.status === 'accepted') return 'Message guard';
+  return 'View job chat history';
+}
+
+/** Best job to open when messaging a guard from their profile or directory. */
+export function findMessageableRequestForGuard(
+  clientId: string,
+  guardId: string,
+  requests: SecurityRequest[],
+  jobChatThreads: JobChatThread[]
+): SecurityRequest | null {
+  const shared = requests.filter(
+    (r) => r.clientId === clientId && r.assignedGuardId === guardId
+  );
+
+  const live = shared.filter(isJobChatEligible);
+  if (live.length > 0) {
+    return live.sort((a, b) => {
+      if (a.status === 'in-progress' && b.status !== 'in-progress') return -1;
+      if (b.status === 'in-progress' && a.status !== 'in-progress') return 1;
+      return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+    })[0];
+  }
+
+  const archived = shared
+    .filter((r) => isJobChatReadOnly(r) && threadForRequest(jobChatThreads, r.id))
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
+  return archived[0] ?? null;
+}
+
 export function activeJobChatCount(threads: JobChatThread[]): number {
   return threads.filter((t) => t.status === 'active').length;
 }

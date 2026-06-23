@@ -43,6 +43,7 @@ interface ClientDashboardProps {
   companyName: string;
   clientId: string;
   requests: SecurityRequest[];
+  platformRequests?: SecurityRequest[];
   guards: SecurityGuard[];
   clientEmail: string;
   accountStatus?: Client['accountStatus'];
@@ -90,6 +91,7 @@ export function ClientDashboard({
   companyName,
   clientId,
   requests,
+  platformRequests = [],
   guards,
   clientEmail,
   accountStatus,
@@ -313,8 +315,13 @@ export function ClientDashboard({
           guard={selectedGuard}
           clientId={clientId}
           requests={requests}
+          platformRequests={platformRequests}
           onBack={() => setSelectedGuard(null)}
           onRequestGuard={startDirectGuardRequest}
+          jobChatThreads={jobChatThreads}
+          currentUser={currentUser}
+          onSendJobChatMessage={onSendJobChatMessage}
+          onOpenJobChat={onOpenJobChat ?? openMessages}
         />
       );
     }
