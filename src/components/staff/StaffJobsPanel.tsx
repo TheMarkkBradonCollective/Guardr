@@ -9,14 +9,13 @@ import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { useDevice } from '../../lib/platform';
+import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
-import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
@@ -422,9 +421,6 @@ export function StaffJobsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
-
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return [...requests]
@@ -438,9 +434,6 @@ export function StaffJobsPanel({
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [requests, filter, search]);
 
-  const selected = filtered.find((r) => r.id === selectedId) ?? (splitView ? filtered[0] : null) ?? null;
-  const showDetailOnly = Boolean(selected && !splitView);
-
   const filters: { id: JobsFilter; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'open', label: 'Open' },
@@ -448,35 +441,31 @@ export function StaffJobsPanel({
     { id: 'complete', label: 'Complete' },
   ];
 
-  function renderJobCard(req: SecurityRequest, isActive: boolean) {
-    const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
+  function renderJobDetail(req: SecurityRequest) {
     return (
-      <JobListCard
-        key={req.id}
-        job={req}
-        subtitle={req.clientName}
-        meta={
-          <div className="flex flex-wrap items-center gap-1.5">
-            <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-            <span>
-              {assignedGuard
-                ? `Guard: ${assignedGuard.name}`
-                : req.status === 'open' && req.applicants.length > 0
-                  ? `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`
-                  : 'No guard yet'}
-            </span>
-          </div>
-        }
-        onClick={() => setSelectedId(req.id)}
-        selected={isActive}
-        showStatus={false}
+      <JobDetailPanel
+        req={req}
+        guards={guards}
+        canManageJobs={canManageJobs}
+        canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+        canEditJobListing={canEditJobListing}
+        onApproveRequest={onApproveRequest}
+        onDenyRequest={onDenyRequest}
+        onAssignGuard={onAssignGuard}
+        onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
+        onUploadSpotCheck={onUploadSpotCheck}
+        canUploadSpotCheck={canUploadSpotCheck}
+        onEditJobListing={onEditJobListing}
+        onApproveGuardApplication={onApproveGuardApplication}
+        onDenyGuardApplication={onDenyGuardApplication}
+        staffRole={staffRole}
       />
     );
   }
 
   return (
     <div className="animate-fade-in space-y-4">
-      {canManageJobs && onCreateJob && !showDetailOnly && (
+      {canManageJobs && onCreateJob && (
         <StaffCreateJobForm
           clients={clients}
           guards={guards}
@@ -486,86 +475,64 @@ export function StaffJobsPanel({
           onCreated={(jobId) => setSelectedId(jobId)}
         />
       )}
-      {!showDetailOnly && (
-        <>
-          <div className="app-action-row--equal">
-            {filters.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  filter === f.id
-                    ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
-                    : 'border-brand-border text-brand-text-muted hover:text-brand-text'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+      <div className="app-action-row--equal">
+        {filters.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              filter === f.id
+                ? 'border-brand-primary bg-brand-primary/15 text-brand-primary'
+                : 'border-brand-border text-brand-text-muted hover:text-brand-text'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search client, location, title..."
-            className="max-w-md"
-          />
-        </>
-      )}
+      <WfSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search client, location, title..."
+        className="max-w-md"
+      />
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
-      ) : showDetailOnly && selected ? (
-        <JobDetailPanel
-          req={selected}
-          guards={guards}
-          canManageJobs={canManageJobs}
-          canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
-          canEditJobListing={canEditJobListing}
-          onApproveRequest={onApproveRequest}
-          onDenyRequest={onDenyRequest}
-          onAssignGuard={onAssignGuard}
-          onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
-          onUploadSpotCheck={onUploadSpotCheck}
-          canUploadSpotCheck={canUploadSpotCheck}
-          onEditJobListing={onEditJobListing}
-          onApproveGuardApplication={onApproveGuardApplication}
-          onDenyGuardApplication={onDenyGuardApplication}
-          onBack={() => setSelectedId(null)}
-          staffRole={staffRole}
-        />
-      ) : splitView ? (
-        <div className="tablet-split-panel">
-          <div className="max-h-[70vh] overflow-y-auto pr-1">
-            <AppItemCardStack>
-              {filtered.map((req) => renderJobCard(req, selected?.id === req.id))}
-            </AppItemCardStack>
-          </div>
-          {selected && (
-            <JobDetailPanel
-              req={selected}
-              guards={guards}
-              canManageJobs={canManageJobs}
-              canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
-              canEditJobListing={canEditJobListing}
-              onApproveRequest={onApproveRequest}
-              onDenyRequest={onDenyRequest}
-              onAssignGuard={onAssignGuard}
-              onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
-              onUploadSpotCheck={onUploadSpotCheck}
-              canUploadSpotCheck={canUploadSpotCheck}
-              onEditJobListing={onEditJobListing}
-              onApproveGuardApplication={onApproveGuardApplication}
-          onDenyGuardApplication={onDenyGuardApplication}
-              staffRole={staffRole}
-            />
-          )}
-        </div>
       ) : (
-        <AppItemCardStack>
-          {filtered.map((req) => renderJobCard(req, false))}
-        </AppItemCardStack>
+        <ListDetailLayout
+          items={filtered}
+          selectedId={selectedId}
+          onSelectId={setSelectedId}
+          getItemId={(req) => req.id}
+          renderItem={(req, isActive, onSelect) => {
+            const assignedGuard = guards.find((g) => g.id === req.assignedGuardId);
+            return (
+              <JobListCard
+                job={req}
+                subtitle={req.clientName}
+                meta={
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                    <span>
+                      {assignedGuard
+                        ? `Guard: ${assignedGuard.name}`
+                        : req.status === 'open' && req.applicants.length > 0
+                          ? `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'}`
+                          : 'No guard yet'}
+                    </span>
+                  </div>
+                }
+                onClick={onSelect}
+                selected={isActive}
+                showStatus={false}
+              />
+            );
+          }}
+          renderDetail={renderJobDetail}
+        />
       )}
     </div>
   );
