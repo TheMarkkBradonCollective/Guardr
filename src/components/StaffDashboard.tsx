@@ -84,6 +84,13 @@ import { UserSettingsScreen } from './profile/UserSettingsScreen';
 
 type ThemeMode = 'dark' | 'light' | 'grey';
 
+export interface StaffSectionSelection {
+  guardId?: string | null;
+  clientId?: string | null;
+  jobId?: string | null;
+  teamId?: string | null;
+}
+
 interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
@@ -213,7 +220,7 @@ interface StaffDashboardProps {
   initialSection?: StaffSection;
   /** Controlled section — when set, parent owns navigation state (URL sync). */
   section?: StaffSection;
-  onSectionChange?: (section: StaffSection) => void;
+  onSectionChange?: (section: StaffSection, selection?: StaffSectionSelection) => void;
   selectedGuardId?: string | null;
   onSelectedGuardIdChange?: (id: string | null) => void;
   selectedClientId?: string | null;
@@ -378,27 +385,44 @@ export function StaffDashboard({
   };
 
   const openJob = (jobId: string) => {
-    setSelectedJobId(jobId);
-    navigateSection('jobs');
+    navigateSection('jobs', { jobId });
   };
 
   const navigateToApprovals = (queue?: ApprovalQueueId) => {
     onOpenStaffApprovals?.(queue ?? null);
   };
 
-  const navigateSection = (next: StaffSection) => {
+  const navigateSection = (next: StaffSection, selection: StaffSectionSelection = {}) => {
     if (next === 'approvals') {
       onOpenStaffApprovals?.(null);
       return;
     }
     onClearStaffApprovalQueue?.();
     if (!isControlled) setInternalSection(next);
-    onSectionChange?.(next);
-    if (next !== 'guards') setSelectedGuardId(null);
-    if (next !== 'team') setSelectedTeamId(null);
+    const nextGuardId = next === 'guards'
+      ? selection.guardId !== undefined ? selection.guardId : selectedGuardId
+      : null;
+    const nextTeamId = next === 'team'
+      ? selection.teamId !== undefined ? selection.teamId : selectedTeamId
+      : null;
+    const nextClientId = next === 'clients'
+      ? selection.clientId !== undefined ? selection.clientId : selectedClientId
+      : null;
+    const nextJobId = next === 'jobs'
+      ? selection.jobId !== undefined ? selection.jobId : selectedJobId
+      : null;
+
+    setSelectedGuardId(nextGuardId ?? null);
+    setSelectedTeamId(nextTeamId ?? null);
+    setSelectedClientId(nextClientId ?? null);
+    setSelectedJobId(nextJobId ?? null);
     if (next !== 'crews') setInternalCrewJobId(null);
-    if (next !== 'clients') setSelectedClientId(null);
-    if (next !== 'jobs') setSelectedJobId(null);
+    onSectionChange?.(next, {
+      guardId: nextGuardId ?? null,
+      teamId: nextTeamId ?? null,
+      clientId: nextClientId ?? null,
+      jobId: nextJobId ?? null,
+    });
   };
 
   const showFinance = canAccessFinancialControls(currentUser);
@@ -523,10 +547,7 @@ export function StaffDashboard({
             staffRole={currentUser.role}
             initialQueue={staffApprovalQueue}
             onQueueChange={(queue) => onUpdateStaffApprovalQueue?.(queue ?? null)}
-            onViewGuard={(guardId) => {
-              setSelectedGuardId(guardId);
-              navigateSection('guards');
-            }}
+            onViewGuard={(guardId) => navigateSection('guards', { guardId })}
           />
         );
       case 'jobs':
@@ -678,7 +699,15 @@ export function StaffDashboard({
               initialSupportTicketId={selectedSupportTicketId}
             />
           </div>
-        ) : null;
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Settings</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Platform settings are limited to Director and Owner roles. Ask your Director to update fees,
+              payment gates, or system-wide controls.
+            </p>
+          </div>
+        );
       case 'payments':
         return showFinance ? (
           <StaffPaymentsPanel

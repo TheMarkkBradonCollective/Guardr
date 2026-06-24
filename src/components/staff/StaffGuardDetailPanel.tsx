@@ -1,5 +1,6 @@
 import { jobAffectedByTrustedRevocation } from '../../lib/guardTeamFlow';
 import { showAppConfirm } from '../ui/AppConfirm';
+import { showAppToast } from '../ui/AppToast';
 import {
   confirmApproveGuardProfile,
   confirmBackgroundCheckToggle,

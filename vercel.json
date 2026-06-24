@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "vite build && node scripts/bundle-push-handlers.mjs",
+  "buildCommand": "npm run generate:logos && npm run generate:walkie-chirp && vite build && node scripts/bundle-push-handlers.mjs",
   "outputDirectory": "dist",
   "framework": null,
   "crons": [

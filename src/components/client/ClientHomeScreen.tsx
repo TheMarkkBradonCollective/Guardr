@@ -112,6 +112,21 @@ export function ClientHomeScreen({
     month: 'long',
     day: 'numeric',
   });
+  const protectedActionClass = accountPending ? 'client-home-action-muted' : '';
+  const runAction = (action: ClientHomeAction) => {
+    if (accountPending && action !== 'messages') {
+      onOpenProfile?.();
+      return;
+    }
+    onAction(action);
+  };
+  const runProtectedCallback = (callback?: () => void) => {
+    if (accountPending) {
+      onOpenProfile?.();
+      return;
+    }
+    callback?.();
+  };
 
   return (
     <AppScreen className="client-home-screen">
@@ -135,7 +150,11 @@ export function ClientHomeScreen({
                 </button>
               ) : undefined
             }
-          />
+          >
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              Finish your profile review before posting jobs, browsing guards, or opening live operations.
+            </p>
+          </AppStatusBanner>
         </div>
       )}
 
@@ -143,8 +162,9 @@ export function ClientHomeScreen({
         {hasLiveCoverage ? (
           <button
             type="button"
-            onClick={() => onAction('map')}
-            className="client-home-live-card w-full text-left"
+            onClick={() => runAction('map')}
+            className={`client-home-live-card w-full text-left ${protectedActionClass}`}
+            aria-disabled={accountPending}
           >
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
@@ -213,10 +233,10 @@ export function ClientHomeScreen({
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 mt-4">
-              <button type="button" onClick={() => onAction('request')} className="app-button-primary app-btn-sm flex-1">
+              <button type="button" onClick={() => runAction('request')} className="app-button-primary app-btn-sm flex-1">
                 Post job offer
               </button>
-              <button type="button" onClick={() => onAction('map')} className="app-button-outline app-btn-sm flex-1 gap-1.5">
+              <button type="button" onClick={() => runAction('map')} className="app-button-outline app-btn-sm flex-1 gap-1.5">
                 <Map className="w-3.5 h-3.5" />
                 Open map
               </button>
@@ -229,8 +249,9 @@ export function ClientHomeScreen({
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => onAction('requests')}
-            className="client-home-glance-tile"
+            onClick={() => runAction('requests')}
+            className={`client-home-glance-tile ${protectedActionClass}`}
+            aria-disabled={accountPending}
           >
             <ClipboardList className="w-5 h-5 text-brand-primary" />
             <p className="client-home-glance-value">{openRequestCount}</p>
@@ -238,8 +259,9 @@ export function ClientHomeScreen({
           </button>
           <button
             type="button"
-            onClick={() => onAction('requests')}
-            className="client-home-glance-tile"
+            onClick={() => runAction('requests')}
+            className={`client-home-glance-tile ${protectedActionClass}`}
+            aria-disabled={accountPending}
           >
             <Calendar className="w-5 h-5 text-brand-primary" />
             <p className="client-home-glance-value">{upcoming.length}</p>
@@ -257,8 +279,9 @@ export function ClientHomeScreen({
               <button
                 key={action.id}
                 type="button"
-                onClick={() => onAction(action.id)}
-                className={`client-home-quick-tile ${isPrimary ? 'client-home-quick-tile-primary' : ''}`}
+                onClick={() => runAction(action.id)}
+                className={`client-home-quick-tile ${isPrimary ? 'client-home-quick-tile-primary' : ''} ${protectedActionClass}`}
+                aria-disabled={accountPending}
               >
                 <span className={`client-home-quick-icon ${isPrimary ? 'client-home-quick-icon-primary' : ''}`}>
                   <Icon className="w-4 h-4" />
@@ -272,7 +295,7 @@ export function ClientHomeScreen({
       </AppDashboardZone>
 
       {recentGuards.length > 0 && onHireGuard && (
-        <AppDashboardZone title="Your guards" actionLabel="Browse all" onAction={() => onAction('guards')}>
+        <AppDashboardZone title="Your guards" actionLabel="Browse all" onAction={() => runAction('guards')}>
           <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
             {recentGuards.map((guard) => (
               <div
@@ -281,8 +304,9 @@ export function ClientHomeScreen({
               >
                 <button
                   type="button"
-                  onClick={() => onViewGuard?.(guard)}
-                  className="flex flex-col items-center gap-2 w-full"
+                  onClick={() => runProtectedCallback(() => onViewGuard?.(guard))}
+                  className={`flex flex-col items-center gap-2 w-full ${protectedActionClass}`}
+                  aria-disabled={accountPending}
                 >
                   <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" className="w-12 h-12 text-sm" />
                   <div>
@@ -295,8 +319,9 @@ export function ClientHomeScreen({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onHireGuard(guard)}
+                  onClick={() => runProtectedCallback(() => onHireGuard(guard))}
                   className="w-full py-1 text-[10px] font-semibold bg-brand-primary/10 text-brand-primary rounded-lg hover:bg-brand-primary/20 transition-colors"
+                  aria-disabled={accountPending}
                 >
                   Hire again
                 </button>
@@ -309,7 +334,7 @@ export function ClientHomeScreen({
       <AppDashboardZone
         title="Upcoming coverage"
         actionLabel={upcoming.length > 0 ? 'All jobs' : undefined}
-        onAction={upcoming.length > 0 ? () => onAction('requests') : undefined}
+        onAction={upcoming.length > 0 ? () => runAction('requests') : undefined}
       >
         {upcoming.length === 0 ? (
           <p className="app-empty-state px-5">No upcoming coverage. Post a job offer to get started.</p>
@@ -318,7 +343,7 @@ export function ClientHomeScreen({
             {upcoming.slice(0, 4).map((req) => (
               <AppItemCard
                 key={req.id}
-                onClick={() => onAction('requests')}
+                onClick={() => runAction('requests')}
                 className="flex-col !items-stretch gap-2 !border !border-brand-border w-full"
               >
                 <div className="flex items-start gap-2">
@@ -336,14 +361,14 @@ export function ClientHomeScreen({
       <AppDashboardZone
         title="Recent reports"
         actionLabel={recentReports.length > 0 ? 'View all' : undefined}
-        onAction={recentReports.length > 0 ? () => onAction('reports') : undefined}
+        onAction={recentReports.length > 0 ? () => runAction('reports') : undefined}
       >
         {recentReports.length === 0 ? (
           <p className="app-empty-state px-5">Reports from completed jobs will appear here.</p>
         ) : (
           <div className="app-item-card-stack px-5">
             {recentReports.slice(0, 3).map((report) => (
-              <AppItemCard key={report.id} onClick={() => onAction('reports')} className="flex-col !items-stretch gap-1">
+              <AppItemCard key={report.id} onClick={() => runAction('reports')} className="flex-col !items-stretch gap-1">
                 <p className="text-xs font-medium text-brand-primary">{REPORT_TYPE_LABEL[report.type]}</p>
                 <p className="font-semibold">{report.title}</p>
                 <p className="text-sm text-brand-text-muted line-clamp-2">{report.summary}</p>

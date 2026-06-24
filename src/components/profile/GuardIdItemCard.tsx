@@ -67,7 +67,7 @@ export function GuardIdItemCard({
         {guard.idFrontUrl && (
           <img
             src={guard.idFrontUrl}
-            alt=""
+            alt={`${guardName || guard.name} government ID preview`}
             className="w-14 h-14 rounded-xl object-cover shrink-0 border border-brand-border"
           />
         )}

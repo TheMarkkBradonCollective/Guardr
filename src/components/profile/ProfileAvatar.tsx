@@ -35,7 +35,7 @@ export function ProfileAvatar({
     return (
       <img
         src={src}
-        alt=""
+        alt={`${name} profile photo`}
         className={`${sizeClass} ${roundedClass} object-cover shrink-0 bg-brand-border/30 ${className}`}
         referrerPolicy="no-referrer"
       />

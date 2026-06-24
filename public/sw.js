@@ -1,13 +1,19 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v4';
+const CACHE_NAME = 'guardr-cache-v5';
 const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
 const OFFLINE_URLS = [
   '/',
   '/index.html',
   '/logo.png',
+  '/logo-64.png',
+  '/logo-128.png',
+  '/logo-256.png',
   '/logo.svg',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/apple-touch-icon.png',
+  '/badge-72.png',
   '/manifest.json',
   WALKIE_CHIRP_SOUND,
 ];
@@ -185,7 +191,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body,
     icon: payload.icon || '/icon-192.png',
-    badge: payload.badge || '/icon-192.png',
+    badge: payload.badge || '/badge-72.png',
     tag: payload.tag || payload.eventType || payload.data?.type || 'guardr-notification',
     data: {
       url: resolveNotificationUrl(payload.url || payload.data?.url || '/'),
@@ -195,7 +201,6 @@ self.addEventListener('push', (event) => {
     requireInteraction: payload.priority === 'high' || payload.data?.priority === 'high',
     renotify: true,
     silent: false,
-    sound: WALKIE_CHIRP_SOUND,
     vibrate:
       payload.priority === 'high' || payload.data?.priority === 'high' ? [200, 100, 200, 100, 200] : undefined,
   };

@@ -32,6 +32,7 @@ interface ClientMapScreenProps extends ClientJobActionsBindings {
   onOpenJobChat?: (requestId: string) => void;
   onPostJob?: () => void;
   onRequestGuard?: () => void;
+  onEditRequest?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   initialLiveJobId?: string | null;
   onLiveJobIdChange?: (requestId: string | null) => void;
 }
@@ -43,6 +44,7 @@ export function ClientMapScreen({
   onOpenJobChat,
   onPostJob,
   onRequestGuard,
+  onEditRequest,
   initialLiveJobId = null,
   onLiveJobIdChange,
   crewSettings,
@@ -129,7 +131,7 @@ export function ClientMapScreen({
         <MapPinFilterStepper
           filters={CLIENT_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
-          onChange={setMapStatusFilter}
+          onChange={(value) => setMapStatusFilter(value as ClientMapStatusFilter)}
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
           routeSlot={
@@ -202,7 +204,7 @@ export function ClientMapScreen({
           scheduleLocked={isJobScheduleLocked(editingRequest)}
           paidReschedule={canClientReschedulePaidSchedule(editingRequest)}
           onSave={async (requestId, updates) => {
-            await jobActions.onEditRequest?.(requestId, updates);
+            await onEditRequest?.(requestId, updates);
             setEditingId(null);
           }}
           onClose={() => setEditingId(null)}

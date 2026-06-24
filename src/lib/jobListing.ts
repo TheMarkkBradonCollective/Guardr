@@ -50,6 +50,7 @@ export type JobListingLike = Pick<
   | 'requestType'
   | 'status'
   | 'breakMinutes'
+  | 'breakPaid'
 >;
 
 export const EMPTY_LISTING_FIELDS: JobListingFields = {
