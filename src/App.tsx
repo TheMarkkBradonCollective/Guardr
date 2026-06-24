@@ -3119,6 +3119,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('clients').update({ approved: true, account_status: 'active' }).eq('id', clientId);
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: clientId,
+      title: 'Account approved',
+      body: 'Your client account is active. You can now request security coverage on Guardr.',
+    });
   };
 
   const handleRejectClient = async (clientId: string) => {
@@ -3134,6 +3140,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('clients').update({ approved: false, account_status: 'suspended' }).eq('id', clientId);
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: clientId,
+      title: 'Account not approved',
+      body: 'Your client account request was not approved. Contact Guardr support if you have questions.',
+    });
   };
 
   const handleApproveGuardAccount = async (guardId: string) => {
@@ -3176,6 +3188,12 @@ export default function App() {
         throw new Error(result.error);
       }
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: guardId,
+      title: 'Account approved',
+      body: 'Your guard profile is approved. Complete activation to start accepting jobs.',
+    });
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
@@ -4980,8 +4998,17 @@ export default function App() {
       appToast('You do not have permission to approve job requests.', 'error');
       return;
     }
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'open' }).eq('id', requestId);
+    if (job) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: job.clientId,
+        title: 'Job approved',
+        body: `"${job.title}" is now live on the marketplace.`,
+      });
+    }
   };
 
   const handleDenyRequest = async (requestId: string) => {
@@ -4989,8 +5016,17 @@ export default function App() {
       appToast('You do not have permission to decline job requests.', 'error');
       return;
     }
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
+    if (job) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: job.clientId,
+        title: 'Job declined',
+        body: `Guardr staff declined "${job.title}". Contact support if you need to revise and resubmit.`,
+      });
+    }
   };
 
   const handleCancelRequest = async (requestId: string) => {
@@ -6328,6 +6364,8 @@ export default function App() {
       if (ticket.category === 'safety' && ticket.priority === 'urgent') {
         void reportPushEvent(currentUser, {
           type: 'emergency_alert',
+          ticketId: ticket.id,
+          requestId: ticket.relatedRequestId,
           body: `Urgent safety support ticket from ${ticket.userName}`,
         });
       }
