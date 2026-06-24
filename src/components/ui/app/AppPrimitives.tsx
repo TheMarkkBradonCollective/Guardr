@@ -437,20 +437,25 @@ export function AppChatHeader({
   hideBackOnDesktop?: boolean;
 }) {
   return (
-    <div className="app-chat-header">
-      {onBack && (
+    <div className="app-subscreen-header">
+      {onBack ? (
         <button
           type="button"
           onClick={onBack}
-          className={`app-chat-header-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
+          className={`app-subscreen-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
           aria-label="Back"
         >
-          <ArrowLeft className="w-5 h-5" strokeWidth={1.75} />
+          <ArrowLeft className="w-4 h-4" />
+          Back
         </button>
+      ) : (
+        <span className="w-0 shrink-0" aria-hidden />
       )}
-      <div className="app-chat-header-copy min-w-0 flex-1">
-        <p className="app-chat-header-title">{title}</p>
-        {subtitle && <p className="app-chat-header-sub">{subtitle}</p>}
+      <div className="min-w-0 flex-1">
+        <h1 className="app-subscreen-title">{title}</h1>
+        {subtitle && (
+          <p className="text-xs text-brand-text-muted truncate mt-0.5">{subtitle}</p>
+        )}
       </div>
       {trailing}
     </div>

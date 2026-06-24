@@ -460,6 +460,7 @@ export default function App() {
     }
     return null;
   });
+  const [clientMessagesDetailOpen, setClientMessagesDetailOpen] = useState(false);
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
@@ -8693,7 +8694,7 @@ export default function App() {
     };
 
     const clientHideHeader =
-      clientView === 'messages' ||
+      (clientView === 'messages' && clientMessagesDetailOpen) ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (clientView === 'guards' && !!clientGuardId) ||
@@ -8802,6 +8803,7 @@ export default function App() {
               onOpenSupportReport={openClientSupportReport}
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
               requestsSelectedId={clientRequestsSelectedId}
+              onMessagesDetailOpenChange={setClientMessagesDetailOpen}
             />
           )}
         </ClientAppLayout>

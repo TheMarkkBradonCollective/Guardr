@@ -99,6 +99,7 @@ interface ClientDashboardProps {
   onOpenSupportReport?: () => void;
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
   requestsSelectedId?: string | null;
+  onMessagesDetailOpenChange?: (open: boolean) => void;
 }
 
 export function ClientDashboard({
@@ -158,6 +159,7 @@ export function ClientDashboard({
   onOpenSupportReport,
   onRequestsSelectedIdChange,
   requestsSelectedId = null,
+  onMessagesDetailOpenChange,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -412,6 +414,7 @@ export function ClientDashboard({
         onSupportTicketIdChange={onSupportTicketIdChange}
         onOpenCompose={onOpenSupportCompose}
         onOpenReport={onOpenSupportReport}
+        onDetailOpenChange={onMessagesDetailOpenChange}
       />
     );
   }

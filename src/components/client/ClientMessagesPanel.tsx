@@ -28,6 +28,7 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { Briefcase, FileText, LifeBuoy, MessageCircle } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
 import { guardForRequest } from '../../lib/clientShift';
 
 type InboxTab = 'jobs' | 'support';
@@ -49,6 +50,7 @@ interface ClientMessagesPanelProps {
   onSupportTicketIdChange?: (ticketId: string | null) => void;
   onOpenCompose?: () => void;
   onOpenReport?: () => void;
+  onDetailOpenChange?: (open: boolean) => void;
 }
 
 function formatInboxMeta(iso: string): string {
@@ -77,7 +79,9 @@ export function ClientMessagesPanel({
   onSupportTicketIdChange,
   onOpenCompose,
   onOpenReport,
+  onDetailOpenChange,
 }: ClientMessagesPanelProps) {
+  const { formFactor } = useDevice();
   const [chatRequestId, setChatRequestId] = useState<string | null>(initialChatRequestId);
   const [chatOpen, setChatOpen] = useState(initialChatOpen);
   const [supportTicketId, setSupportTicketId] = useState<string | null>(initialSupportTicketId);
@@ -164,6 +168,10 @@ export function ClientMessagesPanel({
 
   const hasSelection = !!(chatOpen && chatRequest) || !!activeTicket;
 
+  useEffect(() => {
+    onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
+  }, [formFactor, hasSelection, onDetailOpenChange]);
+
   const isRowSelected = (row: InboxRow) => {
     if (row.requestId && chatOpen && chatRequestId === row.requestId) return true;
     if (row.ticketId && supportTicketId === row.ticketId) return true;
@@ -187,14 +195,9 @@ export function ClientMessagesPanel({
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
-  // ── Header: title + tabs ───────────────────────────────
+  // ── Header: inbox tabs (title lives in AppScreenHeader) ──
   const header = (
-    <div>
-      <div className="app-messages-hub-lead">
-        <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Job chats and support conversations</p>
-      </div>
-      <div className="app-inbox-tabs" role="tablist">
+    <div className="app-inbox-tabs" role="tablist">
         {(
           [
             { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,       icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
@@ -216,7 +219,6 @@ export function ClientMessagesPanel({
             )}
           </button>
         ))}
-      </div>
     </div>
   );
 

@@ -271,6 +271,7 @@ export function GuardDashboard({
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
   const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
+  const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
   const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
@@ -1087,6 +1088,7 @@ export function GuardDashboard({
                   onSupportTicketIdChange={onSupportTicketIdChange}
                   onOpenSupportCompose={onOpenSupportCompose}
                   onOpenSupportReport={onOpenSupportReport}
+                  onDetailOpenChange={setGuardMessagesDetailOpen}
                 />
               )}
             </div>
@@ -1289,7 +1291,7 @@ export function GuardDashboard({
           : 'Available for vetted jobs';
 
   const shellHideHeader =
-    tab === 'messages' ||
+    (tab === 'messages' && guardMessagesDetailOpen) ||
     (tab === 'myJobs' && !!guardSelectedJobId);
 
   return (

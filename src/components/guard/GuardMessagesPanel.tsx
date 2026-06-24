@@ -32,6 +32,7 @@ import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
+import { useDevice } from '../../lib/platform';
 import {
   AppChatHeader,
   AppInboxList,
@@ -75,6 +76,7 @@ interface GuardMessagesPanelProps {
   onSupportTicketIdChange?: (ticketId: string | null) => void;
   onOpenSupportCompose?: () => void;
   onOpenSupportReport?: () => void;
+  onDetailOpenChange?: (open: boolean) => void;
 }
 
 function formatInboxMeta(iso: string): string {
@@ -112,7 +114,9 @@ export function GuardMessagesPanel({
   onSupportTicketIdChange,
   onOpenSupportCompose,
   onOpenSupportReport,
+  onDetailOpenChange,
 }: GuardMessagesPanelProps) {
+  const { formFactor } = useDevice();
   const [activeView, setActiveView] = useState<ActiveView>(() => {
     if (initialTeamChatRequestId) {
       return { kind: 'team', requestId: initialTeamChatRequestId };
@@ -238,14 +242,13 @@ export function GuardMessagesPanel({
 
   const hasSelection = activeView.kind !== 'list';
 
-  // ── Header: title + tab bar ──────────────────────────────
+  useEffect(() => {
+    onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
+  }, [formFactor, hasSelection, onDetailOpenChange]);
+
+  // ── Header: inbox tabs (title lives in AppScreenHeader) ──
   const header = (
-    <div>
-      <div className="app-messages-hub-lead">
-        <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Guard chat, crew teams, job threads, and support</p>
-      </div>
-      <div className="app-inbox-tabs" role="tablist">
+    <div className="app-inbox-tabs" role="tablist">
         {(
           [
             { id: 'chats'   as InboxTab, label: 'Chats',   count: 1,                  icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
@@ -269,7 +272,6 @@ export function GuardMessagesPanel({
             )}
           </button>
         ))}
-      </div>
     </div>
   );
 
