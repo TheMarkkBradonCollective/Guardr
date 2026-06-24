@@ -1,4 +1,4 @@
-import workflowMarkdown from '../../docs/guardr-full-app-workflow.md?raw';
+import workflowMarkdown from '../../docs/guardr-general-guide.md?raw';
 
 export interface GuideBlock {
   type: 'paragraph' | 'list' | 'ordered-list' | 'table' | 'code' | 'hr' | 'italic' | 'h4';
