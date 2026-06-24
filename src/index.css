@@ -4922,7 +4922,7 @@ html.theme-light .staff-ops-btn-primary:hover {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .app-messages-split {
     flex-direction: row;
   }
@@ -4938,7 +4938,9 @@ html.theme-light .staff-ops-btn-primary:hover {
   .app-messages-split-detail {
     flex: 1;
   }
+}
 
+@media (min-width: 1024px) {
   .app-messages-quick-actions .app-item-card-stack {
     display: grid;
     grid-template-columns: 1fr 1fr;

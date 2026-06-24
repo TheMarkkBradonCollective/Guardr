@@ -447,8 +447,6 @@ export function StaffDashboard({
     [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
 
-  const [messagesDetailOpen, setMessagesDetailOpen] = useState(false);
-
   const renderSection = () => {
     switch (section) {
       case 'overview':
@@ -660,7 +658,6 @@ export function StaffDashboard({
               onSelectedSupportTicketIdChange={onSelectedSupportTicketIdChange}
               initialJobChatRequestId={selectedJobChatRequestId}
               initialSupportTicketId={selectedSupportTicketId}
-              onDetailOpenChange={setMessagesDetailOpen}
             />
           </div>
         ) : null;
@@ -784,7 +781,7 @@ export function StaffDashboard({
       badges={badges}
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
-      hideHeader={isStaffMessagesSection(section) && messagesDetailOpen}
+      hideHeader={isStaffMessagesSection(section)}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}

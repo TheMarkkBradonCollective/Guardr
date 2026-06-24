@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
+import { useDevice } from '../../lib/platform';
 
 interface MessagesHubLayoutProps {
   header?: React.ReactNode;
@@ -36,6 +37,9 @@ export function MessagesHubLayout({
   emptyDetailTitle = 'Select a conversation',
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
 }: MessagesHubLayoutProps) {
+  const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+
   const emptyDetail = (
     <MessagesHubEmptyDetail
       emptyDetailTitle={emptyDetailTitle}
@@ -43,24 +47,9 @@ export function MessagesHubLayout({
     />
   );
 
-  return (
-    <>
-      {/* ── Mobile ── */}
-      <div className="lg:hidden h-full flex flex-col min-h-0">
-        {hasSelection ? (
-          detail
-        ) : (
-          <>
-            {/* header contains the title strip + tab bar — fixed height, no scroll */}
-            <div className="flex-shrink-0">{header}</div>
-            {/* list is the scrollable area */}
-            <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
-          </>
-        )}
-      </div>
-
-      {/* ── Desktop split ── */}
-      <div className="hidden lg:flex app-messages-split h-full min-h-0">
+  if (splitView) {
+    return (
+      <div className="app-messages-split h-full min-h-0">
         <div className="app-messages-split-list flex flex-col min-h-0">
           <div className="flex-shrink-0">{header}</div>
           <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
@@ -69,6 +58,17 @@ export function MessagesHubLayout({
           {hasSelection ? detail : emptyDetail}
         </div>
       </div>
-    </>
+    );
+  }
+
+  if (hasSelection) {
+    return <div className="h-full flex flex-col min-h-0">{detail}</div>;
+  }
+
+  return (
+    <div className="h-full flex flex-col min-h-0">
+      <div className="flex-shrink-0">{header}</div>
+      <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
+    </div>
   );
 }

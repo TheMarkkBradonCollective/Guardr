@@ -8515,7 +8515,7 @@ export default function App() {
     };
 
     const clientHideHeader =
-      (clientView === 'messages' && (!!supportTicketId || openJobChat)) ||
+      clientView === 'messages' ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (clientView === 'guards' && !!clientGuardId);

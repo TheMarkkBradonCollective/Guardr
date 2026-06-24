@@ -1162,8 +1162,7 @@ export function GuardDashboard({
         : GUARD_TAB_TITLES[tab];
 
   const shellHideHeader =
-    (tab === 'messages' &&
-      (!!supportTicketId || supportMode === 'compose' || supportMode === 'report' || openJobChat)) ||
+    tab === 'messages' ||
     (tab === 'myJobs' && !!jobChatRequestId);
 
   return (
