@@ -150,6 +150,7 @@ export async function reportPushEvent(
     recipientUserId?: string;
     ticketId?: string;
     clientId?: string;
+    priority?: 'normal' | 'high';
   }
 ): Promise<void> {
   try {

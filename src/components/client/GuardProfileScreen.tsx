@@ -60,6 +60,7 @@ const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
   accepted: 'Picked up',
   'in-progress': 'In progress',
   completed: 'Completed',
+  cancelled: 'Canceled',
   closed: 'Closed',
 };
 
