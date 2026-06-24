@@ -38,6 +38,10 @@ import {
   Shield,
   Star,
   X,
+  ClipboardList,
+  CalendarClock,
+  CheckSquare,
+  Archive,
 } from 'lucide-react';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { JobChatMessage, JobChatThread, SessionUser } from '../../types';
@@ -131,6 +135,7 @@ export function ClientRequestsList({
   onOpenJobChat,
 }: ClientRequestsListProps) {
   const [search, setSearch] = useState('');
+  const [statusTab, setStatusTab] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all');
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
   const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
@@ -167,15 +172,27 @@ export function ClientRequestsList({
       )
     : 0;
 
+  const tabCounts = useMemo(() => ({
+    all: requests.length,
+    active: requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted').length,
+    upcoming: requests.filter((r) => r.status === 'open' || r.status === 'pending-review').length,
+    completed: requests.filter((r) => r.status === 'completed' || r.status === 'closed').length,
+  }), [requests]);
+
   const filtered = useMemo(() => {
+    let base = requests;
+    if (statusTab === 'active') base = base.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
+    else if (statusTab === 'upcoming') base = base.filter((r) => r.status === 'open' || r.status === 'pending-review');
+    else if (statusTab === 'completed') base = base.filter((r) => r.status === 'completed' || r.status === 'closed');
     const q = search.toLowerCase();
-    return requests.filter(
+    if (!q) return base;
+    return base.filter(
       (r) =>
         r.title.toLowerCase().includes(q) ||
         r.location.toLowerCase().includes(q) ||
         r.type.toLowerCase().includes(q)
     );
-  }, [requests, search]);
+  }, [requests, search, statusTab]);
 
   const handlePayNow = async (req: SecurityRequest) => {
     setPayingJobId(req.id);
@@ -612,34 +629,86 @@ export function ClientRequestsList({
         </>
       ) : (
         <>
-      <div className="flex items-center justify-end gap-4 px-5 pt-2 pb-4 border-b border-brand-border">
+      <div className="flex items-center justify-between gap-4 px-5 pt-2 pb-3 border-b border-brand-border">
+        <p className="text-sm font-semibold text-brand-text">
+          {requests.length} job{requests.length !== 1 ? 's' : ''}
+        </p>
         <button
           type="button"
           onClick={onRequestNew}
-          className="app-button-primary !w-auto !h-10 !px-4 !text-sm shrink-0"
+          className="app-button-primary !w-auto !h-9 !px-4 !text-sm shrink-0"
         >
           + Post offer
         </button>
       </div>
 
-      <div className="px-5 py-4 border-b border-brand-border">
-        {requests.length > 0 && (
-          <WfSearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="Search jobs..."
-          />
-        )}
-      </div>
+      {requests.length > 0 && (
+        <>
+          {/* Status filter tabs */}
+          <div className="flex gap-0 border-b border-brand-border overflow-x-auto scrollbar-hide">
+            {(
+              [
+                { id: 'all', label: 'All', icon: ClipboardList },
+                { id: 'active', label: 'Active', icon: CalendarClock },
+                { id: 'upcoming', label: 'Upcoming', icon: Shield },
+                { id: 'completed', label: 'Done', icon: CheckSquare },
+              ] as const
+            ).map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setStatusTab(id)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors shrink-0 ${
+                  statusTab === id
+                    ? 'border-brand-primary text-brand-primary'
+                    : 'border-transparent text-brand-text-muted hover:text-brand-text'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+                {tabCounts[id] > 0 && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    statusTab === id ? 'bg-brand-primary/15 text-brand-primary' : 'bg-brand-bg-sec text-brand-text-muted'
+                  }`}>
+                    {tabCounts[id]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
 
-      <AppSection title="All jobs">
+          <div className="px-5 py-3 border-b border-brand-border">
+            <WfSearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search jobs by title, location…"
+            />
+          </div>
+        </>
+      )}
+
+      <AppSection title={statusTab === 'all' ? 'All jobs' : statusTab === 'active' ? 'Active jobs' : statusTab === 'upcoming' ? 'Upcoming jobs' : 'Completed jobs'}>
       {requests.length === 0 ? (
-        <div className="app-empty-state">
-          <Shield className="w-10 h-10 text-brand-primary/30 mx-auto mb-3" />
-          <p className="text-brand-text-muted text-sm text-center">No jobs yet.</p>
+        <div className="flex flex-col items-center py-12 px-6 text-center">
+          <Shield className="w-10 h-10 text-brand-border mb-3" />
+          <p className="font-semibold text-brand-text mb-1">No jobs yet</p>
+          <p className="text-sm text-brand-text-muted mb-4">Post your first security job offer to get started.</p>
+          <button
+            type="button"
+            onClick={onRequestNew}
+            className="app-button-primary !w-auto !h-9 !px-5 !text-sm"
+          >
+            + Post offer
+          </button>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your search.</p>
+        <div className="flex flex-col items-center py-10 px-6 text-center">
+          <Archive className="w-8 h-8 text-brand-border mb-2" />
+          <p className="text-sm font-medium text-brand-text mb-1">No jobs here</p>
+          <p className="text-xs text-brand-text-muted">
+            {search ? 'No jobs match your search.' : `No ${statusTab === 'active' ? 'active' : statusTab === 'upcoming' ? 'upcoming' : 'completed'} jobs right now.`}
+          </p>
+        </div>
       ) : (
         <AppItemCardStack>
           {filtered.map((req) => {

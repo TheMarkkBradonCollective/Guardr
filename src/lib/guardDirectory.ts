@@ -1,7 +1,119 @@
-import { JobType, SecurityGuard, SecurityRequest, SessionUser } from '../types';
+import { GuardSpecialty, JobType, SecurityGuard, SecurityRequest, SessionUser } from '../types';
 import { isGuardAccountActive } from './accountStatus';
 import { guardCanWorkFieldJobs } from './guardQualification';
 import { JOB_TYPE_LABELS } from './guardJobs';
+
+// ─── Filter & Sort types ──────────────────────────────────────────────────────
+
+export type GuardSortKey = 'rating' | 'jobs' | 'experience' | 'name';
+
+export interface GuardDirectoryFilters {
+  /** Text search across name, bio, headline, experience */
+  query: string;
+  /** Only show favourited guards */
+  favoritesOnly: boolean;
+  /** Armed guards only */
+  armedOnly: boolean;
+  /** Minimum average rating (0 = any) */
+  minRating: number;
+  /** Minimum years of experience (0 = any) */
+  minExperience: number;
+  /** Specialties guard must have at least one of (empty = any) */
+  specialties: GuardSpecialty[];
+  /** Only show verified/approved guards */
+  verifiedOnly: boolean;
+  /** Only show trusted (Director/Owner-flagged) guards */
+  trustedOnly: boolean;
+  /** Only guards the client has worked with before */
+  previouslyWorkedWith: boolean;
+  /** Sort order for results */
+  sortBy: GuardSortKey;
+}
+
+export const DEFAULT_GUARD_FILTERS: GuardDirectoryFilters = {
+  query: '',
+  favoritesOnly: false,
+  armedOnly: false,
+  minRating: 0,
+  minExperience: 0,
+  specialties: [],
+  verifiedOnly: false,
+  trustedOnly: false,
+  previouslyWorkedWith: false,
+  sortBy: 'rating',
+};
+
+export function countActiveFilters(filters: GuardDirectoryFilters): number {
+  let count = 0;
+  if (filters.favoritesOnly) count++;
+  if (filters.armedOnly) count++;
+  if (filters.minRating > 0) count++;
+  if (filters.minExperience > 0) count++;
+  if (filters.specialties.length > 0) count++;
+  if (filters.verifiedOnly) count++;
+  if (filters.trustedOnly) count++;
+  if (filters.previouslyWorkedWith) count++;
+  return count;
+}
+
+export function applyGuardFilters(
+  guards: SecurityGuard[],
+  filters: GuardDirectoryFilters,
+  favoriteGuardIds: string[],
+  previouslyWorkedIds: Set<string>
+): SecurityGuard[] {
+  let result = guards;
+
+  if (filters.query.trim()) {
+    result = filterGuardsByQuery(result, filters.query);
+  }
+  if (filters.favoritesOnly) {
+    result = result.filter((g) => favoriteGuardIds.includes(g.id));
+  }
+  if (filters.armedOnly) {
+    result = result.filter((g) => g.isArmed);
+  }
+  if (filters.minRating > 0) {
+    result = result.filter((g) => g.rating >= filters.minRating);
+  }
+  if (filters.minExperience > 0) {
+    result = result.filter((g) => (g.yearsExperience ?? 0) >= filters.minExperience);
+  }
+  if (filters.specialties.length > 0) {
+    result = result.filter((g) =>
+      filters.specialties.some((s) => g.specialties?.includes(s))
+    );
+  }
+  if (filters.verifiedOnly) {
+    result = result.filter((g) => g.verified);
+  }
+  if (filters.trustedOnly) {
+    result = result.filter((g) => g.trusted === true);
+  }
+  if (filters.previouslyWorkedWith) {
+    result = result.filter((g) => previouslyWorkedIds.has(g.id));
+  }
+
+  result = sortGuards(result, filters.sortBy);
+
+  return result;
+}
+
+export function sortGuards(guards: SecurityGuard[], sortBy: GuardSortKey): SecurityGuard[] {
+  const sorted = [...guards];
+  switch (sortBy) {
+    case 'rating':
+      return sorted.sort((a, b) => b.rating - a.rating || b.jobsCompleted - a.jobsCompleted);
+    case 'jobs':
+      return sorted.sort((a, b) => b.jobsCompleted - a.jobsCompleted || b.rating - a.rating);
+    case 'experience':
+      return sorted.sort((a, b) => (b.yearsExperience ?? 0) - (a.yearsExperience ?? 0) || b.rating - a.rating);
+    case 'name':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    default:
+      return sorted;
+  }
+}
 
 /** Match a session user to their guard row (staff often share one email across roles). */
 export function findGuardProfileForUser(

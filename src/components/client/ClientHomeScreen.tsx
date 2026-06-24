@@ -1,5 +1,5 @@
 import React from 'react';
-import { SecurityRequest } from '../../types';
+import { SecurityGuard, SecurityRequest } from '../../types';
 import {
   ClientReportCard,
   CoverageSummary,
@@ -16,6 +16,7 @@ import {
   AppScreen,
   AppStatusBanner,
 } from '../ui/app/AppPrimitives';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import {
   Shield,
   Calendar,
@@ -28,6 +29,8 @@ import {
   Clock,
   Map,
   MessagesSquare,
+  Star,
+  ChevronRight,
 } from 'lucide-react';
 import { getClientLiveJobs } from '../../lib/clientShift';
 
@@ -41,6 +44,10 @@ interface ClientHomeScreenProps {
   accountPending?: boolean;
   onOpenProfile?: () => void;
   onAction: (action: ClientHomeAction) => void;
+  /** Guards this client has worked with before — shown in "Rehire" section */
+  recentGuards?: SecurityGuard[];
+  onHireGuard?: (guard: SecurityGuard) => void;
+  onViewGuard?: (guard: SecurityGuard) => void;
 }
 
 const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
@@ -66,6 +73,9 @@ export function ClientHomeScreen({
   accountPending = false,
   onOpenProfile,
   onAction,
+  recentGuards = [],
+  onHireGuard,
+  onViewGuard,
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
   const openRequestCount = requests.filter((r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review').length;
@@ -177,6 +187,57 @@ export function ClientHomeScreen({
           </div>
         </div>
       </AppDashboardZone>
+
+      {recentGuards.length > 0 && onHireGuard && (
+        <AppDashboardZone
+          title="Your guards"
+          actionLabel="Browse all"
+          onAction={() => onAction('guards')}
+        >
+          <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
+            {recentGuards.map((guard) => (
+              <div
+                key={guard.id}
+                className="shrink-0 snap-start w-36 app-item-card flex-col items-center gap-2 !p-3 text-center !border !border-brand-border"
+              >
+                <button
+                  type="button"
+                  onClick={() => onViewGuard?.(guard)}
+                  className="flex flex-col items-center gap-2 w-full"
+                >
+                  <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" className="w-12 h-12 text-sm" />
+                  <div>
+                    <p className="font-semibold text-xs leading-snug line-clamp-2">{guard.name}</p>
+                    <p className="text-[10px] text-brand-text-muted flex items-center justify-center gap-0.5 mt-0.5">
+                      <Star className="w-2.5 h-2.5 fill-brand-primary text-brand-primary" />
+                      {guard.rating.toFixed(1)}
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onHireGuard(guard)}
+                  className="w-full py-1 text-[10px] font-semibold bg-brand-primary/10 text-brand-primary rounded-lg hover:bg-brand-primary/20 transition-colors"
+                >
+                  Hire again
+                </button>
+              </div>
+            ))}
+            <div className="shrink-0 snap-start w-20 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => onAction('guards')}
+                className="flex flex-col items-center gap-1.5 text-brand-text-muted hover:text-brand-primary transition-colors"
+              >
+                <div className="w-12 h-12 rounded-xl border-2 border-dashed border-brand-border flex items-center justify-center">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+                <p className="text-[10px] font-medium">All guards</p>
+              </button>
+            </div>
+          </div>
+        </AppDashboardZone>
+      )}
 
       <AppDashboardZone
         title="Upcoming coverage"

@@ -4,6 +4,7 @@ import {
   buildRecentReports,
   computeCoverageSummary,
 } from '../lib/clientCoverage';
+import { getClientRehireableGuards } from '../lib/guardDirectory';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
@@ -341,6 +342,9 @@ export function ClientDashboard({
         onSelectGuard={setSelectedGuard}
         favoriteGuardIds={favoriteGuardIds}
         onToggleFavorite={onToggleFavoriteGuard}
+        clientId={clientId}
+        requests={requests}
+        onRequestGuard={startDirectGuardRequest}
       />
     );
   }
@@ -446,6 +450,12 @@ export function ClientDashboard({
       accountPending={accountPending}
       onOpenProfile={() => navigate('profile')}
       onAction={handleHomeAction}
+      recentGuards={getClientRehireableGuards(clientId, requests, guards).slice(0, 5)}
+      onHireGuard={startDirectGuardRequest}
+      onViewGuard={(guard) => {
+        setSelectedGuard(guard);
+        navigate('guards');
+      }}
     />
   );
 }
