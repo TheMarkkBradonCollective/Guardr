@@ -171,6 +171,26 @@ export async function authorizePushEvent(
       }
       return 'Not authorized to send dispute updates for this context';
 
+    case 'guard_trusted_status':
+    case 'client_trusted_status':
+      return isStaffSession(session) ? null : 'Only staff can send trusted status notifications';
+
+    case 'job_relisted':
+      if (isStaffSession(session)) return null;
+      if (event.recipientUserId && event.recipientUserId === session.userId) return null;
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Not authorized to send job re-list notifications';
+
+    case 'team_chat_message':
+      if (isStaffSession(session)) return null;
+      if (event.recipientUserId && event.recipientUserId === session.userId) return null;
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Not authorized to send crew chat notifications for this job';
+
     default:
       return 'Unknown notification type';
   }

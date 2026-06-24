@@ -897,6 +897,10 @@ export interface NotificationPreferences {
   supportTicket: boolean;
   supportTicketStatus: boolean;
   disputeUpdate: boolean;
+  guardTrustedStatus: boolean;
+  clientTrustedStatus: boolean;
+  jobRelisted: boolean;
+  teamChatMessage: boolean;
   updatedAt: string;
 }
 

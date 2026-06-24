@@ -21,6 +21,10 @@ export type PushNotificationType =
   | 'support_ticket'
   | 'support_ticket_status'
   | 'dispute_update'
+  | 'guard_trusted_status'
+  | 'client_trusted_status'
+  | 'job_relisted'
+  | 'team_chat_message'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

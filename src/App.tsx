@@ -3390,6 +3390,7 @@ export default function App() {
       return;
     }
     const guard = guards.find((g) => g.id === guardId);
+    let relistedCount = 0;
     if (trusted) {
       if (!guard || guard.userStatus !== 'active' || !guard.verified) {
         appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
@@ -3398,31 +3399,28 @@ export default function App() {
     } else if (guard) {
       const affectedJobs = requests.filter((j) => jobAffectedByTrustedRevocation(guardId, j));
       const revocationUpdates = applyTrustedRevocationToJobs(guardId, affectedJobs);
+      relistedCount = revocationUpdates.filter((u) => u.relisted).length;
       for (const update of revocationUpdates) {
         await persistTeamJobUpdate(update.job, update.slots);
         if (update.relisted && currentUser) {
           void reportPushEvent(currentUser, {
-            type: 'job_submitted',
+            type: 'job_relisted',
             recipientUserId: update.job.clientId,
             requestId: update.job.id,
             body: `"${update.job.title}" is back on the marketplace — the coordinated crew was dissolved.`,
           });
         }
         for (const removedId of update.removedGuardIds) {
-          if (!currentUser) continue;
+          if (!currentUser || removedId === guardId) continue;
           void reportPushEvent(currentUser, {
             type: 'assignment',
             recipientUserId: removedId,
             requestId: update.job.id,
-            body:
-              removedId === guardId
-                ? `You lost trusted status and were removed from "${update.job.title}".`
-                : `You were removed from "${update.job.title}" because the crew coordinator is no longer trusted.`,
+            body: `You were removed from "${update.job.title}" because the crew coordinator is no longer trusted.`,
           });
         }
       }
       if (revocationUpdates.length > 0) {
-        const relistedCount = revocationUpdates.filter((u) => u.relisted).length;
         appToast(
           relistedCount > 0
             ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.`
@@ -3440,8 +3438,28 @@ export default function App() {
         return;
       }
     }
-    if (trusted && guard) {
-      appToast(`${guard.name} is now a trusted guard.`, 'success');
+    if (currentUser && guard) {
+      if (trusted) {
+        void reportPushEvent(currentUser, {
+          type: 'guard_trusted_status',
+          recipientUserId: guardId,
+          guardId,
+          title: 'You are now a trusted guard',
+          body: 'You can coordinate multi-guard crews and skip Guardr applicant review on Stripe jobs. Cash jobs still require staff confirmation.',
+        });
+        appToast(`${guard.name} is now a trusted guard.`, 'success');
+      } else {
+        void reportPushEvent(currentUser, {
+          type: 'guard_trusted_status',
+          recipientUserId: guardId,
+          guardId,
+          title: 'Trusted status removed',
+          body:
+            relistedCount > 0
+              ? `Your trusted status was removed. ${relistedCount} scheduled job${relistedCount === 1 ? '' : 's'} were re-listed and coordinated crews were dissolved.`
+              : 'Your trusted status was removed. Future applications will require Guardr staff review and you cannot coordinate crews.',
+        });
+      }
     }
   };
 
@@ -3450,13 +3468,30 @@ export default function App() {
       appToast('Only Directors and Owners can set a client as trusted.', 'error');
       return;
     }
+    const client = clients.find((c) => c.id === clientId);
     setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted } : c)));
     if (isDbConnected) {
       const { error } = await supabase.from('clients').update({ trusted }).eq('id', clientId);
       if (error) {
         setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted: !trusted } : c)));
         appToast('Could not update client trusted status.', 'error');
+        return;
       }
+    }
+    if (currentUser && client) {
+      void reportPushEvent(currentUser, {
+        type: 'client_trusted_status',
+        recipientUserId: clientId,
+        clientId,
+        title: trusted ? 'You are now a trusted client' : 'Trusted status removed',
+        body: trusted
+          ? 'Your non-cash job postings will open to guards immediately without Guardr approval.'
+          : 'Your job postings will require Guardr staff approval before guards can apply.',
+      });
+      appToast(
+        trusted ? `${client.name} is now a trusted client.` : `${client.name} is no longer a trusted client.`,
+        'success'
+      );
     }
   };
 
@@ -7387,7 +7422,7 @@ export default function App() {
     );
     for (const guardId of crewIds) {
       void reportPushEvent(currentUser, {
-        type: 'job_chat_message',
+        type: 'team_chat_message',
         recipientUserId: guardId,
         requestId: req.id,
         body: `${sender.name} in crew chat (${req.title}): ${body.slice(0, 100)}`,
@@ -7395,7 +7430,7 @@ export default function App() {
     }
     if (!isStaffRole(sender.role)) {
       void reportPushEvent(currentUser, {
-        type: 'job_chat_message',
+        type: 'team_chat_message',
         requestId: req.id,
         body: `${sender.name} in crew chat for "${req.title}": ${body.slice(0, 100)}`,
       });

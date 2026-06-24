@@ -96,6 +96,20 @@ export function resolveNotificationUrl(
       return options.ticketId
         ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
         : '/staff/disputes';
+    case 'guard_trusted_status':
+      return options.guardId
+        ? `/guard/profile?g=${encodeURIComponent(options.guardId)}`
+        : '/guard/profile';
+    case 'client_trusted_status':
+      return '/client/profile';
+    case 'job_relisted':
+      return options.requestId
+        ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+        : '/client/requests';
+    case 'team_chat_message':
+      return options.requestId
+        ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}`
+        : '/staff/messages?mtab=team';
     case 'test':
       return '/';
     default:
@@ -213,9 +227,31 @@ export function resolveNotificationUrlForRole(
         ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}`
         : '/staff/disputes';
     case 'assignment':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/requests';
+      }
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
         : '/guard/my-jobs';
+    case 'guard_trusted_status':
+      return '/guard/profile';
+    case 'client_trusted_status':
+      return '/client/profile';
+    case 'job_relisted':
+      return options.requestId
+        ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+        : '/client/requests';
+    case 'team_chat_message':
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/messages';
+      }
+      return options.requestId
+        ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}`
+        : '/staff/messages?mtab=team';
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === 'client') return '/client/home';
@@ -257,6 +293,14 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['client', 'guard'];
     case 'dispute_update':
       return ['dispatch', 'admin', 'client', 'guard'];
+    case 'guard_trusted_status':
+      return ['guard'];
+    case 'client_trusted_status':
+      return ['client'];
+    case 'job_relisted':
+      return ['client'];
+    case 'team_chat_message':
+      return ['guard', 'dispatch', 'admin'];
     case 'test':
       return [];
     default:

@@ -30,6 +30,10 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   support_ticket: 'support_ticket',
   support_ticket_status: 'support_ticket_status',
   dispute_update: 'dispute_update',
+  guard_trusted_status: 'guard_trusted_status',
+  client_trusted_status: 'client_trusted_status',
+  job_relisted: 'job_relisted',
+  team_chat_message: 'team_chat_message',
 };
 
 async function isTypeEnabledForUser(

@@ -123,7 +123,11 @@ export type PushEventType =
   | 'payment_attention'
   | 'support_ticket'
   | 'support_ticket_status'
-  | 'dispute_update';
+  | 'dispute_update'
+  | 'guard_trusted_status'
+  | 'client_trusted_status'
+  | 'job_relisted'
+  | 'team_chat_message';
 
 export async function reportPushEvent(
   user: SessionUser,

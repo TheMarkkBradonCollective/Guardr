@@ -150,6 +150,34 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     description: 'Client payments, cash deposits, and guard payout invoices.',
     roles: ['staff'],
   },
+  {
+    key: 'guardTrustedStatus',
+    type: 'guard_trusted_status',
+    label: 'Trusted guard status',
+    description: 'When Guardr staff mark you as trusted or remove trusted status.',
+    roles: ['guard'],
+  },
+  {
+    key: 'clientTrustedStatus',
+    type: 'client_trusted_status',
+    label: 'Trusted client status',
+    description: 'When Guardr staff mark your account as trusted or remove it.',
+    roles: ['client'],
+  },
+  {
+    key: 'jobRelisted',
+    type: 'job_relisted',
+    label: 'Job re-listed',
+    description: 'When a coordinated crew is dissolved and your job returns to the marketplace.',
+    roles: ['client'],
+  },
+  {
+    key: 'teamChatMessage',
+    type: 'team_chat_message',
+    label: 'Crew chat',
+    description: 'Messages in coordinated crew chats for multi-guard jobs.',
+    roles: ['guard', 'staff'],
+  },
 ];
 
 export function defaultNotificationPreferences(userId: string): NotificationPreferences {
@@ -176,6 +204,10 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     supportTicket: true,
     supportTicketStatus: true,
     disputeUpdate: true,
+    guardTrustedStatus: true,
+    clientTrustedStatus: true,
+    jobRelisted: true,
+    teamChatMessage: true,
     updatedAt: now,
   };
 }
@@ -254,6 +286,10 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     support_ticket: prefs.supportTicket,
     support_ticket_status: prefs.supportTicketStatus,
     dispute_update: prefs.disputeUpdate,
+    guard_trusted_status: prefs.guardTrustedStatus,
+    client_trusted_status: prefs.clientTrustedStatus,
+    job_relisted: prefs.jobRelisted,
+    team_chat_message: prefs.teamChatMessage,
     updated_at: prefs.updatedAt,
   };
 }
@@ -281,6 +317,10 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     supportTicket: row.support_ticket !== false,
     supportTicketStatus: row.support_ticket_status !== false,
     disputeUpdate: row.dispute_update !== false,
+    guardTrustedStatus: row.guard_trusted_status !== false,
+    clientTrustedStatus: row.client_trusted_status !== false,
+    jobRelisted: row.job_relisted !== false,
+    teamChatMessage: row.team_chat_message !== false,
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
 }
