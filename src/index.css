@@ -1772,12 +1772,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .client-map-offer-offset.map-jobs-browse-sheet,
 .map-jobs-browse-sheet.client-map-offer-offset {
-  bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
 }
 
 .client-map-offer-offset,
 .map-browse-offset {
-  bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
+}
+
+.map-selection-layer.map-browse-offset .map-offer-card,
+.map-selection-layer.client-map-offer-offset .map-offer-card {
+  margin-bottom: 0;
 }
 
 /* Sacramento Buy Nothing-style horizontal map browse dock */
