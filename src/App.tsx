@@ -164,6 +164,8 @@ import {
   updateCrewProfile,
   staffApproveIndependentSlot,
   staffApproveTeamSlot,
+  applyTrustedRevocationToJobs,
+  jobAffectedByTrustedRevocation,
 } from './lib/guardTeamFlow';
 import {
   persistJobGuardSlots,
@@ -3387,11 +3389,46 @@ export default function App() {
       appToast('Only Directors and Owners can set a guard as trusted.', 'error');
       return;
     }
+    const guard = guards.find((g) => g.id === guardId);
     if (trusted) {
-      const guard = guards.find((g) => g.id === guardId);
       if (!guard || guard.userStatus !== 'active' || !guard.verified) {
         appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
         return;
+      }
+    } else if (guard) {
+      const affectedJobs = requests.filter((j) => jobAffectedByTrustedRevocation(guardId, j));
+      const revocationUpdates = applyTrustedRevocationToJobs(guardId, affectedJobs);
+      for (const update of revocationUpdates) {
+        await persistTeamJobUpdate(update.job, update.slots);
+        if (update.relisted && currentUser) {
+          void reportPushEvent(currentUser, {
+            type: 'job_submitted',
+            recipientUserId: update.job.clientId,
+            requestId: update.job.id,
+            body: `"${update.job.title}" is back on the marketplace — the coordinated crew was dissolved.`,
+          });
+        }
+        for (const removedId of update.removedGuardIds) {
+          if (!currentUser) continue;
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: removedId,
+            requestId: update.job.id,
+            body:
+              removedId === guardId
+                ? `You lost trusted status and were removed from "${update.job.title}".`
+                : `You were removed from "${update.job.title}" because the crew coordinator is no longer trusted.`,
+          });
+        }
+      }
+      if (revocationUpdates.length > 0) {
+        const relistedCount = revocationUpdates.filter((u) => u.relisted).length;
+        appToast(
+          relistedCount > 0
+            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.`
+            : `${guard.name} is no longer trusted and was removed from open crew rosters.`,
+          'success'
+        );
       }
     }
     setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
@@ -3400,7 +3437,11 @@ export default function App() {
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
         appToast('Could not update guard trusted status.', 'error');
+        return;
       }
+    }
+    if (trusted && guard) {
+      appToast(`${guard.name} is now a trusted guard.`, 'success');
     }
   };
 

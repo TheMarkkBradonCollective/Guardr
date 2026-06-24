@@ -9,6 +9,7 @@ import {
   isMultiGuardJob,
   mergeJobSlots,
   newSlotId,
+  emptySlotsForJob,
 } from './guardTeams';
 import { isGuardTrusted } from './guardTrust';
 import { jobRequiresCashStaffConfirmation, shouldSkipStaffGuardReviewForTrusted } from './guardAssignment';
@@ -644,6 +645,131 @@ export function revokeLeadIfNeeded(job: SecurityRequest, slots: JobGuardSlot[]):
     return { ...job, teamLeadId: undefined };
   }
   return job;
+}
+
+const TRUSTED_REVOCATION_SLOT_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+  'pending_client',
+  'approved',
+];
+
+export type TrustedRevocationJobUpdate = {
+  job: SecurityRequest;
+  slots: JobGuardSlot[];
+  removedGuardIds: string[];
+  relisted: boolean;
+};
+
+/** Scheduled/open jobs where revoking trusted status requires roster or listing changes. */
+export function jobAffectedByTrustedRevocation(
+  guardId: string,
+  job: SecurityRequest
+): boolean {
+  if (!['open', 'accepted'].includes(job.status)) return false;
+  if (job.assignedGuardId === guardId) return true;
+  if (job.teamLeadId === guardId) return true;
+  return (job.guardSlots ?? []).some(
+    (s) => s.guardId === guardId && TRUSTED_REVOCATION_SLOT_STATUSES.includes(s.status)
+  );
+}
+
+function relistJobToMarketplace(
+  job: SecurityRequest,
+  now = new Date()
+): TrustedRevocationJobUpdate {
+  const ts = now.toISOString();
+  const removedGuardIds = new Set<string>();
+  if (job.assignedGuardId) removedGuardIds.add(job.assignedGuardId);
+  if (job.teamLeadId) removedGuardIds.add(job.teamLeadId);
+  if (job.pendingGuardId) removedGuardIds.add(job.pendingGuardId);
+  for (const slot of job.guardSlots ?? []) {
+    if (slot.guardId) removedGuardIds.add(slot.guardId);
+  }
+
+  const slots = isMultiGuardJob(job)
+    ? emptySlotsForJob(job).map((s) => ({ ...s, updatedAt: ts }))
+    : [];
+  const nextApplicants = job.applicants.filter((id) => !removedGuardIds.has(id));
+
+  return {
+    job: {
+      ...job,
+      status: 'open',
+      assignedGuardId: null,
+      pendingGuardId: undefined,
+      staffApprovedGuardAt: undefined,
+      teamLeadId: undefined,
+      teamCode: undefined,
+      crewName: undefined,
+      crewDescription: undefined,
+      guardSlots: isMultiGuardJob(job) ? slots : undefined,
+      applicants: nextApplicants,
+    },
+    slots,
+    removedGuardIds: [...removedGuardIds],
+    relisted: true,
+  };
+}
+
+/** Apply trusted-status removal side effects for one job (crew dissolve, slot removal, or re-list). */
+export function applyTrustedRevocationToJob(
+  job: SecurityRequest,
+  guardId: string,
+  now = new Date()
+): TrustedRevocationJobUpdate | null {
+  if (!jobAffectedByTrustedRevocation(guardId, job)) return null;
+
+  const isCoordinator = job.teamLeadId === guardId;
+  const isAssigned = job.assignedGuardId === guardId;
+  const onActiveCrew = (job.guardSlots ?? []).some(
+    (s) => s.guardId === guardId && TRUSTED_REVOCATION_SLOT_STATUSES.includes(s.status)
+  );
+
+  const fullReset =
+    job.status === 'accepted' || isCoordinator || isAssigned || (isMultiGuardJob(job) && isCoordinator);
+
+  if (fullReset) {
+    return relistJobToMarketplace(job, now);
+  }
+
+  if (onActiveCrew) {
+    const slots = mergeJobSlots(job, job.guardSlots);
+    const slot = slots.find((s) => s.guardId === guardId);
+    if (!slot) return null;
+    const reopened = reopenCrewMemberSlot(job, slots, slot, guardId, now.toISOString());
+    return {
+      job: reopened.job,
+      slots: reopened.slots,
+      removedGuardIds: [guardId],
+      relisted: false,
+    };
+  }
+
+  if (job.applicants.includes(guardId)) {
+    return {
+      job: { ...job, applicants: job.applicants.filter((id) => id !== guardId) },
+      slots: mergeJobSlots(job, job.guardSlots),
+      removedGuardIds: [guardId],
+      relisted: false,
+    };
+  }
+
+  return null;
+}
+
+export function applyTrustedRevocationToJobs(
+  guardId: string,
+  jobs: SecurityRequest[],
+  now = new Date()
+): TrustedRevocationJobUpdate[] {
+  const updates: TrustedRevocationJobUpdate[] = [];
+  for (const job of jobs) {
+    const update = applyTrustedRevocationToJob(job, guardId, now);
+    if (update) updates.push(update);
+  }
+  return updates;
 }
 
 export function ensureSlotIds(job: SecurityRequest, slots: JobGuardSlot[]): JobGuardSlot[] {
