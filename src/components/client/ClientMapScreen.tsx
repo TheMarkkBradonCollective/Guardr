@@ -8,7 +8,7 @@ import { ClientActiveShift } from './ClientActiveShift';
 import { clientBrowseMapJobs, clientMapPinKind } from '../../lib/mapJobVisibility';
 import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob } from '../../lib/clientShift';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
-import { ClientMapBrowseDock } from './ClientMapBrowseDock';
+import { ClientMapPostMenu } from './ClientMapBrowseDock';
 import type { ClientJobActionsBindings } from './clientJobActionsTypes';
 
 interface ClientMapScreenProps extends ClientJobActionsBindings {
@@ -142,15 +142,10 @@ export function ClientMapScreen({
         />
       )}
 
-      {!showShiftOverlay && onPostJob && onRequestGuard && (
-        <ClientMapBrowseDock
-          jobs={browseJobs}
-          selectedJobId={selectedBrowseJobId}
-          onSelectJob={setSelectedBrowseJobId}
-          onPostJob={onPostJob}
-          onRequestGuard={onRequestGuard}
-          bottomOffsetClass="map-browse-offset"
-        />
+      {!showShiftOverlay && !selectedBrowseJobId && onPostJob && onRequestGuard && (
+        <div className="map-post-fab-layer map-browse-offset">
+          <ClientMapPostMenu onPostJob={onPostJob} onRequestGuard={onRequestGuard} />
+        </div>
       )}
     </div>
   );

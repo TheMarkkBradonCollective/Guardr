@@ -5,14 +5,12 @@ import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { staffVisibleMapJobs, staffMapPinKind } from '../../lib/mapJobVisibility';
-import { MapBrowseDock } from '../map/MapBrowseDock';
-import { staffMapBrowseItems } from '../../lib/mapBrowseItems';
 
 interface StaffOpsMapScreenProps {
   requests: SecurityRequest[];
 }
 
-/** Platform ops map — all jobs with Sacramento Buy Nothing-style browse dock. */
+/** Platform ops map — tap a blip to open job details. */
 export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
@@ -46,13 +44,6 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
         loadingRoute={routeLoading}
         onClose={() => setSelectedJobId(null)}
         bottomOffsetClass="map-browse-offset"
-      />
-      <MapBrowseDock
-        items={staffMapBrowseItems(mapJobs)}
-        selectedId={selectedJobId}
-        onSelect={setSelectedJobId}
-        bottomOffsetClass="map-browse-offset"
-        emptyMessage="All platform jobs appear on the map."
       />
     </div>
   );

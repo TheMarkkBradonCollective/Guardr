@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { jobCoords, METRO_CENTER } from '../../lib/geo';
+import type { GeoCoords } from '../../lib/geo';
 import { hasJobCoordinates } from '../../lib/jobLocation';
 import { useUserLocation } from '../../lib/useUserLocation';
 import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
@@ -172,6 +173,28 @@ export function ShiftMap({
     [jobPins, selectedJobId]
   );
 
+  /** Snapshot GPS at pin selection so live watch updates do not re-fetch the route. */
+  const [routeFrom, setRouteFrom] = useState<GeoCoords | null>(null);
+  const prevSelectedJobIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (selectedJobId !== prevSelectedJobIdRef.current) {
+      prevSelectedJobIdRef.current = selectedJobId;
+      if (!selectedJobId) {
+        setRouteFrom(null);
+      } else if (userLocation) {
+        setRouteFrom({ lat: userLocation.lat, lng: userLocation.lng });
+      } else {
+        setRouteFrom(null);
+      }
+      return;
+    }
+
+    if (selectedJobId && userLocation && routeFrom === null) {
+      setRouteFrom({ lat: userLocation.lat, lng: userLocation.lng });
+    }
+  }, [selectedJobId, userLocation, routeFrom]);
+
   // Computed once at mount — MapContainer only uses center/zoom props for initial placement
   const savedViewport = useMemo(() => loadSavedViewport(), []);
   const hadSavedViewport = useMemo(() => !!savedViewport, [savedViewport]);
@@ -199,13 +222,15 @@ export function ShiftMap({
   };
 
   useEffect(() => {
-    if (drawRoute && selectedPin && userLocation) {
-      onRouteLoadingChange?.(true);
-    } else {
-      onRouteLoadingChange?.(false);
-      onRouteChange?.(null);
+    if (!drawRoute || !selectedPin || !routeFrom) {
+      if (!selectedPin) {
+        onRouteLoadingChange?.(false);
+        onRouteChange?.(null);
+      }
+      return;
     }
-  }, [selectedJobId, drawRoute, selectedPin, userLocation, onRouteChange, onRouteLoadingChange]);
+    onRouteLoadingChange?.(true);
+  }, [selectedJobId, drawRoute, selectedPin, routeFrom, onRouteChange, onRouteLoadingChange]);
 
   return (
     <div className={`guardr-map-root ${className}`}>
@@ -241,9 +266,9 @@ export function ShiftMap({
           </>
         )}
 
-        {drawRoute && userLocation && selectedPin && (
+        {drawRoute && routeFrom && selectedPin && (
           <MapRouteLayer
-            from={userLocation}
+            from={routeFrom}
             to={selectedPin.coords}
             active
             onRoute={handleRouteChange}
