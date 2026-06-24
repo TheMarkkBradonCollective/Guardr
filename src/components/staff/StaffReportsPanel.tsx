@@ -3,6 +3,7 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
+import { FileText } from 'lucide-react';
 import { isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
@@ -23,7 +24,11 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       {withAudits.length === 0 ? (
-        <p className="staff-empty-state border-t border-brand-border">No job reports recorded yet.</p>
+        <div className="app-empty-state">
+          <div className="app-empty-state-icon"><FileText className="w-5 h-5" /></div>
+          <p className="app-empty-state-title">No reports yet</p>
+          <p className="app-empty-state-body">Self-audit logs and spot check photos from completed jobs will appear here.</p>
+        </div>
       ) : (
         <AppList>
           {withAudits.map((req) => {

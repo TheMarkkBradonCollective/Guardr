@@ -104,7 +104,11 @@ export function StaffJobChatsPanel({
     <div className="staff-split-pane-list flex flex-col min-h-0">
       <div className="flex-1 min-h-0 overflow-y-auto">
         {chatJobs.length === 0 ? (
-          <p className="staff-empty-state">No job chats yet.</p>
+          <div className="app-empty-state">
+            <div className="app-empty-state-icon"><MessageCircle className="w-5 h-5" /></div>
+            <p className="app-empty-state-title">No job chats yet</p>
+            <p className="app-empty-state-body">Job chats will appear here as guards and clients message during active shifts.</p>
+          </div>
         ) : (
           <AppInboxList>{chatJobs.map(renderJobRow)}</AppInboxList>
         )}
@@ -122,11 +126,10 @@ export function StaffJobChatsPanel({
       onBack={() => setSelectedRequestId(null)}
     />
   ) : (
-    <div className="staff-empty-state flex-1 flex items-center justify-center">
-      <div>
-        <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-        Select a job chat to monitor or reply.
-      </div>
+    <div className="app-empty-state">
+      <div className="app-empty-state-icon"><MessageCircle className="w-5 h-5" /></div>
+      <p className="app-empty-state-title">No chat selected</p>
+      <p className="app-empty-state-body">Select a job chat from the list to monitor or reply.</p>
     </div>
   );
 
