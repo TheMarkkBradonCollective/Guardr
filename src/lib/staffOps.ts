@@ -17,6 +17,7 @@ import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } fr
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
+import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
 
 export type StaffSection =
@@ -105,6 +106,7 @@ export interface PlatformStats {
   /** Job offers + guard credentials waiting in Approvals */
   pendingApprovals: number;
   pendingJobApprovals: number;
+  pendingScheduleChanges: number;
   pendingCertApprovals: number;
   pendingGuardApplicationJobs: number;
   pendingGuardApplications: number;
@@ -123,6 +125,7 @@ export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
 export type ApprovalQueueId =
   | 'accounts'
   | 'job-offers'
+  | 'schedule-changes'
   | 'applications'
   | 'credentials';
 
@@ -224,6 +227,7 @@ export function computePlatformStats(
   requests: SecurityRequest[]
 ): PlatformStats {
   const pendingJobReviews = requests.filter((r) => r.status === 'pending-review').length;
+  const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests).length;
   const pendingCerts = guards.reduce(
     (n, g) => n + g.certifications.filter((c) => isUserSubmittedPendingCert(c, g)).length,
     0
@@ -236,7 +240,11 @@ export function computePlatformStats(
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingApprovals =
-    pendingJobApprovals + pendingCertApprovals + pendingGuardApplicationJobs + pendingGuardAccounts;
+    pendingJobApprovals +
+    pendingScheduleChanges +
+    pendingCertApprovals +
+    pendingGuardApplicationJobs +
+    pendingGuardAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const activeGuardIds = new Set(
@@ -267,6 +275,7 @@ export function computePlatformStats(
     activeClients,
     pendingApprovals,
     pendingJobApprovals,
+    pendingScheduleChanges,
     pendingCertApprovals,
     pendingGuardApplicationJobs,
     pendingGuardApplications,
@@ -408,6 +417,18 @@ export function buildOverviewActionQueue(
       count: stats.pendingJobApprovals,
       section: 'approvals',
       approvalQueue: 'job-offers',
+      tone: 'urgent',
+    });
+  }
+
+  if (stats.pendingScheduleChanges > 0) {
+    items.push({
+      id: 'pending-schedule-changes',
+      title: 'Approve client schedule changes',
+      description: `${stats.pendingScheduleChanges} paid job${stats.pendingScheduleChanges === 1 ? '' : 's'} with new times awaiting review`,
+      count: stats.pendingScheduleChanges,
+      section: 'approvals',
+      approvalQueue: 'schedule-changes',
       tone: 'urgent',
     });
   }

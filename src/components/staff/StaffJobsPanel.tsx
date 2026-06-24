@@ -10,7 +10,7 @@ import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
-import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
+import { canStaffEditJobTitleAndLocation, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
@@ -233,6 +233,7 @@ function JobDetailPanel({
         open={editing && showEdit}
         request={req}
         scheduleLocked={scheduleLocked}
+        paidReschedule={canStaffReschedulePaidSchedule(req)}
         onSave={async (requestId, updates) => {
           await onEditJobListing!(requestId, updates);
           setEditing(false);

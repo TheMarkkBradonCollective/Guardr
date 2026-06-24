@@ -129,4 +129,60 @@ describe('buildEventDispatchPayloads', () => {
     assert.equal(payloads[0].role, 'guard');
     assert.equal(payloads[0].excludeUserId, 'guard-sender');
   });
+
+  it('targets guard trusted status to the guard recipient', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'guard_trusted_status',
+      recipientUserId: 'guard-7',
+      guardId: 'guard-7',
+      title: 'You are now a trusted guard',
+      body: 'You can coordinate crews.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-7');
+  });
+
+  it('targets job relisted notifications to the client', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'job_relisted',
+      recipientUserId: 'client-4',
+      requestId: 'job-9',
+      body: 'Your job is back on the marketplace.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'client-4');
+  });
+
+  it('targets schedule change notifications to the assigned guard', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'job_schedule_changed',
+      recipientUserId: 'guard-5',
+      requestId: 'job-2',
+      body: 'Your job time has changed',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-5');
+  });
+
+  it('targets crew chat to a specific guard or staff dispatch', async () => {
+    const direct = await buildEventDispatchPayloads(mockDb(), {
+      type: 'team_chat_message',
+      recipientUserId: 'guard-2',
+      requestId: 'job-3',
+      body: 'Coordinator: meet at north gate',
+    });
+    assert.equal(direct.length, 1);
+    assert.equal(direct[0].userId, 'guard-2');
+
+    const staff = await buildEventDispatchPayloads(mockDb(), {
+      type: 'team_chat_message',
+      requestId: 'job-3',
+      body: 'Coordinator: meet at north gate',
+    });
+    assert.equal(staff.length, 1);
+    assert.equal(staff[0].role, 'dispatch');
+  });
 });

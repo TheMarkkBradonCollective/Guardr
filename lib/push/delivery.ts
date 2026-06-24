@@ -33,6 +33,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   guard_trusted_status: 'guard_trusted_status',
   client_trusted_status: 'client_trusted_status',
   job_relisted: 'job_relisted',
+  job_schedule_changed: 'assignment',
   team_chat_message: 'team_chat_message',
 };
 

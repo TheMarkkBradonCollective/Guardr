@@ -68,6 +68,8 @@ interface ClientDashboardProps {
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
@@ -124,6 +126,8 @@ export function ClientDashboard({
   onApproveOvertime,
   onDisputeOvertime,
   onRequestOvertimeCash,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
   onApprovePendingGuard,
   onDenyPendingGuard,
   onApproveTeamSlot,
@@ -434,6 +438,8 @@ export function ClientDashboard({
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}
         onRequestOvertimeCash={onRequestOvertimeCash}
+        onApproveScheduleChange={onApproveScheduleChange}
+        onRejectScheduleChange={onRejectScheduleChange}
         onApprovePendingGuard={onApprovePendingGuard}
         onDenyPendingGuard={onDenyPendingGuard}
         onApproveTeamSlot={onApproveTeamSlot}

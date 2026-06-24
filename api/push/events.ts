@@ -82,6 +82,16 @@ function resolveNotificationUrl(type, options = {}) {
       return options.ticketId ? `/staff/messages?mtab=support&st=${encodeURIComponent(options.ticketId)}` : "/staff/messages?mtab=support";
     case "dispute_update":
       return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
+    case "guard_trusted_status":
+      return options.guardId ? `/guard/profile?g=${encodeURIComponent(options.guardId)}` : "/guard/profile";
+    case "client_trusted_status":
+      return "/client/profile";
+    case "job_relisted":
+      return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+    case "job_schedule_changed":
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "team_chat_message":
+      return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
     case "test":
       return "/";
     default:
@@ -155,7 +165,23 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       }
       return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
     case "assignment":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "guard_trusted_status":
+      return "/guard/profile";
+    case "client_trusted_status":
+      return "/client/profile";
+    case "job_relisted":
+      return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+    case "job_schedule_changed":
+      return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+    case "team_chat_message":
+      if (role === "guard") {
+        return options.requestId ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
+      }
+      return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === "client") return "/client/home";
@@ -196,6 +222,16 @@ function rolesForNotificationType(type) {
       return ["client", "guard"];
     case "dispute_update":
       return ["dispatch", "admin", "client", "guard"];
+    case "guard_trusted_status":
+      return ["guard"];
+    case "client_trusted_status":
+      return ["client"];
+    case "job_relisted":
+      return ["client"];
+    case "job_schedule_changed":
+      return ["guard"];
+    case "team_chat_message":
+      return ["guard", "dispatch", "admin"];
     case "test":
       return [];
     default:
@@ -241,7 +277,12 @@ var PREF_COLUMN = {
   payment_attention: "payment_attention",
   support_ticket: "support_ticket",
   support_ticket_status: "support_ticket_status",
-  dispute_update: "dispute_update"
+  dispute_update: "dispute_update",
+  guard_trusted_status: "guard_trusted_status",
+  client_trusted_status: "client_trusted_status",
+  job_relisted: "job_relisted",
+  job_schedule_changed: "assignment",
+  team_chat_message: "team_chat_message"
 };
 async function isTypeEnabledForUser(db, userId, type) {
   const column = PREF_COLUMN[type];
@@ -496,6 +537,26 @@ var EVENT_DEFAULTS = {
   dispute_update: (event) => ({
     title: "Dispute update",
     body: event.body || "A dispute needs your attention"
+  }),
+  guard_trusted_status: (event) => ({
+    title: event.title ?? "Trusted guard update",
+    body: event.body || "Your trusted guard status changed"
+  }),
+  client_trusted_status: (event) => ({
+    title: event.title ?? "Trusted client update",
+    body: event.body || "Your trusted client status changed"
+  }),
+  job_relisted: (event) => ({
+    title: "Job back on marketplace",
+    body: event.body || "A job was re-listed and is open for guards again"
+  }),
+  job_schedule_changed: (event) => ({
+    title: "Shift time changed",
+    body: event.body || "Your job schedule was updated"
+  }),
+  team_chat_message: (event) => ({
+    title: "Crew chat",
+    body: event.body || "New message in crew chat"
   })
 };
 function basePayload(event) {
@@ -562,6 +623,18 @@ async function buildEventDispatchPayloads(db, event) {
     return payloads;
   }
   if (event.type === "support_ticket_status" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed") && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "team_chat_message") {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    return [{ ...payload, role: "dispatch" }];
+  }
+  if (event.type === "job_submitted" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
   if (event.type === "support_ticket") {
@@ -698,6 +771,30 @@ async function authorizePushEvent(db, session, event) {
         return null;
       }
       return "Not authorized to send dispute updates for this context";
+    case "guard_trusted_status":
+    case "client_trusted_status":
+      return isStaffSession(session) ? null : "Only staff can send trusted status notifications";
+    case "job_relisted":
+      if (isStaffSession(session)) return null;
+      if (event.recipientUserId && event.recipientUserId === session.userId) return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Not authorized to send job re-list notifications";
+    case "job_schedule_changed":
+      if (isStaffSession(session)) return null;
+      if (event.recipientUserId && event.recipientUserId === session.userId) return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Not authorized to send schedule change notifications for this job";
+    case "team_chat_message":
+      if (isStaffSession(session)) return null;
+      if (event.recipientUserId && event.recipientUserId === session.userId) return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Not authorized to send crew chat notifications for this job";
     default:
       return "Unknown notification type";
   }

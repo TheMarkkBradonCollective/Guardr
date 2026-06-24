@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SecurityRequest } from '../../types';
 import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
+import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
 import { computeGuardPay } from '../../lib/payments';
 import { US_STATES } from '../../lib/states';
 import { listingFieldsFromJob } from '../../lib/jobListing';
@@ -16,6 +17,8 @@ import { Loader2 } from 'lucide-react';
 interface EditRequestFormProps {
   request: SecurityRequest;
   scheduleLocked?: boolean;
+  /** Paid job — client may move shift times within paid hours (or request extension). */
+  paidReschedule?: boolean;
   onSave: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onCancel: () => void;
   /** Render inside AppFormSheet — hides duplicate header chrome */
@@ -25,6 +28,7 @@ interface EditRequestFormProps {
 export function EditRequestForm({
   request,
   scheduleLocked = false,
+  paidReschedule = false,
   onSave,
   onCancel,
   sheet = false,
@@ -46,6 +50,9 @@ export function EditRequestForm({
 
   const minStart = minScheduleDatetimeLocal();
   const durationHours = computeDurationHours(startDate, endDate);
+  const paidHours = paidReschedule ? paidScheduleDurationHours(request) : null;
+  const showScheduleFields = !scheduleLocked || paidReschedule;
+  const titleOnlyLocked = scheduleLocked && !paidReschedule;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +66,7 @@ export function EditRequestForm({
       return;
     }
 
-    if (!scheduleLocked) {
+    if (showScheduleFields) {
       const scheduleError = validateShiftSchedule(startDate, endDate);
       if (scheduleError) {
         setError(scheduleError);
@@ -72,13 +79,31 @@ export function EditRequestForm({
     try {
       const location = siteName.trim() ? `${siteName.trim()} — ${address.trim()}` : address.trim();
 
-      if (scheduleLocked) {
+      if (titleOnlyLocked) {
         await onSave(request.id, {
           title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
           state: state.toUpperCase(),
           location,
+          latitude,
+          longitude,
+        });
+      } else if (paidReschedule) {
+        const guardPay = computeGuardPay(request.hourlyRate);
+        const guardsNeeded = request.guardsNeeded ?? 1;
+        const estimatedPayout = Math.round(durationHours * request.hourlyRate * guardsNeeded * 100) / 100;
+        await onSave(request.id, {
+          title: trimmedTitle,
+          siteName: siteName.trim(),
+          address: address.trim(),
+          state: state.toUpperCase(),
+          location,
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          durationHours,
+          estimatedPayout,
+          guardPay,
           latitude,
           longitude,
         });
@@ -128,11 +153,17 @@ export function EditRequestForm({
       {!sheet && (
         <div>
           <p className="text-sm font-semibold text-brand-primary">
-            {scheduleLocked ? 'Edit title & location' : 'Edit job listing'}
+            {titleOnlyLocked ? 'Edit title & location' : paidReschedule ? 'Reschedule shift' : 'Edit job listing'}
           </p>
-          {scheduleLocked && (
+          {titleOnlyLocked && (
             <p className="text-xs text-brand-text-muted mt-1">
               Schedule is locked after payment. Title and location can still be updated.
+            </p>
+          )}
+          {paidReschedule && paidHours != null && (
+            <p className="text-xs text-brand-text-muted mt-1">
+              Move your shift to new times within the {formatDuration(paidHours)} already paid for. Longer shifts
+              and cash jobs require staff approval before guards are notified.
             </p>
           )}
         </div>
@@ -184,7 +215,7 @@ export function EditRequestForm({
           }
         }}
       />
-      {!scheduleLocked && (
+      {!titleOnlyLocked && (
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -209,32 +240,41 @@ export function EditRequestForm({
             </div>
           </div>
           <p className="text-xs text-brand-text-muted">
-            {durationHours > 0 ? formatDuration(durationHours) : 'End must be after start'} · no past times
+            {durationHours > 0 ? formatDuration(durationHours) : 'End must be after start'}
+            {paidHours != null && durationHours > paidHours + 0.01
+              ? ` · exceeds paid ${formatDuration(paidHours)} — staff approval required`
+              : paidHours != null
+                ? ` · paid for ${formatDuration(paidHours)}`
+                : ' · no past times'}
           </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="uber-label block mb-1">Guards</label>
-              <input
-                type="number"
-                min={1}
-                value={guardsNeeded}
-                onChange={(e) => setGuardsNeeded(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                className="uber-input w-full"
-              />
-            </div>
-            <div>
-              <label className="uber-label block mb-1">Rate ($/hr)</label>
-              <input
-                type="number"
-                min={20}
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(Math.max(20, parseInt(e.target.value, 10) || 20))}
-                className="uber-input w-full"
-              />
-            </div>
-          </div>
-          <JobPostOrdersFields value={listing} onChange={setListing} />
-          <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+          {!paidReschedule && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="uber-label block mb-1">Guards</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={guardsNeeded}
+                    onChange={(e) => setGuardsNeeded(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="uber-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="uber-label block mb-1">Rate ($/hr)</label>
+                  <input
+                    type="number"
+                    min={20}
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(Math.max(20, parseInt(e.target.value, 10) || 20))}
+                    className="uber-input w-full"
+                  />
+                </div>
+              </div>
+              <JobPostOrdersFields value={listing} onChange={setListing} />
+              <JobOperationalDetailsFields value={operational} onChange={setOperational} />
+            </>
+          )}
         </>
       )}
       <div className="app-action-row--2 pt-1">

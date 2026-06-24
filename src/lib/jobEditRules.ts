@@ -2,9 +2,6 @@ import { JobStatus, PlatformRole, SecurityRequest } from '../types';
 import type { ClientPaymentGates } from './platformSettings';
 import { computeDurationHours } from './dates';
 
-const FULL_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open'];
-
-/** Title and location may be updated through in-progress (not after completed/closed). */
 const LISTING_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open', 'accepted', 'in-progress'];
 
 const TITLE_LOCATION_FIELDS = [
@@ -64,12 +61,42 @@ export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: Plat
 }
 
 export function canEditJobSchedule(req: SecurityRequest): boolean {
-  return FULL_EDIT_STATUSES.includes(req.status) && !isJobPaid(req);
+  return !isJobPaid(req) && LISTING_EDIT_STATUSES.includes(req.status);
+}
+
+/** Unpaid jobs — client or staff may change times freely on any active job (no approval workflow). */
+export function canEditUnpaidJobSchedule(req: SecurityRequest): boolean {
+  return canEditJobSchedule(req);
+}
+
+/** Staff may edit unpaid schedules wherever they can edit the listing (directors: any non-closed job). */
+export function canStaffEditUnpaidJobSchedule(req: SecurityRequest, role: PlatformRole): boolean {
+  if (isJobPaid(req)) return false;
+  if (role === 'director' || role === 'owner') return req.status !== 'closed';
+  return LISTING_EDIT_STATUSES.includes(req.status);
 }
 
 /** Schedule is locked once the client has paid — title/location stay editable. */
 export function isJobScheduleLocked(req: SecurityRequest): boolean {
   return isJobPaid(req);
+}
+
+/** Paid jobs may reschedule times (same paid hours, or staff-approved extension). */
+export function canClientReschedulePaidSchedule(req: SecurityRequest): boolean {
+  return (
+    isJobPaid(req) &&
+    ['open', 'accepted', 'in-progress'].includes(req.status) &&
+    (!req.scheduleChangeStatus || req.scheduleChangeStatus === 'none')
+  );
+}
+
+export function canStaffReschedulePaidSchedule(req: SecurityRequest): boolean {
+  return canClientReschedulePaidSchedule(req);
+}
+
+/** Whether the edit form should show schedule fields (unpaid full edit or paid reschedule). */
+export function canClientEditScheduleFields(req: SecurityRequest): boolean {
+  return canEditJobSchedule(req) || canClientReschedulePaidSchedule(req);
 }
 
 /** Client may change schedule and billing only before payment clears */
@@ -94,13 +121,28 @@ export function jobEditBlockedReason(req: SecurityRequest): string | null {
 }
 
 export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
+  if (req.scheduleChangeStatus === 'pending_staff') {
+    return 'A schedule change is awaiting staff approval.';
+  }
+  if (req.scheduleChangeStatus === 'pending_client') {
+    return 'A schedule change is awaiting your approval.';
+  }
+  if (req.scheduleChangeStatus === 'awaiting_payment') {
+    return 'Pay the schedule extension before times update.';
+  }
+  if (req.scheduleChangeStatus === 'pending_staff_billing') {
+    return 'Schedule change is awaiting staff billing confirmation.';
+  }
+  if (canClientReschedulePaidSchedule(req)) {
+    return null;
+  }
+  if (canEditUnpaidJobSchedule(req)) {
+    return null;
+  }
   if (isJobScheduleLocked(req)) {
     return 'Schedule is locked after payment. Update title and location only, or contact staff.';
   }
-  if (!FULL_EDIT_STATUSES.includes(req.status)) {
-    return 'Schedule can only be changed on open unpaid jobs.';
-  }
-  return null;
+  return 'Schedule cannot be changed in this job status.';
 }
 
 /** Strip schedule/billing fields when payment has cleared. */

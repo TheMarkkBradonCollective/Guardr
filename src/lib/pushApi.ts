@@ -127,6 +127,7 @@ export type PushEventType =
   | 'guard_trusted_status'
   | 'client_trusted_status'
   | 'job_relisted'
+  | 'job_schedule_changed'
   | 'team_chat_message';
 
 export async function reportPushEvent(

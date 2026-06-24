@@ -106,6 +106,10 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
         : '/client/requests';
+    case 'job_schedule_changed':
+      return options.requestId
+        ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/my-jobs';
     case 'team_chat_message':
       return options.requestId
         ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}`
@@ -243,6 +247,10 @@ export function resolveNotificationUrlForRole(
       return options.requestId
         ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
         : '/client/requests';
+    case 'job_schedule_changed':
+      return options.requestId
+        ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/my-jobs';
     case 'team_chat_message':
       if (role === 'guard') {
         return options.requestId
@@ -299,6 +307,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['client'];
     case 'job_relisted':
       return ['client'];
+    case 'job_schedule_changed':
+      return ['guard'];
     case 'team_chat_message':
       return ['guard', 'dispatch', 'admin'];
     case 'test':
