@@ -15,10 +15,16 @@ export async function persistJobGuardSlots(
 export async function persistJobTeamMeta(
   supabase: { from: (table: string) => any },
   jobId: string,
-  patch: Partial<Pick<SecurityRequest, 'teamLeadId' | 'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'>>
+  patch: Partial<
+    Pick<
+      SecurityRequest,
+      'teamLeadId' | 'teamCode' | 'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'
+    >
+  >
 ): Promise<void> {
   const dbPatch: Record<string, unknown> = {};
   if (patch.teamLeadId !== undefined) dbPatch.team_lead_id = patch.teamLeadId;
+  if (patch.teamCode !== undefined) dbPatch.team_code = patch.teamCode;
   if (patch.pendingGuardId !== undefined) dbPatch.pending_guard_id = patch.pendingGuardId;
   if (patch.staffApprovedGuardAt !== undefined) dbPatch.staff_approved_guard_at = patch.staffApprovedGuardAt;
   if (patch.applicants !== undefined) dbPatch.applicants = patch.applicants;

@@ -7,6 +7,7 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { TeamCodeJoinPanel } from '../guard/TeamCodeJoinPanel';
 
 interface UserSettingsScreenProps {
   currentUser: SessionUser;
@@ -14,6 +15,7 @@ interface UserSettingsScreenProps {
   onChangeTheme: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 export function UserSettingsScreen({
@@ -22,9 +24,16 @@ export function UserSettingsScreen({
   onChangeTheme,
   isDbConnected = false,
   onOpenLegal,
+  onJoinTeamWithCode,
 }: UserSettingsScreenProps) {
   return (
     <AppScreen>
+      {currentUser.role === 'guard' && onJoinTeamWithCode && (
+        <AppFormSection title="Crew team code">
+          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} />
+        </AppFormSection>
+      )}
+
       <AppFormSection title="Appearance">
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
       </AppFormSection>

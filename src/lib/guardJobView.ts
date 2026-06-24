@@ -31,6 +31,7 @@ export interface GuardJobView {
   guardsNeeded?: number;
   guardSlots?: JobGuardSlot[];
   teamLeadId?: string | null;
+  teamCode?: string | null;
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
@@ -185,6 +186,7 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
     guardsNeeded: req.guardsNeeded,
     guardSlots: req.guardSlots,
     teamLeadId: req.teamLeadId,
+    teamCode: req.teamCode,
     uniformRequirements: req.uniformRequirements,
     equipmentRequirements: req.equipmentRequirements,
     siteInstructions: canViewBriefing ? req.siteInstructions : undefined,

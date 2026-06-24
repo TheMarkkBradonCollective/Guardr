@@ -29,6 +29,7 @@ interface GuardBottomSheetProps {
   onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
   onApplyOpenTeamSlot?: (jobId: string) => void | Promise<void>;
   onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
   onOpenTeamChat?: (jobId: string) => void;
@@ -66,6 +67,7 @@ export function GuardBottomSheet({
   onApplyAsTeamLead,
   onApplyOpenTeamSlot,
   onInviteTeamGuard,
+  onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
   onOpenTeamChat,
@@ -112,6 +114,7 @@ export function GuardBottomSheet({
       onApplyAsTeamLead={onApplyAsTeamLead}
       onApplyOpenTeamSlot={onApplyOpenTeamSlot}
       onInviteTeamGuard={onInviteTeamGuard}
+      onJoinTeamWithCode={onJoinTeamWithCode}
       onAcceptTeamInvite={onAcceptTeamInvite}
       onDeclineTeamInvite={onDeclineTeamInvite}
       onOpenTeamChat={onOpenTeamChat}

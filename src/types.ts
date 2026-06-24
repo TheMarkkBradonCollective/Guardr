@@ -682,6 +682,8 @@ export interface SecurityRequest {
   assignedGuardId: string | null;
   /** Trusted lead for multi-guard team jobs */
   teamLeadId?: string | null;
+  /** Shareable code for crew self-join (multi-guard jobs with a lead) */
+  teamCode?: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;
   /** Per-slot roster for multi-guard jobs */

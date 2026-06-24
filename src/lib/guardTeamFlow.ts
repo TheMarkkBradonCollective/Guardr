@@ -11,6 +11,7 @@ import {
 import { isGuardTrusted } from './guardTrust';
 import { jobRequiresCashStaffConfirmation, shouldSkipStaffGuardReviewForTrusted } from './guardAssignment';
 import { guardScheduleConflictError } from './guardSchedule';
+import { findOpenTeamJobByCode, generateUniqueTeamCode } from './teamCode';
 
 function scheduleError(
   guardId: string,
@@ -59,6 +60,7 @@ export function applyAsTeamLead(
     job: {
       ...job,
       teamLeadId: lead.id,
+      teamCode: job.teamCode ?? generateUniqueTeamCode(allJobs),
       guardSlots: nextSlots,
       applicants: nextApplicants,
       pendingGuardId: skipStaff ? lead.id : undefined,
@@ -214,6 +216,23 @@ export function applyToOpenTeamSlot(
     },
     slots: nextSlots,
   };
+}
+
+export function joinTeamWithCode(
+  rawCode: string,
+  guardId: string,
+  allJobs: SecurityRequest[],
+  skipStaffReview: boolean,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  const job = findOpenTeamJobByCode(rawCode, allJobs);
+  if (!job) {
+    return { error: 'Team code not found or this crew is no longer accepting members.' };
+  }
+  if (job.teamLeadId === guardId) {
+    return { error: 'You are already the team lead for this job.' };
+  }
+  return applyToOpenTeamSlot(job, guardId, skipStaffReview, allJobs, now);
 }
 
 export function staffApproveTeamSlot(

@@ -5,9 +5,13 @@ import { isGuardTrusted } from '../../lib/guardTrust';
 import { confirmApplyAsTeamLead } from '../../lib/importantActionConfirm';
 import { findGuardScheduleConflict, type ScheduleJob } from '../../lib/guardSchedule';
 import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from '../../lib/guardTeams';
+import { formatTeamCodeDisplay } from '../../lib/teamCode';
+import { TeamGuardInvitePicker } from './TeamGuardInvitePicker';
+import { TeamCodeJoinPanel } from './TeamCodeJoinPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
-import { Users } from 'lucide-react';
+import { Copy, Users } from 'lucide-react';
 
 interface GuardTeamPanelProps {
   job: GuardJobView;
@@ -16,6 +20,7 @@ interface GuardTeamPanelProps {
   onApplyAsLead?: () => void | Promise<void>;
   onApplyOpenSlot?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onJoinWithTeamCode?: (code: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
@@ -29,12 +34,12 @@ export function GuardTeamPanel({
   onApplyAsLead,
   onApplyOpenSlot,
   onInviteGuard,
+  onJoinWithTeamCode,
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
   scheduleRequests = [],
 }: GuardTeamPanelProps) {
-  const [inviteGuardId, setInviteGuardId] = useState('');
   const multi = isMultiGuardJob(job);
   const trusted = isGuardTrusted(guard);
   const slots = job.guardSlots ?? [];
@@ -45,18 +50,33 @@ export function GuardTeamPanel({
   const hasScheduleConflict = !!findGuardScheduleConflict(guard.id, job, scheduleRequests);
   const canLead = trusted && multi && !job.teamLeadId && job.status === 'open' && !hasScheduleConflict;
   const canInvite = isLead && summary.open > 0 && job.status === 'open';
+  const showTeamCodeJoin =
+    !!onJoinWithTeamCode &&
+    job.status === 'open' &&
+    !onTeam &&
+    !myInvite &&
+    summary.open > 0 &&
+    !!job.teamLeadId &&
+    !isLead;
 
-  const inviteCandidates = useMemo(() => {
-    const taken = new Set(slots.map((s) => s.guardId).filter(Boolean) as string[]);
-    return coworkerGuards.filter(
-      (g) =>
-        g.id !== guard.id &&
-        !taken.has(g.id) &&
-        g.userStatus === 'active' &&
-        g.verified &&
-        !findGuardScheduleConflict(g.id, job, scheduleRequests)
-    );
-  }, [coworkerGuards, guard.id, job, scheduleRequests, slots]);
+  const rosterGuards = useMemo(() => {
+    const byId = new Map(coworkerGuards.map((g) => [g.id, g]));
+    return slots
+      .filter((s) => s.guardId)
+      .map((s) => ({ slot: s, guard: byId.get(s.guardId!) }))
+      .filter((row) => row.guard);
+  }, [coworkerGuards, slots]);
+
+  const copyTeamCode = async () => {
+    const code = formatTeamCodeDisplay(job.teamCode);
+    if (code === '—') return;
+    try {
+      await navigator.clipboard.writeText(code);
+      showAppToast('Team code copied.', { tone: 'success' });
+    } catch {
+      showAppToast(code, { tone: 'info' });
+    }
+  };
 
   if (!multi) return null;
 
@@ -77,7 +97,7 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can lead a team and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot.
+          Trusted guards can lead a team and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot or join with a team code.
         </p>
       )}
 
@@ -106,6 +126,30 @@ export function GuardTeamPanel({
         <WfBadge tone="primary">You are the team lead</WfBadge>
       )}
 
+      {isLead && job.teamCode && job.status === 'open' && (
+        <div className="rounded-lg border border-brand-primary/25 bg-brand-primary/10 px-3 py-2.5 space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+            Crew team code
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-base font-bold tracking-widest text-brand-primary">
+              {formatTeamCodeDisplay(job.teamCode)}
+            </code>
+            <button
+              type="button"
+              onClick={() => void copyTeamCode()}
+              className="app-button-outline app-btn-sm inline-flex items-center gap-1 shrink-0"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy
+            </button>
+          </div>
+          <p className="text-xs text-brand-text-muted">
+            Share this code so guards can join your crew instantly from Settings or this job.
+          </p>
+        </div>
+      )}
+
       {onTeam && onOpenTeamChat && job.status !== 'closed' && (
         <button type="button" onClick={onOpenTeamChat} className="app-button-outline w-full py-2.5 text-sm">
           Open team chat
@@ -132,39 +176,21 @@ export function GuardTeamPanel({
       )}
 
       {canInvite && onInviteGuard && (
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-            Invite a guard
-          </label>
-          <div className="flex gap-2">
-            <select
-              value={inviteGuardId}
-              onChange={(e) => setInviteGuardId(e.target.value)}
-              className="app-input flex-1 text-sm"
-            >
-              <option value="">Select guard…</option>
-              {inviteCandidates.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={!inviteGuardId}
-              onClick={() => {
-                void onInviteGuard(inviteGuardId);
-                setInviteGuardId('');
-              }}
-              className="app-button-primary app-btn-sm shrink-0"
-            >
-              Invite
-            </button>
-          </div>
-          {inviteCandidates.length === 0 && (
-            <p className="text-xs text-brand-text-muted">No available guards to invite right now.</p>
-          )}
-        </div>
+        <TeamGuardInvitePicker
+          job={job}
+          leadId={guard.id}
+          guards={coworkerGuards}
+          scheduleRequests={scheduleRequests}
+          onInvite={onInviteGuard}
+        />
+      )}
+
+      {showTeamCodeJoin && (
+        <TeamCodeJoinPanel
+          onJoin={onJoinWithTeamCode}
+          compact
+          hint="Have a code from your lead? Join this crew without waiting for an invite."
+        />
       )}
 
       {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && onApplyOpenSlot && (
@@ -173,21 +199,15 @@ export function GuardTeamPanel({
         </button>
       )}
 
-      {slots.some((s) => s.guardId && s.guardId !== guard.id) && (
+      {rosterGuards.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-1">
-          {slots
-            .filter((s) => s.guardId)
-            .map((s) => {
-              const g = coworkerGuards.find((c) => c.id === s.guardId);
-              if (!g) return null;
-              return (
-                <div key={s.id} className="inline-flex items-center gap-1.5 text-xs text-brand-text-muted">
-                  <ProfileAvatar src={g.avatar} name={g.name} size="xs" />
-                  {g.name}
-                  {s.isLead ? ' · lead' : ''}
-                </div>
-              );
-            })}
+          {rosterGuards.map(({ slot, guard: member }) => (
+            <div key={slot.id} className="inline-flex items-center gap-1.5 text-xs text-brand-text-muted">
+              <ProfileAvatar src={member!.avatar} name={member!.name} size="xs" />
+              {member!.name}
+              {slot.isLead ? ' · lead' : ''}
+            </div>
+          ))}
         </div>
       )}
     </div>

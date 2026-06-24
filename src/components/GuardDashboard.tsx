@@ -96,6 +96,7 @@ interface GuardDashboardProps {
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
   onApplyOpenTeamSlot?: (requestId: string) => void | Promise<void>;
   onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
@@ -177,6 +178,7 @@ export function GuardDashboard({
   onApplyAsTeamLead,
   onApplyOpenTeamSlot,
   onInviteTeamGuard,
+  onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
   coworkerGuards = [],
@@ -756,6 +758,7 @@ export function GuardDashboard({
           onApplyAsTeamLead={onApplyAsTeamLead}
           onApplyOpenTeamSlot={onApplyOpenTeamSlot}
           onInviteTeamGuard={onInviteTeamGuard}
+          onJoinTeamWithCode={onJoinTeamWithCode}
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
           onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
@@ -882,6 +885,7 @@ export function GuardDashboard({
                 themeMode={themeMode as 'dark' | 'light' | 'grey'}
                 onChangeTheme={onChangeTheme}
                 onOpenLegal={onOpenLegal}
+                onJoinTeamWithCode={onJoinTeamWithCode}
               />
             </div>
           )}

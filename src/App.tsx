@@ -130,6 +130,7 @@ import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdate
 import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
 import { guardScheduleConflictError } from './lib/guardSchedule';
+import { findOpenTeamJobByCode, generateUniqueTeamCode } from './lib/teamCode';
 import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
@@ -150,6 +151,7 @@ import {
   clientDenyTeamSlot,
   declineTeamInvite,
   ensureSlotIds,
+  joinTeamWithCode,
   inviteGuardToTeam,
   revokeLeadIfNeeded,
   staffApproveTeamSlot,
@@ -1486,6 +1488,7 @@ export default function App() {
           status: normalizeJobStatus(r.status),
           assignedGuardId: r.assigned_guard_id,
           teamLeadId: r.team_lead_id ?? undefined,
+          teamCode: r.team_code ?? undefined,
           openedAt: r.opened_at ?? undefined,
           pendingGuardId: r.pending_guard_id ?? undefined,
           staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
@@ -5375,7 +5378,10 @@ export default function App() {
 
   const persistTeamJobUpdate = async (updatedJob: SecurityRequest, slots: JobGuardSlot[]) => {
     const normalizedSlots = ensureSlotIds(updatedJob, slots);
-    const nextJob = revokeLeadIfNeeded({ ...updatedJob, guardSlots: normalizedSlots }, normalizedSlots);
+    let nextJob = revokeLeadIfNeeded({ ...updatedJob, guardSlots: normalizedSlots }, normalizedSlots);
+    if (nextJob.teamLeadId && isMultiGuardJob(nextJob) && !nextJob.teamCode) {
+      nextJob = { ...nextJob, teamCode: generateUniqueTeamCode(requests) };
+    }
     setRequests((prev) =>
       prev.map((r) => (r.id === nextJob.id ? nextJob : r))
     );
@@ -5383,6 +5389,7 @@ export default function App() {
       await persistJobGuardSlots(supabase, normalizedSlots);
       await persistJobTeamMeta(supabase, nextJob.id, {
         teamLeadId: nextJob.teamLeadId ?? null,
+        teamCode: nextJob.teamCode ?? null,
         pendingGuardId: nextJob.pendingGuardId ?? null,
         staffApprovedGuardAt: nextJob.staffApprovedGuardAt,
         applicants: nextJob.applicants,
@@ -5514,6 +5521,50 @@ export default function App() {
       }
       appToast('Application submitted. Guardr staff will review your open-slot application.', 'success');
     }
+    await finalizeTeamJobIfReady(nextJob, result.slots);
+  };
+
+  const handleJoinTeamWithCode = async (rawCode: string) => {
+    const jobPreview = findOpenTeamJobByCode(rawCode, requests);
+    if (!jobPreview) {
+      appToast('Team code not found or this crew is no longer accepting members.', 'error');
+      return;
+    }
+    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, jobPreview);
+    const result = joinTeamWithCode(rawCode, activeGuardId, requests, skipStaff);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      if (skipStaff) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: nextJob.clientId,
+          requestId: nextJob.id,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          title: 'Approve your guard',
+          body: `${activeGuard.name} joined "${nextJob.title}" with your team code.`,
+        });
+      } else {
+        void reportPushEvent(currentUser, {
+          type: 'guard_application',
+          requestId: nextJob.id,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          location: nextJob.location,
+          body: `${activeGuard.name} joined "${nextJob.title}" with a team code`,
+        });
+      }
+    }
+    appToast(
+      skipStaff
+        ? `Joined "${nextJob.title}" — sent to client for approval.`
+        : `Joined "${nextJob.title}" — Guardr staff will review your slot request.`,
+      'success'
+    );
     await finalizeTeamJobIfReady(nextJob, result.slots);
   };
 
@@ -7362,6 +7413,7 @@ export default function App() {
           onApplyAsTeamLead={handleApplyAsTeamLead}
           onApplyOpenTeamSlot={handleApplyOpenTeamSlot}
           onInviteTeamGuard={handleInviteTeamGuard}
+          onJoinTeamWithCode={handleJoinTeamWithCode}
           onAcceptTeamInvite={handleAcceptTeamInvite}
           onDeclineTeamInvite={handleDeclineTeamInvite}
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
