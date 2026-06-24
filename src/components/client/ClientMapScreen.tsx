@@ -5,7 +5,7 @@ import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { ClientActiveShift } from './ClientActiveShift';
-import { clientBrowseMapJobs } from '../../lib/mapJobVisibility';
+import { clientBrowseMapJobs, clientMapPinKind } from '../../lib/mapJobVisibility';
 import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob } from '../../lib/clientShift';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 import { ClientMapBrowseDock } from './ClientMapBrowseDock';
@@ -105,6 +105,7 @@ export function ClientMapScreen({
         drawRoute={!showShiftOverlay}
         onRouteChange={setRoute}
         onRouteLoadingChange={setRouteLoading}
+        getPinKind={(job) => clientMapPinKind(job as SecurityRequest)}
       />
 
       {showShiftOverlay && activeLiveJob && activeGuard && (

@@ -4,7 +4,7 @@ import { ShiftMap } from '../guard/ShiftMap';
 import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
-import { staffVisibleMapJobs } from '../../lib/mapJobVisibility';
+import { staffVisibleMapJobs, staffMapPinKind } from '../../lib/mapJobVisibility';
 import { MapBrowseDock } from '../map/MapBrowseDock';
 import { staffMapBrowseItems } from '../../lib/mapBrowseItems';
 
@@ -37,6 +37,7 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
         pinMode="staff"
         onRouteChange={setRoute}
         onRouteLoadingChange={setRouteLoading}
+        getPinKind={(job) => staffMapPinKind(job as SecurityRequest)}
       />
       <MapSelectionExperience
         job={selectedJob}
