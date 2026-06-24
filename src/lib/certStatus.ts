@@ -1,6 +1,6 @@
 import { Certification, SecurityGuard } from '../types';
 import { resolveCertCatalogId } from './certCatalog';
-import { resolveGuardCardLicenseState } from './californiaCities';
+import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
   BSIS_PTA_UOF_COMBINED_ID,
@@ -76,7 +76,7 @@ function matchingListedCerts(
     const idMatches = storedId === catalogId || resolveCertCatalogId(cert) === catalogId;
     if (!idMatches) return false;
     if (catalogId === 'bsis-guard-card' && guardCardState) {
-      return cert.state?.toUpperCase() === guardCardState.toUpperCase();
+      return licenseStatesMatch(cert.state, guardCardState);
     }
     return true;
   });

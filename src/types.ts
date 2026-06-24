@@ -601,6 +601,7 @@ export interface SecurityRequest {
   clientRating?: number;
   siteName?: string;
   address?: string;
+  /** California work city (e.g. Los Angeles) — not the license/ID state code */
   state?: string;
   /** Geocoded map pin — preferred over hash-based placement */
   latitude?: number;

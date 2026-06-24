@@ -1,4 +1,5 @@
 import { SecurityGuard } from '../types';
+import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
 import { isGuardSubmittedIdentityVerification } from './approvalSubmissions';
 import { getGuardUserStatus } from './accountStatus';
 
@@ -27,6 +28,15 @@ export function isIdExpired(guard: Pick<SecurityGuard, 'idExpiryDate'>): boolean
   if (!guard.idExpiryDate) return false;
   const expiry = new Date(guard.idExpiryDate);
   return !Number.isNaN(expiry.getTime()) && expiry < new Date();
+}
+
+/** Government ID is state-issued — must match the job's license jurisdiction (not work city). */
+export function guardIdMatchesWorkLicenseState(
+  guard: Pick<SecurityGuard, 'idState'>,
+  jobCityOrLicenseState?: string
+): boolean {
+  const required = resolveGuardCardLicenseState(jobCityOrLicenseState);
+  return licenseStatesMatch(guard.idState, required);
 }
 
 export function formatIdExpiryLabel(expiryDate?: string): string | null {
