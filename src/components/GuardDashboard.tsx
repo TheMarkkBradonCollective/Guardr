@@ -18,7 +18,7 @@ import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
-import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
+import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, guardMapShouldRouteToJob, guardMapIsUnclaimedOpenOffer, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
 import { GuardJobCard } from './guard/GuardJobCard';
@@ -361,6 +361,19 @@ export function GuardDashboard({
     const visible = guardVisibleMapJobs(guard.id, requests, requests);
     return visible.find((j) => j.id === selectedJobId) ?? null;
   }, [requests, guard.id, selectedJobId]);
+
+  const selectedJobShouldRoute = useMemo(
+    () =>
+      selectedJob
+        ? guardMapShouldRouteToJob(guard.id, selectedJob as unknown as SecurityRequest)
+        : false,
+    [selectedJob, guard.id]
+  );
+
+  const selectedJobIsUnclaimedOffer = useMemo(
+    () => (selectedJob ? guardMapIsUnclaimedOpenOffer(guard, selectedJob, requests) : false),
+    [selectedJob, guard, requests]
+  );
 
   const mapJobs = useMemo(() => {
     const visible = guardVisibleMapJobs(guard.id, requests, requests);
@@ -844,11 +857,11 @@ export function GuardDashboard({
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
           routeSlot={
-            selectedJobId ? (
+            selectedJobShouldRoute ? (
               <MapRouteBanner
                 route={mapRoute}
                 loading={mapRouteLoading}
-                label="Route to offer"
+                label="Route to job"
               />
             ) : null
           }
@@ -860,6 +873,7 @@ export function GuardDashboard({
           jobs={mapJobs}
           selectedJobId={selectedJobId}
           onSelectJob={setSelectedJobId}
+          drawRoute={selectedJobShouldRoute}
           onRouteChange={setMapRoute}
           onRouteLoadingChange={setMapRouteLoading}
           getPinKind={(job) => guardMapPinKind(guard.id, job as unknown as SecurityRequest)}
@@ -900,7 +914,7 @@ export function GuardDashboard({
             setMapRouteLoading(false);
           }}
           onPrimaryAction={
-            selectedJob.status === 'open' ? () => handleAcceptJob(selectedJob.id) : undefined
+            selectedJobIsUnclaimedOffer ? () => handleAcceptJob(selectedJob.id) : undefined
           }
           primaryLabel="Slide to accept"
           bottomOffsetClass="map-browse-offset"

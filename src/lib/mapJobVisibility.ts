@@ -1,5 +1,8 @@
-import type { SecurityRequest } from '../types';
+import type { SecurityGuard, SecurityRequest } from '../types';
 import type { GuardJobView } from './guardJobView';
+import { guardCanApplyToJob } from './guardJobs';
+import { guardHasApplied } from './jobApplications';
+import { isMultiGuardJob } from './guardTeams';
 import { hasScheduleDateChange } from './jobScheduleChange';
 import { isJobPaid } from './jobEditRules';
 
@@ -19,6 +22,33 @@ export function guardMapPinKind(guardId: string, req: SecurityRequest): 'availab
   if (isMine && (req.status === 'accepted' || req.status === 'in-progress')) return 'scheduled';
   if (isMine && (req.status === 'completed' || req.status === 'closed')) return 'past';
   return null;
+}
+
+/** Driving directions — only for jobs the guard is booked on or has completed. */
+export function guardMapShouldRouteToJob(guardId: string, req: SecurityRequest): boolean {
+  const kind = guardMapPinKind(guardId, req);
+  return kind === 'scheduled' || kind === 'past';
+}
+
+/** Map accept slide — open marketplace/direct offers the guard has not claimed yet. */
+export function guardMapIsUnclaimedOpenOffer(
+  guard: SecurityGuard,
+  job: GuardJobView,
+  scheduleJobs?: SecurityRequest[]
+): boolean {
+  if (job.status !== 'open') return false;
+  if (!guardCanApplyToJob(guard, job, scheduleJobs)) return false;
+  if (isMultiGuardJob(job)) return false;
+  if (job.requestType === 'direct') {
+    return job.targetGuardId === guard.id && !guardHasApplied(job, guard.id);
+  }
+  return !guardHasApplied(job, guard.id);
+}
+
+/** Client browse pins — route only to scheduled or completed jobs (not cancelled). */
+export function clientMapShouldRouteToJob(req: SecurityRequest): boolean {
+  const kind = clientMapPinKind(req);
+  return kind === 'upcoming' || kind === 'past';
 }
 
 export function guardVisibleMapJobs(

@@ -9,6 +9,7 @@ import {
   clientBrowseMapJobs,
   clientMapPinKind,
   clientJobMatchesMapStatusFilter,
+  clientMapShouldRouteToJob,
   CLIENT_MAP_STATUS_FILTERS,
   type ClientMapStatusFilter,
 } from '../../lib/mapJobVisibility';
@@ -78,6 +79,11 @@ export function ClientMapScreen({
     [filteredBrowseJobs, selectedBrowseJobId]
   );
 
+  const selectedBrowseJobShouldRoute = useMemo(
+    () => (selectedBrowseJob ? clientMapShouldRouteToJob(selectedBrowseJob) : false),
+    [selectedBrowseJob]
+  );
+
   useEffect(() => {
     if (selectedBrowseJobId && !filteredBrowseJobs.some((j) => j.id === selectedBrowseJobId)) {
       setSelectedBrowseJobId(null);
@@ -115,8 +121,8 @@ export function ClientMapScreen({
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
           routeSlot={
-            selectedBrowseJobId ? (
-              <MapRouteBanner route={route} loading={routeLoading} label="Your job" />
+            selectedBrowseJobShouldRoute ? (
+              <MapRouteBanner route={route} loading={routeLoading} label="Route to job" />
             ) : null
           }
         />
@@ -133,7 +139,7 @@ export function ClientMapScreen({
           setSelectedBrowseJobId(id);
         }}
         pinMode="client"
-        drawRoute={!showShiftOverlay}
+        drawRoute={!showShiftOverlay && selectedBrowseJobShouldRoute}
         onRouteChange={setRoute}
         onRouteLoadingChange={setRouteLoading}
         getPinKind={(job) => clientMapPinKind(job as SecurityRequest)}
