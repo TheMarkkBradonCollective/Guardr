@@ -24,7 +24,7 @@ export function JobPostOrdersFields({
   return (
     <div className="space-y-4">
       <div>
-        <label className="uber-label block mb-1.5">Listing overview</label>
+        <label className="uber-label block mb-1.5">Listing overview <span className="text-brand-text-muted font-normal">(optional)</span></label>
         <p className="text-xs text-brand-text-muted mb-2">
           How you present this opportunity to guards — scope, tone, and expectations.
         </p>
@@ -38,7 +38,7 @@ export function JobPostOrdersFields({
       </div>
 
       <div>
-        <label className="uber-label block mb-1.5">Dress code & uniform</label>
+        <label className="uber-label block mb-1.5">Dress code & uniform <span className="text-brand-text-muted font-normal">(optional)</span></label>
         <textarea
           value={value.uniformRequirements}
           onChange={(e) => set('uniformRequirements', e.target.value)}
@@ -49,7 +49,7 @@ export function JobPostOrdersFields({
       </div>
 
       <div>
-        <label className="uber-label block mb-1.5">Equipment required</label>
+        <label className="uber-label block mb-1.5">Equipment required <span className="text-brand-text-muted font-normal">(optional)</span></label>
         <textarea
           value={value.equipmentRequirements}
           onChange={(e) => set('equipmentRequirements', e.target.value)}
@@ -60,7 +60,7 @@ export function JobPostOrdersFields({
       </div>
 
       <div>
-        <label className="uber-label block mb-1.5">Post orders & site instructions</label>
+        <label className="uber-label block mb-1.5">Post orders & site instructions <span className="text-brand-text-muted font-normal">(optional)</span></label>
         <textarea
           value={value.siteInstructions}
           onChange={(e) => set('siteInstructions', e.target.value)}

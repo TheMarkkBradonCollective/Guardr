@@ -5,7 +5,7 @@ import {
   checkJobRequirements,
   getJobDistance,
 } from '../../lib/guardJobs';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardHasApplied } from '../../lib/jobApplications';
 import { isMultiGuardJob } from '../../lib/guardTeams';
 import { GuardTeamPanel } from './GuardTeamPanel';
@@ -60,7 +60,7 @@ export function GuardJobDetailContent({
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          <WfBadge>{JOB_STATUS_LABELS[job.status]}</WfBadge>
+          <JobStatusBadge job={job} />
           {isUpcoming && <WfBadge tone="primary">Upcoming job</WfBadge>}
           {isDirectRequest && job.status === 'open' && (
             <WfBadge tone="warning">Direct request</WfBadge>

@@ -52,6 +52,16 @@ describe('resolveNotificationUrlForRole', () => {
     const url = resolveNotificationUrlForRole('emergency_alert', 'guard', { requestId: 'job-1' });
     assert.equal(url, '/guard/my-jobs?jc=job-1');
   });
+
+  it('deep-links guards to map job on open-to-guards alerts', () => {
+    const url = resolveNotificationUrlForRole('job_open_to_guards', 'guard', { requestId: 'job-1' });
+    assert.equal(url, '/guard/map?jc=job-1');
+  });
+
+  it('deep-links clients to job requests on payment status updates', () => {
+    const url = resolveNotificationUrlForRole('support_ticket_status', 'client', { requestId: 'job-1' });
+    assert.equal(url, '/client/requests?jc=job-1');
+  });
 });
 
 describe('missedCheckinDedupKey', () => {

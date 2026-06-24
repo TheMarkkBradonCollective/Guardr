@@ -46,7 +46,9 @@ export function resolveNotificationUrl(
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
     case 'job_open_to_guards':
-      return '/guard/map';
+      return options.requestId
+        ? `/guard/map?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/map';
     case 'client_cash_payment_requested':
     case 'guard_cash_payout_requested':
     case 'stripe_payment_complete':
@@ -160,7 +162,9 @@ export function resolveNotificationUrlForRole(
         : '/staff/jobs';
 
     case 'job_open_to_guards':
-      return '/guard/map';
+      return options.requestId
+        ? `/guard/map?jc=${encodeURIComponent(options.requestId)}`
+        : '/guard/map';
 
     case 'client_cash_payment_requested':
     case 'guard_cash_payout_requested':
@@ -260,6 +264,9 @@ export function resolveNotificationUrlForRole(
       return '/guard/guard-chat';
     case 'support_ticket':
     case 'support_ticket_status':
+      if (role === 'client' && options.requestId) {
+        return `/client/requests?jc=${encodeURIComponent(options.requestId)}`;
+      }
       if (role === 'client') {
         return options.ticketId
           ? `/client/support?st=${encodeURIComponent(options.ticketId)}`

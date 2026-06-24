@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { PlatformFeeConfig } from '../../lib/payments';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import { jobStatusBadgeTone } from '../../lib/jobStatusBadges';
+import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { JobListCard } from '../jobs/JobListCard';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
@@ -198,7 +197,7 @@ export function StaffJobsPanel({
                 subtitle={req.clientName}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <WfBadge tone={jobStatusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
+                    <JobStatusBadge job={req} variant="staff" />
                     <span>
                       {assignedGuard
                         ? `Guard: ${assignedGuard.name}`

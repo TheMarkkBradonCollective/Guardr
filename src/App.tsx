@@ -449,7 +449,17 @@ export default function App() {
   const [clientDirectGuardId, setClientDirectGuardIdState] = useState<string | null>(
     () => initialRoute?.clientDirectGuardId ?? null
   );
-  const [clientRequestsSelectedId, setClientRequestsSelectedIdState] = useState<string | null>(null);
+  const [clientRequestsSelectedId, setClientRequestsSelectedIdState] = useState<string | null>(() => {
+    if (
+      initialRoute?.jobChatRequestId &&
+      !initialRoute.openJobChat &&
+      initialRoute.role === 'client' &&
+      initialRoute.clientView === 'requests'
+    ) {
+      return initialRoute.jobChatRequestId;
+    }
+    return null;
+  });
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
@@ -522,6 +532,13 @@ export default function App() {
     setSupportModeState(route.supportMode ?? null);
     setStaffApprovalQueueState(route.staffApprovalQueue ?? null);
     setOpenJobChatState(route.openJobChat ?? false);
+    if (route.jobChatRequestId && !route.openJobChat) {
+      if (route.role === 'client' && route.clientView === 'requests') {
+        setClientRequestsSelectedIdState(route.jobChatRequestId);
+      }
+    } else if (!route.jobChatRequestId) {
+      setClientRequestsSelectedIdState(null);
+    }
     if (route.authView) {
       setIsAuthView(true);
       setInitialAuthMode(route.authView);
@@ -745,8 +762,11 @@ export default function App() {
       return;
     }
     if (role === 'client') {
-      const openChat = options?.openChat ?? !!requestId;
+      const openChat = options?.openChat ?? false;
       if (openChat) setClientViewState('messages');
+      if (requestId && clientView === 'requests' && !openChat) {
+        setClientRequestsSelectedIdState(requestId);
+      }
       syncAppRoute(
         buildAppRoute({
           role: 'client',
@@ -4294,7 +4314,7 @@ export default function App() {
         guardId: assignedGuardId,
         requestId: freshJob.id,
         location: freshJob.location,
-        body: `You picked up ${freshJob.title}`,
+        body: `Staff assigned you to "${freshJob.title}".`,
       });
     }
 
@@ -4499,21 +4519,22 @@ export default function App() {
       }
     }
 
-    if (currentUser) {
+    if (currentUser && req.clientId) {
       void reportPushEvent(currentUser, {
-        type: 'payment_attention',
+        type: 'support_ticket_status',
+        recipientUserId: req.clientId,
+        requestId,
+        title: 'Payment received',
+        body: `Your payment for "${req.title}" was confirmed. This job is now live for guards.`,
+      });
+    }
+    if (currentUser && req.status === 'open') {
+      void reportPushEvent(currentUser, {
+        type: 'job_open_to_guards',
         requestId,
         location: req.location,
-        body: `Cash payment recorded for "${req.title}" — $${req.estimatedPayout.toFixed(2)}`,
+        body: `"${req.title}" is paid and open on the map — browse and apply.`,
       });
-      if (req.status === 'open') {
-        void reportPushEvent(currentUser, {
-          type: 'job_open_to_guards',
-          requestId,
-          location: req.location,
-          body: `"${req.title}" is paid and open on the map — browse and apply.`,
-        });
-      }
     }
   };
 
@@ -4557,7 +4578,8 @@ export default function App() {
         type: 'client_cash_payment_requested',
         requestId,
         location: req.location,
-        body: `${req.clientName} requested to pay $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}".`,
+        title: 'Client wants to pay in cash',
+        body: `${req.clientName} requested to pay $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}". Approve on the Payments screen.`,
       });
     }
     appToast('Cash payment requested — staff will confirm once received.', 'success');
@@ -5436,8 +5458,9 @@ export default function App() {
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: job.clientId,
+        requestId,
         title: 'Job approved',
-        body: `"${job.title}" is now live on the marketplace.`,
+        body: `"${job.title}" was approved. Complete payment to publish it on the marketplace.`,
       });
     }
   };
@@ -5997,7 +6020,11 @@ export default function App() {
     await persistJobListingUpdate(requestId, existing, updates);
   };
 
-  const assignGuardToJob = async (requestId: string, guardId: string): Promise<boolean> => {
+  const assignGuardToJob = async (
+    requestId: string,
+    guardId: string,
+    options?: { assignmentSource?: 'self' | 'client' | 'staff' }
+  ): Promise<boolean> => {
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
     if (!job) {
@@ -6053,12 +6080,19 @@ export default function App() {
       }
     }
     if (currentUser && guardId !== currentUser.id) {
+      const source = options?.assignmentSource ?? 'self';
+      const guardBody =
+        source === 'client'
+          ? `The client approved you for "${job.title}".`
+          : source === 'staff'
+            ? `Staff assigned you to "${job.title}".`
+            : `You picked up ${job.title}`;
       void reportPushEvent(currentUser, {
         type: 'assignment',
         recipientUserId: guardId,
         requestId,
         location: job.location,
-        body: `You picked up ${job.title}`,
+        body: guardBody,
       });
     }
     if (currentUser && job.clientId && job.clientId !== currentUser.id) {
@@ -6662,7 +6696,7 @@ export default function App() {
       appToast('No guard is waiting for your approval on this job.', 'error');
       return;
     }
-    const assigned = await assignGuardToJob(requestId, job.pendingGuardId);
+    const assigned = await assignGuardToJob(requestId, job.pendingGuardId, { assignmentSource: 'client' });
     if (assigned) {
       appToast('Guard confirmed for this job.', 'success');
     }
@@ -8602,6 +8636,7 @@ export default function App() {
           onRefreshGuardMessages={refreshGuardMessages}
           jobChatRequestId={jobChatRequestId}
           openJobChat={openJobChat}
+          initialSelectedJobId={jobChatRequestId && !openJobChat ? jobChatRequestId : null}
           onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
           onJobChatOpenChange={(open) => {
             setOpenJobChatState(open);
@@ -8766,6 +8801,7 @@ export default function App() {
               onOpenSupportCompose={openClientSupportCompose}
               onOpenSupportReport={openClientSupportReport}
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
+              requestsSelectedId={clientRequestsSelectedId}
             />
           )}
         </ClientAppLayout>
