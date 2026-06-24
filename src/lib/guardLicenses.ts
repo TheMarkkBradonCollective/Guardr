@@ -1,4 +1,5 @@
 import { Certification, SecurityGuard, SecurityRequest } from '../types';
+import { resolveGuardCardLicenseState } from './californiaCities';
 import { resolveCertCatalogId } from './certCatalog';
 import { guardHasCredentialOnFile } from './guardQualification';
 import { formatStateName } from './states';
@@ -31,7 +32,7 @@ export function hasGuardCardForState(
   stateCode: string,
   armedRequired = false
 ): boolean {
-  const state = stateCode.toUpperCase();
+  const state = resolveGuardCardLicenseState(stateCode);
   if (!guardHasCredentialOnFile(guard, 'bsis-guard-card', state)) return false;
   if (armedRequired) {
     return guardHasFirearmPermitOnFile(guard);
@@ -90,8 +91,7 @@ export function guardCanWorkInState(guard: SecurityGuard, stateCode: string, arm
 export function stateLicenseRequirementLabel(
   job: Pick<SecurityRequest, 'state' | 'armedRequired'>
 ): string {
-  if (!job.state) return 'BSIS Guard Card';
-  const stateName = formatStateName(job.state);
+  const stateName = formatStateName(resolveGuardCardLicenseState(job.state));
   return job.armedRequired ? `${stateName} Guard Card + Firearm Permit` : `${stateName} BSIS Guard Card`;
 }
 
