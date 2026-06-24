@@ -5463,7 +5463,7 @@ export default function App() {
           guardId: activeGuardId,
           guardName: activeGuard.name,
           title: 'Approve your guard',
-          body: `${activeGuard.name} applied as team lead for "${job.title}". Confirm to hire them.`,
+          body: `${activeGuard.name} applied as crew coordinator for "${job.title}". Confirm to hire them.`,
         });
       } else {
         void reportPushEvent(currentUser, {
@@ -5472,14 +5472,14 @@ export default function App() {
           guardId: activeGuardId,
           guardName: activeGuard.name,
           location: job.location,
-          body: `${activeGuard.name} applied as team lead (cash job) for "${job.title}"`,
+          body: `${activeGuard.name} applied as crew coordinator (cash job) for "${job.title}"`,
         });
       }
     }
     appToast(
       skipStaff
-        ? 'Team lead application sent to client for approval.'
-        : 'Team lead application submitted. Guardr staff will review (cash job).',
+        ? 'Crew coordinator application sent to client for approval.'
+        : 'Crew coordinator application submitted. Guardr staff will review (cash job).',
       'success'
     );
     await finalizeTeamJobIfReady(nextJob, result.slots);
@@ -5899,7 +5899,7 @@ export default function App() {
     }
 
     if (isMultiGuardJob(job)) {
-      appToast('Use Apply as team lead or Apply for open slot on this job.', 'info');
+      appToast('Use Apply as crew coordinator or Apply for open slot on this job.', 'info');
       return;
     }
 
@@ -7573,7 +7573,7 @@ export default function App() {
               onDenyPendingGuard={handleClientDenyPendingGuard}
               onApproveTeamSlot={handleClientApproveTeamSlot}
               onDenyTeamSlot={handleClientDenyTeamSlot}
-              teamLeadSettings={platformSettings}
+              crewSettings={platformSettings}
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}
               paymentGates={clientPaymentGatesMemo}

@@ -290,7 +290,7 @@ export interface SecurityGuard {
   credentialGraceHours?: number;
   /**
    * Explicitly trusted by a Director or Owner.
-   * Trusted guards skip Guardr applicant review on Stripe jobs and may lead teams.
+   * Trusted guards skip Guardr applicant review on Stripe jobs and may coordinate crews.
    * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */
   trusted?: boolean;
@@ -680,9 +680,9 @@ export interface SecurityRequest {
   pendingGuardId?: string | null;
   staffApprovedGuardAt?: string;
   assignedGuardId: string | null;
-  /** Trusted lead for multi-guard team jobs */
+  /** Crew coordinator for multi-guard team jobs */
   teamLeadId?: string | null;
-  /** Shareable code for crew self-join (multi-guard jobs with a lead) */
+  /** Shareable code for crew self-join (multi-guard jobs with a coordinator) */
   teamCode?: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;

@@ -16,7 +16,7 @@ function accountLabel(kind: AccountKind): string {
 export async function confirmMarkGuardTrusted(guardName: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Mark guard as trusted?',
-    message: `${guardName} will skip Guardr applicant review on Stripe jobs, may lead multi-guard teams, and cash jobs will still require staff confirmation.`,
+    message: `${guardName} will skip Guardr applicant review on Stripe jobs, may coordinate multi-guard crews, and cash jobs will still require staff confirmation.`,
     confirmLabel: 'Mark trusted',
   });
 }
@@ -24,7 +24,7 @@ export async function confirmMarkGuardTrusted(guardName: string): Promise<boolea
 export async function confirmRemoveGuardTrusted(guardName: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Remove trusted status?',
-    message: `${guardName} will require Guardr applicant review on future job applications and cannot lead teams until marked trusted again.`,
+    message: `${guardName} will require Guardr applicant review on future job applications and cannot coordinate crews until marked trusted again.`,
     confirmLabel: 'Remove trusted',
     tone: 'danger',
   });
@@ -118,9 +118,9 @@ export async function confirmStaffRoleChange(memberName: string, newRole: string
 
 export async function confirmApplyAsTeamLead(jobTitle: string): Promise<boolean> {
   return showAppConfirm({
-    title: 'Apply as team lead?',
-    message: `Apply to lead the crew for "${jobTitle}"? You will coordinate invites and crew chat for this job.`,
-    confirmLabel: 'Apply as lead',
+    title: 'Apply as crew coordinator?',
+    message: `Apply to coordinate the crew for "${jobTitle}"? You will manage invites and crew chat for this job.`,
+    confirmLabel: 'Apply as coordinator',
   });
 }
 

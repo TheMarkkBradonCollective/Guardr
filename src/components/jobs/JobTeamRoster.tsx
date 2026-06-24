@@ -92,7 +92,7 @@ export function JobTeamRoster({
                       Open slot — needs a guard
                     </span>
                   )}
-                  {slot.isLead && guard && <WfBadge tone="primary">Lead</WfBadge>}
+                  {slot.isLead && guard && <WfBadge tone="primary">Coordinator</WfBadge>}
                 </div>
                 <p className="text-xs text-brand-text-muted">{SLOT_STATUS_LABEL[slot.status]}</p>
                 {slot.status === 'invited' && slot.inviteExpiresAt && (

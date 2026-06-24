@@ -20,7 +20,7 @@ import {
 import { toDatetimeLocal } from '../../lib/dates';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
-import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
+import { JobBillingSummaryFromRequest, CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
@@ -82,6 +82,8 @@ interface ClientRequestsListProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  crewSettings?: PlatformSettings;
+  /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
   onRequestNew: () => void;
   currentUser?: SessionUser;
@@ -135,6 +137,7 @@ export function ClientRequestsList({
   onDenyPendingGuard,
   onApproveTeamSlot,
   onDenyTeamSlot,
+  crewSettings,
   teamLeadSettings,
   onRequestNew,
   currentUser,
@@ -142,6 +145,7 @@ export function ClientRequestsList({
   onSendJobChatMessage,
   onOpenJobChat,
 }: ClientRequestsListProps) {
+  const billingSettings = crewSettings ?? teamLeadSettings;
   const [search, setSearch] = useState('');
   const [statusTab, setStatusTab] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all');
   const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
@@ -269,8 +273,19 @@ export function ClientRequestsList({
                         job={req}
                         showClientHeader={false}
                         showBadges={false}
-                        payLine={<JobBillingSummaryFromRequest req={req} variant="client" teamLeadSettings={teamLeadSettings} />}
+                        payLine={
+                          <JobBillingSummaryFromRequest
+                            req={req}
+                            variant="client"
+                            crewSettings={billingSettings}
+                            hideCrewUpcostNotice
+                          />
+                        }
                       />
+
+                      {isMultiGuardJob(req) && billingSettings && (
+                        <CrewTeamUpcostNotice req={req} crewSettings={billingSettings} />
+                      )}
 
                       {isMultiGuardJob(req) && (
                         <JobTeamRoster

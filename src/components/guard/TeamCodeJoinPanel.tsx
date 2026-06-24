@@ -11,7 +11,7 @@ interface TeamCodeJoinPanelProps {
 export function TeamCodeJoinPanel({
   onJoin,
   compact = false,
-  hint = 'Enter a crew code from your team lead to request an open slot instantly.',
+  hint = 'Enter a crew code from your coordinator to request an open slot instantly.',
 }: TeamCodeJoinPanelProps) {
   const [code, setCode] = useState('');
   const [joining, setJoining] = useState(false);

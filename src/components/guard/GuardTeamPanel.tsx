@@ -97,7 +97,7 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can lead a team and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot or join with a team code.
+          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot or join with a crew code.
         </p>
       )}
 
@@ -118,12 +118,12 @@ export function GuardTeamPanel({
           }}
           className="app-button-primary w-full py-2.5 text-sm font-bold"
         >
-          Apply as team lead
+          Apply as crew coordinator
         </button>
       )}
 
       {isLead && (
-        <WfBadge tone="primary">You are the team lead</WfBadge>
+        <WfBadge tone="primary">You are the crew coordinator</WfBadge>
       )}
 
       {isLead && job.teamCode && job.status === 'open' && (
@@ -189,7 +189,7 @@ export function GuardTeamPanel({
         <TeamCodeJoinPanel
           onJoin={onJoinWithTeamCode}
           compact
-          hint="Have a code from your lead? Join this crew without waiting for an invite."
+          hint="Have a code from your coordinator? Join this crew without waiting for an invite."
         />
       )}
 
@@ -205,7 +205,7 @@ export function GuardTeamPanel({
             <div key={slot.id} className="inline-flex items-center gap-1.5 text-xs text-brand-text-muted">
               <ProfileAvatar src={member!.avatar} name={member!.name} size="xs" />
               {member!.name}
-              {slot.isLead ? ' · lead' : ''}
+              {slot.isLead ? ' · coordinator' : ''}
             </div>
           ))}
         </div>

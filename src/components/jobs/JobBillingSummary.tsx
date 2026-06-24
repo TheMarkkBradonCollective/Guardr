@@ -1,9 +1,11 @@
 import React from 'react';
+import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
-import { SecurityRequest } from '../../types';
-import { computeTeamLeadBonusBreakdown } from '../../lib/teamLeadBilling';
+import { computeCrewTeamPayBumpBreakdown, jobHasCrewTeamPayBump } from '../../lib/crewTeamBilling';
 import type { PlatformSettings } from '../../lib/platformSettings';
+import { isMultiGuardJob } from '../../lib/guardTeams';
+import { Users } from 'lucide-react';
 
 export type JobBillingVariant = 'staff' | 'client' | 'guard';
 
@@ -14,7 +16,6 @@ interface JobBillingSummaryProps {
   estimatedPayout?: number;
   guardPay?: number;
   platformFeePerHour?: number;
-  /** Override computed platform fee total (e.g. multi-guard requests). */
   platformFeeTotal?: number;
 }
 
@@ -80,24 +81,83 @@ export function JobBillingSummary({
   );
 }
 
+export function CrewTeamUpcostNotice({
+  req,
+  crewSettings,
+  variant = 'client',
+}: {
+  req: Pick<SecurityRequest, 'guardsNeeded' | 'guardSlots' | 'durationHours' | 'status'>;
+  crewSettings?: PlatformSettings;
+  variant?: 'client' | 'compact';
+}) {
+  if (!crewSettings || !jobHasCrewTeamPayBump(req)) return null;
+  const bump = computeCrewTeamPayBumpBreakdown(
+    crewSettings,
+    req.guardSlots,
+    req.guardsNeeded ?? 1,
+    req.durationHours
+  );
+  if (bump.totalUpcost <= 0) return null;
+
+  const pendingCrew = (req.guardSlots ?? []).some((s) => s.status === 'pending_client');
+  const isCompact = variant === 'compact';
+
+  return (
+    <div
+      className={`rounded-xl border border-amber-500/30 bg-amber-500/10 ${
+        isCompact ? 'px-3 py-2.5' : 'px-3 py-3'
+      } space-y-1.5`}
+    >
+      <div className="flex items-start gap-2">
+        <Users className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-brand-text">
+            All-in-one crew premium
+          </p>
+          <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
+            {pendingCrew
+              ? 'This coordinated crew is requesting your approval. Each guard earns an additional '
+              : 'Each guard on this coordinated crew earns an additional '}
+            <strong className="text-brand-text">${bump.perGuardPerHour}/hr</strong>
+            {' '}for working as a unified team — added to your total job cost.
+          </p>
+          <p className="text-xs text-amber-400/95 mt-1.5 font-medium">
+            Estimated crew upcost: +${bump.totalUpcost.toFixed(2)}
+            {' '}
+            <span className="font-normal text-brand-text-muted">
+              (${bump.perGuardPerHour}/hr × {bump.guardCount} guard{bump.guardCount === 1 ? '' : 's'} × {bump.durationHours}h)
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function JobBillingSummaryFromRequest({
   req,
   variant = 'staff',
+  crewSettings,
   teamLeadSettings,
+  hideCrewUpcostNotice = false,
 }: {
   req: SecurityRequest;
   variant?: JobBillingVariant;
+  crewSettings?: PlatformSettings;
+  /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
+  hideCrewUpcostNotice?: boolean;
 }) {
+  const settings = crewSettings ?? teamLeadSettings;
   const hasOvertime = (req.overtimeAmount ?? 0) > 0;
   const scheduledPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
   const overtimeSettled = req.overtimeStatus === 'paid';
-  const teamBonus =
-    teamLeadSettings && (req.guardsNeeded ?? 1) > 1
-      ? computeTeamLeadBonusBreakdown(
-          teamLeadSettings,
+  const crewBump =
+    settings && isMultiGuardJob(req)
+      ? computeCrewTeamPayBumpBreakdown(
+          settings,
           req.guardSlots,
-          req.teamLeadId,
+          req.guardsNeeded ?? 1,
           req.durationHours
         )
       : null;
@@ -112,17 +172,13 @@ export function JobBillingSummaryFromRequest({
         guardPay={req.guardPay}
         platformFeePerHour={req.platformFeePerHour}
       />
-      {teamBonus && teamBonus.crewCount > 0 && variant === 'client' && (
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
-          <span>
-            Team coordination (est.):{' '}
-            <strong className="text-brand-text">${teamBonus.clientShare.toFixed(2)}</strong>
-          </span>
-          <span className="text-xs">
-            {teamBonus.crewCount} confirmed crew × ${teamBonus.perGuardPerHour}/hr × {teamBonus.durationHours}h
-            {' '}({teamBonus.clientSharePercent}% client / {teamBonus.platformSharePercent}% platform)
-          </span>
-        </div>
+      {variant === 'client' && !hideCrewUpcostNotice && crewBump && crewBump.guardCount > 0 && (
+        <CrewTeamUpcostNotice req={req} crewSettings={settings} variant="compact" />
+      )}
+      {crewBump && crewBump.guardCount > 0 && variant === 'guard' && (
+        <p className="text-xs text-brand-primary border-t border-brand-border pt-3">
+          Crew jobs include +${crewBump.perGuardPerHour}/hr on your guard rate when you are on the roster.
+        </p>
       )}
       {hasOvertime && (
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">

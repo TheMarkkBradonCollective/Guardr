@@ -11,7 +11,7 @@ export function isGuardProfileApproved(guard: Pick<SecurityGuard, 'verified'>): 
 /**
  * Badge shown when a Director or Owner has explicitly marked a guard as trusted.
  * Trusted guards skip Guardr applicant review on Stripe jobs (mods, admins, directors)
- * and may lead multi-guard teams. Cash jobs always require full Guardr review and cash confirmation.
+ * and may coordinate multi-guard crews. Cash jobs always require full Guardr review and cash confirmation.
  */
 export const GUARD_TRUSTED_BADGE_LABEL = 'Trusted';
 

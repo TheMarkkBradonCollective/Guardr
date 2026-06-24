@@ -14,11 +14,13 @@ export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
   feeConfig: PlatformFeeConfig;
-  /** Bonus paid to team lead per confirmed crew guard per hour (default $1). */
+  /** Extra pay per crew guard per hour on coordinated multi-guard jobs (default $1). */
+  crewTeamPayBumpPerHour?: number;
+  /** @deprecated Use crewTeamPayBumpPerHour — kept for DB/localStorage compatibility. */
   teamLeadBonusPerGuardPerHour?: number;
-  /** Client share of team lead bonus (default 50%). */
+  /** @deprecated No longer used — full crew bump is billed to the client. */
   teamLeadBonusClientSharePercent?: number;
-  /** Platform share of team lead bonus (default 50%). */
+  /** @deprecated No longer used. */
   teamLeadBonusPlatformSharePercent?: number;
   updatedAt?: string;
 }
@@ -27,9 +29,10 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   paymentCashEnabled: true,
   paymentStripeEnabled: true,
   feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
+  crewTeamPayBumpPerHour: 1,
   teamLeadBonusPerGuardPerHour: 1,
-  teamLeadBonusClientSharePercent: 50,
-  teamLeadBonusPlatformSharePercent: 50,
+  teamLeadBonusClientSharePercent: 100,
+  teamLeadBonusPlatformSharePercent: 0,
 };
 
 const STORAGE_KEY = 'guardr_platform_settings';
@@ -69,20 +72,18 @@ export function normalizePlatformSettings(
   const cash = input.paymentCashEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentCashEnabled;
   const stripe = input.paymentStripeEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentStripeEnabled;
   if (!cash && !stripe) return null;
-  let clientShare = input.teamLeadBonusClientSharePercent ?? 50;
-  let platformShare = input.teamLeadBonusPlatformSharePercent ?? 50;
-  if (clientShare + platformShare !== 100) {
-    clientShare = 50;
-    platformShare = 50;
-  }
-  const bonusRate = Math.max(0, input.teamLeadBonusPerGuardPerHour ?? 1);
+  const bumpRate = Math.max(
+    0,
+    input.crewTeamPayBumpPerHour ?? input.teamLeadBonusPerGuardPerHour ?? 1
+  );
   return {
     paymentCashEnabled: cash,
     paymentStripeEnabled: stripe,
     feeConfig: normalizePlatformFeeConfig(input.feeConfig),
-    teamLeadBonusPerGuardPerHour: bonusRate,
-    teamLeadBonusClientSharePercent: clientShare,
-    teamLeadBonusPlatformSharePercent: platformShare,
+    crewTeamPayBumpPerHour: bumpRate,
+    teamLeadBonusPerGuardPerHour: bumpRate,
+    teamLeadBonusClientSharePercent: 100,
+    teamLeadBonusPlatformSharePercent: 0,
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   };
 }
@@ -127,14 +128,14 @@ export function platformSettingsFromDbRow(row: {
       feeConfig: normalizePlatformFeeConfig(
         row.fee_config as Partial<PlatformFeeConfig> | null | undefined
       ),
+      crewTeamPayBumpPerHour:
+        row.team_lead_bonus_per_guard_per_hour != null
+          ? Number(row.team_lead_bonus_per_guard_per_hour)
+          : 1,
       teamLeadBonusPerGuardPerHour:
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
           : 1,
-      teamLeadBonusClientSharePercent:
-        row.team_lead_bonus_client_share_percent ?? 50,
-      teamLeadBonusPlatformSharePercent:
-        row.team_lead_bonus_platform_share_percent ?? 50,
       updatedAt: row.updated_at ?? undefined,
     }) ?? {
       ...DEFAULT_PLATFORM_SETTINGS,
@@ -149,9 +150,10 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     payment_cash_enabled: settings.paymentCashEnabled,
     payment_stripe_enabled: settings.paymentStripeEnabled,
     fee_config: settings.feeConfig,
-    team_lead_bonus_per_guard_per_hour: settings.teamLeadBonusPerGuardPerHour ?? 1,
-    team_lead_bonus_client_share_percent: settings.teamLeadBonusClientSharePercent ?? 50,
-    team_lead_bonus_platform_share_percent: settings.teamLeadBonusPlatformSharePercent ?? 50,
+    team_lead_bonus_per_guard_per_hour:
+      settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
+    team_lead_bonus_client_share_percent: 100,
+    team_lead_bonus_platform_share_percent: 0,
     updated_at: settings.updatedAt ?? new Date().toISOString(),
   };
 }

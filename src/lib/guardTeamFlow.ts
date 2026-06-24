@@ -30,10 +30,10 @@ export function applyAsTeamLead(
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'This job only needs one guard.' };
-  if (!isGuardTrusted(lead)) return { error: 'Only trusted guards can lead a team.' };
+  if (!isGuardTrusted(lead)) return { error: 'Only trusted guards can coordinate a crew.' };
   if (job.status !== 'open') return { error: 'This job is not open for applications.' };
   if (job.teamLeadId && job.teamLeadId !== lead.id) {
-    return { error: 'Another guard is already leading this team.' };
+    return { error: 'Another guard is already coordinating this crew.' };
   }
   const blocked = scheduleError(lead.id, job, allJobs);
   if (blocked) return blocked;
@@ -79,7 +79,7 @@ export function inviteGuardToTeam(
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'This job only needs one guard.' };
-  if (job.teamLeadId !== lead.id) return { error: 'Only the team lead can invite guards.' };
+  if (job.teamLeadId !== lead.id) return { error: 'Only the crew coordinator can invite guards.' };
   const blocked = scheduleError(inviteeId, job, allJobs, inviteeName);
   if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
@@ -230,7 +230,7 @@ export function joinTeamWithCode(
     return { error: 'Team code not found or this crew is no longer accepting members.' };
   }
   if (job.teamLeadId === guardId) {
-    return { error: 'You are already the team lead for this job.' };
+    return { error: 'You are already the crew coordinator for this job.' };
   }
   return applyToOpenTeamSlot(job, guardId, skipStaffReview, allJobs, now);
 }
