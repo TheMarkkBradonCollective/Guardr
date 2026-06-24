@@ -81,6 +81,7 @@ import {
   guardBreakBlockedMessage,
 } from '../lib/shiftBreaks';
 import type { IncidentReportFormInput } from '../lib/incidentReports';
+import { useUserLocation } from '../lib/useUserLocation';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
