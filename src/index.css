@@ -1730,6 +1730,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   z-index: 1003;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   height: 2.75rem;
   box-sizing: border-box;
@@ -1749,7 +1750,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: calc(100% - 5rem);
   pointer-events: none;
 }
 
@@ -1757,15 +1757,25 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   pointer-events: auto;
 }
 
-.map-top-right-cluster .map-route-banner {
+.map-route-banner-slot {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1003;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(calc(100vw - 8.5rem), 20rem);
+}
+
+.map-route-banner-slot .map-route-banner {
   position: static;
   top: auto;
   left: auto;
   transform: none;
   z-index: auto;
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: min(14rem, 42vw);
+  pointer-events: auto;
+  max-width: min(calc(100vw - 8.5rem), 20rem);
 }
 
 .map-route-banner-text {
