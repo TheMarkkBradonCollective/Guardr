@@ -29,7 +29,7 @@ export function MoreMenuSheet({
         <button
           type="button"
           onClick={onClose}
-          className="p-2 border border-brand-border bg-brand-bg-sec text-brand-text-muted hover:text-brand-text transition-colors"
+          className="p-2 rounded-full border border-brand-border bg-brand-bg-sec text-brand-text-muted hover:text-brand-text transition-colors"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -56,7 +56,7 @@ export function MoreMenuSheet({
                 <Icon className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-bold flex-1 tracking-tight">{label}</span>
                 {badge != null && badge > 0 && (
-                  <span className="min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand-primary text-white text-[10px] font-bold flex items-center justify-center">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}

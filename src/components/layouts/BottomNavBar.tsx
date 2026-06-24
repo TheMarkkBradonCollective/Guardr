@@ -46,20 +46,23 @@ export function BottomNavBar({
         key={id}
         type="button"
         onClick={() => onNavigate(id)}
-        className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors ${
-          active ? 'text-brand-text' : 'text-brand-text-muted hover:text-brand-text'
+        className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors relative ${
+          active ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'
         }`}
         aria-current={active ? 'page' : undefined}
       >
+        {active && (
+          <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-brand-primary" aria-hidden="true" />
+        )}
         <span className="relative">
           <Icon className={`w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-2'}`} />
           {badge != null && badge > 0 && (
-            <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+            <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 rounded-full bg-brand-primary text-white text-[9px] font-bold flex items-center justify-center leading-none">
               {badge > 9 ? '9+' : badge}
             </span>
           )}
         </span>
-        <span className={`text-[10px] leading-none ${active ? 'font-semibold' : 'font-medium'}`}>
+        <span className={`text-[10px] leading-none ${active ? 'font-bold' : 'font-medium'}`}>
           {label}
         </span>
       </button>
@@ -97,20 +100,23 @@ export function BottomNavBar({
           <button
             type="button"
             onClick={onMoreClick}
-            className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors ${
-              moreActive ? 'text-brand-text' : 'text-brand-text-muted hover:text-brand-text'
+            className={`bottom-nav-item flex-1 flex flex-col items-center justify-center gap-1 py-2 min-h-[3.25rem] transition-colors relative ${
+              moreActive ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'
             }`}
             aria-current={moreActive ? 'page' : undefined}
           >
+            {moreActive && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-brand-primary" aria-hidden="true" />
+            )}
             <span className="relative">
               <LayoutGrid className={`w-5 h-5 ${moreActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
               {moreBadge > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 rounded-full bg-brand-primary text-white text-[9px] font-bold flex items-center justify-center leading-none">
                   {moreBadge > 9 ? '9+' : moreBadge}
                 </span>
               )}
             </span>
-            <span className={`text-[10px] leading-none ${moreActive ? 'font-semibold' : 'font-medium'}`}>
+            <span className={`text-[10px] leading-none ${moreActive ? 'font-bold' : 'font-medium'}`}>
               More
             </span>
           </button>
