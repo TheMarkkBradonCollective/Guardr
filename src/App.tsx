@@ -61,7 +61,7 @@ import {
   isCashClientPayment,
   parsePaymentMethod,
 } from './lib/cashPayments';
-import { isJobLocationCoordsMissing } from './lib/jobLocation';
+import { isJobLocationCoordsMissing, resolveJobMapCoordinates } from './lib/jobLocation';
 import { ChangePasswordPrompt } from './components/auth/ChangePasswordPrompt';
 import {
   provisionedPasswordFields,
@@ -4007,6 +4007,16 @@ export default function App() {
     const guardPay = newRequest.guardPay ?? computeGuardPay(hourlyRate, platformFeePerHour);
     const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const location = siteName ? `${siteName} — ${address}` : address;
+    const jobState = formatCityLabel(newRequest.state) || resolveJobCity(newRequest.state);
+
+    const resolvedCoords = await resolveJobMapCoordinates({
+      latitude: newRequest.latitude,
+      longitude: newRequest.longitude,
+      siteName,
+      address,
+      state: jobState,
+      location,
+    });
 
     // Trusted clients skip the approval queue unless they're using cash.
     const clientIsTrusted = clientRecord?.trusted === true;
@@ -4025,7 +4035,7 @@ export default function App() {
       clientRating: clientRecord?.rating,
       siteName,
       address,
-      state: formatCityLabel(newRequest.state) || resolveJobCity(newRequest.state),
+      state: jobState,
       location,
       type: newRequest.type || 'event',
       armedRequired: newRequest.armedRequired || false,
@@ -4037,8 +4047,8 @@ export default function App() {
       contactPhone: newRequest.contactPhone,
       parkingInstructions: newRequest.parkingInstructions,
       accessInstructions: newRequest.accessInstructions,
-      latitude: newRequest.latitude,
-      longitude: newRequest.longitude,
+      latitude: resolvedCoords.latitude ?? newRequest.latitude,
+      longitude: resolvedCoords.longitude ?? newRequest.longitude,
       operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
@@ -5351,10 +5361,22 @@ export default function App() {
       return;
     }
     const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
     const openedAt = new Date().toISOString();
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open', openedAt } : r));
+    const resolvedCoords = await resolveJobMapCoordinates(job);
+    const patch = {
+      status: 'open' as const,
+      openedAt,
+      ...resolvedCoords,
+    };
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...patch } : r));
     if (isDbConnected) {
-      await supabase.from('security_requests').update({ status: 'open', opened_at: openedAt }).eq('id', requestId);
+      await supabase.from('security_requests').update({
+        status: 'open',
+        opened_at: openedAt,
+        ...(resolvedCoords.latitude != null ? { latitude: resolvedCoords.latitude } : {}),
+        ...(resolvedCoords.longitude != null ? { longitude: resolvedCoords.longitude } : {}),
+      }).eq('id', requestId);
     }
     if (job) {
       void reportPushEvent(currentUser, {

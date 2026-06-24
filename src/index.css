@@ -1646,6 +1646,10 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   background: #059669;
   color: #ffffff;
 }
+.guardr-shift-pin-kind--pending .guardr-shift-pin-inner {
+  background: #d97706;
+  color: #ffffff;
+}
 .guardr-shift-pin-kind--live .guardr-shift-pin-inner {
   background: #dc2626;
   color: #ffffff;
@@ -1670,6 +1674,9 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 .guardr-shift-pin-kind--available.guardr-shift-pin-selected .guardr-shift-pin-inner,
 .guardr-shift-pin-kind--open.guardr-shift-pin-selected .guardr-shift-pin-inner {
   box-shadow: 0 0 0 6px color-mix(in srgb, #059669 30%, transparent), var(--shadow-float);
+}
+.guardr-shift-pin-kind--pending.guardr-shift-pin-selected .guardr-shift-pin-inner {
+  box-shadow: 0 0 0 6px color-mix(in srgb, #d97706 30%, transparent), var(--shadow-float);
 }
 .guardr-shift-pin-kind--live.guardr-shift-pin-selected .guardr-shift-pin-inner {
   box-shadow: 0 0 0 6px color-mix(in srgb, #dc2626 30%, transparent), var(--shadow-float);
