@@ -13,6 +13,8 @@ import { computeShiftDutySeconds, shiftDutyStartedAt } from '../../lib/shiftWind
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
+import { ClientJobActionsPanel } from './ClientJobActionsPanel';
+import type { ClientJobActionsBindings } from './clientJobActionsTypes';
 import {
   Activity,
   AlertTriangle,
@@ -31,6 +33,7 @@ interface ClientActiveShiftProps {
   onOpenJobChat?: () => void;
   onOpenCoverage?: () => void;
   onSwitchJob?: (requestId: string) => void;
+  jobActions?: ClientJobActionsBindings;
 }
 
 function formatTimer(seconds: number): string {
@@ -53,6 +56,7 @@ export function ClientActiveShift({
   onOpenJobChat,
   onOpenCoverage,
   onSwitchJob,
+  jobActions,
 }: ClientActiveShiftProps) {
   const phase = inferClientShiftPhase(request);
   const stepIdx = clientShiftStepIndex(phase);
@@ -182,6 +186,15 @@ export function ClientActiveShift({
 
         {(phase === 'on-duty' || phase === 'on-site') && request.checkInAudit && (
           <JobSelfAuditPhotosSection request={request} hideStaffAttribution />
+        )}
+
+        {jobActions && (
+          <ClientJobActionsPanel
+            request={request}
+            context="map"
+            hideMessaging
+            {...jobActions}
+          />
         )}
 
         <div className="app-action-row--2">

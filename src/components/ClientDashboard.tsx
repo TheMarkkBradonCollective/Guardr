@@ -288,10 +288,29 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         currentUser={currentUser}
+        clientEmail={clientEmail}
+        paymentGates={paymentGates}
+        crewSettings={crewSettings ?? teamLeadSettings}
+        jobChatThreads={jobChatThreads}
         onOpenCoverage={() => navigate('coverage')}
         onOpenJobChat={openMessages}
         initialLiveJobId={jobChatRequestId}
         onLiveJobIdChange={onJobChatRequestIdChange}
+        onConfirmSelfAudit={onConfirmSelfAudit}
+        onConfirmSpotCheck={onConfirmSpotCheck}
+        onRequestCashPayment={onRequestCashPayment}
+        onApproveOvertime={onApproveOvertime}
+        onDisputeOvertime={onDisputeOvertime}
+        onRequestOvertimeCash={onRequestOvertimeCash}
+        onApproveScheduleChange={onApproveScheduleChange}
+        onRejectScheduleChange={onRejectScheduleChange}
+        onApprovePendingGuard={onApprovePendingGuard}
+        onDenyPendingGuard={onDenyPendingGuard}
+        onApproveTeamSlot={onApproveTeamSlot}
+        onDenyTeamSlot={onDenyTeamSlot}
+        onApproveFullTeam={onApproveFullTeam}
+        onDenyFullTeam={onDenyFullTeam}
+        onAddReview={onAddReview}
       />
     );
   }

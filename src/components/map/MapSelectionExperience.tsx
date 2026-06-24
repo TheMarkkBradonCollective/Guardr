@@ -19,6 +19,8 @@ interface MapSelectionExperienceProps {
   primaryLabel?: string;
   /** Bottom offset when another sheet (e.g. guard browse) is visible */
   bottomOffsetClass?: string;
+  /** Client approvals / payments rendered inside the expanded card */
+  clientActions?: React.ReactNode;
 }
 
 export function MapSelectionExperience({
@@ -30,6 +32,7 @@ export function MapSelectionExperience({
   onPrimaryAction,
   primaryLabel,
   bottomOffsetClass = '',
+  clientActions,
 }: MapSelectionExperienceProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -71,7 +74,7 @@ export function MapSelectionExperience({
         onPrimaryAction={onPrimaryAction}
         primaryLabel={primaryLabel}
       >
-        <div className="mt-3 max-h-[42vh] overflow-y-auto overscroll-contain pr-1 -mr-1">
+        <div className={`mt-3 overflow-y-auto overscroll-contain pr-1 -mr-1 ${clientActions ? 'max-h-[55vh]' : 'max-h-[42vh]'}`}>
           <JobListingProfile
             job={selected}
             showClientHeader={false}
@@ -82,6 +85,7 @@ export function MapSelectionExperience({
             operationalBriefingLocked={operationalBriefingLocked}
             jobStatus={jobStatus}
           />
+          {clientActions}
         </div>
       </MapOfferCard>
     </div>

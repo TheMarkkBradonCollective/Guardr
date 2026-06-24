@@ -2,71 +2,28 @@ import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
-import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession } from '../../lib/stripeApi';
-import {
-  canClientApproveOvertime,
-  canClientDisputeOvertime,
-  canClientPayOvertimeStripe,
-  canClientRequestOvertimeCash,
-  computeLateClockOutHours,
-  computeOvertimeAmount,
-  hasOvertime,
-  hasUnpaidOvertime,
-  isOvertimeCashPaymentPendingApproval,
-  isOvertimeDisputed,
-  isOvertimeWaived,
-  type OvertimeDisputeInput,
-} from '../../lib/shiftBilling';
-import { toDatetimeLocal, formatShiftRange } from '../../lib/dates';
-import {
-  canClientApproveStaffScheduleChange,
-  canClientPayScheduleChangeExtension,
-} from '../../lib/jobScheduleChange';
-import { showAppToast } from '../ui/AppToast';
-import { showAppConfirm } from '../ui/AppConfirm';
-import { JobBillingSummaryFromRequest, CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
+import type { OvertimeDisputeInput } from '../../lib/shiftBilling';
+import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobListCard } from '../jobs/JobListCard';
-import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
-  Award,
-  Banknote,
-  Check,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  MessageCircle,
-  Pencil,
   Shield,
-  Star,
-  X,
   ClipboardList,
   CalendarClock,
   CheckSquare,
   Archive,
 } from 'lucide-react';
-import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { JobChatMessage, JobChatThread, SessionUser } from '../../types';
 import {
-  canClientCancelRequest,
-  canClientEditJobListing,
-  canClientEditRequest,
-  canClientPayForJob,
-  canClientRequestCashPayment,
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
-import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
-import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
+import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient, hasIndependentSlotsPendingClient } from '../../lib/guardTeams';
-import { confirmApproveFullTeam, confirmDenyFullTeam } from '../../lib/importantActionConfirm';
-import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
-import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
+import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
@@ -161,44 +118,10 @@ export function ClientRequestsList({
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [search, setSearch] = useState('');
   const [statusTab, setStatusTab] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all');
-  const [reviewRating, setReviewRating] = useState<{ [reqId: string]: number }>({});
-  const [reviewNote, setReviewNote] = useState<{ [reqId: string]: string }>({});
-  const [payingJobId, setPayingJobId] = useState<string | null>(null);
-  const [payingOvertimeJobId, setPayingOvertimeJobId] = useState<string | null>(null);
-  const [cashRequestJobId, setCashRequestJobId] = useState<string | null>(null);
-  const [overtimeCashRequestJobId, setOvertimeCashRequestJobId] = useState<string | null>(null);
-  const [overtimeApproveJobId, setOvertimeApproveJobId] = useState<string | null>(null);
-  const [overtimeDisputeJobId, setOvertimeDisputeJobId] = useState<string | null>(null);
-  const [overtimeDisputeReason, setOvertimeDisputeReason] = useState('');
-  const [overtimeDisputeClockOutLocal, setOvertimeDisputeClockOutLocal] = useState('');
-  const [overtimeDisputingJobId, setOvertimeDisputingJobId] = useState<string | null>(null);
-  const [scheduleApproveJobId, setScheduleApproveJobId] = useState<string | null>(null);
-  const [scheduleRejectJobId, setScheduleRejectJobId] = useState<string | null>(null);
-  const [payingScheduleJobId, setPayingScheduleJobId] = useState<string | null>(null);
-  const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
-  const reviewingRequest = reviewingId ? requests.find((r) => r.id === reviewingId) ?? null : null;
-  const disputeRequest = overtimeDisputeJobId
-    ? requests.find((r) => r.id === overtimeDisputeJobId) ?? null
-    : null;
-  const disputeClockOutIso = overtimeDisputeClockOutLocal
-    ? new Date(overtimeDisputeClockOutLocal).toISOString()
-    : null;
-  const disputeClaimedHours =
-    disputeRequest && disputeClockOutIso
-      ? computeLateClockOutHours(disputeClockOutIso, disputeRequest.endDate)
-      : 0;
-  const disputeClaimedAmount = disputeRequest
-    ? computeOvertimeAmount(
-        disputeClaimedHours,
-        disputeRequest.hourlyRate,
-        disputeRequest.guardsNeeded ?? 1
-      )
-    : 0;
 
   const tabCounts = useMemo(() => ({
     all: requests.length,
@@ -222,615 +145,57 @@ export function ClientRequestsList({
     );
   }, [requests, search, statusTab]);
 
-  const handlePayNow = async (req: SecurityRequest) => {
-    setPayingJobId(req.id);
-    try {
-      const amountCents = Math.round(req.estimatedPayout * 100);
-      const { url } = await createCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
-    } finally {
-      setPayingJobId(null);
-    }
-  };
-
-  const handlePayOvertime = async (req: SecurityRequest) => {
-    setPayingOvertimeJobId(req.id);
-    try {
-      const amountCents = Math.round((req.overtimeAmount ?? 0) * 100);
-      const { url } = await createOvertimeCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start overtime checkout', { tone: 'error' });
-    } finally {
-      setPayingOvertimeJobId(null);
-    }
-  };
-
-  const handlePayScheduleExtension = async (req: SecurityRequest) => {
-    setPayingScheduleJobId(req.id);
-    try {
-      const amountCents = Math.round((req.scheduleChangeExtraAmount ?? 0) * 100);
-      const { url } = await createScheduleChangeCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start schedule payment', { tone: 'error' });
-    } finally {
-      setPayingScheduleJobId(null);
-    }
-  };
-
   const selectedRequest = expandedId
     ? requests.find((r) => r.id === expandedId) ?? null
     : null;
 
-  const handleRequestCashPayment = async (req: SecurityRequest) => {
-    if (!onRequestCashPayment) return;
-    setCashRequestJobId(req.id);
-    try {
-      await onRequestCashPayment(req.id);
-    } finally {
-      setCashRequestJobId(null);
-    }
-  };
-
-
   function renderSelectedRequestDetail(req: SecurityRequest) {
-    const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
-    const pendingGuard = req.pendingGuardId
-      ? guards.find((g) => g.id === req.pendingGuardId)
-      : undefined;
-    const awaitingClientGuard = isIndependentGuardPendingForClient(req);
-    const fullCrewAwaitingClient = isFullCrewAwaitingClientApproval(req);
-    const independentSlotsPending = hasIndependentSlotsPendingClient(req);
     return (
-            <div className="staff-detail-pane space-y-4">
-                      <JobListingProfile
-                        job={req}
-                        showClientHeader={false}
-                        showBadges={false}
-                        operationalDetails={req.operationalDetails}
-                        payLine={
-                          <JobBillingSummaryFromRequest
-                            req={req}
-                            variant="client"
-                            crewSettings={billingSettings}
-                            hideCrewUpcostNotice
-                          />
-                        }
-                      />
-
-                      {isMultiGuardJob(req) && billingSettings && fullCrewAwaitingClient && (
-                        <CrewTeamUpcostNotice req={req} crewSettings={billingSettings} />
-                      )}
-
-                      {independentSlotsPending && (
-                        <JobTeamRoster
-                          job={req}
-                          guards={guards}
-                          variant="client"
-                          showIndependentSlotActions
-                          slotFilter={(slot) => slot.status === 'pending_client' && !!slot.guardId}
-                          onApproveSlot={
-                            onApproveTeamSlot
-                              ? (slotId) => void onApproveTeamSlot(req.id, slotId)
-                              : undefined
-                          }
-                          onDenySlot={
-                            onDenyTeamSlot
-                              ? (slotId) => void onDenyTeamSlot(req.id, slotId)
-                              : undefined
-                          }
-                        />
-                      )}
-
-                      {fullCrewAwaitingClient && (
-                        <JobTeamRoster
-                          job={req}
-                          guards={guards}
-                          variant="client"
-                          showFullTeamActions={
-                            !!(onApproveFullTeam && onDenyFullTeam)
-                          }
-                          onApproveFullTeam={
-                            onApproveFullTeam
-                              ? () => void onApproveFullTeam(req.id)
-                              : undefined
-                          }
-                          onDenyFullTeam={
-                            onDenyFullTeam
-                              ? () => void onDenyFullTeam(req.id)
-                              : undefined
-                          }
-                        />
-                      )}
-      
-                      {isJobScheduleLocked(req) && !canClientReschedulePaidSchedule(req) && (
-                        <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
-                          Schedule is locked after payment. You can still update the job title and location.
-                        </p>
-                      )}
-      
-                      {canClientEditJobListing(req) && (
-                        <div className="flex flex-wrap gap-2 w-full">
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(req.id)}
-                            className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
-                          >
-                            <Pencil className="w-3 h-3 inline" />{' '}
-                            {canClientReschedulePaidSchedule(req)
-                              ? 'Reschedule'
-                              : isJobScheduleLocked(req)
-                                ? 'Edit title & location'
-                                : 'Edit'}
-                          </button>
-                          {canClientCancelRequest(req) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void (async () => {
-                                  if (await showAppConfirm({
-                                    title: 'Cancel job?',
-                                    message: `Cancel "${req.title}"?`,
-                                    confirmLabel: 'Cancel job',
-                                    tone: 'danger',
-                                  })) {
-                                    onCancelRequest(req.id);
-                                  }
-                                })();
-                              }}
-                              className="app-button-outline !w-auto !h-9 !px-4 !text-xs text-red-400 border-red-500/40"
-                            >
-                              <X className="w-3 h-3 inline" /> Cancel
-                            </button>
-                          )}
-                        </div>
-                      )}
-      
-                      {req.status === 'pending-review' && (
-                        <div className="border-t border-brand-border pt-3 w-full">
-                          <p className="text-xs text-amber-400/95 leading-relaxed">
-                            Waiting for staff approval. You can pay after Guardr approves this job offer; guards apply and staff approves the best fit.
-                          </p>
-                        </div>
-                      )}
-      
-                      {req.status === 'open' && (
-                        <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && !isMultiGuardJob(req) && (
-                            <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
-                              <div className="flex items-start gap-3">
-                                <ProfileAvatar src={pendingGuard.avatar} name={pendingGuard.name} size="sm" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-brand-text">
-                                    {isMultiGuardJob(req) ? 'Independent guard request' : 'Approve your guard'}
-                                  </p>
-                                  <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
-                                    {isMultiGuardJob(req) ? (
-                                      <>
-                                        Guardr approved{' '}
-                                        <span className="font-medium text-brand-text">{pendingGuard.name}</span>{' '}
-                                        as an independent applicant. This is separate from any coordinated crew
-                                        forming for this job.
-                                      </>
-                                    ) : (
-                                      <>
-                                        Guardr approved{' '}
-                                        <span className="font-medium text-brand-text">{pendingGuard.name}</span>{' '}
-                                        for this job. Confirm to hire them, or decline to send the job back to the
-                                        applicant list.
-                                      </>
-                                    )}
-                                  </p>
-                                  <p className="text-xs text-brand-text-muted mt-1">
-                                    ★ {pendingGuard.rating.toFixed(1)} · {pendingGuard.jobsCompleted} jobs completed
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    setPendingGuardActionId(req.id);
-                                    try {
-                                      await onApprovePendingGuard(req.id);
-                                    } finally {
-                                      setPendingGuardActionId(null);
-                                    }
-                                  }}
-                                  disabled={pendingGuardActionId === req.id}
-                                  className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
-                                >
-                                  {pendingGuardActionId === req.id ? (
-                                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Confirming...</>
-                                  ) : (
-                                    <><CheckCircle2 className="w-3.5 h-3.5" /> Approve guard</>
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    setPendingGuardActionId(req.id);
-                                    try {
-                                      await onDenyPendingGuard(req.id);
-                                    } finally {
-                                      setPendingGuardActionId(null);
-                                    }
-                                  }}
-                                  disabled={pendingGuardActionId === req.id}
-                                  className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 text-red-400 border-red-500/40 disabled:opacity-50"
-                                >
-                                  <X className="w-3.5 h-3.5" /> Decline guard
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                          {isClientCashPaymentPendingApproval(req) && (
-                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                              <p className="text-sm font-semibold text-amber-300">Cash payment pending approval</p>
-                              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                                {clientPaymentStatusHint(req.paymentStatus, req.status, req)}
-                              </p>
-                            </div>
-                          )}
-                          {(canClientPayForJob(req, paymentGates) || canClientRequestCashPayment(req, paymentGates)) && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div>
-                                <p className="text-sm text-brand-primary font-semibold">Pay for this job</p>
-                                <p className="text-xs text-brand-text-muted mt-0.5">
-                                  {clientPaymentStatusHint(req.paymentStatus, req.status, req, paymentGates)} Total: ${req.estimatedPayout.toFixed(2)}.
-                                </p>
-                              </div>
-                              <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-                                {canClientPayForJob(req, paymentGates) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePayNow(req)}
-                                    disabled={payingJobId === req.id || cashRequestJobId === req.id}
-                                    className="app-button-primary !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
-                                  >
-                                    {payingJobId === req.id ? (
-                                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
-                                    ) : (
-                                      <><CreditCard className="w-3.5 h-3.5" /> Pay Now</>
-                                    )}
-                                  </button>
-                                )}
-                                {canClientRequestCashPayment(req, paymentGates) && onRequestCashPayment && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRequestCashPayment(req)}
-                                    disabled={payingJobId === req.id || cashRequestJobId === req.id}
-                                    className="app-button-outline !w-auto !h-9 !px-5 !text-xs gap-1.5 disabled:opacity-50"
-                                  >
-                                    {cashRequestJobId === req.id ? (
-                                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
-                                    ) : (
-                                      <><Banknote className="w-3.5 h-3.5" /> Pay in Cash</>
-                                    )}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          {(req.paymentStatus === 'paid' || req.paymentStatus === 'held' || req.paymentStatus === 'released') && (
-                            <p className="text-xs text-emerald-400/90 flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              {clientPaymentStatusLabel(req.paymentStatus, req)}
-                              {clientPaymentStatusHint(req.paymentStatus, req.status, req) ? ` — ${clientPaymentStatusHint(req.paymentStatus, req.status, req)}` : ''}
-                            </p>
-                          )}
-                          <p className="text-sm text-brand-text-muted">
-                            {fullCrewAwaitingClient && independentSlotsPending ? (
-                              <>You have independent guard requests and a full coordinated crew ready — approve guards individually or the full crew.</>
-                            ) : fullCrewAwaitingClient ? (
-                              <>A coordinated crew of {req.guardsNeeded} guards is ready for your approval.</>
-                            ) : independentSlotsPending ? (
-                              <>Independent guards are ready for your approval — confirm each one you want on this job.</>
-                            ) : awaitingClientGuard ? (
-                              <>Waiting for your approval on the independent guard Guardr recommended.</>
-                            ) : req.applicants.length === 0 ? (
-                              <>Guards can apply to this offer. Guardr staff will review applicants and send the best fit for your approval.</>
-                            ) : (
-                              <>
-                                <span className="font-medium text-brand-text">{req.applicants.length} guard{req.applicants.length === 1 ? '' : 's'} applied.</span>
-                                {' '}Staff will review applicants and send the best fit for your approval.
-                              </>
-                            )}
-                          </p>
-                        </div>
-                      )}
-      
-                      {req.status === 'accepted' && hiredGuard && (
-                        <div className="border-t border-brand-border pt-3 w-full space-y-2">
-                          <p className="text-sm text-brand-text-muted leading-relaxed">
-                            <span className="font-medium text-brand-text">{hiredGuard.name}</span> is assigned.
-                          </p>
-                          {onOpenJobChat && currentUser && onSendJobChatMessage && isJobChatEligible(req) && (
-                            <button
-                              type="button"
-                              onClick={() => onOpenJobChat(req.id)}
-                              className="app-button-outline !h-9 !text-xs w-full gap-1.5"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" /> Message guard
-                            </button>
-                          )}
-                        </div>
-                      )}
-      
-                      {req.status === 'in-progress' && hiredGuard && onOpenJobChat && currentUser && onSendJobChatMessage && (
-                        <button
-                          type="button"
-                          onClick={() => onOpenJobChat(req.id)}
-                          className="app-button-outline !h-9 !text-xs w-full gap-1.5"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" /> Message guard on shift
-                        </button>
-                      )}
-      
-                      {(req.status === 'completed' || req.status === 'closed') &&
-                        onOpenJobChat &&
-                        threadForRequest(jobChatThreads, req.id) && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenJobChat(req.id)}
-                            className="app-button-outline !h-9 !text-xs w-full gap-1.5"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" /> View job chat history
-                          </button>
-                        )}
-      
-                      {hasOvertime(req) && (
-                        <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                            <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>
-                            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                              Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end.
-                              {req.overtimeStatus === 'pending_guard' && ' Waiting for the guard to confirm overtime.'}
-                              {req.overtimeStatus === 'pending_client' && ` Additional charge: $${(req.overtimeAmount ?? 0).toFixed(2)} — approve to proceed.`}
-                              {isOvertimeDisputed(req) && (
-                                <>
-                                  {' Staff is reviewing your dispute.'}
-                                  {req.overtimeDisputeClaimedClockOutAt && (
-                                    <>
-                                      {' You claimed the guard left at '}
-                                      {new Date(req.overtimeDisputeClaimedClockOutAt).toLocaleString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                      })}
-                                      .
-                                    </>
-                                  )}
-                                </>
-                              )}
-                              {isOvertimeWaived(req) && ' Overtime charge was waived after your dispute.'}
-                              {req.overtimeStatus === 'awaiting_payment' && ` Approved charge: $${(req.overtimeAmount ?? 0).toFixed(2)}.`}
-                              {req.overtimeStatus === 'paid' && ` Overtime of $${(req.overtimeAmount ?? 0).toFixed(2)} has been paid.`}
-                            </p>
-                          </div>
-      
-                          {canClientApproveOvertime(req) && onApproveOvertime && (
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  setOvertimeApproveJobId(req.id);
-                                  try {
-                                    await onApproveOvertime(req.id);
-                                  } finally {
-                                    setOvertimeApproveJobId(null);
-                                  }
-                                }}
-                                disabled={overtimeApproveJobId === req.id || overtimeDisputingJobId === req.id}
-                                className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                              >
-                                {overtimeApproveJobId === req.id ? (
-                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                                ) : (
-                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Approve overtime ${(req.overtimeAmount ?? 0).toFixed(2)}</>
-                                )}
-                              </button>
-                              {onDisputeOvertime && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOvertimeDisputeJobId(req.id);
-                                    setOvertimeDisputeReason('');
-                                    setOvertimeDisputeClockOutLocal(toDatetimeLocal(req.endDate));
-                                  }}
-                                  disabled={overtimeApproveJobId === req.id || overtimeDisputingJobId === req.id}
-                                  className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                                >
-                                  Dispute charge
-                                </button>
-                              )}
-                            </div>
-                          )}
-      
-                          {isOvertimeCashPaymentPendingApproval(req) && (
-                            <p className="text-xs text-amber-400/90">
-                              Cash overtime payment pending staff approval.
-                            </p>
-                          )}
-      
-                          {hasUnpaidOvertime(req) && (
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              {canClientPayOvertimeStripe(req, paymentGates) && (
-                                <button
-                                  type="button"
-                                  onClick={() => handlePayOvertime(req)}
-                                  disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
-                                  className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                                >
-                                  {payingOvertimeJobId === req.id ? (
-                                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
-                                  ) : (
-                                    <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.overtimeAmount ?? 0).toFixed(2)} by card</>
-                                  )}
-                                </button>
-                              )}
-                              {canClientRequestOvertimeCash(req, paymentGates) && onRequestOvertimeCash && (
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    setOvertimeCashRequestJobId(req.id);
-                                    try {
-                                      await onRequestOvertimeCash(req.id);
-                                    } finally {
-                                      setOvertimeCashRequestJobId(null);
-                                    }
-                                  }}
-                                  disabled={payingOvertimeJobId === req.id || overtimeCashRequestJobId === req.id}
-                                  className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                                >
-                                  {overtimeCashRequestJobId === req.id ? (
-                                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
-                                  ) : (
-                                    <><Banknote className="w-3.5 h-3.5" /> Pay in cash</>
-                                  )}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {(req.scheduleChangeStatus === 'pending_client' ||
-                        req.scheduleChangeStatus === 'awaiting_payment' ||
-                        req.scheduleChangeStatus === 'pending_staff_billing') && (
-                        <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2.5">
-                            <p className="text-sm font-semibold text-sky-300">Schedule change</p>
-                            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                              {req.scheduleChangeStatus === 'pending_client' && req.pendingStartDate && req.pendingEndDate && (
-                                <>
-                                  Guardr proposed new times:{' '}
-                                  <span className="text-brand-text">
-                                    {formatShiftRange(req.pendingStartDate, req.pendingEndDate)}
-                                  </span>
-                                  {(req.scheduleChangeExtraAmount ?? 0) > 0
-                                    ? ` · additional $${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} if approved`
-                                    : ''}
-                                </>
-                              )}
-                              {req.scheduleChangeStatus === 'awaiting_payment' &&
-                                ` Approved extension: $${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} — pay to update the listing.`}
-                              {req.scheduleChangeStatus === 'pending_staff_billing' &&
-                                ' Approved — Guardr is confirming cash billing before guards are notified.'}
-                            </p>
-                          </div>
-
-                          {canClientApproveStaffScheduleChange(req) && onApproveScheduleChange && onRejectScheduleChange && (
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  setScheduleApproveJobId(req.id);
-                                  try {
-                                    await onApproveScheduleChange(req.id);
-                                  } finally {
-                                    setScheduleApproveJobId(null);
-                                  }
-                                }}
-                                disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
-                                className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                              >
-                                {scheduleApproveJobId === req.id ? (
-                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                                ) : (
-                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Approve new times</>
-                                )}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  setScheduleRejectJobId(req.id);
-                                  try {
-                                    await onRejectScheduleChange(req.id);
-                                  } finally {
-                                    setScheduleRejectJobId(null);
-                                  }
-                                }}
-                                disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
-                                className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
-                              >
-                                {scheduleRejectJobId === req.id ? (
-                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Declining...</>
-                                ) : (
-                                  'Decline'
-                                )}
-                              </button>
-                            </div>
-                          )}
-
-                          {canClientPayScheduleChangeExtension(req) && paymentGates.allowStripe && (
-                            <button
-                              type="button"
-                              onClick={() => handlePayScheduleExtension(req)}
-                              disabled={payingScheduleJobId === req.id}
-                              className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
-                            >
-                              {payingScheduleJobId === req.id ? (
-                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting checkout...</>
-                              ) : (
-                                <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} extension</>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-      
-                      {onConfirmSelfAudit && (
-                        <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
-                      )}
-      
-                      {onConfirmSpotCheck && (
-                        <ClientSpotCheckConfirm request={req} onConfirm={onConfirmSpotCheck} />
-                      )}
-      
-                      {req.status === 'in-progress' && hiredGuard && (
-                        <button type="button" onClick={() => onUpdateStatus(req.id, 'completed')} className="app-button-primary !h-9 !text-xs w-full">
-                          <Check className="w-3.5 h-3.5 inline" /> Complete job
-                        </button>
-                      )}
-      
-                      {req.status === 'completed' && hiredGuard && !req.ratingGiven && (
-                        <div className="border-t border-brand-border pt-3 w-full">
-                          <button
-                            type="button"
-                            onClick={() => setReviewingId(req.id)}
-                            className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
-                          >
-                            <Award className="w-3.5 h-3.5" /> Rate guard
-                          </button>
-                        </div>
-                      )}
-                      </div>
+      <div className="staff-detail-pane space-y-4">
+        <JobListingProfile
+          job={req}
+          showClientHeader={false}
+          showBadges={false}
+          operationalDetails={req.operationalDetails}
+          payLine={
+            <JobBillingSummaryFromRequest
+              req={req}
+              variant="client"
+              crewSettings={billingSettings}
+              hideCrewUpcostNotice
+            />
+          }
+        />
+        <ClientJobActionsPanel
+          request={req}
+          guards={guards}
+          clientEmail={clientEmail}
+          paymentGates={paymentGates}
+          crewSettings={billingSettings}
+          currentUser={currentUser}
+          jobChatThreads={jobChatThreads}
+          context="jobs"
+          onCancelRequest={onCancelRequest}
+          onRequestEdit={setEditingId}
+          onUpdateStatus={onUpdateStatus}
+          onAddReview={onAddReview}
+          onConfirmSelfAudit={onConfirmSelfAudit}
+          onConfirmSpotCheck={onConfirmSpotCheck}
+          onRequestCashPayment={onRequestCashPayment}
+          onApproveOvertime={onApproveOvertime}
+          onDisputeOvertime={onDisputeOvertime}
+          onRequestOvertimeCash={onRequestOvertimeCash}
+          onApproveScheduleChange={onApproveScheduleChange}
+          onRejectScheduleChange={onRejectScheduleChange}
+          onApprovePendingGuard={onApprovePendingGuard}
+          onDenyPendingGuard={onDenyPendingGuard}
+          onApproveTeamSlot={onApproveTeamSlot}
+          onDenyTeamSlot={onDenyTeamSlot}
+          onApproveFullTeam={onApproveFullTeam}
+          onDenyFullTeam={onDenyFullTeam}
+          onOpenJobChat={onOpenJobChat}
+        />
+      </div>
     );
   }
 
@@ -982,145 +347,6 @@ export function ClientRequestsList({
         onSave={onEditRequest}
         onClose={() => setEditingId(null)}
       />
-
-      <AppFormSheet
-        open={!!overtimeDisputeJobId}
-        onClose={() => {
-          if (overtimeDisputingJobId) return;
-          setOvertimeDisputeJobId(null);
-          setOvertimeDisputeReason('');
-          setOvertimeDisputeClockOutLocal('');
-        }}
-        title="Dispute late clock-out charge"
-        subtitle={undefined}
-      >
-        <div className="space-y-4">
-          {disputeRequest && (
-            <label className="block space-y-1.5">
-              <span className="text-xs font-medium text-brand-text-muted">
-                Guard&apos;s actual clock-out time
-              </span>
-              <input
-                type="datetime-local"
-                value={overtimeDisputeClockOutLocal}
-                min={toDatetimeLocal(disputeRequest.checkInAudit?.checkedAt ?? disputeRequest.startDate)}
-                max={toDatetimeLocal(
-                  disputeRequest.checkOutAudit?.checkedAt ?? new Date().toISOString()
-                )}
-                onChange={(e) => setOvertimeDisputeClockOutLocal(e.target.value)}
-                className="uber-input w-full"
-              />
-              <p className="text-xs text-brand-text-muted leading-relaxed">
-                Recorded clock-out:{' '}
-                {disputeRequest.checkOutAudit?.checkedAt
-                  ? new Date(disputeRequest.checkOutAudit.checkedAt).toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })
-                  : '—'}
-                . Your claim implies {disputeClaimedHours}h overtime (${disputeClaimedAmount.toFixed(2)}).
-              </p>
-            </label>
-          )}
-          <textarea
-            placeholder="e.g. The guard left at the scheduled end time, or the billed hours are incorrect..."
-            value={overtimeDisputeReason}
-            onChange={(e) => setOvertimeDisputeReason(e.target.value)}
-            className="uber-input w-full min-h-[120px] resize-y"
-            rows={4}
-          />
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
-              disabled={!!overtimeDisputingJobId}
-              onClick={() => {
-                setOvertimeDisputeJobId(null);
-                setOvertimeDisputeReason('');
-                setOvertimeDisputeClockOutLocal('');
-              }}
-              className="app-button-outline flex-1 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={
-                !overtimeDisputeReason.trim() ||
-                !overtimeDisputeClockOutLocal ||
-                !overtimeDisputeJobId ||
-                !onDisputeOvertime ||
-                !!overtimeDisputingJobId
-              }
-              onClick={async () => {
-                if (!overtimeDisputeJobId || !onDisputeOvertime || !disputeClockOutIso) return;
-                setOvertimeDisputingJobId(overtimeDisputeJobId);
-                try {
-                  await onDisputeOvertime(overtimeDisputeJobId, {
-                    reason: overtimeDisputeReason,
-                    claimedClockOutAt: disputeClockOutIso,
-                  });
-                  setOvertimeDisputeJobId(null);
-                  setOvertimeDisputeReason('');
-                  setOvertimeDisputeClockOutLocal('');
-                } finally {
-                  setOvertimeDisputingJobId(null);
-                }
-              }}
-              className="app-button-primary flex-1 disabled:opacity-50 gap-1.5"
-            >
-              {overtimeDisputingJobId ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting...</>
-              ) : (
-                'Submit dispute'
-              )}
-            </button>
-          </div>
-        </div>
-      </AppFormSheet>
-
-      <AppFormSheet
-        open={!!reviewingRequest}
-        onClose={() => setReviewingId(null)}
-        title="Rate guard"
-        subtitle={reviewingRequest ? `How was ${guards.find((g) => g.id === reviewingRequest.assignedGuardId)?.name ?? 'your guard'} on "${reviewingRequest.title}"?` : undefined}
-      >
-        {reviewingRequest && (
-          <div className="space-y-4">
-            <div className="flex gap-1 justify-center py-2">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button key={s} type="button" onClick={() => setReviewRating((p) => ({ ...p, [reviewingRequest.id]: s }))}>
-                  <Star
-                    className={`w-8 h-8 ${(reviewRating[reviewingRequest.id] || 0) >= s ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'}`}
-                  />
-                </button>
-              ))}
-            </div>
-            <textarea
-              placeholder="Optional review note..."
-              value={reviewNote[reviewingRequest.id] || ''}
-              onChange={(e) => setReviewNote((p) => ({ ...p, [reviewingRequest.id]: e.target.value }))}
-              className="uber-input w-full min-h-[100px] resize-y"
-              rows={3}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                onAddReview(
-                  reviewingRequest.id,
-                  reviewRating[reviewingRequest.id] || 5,
-                  reviewNote[reviewingRequest.id] || 'Good work.'
-                );
-                setReviewingId(null);
-              }}
-              className="app-button-primary w-full"
-            >
-              Submit review
-            </button>
-          </div>
-        )}
-      </AppFormSheet>
     </AppScreen>
   );
 }

@@ -7,9 +7,11 @@ import { MapRouteSummary } from '../../lib/mapRouting';
 import { ClientActiveShift } from './ClientActiveShift';
 import { clientVisibleMapJobs } from '../../lib/mapJobVisibility';
 import { MapJobsBrowseSheet } from '../map/MapJobsBrowseSheet';
-import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest } from '../../lib/clientShift';
+import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob } from '../../lib/clientShift';
+import { ClientJobActionsPanel } from './ClientJobActionsPanel';
+import type { ClientJobActionsBindings } from './clientJobActionsTypes';
 
-interface ClientMapScreenProps {
+interface ClientMapScreenProps extends ClientJobActionsBindings {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   currentUser?: SessionUser;
@@ -27,6 +29,7 @@ export function ClientMapScreen({
   onOpenJobChat,
   initialLiveJobId = null,
   onLiveJobIdChange,
+  ...jobActions
 }: ClientMapScreenProps) {
   const liveJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
   const primaryLiveJob = useMemo(() => getPrimaryClientLiveJob(requests), [requests]);
@@ -45,7 +48,7 @@ export function ClientMapScreen({
   }, [liveJobs, selectedLiveJobId, primaryLiveJob]);
 
   const activeGuard = activeLiveJob ? guardForRequest(guards, activeLiveJob) : null;
-  const showShiftOverlay = !!activeLiveJob && !!activeGuard && activeLiveJob.status === 'in-progress';
+  const showShiftOverlay = !!activeLiveJob && !!activeGuard && isClientLiveJob(activeLiveJob);
 
   const mapJobs = useMemo(() => {
     if (!currentUser) return [];
@@ -69,6 +72,13 @@ export function ClientMapScreen({
   const switchLiveJob = (requestId: string) => {
     setSelectedLiveJobId(requestId);
     onLiveJobIdChange?.(requestId);
+  };
+
+  const mapActionProps = {
+    ...jobActions,
+    guards,
+    currentUser,
+    onOpenJobChat,
   };
 
   return (
@@ -103,6 +113,7 @@ export function ClientMapScreen({
           }
           onOpenCoverage={onOpenCoverage}
           onSwitchJob={liveJobs.length > 1 ? switchLiveJob : undefined}
+          jobActions={mapActionProps}
         />
       )}
 
@@ -114,6 +125,15 @@ export function ClientMapScreen({
           loadingRoute={routeLoading}
           onClose={() => setSelectedOfferId(null)}
           bottomOffsetClass="client-map-offer-offset"
+          clientActions={
+            selectedOffer && currentUser ? (
+              <ClientJobActionsPanel
+                request={selectedOffer}
+                context="map"
+                {...mapActionProps}
+              />
+            ) : null
+          }
         />
       )}
 
