@@ -837,6 +837,18 @@ export interface JobChatMessage {
   createdAt: string;
 }
 
+export interface TeamChatThread {
+  id: string;
+  requestId: string;
+  teamLeadId: string;
+  status: JobChatThreadStatus;
+  createdAt: string;
+  archivedAt?: string;
+}
+
+/** Crew chat message — same shape as job chat messages. */
+export type TeamChatMessage = JobChatMessage;
+
 export interface StaffMessage {
   id: string;
   senderId: string;

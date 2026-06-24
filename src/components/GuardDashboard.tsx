@@ -11,6 +11,8 @@ import {
   JobChatThread,
   JobChatMessage,
   GuardMessage,
+  TeamChatThread,
+  TeamChatMessage,
 } from '../types';
 import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
@@ -111,7 +113,10 @@ interface GuardDashboardProps {
   onSendSupportMessage?: (ticketId: string, body: string) => void | Promise<void>;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
+  teamChatThreads?: TeamChatThread[];
+  teamChatMessages?: TeamChatMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   guardMessages?: GuardMessage[];
   onSendGuardMessage?: (body: string) => void | Promise<void>;
   onRefreshGuardMessages?: () => void | Promise<void>;
@@ -189,7 +194,10 @@ export function GuardDashboard({
   onSendSupportMessage,
   jobChatThreads = [],
   jobChatMessages = [],
+  teamChatThreads = [],
+  teamChatMessages = [],
   onSendJobChatMessage,
+  onSendTeamChatMessage,
   guardMessages = [],
   onSendGuardMessage,
   onRefreshGuardMessages,
@@ -339,6 +347,19 @@ export function GuardDashboard({
       setTab('messages');
     }
   }, [tab, openJobChat, jobChatRequestId, setTab]);
+
+  const [teamChatRequestId, setTeamChatRequestId] = useState<string | null>(null);
+
+  const openMessagesForTeam = useCallback(
+    (requestId: string) => {
+      setTab('messages');
+      setTeamChatRequestId(requestId);
+      onJobChatOpenChange?.(false);
+      onJobChatRequestIdChange?.(null);
+      onSupportTicketIdChange?.(null);
+    },
+    [setTab, onJobChatOpenChange, onJobChatRequestIdChange, onSupportTicketIdChange]
+  );
 
   const openMessagesForJob = useCallback(
     (requestId: string) => {
@@ -729,6 +750,7 @@ export function GuardDashboard({
           onInviteTeamGuard={onInviteTeamGuard}
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
+          onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
         />
       )}
 
@@ -798,14 +820,18 @@ export function GuardDashboard({
                   currentUser={currentUser}
                   jobChatThreads={jobChatThreads}
                   jobChatMessages={jobChatMessages}
+                  teamChatThreads={teamChatThreads}
+                  teamChatMessages={teamChatMessages}
                   guardMessages={guardMessages}
                   supportTickets={supportTickets}
                   onSendJobChatMessage={onSendJobChatMessage}
+                  onSendTeamChatMessage={onSendTeamChatMessage}
                   onSendGuardMessage={onSendGuardMessage}
                   onSendSupportMessage={onSendSupportMessage}
                   onRefreshGuardMessages={onRefreshGuardMessages}
                   initialJobChatRequestId={jobChatRequestId}
                   initialJobChatOpen={openJobChat}
+                  initialTeamChatRequestId={teamChatRequestId}
                   onJobChatRequestIdChange={onJobChatRequestIdChange}
                   onJobChatOpenChange={onJobChatOpenChange}
                   initialSupportTicketId={supportTicketId}

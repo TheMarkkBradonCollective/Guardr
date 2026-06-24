@@ -8,8 +8,11 @@ import {
   StaffMessage,
   SupportTicket,
   SupportTicketStatus,
+  TeamChatMessage,
+  TeamChatThread,
 } from '../../types';
 import { threadForRequest } from '../../lib/jobChat';
+import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
 import {
   SUPPORT_STATUS_LABEL,
@@ -19,6 +22,7 @@ import {
 import { ROLE_LABELS, canDeleteResolvedSupportChat } from '../../lib/permissions';
 import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
+import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { AppChatHeader, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
@@ -36,6 +40,7 @@ import {
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
   | { kind: 'job'; requestId: string }
+  | { kind: 'team'; requestId: string }
   | { kind: 'support'; ticketId: string };
 
 type InboxTab = 'team' | 'jobs' | 'support';
@@ -45,10 +50,13 @@ interface StaffMessagesPanelProps {
   guards: SecurityGuard[];
   threads: JobChatThread[];
   messages: JobChatMessage[];
+  teamChatThreads?: TeamChatThread[];
+  teamChatMessages?: TeamChatMessage[];
   staffMessages: StaffMessage[];
   supportTickets: SupportTicket[];
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
+  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendStaffMessage: (body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
@@ -76,10 +84,13 @@ export function StaffMessagesPanel({
   guards,
   threads,
   messages,
+  teamChatThreads = [],
+  teamChatMessages = [],
   staffMessages,
   supportTickets,
   currentUser,
   onSendJobChat,
+  onSendTeamChatMessage,
   onSendStaffMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
@@ -116,13 +127,18 @@ export function StaffMessagesPanel({
         guards,
         jobChatThreads: threads,
         jobChatMessages: messages,
+        teamChatThreads,
+        teamChatMessages,
         supportTickets,
         staffMessagesUpdatedAt: staffUpdatedAt,
       }),
-    [requests, guards, threads, messages, supportTickets, staffUpdatedAt]
+    [requests, guards, threads, messages, teamChatThreads, teamChatMessages, supportTickets, staffUpdatedAt]
   );
 
-  const teamRows    = useMemo(() => allRows.filter((r) => r.channel === 'staff-community'), [allRows]);
+  const teamRows = useMemo(
+    () => allRows.filter((r) => r.channel === 'staff-community' || r.channel === 'team-crew'),
+    [allRows]
+  );
   const jobRows     = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
   const supportRowsAll = useMemo(
     () => allRows.filter((r) => r.channel === 'support' || r.channel === 'report'),
@@ -140,6 +156,12 @@ export function StaffMessagesPanel({
   const selectRow = (row: InboxRow) => {
     if (row.channel === 'staff-community') {
       setSelection({ kind: 'staff-channel' });
+      onSelectedJobChatRequestIdChange?.(null);
+      onSelectedSupportTicketIdChange?.(null);
+      return;
+    }
+    if (row.requestId && row.channel === 'team-crew') {
+      setSelection({ kind: 'team', requestId: row.requestId });
       onSelectedJobChatRequestIdChange?.(null);
       onSelectedSupportTicketIdChange?.(null);
       return;
@@ -181,6 +203,7 @@ export function StaffMessagesPanel({
 
   const isRowSelected = (row: InboxRow) => {
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
+    if (row.requestId && row.channel === 'team-crew' && effectiveSelection?.kind === 'team' && effectiveSelection.requestId === row.requestId) return true;
     if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
     if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) return true;
     return false;
@@ -191,12 +214,12 @@ export function StaffMessagesPanel({
     <div>
       <div className="app-messages-hub-lead">
         <h2 className="text-base font-bold tracking-tight">Messages</h2>
-        <p>Staff, job chats, and support sorted by recent activity</p>
+        <p>Staff channel, crew team chats, job threads, and support</p>
       </div>
       <div className="app-inbox-tabs" role="tablist">
         {(
           [
-            { id: 'team'    as InboxTab, label: 'Team',    count: 1,                    icon: <Users      className="w-3.5 h-3.5" strokeWidth={2} /> },
+            { id: 'team'    as InboxTab, label: 'Team',    count: teamRows.length,     icon: <Users      className="w-3.5 h-3.5" strokeWidth={2} /> },
             { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,        icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
             { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy   className="w-3.5 h-3.5" strokeWidth={2} /> },
           ] as const
@@ -227,14 +250,14 @@ export function StaffMessagesPanel({
         <div className="app-inbox-tab-empty">
           <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
           <p className="app-inbox-tab-empty-title">
-            {activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'Team channel'}
+            {activeTab === 'jobs' ? 'No job chats' : activeTab === 'support' ? 'No support tickets' : 'No team conversations'}
           </p>
           <p className="app-inbox-tab-empty-hint">
             {activeTab === 'jobs'
               ? 'Job chats appear here when a guard is assigned to a booking.'
               : activeTab === 'support'
               ? 'Support and report tickets from users will appear here.'
-              : 'The staff team channel will appear here.'}
+              : 'Staff chat and multi-guard crew chats appear here.'}
           </p>
         </div>
       ) : (
@@ -250,10 +273,14 @@ export function StaffMessagesPanel({
               leading={
                 row.channel === 'staff-community' ? (
                   <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'team-crew' ? (
+                  <Users className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'report' ? (
                   <FileText className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'support' ? (
                   <LifeBuoy className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'job' ? (
+                  <Briefcase className="w-5 h-5 text-brand-primary" />
                 ) : undefined
               }
               badges={row.badge ? <WfBadge tone={row.badgeTone ?? 'default'}>{row.badge}</WfBadge> : undefined}
@@ -301,6 +328,22 @@ export function StaffMessagesPanel({
           messages={messages}
           currentUser={currentUser}
           onSend={(body) => onSendJobChat(request.id, body)}
+          onBack={clearSelection}
+          hideBackOnDesktop
+        />
+      );
+    }
+
+    if (effectiveSelection.kind === 'team' && onSendTeamChatMessage) {
+      const request = requests.find((r) => r.id === effectiveSelection.requestId);
+      if (!request) return null;
+      return (
+        <TeamChatPanel
+          request={request}
+          thread={threadForTeamRequest(teamChatThreads, request.id) ?? null}
+          messages={teamChatMessages}
+          currentUser={currentUser}
+          onSend={(body) => onSendTeamChatMessage(request.id, body)}
           onBack={clearSelection}
           hideBackOnDesktop
         />
@@ -399,7 +442,7 @@ export function StaffMessagesPanel({
       detail={detailView ?? <div />}
       hasSelection={hasSelection && !!detailView}
       emptyDetailTitle="Select a conversation"
-      emptyDetailHint="Staff, job, and support chats sorted by activity"
+      emptyDetailHint="Staff channel, crew chats, job threads, and support"
     />
   );
 }

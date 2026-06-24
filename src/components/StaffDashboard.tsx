@@ -16,6 +16,8 @@ import {
   JobChatThread,
   JobChatMessage,
   StaffMessage,
+  TeamChatThread,
+  TeamChatMessage,
 } from '../types';
 import {
   canAccessFinancialControls,
@@ -87,6 +89,8 @@ interface StaffDashboardProps {
   supportTickets?: SupportTicket[];
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
+  teamChatThreads?: TeamChatThread[];
+  teamChatMessages?: TeamChatMessage[];
   staffMessages?: StaffMessage[];
   payments?: Payment[];
   guardPayoutInvoices?: GuardPayoutInvoice[];
@@ -195,6 +199,7 @@ interface StaffDashboardProps {
   onSendStaffMessage?: (body: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
+  onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onCreateSupportTicket?: (input: CreateSupportTicketInput) => void | Promise<string | void>;
   initialSection?: StaffSection;
   /** Controlled section — when set, parent owns navigation state (URL sync). */
@@ -228,6 +233,8 @@ export function StaffDashboard({
   supportTickets = [],
   jobChatThreads = [],
   jobChatMessages = [],
+  teamChatThreads = [],
+  teamChatMessages = [],
   staffMessages = [],
   payments = [],
   guardPayoutInvoices = [],
@@ -299,6 +306,7 @@ export function StaffDashboard({
   onSendStaffMessage,
   onRefreshStaffMessages,
   onSendJobChat,
+  onSendTeamChatMessage,
   initialSection = 'overview',
   section: controlledSection,
   onSectionChange,
@@ -590,17 +598,20 @@ export function StaffDashboard({
       case 'support':
       case 'team-chat':
       case 'job-chats':
-        return onSendStaffMessage && onSendJobChat && onSendSupportMessage && onUpdateSupportStatus ? (
+        return onSendStaffMessage && onSendJobChat && onSendTeamChatMessage && onSendSupportMessage && onUpdateSupportStatus ? (
           <div className="app-messages-hub h-full min-h-0">
             <StaffMessagesPanel
               requests={requests}
               guards={guards}
               threads={jobChatThreads}
               messages={jobChatMessages}
+              teamChatThreads={teamChatThreads}
+              teamChatMessages={teamChatMessages}
               staffMessages={staffMessages}
               supportTickets={supportTickets}
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
+              onSendTeamChatMessage={onSendTeamChatMessage}
               onSendStaffMessage={onSendStaffMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}

@@ -5,12 +5,16 @@ import {
   SecurityRequest,
   SessionUser,
   SupportTicket,
+  TeamChatMessage,
+  TeamChatThread,
 } from '../types';
 import { guardForRequest } from './clientShift';
 import { isJobChatEligible, isJobChatReadOnly, threadForRequest, threadsForClient } from './jobChat';
+import { isTeamChatEligible, isTeamChatReadOnly, threadForTeamRequest } from './teamChat';
+import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from './guardTeams';
 import { supportStatusLabel, ticketsForUser } from './support';
 
-export type InboxChannelKind = 'job' | 'support' | 'report' | 'guard-community' | 'staff-community';
+export type InboxChannelKind = 'job' | 'team-crew' | 'support' | 'report' | 'guard-community' | 'staff-community';
 
 export type InboxRow = {
   id: string;
@@ -29,11 +33,16 @@ export function sortInboxRows(rows: InboxRow[]): InboxRow[] {
   return [...rows].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
-function lastJobMessage(messages: JobChatMessage[], threadId: string): JobChatMessage | null {
+function lastThreadMessage(messages: JobChatMessage[], threadId: string): JobChatMessage | null {
   const threadMessages = messages
     .filter((m) => m.threadId === threadId)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return threadMessages[0] ?? null;
+}
+
+/** @deprecated use lastThreadMessage */
+function lastJobMessage(messages: JobChatMessage[], threadId: string): JobChatMessage | null {
+  return lastThreadMessage(messages, threadId);
 }
 
 export function buildClientInboxRows({
@@ -188,11 +197,55 @@ export function buildGuardSupportInboxRows({
   );
 }
 
+export function buildGuardTeamInboxRows({
+  jobs,
+  guardId,
+  teamChatThreads,
+  teamChatMessages,
+}: {
+  jobs: Pick<
+    SecurityRequest,
+    'id' | 'title' | 'siteName' | 'location' | 'status' | 'startDate' | 'guardsNeeded' | 'guardSlots' | 'teamLeadId'
+  >[];
+  guardId: string;
+  teamChatThreads: TeamChatThread[];
+  teamChatMessages: TeamChatMessage[];
+}): InboxRow[] {
+  const rows: InboxRow[] = [];
+
+  for (const job of jobs) {
+    if (!isMultiGuardJob(job)) continue;
+    if (!guardHasJobTeamAssociation(job.guardSlots, guardId)) continue;
+    const eligible = isTeamChatEligible(job);
+    const readOnly = isTeamChatReadOnly(job);
+    if (!eligible && !readOnly) continue;
+
+    const thread = threadForTeamRequest(teamChatThreads, job.id);
+    const lastMessage = thread ? lastThreadMessage(teamChatMessages, thread.id) : null;
+    const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
+    rows.push({
+      id: `team-${job.id}`,
+      channel: 'team-crew',
+      title: job.title,
+      subtitle: `${job.siteName || job.location} · ${summary.filled}/${summary.total} crew`,
+      preview: lastMessage?.body ?? (eligible ? 'Coordinate with your crew' : 'View team chat history'),
+      updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
+      badge: eligible ? 'Team' : readOnly ? 'Archived' : 'Active',
+      badgeTone: eligible ? 'primary' : readOnly ? 'default' : 'success',
+      requestId: job.id,
+    });
+  }
+
+  return rows;
+}
+
 export function buildStaffInboxRows({
   requests,
   guards,
   jobChatThreads,
   jobChatMessages,
+  teamChatThreads = [],
+  teamChatMessages = [],
   supportTickets,
   staffMessagesUpdatedAt,
 }: {
@@ -200,6 +253,8 @@ export function buildStaffInboxRows({
   guards: SecurityGuard[];
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
+  teamChatThreads?: TeamChatThread[];
+  teamChatMessages?: TeamChatMessage[];
   supportTickets: SupportTicket[];
   staffMessagesUpdatedAt?: string;
 }): InboxRow[] {
@@ -237,6 +292,33 @@ export function buildStaffInboxRows({
       preview: lastMessage?.body ?? (count > 0 ? `${count} messages` : archived ? 'Archived job chat' : 'Live job chat'),
       updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
       badge: archived ? 'Archived' : 'Live',
+      badgeTone: archived ? 'default' : 'primary',
+      requestId: job.id,
+    });
+  }
+
+  const multiGuardJobs = requests.filter(
+    (r) =>
+      isMultiGuardJob(r) &&
+      (r.teamLeadId || (r.guardSlots ?? []).some((s) => s.guardId && s.status !== 'open')) &&
+      (r.status === 'open' || r.status === 'accepted' || r.status === 'in-progress' || r.status === 'completed' || r.status === 'closed')
+  );
+
+  for (const job of multiGuardJobs) {
+    const thread = threadForTeamRequest(teamChatThreads, job.id);
+    if (!thread && job.status !== 'accepted' && job.status !== 'in-progress' && job.status !== 'open') continue;
+    const archived = job.status === 'completed' || job.status === 'closed';
+    const lastMessage = thread ? lastThreadMessage(teamChatMessages, thread.id) : null;
+    const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
+    const count = thread ? teamChatMessages.filter((m) => m.threadId === thread.id).length : 0;
+    rows.push({
+      id: `team-${job.id}`,
+      channel: 'team-crew',
+      title: `${job.title} · Crew chat`,
+      subtitle: `${job.clientName} · ${summary.filled}/${summary.total} guards`,
+      preview: lastMessage?.body ?? (count > 0 ? `${count} messages` : archived ? 'Archived crew chat' : 'Live crew chat'),
+      updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
+      badge: archived ? 'Archived' : 'Crew',
       badgeTone: archived ? 'default' : 'primary',
       requestId: job.id,
     });

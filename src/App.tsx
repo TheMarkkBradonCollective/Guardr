@@ -22,6 +22,8 @@ import {
   StaffRole,
   JobChatThread,
   JobChatMessage,
+  TeamChatThread,
+  TeamChatMessage,
   StaffMessage,
   GuardMessage,
 } from './types';
@@ -190,6 +192,15 @@ import {
   saveJobChatThreadsToStorage,
   threadForRequest,
 } from './lib/jobChat';
+import {
+  buildTeamChatMessage,
+  buildTeamChatThread,
+  loadTeamChatMessagesFromStorage,
+  loadTeamChatThreadsFromStorage,
+  saveTeamChatMessagesToStorage,
+  saveTeamChatThreadsToStorage,
+  threadForTeamRequest,
+} from './lib/teamChat';
 import { clientMessagesBadge } from './lib/messagesInbox';
 import {
   buildGuardMessage,
@@ -357,6 +368,8 @@ export default function App() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
   const [jobChatThreads, setJobChatThreads] = useState<JobChatThread[]>(() => loadJobChatThreadsFromStorage());
   const [jobChatMessages, setJobChatMessages] = useState<JobChatMessage[]>(() => loadJobChatMessagesFromStorage());
+  const [teamChatThreads, setTeamChatThreads] = useState<TeamChatThread[]>(() => loadTeamChatThreadsFromStorage());
+  const [teamChatMessages, setTeamChatMessages] = useState<TeamChatMessage[]>(() => loadTeamChatMessagesFromStorage());
   const [staffMessages, setStaffMessages] = useState<StaffMessage[]>(() => loadStaffMessagesFromStorage());
   const [guardMessages, setGuardMessages] = useState<GuardMessage[]>(() => loadGuardMessagesFromStorage());
   const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
@@ -1238,6 +1251,8 @@ export default function App() {
       const { data: dbSupportMessages, error: supportMessagesErr } = await supabase.from('support_messages').select('*');
       const { data: dbJobChatThreads, error: jobChatThreadsErr } = await supabase.from('job_chat_threads').select('*');
       const { data: dbJobChatMessages, error: jobChatMessagesErr } = await supabase.from('job_chat_messages').select('*');
+      const { data: dbTeamChatThreads, error: teamChatThreadsErr } = await supabase.from('team_chat_threads').select('*');
+      const { data: dbTeamChatMessages, error: teamChatMessagesErr } = await supabase.from('team_chat_messages').select('*');
       const { data: dbStaffMessages, error: staffMessagesErr } = await supabase.from('staff_messages').select('*');
       const { data: dbGuardMessages, error: guardMessagesErr } = await supabase.from('guard_messages').select('*');
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
@@ -1255,6 +1270,12 @@ export default function App() {
       }
       if (jobChatThreadsErr || jobChatMessagesErr) {
         console.warn('Job chat tables load (run migration if missing):', jobChatThreadsErr ?? jobChatMessagesErr);
+      }
+      if (teamChatThreadsErr && teamChatThreadsErr.code !== '42P01') {
+        console.warn('Team chat threads load (run migration if missing):', teamChatThreadsErr);
+      }
+      if (teamChatMessagesErr && teamChatMessagesErr.code !== '42P01') {
+        console.warn('Team chat messages load (run migration if missing):', teamChatMessagesErr);
       }
       if (staffMessagesErr) {
         console.warn('Staff messages load (run migration if missing):', staffMessagesErr);
@@ -1593,6 +1614,33 @@ export default function App() {
         saveJobChatMessagesToStorage(mappedMessages);
       }
 
+      if (!teamChatThreadsErr && dbTeamChatThreads != null) {
+        const mappedTeamThreads = dbTeamChatThreads.map((t: any) => ({
+          id: t.id,
+          requestId: t.request_id,
+          teamLeadId: t.team_lead_id ?? '',
+          status: t.status,
+          createdAt: t.created_at,
+          archivedAt: t.archived_at ?? undefined,
+        }));
+        setTeamChatThreads(mappedTeamThreads);
+        saveTeamChatThreadsToStorage(mappedTeamThreads);
+      }
+
+      if (!teamChatMessagesErr && dbTeamChatMessages != null) {
+        const mappedTeamMessages = dbTeamChatMessages.map((m: any) => ({
+          id: m.id,
+          threadId: m.thread_id,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderRole: m.sender_role,
+          body: m.body,
+          createdAt: m.created_at,
+        }));
+        setTeamChatMessages(mappedTeamMessages);
+        saveTeamChatMessagesToStorage(mappedTeamMessages);
+      }
+
       if (!staffMessagesErr && dbStaffMessages != null) {
         const mappedStaffMessages = dbStaffMessages.map((m: any) => ({
           id: m.id,
@@ -1826,6 +1874,19 @@ export default function App() {
           isNew = true;
           const next = [...prev, message];
           saveJobChatMessagesToStorage(next);
+          return next;
+        });
+        if (isNew && !fromSelf) void playWalkieChirpSound();
+      },
+      onTeamChatMessage: (message) => {
+        if (shouldSkipRealtimeSync()) return;
+        const fromSelf = message.senderId === currentUser?.id;
+        let isNew = false;
+        setTeamChatMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          isNew = true;
+          const next = [...prev, message];
+          saveTeamChatMessagesToStorage(next);
           return next;
         });
         if (isNew && !fromSelf) void playWalkieChirpSound();
@@ -5363,6 +5424,7 @@ export default function App() {
       }
     }
     await ensureJobChatThread({ ...acceptedJob, status: 'accepted', assignedGuardId: leadId });
+    await ensureTeamChatThread(acceptedJob);
     appToast('Full team confirmed — job is locked in.', 'success');
   };
 
@@ -5376,6 +5438,9 @@ export default function App() {
     }
     const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
     const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (isMultiGuardJob(nextJob)) {
+      await ensureTeamChatThread(nextJob);
+    }
     if (currentUser) {
       if (skipStaff) {
         void reportPushEvent(currentUser, {
@@ -6098,6 +6163,7 @@ export default function App() {
 
     if (payload.status === 'completed') {
       await archiveJobChatThread(requestId);
+      await archiveTeamChatThread(requestId);
     }
   };
 
@@ -6732,6 +6798,130 @@ export default function App() {
     }
   };
 
+  const persistTeamChatThreadToDb = async (thread: TeamChatThread) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('team_chat_threads').upsert({
+        id: thread.id,
+        request_id: thread.requestId,
+        team_lead_id: thread.teamLeadId || null,
+        status: thread.status,
+        created_at: thread.createdAt,
+        archived_at: thread.archivedAt ?? null,
+      });
+    } catch (e) {
+      console.warn('Team chat thread DB sync:', e);
+    }
+  };
+
+  const persistTeamChatMessageToDb = async (message: TeamChatMessage) => {
+    if (!isDbConnected) return;
+    try {
+      await supabase.from('team_chat_messages').upsert({
+        id: message.id,
+        thread_id: message.threadId,
+        sender_id: message.senderId,
+        sender_name: message.senderName,
+        sender_role: message.senderRole,
+        body: message.body,
+        created_at: message.createdAt,
+      });
+    } catch (e) {
+      console.warn('Team chat message DB sync:', e);
+    }
+  };
+
+  const ensureTeamChatThread = async (req: SecurityRequest) => {
+    if (!isMultiGuardJob(req)) return null;
+    if (!req.teamLeadId && !(req.guardSlots ?? []).some((s) => s.guardId && s.status !== 'open')) {
+      return null;
+    }
+    const existing = threadForTeamRequest(teamChatThreads, req.id);
+    if (existing) return existing;
+
+    const thread = buildTeamChatThread(req);
+    setTeamChatThreads((prev) => {
+      const next = [thread, ...prev.filter((t) => t.requestId !== req.id)];
+      saveTeamChatThreadsToStorage(next);
+      return next;
+    });
+    await persistTeamChatThreadToDb(thread);
+    return thread;
+  };
+
+  const archiveTeamChatThread = async (requestId: string) => {
+    const now = new Date().toISOString();
+    setTeamChatThreads((prev) => {
+      const next = prev.map((t) =>
+        t.requestId === requestId && t.status === 'active'
+          ? { ...t, status: 'archived' as const, archivedAt: now }
+          : t
+      );
+      saveTeamChatThreadsToStorage(next);
+      return next;
+    });
+    if (isDbConnected) {
+      try {
+        await supabase
+          .from('team_chat_threads')
+          .update({ status: 'archived', archived_at: now })
+          .eq('request_id', requestId);
+      } catch (e) {
+        console.warn('Team chat archive DB sync:', e);
+      }
+    }
+  };
+
+  const notifyTeamChatParticipants = async (
+    req: SecurityRequest,
+    sender: SessionUser,
+    body: string
+  ) => {
+    if (!currentUser) return;
+    const crewIds = new Set(
+      (req.guardSlots ?? [])
+        .map((s) => s.guardId)
+        .filter((id): id is string => !!id && id !== sender.id)
+    );
+    for (const guardId of crewIds) {
+      void reportPushEvent(currentUser, {
+        type: 'job_chat_message',
+        recipientUserId: guardId,
+        requestId: req.id,
+        body: `${sender.name} in crew chat (${req.title}): ${body.slice(0, 100)}`,
+      });
+    }
+    if (!isStaffRole(sender.role)) {
+      void reportPushEvent(currentUser, {
+        type: 'job_chat_message',
+        requestId: req.id,
+        body: `${sender.name} in crew chat for "${req.title}": ${body.slice(0, 100)}`,
+      });
+    }
+  };
+
+  const handleSendTeamChatMessage = async (requestId: string, body: string) => {
+    if (!currentUser || !body.trim()) return;
+    const req = requests.find((r) => r.id === requestId);
+    if (!req) return;
+
+    let thread = threadForTeamRequest(teamChatThreads, requestId);
+    if (!thread) {
+      thread = (await ensureTeamChatThread(req)) ?? undefined;
+    }
+    if (!thread) return;
+
+    const message = buildTeamChatMessage(thread, currentUser, body);
+    beginLocalMutation();
+    setTeamChatMessages((prev) => {
+      const next = [...prev, message];
+      saveTeamChatMessagesToStorage(next);
+      return next;
+    });
+    await persistTeamChatMessageToDb(message);
+    await notifyTeamChatParticipants(req, currentUser, body.trim());
+  };
+
   const notifyJobChatParticipants = async (
     req: SecurityRequest,
     sender: SessionUser,
@@ -7164,6 +7354,9 @@ export default function App() {
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
           onSendJobChatMessage={handleSendJobChatMessage}
+          teamChatThreads={teamChatThreads}
+          teamChatMessages={teamChatMessages}
+          onSendTeamChatMessage={handleSendTeamChatMessage}
           guardMessages={guardMessages}
           onSendGuardMessage={handleSendGuardMessage}
           onRefreshGuardMessages={refreshGuardMessages}
@@ -7437,10 +7630,13 @@ export default function App() {
           onResolveDispute={handleResolveDispute}
           jobChatThreads={jobChatThreads}
           jobChatMessages={jobChatMessages}
+          teamChatThreads={teamChatThreads}
+          teamChatMessages={teamChatMessages}
           staffMessages={staffMessages}
           onSendStaffMessage={handleSendStaffMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
+          onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
         />
         {passwordChangeOverlay}

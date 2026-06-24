@@ -20,6 +20,7 @@ interface GuardJobsPanelContentProps {
   onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
+  onOpenTeamChat?: (jobId: string) => void;
 }
 
 function CategoryFilters({
@@ -67,6 +68,7 @@ export function GuardJobsPanelContent({
   onInviteTeamGuard,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
+  onOpenTeamChat,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
     return (
@@ -115,6 +117,9 @@ export function GuardJobsPanelContent({
           onDeclineTeamInvite && selectedJob.status === 'open'
             ? () => void onDeclineTeamInvite(selectedJob.id)
             : undefined
+        }
+        onOpenTeamChat={
+          onOpenTeamChat ? () => onOpenTeamChat(selectedJob.id) : undefined
         }
       />
     );

@@ -16,6 +16,7 @@ interface GuardTeamPanelProps {
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
+  onOpenTeamChat?: () => void;
 }
 
 export function GuardTeamPanel({
@@ -27,6 +28,7 @@ export function GuardTeamPanel({
   onInviteGuard,
   onAcceptInvite,
   onDeclineInvite,
+  onOpenTeamChat,
 }: GuardTeamPanelProps) {
   const [inviteGuardId, setInviteGuardId] = useState('');
   const multi = isMultiGuardJob(job);
@@ -77,6 +79,12 @@ export function GuardTeamPanel({
 
       {isLead && (
         <WfBadge tone="primary">You are the team lead</WfBadge>
+      )}
+
+      {onTeam && onOpenTeamChat && job.status !== 'closed' && (
+        <button type="button" onClick={onOpenTeamChat} className="app-button-outline w-full py-2.5 text-sm">
+          Open team chat
+        </button>
       )}
 
       {myInvite && onAcceptInvite && onDeclineInvite && (

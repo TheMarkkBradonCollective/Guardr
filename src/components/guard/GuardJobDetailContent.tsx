@@ -27,6 +27,7 @@ interface GuardJobDetailContentProps {
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
+  onOpenTeamChat?: () => void;
   onClose?: () => void;
 }
 
@@ -41,6 +42,7 @@ export function GuardJobDetailContent({
   onInviteGuard,
   onAcceptInvite,
   onDeclineInvite,
+  onOpenTeamChat,
   onClose,
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
@@ -136,6 +138,7 @@ export function GuardJobDetailContent({
                   onInviteGuard={onInviteGuard}
                   onAcceptInvite={onAcceptInvite}
                   onDeclineInvite={onDeclineInvite}
+                  onOpenTeamChat={onOpenTeamChat}
                 />
               )}
 
