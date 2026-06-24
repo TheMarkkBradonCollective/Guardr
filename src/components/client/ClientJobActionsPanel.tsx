@@ -94,6 +94,7 @@ export interface ClientJobActionsPanelProps {
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   onOpenJobChat?: (requestId: string) => void;
+  onEditRequest?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
 }
 
 export function ClientJobActionsPanel({

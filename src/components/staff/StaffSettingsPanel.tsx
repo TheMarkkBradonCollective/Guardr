@@ -497,10 +497,12 @@ export function StaffSettingsPanel({
       <AppFormSection title="Approval rules">
         <div className="pb-6">
           <label className="uber-label block mb-1">Job posting review</label>
-          <select className="uber-input w-full max-w-lg" defaultValue="staff-all" disabled>
-            <option value="staff-all">All jobs require staff review</option>
-            <option value="trusted">Trusted clients auto-open (coming soon)</option>
+          <select className="uber-input w-full max-w-lg" defaultValue="staff-all" disabled aria-describedby="job-review-note">
+            <option value="staff-all">All jobs require staff review before going live</option>
           </select>
+          <p id="job-review-note" className="text-xs text-brand-text-muted mt-2">
+            Trusted-client auto-publish is planned for a future release. Every job offer is reviewed by staff today.
+          </p>
         </div>
       </AppFormSection>
 

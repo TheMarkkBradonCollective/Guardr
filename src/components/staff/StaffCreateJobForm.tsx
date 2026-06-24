@@ -17,7 +17,7 @@ import {
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, type CaliforniaCity } from '../../lib/californiaCities';
+import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -316,7 +316,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
           <label className="uber-label block mb-1">City</label>
           <select
             value={jobState}
-            onChange={(e) => setJobState(e.target.value as CaliforniaCity)}
+            onChange={(e) => setJobState(resolveJobCity(e.target.value))}
             className="uber-input w-full"
           >
             {CALIFORNIA_CITIES.map((city) => (

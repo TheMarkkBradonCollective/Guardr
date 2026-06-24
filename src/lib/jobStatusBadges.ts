@@ -14,6 +14,7 @@ export function jobStatusBadgeTone(status: SecurityRequest['status']): JobStatus
     case 'completed':
       return 'success';
     case 'closed':
+    case 'cancelled':
       return 'default';
     default:
       return 'default';
