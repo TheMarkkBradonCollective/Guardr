@@ -113,7 +113,7 @@ const QUICK_LINK_META: Record<
   disputes: { label: 'Disputes', icon: AlertTriangle },
   analytics: { label: 'Analytics', icon: BarChart3 },
   settings: { label: 'Settings', icon: Settings },
-  guide: { label: 'Guide', icon: LayoutDashboard },
+  guide: { label: 'General guide', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },
   preferences: { label: 'Preferences', icon: Settings },
 };

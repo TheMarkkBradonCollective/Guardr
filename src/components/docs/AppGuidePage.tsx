@@ -235,13 +235,13 @@ function GuideHub({
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-export interface AppWorkflowPageProps {
+export interface AppGuidePageProps {
   audience?: AudienceFilter;
 }
 
 const ALL_SECTIONS = parseGuide();
 
-export function AppWorkflowPage({ audience: initialAudience }: AppWorkflowPageProps) {
+export function AppGuidePage({ audience: initialAudience }: AppGuidePageProps) {
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
 
   const handleSelect = useCallback((section: GuideSection) => {

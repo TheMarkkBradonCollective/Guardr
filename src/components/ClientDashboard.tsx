@@ -21,7 +21,7 @@ import { GuardProfileScreen } from './client/GuardProfileScreen';
 import { ClientMapScreen } from './client/ClientMapScreen';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
-import { AppWorkflowPage } from './docs/AppWorkflowPage';
+import { AppGuidePage } from './docs/AppGuidePage';
 
 export type ClientView =
   | 'map'
@@ -433,7 +433,7 @@ export function ClientDashboard({
   }
 
   if (view === 'guide') {
-    return page('guide', <AppWorkflowPage audience="client" />);
+    return page('guide', <AppGuidePage audience="client" />);
   }
 
   return page(

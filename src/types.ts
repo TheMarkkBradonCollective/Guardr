@@ -606,7 +606,7 @@ export interface SecurityRequest {
   overtimeHours?: number;
   /** Additional client charge for late clock-out */
   overtimeAmount?: number;
-  /** Workflow: none → pending_guard → pending_client → awaiting_payment | disputed → paid | waived */
+  /** Process: none → pending_guard → pending_client → awaiting_payment | disputed → paid | waived */
   overtimeStatus?: 'none' | 'pending_guard' | 'pending_client' | 'awaiting_payment' | 'disputed' | 'paid' | 'waived';
   overtimeGuardApprovedAt?: string;
   overtimeClientApprovedAt?: string;

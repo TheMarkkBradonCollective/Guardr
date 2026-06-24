@@ -156,7 +156,7 @@ export const LEGAL_PRIVACY: LegalDocument = {
       bullets: [
         'Between Clients and Guards when you request, accept, or perform a job.',
         'With service providers such as hosting, analytics, identity verification, and payment processors under contractual safeguards.',
-        'With platform staff who need access to administer approvals, support, and safety workflows.',
+        'With platform staff who need access to administer approvals, support, and safety processes.',
         'When required by law, subpoena, court order, or to protect rights, safety, and integrity of users.',
         'In connection with a merger, acquisition, financing, or asset sale, subject to continuing protections.',
       ],

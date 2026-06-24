@@ -31,7 +31,7 @@ import { UserSettingsScreen } from './profile/UserSettingsScreen';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
-import { AppWorkflowPage } from './docs/AppWorkflowPage';
+import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
 import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen } from 'lucide-react';
@@ -145,7 +145,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   support: 'Messages',
   profile: 'Profile',
   settings: 'Settings',
-  guide: 'Workflow guide',
+  guide: 'General guide',
 };
 
 export function GuardDashboard({
@@ -801,7 +801,7 @@ export function GuardDashboard({
 
           {tab === 'guide' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <AppWorkflowPage audience="guard" />
+              <AppGuidePage audience="guard" />
             </div>
           )}
 
@@ -1003,7 +1003,7 @@ export function GuardDashboard({
         active: activeTab === 'profile' || activeTab === 'settings',
         extraLinks: [
           {
-            label: 'Workflow guide',
+            label: 'General guide',
             icon: BookOpen,
             onClick: () => setTab('guide'),
             active: tab === 'guide',
