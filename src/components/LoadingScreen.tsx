@@ -4,6 +4,14 @@ import { Logo } from './Logo';
 
 const LANE_PRACTICALS = [Shield, MapPin, BadgeCheck] as const;
 
+const LOADING_PARTICLES = Array.from({ length: 24 }, (_, i) => ({
+  left: `${(i * 37 + 13) % 94 + 3}%`,
+  top: `${(i * 29 + 19) % 90 + 5}%`,
+  delay: `${((i * 0.43) % 6).toFixed(2)}s`,
+  duration: `${(5 + (i % 6)).toFixed(1)}s`,
+  size: 2 + (i % 4),
+}));
+
 export function LoadingScreen() {
   return (
     <div className="guardr-loading-screen" role="status" aria-live="polite" aria-label="Loading Guardr">
@@ -11,6 +19,22 @@ export function LoadingScreen() {
         <span className="guardr-loading-orb guardr-loading-orb--a" />
         <span className="guardr-loading-orb guardr-loading-orb--b" />
         <span className="guardr-loading-orb guardr-loading-orb--c" />
+        <span className="guardr-loading-orb guardr-loading-orb--d" />
+        <span className="guardr-loading-orb guardr-loading-orb--e" />
+        {LOADING_PARTICLES.map((particle, index) => (
+          <span
+            key={index}
+            className="guardr-loading-particle"
+            style={{
+              left: particle.left,
+              top: particle.top,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              animationDelay: particle.delay,
+              animationDuration: particle.duration,
+            }}
+          />
+        ))}
       </div>
 
       <div className="guardr-loading-core">
