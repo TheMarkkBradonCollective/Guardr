@@ -1,49 +1,51 @@
 import { GuardPayoutInvoiceLine, SecurityGuard, SecurityRequest } from '../types';
-import { guardPayoutAmount } from './cashPayments';
+import { guardPayoutAmount, isStripeDepositSatisfied } from './cashPayments';
 import { formatShiftRange } from './dates';
 
 export type GuardPayoutMethod = 'cash' | 'stripe';
 
-/**
- * Jobs a guard can include in a payout invoice (Stripe bank transfer or cash pickup).
- *
- * Both methods require the job to be complete — early-end refunds and overtime
- * adjustments must be settled before the guard is paid.
- */
-export function getGuardPayoutEligibleJobs(
-  guardId: string,
-  requests: SecurityRequest[]
-): SecurityRequest[] {
-  return requests.filter(
-    (r) =>
-      r.assignedGuardId === guardId &&
-      r.status === 'completed' &&
-      ['paid', 'held'].includes(r.paymentStatus || '') &&
-      r.guardPayoutMethod !== 'cash' &&
-      !!r.guardPayoutAvailable
+/** Base filter: job complete, payout released, not yet paid out. */
+function basePayoutEligible(guardId: string, req: SecurityRequest): boolean {
+  return (
+    req.assignedGuardId === guardId &&
+    req.status === 'completed' &&
+    ['paid', 'held'].includes(req.paymentStatus || '') &&
+    req.guardPayoutMethod !== 'cash' &&
+    !!req.guardPayoutAvailable
   );
 }
 
 /**
  * Jobs eligible for a Stripe bank transfer.
- * Requires job completion so any adjustments are settled first.
+ * Money must be in Guardr's Stripe account — if client paid cash and it hasn't
+ * been deposited yet, Stripe payout is unavailable (only cash pickup applies).
  */
 export function getGuardStripePayoutEligibleJobs(
   guardId: string,
   requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return getGuardPayoutEligibleJobs(guardId, requests);
+  return requests.filter(
+    (r) => basePayoutEligible(guardId, r) && isStripeDepositSatisfied(r)
+  );
 }
 
 /**
  * Jobs eligible for a cash pickup.
- * Same rules — job must be complete and payout released by staff.
+ * Available regardless of Stripe deposit status — Guardr pays from their own funds.
  */
 export function getGuardCashPayoutEligibleJobs(
   guardId: string,
   requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return getGuardPayoutEligibleJobs(guardId, requests);
+  return requests.filter((r) => basePayoutEligible(guardId, r));
+}
+
+/** All payout-eligible jobs (used for general checks). */
+export function getGuardPayoutEligibleJobs(
+  guardId: string,
+  requests: SecurityRequest[]
+): SecurityRequest[] {
+  return getGuardCashPayoutEligibleJobs(guardId, requests);
 }
 
 export function buildGuardPayoutInvoice(params: {

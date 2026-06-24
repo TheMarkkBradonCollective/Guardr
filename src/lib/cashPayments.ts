@@ -144,9 +144,16 @@ export function canDirectorMarkGuardPaidCash(req: SecurityRequest): boolean {
   return canDirectorPayGuardCash(req);
 }
 
-/** Stripe Connect payout — never pay online for cash-paid or cash-requested jobs */
+/**
+ * Guard can only request a Stripe bank transfer if money is actually in Guardr's Stripe.
+ * - Client paid via Stripe → always satisfied.
+ * - Client paid cash → only if the cash has been deposited to Guardr's Stripe.
+ * If cash isn't deposited yet, the guard can only receive a cash pickup.
+ */
 export function canStripePayGuard(req: SecurityRequest): boolean {
   if (isCashGuardPayout(req)) return false;
+  // Cash client whose deposit hasn't landed in Stripe yet — no funds to transfer
+  if (!isStripeDepositSatisfied(req)) return false;
   return true;
 }
 

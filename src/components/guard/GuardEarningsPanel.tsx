@@ -89,7 +89,7 @@ export function GuardEarningsPanel({
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
           Ready to collect
         </p>
-        <p className="app-pay-amount mb-1">${breakdown.onlineAvailable.toFixed(2)}</p>
+        <p className="app-pay-amount mb-1">${(breakdown.cashAvailable ?? breakdown.onlineAvailable).toFixed(2)}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
@@ -106,11 +106,16 @@ export function GuardEarningsPanel({
               )}
               Send to my bank
             </span>
+            {breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
+              <span className="text-[11px] font-normal opacity-70 leading-snug">
+                Pending deposit — cash pickup available now
+              </span>
+            )}
           </button>
           <button
             type="button"
             onClick={() => void onRequestCashPayout?.()}
-            disabled={breakdown.onlineAvailable <= 0 || cashRequestPending || !onRequestCashPayout}
+            disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
             className="app-button-outline !text-sm !h-auto !py-3 flex-col items-start gap-1 disabled:opacity-40 text-left"
           >
             <span className="flex items-center gap-2 font-semibold">

@@ -5,6 +5,7 @@ import type { PlatformSettings } from './platformSettings';
 import { guardCanViewJob } from './guardJobs';
 import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
 import { overtimeGuardEarnings } from './shiftBilling';
+import { isStripeDepositSatisfied } from './cashPayments';
 
 /** Guard-safe payout state — no internal payment pipeline details */
 export type GuardPayoutStatus = 'pending' | 'processing' | 'paid';
@@ -65,6 +66,12 @@ export interface GuardJobView {
   payoutMethod?: PaymentMethod;
   cashPayoutRequested?: boolean;
   guardPayoutAvailable?: boolean;
+  /**
+   * True when Guardr's Stripe account holds the funds for this job.
+   * False only for cash-paying clients whose cash hasn't been deposited yet.
+   * When false, guard can only request a cash pickup — not a Stripe bank transfer.
+   */
+  stripeDepositSatisfied?: boolean;
   overtimeHours?: number;
   overtimeGuardEarnings?: number;
   overtimeStatus?: SecurityRequest['overtimeStatus'];
@@ -229,6 +236,7 @@ export function toGuardJobView(
       req.paymentStatus === 'released' && req.guardPayoutMethod ? req.guardPayoutMethod : undefined,
     cashPayoutRequested: !!req.guardCashPayoutRequested,
     guardPayoutAvailable: !!req.guardPayoutAvailable,
+    stripeDepositSatisfied: isStripeDepositSatisfied(req),
     overtimeHours: req.overtimeHours,
     overtimeGuardEarnings: req.overtimeHours ? overtimeGuardEarnings(req) : undefined,
     overtimeStatus: req.overtimeStatus,

@@ -5,9 +5,15 @@ export interface GuardEarningsBreakdown {
   totalEarnings: number;
   cashPaid: number;
   stripePaid: number;
-  /** Stripe bank transfer: available as soon as Guardr releases (any job status). */
+  /**
+   * Stripe bank transfer available: job complete, payout released, AND
+   * client money is in Guardr's Stripe (Stripe client OR cash client who deposited).
+   */
   onlineAvailable: number;
-  /** Cash pickup: only available on completed jobs — Guardr pays from their Stripe balance. */
+  /**
+   * Cash pickup available: job complete and payout released.
+   * Available even when Stripe deposit is pending — Guardr pays cash from their own funds.
+   */
   cashAvailable: number;
 }
 
@@ -48,10 +54,15 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
       continue;
     }
 
-    // Released by staff — guard can collect via Stripe or cash
+    // Released by staff — guard can collect
     if (job.guardPayoutAvailable && job.payoutMethod !== 'cash') {
-      onlineAvailable += amount;
+      // Cash pickup: always available once released (Guardr pays from their own funds)
       cashAvailable += amount;
+      // Stripe bank transfer: only when money is actually in Guardr's Stripe.
+      // For cash-paying clients, stripeDepositSatisfied is false until the cash is deposited.
+      if (job.stripeDepositSatisfied !== false) {
+        onlineAvailable += amount;
+      }
     }
   }
 
