@@ -295,7 +295,13 @@ export function StaffApprovals({
   const renderHub = () => (
     <div className="space-y-4">
       {queueEmpty ? (
-        <AppEmptyState dashed>Nothing waiting for approval.</AppEmptyState>
+        <AppEmptyState
+          dashed
+          icon={<ClipboardCheck className="w-5 h-5" />}
+          title="All clear"
+        >
+          Nothing is waiting for approval right now.
+        </AppEmptyState>
       ) : (
         <AppItemCardStack>
           {availableQueues.map((queueId) => {
