@@ -5,6 +5,7 @@ import {
   resolveCertCatalogId,
 } from './certCatalog';
 import { guardCanWorkInState } from './guardLicenses';
+import { resolveGuardCardLicenseState } from './californiaCities';
 import {
   guardHasCredentialOnFile,
   isRequiredPathwayCredential,
@@ -25,9 +26,10 @@ export function guardHasStaffVerifiedCert(
   jobState?: string
 ): boolean {
   if (catalogId === 'bsis-guard-card') {
+    const licenseState = jobState ? resolveGuardCardLicenseState(jobState) : undefined;
     return guard.certifications.some((c) => {
       if (c.status !== 'verified' || !isGuardCardOnFile(c)) return false;
-      if (jobState) return c.state?.toUpperCase() === jobState.toUpperCase();
+      if (licenseState) return c.state?.toUpperCase() === licenseState.toUpperCase();
       return true;
     });
   }

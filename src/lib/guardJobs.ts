@@ -5,6 +5,7 @@ import { estimateJobDistanceMiles } from './geo';
 import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
+import { resolveGuardCardLicenseState } from './californiaCities';
 import { requirementLabel } from './certCatalog';
 import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import {
@@ -97,11 +98,12 @@ export function checkJobRequirements(
   job: GuardJobView,
   allRequests?: ScheduleJob[]
 ): { checks: RequirementCheck[]; canAccept: boolean } {
-  const jobState = job.state ?? 'CA';
+  const jobCity = job.state ?? 'CA';
+  const licenseState = resolveGuardCardLicenseState(jobCity);
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
 
-  if (!guardCanWorkFieldJobs(guard, jobState)) {
+  if (!guardCanWorkFieldJobs(guard, licenseState)) {
     return {
       checks: [{ label: stateLabel, met: false }],
       canAccept: false,
@@ -111,14 +113,14 @@ export function checkJobRequirements(
   const checks: RequirementCheck[] = [
     {
       label: stateLabel,
-      met: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
+      met: guardHasCredentialOnFile(guard, 'bsis-guard-card', licenseState),
     },
   ];
 
   if (minLevel === 'active') {
     checks.push({
       label: `Client prefers ${GUARD_PATHWAY_STATUS_LABELS.active} guard (full BSIS training on file)`,
-      met: getGuardQualificationLevel(guard, jobState) === 'active',
+      met: getGuardQualificationLevel(guard, licenseState) === 'active',
       recommended: true,
     });
   }
@@ -128,20 +130,20 @@ export function checkJobRequirements(
       label: '8-hour PTA & UOF (combined cert or separate PTA + UOF)',
       met:
         guardMeetsPtaUofTraining(guard) ||
-        guardGraceWaivesTrainingCredential(guard, 'pta-uof', jobState),
+        guardGraceWaivesTrainingCredential(guard, 'pta-uof', licenseState),
     },
     {
       label: requirementLabel('bsis-32-hour-completed'),
       met:
         guardMeets32HourBlock(guard) ||
-        guardGraceWaivesTrainingCredential(guard, '32-hour', jobState),
+        guardGraceWaivesTrainingCredential(guard, '32-hour', licenseState),
     }
   );
 
   if (job.armedRequired) {
     checks.push({
       label: 'BSIS Exposed Firearm Permit (on file)',
-      met: guardHasCredentialOnFile(guard, 'bsis-exposed-firearm', jobState),
+      met: guardHasCredentialOnFile(guard, 'bsis-exposed-firearm'),
     });
   }
 
@@ -152,7 +154,7 @@ export function checkJobRequirements(
     if (job.armedRequired && certId === 'bsis-exposed-firearm') continue;
     checks.push({
       label: requirementLabel(certId),
-      met: guardHasCredentialOnFile(guard, certId, jobState),
+      met: guardHasCredentialOnFile(guard, certId),
     });
   }
 
@@ -225,8 +227,8 @@ type GuardJobVisibility = Pick<
 
 /** Open jobs visible on a guard's map/list — field-ready guards can browse; apply checks are separate. */
 export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
-  const jobState = job.state ?? 'CA';
-  if (!guardCanWorkFieldJobs(guard, jobState)) return false;
+  const licenseState = resolveGuardCardLicenseState(job.state);
+  if (!guardCanWorkFieldJobs(guard, licenseState)) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
   return true;

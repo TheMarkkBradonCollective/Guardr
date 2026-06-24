@@ -39,6 +39,7 @@ import {
   guardGraceWaivesTrainingCredential,
   guardHasActiveCredentialGrace,
 } from './guardCredentialGrace';
+import { resolveGuardCardLicenseState } from './californiaCities';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
@@ -123,8 +124,9 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     return 'Submit and verify your government ID in Credentials before working jobs.';
   }
   if (!guardMeetsLevel1(guard, state)) {
-    const jobState = state || 'CA';
-    return `Upload a valid BSIS Guard Card for ${jobState} to accept and work jobs.`;
+    const licenseState = resolveGuardCardLicenseState(state);
+    const stateName = licenseState === 'CA' ? 'California' : licenseState;
+    return `Upload a valid BSIS Guard Card for ${stateName} to accept and work jobs.`;
   }
   if (
     !guardMeetsPtaUofTraining(guard) &&
@@ -333,11 +335,15 @@ function matchingCredentials(
   catalogId: string,
   jobState?: string
 ): Certification[] {
+  const guardCardState =
+    catalogId === 'bsis-guard-card' && jobState
+      ? resolveGuardCardLicenseState(jobState)
+      : jobState;
   return guard.certifications.filter((cert) => {
     if (cert.status === 'rejected') return false;
     if (!certMatchesCatalogId(cert, catalogId)) return false;
-    if (catalogId === 'bsis-guard-card' && jobState) {
-      return cert.state?.toUpperCase() === jobState.toUpperCase();
+    if (catalogId === 'bsis-guard-card' && guardCardState) {
+      return cert.state?.toUpperCase() === guardCardState.toUpperCase();
     }
     return true;
   });

@@ -1,4 +1,6 @@
 /** Major California cities and metros — Guardr operates statewide in CA. */
+export const GUARDR_HOME_LICENSE_STATE = 'CA';
+
 export const CALIFORNIA_CITIES = [
   'Anaheim',
   'Bakersfield',
@@ -76,6 +78,19 @@ export function formatCityLabel(city: string | undefined): string {
   if (!city?.trim()) return '';
   const match = CALIFORNIA_CITIES.find((c) => c.toLowerCase() === city.trim().toLowerCase());
   return match ?? city.trim();
+}
+
+/**
+ * Job `state` stores the work city (e.g. Los Angeles).
+ * BSIS guard cards are California statewide — always match against CA.
+ */
+export function resolveGuardCardLicenseState(jobCityOrState?: string): string {
+  const raw = jobCityOrState?.trim();
+  if (!raw) return GUARDR_HOME_LICENSE_STATE;
+  const upper = raw.toUpperCase();
+  if (upper === 'CA' || upper === 'CALIFORNIA') return GUARDR_HOME_LICENSE_STATE;
+  if (isCaliforniaCity(raw)) return GUARDR_HOME_LICENSE_STATE;
+  return GUARDR_HOME_LICENSE_STATE;
 }
 
 /** Normalize stored job location — legacy 2-letter state codes map to default city. */
