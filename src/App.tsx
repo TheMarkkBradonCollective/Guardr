@@ -448,6 +448,7 @@ export default function App() {
   const [clientDirectGuardId, setClientDirectGuardIdState] = useState<string | null>(
     () => initialRoute?.clientDirectGuardId ?? null
   );
+  const [clientRequestsSelectedId, setClientRequestsSelectedIdState] = useState<string | null>(null);
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
@@ -543,6 +544,9 @@ export default function App() {
     const nextSupportId = resolvedView === 'messages' ? supportTicketId ?? undefined : undefined;
     setClientGuardIdState(nextGuardId ?? null);
     setClientDirectGuardIdState(nextDirectId ?? null);
+    if (resolvedView !== 'requests') {
+      setClientRequestsSelectedIdState(null);
+    }
     if (!keepsJobChatId) {
       setJobChatRequestIdState(null);
       setOpenJobChatState(false);
@@ -8519,7 +8523,8 @@ export default function App() {
       clientView === 'messages' ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
-      (clientView === 'guards' && !!clientGuardId);
+      (clientView === 'guards' && !!clientGuardId) ||
+      (clientView === 'requests' && !!clientRequestsSelectedId);
 
     return (
       <>
@@ -8622,6 +8627,7 @@ export default function App() {
               onSupportTicketIdChange={setSupportTicketId}
               onOpenSupportCompose={openClientSupportCompose}
               onOpenSupportReport={openClientSupportReport}
+              onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
             />
           )}
         </ClientAppLayout>
