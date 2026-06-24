@@ -1,30 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
+import { SecurityRequest, SecurityGuard, JobChatThread, SessionUser } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
-import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import type { OvertimeDisputeInput } from '../../lib/shiftBilling';
+import { formatShiftRange } from '../../lib/dates';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
-import { JobListCard } from '../jobs/JobListCard';
-import { AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
-import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import {
-  Shield,
-  ClipboardList,
-  CalendarClock,
-  CheckSquare,
-  Archive,
-} from 'lucide-react';
-import { JobChatMessage, JobChatThread, SessionUser } from '../../types';
+  AppItemCard,
+  AppItemCardStack,
+  AppScreen,
+  AppSegmentedControl,
+  AppSubScreenHeader,
+} from '../ui/app/AppPrimitives';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
-import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
-import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
-import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient, hasIndependentSlotsPendingClient } from '../../lib/guardTeams';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
+
+type JobTab = 'open' | 'upcoming' | 'past';
 
 interface ClientRequestsListProps {
   requests: SecurityRequest[];
@@ -55,35 +50,42 @@ interface ClientRequestsListProps {
   onRequestNew: () => void;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
-  jobChatMessages?: JobChatMessage[];
-  onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onOpenJobChat?: (requestId: string) => void;
+  onSelectedJobIdChange?: (jobId: string | null) => void;
 }
 
-function statusBadgeTone(status: JobStatus): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  switch (status) {
-    case 'open': return 'primary';
-    case 'pending-review': return 'warning';
-    case 'accepted': return 'primary';
-    case 'in-progress': return 'success';
-    case 'completed': return 'success';
-    case 'closed': return 'default';
-    default: return 'default';
-  }
+function JobRow({
+  job,
+  onSelect,
+  showRate = false,
+}: {
+  job: SecurityRequest;
+  onSelect: () => void;
+  showRate?: boolean;
+}) {
+  return (
+    <AppItemCard
+      onClick={onSelect}
+      className={showRate ? 'border-brand-primary/30 bg-brand-primary/8' : undefined}
+    >
+      <div className="min-w-0 flex-1 text-left">
+        <p className="font-semibold truncate">{job.title}</p>
+        <p className="text-sm text-brand-text-muted mt-1 truncate">
+          {formatShiftRange(job.startDate, job.endDate)}
+        </p>
+        {showRate && (
+          <p className="text-sm font-medium text-brand-primary mt-1">${job.hourlyRate}/hr</p>
+        )}
+      </div>
+    </AppItemCard>
+  );
 }
 
-function paymentBadgeTone(
-  status?: SecurityRequest['paymentStatus'],
-  req?: SecurityRequest
-): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  if (req && isClientCashPaymentPendingApproval(req)) return 'warning';
-  switch (status) {
-    case 'paid': return 'success';
-    case 'held': return 'warning';
-    case 'released': return 'success';
-    default: return 'warning';
-  }
-}
+const TAB_OPTIONS: { id: JobTab; label: string }[] = [
+  { id: 'open', label: 'Open' },
+  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'past', label: 'Past' },
+];
 
 export function ClientRequestsList({
   requests,
@@ -113,46 +115,39 @@ export function ClientRequestsList({
   onRequestNew,
   currentUser,
   jobChatThreads = [],
-  onSendJobChatMessage,
   onOpenJobChat,
+  onSelectedJobIdChange,
 }: ClientRequestsListProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
-  const [search, setSearch] = useState('');
-  const [statusTab, setStatusTab] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all');
+  const [activeTab, setActiveTab] = useState<JobTab>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
 
-  const tabCounts = useMemo(() => ({
-    all: requests.length,
-    active: requests.filter((r) => r.status === 'in-progress' || r.status === 'accepted').length,
-    upcoming: requests.filter((r) => r.status === 'open' || r.status === 'pending-review').length,
-    completed: requests.filter((r) => r.status === 'completed' || r.status === 'closed').length,
-  }), [requests]);
+  const openJobs = useMemo(
+    () => requests.filter((r) => r.status === 'open' || r.status === 'pending-review'),
+    [requests]
+  );
+  const upcomingJobs = useMemo(
+    () => requests.filter((r) => r.status === 'accepted' || r.status === 'in-progress'),
+    [requests]
+  );
+  const pastJobs = useMemo(
+    () => requests.filter((r) => r.status === 'completed' || r.status === 'closed'),
+    [requests]
+  );
 
-  const filtered = useMemo(() => {
-    let base = requests;
-    if (statusTab === 'active') base = base.filter((r) => r.status === 'in-progress' || r.status === 'accepted');
-    else if (statusTab === 'upcoming') base = base.filter((r) => r.status === 'open' || r.status === 'pending-review');
-    else if (statusTab === 'completed') base = base.filter((r) => r.status === 'completed' || r.status === 'closed');
-    const q = search.toLowerCase();
-    if (!q) return base;
-    return base.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.location.toLowerCase().includes(q) ||
-        r.type.toLowerCase().includes(q)
-    );
-  }, [requests, search, statusTab]);
+  const updateSelectedId = (jobId: string | null) => {
+    setSelectedId(jobId);
+    onSelectedJobIdChange?.(jobId);
+  };
 
-  const selectedRequest = expandedId
-    ? requests.find((r) => r.id === expandedId) ?? null
-    : null;
+  const selectedRequest = selectedId ? requests.find((r) => r.id === selectedId) ?? null : null;
 
   function renderSelectedRequestDetail(req: SecurityRequest) {
     return (
-      <div className="staff-detail-pane space-y-4">
+      <div className="space-y-4">
         <JobListingProfile
           job={req}
           showClientHeader={false}
@@ -200,144 +195,90 @@ export function ClientRequestsList({
     );
   }
 
+  if (selectedRequest) {
+    return (
+      <AppScreen className="app-full-page-detail">
+        <AppSubScreenHeader title={selectedRequest.title} onBack={() => updateSelectedId(null)} />
+        <div className="px-5 pb-8">{renderSelectedRequestDetail(selectedRequest)}</div>
+        <EditRequestSheet
+          open={!!editingRequest}
+          request={editingRequest}
+          scheduleLocked={editingRequest ? isJobScheduleLocked(editingRequest) : false}
+          paidReschedule={editingRequest ? canClientReschedulePaidSchedule(editingRequest) : false}
+          onSave={onEditRequest}
+          onClose={() => setEditingId(null)}
+        />
+      </AppScreen>
+    );
+  }
+
   return (
-    <AppScreen className={selectedRequest ? 'app-full-page-detail' : ''}>
-      {selectedRequest ? (
-        <>
-          <AppSubScreenHeader title={selectedRequest.title} onBack={() => setExpandedId(null)} backLabel="Jobs" />
-          <div className="px-5 pb-8">{renderSelectedRequestDetail(selectedRequest)}</div>
-        </>
-      ) : (
-        <>
-      <div className="flex items-center justify-between gap-4 px-5 pt-2 pb-3 border-b border-brand-border">
-        <p className="text-sm font-semibold text-brand-text">
-          {requests.length} job{requests.length !== 1 ? 's' : ''}
-        </p>
-        <button
-          type="button"
-          onClick={onRequestNew}
-          className="app-button-primary !w-auto !h-9 !px-4 !text-sm shrink-0"
-        >
-          + Post offer
-        </button>
-      </div>
+    <AppScreen>
+      <AppSegmentedControl<JobTab>
+        options={TAB_OPTIONS}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
-      {requests.length > 0 && (
-        <>
-          {/* Status filter tabs */}
-          <div className="flex gap-0 border-b border-brand-border overflow-x-auto scrollbar-hide">
-            {(
-              [
-                { id: 'all', label: 'All', icon: ClipboardList },
-                { id: 'active', label: 'Active', icon: CalendarClock },
-                { id: 'upcoming', label: 'Upcoming', icon: Shield },
-                { id: 'completed', label: 'Done', icon: CheckSquare },
-              ] as const
-            ).map(({ id, label, icon: Icon }) => (
+      {activeTab === 'open' && (
+        <div className="app-section-body pt-4">
+          {openJobs.length === 0 ? (
+            <div className="space-y-4">
+              <p className="app-empty-state">No open offers right now.</p>
               <button
-                key={id}
                 type="button"
-                onClick={() => setStatusTab(id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors shrink-0 ${
-                  statusTab === id
-                    ? 'border-brand-primary text-brand-primary'
-                    : 'border-transparent text-brand-text-muted hover:text-brand-text'
-                }`}
+                onClick={onRequestNew}
+                className="app-button-primary !w-auto !h-10 !px-5 !text-sm mx-auto block"
               >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-                {tabCounts[id] > 0 && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    statusTab === id ? 'bg-brand-primary/15 text-brand-primary' : 'bg-brand-bg-sec text-brand-text-muted'
-                  }`}>
-                    {tabCounts[id]}
-                  </span>
-                )}
+                + Post offer
               </button>
-            ))}
-          </div>
-
-          <div className="px-5 py-3 border-b border-brand-border">
-            <WfSearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder="Search jobs by title, location…"
-            />
-          </div>
-        </>
+            </div>
+          ) : (
+            <AppItemCardStack>
+              {openJobs.map((job) => (
+                <JobRow
+                  key={job.id}
+                  job={job}
+                  onSelect={() => updateSelectedId(job.id)}
+                  showRate
+                />
+              ))}
+            </AppItemCardStack>
+          )}
+        </div>
       )}
 
-      <AppSection title={statusTab === 'all' ? 'All jobs' : statusTab === 'active' ? 'Active jobs' : statusTab === 'upcoming' ? 'Upcoming jobs' : 'Completed jobs'}>
-      {requests.length === 0 ? (
-        <div className="flex flex-col items-center py-12 px-6 text-center">
-          <Shield className="w-10 h-10 text-brand-border mb-3" />
-          <p className="font-semibold text-brand-text mb-1">No jobs yet</p>
-          <p className="text-sm text-brand-text-muted mb-4">Post your first security job offer to get started.</p>
-          <button
-            type="button"
-            onClick={onRequestNew}
-            className="app-button-primary !w-auto !h-9 !px-5 !text-sm"
-          >
-            + Post offer
-          </button>
+      {activeTab === 'upcoming' && (
+        <div className="app-section-body pt-4">
+          {upcomingJobs.length === 0 ? (
+            <p className="app-empty-state">No upcoming jobs.</p>
+          ) : (
+            <AppItemCardStack>
+              {upcomingJobs.map((job) => (
+                <JobRow
+                  key={job.id}
+                  job={job}
+                  onSelect={() => updateSelectedId(job.id)}
+                  showRate
+                />
+              ))}
+            </AppItemCardStack>
+          )}
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-10 px-6 text-center">
-          <Archive className="w-8 h-8 text-brand-border mb-2" />
-          <p className="text-sm font-medium text-brand-text mb-1">No jobs here</p>
-          <p className="text-xs text-brand-text-muted">
-            {search ? 'No jobs match your search.' : `No ${statusTab === 'active' ? 'active' : statusTab === 'upcoming' ? 'upcoming' : 'completed'} jobs right now.`}
-          </p>
-        </div>
-      ) : (
-        <AppItemCardStack>
-          {filtered.map((req) => {
-            const awaitingIndependentGuard = isIndependentGuardPendingForClient(req);
-            const awaitingFullCrew = isFullCrewAwaitingClientApproval(req);
-            const independentPending = hasIndependentSlotsPendingClient(req);
-            return (
-              <JobListCard
-                key={req.id}
-                job={req}
-                subtitle={req.siteName ? `${req.siteName} · ${req.clientName}` : req.clientName}
-                meta={
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <WfBadge tone={req.requestType === 'direct' ? 'primary' : 'default'}>
-                      {jobPostingTypeLabel(req.requestType)}
-                    </WfBadge>
-                    <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                    {independentPending && (
-                      <WfBadge tone="warning">
-                        {req.guardSlots?.filter((s) => s.status === 'pending_client').length ?? 1} independent pending
-                      </WfBadge>
-                    )}
-                    {awaitingIndependentGuard && !independentPending && !isMultiGuardJob(req) && (
-                      <WfBadge tone="warning">Independent guard pending</WfBadge>
-                    )}
-                    {awaitingFullCrew && (
-                      <WfBadge tone="warning">Full crew pending</WfBadge>
-                    )}
-                    {req.scheduleChangeStatus === 'pending_staff' && (
-                      <WfBadge tone="warning">Schedule change pending</WfBadge>
-                    )}
-                    {req.scheduleChangeStatus === 'pending_client' && (
-                      <WfBadge tone="warning">Guardr schedule proposal</WfBadge>
-                    )}
-                    {req.scheduleChangeStatus === 'awaiting_payment' && (
-                      <WfBadge tone="warning">Schedule extension due</WfBadge>
-                    )}
-                    <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
-                  </div>
-                }
-                onClick={() => setExpandedId(req.id)}
-                showStatus={false}
-              />
-            );
-          })}
-        </AppItemCardStack>
       )}
-      </AppSection>
-        </>
+
+      {activeTab === 'past' && (
+        <div className="app-section-body pt-4">
+          {pastJobs.length === 0 ? (
+            <p className="app-empty-state">No completed jobs yet.</p>
+          ) : (
+            <AppItemCardStack>
+              {pastJobs.map((job) => (
+                <JobRow key={job.id} job={job} onSelect={() => updateSelectedId(job.id)} />
+              ))}
+            </AppItemCardStack>
+          )}
+        </div>
       )}
 
       <EditRequestSheet
