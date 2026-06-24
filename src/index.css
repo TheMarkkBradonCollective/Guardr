@@ -4556,26 +4556,26 @@ html.theme-light .staff-ops-btn-primary:hover {
   animation-name: guardr-lightning-strike;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  /* Triple-layer halo: tight bright ring + wide atmospheric bloom */
-  filter: drop-shadow(0 0 4px rgba(60, 110, 240, 1))
-          drop-shadow(0 0 10px rgba(80, 140, 255, 0.75))
-          drop-shadow(0 0 22px rgba(100, 160, 255, 0.45));
+  /* Triple-layer halo in logo sage-green (#9CAF88 / #5E7B61) */
+  filter: drop-shadow(0 0 4px rgba(94, 123, 97, 1))
+          drop-shadow(0 0 10px rgba(130, 158, 110, 0.8))
+          drop-shadow(0 0 22px rgba(156, 175, 136, 0.5));
 }
 
-/* Outer corona — wider, blue, semi-transparent; visible on light backgrounds */
+/* Outer corona — logo sage-green, semi-transparent */
 .guardr-lightning-glow {
   fill: none;
-  stroke: rgba(80, 140, 255, 0.65);
+  stroke: rgba(156, 175, 136, 0.7);
   stroke-width: 8;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
-/* Inner core — dark indigo, clearly visible on white */
+/* Inner core — darker brand green, clearly visible on white */
 .guardr-lightning-core {
   fill: none;
-  stroke: rgba(22, 46, 210, 0.95);
+  stroke: rgba(74, 107, 78, 0.97);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
