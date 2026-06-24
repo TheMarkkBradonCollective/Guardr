@@ -33,6 +33,7 @@ describe('buildEventDispatchPayloads', () => {
     assert.equal(payloads.length, 1);
     assert.equal(payloads[0].userId, 'client-9');
     assert.equal(payloads[0].role, undefined);
+    assert.equal(payloads[0].url, undefined);
   });
 
   it('targets assignment guardId when provided', async () => {
@@ -44,6 +45,21 @@ describe('buildEventDispatchPayloads', () => {
 
     assert.equal(payloads.length, 1);
     assert.equal(payloads[0].userId, 'guard-3');
+    assert.equal(payloads[0].url, undefined);
+  });
+
+  it('routes guard applications to staff and the job client when recipientUserId is set', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'guard_application',
+      recipientUserId: 'client-3',
+      requestId: 'job-8',
+      body: 'Alex applied for "Warehouse patrol".',
+    });
+
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[0].role, 'dispatch');
+    assert.equal(payloads[1].userId, 'client-3');
+    assert.equal(payloads[1].url, undefined);
   });
 
   it('notifies guard, client, and dispatch on emergencies with a job id', async () => {

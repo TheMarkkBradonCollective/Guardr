@@ -38,6 +38,16 @@ describe('resolveNotificationUrlForRole', () => {
     assert.equal(url, '/client/map?jc=job-1');
   });
 
+  it('deep-links clients to job requests on assignments', () => {
+    const url = resolveNotificationUrlForRole('assignment', 'client', { requestId: 'job-1' });
+    assert.equal(url, '/client/requests?jc=job-1');
+  });
+
+  it('deep-links clients to job requests on guard applications', () => {
+    const url = resolveNotificationUrlForRole('guard_application', 'client', { requestId: 'job-1' });
+    assert.equal(url, '/client/requests?jc=job-1');
+  });
+
   it('deep-links guards to active job on emergencies', () => {
     const url = resolveNotificationUrlForRole('emergency_alert', 'guard', { requestId: 'job-1' });
     assert.equal(url, '/guard/my-jobs?jc=job-1');

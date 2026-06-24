@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { resolveNotificationUrl } from './routing';
 import type { PushSendPayload, PushNotificationType } from './types';
 
 export interface PushEventInput {
@@ -172,11 +171,6 @@ function basePayload(event: PushEventInput): PushSendPayload {
     title: event.title ?? fallback.title,
     body: event.body ?? fallback.body,
     type: event.type,
-    url: resolveNotificationUrl(event.type, {
-      guardId: event.guardId,
-      requestId: event.requestId,
-      ticketId: event.ticketId,
-    }),
     guardId: event.guardId,
     requestId: event.requestId,
     ticketId: event.ticketId,
@@ -281,6 +275,16 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, role: 'guard' }];
   }
 
+  if (event.type === 'guard_application') {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    } else if (event.clientId) {
+      payloads.push({ ...payload, userId: event.clientId });
+    }
+    return payloads;
+  }
+
   if (event.type === 'stripe_payment_complete' || event.type === 'client_cash_payment_requested' || event.type === 'guard_cash_payout_requested') {
     return [{ ...payload, role: 'dispatch' }];
   }
@@ -300,7 +304,6 @@ export async function buildEventDispatchPayloads(
   if (
     event.type === 'staff_message' ||
     event.type === 'job_submitted' ||
-    event.type === 'guard_application' ||
     event.type === 'guard_pending_approval' ||
     event.type === 'client_pending_approval' ||
     event.type === 'credential_pending' ||

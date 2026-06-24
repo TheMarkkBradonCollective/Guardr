@@ -149,8 +149,12 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       }
       return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
     case "assignment":
+    case "guard_application":
       if (role === "client") {
         return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (type === "guard_application") {
+        return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=applications";
       }
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "guard_trusted_status":
@@ -183,6 +187,8 @@ function rolesForNotificationType(type) {
       return ["dispatch", "admin"];
     case "assignment":
       return ["guard"];
+    case "guard_application":
+      return ["dispatch", "admin"];
     case "emergency_alert":
       return ["guard", "client", "dispatch", "admin"];
     case "support_message":
@@ -194,7 +200,6 @@ function rolesForNotificationType(type) {
     case "guard_message":
       return ["guard"];
     case "job_submitted":
-    case "guard_application":
     case "guard_pending_approval":
     case "client_pending_approval":
     case "credential_pending":

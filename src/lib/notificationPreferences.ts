@@ -14,8 +14,8 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     key: 'assignment',
     type: 'assignment',
     label: 'Job assignments',
-    description: 'New direct requests and picked-up jobs.',
-    roles: ['guard'],
+    description: 'New direct requests, guard applications, and confirmed guards on your jobs.',
+    roles: ['guard', 'client'],
   },
   {
     key: 'guardCheckin',
