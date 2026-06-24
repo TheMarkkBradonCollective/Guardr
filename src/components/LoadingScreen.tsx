@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BadgeCheck, MapPin, Shield } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -12,105 +12,118 @@ const LOADING_PARTICLES = Array.from({ length: 24 }, (_, i) => ({
   size: 2 + (i % 4),
 }));
 
-// Ten independent lightning bolts spread across the full screen width.
-// Shorter cycle times (3.5–8 s) and staggered delays ensure strikes fire
-// roughly every 0.5–1.5 s somewhere on screen — visibly chaotic.
-// Coordinates are in a 0-100 × 0-100 SVG viewBox (preserveAspectRatio="none").
-// vector-effect="non-scaling-stroke" keeps stroke width pixel-consistent.
-const LIGHTNING_BOLTS = [
-  {
-    id: '1',
-    main: 'M 5,0 L 1,9 L 10,18 L 3,29 L 13,40 L 2,51 L 12,62 L 1,74 L 11,85 L 0,97',
-    branch: 'M 13,40 L 21,50 L 28,62 L 23,74',
-    duration: '5s',
-    delay: '0s',
-    flashCx: '6',
-    flashCy: '50',
-  },
-  {
-    id: '2',
-    main: 'M 25,0 L 20,11 L 30,22 L 18,34 L 29,45 L 17,57 L 28,68 L 16,80 L 27,92',
-    branch: 'M 29,45 L 37,55 L 43,65 L 39,77',
-    duration: '7s',
-    delay: '1.4s',
-    flashCx: '24',
-    flashCy: '48',
-  },
-  {
-    id: '3',
-    main: 'M 48,0 L 43,10 L 53,21 L 41,33 L 52,44 L 39,56 L 51,67 L 38,79 L 50,92',
-    branch: 'M 39,56 L 31,66 L 26,78 L 30,88',
-    duration: '4.5s',
-    delay: '2.1s',
-    flashCx: '46',
-    flashCy: '50',
-  },
-  {
-    id: '4',
-    main: 'M 68,0 L 73,12 L 63,23 L 72,35 L 62,46 L 71,58 L 61,70 L 70,82',
-    branch: 'M 62,46 L 56,56 L 51,66 L 54,76',
-    duration: '6s',
-    delay: '0.6s',
-    flashCx: '67',
-    flashCy: '44',
-  },
-  {
-    id: '5',
-    main: 'M 88,0 L 83,11 L 92,22 L 82,34 L 91,46 L 81,58 L 90,70 L 79,82 L 89,94',
-    branch: 'M 91,46 L 97,56 L 100,68',
-    duration: '5.5s',
-    delay: '3.2s',
-    flashCx: '87',
-    flashCy: '48',
-  },
-  {
-    id: '6',
-    main: 'M 14,5 L 19,16 L 10,28 L 18,40 L 9,52 L 17,64 L 7,76',
-    branch: 'M 10,28 L 4,38 L 0,50',
-    duration: '3.5s',
-    delay: '1.8s',
-    flashCx: '13',
-    flashCy: '42',
-  },
-  {
-    id: '7',
-    main: 'M 36,0 L 31,13 L 40,26 L 29,39 L 39,52 L 28,64 L 38,76 L 26,90',
-    branch: 'M 29,39 L 22,49 L 17,61 L 21,72',
-    duration: '8s',
-    delay: '4.0s',
-    flashCx: '35',
-    flashCy: '46',
-  },
-  {
-    id: '8',
-    main: 'M 57,2 L 63,14 L 54,26 L 62,38 L 53,50 L 61,62 L 51,74',
-    branch: 'M 54,26 L 47,36 L 42,48',
-    duration: '4s',
-    delay: '2.7s',
-    flashCx: '57',
-    flashCy: '40',
-  },
-  {
-    id: '9',
-    main: 'M 78,0 L 73,14 L 82,28 L 72,42 L 81,56 L 71,70 L 80,84',
-    branch: 'M 81,56 L 87,67 L 91,78 L 88,88',
-    duration: '6.5s',
-    delay: '5.3s',
-    flashCx: '78',
-    flashCy: '44',
-  },
-  {
-    id: '10',
-    main: 'M 95,3 L 98,16 L 92,29 L 97,43 L 90,57 L 96,71 L 89,85',
-    branch: 'M 92,29 L 87,39 L 82,51',
-    duration: '5s',
-    delay: '0.9s',
-    flashCx: '93',
-    flashCy: '46',
-  },
-];
+// ── Lightning path generation ────────────────────────────────
+type Pt = [number, number];
+
+// Build a jagged polyline from (sx,sy) to roughly (ex,ey).
+// At each step, jitter perpendicular to the main axis so the bolt
+// zigzags like real stepped-leader lightning.
+function buildBoltPts(
+  sx: number, sy: number,
+  ex: number, ey: number,
+  steps: number,
+  chaos: number,
+): Pt[] {
+  const pts: Pt[] = [[sx, sy]];
+  const dx = ex - sx;
+  const dy = ey - sy;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  // Unit perpendicular axis
+  const px = -dy / len;
+  const py =  dx / len;
+
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const bx = sx + dx * t;
+    const by = sy + dy * t;
+    // Jitter shrinks slightly toward the endpoint so the bolt converges
+    const jitter = (Math.random() - 0.5) * chaos * 2 * (1 - t * 0.35);
+    pts.push([bx + px * jitter, by + py * jitter]);
+  }
+  return pts;
+}
+
+function ptsToPath(pts: Pt[]): string {
+  return 'M ' + pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ');
+}
+
+interface BoltConfig {
+  id: string;
+  main: string;
+  branch: string;
+  duration: string;
+  delay: string;
+  flashCx: string;
+  flashCy: string;
+}
+
+// Generates `count` fully random bolts fresh on every call.
+// Start edges: 70% top (like cloud discharge), 15% left, 15% right.
+// Direction: ±50° from straight-down so bolts can be diagonal or near-horizontal.
+// Branches fork from an actual node on the main channel so they visually connect.
+function generateBolts(count: number): BoltConfig[] {
+  return Array.from({ length: count }, (_, i) => {
+    // Random start edge
+    const edge = Math.random();
+    let sx: number, sy: number;
+    if (edge < 0.70) {
+      sx = Math.random() * 110 - 5;   // top edge (slight overhang allowed)
+      sy = Math.random() * 12 - 5;
+    } else if (edge < 0.85) {
+      sx = Math.random() * 12 - 5;    // left edge
+      sy = Math.random() * 55;
+    } else {
+      sx = 95 + Math.random() * 10;   // right edge
+      sy = Math.random() * 55;
+    }
+
+    // Direction: mostly downward but anything from -50° to +50° from vertical
+    const angleDeg = (Math.random() - 0.5) * 100;
+    const angleRad = (angleDeg * Math.PI) / 180;
+    const length = 40 + Math.random() * 60;
+    const ex = sx + Math.sin(angleRad) * length;
+    const ey = sy + Math.cos(angleRad) * length;
+
+    const steps = 7 + Math.floor(Math.random() * 5);   // 7–11 nodes
+    const chaos = 5 + Math.random() * 8;               // jitter magnitude
+
+    const mainPts = buildBoltPts(sx, sy, ex, ey, steps, chaos);
+    const main = ptsToPath(mainPts);
+
+    // Fork a branch from a real node on the main path so it connects cleanly
+    const nodeIdx = 2 + Math.floor(Math.random() * Math.max(1, mainPts.length - 4));
+    const [bx0, by0] = mainPts[nodeIdx];
+    const branchAngleDeg = angleDeg + (Math.random() > 0.5 ? 1 : -1) * (25 + Math.random() * 40);
+    const branchAngleRad = (branchAngleDeg * Math.PI) / 180;
+    const branchLen = 15 + Math.random() * 30;
+    const bex = bx0 + Math.sin(branchAngleRad) * branchLen;
+    const bey = by0 + Math.cos(branchAngleRad) * branchLen;
+    const branchPts = buildBoltPts(
+      bx0, by0, bex, bey,
+      3 + Math.floor(Math.random() * 3),
+      chaos * 0.7,
+    );
+    const branch = ptsToPath(branchPts);
+
+    const flashCx = Math.max(0, Math.min(100, (sx + ex) / 2));
+    const flashCy = Math.max(0, Math.min(100, (sy + ey) / 2));
+
+    return {
+      id: String(i + 1),
+      main,
+      branch,
+      duration: `${(3.5 + Math.random() * 4.5).toFixed(1)}s`,
+      delay:    `${(Math.random() * 6).toFixed(2)}s`,
+      flashCx:  flashCx.toFixed(0),
+      flashCy:  flashCy.toFixed(0),
+    };
+  });
+}
 
 export function LoadingScreen() {
+  // Lazy initializer runs once on mount — fresh random bolts every page load
+  const [bolts] = useState<BoltConfig[]>(() => generateBolts(10));
+
   return (
     <div className="guardr-loading-screen" role="status" aria-live="polite" aria-label="Loading Guardr">
       <div className="guardr-loading-ambient" aria-hidden="true">
@@ -135,18 +148,18 @@ export function LoadingScreen() {
         ))}
 
         {/* Lightning storm: flash overlay + bolt SVG per strike */}
-        {LIGHTNING_BOLTS.map((bolt) => (
+        {bolts.map((bolt) => (
           <React.Fragment key={`lightning-${bolt.id}`}>
-            {/* Radial flash tints the background on each strike */}
+            {/* Radial flash tints background with logo sage-green on each strike */}
             <div
               className="guardr-lightning-flash"
               style={{
                 animationDuration: bolt.duration,
                 animationDelay: bolt.delay,
-                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(150,185,255,0.85), rgba(175,205,255,0.28) 45%, transparent 70%)`,
+                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(156,175,136,0.85), rgba(175,190,160,0.28) 45%, transparent 70%)`,
               }}
             />
-            {/* Layered SVG: wide glow + bright core + dimmer branch */}
+            {/* Layered SVG: wide corona + bright core + dimmer branch */}
             <svg
               className="guardr-lightning-bolt"
               viewBox="0 0 100 100"
@@ -154,9 +167,9 @@ export function LoadingScreen() {
               style={{ animationDuration: bolt.duration, animationDelay: bolt.delay }}
               aria-hidden="true"
             >
-              <path d={bolt.main} className="guardr-lightning-glow" />
+              <path d={bolt.main}   className="guardr-lightning-glow" />
               <path d={bolt.branch} className="guardr-lightning-glow guardr-lightning-branch" />
-              <path d={bolt.main} className="guardr-lightning-core" />
+              <path d={bolt.main}   className="guardr-lightning-core" />
               <path d={bolt.branch} className="guardr-lightning-core guardr-lightning-branch" />
             </svg>
           </React.Fragment>
