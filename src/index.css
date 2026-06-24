@@ -1315,7 +1315,7 @@ html.theme-grey {
   width: auto;
 }
 
-/* Evenly aligned action rows */
+/* Evenly aligned action rows — sliders always get their own full-width row */
 .app-action-row {
   display: flex;
   flex-wrap: wrap;
@@ -1328,11 +1328,17 @@ html.theme-grey {
 .app-action-row > a,
 .app-action-row > .app-button-primary,
 .app-action-row > .app-button-outline,
-.app-action-row > .app-button-danger,
-.app-action-row > .slide-to-confirm-root {
+.app-action-row > .app-button-danger {
   flex: 1 1 calc(50% - 0.25rem);
   min-width: min(100%, 8.5rem);
   width: auto;
+}
+
+.app-action-row > .slide-to-confirm-root {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
 }
 
 .app-action-row--equal {
@@ -1347,8 +1353,13 @@ html.theme-grey {
 .app-action-row--equal > a,
 .app-action-row--equal > .app-button-primary,
 .app-action-row--equal > .app-button-outline,
-.app-action-row--equal > .app-button-danger,
+.app-action-row--equal > .app-button-danger {
+  width: 100%;
+  min-width: 0;
+}
+
 .app-action-row--equal > .slide-to-confirm-root {
+  grid-column: 1 / -1;
   width: 100%;
   min-width: 0;
 }
@@ -1361,7 +1372,13 @@ html.theme-grey {
   align-items: stretch;
 }
 
-.app-action-row--2 > * {
+.app-action-row--2 > *:not(.slide-to-confirm-root) {
+  width: 100%;
+  min-width: 0;
+}
+
+.app-action-row--2 > .slide-to-confirm-root {
+  grid-column: 1 / -1;
   width: 100%;
   min-width: 0;
 }
@@ -1384,6 +1401,9 @@ html.theme-grey {
 /* ─── SLIDE TO CONFIRM (shift claim / clock in / clock out) ─ */
 .slide-to-confirm-root {
   width: 100%;
+  flex: 1 1 100%;
+  min-width: 100%;
+  max-width: 100%;
 }
 
 .slide-to-confirm-track {
@@ -2294,12 +2314,38 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   border: 1px solid var(--brand-border);
   box-shadow: var(--shadow-nav);
   color: var(--brand-text);
+  display: flex;
+  flex-direction: column;
 }
 
 .map-offer-card-expanded {
   max-height: min(70dvh, 540px);
+}
+
+.map-offer-card-body-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.map-offer-card-actions {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-shrink: 0;
+}
+
+.map-offer-card-actions > * {
+  width: 100%;
+}
+
+.map-offer-card-slide {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .map-offer-card-handle {
@@ -2355,19 +2401,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .map-offer-card-meta {
   margin-top: 0.5rem;
-}
-
-.map-offer-card-actions {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  flex-shrink: 0;
-}
-
-.map-offer-card-actions > * {
-  flex: 1 1 0;
-  min-width: 0;
 }
 
 body[data-form-factor="tablet"] .client-map-layout .map-selection-layer,

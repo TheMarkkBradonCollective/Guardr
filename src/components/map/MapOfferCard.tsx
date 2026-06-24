@@ -103,23 +103,21 @@ export function MapOfferCard({
         </p>
       )}
 
-      {expanded && children}
+      {expanded && children && <div className="map-offer-card-body-scroll mt-3 pr-1 -mr-1">{children}</div>}
 
-      <div className="map-offer-card-actions">
-        {!expanded && onExpand && (
-          <button type="button" onClick={onExpand} className="app-button-outline app-btn-sm flex-1">
+      {!expanded && onExpand && (
+        <div className="map-offer-card-actions">
+          <button type="button" onClick={onExpand} className="app-button-outline app-btn-sm w-full">
             View full listing
           </button>
-        )}
-        {onPrimaryAction && primaryLabel && (
-          <SlideToConfirm
-            label={primaryLabel}
-            onConfirm={onPrimaryAction}
-            compact
-            className={!expanded && onExpand ? 'min-w-[58%]' : 'w-full'}
-          />
-        )}
-      </div>
+        </div>
+      )}
+
+      {onPrimaryAction && primaryLabel && (
+        <div className="map-offer-card-slide">
+          <SlideToConfirm label={primaryLabel} onConfirm={onPrimaryAction} />
+        </div>
+      )}
     </div>
   );
 }
