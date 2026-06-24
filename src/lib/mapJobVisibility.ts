@@ -6,6 +6,19 @@ import { isMultiGuardJob } from './guardTeams';
 import { hasScheduleDateChange } from './jobScheduleChange';
 import { isJobPaid } from './jobEditRules';
 
+export function clientOwnsRequest(
+  req: SecurityRequest,
+  clientId: string,
+  clientName?: string,
+  altClientName?: string
+): boolean {
+  return (
+    req.clientId === clientId ||
+    (!!clientName && req.clientName === clientName) ||
+    (!!altClientName && req.clientName === altClientName)
+  );
+}
+
 export type MapViewerRole = 'guard' | 'client' | 'staff';
 
 export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
@@ -83,21 +96,21 @@ export function staffVisibleMapJobs(requests: SecurityRequest[]): SecurityReques
 export function clientVisibleMapJobs(
   clientId: string,
   clientName: string | undefined,
-  requests: SecurityRequest[]
+  requests: SecurityRequest[],
+  altClientName?: string
 ): SecurityRequest[] {
   return requests.filter((r) => {
-    const isMine = r.clientId === clientId || r.clientName === clientName;
-    if (!isMine) return false;
+    if (!clientOwnsRequest(r, clientId, clientName, altClientName)) return false;
     return ['open', 'accepted', 'in-progress', 'completed', 'cancelled', 'pending-review'].includes(
       r.status
     );
   });
 }
 
-export type ClientMapPinKind = 'upcoming' | 'past' | 'cancelled';
+export type ClientMapPinKind = 'open' | 'pending' | 'upcoming' | 'live' | 'past' | 'cancelled';
 
 export type GuardMapStatusFilter = 'all' | 'available' | 'upcoming' | 'complete';
-export type ClientMapStatusFilter = 'all' | 'scheduled' | 'complete';
+export type ClientMapStatusFilter = 'all' | 'open' | 'scheduled' | 'complete';
 
 export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -108,6 +121,7 @@ export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string
 
 export const CLIENT_MAP_STATUS_FILTERS: { id: ClientMapStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
+  { id: 'open', label: 'Open' },
   { id: 'scheduled', label: 'Scheduled' },
   { id: 'complete', label: 'Complete' },
 ];
@@ -129,31 +143,34 @@ export function clientJobMatchesMapStatusFilter(
   req: SecurityRequest,
   filter: ClientMapStatusFilter
 ): boolean {
-  if (filter === 'all') return clientMapPinKind(req) !== null;
   const kind = clientMapPinKind(req);
-  if (filter === 'scheduled') return kind === 'upcoming';
-  if (filter === 'complete') return kind === 'past';
+  if (kind === null) return false;
+  if (filter === 'all') return true;
+  if (filter === 'open') return kind === 'open' || kind === 'pending';
+  if (filter === 'scheduled') return kind === 'upcoming' || kind === 'live';
+  if (filter === 'complete') return kind === 'past' || kind === 'cancelled';
   return true;
 }
 
 export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null {
   if (req.status === 'cancelled') return 'cancelled';
   if (req.status === 'completed' || req.status === 'closed') return 'past';
+  if (req.status === 'in-progress') return 'live';
   if (req.status === 'accepted') return 'upcoming';
+  if (req.status === 'open') return 'open';
+  if (req.status === 'pending-review') return 'pending';
   return null;
 }
 
-/** Map blips when no guard is clocked in — past, upcoming (accepted), and cancelled only. */
+/** Client map pins — open listings, pending review, scheduled, live, and history. */
 export function clientBrowseMapJobs(
   clientId: string,
   clientName: string | undefined,
-  requests: SecurityRequest[]
+  requests: SecurityRequest[],
+  altClientName?: string
 ): SecurityRequest[] {
   return requests
-    .filter((r) => {
-      const isMine = r.clientId === clientId || r.clientName === clientName;
-      return isMine && clientMapPinKind(r) !== null;
-    })
+    .filter((r) => clientOwnsRequest(r, clientId, clientName, altClientName) && clientMapPinKind(r) !== null)
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 }
 

@@ -14,7 +14,10 @@ function jobLocation(req: SecurityRequest): string {
 }
 
 const CLIENT_CHIP: Record<NonNullable<ReturnType<typeof clientMapPinKind>>, { label: string; variant: MapBrowseChipVariant }> = {
+  open: { label: 'Open', variant: 'open' },
+  pending: { label: 'Pending', variant: 'default' },
   upcoming: { label: 'Upcoming', variant: 'upcoming' },
+  live: { label: 'Live', variant: 'live' },
   past: { label: 'Past', variant: 'past' },
   cancelled: { label: 'Canceled', variant: 'cancelled' },
 };

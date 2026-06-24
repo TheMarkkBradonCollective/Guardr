@@ -64,7 +64,7 @@ export function ClientMapScreen({
 
   const browseJobs = useMemo(() => {
     if (!currentUser) return [];
-    return clientBrowseMapJobs(currentUser.id, currentUser.clientName, requests);
+    return clientBrowseMapJobs(currentUser.id, currentUser.clientName, requests, currentUser.name);
   }, [requests, currentUser]);
 
   const filteredBrowseJobs = useMemo(
