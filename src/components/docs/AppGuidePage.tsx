@@ -36,7 +36,11 @@ export function AppGuidePage({ audience = 'all' }: AppGuidePageProps) {
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
       <div className="px-5 pt-2 pb-4 space-y-3">
-        <AppSegmentedControl options={GUIDE_TABS} value={selectedAudience} onChange={setSelectedAudience} />
+        <AppSegmentedControl<GuideAudience>
+          options={GUIDE_TABS}
+          value={selectedAudience}
+          onChange={(nextAudience) => setSelectedAudience(nextAudience)}
+        />
         <p className="text-sm text-brand-text-muted">{subtitle}</p>
       </div>
       <AppSection title="How Guardr works">
