@@ -48,6 +48,13 @@ export function MapSelectionExperience({
       <JobBillingSummaryFromRequest req={selected as SecurityRequest} variant={role === 'staff' ? 'staff' : 'client'} />
     );
 
+  const operationalDetails = 'operationalDetails' in selected ? selected.operationalDetails : undefined;
+  const operationalBriefingLocked =
+    role === 'guard' && 'operationalBriefingLocked' in selected
+      ? !!selected.operationalBriefingLocked
+      : false;
+  const jobStatus = 'status' in selected ? selected.status : undefined;
+
   return (
     <div className={`map-selection-layer ${bottomOffsetClass}`}>
       <MapOfferCard
@@ -71,6 +78,9 @@ export function MapSelectionExperience({
             showBadges={false}
             distanceMiles={route?.distanceMiles}
             payLine={payLine}
+            operationalDetails={operationalDetails}
+            operationalBriefingLocked={operationalBriefingLocked}
+            jobStatus={jobStatus}
           />
         </div>
       </MapOfferCard>

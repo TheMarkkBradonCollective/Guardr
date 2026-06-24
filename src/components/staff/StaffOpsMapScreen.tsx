@@ -4,6 +4,8 @@ import { ShiftMap } from '../guard/ShiftMap';
 import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
+import { staffVisibleMapJobs } from '../../lib/mapJobVisibility';
+import { MapJobsBrowseSheet } from '../map/MapJobsBrowseSheet';
 
 interface StaffOpsMapScreenProps {
   requests: SecurityRequest[];
@@ -15,13 +17,7 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
-  const mapJobs = useMemo(
-    () =>
-      requests.filter((r) =>
-        ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
-      ),
-    [requests]
-  );
+  const mapJobs = useMemo(() => staffVisibleMapJobs(requests), [requests]);
 
   const selectedJob = useMemo(
     () => mapJobs.find((j) => j.id === selectedJobId) ?? null,
@@ -48,6 +44,14 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
         loadingRoute={routeLoading}
         onClose={() => setSelectedJobId(null)}
       />
+      {!selectedJob && mapJobs.length > 0 && (
+        <MapJobsBrowseSheet
+          jobs={mapJobs}
+          selectedJobId={selectedJobId}
+          onSelectJob={setSelectedJobId}
+          title={`Jobs on map (${mapJobs.length})`}
+        />
+      )}
     </div>
   );
 }

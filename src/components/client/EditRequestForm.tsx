@@ -4,7 +4,7 @@ import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
 import { computeGuardPay } from '../../lib/payments';
-import { US_STATES } from '../../lib/states';
+import { CALIFORNIA_CITIES, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { listingFieldsFromJob } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -36,7 +36,7 @@ export function EditRequestForm({
   const [title, setTitle] = useState(request.title);
   const [siteName, setSiteName] = useState(request.siteName || '');
   const [address, setAddress] = useState(request.address || request.location);
-  const [state, setState] = useState(request.state || '');
+  const [state, setState] = useState(() => resolveJobCity(request.state));
   const [startDate, setStartDate] = useState(toDatetimeLocal(request.startDate));
   const [endDate, setEndDate] = useState(toDatetimeLocal(request.endDate));
   const [guardsNeeded, setGuardsNeeded] = useState(request.guardsNeeded ?? 1);
@@ -61,8 +61,8 @@ export function EditRequestForm({
       setError('Job title is required.');
       return;
     }
-    if (!address.trim() || state.length !== 2) {
-      setError('Address and state are required.');
+    if (!address.trim() || !isCaliforniaCity(state)) {
+      setError('Address and city are required.');
       return;
     }
 
@@ -84,7 +84,7 @@ export function EditRequestForm({
           title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
-          state: state.toUpperCase(),
+          state: formatCityLabel(state),
           location,
           latitude,
           longitude,
@@ -97,7 +97,7 @@ export function EditRequestForm({
           title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
-          state: state.toUpperCase(),
+          state: formatCityLabel(state),
           location,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
@@ -114,7 +114,7 @@ export function EditRequestForm({
           title: trimmedTitle,
           siteName: siteName.trim(),
           address: address.trim(),
-          state: state.toUpperCase(),
+          state: formatCityLabel(state),
           location,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
@@ -181,11 +181,10 @@ export function EditRequestForm({
           <input value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
         </div>
         <div>
-          <label className="uber-label block mb-1">State</label>
+          <label className="uber-label block mb-1">City</label>
           <select value={state} onChange={(e) => setState(e.target.value)} className="uber-input w-full">
-            <option value="">Select</option>
-            {US_STATES.map((s) => (
-              <option key={s.code} value={s.code}>{s.name}</option>
+            {CALIFORNIA_CITIES.map((city) => (
+              <option key={city} value={city}>{city}</option>
             ))}
           </select>
         </div>
@@ -199,7 +198,7 @@ export function EditRequestForm({
           setLatitude(coords.lat);
           setLongitude(coords.lng);
           if (addressLine) setAddress(addressLine);
-          if (stateCode) setState(stateCode);
+          setState(cityFromGeocode(addressLine, stateCode));
         }}
       />
       <JobLocationCoordsFields

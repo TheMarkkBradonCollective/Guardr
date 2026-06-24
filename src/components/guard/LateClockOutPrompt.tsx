@@ -1,13 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { toDatetimeLocal } from '../../lib/dates';
+import { computeLateClockOutHours } from '../../lib/shiftBilling';
 import { AppModal } from '../ui/motion/AppMotion';
+
+export interface LateClockOutResult {
+  checkedAt: string;
+  leftEarlier: boolean;
+  overtimeClaimed: boolean;
+}
 
 interface LateClockOutPromptProps {
   open: boolean;
   endDate: string;
   checkInAt?: string;
   onClose: () => void;
-  onConfirm: (checkedAt: string, leftEarlier: boolean) => void;
+  onConfirm: (result: LateClockOutResult) => void;
 }
 
 function formatWhen(iso: string): string {
@@ -32,6 +39,7 @@ export function LateClockOutPrompt({
 
   const minLocal = checkInAt ? toDatetimeLocal(checkInAt) : toDatetimeLocal(endDate);
   const maxLocal = nowLocal;
+  const endLocal = toDatetimeLocal(endDate);
 
   useEffect(() => {
     if (!open) {
@@ -42,8 +50,21 @@ export function LateClockOutPrompt({
     setAdjustedLocal(defaultLocal > maxLocal ? maxLocal : defaultLocal < minLocal ? minLocal : defaultLocal);
   }, [open, endDate, minLocal, maxLocal]);
 
-  const handleLeavingNow = () => {
-    onConfirm(new Date().toISOString(), false);
+  const handleStayed = () => {
+    const checkedAt = new Date().toISOString();
+    onConfirm({
+      checkedAt,
+      leftEarlier: false,
+      overtimeClaimed: computeLateClockOutHours(checkedAt, endDate) > 0,
+    });
+  };
+
+  const handleLeftOnTime = () => {
+    onConfirm({
+      checkedAt: endDate,
+      leftEarlier: true,
+      overtimeClaimed: false,
+    });
   };
 
   const handleUseAdjustedTime = () => {
@@ -52,8 +73,16 @@ export function LateClockOutPrompt({
     const minMs = new Date(minLocal).getTime();
     const maxMs = new Date(maxLocal).getTime();
     const clampedMs = Math.min(maxMs, Math.max(minMs, picked.getTime()));
-    onConfirm(new Date(clampedMs).toISOString(), true);
+    const checkedAt = new Date(clampedMs).toISOString();
+    onConfirm({
+      checkedAt,
+      leftEarlier: true,
+      overtimeClaimed: clampedMs > new Date(endDate).getTime(),
+    });
   };
+
+  const adjustedHasOvertime =
+    adjustedLocal > endLocal && adjustedLocal <= maxLocal && adjustedLocal >= minLocal;
 
   return (
     <AppModal
@@ -66,25 +95,32 @@ export function LateClockOutPrompt({
     >
       {step === 'choice' ? (
         <>
-          <h3 className="font-bold text-lg">You&apos;re clocking out late</h3>
+          <h3 className="font-bold text-lg">Past your scheduled end</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Your shift was scheduled to end at {formatWhen(endDate)}. Are you leaving the site right now,
-            or did you already head out and forget to clock out?
+            Your shift was scheduled to end at {formatWhen(endDate)}. Tell us how to record your
+            departure — overtime only applies if you stayed past that time or set a later leave time.
           </p>
           <div className="space-y-2">
             <button
               type="button"
-              onClick={handleLeavingNow}
+              onClick={handleStayed}
               className="app-button-primary app-btn-md w-full"
             >
-              I&apos;m leaving now
+              I stayed — clock out now
             </button>
             <button
               type="button"
               onClick={() => setStep('adjust')}
               className="app-button-outline app-btn-md w-full"
             >
-              I left earlier — set my departure time
+              Set when I left
+            </button>
+            <button
+              type="button"
+              onClick={handleLeftOnTime}
+              className="app-button-outline app-btn-md w-full"
+            >
+              I left at scheduled end — forgot to clock out
             </button>
             <button type="button" onClick={onClose} className="app-button-outline app-btn-md w-full">
               Cancel
@@ -95,7 +131,8 @@ export function LateClockOutPrompt({
         <>
           <h3 className="font-bold text-lg">When did you leave?</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Pick the time you actually left the site. Overtime billing, if any, will use this time.
+            Pick the time you actually left the site. If it is after {formatWhen(endDate)}, the client
+            will need to approve overtime before billing.
           </p>
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-brand-text-muted">Departure time</span>
@@ -108,6 +145,11 @@ export function LateClockOutPrompt({
               className="uber-input w-full"
             />
           </label>
+          {adjustedHasOvertime && (
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              This time is after your scheduled end — client approval will be required for overtime.
+            </p>
+          )}
           <div className="space-y-2">
             <button
               type="button"

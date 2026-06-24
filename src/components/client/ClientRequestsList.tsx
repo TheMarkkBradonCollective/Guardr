@@ -311,6 +311,7 @@ export function ClientRequestsList({
                         job={req}
                         showClientHeader={false}
                         showBadges={false}
+                        operationalDetails={req.operationalDetails}
                         payLine={
                           <JobBillingSummaryFromRequest
                             req={req}

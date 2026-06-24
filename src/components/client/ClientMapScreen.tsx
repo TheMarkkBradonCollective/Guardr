@@ -5,6 +5,8 @@ import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { ClientActiveShift } from './ClientActiveShift';
+import { clientVisibleMapJobs } from '../../lib/mapJobVisibility';
+import { MapJobsBrowseSheet } from '../map/MapJobsBrowseSheet';
 import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest } from '../../lib/clientShift';
 
 interface ClientMapScreenProps {
@@ -43,14 +45,12 @@ export function ClientMapScreen({
   }, [liveJobs, selectedLiveJobId, primaryLiveJob]);
 
   const activeGuard = activeLiveJob ? guardForRequest(guards, activeLiveJob) : null;
-  const showShiftOverlay = !!activeLiveJob && !!activeGuard;
+  const showShiftOverlay = !!activeLiveJob && !!activeGuard && activeLiveJob.status === 'in-progress';
 
   const mapJobs = useMemo(() => {
-    const posted = requests.filter((r) =>
-      ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)
-    );
-    return posted;
-  }, [requests]);
+    if (!currentUser) return [];
+    return clientVisibleMapJobs(currentUser.id, currentUser.clientName, requests);
+  }, [requests, currentUser]);
 
   const selectedOffer = useMemo(
     () => mapJobs.find((j) => j.id === selectedOfferId) ?? null,
@@ -113,6 +113,16 @@ export function ClientMapScreen({
           route={route}
           loadingRoute={routeLoading}
           onClose={() => setSelectedOfferId(null)}
+          bottomOffsetClass="client-map-offer-offset"
+        />
+      )}
+
+      {!showShiftOverlay && !selectedOffer && mapJobs.length > 0 && (
+        <MapJobsBrowseSheet
+          jobs={mapJobs}
+          selectedJobId={selectedOfferId}
+          onSelectJob={setSelectedOfferId}
+          title={`Your offers (${mapJobs.length})`}
           bottomOffsetClass="client-map-offer-offset"
         />
       )}

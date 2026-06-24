@@ -39,14 +39,16 @@ export function computeOvertimeAmount(
   return roundMoney(overtimeHours * hourlyRate * guardsNeeded);
 }
 
-/** Record overtime on clock-out — goes straight to client approval (guard already confirmed by staying). */
+/** Record overtime when the guard claimed it (I stayed, or departure time after scheduled end). */
 export function detectLateClockOutOvertime(
   req: Pick<
     SecurityRequest,
     'durationHours' | 'estimatedPayout' | 'hourlyRate' | 'guardsNeeded' | 'endDate' | 'overtimeStatus'
   >,
-  checkOutAt: string
+  checkOutAt: string,
+  options?: { guardClaimedOvertime?: boolean }
 ): DetectedOvertime | null {
+  if (!options?.guardClaimedOvertime) return null;
   if (req.overtimeStatus && req.overtimeStatus !== 'none') return null;
 
   const overtimeHours = computeLateClockOutHours(checkOutAt, req.endDate);
@@ -81,6 +83,18 @@ export function billableDurationHours(
   }
   const breakHours = breakMs / 3_600_000;
   return Math.max(0, roundMoney(base - breakHours));
+}
+
+export function guardClaimsOvertimeForClockOut(
+  checkOutAt: string,
+  endDate: string,
+  options: { stayed?: boolean; leftEarlier?: boolean }
+): boolean {
+  if (options.stayed) return computeLateClockOutHours(checkOutAt, endDate) > 0;
+  if (options.leftEarlier) {
+    return new Date(checkOutAt).getTime() > new Date(endDate).getTime();
+  }
+  return false;
 }
 
 export function billableEstimatedPayout(

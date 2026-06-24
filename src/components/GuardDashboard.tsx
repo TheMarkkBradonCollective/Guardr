@@ -267,6 +267,7 @@ export function GuardDashboard({
   const [showLateClockOutPrompt, setShowLateClockOutPrompt] = useState(false);
   const [pendingClockOutAt, setPendingClockOutAt] = useState<string | null>(null);
   const [pendingLeftEarlier, setPendingLeftEarlier] = useState(false);
+  const [pendingOvertimeClaimed, setPendingOvertimeClaimed] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showIncidentReport, setShowIncidentReport] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
@@ -658,12 +659,14 @@ export function GuardDashboard({
     }
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
+    setPendingOvertimeClaimed(false);
     setShowCheckout(true);
   };
 
-  const handleLateClockOutConfirm = (checkedAt: string, leftEarlier: boolean) => {
-    setPendingClockOutAt(checkedAt);
-    setPendingLeftEarlier(leftEarlier);
+  const handleLateClockOutConfirm = (result: import('./guard/LateClockOutPrompt').LateClockOutResult) => {
+    setPendingClockOutAt(result.checkedAt);
+    setPendingLeftEarlier(result.leftEarlier);
+    setPendingOvertimeClaimed(result.overtimeClaimed);
     setShowLateClockOutPrompt(false);
     setShowCheckout(true);
   };
@@ -692,12 +695,14 @@ export function GuardDashboard({
         incidentReports: existing?.incidentReports,
         clientNotes: existing?.clientNotes ?? '',
         leftEarlier: pendingLeftEarlier || undefined,
+        overtimeClaimed: pendingOvertimeClaimed || undefined,
       },
     });
     updatePhase(activeShiftJob.id, 'complete');
     setShowCheckout(false);
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
+    setPendingOvertimeClaimed(false);
     setRatingJob(activeShiftJob);
   };
 

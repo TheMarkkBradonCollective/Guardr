@@ -14,7 +14,7 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
-import { US_STATES } from '../../lib/states';
+import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity } from '../../lib/californiaCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -29,6 +29,7 @@ import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
 import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
+import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -58,7 +59,7 @@ export function DirectGuardRequestFlow({
   const [jobTitle, setJobTitle] = useState(() => defaultDirectGuardJobTitle('standing-guard', guard.name));
   const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [address, setAddress] = useState('');
-  const [jobState, setJobState] = useState('');
+  const [jobState, setJobState] = useState(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, 8));
@@ -70,6 +71,7 @@ export function DirectGuardRequestFlow({
   const [longitude, setLongitude] = useState<number | undefined>();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
+  const [breakPaid, setBreakPaid] = useState(true);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
 
@@ -95,7 +97,7 @@ export function DirectGuardRequestFlow({
   const canNext = (): boolean => {
     switch (step) {
       case 1: return !!serviceId && jobTitle.trim().length > 0;
-      case 2: return address.trim().length > 3 && jobState.length === 2;
+      case 2: return address.trim().length > 3 && isCaliforniaCity(jobState);
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveRate >= 20;
       case 5: return true;
@@ -133,7 +135,7 @@ export function DirectGuardRequestFlow({
       title,
       siteName: siteName || title,
       address,
-      state: jobState.toUpperCase(),
+      state: formatCityLabel(jobState),
       location: siteName ? `${siteName} — ${address}` : address,
       type: serviceToJobType(serviceId),
       guardsNeeded: 1,
@@ -159,6 +161,7 @@ export function DirectGuardRequestFlow({
       minGuardQualification,
       operationalDetails: normalizeJobOperationalDetails(operational),
       breakMinutes: effectiveBreakMinutes,
+      breakPaid,
     });
   };
 
@@ -253,15 +256,14 @@ export function DirectGuardRequestFlow({
                 setLatitude(coords.lat);
                 setLongitude(coords.lng);
                 if (addressLine) setAddress(addressLine);
-                if (stateCode) setJobState(stateCode);
+                setJobState(cityFromGeocode(addressLine, stateCode));
               }}
             />
             <div>
-              <label className="uber-label block mb-1">State</label>
+              <label className="uber-label block mb-1">City</label>
               <select value={jobState} onChange={(e) => setJobState(e.target.value)} className="uber-select w-full" required>
-                <option value="">State…</option>
-                {US_STATES.map(({ code, name }) => (
-                  <option key={code} value={code}>{name}</option>
+                {CALIFORNIA_CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
                 ))}
               </select>
             </div>
@@ -317,7 +319,7 @@ export function DirectGuardRequestFlow({
             <div>
               <h3 className="text-lg font-bold">Scheduled breaks</h3>
               <p className="text-sm text-brand-text-muted mt-1">
-                Unpaid break minutes for this shift. Staff are notified when breaks start and end.
+                Break minutes for this shift. Staff are notified when breaks start and end.
               </p>
             </div>
             <div className="segmented-control segmented-control-full">
@@ -337,6 +339,11 @@ export function DirectGuardRequestFlow({
                 </button>
               ))}
             </div>
+            <JobBreakPaidToggle
+              breakMinutes={effectiveBreakMinutes}
+              breakPaid={breakPaid}
+              onBreakPaidChange={setBreakPaid}
+            />
           </div>
         )}
 
@@ -403,7 +410,7 @@ export function DirectGuardRequestFlow({
                 clientLogo: 'YOU',
                 siteName: siteName || title,
                 address,
-                state: jobState.toUpperCase(),
+                state: formatCityLabel(jobState),
                 location: siteName ? `${siteName} — ${address}` : address,
                 type: serviceToJobType(serviceId),
                 armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
@@ -425,6 +432,7 @@ export function DirectGuardRequestFlow({
                 requestType: 'direct',
                 status: 'draft',
                 breakMinutes: effectiveBreakMinutes,
+                breakPaid,
                 operationalDetails: normalizeJobOperationalDetails(operational),
               }}
             />

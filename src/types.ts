@@ -822,6 +822,8 @@ export interface SecurityRequest {
     attachments?: string[];
     /** Guard corrected departure time after forgetting to clock out on time */
     leftEarlier?: boolean;
+    /** Guard explicitly claimed overtime (stayed past end or set departure after scheduled end). */
+    overtimeClaimed?: boolean;
   };
   reports?: ShiftReport[];
 }

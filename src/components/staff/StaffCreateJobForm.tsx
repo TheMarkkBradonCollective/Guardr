@@ -17,7 +17,7 @@ import {
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
-import { CALIFORNIA_CITIES } from '../../lib/californiaCities';
+import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel } from '../../lib/californiaCities';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -26,6 +26,7 @@ import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
 import { JobOperationalDetails } from '../../types';
 import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
+import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
 export interface StaffCreateJobInput {
@@ -55,6 +56,7 @@ export interface StaffCreateJobInput {
   longitude?: number;
   operationalDetails?: JobOperationalDetails;
   breakMinutes?: number;
+  breakPaid?: boolean;
 }
 
 interface StaffCreateJobFormProps {
@@ -72,7 +74,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
   const [customTitle, setCustomTitle] = useState('');
   const [address, setAddress] = useState('');
-  const [jobState, setJobState] = useState('CA');
+  const [jobState, setJobState] = useState(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(() => getDefaultShiftStart());
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(getDefaultShiftStart(), 8));
@@ -85,6 +87,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const [longitude, setLongitude] = useState<number | undefined>();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
+  const [breakPaid, setBreakPaid] = useState(true);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [saving, setSaving] = useState(false);
@@ -117,7 +120,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
     setServiceId('standing-guard');
     setCustomTitle('');
     setAddress('');
-    setJobState('CA');
+    setJobState(DEFAULT_CALIFORNIA_CITY);
     setSiteName('');
     setStartDate(getDefaultShiftStart());
     setEndDate(getDefaultShiftEnd(getDefaultShiftStart(), 8));
@@ -160,7 +163,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         clientId,
         title,
         address: address.trim(),
-        state: jobState.toUpperCase(),
+        state: formatCityLabel(jobState),
         siteName: siteName.trim() || title,
         type: serviceToJobType(serviceId),
         startDate: new Date(startDate).toISOString(),
@@ -183,6 +186,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         longitude,
         operationalDetails: normalizeJobOperationalDetails(operational),
         breakMinutes: effectiveBreakMinutes,
+        breakPaid,
       });
       const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
       setMsg(
@@ -302,7 +306,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
                 setLatitude(coords.lat);
                 setLongitude(coords.lng);
                 if (addressLine) setAddress(addressLine);
-                if (stateCode) setJobState(stateCode);
+                setJobState(cityFromGeocode(addressLine, stateCode));
               }}
             />
           </div>
@@ -365,7 +369,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         <div className="sm:col-span-2">
           <label className="uber-label block mb-1">Scheduled breaks (minutes)</label>
           <p className="text-xs text-brand-text-muted mb-2">
-            Unpaid break time guards can take during the shift.
+            Break time guards can take during the shift.
           </p>
           <div className="segmented-control segmented-control-full">
             {BREAK_MINUTE_PRESETS.map((minutes) => (
@@ -392,6 +396,12 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             value={customBreakMinutes}
             onChange={(e) => setCustomBreakMinutes(e.target.value)}
             className="uber-input w-full mt-2"
+          />
+          <JobBreakPaidToggle
+            breakMinutes={effectiveBreakMinutes}
+            breakPaid={breakPaid}
+            onBreakPaidChange={setBreakPaid}
+            className="mt-3"
           />
         </div>
 

@@ -1687,6 +1687,28 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   pointer-events: auto;
 }
 
+.map-jobs-browse-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+.map-jobs-browse-sheet > * {
+  pointer-events: auto;
+}
+
+.map-jobs-browse-card {
+  margin-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.client-map-offer-offset.map-jobs-browse-sheet,
+.map-jobs-browse-sheet.client-map-offer-offset {
+  bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+}
+
 .client-map-offer-offset {
   bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
