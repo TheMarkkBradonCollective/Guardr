@@ -1882,8 +1882,8 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 999px;
   background: var(--brand-primary);
   color: var(--brand-accent-text);
@@ -1939,6 +1939,11 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 .client-map-layout .guardr-map-locate-btn {
   left: 0.875rem;
   right: auto;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Client map: align New FAB with locate button */
+.client-map-layout .map-post-fab-layer.map-browse-offset {
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
