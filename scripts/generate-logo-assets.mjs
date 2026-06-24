@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const PUBLIC = path.join(ROOT, 'public');
 const SVG = path.join(ROOT, 'logo.svg');
 
-const BRAND_SAGE = '#9CAF88';
+const BRAND_SAGE = '#5E7B61';
 
 async function main() {
   await mkdir(PUBLIC, { recursive: true });

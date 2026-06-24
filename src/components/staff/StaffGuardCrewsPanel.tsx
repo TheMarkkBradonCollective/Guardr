@@ -22,8 +22,8 @@ const PHASE_LABEL: Record<StaffCrewPhase, string> = {
   active: 'On assignment',
 };
 
-const PHASE_TONE: Record<StaffCrewPhase, 'warning' | 'primary' | 'muted' | 'success'> = {
-  recruiting: 'muted',
+const PHASE_TONE: Record<StaffCrewPhase, 'warning' | 'primary' | 'default' | 'success'> = {
+  recruiting: 'default',
   needs_review: 'warning',
   confirmed: 'primary',
   awaiting_client: 'primary',
@@ -246,23 +246,21 @@ export function StaffGuardCrewsPanel({
           listScrollClassName="max-h-[75vh] overflow-y-auto pr-1"
           mobilePresentation="page"
           renderItem={(crew, isActive, onSelect) => (
-            <WfListCard active={isActive} onClick={onSelect}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                  <p className="font-semibold text-brand-text truncate">{crew.crewName}</p>
-                  <p className="text-xs text-brand-text-muted truncate">
-                    {crew.jobTitle} · {crew.clientName}
-                  </p>
-                  <p className="text-xs text-brand-text-muted">
-                    {crew.coordinatorName} · {crew.memberCount}/{crew.guardsNeeded} guards
-                    {crew.pendingStaffCount > 0
-                      ? ` · ${crew.pendingStaffCount} awaiting review`
-                      : ''}
-                  </p>
-                </div>
-                <WfBadge tone={PHASE_TONE[crew.phase]}>{PHASE_LABEL[crew.phase]}</WfBadge>
-              </div>
-            </WfListCard>
+            <WfListCard
+              title={crew.crewName}
+              subtitle={`${crew.jobTitle} · ${crew.clientName}`}
+              meta={
+                <>
+                  {crew.coordinatorName} · {crew.memberCount}/{crew.guardsNeeded} guards
+                  {crew.pendingStaffCount > 0
+                    ? ` · ${crew.pendingStaffCount} awaiting review`
+                    : ''}
+                </>
+              }
+              action={<WfBadge tone={PHASE_TONE[crew.phase]}>{PHASE_LABEL[crew.phase]}</WfBadge>}
+              onClick={onSelect}
+              className={isActive ? 'app-item-card-selected' : ''}
+            />
           )}
           renderDetail={(crew, options) => {
             const job = requests.find((r) => r.id === crew.jobId);

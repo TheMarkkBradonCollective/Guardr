@@ -60,6 +60,7 @@ import {
   Shield,
   UserCheck,
   Users,
+  UsersRound,
 } from 'lucide-react';
 
 interface StaffOverviewProps {
@@ -104,6 +105,7 @@ const QUICK_LINK_META: Record<
   guards: { label: 'Guards', icon: Shield },
   team: { label: 'Staff', icon: Users },
   clients: { label: 'Clients', icon: Building2 },
+  crews: { label: 'Crews', icon: UsersRound },
   incidents: { label: 'Incidents', icon: AlertTriangle },
   messages: { label: 'Messages', icon: MessagesSquare },
   support: { label: 'Messages', icon: MessagesSquare },

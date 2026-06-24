@@ -13,6 +13,7 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   'in-progress': 'In Progress',
   completed: 'Completed',
   closed: 'Closed',
+  cancelled: 'Canceled',
 };
 
 export const JOB_STATUS_FLOW: JobStatus[] = [
@@ -31,7 +32,7 @@ export function normalizeJobStatus(status: string): JobStatus {
     case 'assigned':
       return 'accepted';
     case 'cancelled':
-      return 'closed';
+      return 'cancelled';
     default:
       return status as JobStatus;
   }

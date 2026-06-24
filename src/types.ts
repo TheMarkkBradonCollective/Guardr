@@ -7,7 +7,8 @@ export type JobStatus =
   | 'accepted'
   | 'in-progress'
   | 'completed'
-  | 'closed';
+  | 'closed'
+  | 'cancelled';
 
 export type ReportType =
   | 'daily-activity'

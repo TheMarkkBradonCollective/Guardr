@@ -61,6 +61,7 @@ const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
   'in-progress': 'In progress',
   completed: 'Completed',
   closed: 'Closed',
+  cancelled: 'Canceled',
 };
 
 export function GuardProfileScreen({

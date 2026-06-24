@@ -686,7 +686,7 @@ async function buildEventDispatchPayloads(db, event) {
     else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
     return payloads;
   }
-  if (event.type === "staff_message" || event.type === "job_submitted" || event.type === "guard_pending_approval" || event.type === "client_pending_approval" || event.type === "credential_pending" || event.type === "payment_attention" || event.type === "client_cash_payment_requested" || event.type === "guard_cash_payout_requested" || event.type === "stripe_payment_complete" || event.type === "support_message" && !event.recipientUserId || event.type === "job_chat_message" && !event.recipientUserId) {
+  if (event.type === "staff_message" || event.type === "job_submitted" || event.type === "guard_pending_approval" || event.type === "client_pending_approval" || event.type === "credential_pending" || event.type === "payment_attention" || event.type === "support_message" && !event.recipientUserId || event.type === "job_chat_message" && !event.recipientUserId) {
     return [{ ...payload, role: "dispatch" }];
   }
   if (event.type === "guard_message") {
