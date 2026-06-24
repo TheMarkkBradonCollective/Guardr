@@ -464,11 +464,23 @@ html.theme-grey {
   }
 }
 
-.staff-empty-state {
+.staff-empty-state,
+.app-empty-state--dashed {
   padding: 3rem 1.25rem;
   text-align: center;
   font-size: 0.875rem;
   color: var(--brand-text-muted);
+  border: 1px dashed color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary));
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-bg-sec) 40%, transparent);
+}
+
+.app-empty-state {
+  padding: 3rem 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+  line-height: 1.5;
 }
 
 .staff-overview-hero {
@@ -3229,13 +3241,6 @@ a.app-item-card:active,
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-}
-
-.app-empty-state {
-  padding: 3rem 1.25rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--brand-text-muted);
 }
 
 /* Inline search */

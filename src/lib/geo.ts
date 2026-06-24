@@ -8,7 +8,7 @@ export interface GeoCoords {
 }
 
 export type JobCoordsSource = Pick<
-  { location: string; id?: string; latitude?: number; longitude?: number },
+  { location?: string; id?: string; latitude?: number; longitude?: number },
   'location' | 'id' | 'latitude' | 'longitude'
 >;
 
@@ -16,7 +16,7 @@ export function jobCoords(job: JobCoordsSource): GeoCoords {
   if (job.latitude != null && job.longitude != null) {
     return { lat: job.latitude, lng: job.longitude };
   }
-  return locationToCoords(job.location, job.id);
+  return locationToCoords(job.location ?? '', job.id);
 }
 
 export function buildGeocodeQuery(parts: {

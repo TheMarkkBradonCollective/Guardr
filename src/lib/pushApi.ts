@@ -134,7 +134,8 @@ export type PushEventType =
   | 'client_trusted_status'
   | 'job_relisted'
   | 'job_schedule_changed'
-  | 'team_chat_message';
+  | 'team_chat_message'
+  | 'test';
 
 export async function reportPushEvent(
   user: SessionUser,
