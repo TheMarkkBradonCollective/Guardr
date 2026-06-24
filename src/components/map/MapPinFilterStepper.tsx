@@ -55,8 +55,9 @@ export function MapPinFilterStepper<T extends string>({
         </button>
       </div>
 
+      {routeSlot ? <div className="map-route-banner-slot">{routeSlot}</div> : null}
+
       <div className="map-top-right-cluster">
-        {routeSlot}
         <button
           type="button"
           className="map-filter-step-label"
