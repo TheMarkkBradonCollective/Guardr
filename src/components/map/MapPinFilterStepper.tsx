@@ -34,18 +34,18 @@ export function MapPinFilterStepper<T extends string>({
         <button
           type="button"
           className="map-filter-step-btn"
-          onClick={() => step(-1)}
-          aria-label={`Previous filter: ${filters[(currentIndex - 1 + filters.length) % filters.length].label}`}
-        >
-          <Minus className="w-4 h-4" strokeWidth={2.5} />
-        </button>
-        <button
-          type="button"
-          className="map-filter-step-btn"
           onClick={() => step(1)}
           aria-label={`Next filter: ${filters[(currentIndex + 1) % filters.length].label}`}
         >
           <Plus className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          className="map-filter-step-btn"
+          onClick={() => step(-1)}
+          aria-label={`Previous filter: ${filters[(currentIndex - 1 + filters.length) % filters.length].label}`}
+        >
+          <Minus className="w-4 h-4" strokeWidth={2.5} />
         </button>
       </div>
 

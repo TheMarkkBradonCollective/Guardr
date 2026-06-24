@@ -1807,7 +1807,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .guard-map-layout .map-route-banner,
 .client-map-layout .map-route-banner {
-  top: calc(10px + 6rem + 0.5rem);
+  top: calc(10px + 2.75rem + 0.5rem);
 }
 
 .map-selection-layer {
@@ -2321,7 +2321,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
-  top: calc(10px + 6rem + 0.5rem);
+  top: calc(10px + 2.75rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: 18rem;
@@ -2656,7 +2656,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
 
 body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
-  top: calc(10px + 6rem + 0.5rem);
+  top: calc(10px + 2.75rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: min(calc(62vw - 2rem), 20rem);
