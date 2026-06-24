@@ -206,6 +206,7 @@ function JobDetailPanel({
           showClientHeader
           showBadges={false}
           payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
+          operationalDetails={req.operationalDetails}
         />
       )}
       {scheduleLocked && !editing && (

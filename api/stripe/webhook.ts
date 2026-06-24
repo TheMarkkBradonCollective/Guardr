@@ -89,11 +89,23 @@ async function markJobPaid(
   }
 
   try {
-    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
-    await notifyPaymentAttention(db, {
+    const { notifyStripePaymentComplete, notifyJobOpenToGuards } = await import('../../lib/push/paymentNotifications');
+    const { data: jobRow } = await db
+      .from('security_requests')
+      .select('title, location, status')
+      .eq('id', jobId)
+      .maybeSingle();
+    await notifyStripePaymentComplete(db, {
       requestId: jobId,
-      body: 'Client card payment received — job may be ready for guard assignment',
+      body: `Client card payment received for "${jobRow?.title ?? 'job'}" — $${amount.toFixed(2)}`,
     });
+    if (jobRow?.status === 'open') {
+      await notifyJobOpenToGuards(db, {
+        requestId: jobId,
+        location: jobRow.location ?? undefined,
+        body: `"${jobRow.title}" is paid and open on the map.`,
+      });
+    }
   } catch (err) {
     console.warn('Payment push notification failed:', err);
   }

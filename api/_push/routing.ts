@@ -165,7 +165,7 @@ export function resolveNotificationUrlForRole(
       if (role === 'client') {
         return options.requestId
           ? `/client/map?jc=${encodeURIComponent(options.requestId)}`
-          : '/client/coverage';
+          : '/client/map';
       }
       if (role === 'guard') {
         return options.requestId
@@ -192,7 +192,7 @@ export function resolveNotificationUrlForRole(
       if (role === 'client') {
         return options.requestId
           ? `/client/map?jc=${encodeURIComponent(options.requestId)}`
-          : '/client/coverage';
+          : '/client/map';
       }
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`

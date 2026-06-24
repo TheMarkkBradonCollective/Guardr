@@ -77,3 +77,24 @@ export function formatCityLabel(city: string | undefined): string {
   const match = CALIFORNIA_CITIES.find((c) => c.toLowerCase() === city.trim().toLowerCase());
   return match ?? city.trim();
 }
+
+/** Normalize stored job location — legacy 2-letter state codes map to default city. */
+export function resolveJobCity(value: string | undefined): CaliforniaCity {
+  if (value && isCaliforniaCity(value)) {
+    return formatCityLabel(value) as CaliforniaCity;
+  }
+  return DEFAULT_CALIFORNIA_CITY;
+}
+
+/** Pick a California city from geocode results (address line preferred). */
+export function cityFromGeocode(addressLine?: string, stateCode?: string): CaliforniaCity {
+  if (addressLine) {
+    const lower = addressLine.toLowerCase();
+    const found = CALIFORNIA_CITIES.find((c) => lower.includes(c.toLowerCase()));
+    if (found) return found;
+  }
+  if (stateCode && isCaliforniaCity(stateCode)) {
+    return formatCityLabel(stateCode) as CaliforniaCity;
+  }
+  return DEFAULT_CALIFORNIA_CITY;
+}

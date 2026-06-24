@@ -22,6 +22,7 @@ interface RoleAppShellProps {
   flatNav?: boolean;
   variant?: 'default' | 'dark';
   experience?: 'client' | 'guard';
+  centerNavId?: string;
 }
 
 export function RoleAppShell({
@@ -42,6 +43,7 @@ export function RoleAppShell({
   flatNav = false,
   variant = 'default',
   experience,
+  centerNavId = 'map',
 }: RoleAppShellProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMapMode = variant === 'dark';
@@ -88,6 +90,7 @@ export function RoleAppShell({
         moreBadge={moreBadge}
         onMoreClick={() => setMoreOpen(true)}
         flat={flatNav}
+        centerItemId={centerNavId}
       />
 
       {hasOverflow && (

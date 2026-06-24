@@ -14,7 +14,6 @@ import type { OvertimeDisputeInput } from '../lib/shiftBilling';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
-import { LiveCoverageScreen } from './client/LiveCoverageScreen';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
@@ -29,7 +28,6 @@ export type ClientView =
   | 'home'
   | 'request'
   | 'direct-request'
-  | 'coverage'
   | 'messages'
   | 'reports'
   | 'requests'
@@ -214,7 +212,7 @@ export function ClientDashboard({
   };
 
   useEffect(() => {
-    if (openJobChat && jobChatRequestId && (view === 'map' || view === 'coverage')) {
+    if (openJobChat && jobChatRequestId && (view === 'map' || view === 'messages')) {
       navigate('messages');
     }
   }, [openJobChat, jobChatRequestId, view]);
@@ -240,9 +238,6 @@ export function ClientDashboard({
       case 'reports':
         setSelectedIncidentId(null);
         navigate('reports');
-        break;
-      case 'coverage':
-        navigate('coverage');
         break;
       case 'requests':
         navigate('requests');
@@ -288,10 +283,33 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         currentUser={currentUser}
-        onOpenCoverage={() => navigate('coverage')}
+        clientEmail={clientEmail}
+        paymentGates={paymentGates}
+        crewSettings={crewSettings ?? teamLeadSettings}
+        jobChatThreads={jobChatThreads}
         onOpenJobChat={openMessages}
+        onPostJob={() => {
+          setFlowPreset('default');
+          navigate('request');
+        }}
+        onRequestGuard={() => navigate('guards')}
         initialLiveJobId={jobChatRequestId}
         onLiveJobIdChange={onJobChatRequestIdChange}
+        onConfirmSelfAudit={onConfirmSelfAudit}
+        onConfirmSpotCheck={onConfirmSpotCheck}
+        onRequestCashPayment={onRequestCashPayment}
+        onApproveOvertime={onApproveOvertime}
+        onDisputeOvertime={onDisputeOvertime}
+        onRequestOvertimeCash={onRequestOvertimeCash}
+        onApproveScheduleChange={onApproveScheduleChange}
+        onRejectScheduleChange={onRejectScheduleChange}
+        onApprovePendingGuard={onApprovePendingGuard}
+        onDenyPendingGuard={onDenyPendingGuard}
+        onApproveTeamSlot={onApproveTeamSlot}
+        onDenyTeamSlot={onDenyTeamSlot}
+        onApproveFullTeam={onApproveFullTeam}
+        onDenyFullTeam={onDenyFullTeam}
+        onAddReview={onAddReview}
       />
     );
   }
@@ -386,20 +404,6 @@ export function ClientDashboard({
         onSupportTicketIdChange={onSupportTicketIdChange}
         onOpenCompose={onOpenSupportCompose}
         onOpenReport={onOpenSupportReport}
-      />
-    );
-  }
-
-  if (view === 'coverage') {
-    return page(
-      'coverage',
-      <LiveCoverageScreen
-        requests={requests}
-        guards={guards}
-        onConfirmSelfAudit={onConfirmSelfAudit}
-        onConfirmSpotCheck={onConfirmSpotCheck}
-        jobChatThreads={jobChatThreads}
-        onOpenJobChat={openMessages}
       />
     );
   }

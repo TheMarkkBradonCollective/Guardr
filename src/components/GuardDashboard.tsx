@@ -17,7 +17,11 @@ import {
 import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
-import { GuardBottomSheet } from './guard/GuardBottomSheet';
+import { MapSelectionExperience } from './map/MapSelectionExperience';
+import { MapBrowseDock } from './map/MapBrowseDock';
+import { guardMapBrowseItems } from '../lib/mapBrowseItems';
+import { guardVisibleMapJobs } from '../lib/mapJobVisibility';
+import { GuardJobCard } from './guard/GuardJobCard';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
@@ -81,6 +85,7 @@ import {
   guardBreakBlockedMessage,
 } from '../lib/shiftBreaks';
 import type { IncidentReportFormInput } from '../lib/incidentReports';
+import { useUserLocation } from '../lib/useUserLocation';
 
 interface GuardDashboardProps {
   guard: SecurityGuard;
@@ -267,6 +272,7 @@ export function GuardDashboard({
   const [showLateClockOutPrompt, setShowLateClockOutPrompt] = useState(false);
   const [pendingClockOutAt, setPendingClockOutAt] = useState<string | null>(null);
   const [pendingLeftEarlier, setPendingLeftEarlier] = useState(false);
+  const [pendingOvertimeClaimed, setPendingOvertimeClaimed] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showIncidentReport, setShowIncidentReport] = useState(false);
   const [ratingJob, setRatingJob] = useState<GuardJobView | null>(null);
@@ -349,14 +355,27 @@ export function GuardDashboard({
   );
 
   const selectedJob = useMemo(() => {
-    const all = [...filteredBrowseJobs, ...assignedJobs];
-    return all.find((j) => j.id === selectedJobId) ?? null;
-  }, [filteredBrowseJobs, assignedJobs, selectedJobId]);
+    const visible = guardVisibleMapJobs(guard.id, requests, requests);
+    return visible.find((j) => j.id === selectedJobId) ?? null;
+  }, [requests, guard.id, selectedJobId]);
 
-  const mapJobs = useMemo(
-    () => [...filteredBrowseJobs, ...scheduledMapJobs],
-    [filteredBrowseJobs, scheduledMapJobs]
-  );
+  const mapJobs = useMemo(() => {
+    const visible = guardVisibleMapJobs(guard.id, requests, requests);
+    const onDutyOverlay =
+      activeTab === 'map' &&
+      activeShiftJob?.status === 'in-progress' &&
+      activePhase &&
+      activePhase !== 'complete';
+    if (onDutyOverlay) {
+      return visible.filter((j) => j.status === 'in-progress' && j.assignedGuardId === guard.id);
+    }
+    return visible.filter((j) => j.status !== 'in-progress');
+  }, [requests, guard.id, activeTab, activeShiftJob, activePhase]);
+
+  const browseMapJobs = useMemo(() => {
+    const visible = guardVisibleMapJobs(guard.id, requests, requests);
+    return visible.filter((j) => j.status !== 'in-progress');
+  }, [requests, guard.id]);
 
   const userLocation = useUserLocation(activeTab === 'map');
   const geofenceNotifiedRef = useRef(false);
@@ -658,12 +677,14 @@ export function GuardDashboard({
     }
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
+    setPendingOvertimeClaimed(false);
     setShowCheckout(true);
   };
 
-  const handleLateClockOutConfirm = (checkedAt: string, leftEarlier: boolean) => {
-    setPendingClockOutAt(checkedAt);
-    setPendingLeftEarlier(leftEarlier);
+  const handleLateClockOutConfirm = (result: import('./guard/LateClockOutPrompt').LateClockOutResult) => {
+    setPendingClockOutAt(result.checkedAt);
+    setPendingLeftEarlier(result.leftEarlier);
+    setPendingOvertimeClaimed(result.overtimeClaimed);
     setShowLateClockOutPrompt(false);
     setShowCheckout(true);
   };
@@ -692,12 +713,14 @@ export function GuardDashboard({
         incidentReports: existing?.incidentReports,
         clientNotes: existing?.clientNotes ?? '',
         leftEarlier: pendingLeftEarlier || undefined,
+        overtimeClaimed: pendingOvertimeClaimed || undefined,
       },
     });
     updatePhase(activeShiftJob.id, 'complete');
     setShowCheckout(false);
     setPendingClockOutAt(null);
     setPendingLeftEarlier(false);
+    setPendingOvertimeClaimed(false);
     setRatingJob(activeShiftJob);
   };
 
@@ -776,9 +799,9 @@ export function GuardDashboard({
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
-    { id: 'earnings', icon: DollarSign, label: 'Pay' },
-    { id: 'map', icon: Map, label: 'Map' },
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
+    { id: 'map', icon: Map, label: 'Map' },
+    { id: 'earnings', icon: DollarSign, label: 'Pay' },
     ...(trustedGuard ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
@@ -833,31 +856,76 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && !showShiftOverlay && (
-        <GuardBottomSheet
-          jobs={filteredBrowseJobs}
-          guard={guard}
-          coworkerGuards={coworkerGuards}
-          selectedJob={selectedJob}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          onSelectJob={(job) => {
-            setSelectedJobId(job?.id ?? null);
-            if (!job) {
-              setMapRoute(null);
-              setMapRouteLoading(false);
-            }
+      {activeTab === 'map' && !showShiftOverlay && selectedJob && (
+        <MapSelectionExperience
+          job={selectedJob}
+          role="guard"
+          route={mapRoute}
+          loadingRoute={mapRouteLoading}
+          onClose={() => {
+            setSelectedJobId(null);
+            setMapRoute(null);
+            setMapRouteLoading(false);
           }}
-          onAcceptJob={handleAcceptJob}
-          onDeclineDirectJob={onDeclineDirectJob}
-          onApplyAsTeamLead={onApplyAsTeamLead}
-          onInviteTeamGuard={onInviteTeamGuard}
-          onRemoveTeamGuard={onRemoveTeamGuard}
-          onUpdateCrewProfile={onUpdateCrewProfile}
-          onAcceptTeamInvite={onAcceptTeamInvite}
-          onDeclineTeamInvite={onDeclineTeamInvite}
-          scheduleRequests={requests}
-          scheduledJobs={scheduledMapJobs}
+          onPrimaryAction={
+            selectedJob.status === 'open' ? () => handleAcceptJob(selectedJob.id) : undefined
+          }
+          primaryLabel="Slide to accept"
+          bottomOffsetClass="map-browse-offset"
+          detailActions={
+            <GuardJobCard
+              job={selectedJob}
+              guard={guard}
+              coworkerGuards={coworkerGuards}
+              onClose={() => setSelectedJobId(null)}
+              onDeclineDirectJob={
+                onDeclineDirectJob && selectedJob.status === 'open'
+                  ? () => void onDeclineDirectJob(selectedJob.id)
+                  : undefined
+              }
+              onApplyAsLead={
+                onApplyAsTeamLead && selectedJob.status === 'open'
+                  ? () => void onApplyAsTeamLead(selectedJob.id)
+                  : undefined
+              }
+              onInviteGuard={
+                onInviteTeamGuard && selectedJob.status === 'open'
+                  ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
+                  : undefined
+              }
+              onRemoveGuard={
+                onRemoveTeamGuard && selectedJob.status === 'open'
+                  ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
+                  : undefined
+              }
+              onUpdateCrewProfile={
+                onUpdateCrewProfile && selectedJob.status === 'open'
+                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+                  : undefined
+              }
+              onAcceptInvite={
+                onAcceptTeamInvite && selectedJob.status === 'open'
+                  ? () => void onAcceptTeamInvite(selectedJob.id)
+                  : undefined
+              }
+              onDeclineInvite={
+                onDeclineTeamInvite && selectedJob.status === 'open'
+                  ? () => void onDeclineTeamInvite(selectedJob.id)
+                  : undefined
+              }
+              scheduleRequests={requests}
+            />
+          }
+        />
+      )}
+
+      {activeTab === 'map' && !showShiftOverlay && (
+        <MapBrowseDock
+          items={guardMapBrowseItems(guard.id, browseMapJobs)}
+          selectedId={selectedJobId}
+          onSelect={setSelectedJobId}
+          bottomOffsetClass="map-browse-offset"
+          emptyMessage="Available, scheduled, and past jobs appear here."
         />
       )}
 
@@ -1157,8 +1225,7 @@ export function GuardDashboard({
         : GUARD_TAB_TITLES[tab];
 
   const shellHideHeader =
-    (tab === 'messages' &&
-      (!!supportTicketId || supportMode === 'compose' || supportMode === 'report' || openJobChat)) ||
+    tab === 'messages' ||
     (tab === 'myJobs' && !!jobChatRequestId);
 
   return (

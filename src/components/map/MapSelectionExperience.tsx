@@ -19,6 +19,10 @@ interface MapSelectionExperienceProps {
   primaryLabel?: string;
   /** Bottom offset when another sheet (e.g. guard browse) is visible */
   bottomOffsetClass?: string;
+  /** Client approvals / payments rendered inside the expanded card */
+  clientActions?: React.ReactNode;
+  /** Role-specific actions in the expanded card (guard crew controls, etc.) */
+  detailActions?: React.ReactNode;
 }
 
 export function MapSelectionExperience({
@@ -30,6 +34,8 @@ export function MapSelectionExperience({
   onPrimaryAction,
   primaryLabel,
   bottomOffsetClass = '',
+  clientActions,
+  detailActions,
 }: MapSelectionExperienceProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -48,6 +54,13 @@ export function MapSelectionExperience({
       <JobBillingSummaryFromRequest req={selected as SecurityRequest} variant={role === 'staff' ? 'staff' : 'client'} />
     );
 
+  const operationalDetails = 'operationalDetails' in selected ? selected.operationalDetails : undefined;
+  const operationalBriefingLocked =
+    role === 'guard' && 'operationalBriefingLocked' in selected
+      ? !!selected.operationalBriefingLocked
+      : false;
+  const jobStatus = 'status' in selected ? selected.status : undefined;
+
   return (
     <div className={`map-selection-layer ${bottomOffsetClass}`}>
       <MapOfferCard
@@ -64,15 +77,24 @@ export function MapSelectionExperience({
         onPrimaryAction={onPrimaryAction}
         primaryLabel={primaryLabel}
       >
-        <div className="mt-3 max-h-[42vh] overflow-y-auto overscroll-contain pr-1 -mr-1">
-          <JobListingProfile
-            job={selected}
-            showClientHeader={false}
-            showBadges={false}
-            distanceMiles={route?.distanceMiles}
-            payLine={payLine}
-          />
+        {expanded && (
+        <div className={`mt-3 overflow-y-auto overscroll-contain pr-1 -mr-1 ${clientActions || detailActions ? 'max-h-[55vh]' : 'max-h-[42vh]'}`}>
+          {role !== 'guard' && (
+            <JobListingProfile
+              job={selected}
+              showClientHeader={false}
+              showBadges={false}
+              distanceMiles={route?.distanceMiles}
+              payLine={payLine}
+              operationalDetails={operationalDetails}
+              operationalBriefingLocked={operationalBriefingLocked}
+              jobStatus={jobStatus}
+            />
+          )}
+          {clientActions}
+          {detailActions}
         </div>
+      )}
       </MapOfferCard>
     </div>
   );

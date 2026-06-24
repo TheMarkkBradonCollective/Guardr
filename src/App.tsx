@@ -41,6 +41,7 @@ import {
   IncidentReportFormInput,
 } from './lib/incidentReports';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
+import { formatCityLabel, resolveJobCity } from './lib/californiaCities';
 import {
   canDirectorMarkClientPaidCash,
   canDirectorMarkOvertimePaidCash,
@@ -413,7 +414,7 @@ export default function App() {
 
   const initialRoute = readAppRouteFromWindow();
   const [clientView, setClientViewState] = useState<ClientView>(
-    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
+    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'map'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
     () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
@@ -533,7 +534,7 @@ export default function App() {
     setClientViewState(resolvedView);
     const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
-    const keepsJobChatId = resolvedView === 'coverage' || resolvedView === 'messages' || resolvedView === 'map';
+    const keepsJobChatId = resolvedView === 'messages' || resolvedView === 'map';
     const nextJobChatId = keepsJobChatId ? jobChatRequestId ?? undefined : undefined;
     const inMessagesFlow =
       resolvedView === 'messages' ||
@@ -4019,7 +4020,7 @@ export default function App() {
       clientRating: clientRecord?.rating,
       siteName,
       address,
-      state: newRequest.state?.toUpperCase() || '',
+      state: formatCityLabel(newRequest.state) || resolveJobCity(newRequest.state),
       location,
       type: newRequest.type || 'event',
       armedRequired: newRequest.armedRequired || false,
@@ -4047,6 +4048,7 @@ export default function App() {
       minGuardQualification: newRequest.minGuardQualification ?? 'pending',
       applicants: [],
       breakMinutes: newRequest.breakMinutes ?? 0,
+      breakPaid: newRequest.breakPaid !== false,
     };
 
     setRequests((prev) => [freshJob, ...prev]);
@@ -4128,6 +4130,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           break_minutes: freshJob.breakMinutes ?? 0,
+          break_paid: freshJob.breakPaid !== false,
           shift_breaks: [],
           ...listingDetailDbColumns(freshJob),
           operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
@@ -4200,7 +4203,7 @@ export default function App() {
       clientRating: clientRecord.rating,
       siteName,
       address,
-      state: input.state,
+      state: formatCityLabel(input.state) || resolveJobCity(input.state),
       location,
       type: input.type,
       armedRequired: false,
@@ -4232,6 +4235,7 @@ export default function App() {
       minGuardQualification: 'pending',
       applicants: assignedGuardId ? [assignedGuardId] : [],
       breakMinutes: input.breakMinutes ?? 0,
+      breakPaid: input.breakPaid !== false,
     };
 
     setRequests((prev) => [freshJob, ...prev]);
@@ -4295,6 +4299,7 @@ export default function App() {
           min_guard_qualification: freshJob.minGuardQualification ?? 'pending',
           applicants: freshJob.applicants,
           break_minutes: freshJob.breakMinutes ?? 0,
+          break_paid: freshJob.breakPaid !== false,
           shift_breaks: [],
           ...listingDetailDbColumns(freshJob),
           operational_details: operationalDetailsDbValue(freshJob.operationalDetails),
@@ -7039,9 +7044,10 @@ export default function App() {
       payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
 
     const checkOutAt = payload.checkOutAudit?.checkedAt;
+    const guardClaimedOvertime = payload.checkOutAudit?.overtimeClaimed === true;
     const detectedOvertime =
       req && payload.status === 'completed' && checkOutAt
-        ? detectLateClockOutOvertime(req, checkOutAt)
+        ? detectLateClockOutOvertime(req, checkOutAt, { guardClaimedOvertime })
         : null;
 
     setRequests(prev => prev.map(r => {
@@ -7486,6 +7492,13 @@ export default function App() {
         type: 'payment_attention',
         body: `${guard.name} requested a $${draft.total.toFixed(2)} ${label} payout for ${eligible.length} job(s)`,
       });
+      if (method === 'cash') {
+        void reportPushEvent(currentUser, {
+          type: 'guard_cash_payout_requested',
+          guardId: guard.id,
+          body: `${guard.name} submitted a $${draft.total.toFixed(2)} cash payout invoice for ${eligible.length} completed job(s).`,
+        });
+      }
     }
     appToast(`${label[0].toUpperCase()}${label.slice(1)} invoice sent to Payments. Request again anytime you have more unpaid jobs.`, 'success');
   };
@@ -8502,7 +8515,7 @@ export default function App() {
     };
 
     const clientHideHeader =
-      (clientView === 'messages' && (!!supportTicketId || openJobChat)) ||
+      clientView === 'messages' ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (clientView === 'guards' && !!clientGuardId);

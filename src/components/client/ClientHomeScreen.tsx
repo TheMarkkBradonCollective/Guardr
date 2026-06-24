@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import {
   ClientReportCard,
-  CoverageSummary,
   formatCoverageDateLabel,
   formatShiftTimeRange,
   getUpcomingCoverage,
 } from '../../lib/clientCoverage';
-import { WfMetricTile } from '../ui/wireframe';
+import { getClientLiveJobs, inferClientShiftPhase, CLIENT_SHIFT_PHASE_LABELS } from '../../lib/clientShift';
+import { canClientApproveStaffScheduleChange } from '../../lib/jobScheduleChange';
+import { canClientApproveOvertime } from '../../lib/shiftBilling';
+import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClientConfirmed } from '../../lib/selfAuditPhotos';
+import { hasUnconfirmedSpotChecks } from '../../lib/spotChecks';
 import {
-  AppDashboardHero,
   AppDashboardZone,
-  AppHeroBand,
   AppItemCard,
   AppScreen,
   AppStatusBanner,
@@ -22,38 +23,34 @@ import {
   Calendar,
   Building2,
   FileText,
-  Radio,
   Plus,
   ClipboardList,
   Users,
   Clock,
   Map,
-  MessagesSquare,
   Star,
   ChevronRight,
+  Radio,
 } from 'lucide-react';
-import { getClientLiveJobs } from '../../lib/clientShift';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards' | 'messages' | 'map';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map';
 
 interface ClientHomeScreenProps {
   companyName: string;
-  coverage: CoverageSummary;
+  coverage: import('../../lib/clientCoverage').CoverageSummary;
   requests: SecurityRequest[];
   recentReports: ClientReportCard[];
   accountPending?: boolean;
   onOpenProfile?: () => void;
   onAction: (action: ClientHomeAction) => void;
-  /** Guards this client has worked with before — shown in "Rehire" section */
   recentGuards?: SecurityGuard[];
   onHireGuard?: (guard: SecurityGuard) => void;
   onViewGuard?: (guard: SecurityGuard) => void;
 }
 
-const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string; accent?: boolean }[] = [
-  { id: 'request', icon: Plus, label: 'Post job offer', sub: 'Open to any guard', accent: true },
+const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string }[] = [
+  { id: 'request', icon: Plus, label: 'Post job', sub: 'Open to guards' },
   { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes & licenses' },
-  { id: 'coverage', icon: Radio, label: 'Live coverage', sub: 'On-duty guards' },
   { id: 'schedule', icon: Calendar, label: 'Schedule', sub: 'Plan ahead' },
   { id: 'recurring', icon: Building2, label: 'Multi-guard site', sub: 'Construction & events' },
   { id: 'reports', icon: FileText, label: 'Reports', sub: 'Activity & incidents' },
@@ -64,6 +61,31 @@ const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
   activity: 'Activity report',
   property: 'Property report',
 };
+
+function timeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function clientActionCount(requests: SecurityRequest[]): number {
+  let count = 0;
+  for (const req of requests) {
+    if (canClientApproveOvertime(req)) count += 1;
+    if (canClientApproveStaffScheduleChange(req)) count += 1;
+    if (hasUnconfirmedSpotChecks(req)) count += 1;
+    if (
+      hasSelfAuditPhotosToReview(req) &&
+      req.checkInAudit &&
+      !isSelfAuditClientConfirmed(req.checkInAudit) &&
+      canClientConfirmSelfAudit(req)
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
 
 export function ClientHomeScreen({
   companyName,
@@ -78,122 +100,179 @@ export function ClientHomeScreen({
   onViewGuard,
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
-  const openRequestCount = requests.filter((r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review').length;
-  const liveJobs = getClientLiveJobs(requests);
+  const liveJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
+  const openRequestCount = requests.filter(
+    (r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review'
+  ).length;
+  const hasLiveCoverage = coverage.activeAssignments > 0;
+  const pendingActions = useMemo(() => clientActionCount(requests), [requests]);
+
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
-    <AppScreen>
-      <AppDashboardHero kicker="Client workspace" title={companyName} />
-
-      {liveJobs.length > 0 && (
-        <AppHeroBand
-          label="Live shift dashboard"
-          icon={<Map className="w-4 h-4" />}
-          footer={
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button type="button" onClick={() => onAction('map')} className="app-button-primary !w-full sm:!w-auto">
-                Open shift map
-              </button>
-              <button type="button" onClick={() => onAction('messages')} className="app-button-outline !w-full sm:!w-auto gap-2">
-                <MessagesSquare className="w-4 h-4" />
-                Message guards
-              </button>
-            </div>
-          }
-        >
-          <div className="app-metric-grid-3">
-            <WfMetricTile label="Active sites" value={liveJobs.length} accent />
-            <WfMetricTile label="On duty" value={liveJobs.filter((j) => j.status === 'in-progress').length} />
-            <WfMetricTile label="Arriving" value={liveJobs.filter((j) => j.status === 'accepted').length} />
-          </div>
-        </AppHeroBand>
-      )}
+    <AppScreen className="client-home-screen">
+      <header className="client-home-header px-5 pt-4 pb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-text-muted">{todayLabel}</p>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-[-0.04em] leading-tight mt-1">
+          {timeGreeting()}
+        </h1>
+        <p className="text-sm text-brand-text-muted mt-1">{companyName}</p>
+      </header>
 
       {accountPending && (
-        <AppStatusBanner
-          icon={<Clock className="w-5 h-5 text-amber-400" />}
-          title="Account pending approval"
-          action={
-            onOpenProfile ? (
-              <button type="button" onClick={onOpenProfile} className="app-button-outline app-btn-sm">
-                Review profile
-              </button>
-            ) : undefined
-          }
-        >
-        </AppStatusBanner>
-      )}
-
-      <AppHeroBand
-        label="Active coverage"
-        icon={<Radio className="w-4 h-4" />}
-        footer={
-          <button type="button" onClick={() => onAction('coverage')} className="app-button-primary !w-full sm:!w-auto">
-            View live coverage
-          </button>
-        }
-      >
-        <div className="app-metric-grid-3">
-          <WfMetricTile label="Active" value={coverage.activeAssignments} accent />
-          <WfMetricTile label="On duty" value={coverage.guardsOnDuty} />
-          <WfMetricTile
-            label={coverage.guardsArriving > 0 && coverage.arrivingTimeLabel ? `Arriving ${coverage.arrivingTimeLabel}` : 'Arriving'}
-            value={coverage.guardsArriving}
+        <div className="px-5 pb-4">
+          <AppStatusBanner
+            icon={<Clock className="w-5 h-5 text-amber-400" />}
+            title="Account pending approval"
+            action={
+              onOpenProfile ? (
+                <button type="button" onClick={onOpenProfile} className="app-button-outline app-btn-sm">
+                  Review profile
+                </button>
+              ) : undefined
+            }
           />
         </div>
-      </AppHeroBand>
+      )}
 
-      <AppDashboardZone title="At a glance">
-        <div className="app-tile-grid-2">
-          <button type="button" onClick={() => onAction('requests')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2.5 text-left !p-5">
-            <ClipboardList className="w-5 h-5 text-brand-primary" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-muted">Open jobs</p>
-              <p className="text-4xl font-black tracking-[-0.05em] leading-none mt-1">{openRequestCount}</p>
+      <div className="px-5 pb-2">
+        {hasLiveCoverage ? (
+          <button
+            type="button"
+            onClick={() => onAction('map')}
+            className="client-home-live-card w-full text-left"
+          >
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-primary flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5" />
+                  Live now
+                </p>
+              </div>
+              <span className="client-home-live-map-pill">
+                <Map className="w-3.5 h-3.5" />
+                Map
+                <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+              </span>
             </div>
+
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="client-home-stat-pill">
+                <p className="client-home-stat-value">{coverage.activeAssignments}</p>
+                <p className="client-home-stat-label">Active</p>
+              </div>
+              <div className="client-home-stat-pill">
+                <p className="client-home-stat-value">{coverage.guardsOnDuty}</p>
+                <p className="client-home-stat-label">On duty</p>
+              </div>
+              <div className="client-home-stat-pill">
+                <p className="client-home-stat-value">{coverage.guardsArriving}</p>
+                <p className="client-home-stat-label">
+                  {coverage.guardsArriving > 0 && coverage.arrivingTimeLabel
+                    ? `Next ${coverage.arrivingTimeLabel}`
+                    : 'Arriving'}
+                </p>
+              </div>
+            </div>
+
+            {liveJobs.length > 0 && (
+              <ul className="space-y-2 mb-3">
+                {liveJobs.slice(0, 3).map((job) => (
+                  <li key={job.id} className="client-home-live-job-row">
+                    <Shield className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+                    <span className="font-medium text-sm truncate flex-1">{job.title}</span>
+                    <span className="text-[11px] text-brand-text-muted shrink-0">
+                      {CLIENT_SHIFT_PHASE_LABELS[inferClientShiftPhase(job)]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {pendingActions > 0 && (
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                {pendingActions} item{pendingActions === 1 ? '' : 's'} need your approval on the map
+              </p>
+            )}
           </button>
-          <button type="button" onClick={() => onAction('schedule')} className="app-item-card flex-col items-stretch !flex !flex-col gap-2.5 text-left !p-5">
-            <Calendar className="w-5 h-5 text-brand-primary" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-muted">Upcoming</p>
-              <p className="text-4xl font-black tracking-[-0.05em] leading-none mt-1">{upcoming.length}</p>
+        ) : (
+          <div className="client-home-empty-live">
+            <div className="flex items-start gap-3">
+              <div className="client-home-empty-live-icon">
+                <Map className="w-5 h-5 text-brand-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-base">No guards on site right now</p>
+                <p className="text-sm text-brand-text-muted mt-1 leading-relaxed">
+                  Post a job offer or open the map to track coverage when shifts go live.
+                </p>
+              </div>
             </div>
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
+              <button type="button" onClick={() => onAction('request')} className="app-button-primary app-btn-sm flex-1">
+                Post job offer
+              </button>
+              <button type="button" onClick={() => onAction('map')} className="app-button-outline app-btn-sm flex-1 gap-1.5">
+                <Map className="w-3.5 h-3.5" />
+                Open map
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 py-4">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => onAction('requests')}
+            className="client-home-glance-tile"
+          >
+            <ClipboardList className="w-5 h-5 text-brand-primary" />
+            <p className="client-home-glance-value">{openRequestCount}</p>
+            <p className="client-home-glance-label">Open jobs</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction('requests')}
+            className="client-home-glance-tile"
+          >
+            <Calendar className="w-5 h-5 text-brand-primary" />
+            <p className="client-home-glance-value">{upcoming.length}</p>
+            <p className="client-home-glance-label">Upcoming shifts</p>
           </button>
         </div>
-      </AppDashboardZone>
+      </div>
 
       <AppDashboardZone title="Quick actions">
-        <div className="app-section-body-bleed">
-          <div className="app-quick-action-row">
+        <div className="client-home-quick-grid px-5 pb-1">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
+            const isPrimary = action.id === 'request';
             return (
               <button
                 key={action.id}
                 type="button"
                 onClick={() => onAction(action.id)}
-                className={`app-quick-action-tile ${action.accent ? 'app-quick-action-tile-accent' : ''}`}
+                className={`client-home-quick-tile ${isPrimary ? 'client-home-quick-tile-primary' : ''}`}
               >
-                <div className={`app-quick-action-icon ${action.accent ? '' : ''}`}>
+                <span className={`client-home-quick-icon ${isPrimary ? 'client-home-quick-icon-primary' : ''}`}>
                   <Icon className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="app-quick-action-label">{action.label}</p>
-                  <p className="app-quick-action-sub">{action.sub}</p>
-                </div>
+                </span>
+                <span className="client-home-quick-label">{action.label}</span>
+                <span className="client-home-quick-sub">{action.sub}</span>
               </button>
             );
           })}
-          </div>
         </div>
       </AppDashboardZone>
 
       {recentGuards.length > 0 && onHireGuard && (
-        <AppDashboardZone
-          title="Your guards"
-          actionLabel="Browse all"
-          onAction={() => onAction('guards')}
-        >
+        <AppDashboardZone title="Your guards" actionLabel="Browse all" onAction={() => onAction('guards')}>
           <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
             {recentGuards.map((guard) => (
               <div
@@ -223,18 +302,6 @@ export function ClientHomeScreen({
                 </button>
               </div>
             ))}
-            <div className="shrink-0 snap-start w-20 flex items-center justify-center">
-              <button
-                type="button"
-                onClick={() => onAction('guards')}
-                className="flex flex-col items-center gap-1.5 text-brand-text-muted hover:text-brand-primary transition-colors"
-              >
-                <div className="w-12 h-12 rounded-xl border-2 border-dashed border-brand-border flex items-center justify-center">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-                <p className="text-[10px] font-medium">All guards</p>
-              </button>
-            </div>
           </div>
         </AppDashboardZone>
       )}
@@ -245,10 +312,10 @@ export function ClientHomeScreen({
         onAction={upcoming.length > 0 ? () => onAction('requests') : undefined}
       >
         {upcoming.length === 0 ? (
-          <p className="app-empty-state">No upcoming coverage. Post a job offer to get started.</p>
+          <p className="app-empty-state px-5">No upcoming coverage. Post a job offer to get started.</p>
         ) : (
-          <div className="flex flex-col gap-2">
-            {upcoming.map((req) => (
+          <div className="flex flex-col gap-2 px-5">
+            {upcoming.slice(0, 4).map((req) => (
               <AppItemCard
                 key={req.id}
                 onClick={() => onAction('requests')}
@@ -260,9 +327,6 @@ export function ClientHomeScreen({
                 </div>
                 <p className="text-sm font-medium text-brand-primary">{formatCoverageDateLabel(req.startDate)}</p>
                 <p className="text-xs text-brand-text-muted">{formatShiftTimeRange(req.startDate, req.endDate)}</p>
-                <p className="text-xs text-brand-text pt-2 border-t border-brand-border">
-                  {req.guardsNeeded ?? 1} guard{(req.guardsNeeded ?? 1) !== 1 ? 's' : ''} needed
-                </p>
               </AppItemCard>
             ))}
           </div>
@@ -275,15 +339,14 @@ export function ClientHomeScreen({
         onAction={recentReports.length > 0 ? () => onAction('reports') : undefined}
       >
         {recentReports.length === 0 ? (
-          <p className="app-empty-state">Reports from completed jobs will appear here.</p>
+          <p className="app-empty-state px-5">Reports from completed jobs will appear here.</p>
         ) : (
-          <div className="app-item-card-stack">
-            {recentReports.slice(0, 4).map((report) => (
+          <div className="app-item-card-stack px-5">
+            {recentReports.slice(0, 3).map((report) => (
               <AppItemCard key={report.id} onClick={() => onAction('reports')} className="flex-col !items-stretch gap-1">
                 <p className="text-xs font-medium text-brand-primary">{REPORT_TYPE_LABEL[report.type]}</p>
                 <p className="font-semibold">{report.title}</p>
                 <p className="text-sm text-brand-text-muted line-clamp-2">{report.summary}</p>
-                <p className="text-xs text-brand-text-muted">{report.siteName}</p>
               </AppItemCard>
             ))}
           </div>

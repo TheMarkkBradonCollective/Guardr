@@ -118,7 +118,7 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return options.requestId ? `/staff/messages?mtab=jobs&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=jobs";
     case "emergency_alert":
       if (role === "client") {
-        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/coverage";
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
       }
       if (role === "guard") {
         return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
@@ -139,7 +139,7 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
         return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
       }
       if (role === "client") {
-        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/coverage";
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
       }
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
     case "staff_message":

@@ -8,18 +8,18 @@ import {
   clientShiftTimerLabel,
   inferClientShiftPhase,
 } from '../../lib/clientShift';
-import { computeSiteStatus } from '../../lib/clientCoverage';
+import { buildActivityFeed } from '../../lib/clientCoverage';
 import { computeShiftDutySeconds, shiftDutyStartedAt } from '../../lib/shiftWindow';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ShiftPeriodStatusBar } from '../shift/ShiftPeriodStatusBar';
+import { ClientJobActionsPanel } from './ClientJobActionsPanel';
+import type { ClientJobActionsBindings } from './clientJobActionsTypes';
 import {
   Activity,
-  AlertTriangle,
   Clock,
   MapPin,
   MessageCircle,
-  Radio,
   Shield,
   Star,
 } from 'lucide-react';
@@ -27,10 +27,11 @@ import {
 interface ClientActiveShiftProps {
   request: SecurityRequest;
   guard: SecurityGuard;
+  guards: SecurityGuard[];
   allLiveRequests: SecurityRequest[];
   onOpenJobChat?: () => void;
-  onOpenCoverage?: () => void;
   onSwitchJob?: (requestId: string) => void;
+  jobActions?: ClientJobActionsBindings;
 }
 
 function formatTimer(seconds: number): string {
@@ -40,27 +41,29 @@ function formatTimer(seconds: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-const SITE_STATUS_COPY = {
-  secured: { label: 'Site secured', tone: 'text-emerald-500' },
-  attention: { label: 'Needs attention', tone: 'text-amber-500' },
-  incident: { label: 'Incident reported', tone: 'text-red-500' },
-} as const;
+function formatFeedTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 
 export function ClientActiveShift({
   request,
   guard,
+  guards,
   allLiveRequests,
   onOpenJobChat,
-  onOpenCoverage,
   onSwitchJob,
+  jobActions,
 }: ClientActiveShiftProps) {
   const phase = inferClientShiftPhase(request);
   const stepIdx = clientShiftStepIndex(phase);
-  const siteStatus = computeSiteStatus([request]);
-  const statusCopy = SITE_STATUS_COPY[siteStatus];
   const address = request.address || request.location;
   const timerLabel = clientShiftTimerLabel(request);
   const [dutySeconds, setDutySeconds] = useState(0);
+
+  const activityFeed = useMemo(
+    () => buildActivityFeed([request], guards),
+    [request, guards]
+  );
 
   useEffect(() => {
     if (request.status !== 'in-progress') {
@@ -84,22 +87,9 @@ export function ClientActiveShift({
       <div className="w-10 h-1 rounded-full sheet-handle mx-auto mt-3 mb-3" />
 
       <div className="guard-scroll-panel px-5 pb-8 space-y-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-brand-primary mb-1">Live coverage</p>
-            <h2 className="text-xl font-bold leading-tight">{request.title}</h2>
-            <p className={`text-sm font-semibold mt-1 ${statusCopy.tone}`}>{statusCopy.label}</p>
-          </div>
-          {onOpenCoverage && (
-            <button
-              type="button"
-              onClick={onOpenCoverage}
-              className="shrink-0 app-button-outline app-btn-sm gap-1.5"
-            >
-              <Radio className="w-3.5 h-3.5" />
-              Ops
-            </button>
-          )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-brand-primary mb-1">Live shift</p>
+          <h2 className="text-xl font-bold leading-tight">{request.title}</h2>
         </div>
 
         <ShiftPeriodStatusBar
@@ -184,23 +174,38 @@ export function ClientActiveShift({
           <JobSelfAuditPhotosSection request={request} hideStaffAttribution />
         )}
 
-        <div className="app-action-row--2">
-          {onOpenJobChat && (
-            <button type="button" onClick={onOpenJobChat} className="app-button-primary app-btn-md gap-2 col-span-2" style={{ gridColumn: '1 / -1' }}>
-              <MessageCircle className="w-4 h-4" /> Message guard
-            </button>
+        {jobActions && (
+          <ClientJobActionsPanel
+            request={request}
+            context="map"
+            hideMessaging
+            {...jobActions}
+          />
+        )}
+
+        <section className="border-t border-brand-border pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-3 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5" />
+            Activity
+          </p>
+          {activityFeed.length === 0 ? (
+            <p className="text-sm text-brand-text-muted leading-relaxed">
+              Check-ins, audits, and reports from this shift will appear here.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {activityFeed.map((item) => (
+                <li
+                  key={item.id}
+                  className="px-3 py-2.5 border border-brand-border bg-brand-bg-sec rounded-lg"
+                >
+                  <p className="font-medium text-sm leading-snug">{item.label}</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">{formatFeedTime(item.timestamp)}</p>
+                </li>
+              ))}
+            </ul>
           )}
-          {onOpenCoverage && (
-            <button type="button" onClick={onOpenCoverage} className="app-button-outline app-btn-md gap-2">
-              <Activity className="w-4 h-4" /> Activity feed
-            </button>
-          )}
-          {siteStatus === 'incident' && onOpenCoverage && (
-            <button type="button" onClick={onOpenCoverage} className="app-button-outline app-btn-md gap-2 text-red-500 border-red-500/40">
-              <AlertTriangle className="w-4 h-4" /> View incident
-            </button>
-          )}
-        </div>
+        </section>
 
         {otherJobs.length > 0 && onSwitchJob && (
           <div className="border-t border-brand-border pt-4 space-y-2">
@@ -212,7 +217,7 @@ export function ClientActiveShift({
                 key={job.id}
                 type="button"
                 onClick={() => onSwitchJob(job.id)}
-                className="w-full text-left px-3 py-2 border border-brand-border hover:bg-brand-bg-sec transition-colors"
+                className="w-full text-left px-3 py-2 border border-brand-border hover:bg-brand-bg-sec transition-colors rounded-lg"
               >
                 <p className="text-sm font-semibold truncate">{job.title}</p>
                 <p className="text-xs text-brand-text-muted mt-0.5">{CLIENT_SHIFT_PHASE_LABELS[inferClientShiftPhase(job)]}</p>
