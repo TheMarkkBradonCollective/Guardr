@@ -787,6 +787,11 @@ export function GuardDashboard({
     setCashRequestPending(true);
     try {
       await onRequestCashPayout();
+    } catch (error) {
+      showAppToast('Cash payout request failed', {
+        tone: 'error',
+        body: error instanceof Error ? error.message : 'Try again or contact Guardr support.',
+      });
     } finally {
       setCashRequestPending(false);
     }
@@ -797,6 +802,11 @@ export function GuardDashboard({
     setStripeRequestPending(true);
     try {
       await onRequestStripePayout();
+    } catch (error) {
+      showAppToast('Stripe payout request failed', {
+        tone: 'error',
+        body: error instanceof Error ? error.message : 'Try again or contact Guardr support.',
+      });
     } finally {
       setStripeRequestPending(false);
     }
@@ -1196,8 +1206,11 @@ export function GuardDashboard({
           open={showIncidentReport}
           onClose={() => setShowIncidentReport(false)}
           siteName={activeShiftJob.siteName || activeShiftJob.location}
-          onSubmit={(input) => {
-            void onSubmitIncidentReport?.(activeShiftJob.id, input);
+          onSubmit={async (input) => {
+            if (!onSubmitIncidentReport) {
+              throw new Error('Incident reporting is not available for this session.');
+            }
+            await onSubmitIncidentReport(activeShiftJob.id, input);
             showAppToast('Incident report filed', {
               body: 'Full details shared with the client and staff.',
               tone: 'success',
@@ -1257,6 +1270,14 @@ export function GuardDashboard({
       : tab === 'messages' && supportMode === 'report'
         ? 'File a report'
         : GUARD_TAB_TITLES[tab];
+  const guardHeaderStatus =
+    activeShiftJob?.status === 'in-progress'
+      ? `On shift · ${activeShiftJob.siteName || activeShiftJob.location}`
+      : accountPreActive
+        ? 'Activation in review'
+        : trustedGuard
+          ? 'Trusted Guardr professional'
+          : 'Available for vetted jobs';
 
   const shellHideHeader =
     tab === 'messages' ||
@@ -1265,7 +1286,7 @@ export function GuardDashboard({
   return (
     <RoleAppShell
       title={guardScreenTitle}
-      locationLabel={guard.name}
+      locationLabel={guardHeaderStatus}
       hideHeader={shellHideHeader}
       accountMenu={{
         userName: guard.name,

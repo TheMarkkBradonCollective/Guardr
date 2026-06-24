@@ -7,6 +7,7 @@ export type JobStatus =
   | 'accepted'
   | 'in-progress'
   | 'completed'
+  | 'cancelled'
   | 'closed';
 
 export type ReportType =

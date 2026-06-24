@@ -10,7 +10,7 @@ import {
 interface GuardIncidentReportModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (input: IncidentReportFormInput) => void;
+  onSubmit: (input: IncidentReportFormInput) => void | Promise<void>;
   siteName?: string;
 }
 
@@ -21,21 +21,33 @@ export function GuardIncidentReportModal({
   siteName,
 }: GuardIncidentReportModalProps) {
   const [form, setForm] = useState<IncidentReportFormInput>(emptyIncidentFormInput);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const update = <K extends keyof IncidentReportFormInput>(key: K, value: IncidentReportFormInput[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.description.trim()) return;
-    onSubmit(form);
-    setForm(emptyIncidentFormInput());
-    onClose();
+    if (!form.description.trim() || !form.actionsTaken.trim() || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await onSubmit(form);
+      setForm(emptyIncidentFormInput());
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Could not file this incident report. Try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
+    if (submitting) return;
     setForm(emptyIncidentFormInput());
+    setSubmitError(null);
     onClose();
   };
 
@@ -53,6 +65,12 @@ export function GuardIncidentReportModal({
       {siteName && <p className="text-sm text-brand-text-muted">Site: {siteName}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {submitError && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            {submitError}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block space-y-1">
             <span className="text-xs font-semibold text-brand-text-muted">Incident type</span>
@@ -254,15 +272,15 @@ export function GuardIncidentReportModal({
         </div>
 
         <div className="app-action-row--2 pt-1">
-          <button type="button" onClick={handleClose} className="app-button-outline">
+          <button type="button" onClick={handleClose} disabled={submitting} className="app-button-outline disabled:opacity-50">
             Cancel
           </button>
           <button
             type="submit"
-            disabled={!form.description.trim() || !form.actionsTaken.trim()}
+            disabled={!form.description.trim() || !form.actionsTaken.trim() || submitting}
             className="app-button-primary disabled:opacity-50"
           >
-            Submit report
+            {submitting ? 'Submitting...' : 'Submit report'}
           </button>
         </div>
       </form>

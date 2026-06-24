@@ -15,11 +15,11 @@ const config = {
   },
   plugins: {
     SplashScreen: {
-      backgroundColor: '#000000',
+      backgroundColor: '#FFFFFF',
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#000000',
+      backgroundColor: '#5E7B61',
     },
   },
 };

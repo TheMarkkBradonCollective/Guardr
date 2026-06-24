@@ -17,6 +17,12 @@
   --color-brand-accent-text: var(--brand-accent-text);
   --color-brand-surface: var(--brand-surface);
   --color-brand-elevated: var(--brand-elevated);
+  --color-brand-surface-elevated: var(--brand-elevated);
+  --color-brand-card: var(--brand-surface);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
 
   --radius-app: 0px;
   --radius-app-lg: 12px;
@@ -66,11 +72,15 @@ html.theme-light {
   --brand-accent:        #5E7B61;
   --brand-accent-text:   #FFFFFF;
   --brand-overlay:       rgba(255, 255, 255, 0.92);
-  --brand-chrome:        var(--brand-primary);
-  --brand-chrome-deep:   var(--brand-primary-hover);
-  --brand-chrome-text:   var(--brand-accent-text);
-  --brand-chrome-muted:  color-mix(in srgb, var(--brand-accent-text) 65%, transparent);
-  --brand-chrome-border: color-mix(in srgb, var(--brand-accent-text) 18%, transparent);
+  --brand-chrome:        var(--brand-surface);
+  --brand-chrome-deep:   var(--brand-elevated);
+  --brand-chrome-text:   var(--brand-text);
+  --brand-chrome-muted:  var(--brand-text-muted);
+  --brand-chrome-border: var(--brand-border);
+  --status-success:      #3F7D4F;
+  --status-warning:      #B7791F;
+  --status-danger:       #DC2626;
+  --status-info:         #2F6F8F;
   --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.06);
   --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.06);
   --shadow-float:        0 6px 24px rgba(0, 0, 0, 0.08);
@@ -95,6 +105,10 @@ html.theme-dark {
   --brand-chrome-text:   var(--brand-text);
   --brand-chrome-muted:  var(--brand-text-muted);
   --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  --status-success:      #7DBB82;
+  --status-warning:      #F5B85B;
+  --status-danger:       #F87171;
+  --status-info:         #78B9D8;
   --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.22);
   --shadow-card:         0 2px 16px rgba(0, 0, 0, 0.35);
   --shadow-float:        0 8px 28px rgba(0, 0, 0, 0.45);
@@ -102,26 +116,30 @@ html.theme-dark {
 }
 
 html.theme-grey {
-  --brand-primary:       #7BA17E;
-  --brand-primary-hover: #6A9070;
-  --brand-bg:            #1A1D20;
-  --brand-bg-sec:        #232628;
-  --brand-surface:       #2A2E31;
-  --brand-elevated:      #32373A;
-  --brand-border:        #3C4145;
-  --brand-text:          #E4E6E8;
-  --brand-text-muted:    #8A9198;
-  --brand-accent:        #7BA17E;
+  --brand-primary:       #7EA383;
+  --brand-primary-hover: #6E9273;
+  --brand-bg:            #101417;
+  --brand-bg-sec:        #171C20;
+  --brand-surface:       #20272B;
+  --brand-elevated:      #2A3338;
+  --brand-border:        #354047;
+  --brand-text:          #F3F5F1;
+  --brand-text-muted:    #AAB3AA;
+  --brand-accent:        #7EA383;
   --brand-accent-text:   #FFFFFF;
-  --brand-overlay:       rgba(20, 22, 25, 0.94);
-  --brand-chrome:        color-mix(in srgb, var(--brand-primary) 28%, var(--brand-bg-sec));
-  --brand-chrome-deep:   color-mix(in srgb, var(--brand-primary) 18%, var(--brand-bg));
+  --brand-overlay:       rgba(16, 20, 23, 0.94);
+  --brand-chrome:        #182017;
+  --brand-chrome-deep:   #101610;
   --brand-chrome-text:   var(--brand-text);
   --brand-chrome-muted:  var(--brand-text-muted);
   --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 26%, var(--brand-border));
+  --status-success:      #8FCB91;
+  --status-warning:      #F3BD63;
+  --status-danger:       #F98080;
+  --status-info:         #82C4E4;
   --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.28);
-  --shadow-card:         0 2px 16px rgba(0, 0, 0, 0.28);
-  --shadow-float:        0 8px 28px rgba(0, 0, 0, 0.40);
+  --shadow-card:         0 2px 16px rgba(0, 0, 0, 0.32);
+  --shadow-float:        0 8px 28px rgba(0, 0, 0, 0.38);
   --shadow-nav:          0 -2px 16px rgba(0, 0, 0, 0.22);
 }
 
@@ -3721,6 +3739,23 @@ html.theme-dark .role-experience-client {
   color: var(--brand-primary);
 }
 
+.nav-badge {
+  min-width: 1rem;
+  height: 1rem;
+  padding-inline: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--status-danger);
+  color: #ffffff;
+  border: 1px solid color-mix(in srgb, #ffffff 35%, transparent);
+  box-shadow: 0 0 0 2px var(--brand-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5625rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
 .app-screen-header.role-header-guard {
   background: color-mix(in srgb, var(--brand-bg) 94%, var(--brand-primary));
 }
@@ -3839,7 +3874,11 @@ html.theme-dark .role-experience-client {
 }
 
 /* ─── AUTH EXPERIENCE ─────────────────────────────────────── */
-/* The canonical hero gradient is defined later (wave 2 layer takes precedence) */
+.auth-experience-client .auth-hero,
+.auth-experience-guard .auth-hero {
+  background: var(--brand-chrome-deep);
+}
+/* Wave 2 override below sets a richer gradient on top of this base */
 
 .auth-experience-client .auth-hero-curve,
 .auth-experience-guard .auth-hero-curve {
@@ -6535,14 +6574,15 @@ html.theme-grey .landing-hero .landing-hero-glow {
 .app-card,
 .uber-card,
 .client-action-card {
-  box-shadow: none;
-  transition: border-color 0.15s ease;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .app-card:hover,
-.uber-card:hover {
-  box-shadow: none;
-  transform: none;
+.uber-card:hover,
+.client-action-card:hover:not(:disabled) {
+  box-shadow: var(--shadow-float);
+  transform: translateY(-1px);
 }
 
 /* Active/selected cards get a strong left accent line — Uber inbox style */
@@ -7961,6 +8001,14 @@ html.theme-grey .wf-badge-success {
 
 .client-home-live-card:active {
   transform: scale(0.995);
+}
+
+.client-home-action-muted {
+  opacity: 0.62;
+}
+
+.client-home-action-muted:hover {
+  border-color: var(--brand-border);
 }
 
 .client-home-live-map-pill {

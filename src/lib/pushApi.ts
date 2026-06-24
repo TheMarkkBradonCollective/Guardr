@@ -106,8 +106,10 @@ export async function sendTestPush(user: SessionUser, siteId?: string): Promise<
 export type PushEventType =
   | 'guard_checkin'
   | 'guard_clockout'
+  | 'guard_arrived'
   | 'guard_break_start'
   | 'guard_break_end'
+  | 'guard_left_site'
   | 'missed_checkin'
   | 'assignment'
   | 'emergency_alert'
@@ -116,11 +118,15 @@ export type PushEventType =
   | 'staff_message'
   | 'guard_message'
   | 'job_submitted'
+  | 'job_open_to_guards'
   | 'guard_application'
   | 'guard_pending_approval'
   | 'client_pending_approval'
   | 'credential_pending'
   | 'payment_attention'
+  | 'client_cash_payment_requested'
+  | 'guard_cash_payout_requested'
+  | 'stripe_payment_complete'
   | 'support_ticket'
   | 'support_ticket_status'
   | 'dispute_update'
@@ -144,6 +150,7 @@ export async function reportPushEvent(
     recipientUserId?: string;
     ticketId?: string;
     clientId?: string;
+    priority?: 'normal' | 'high';
   }
 ): Promise<void> {
   try {

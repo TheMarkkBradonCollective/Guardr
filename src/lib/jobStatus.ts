@@ -12,6 +12,7 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   accepted: 'Picked up',
   'in-progress': 'In Progress',
   completed: 'Completed',
+  cancelled: 'Canceled',
   closed: 'Closed',
 };
 
@@ -31,7 +32,7 @@ export function normalizeJobStatus(status: string): JobStatus {
     case 'assigned':
       return 'accepted';
     case 'cancelled':
-      return 'closed';
+      return 'cancelled';
     default:
       return status as JobStatus;
   }

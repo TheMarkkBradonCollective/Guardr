@@ -1,5 +1,5 @@
 import { requestDevicePosition } from './deviceLocation';
-import { jobCoords } from './geo';
+import { jobCoords, type JobCoordsSource } from './geo';
 
 /** Maximum distance from job site pin for clock-in and on-site arrival. */
 export const ON_SITE_RADIUS_METERS = 150;
@@ -27,7 +27,7 @@ export function distanceMeters(a: Coordinates, b: Coordinates): number {
 }
 
 export function jobHasSiteCoordinates(
-  job: Pick<{ latitude?: number; longitude?: number }, 'latitude' | 'longitude'>
+  job: Pick<JobCoordsSource, 'latitude' | 'longitude'>
 ): boolean {
   return (
     typeof job.latitude === 'number' &&
@@ -39,7 +39,7 @@ export function jobHasSiteCoordinates(
 
 export function isWithinSiteRadius(
   user: Coordinates,
-  job: Pick<{ latitude?: number; longitude?: number }, 'latitude' | 'longitude'>,
+  job: JobCoordsSource,
   radiusMeters = ON_SITE_RADIUS_METERS
 ): boolean {
   if (!jobHasSiteCoordinates(job)) return false;
@@ -48,7 +48,7 @@ export function isWithinSiteRadius(
 }
 
 export async function verifyOnSiteForJob(
-  job: Pick<{ latitude?: number; longitude?: number }, 'latitude' | 'longitude'>,
+  job: JobCoordsSource,
   radiusMeters = ON_SITE_RADIUS_METERS
 ): Promise<{ onSite: boolean; position: Coordinates | null; distanceMeters: number | null }> {
   if (!jobHasSiteCoordinates(job)) {
