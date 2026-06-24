@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityRequest } from '../../types';
+import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
+import { MapJobPeekSummary } from './MapJobPeekSummary';
 import { MapOfferCard, MapViewerRole } from './MapOfferCard';
 
 type MapJob = GuardJobView | SecurityRequest;
@@ -17,14 +18,19 @@ interface MapSelectionExperienceProps {
   onClose: () => void;
   onPrimaryAction?: () => void;
   primaryLabel?: string;
-  /** Bottom offset when bottom nav is visible */
   bottomOffsetClass?: string;
-  /** Client approvals / payments rendered inside the expanded card */
+  guardId?: string;
+  guards?: SecurityGuard[];
+  /** Client billing settings for full detail */
+  crewSettings?: import('../../lib/platformSettings').PlatformSettings;
+  /** Client approvals / payments in expanded card */
   clientActions?: React.ReactNode;
-  /** Role-specific actions in the expanded card (guard crew controls, etc.) */
+  /** Guard full detail + controls in expanded card */
+  guardFullBody?: React.ReactNode;
+  /** @deprecated Use guardFullBody */
   detailActions?: React.ReactNode;
-  /** Guard map — full job detail (same as Jobs tab) instead of peek + expand */
-  layout?: 'peek' | 'detail';
+  /** Staff ops detail + controls in expanded card */
+  staffActions?: React.ReactNode;
 }
 
 export function MapSelectionExperience({
@@ -36,17 +42,21 @@ export function MapSelectionExperience({
   onPrimaryAction,
   primaryLabel,
   bottomOffsetClass = '',
+  guardId,
+  guards = [],
+  crewSettings,
   clientActions,
+  guardFullBody,
   detailActions,
-  layout = 'peek',
+  staffActions,
 }: MapSelectionExperienceProps) {
-  const [expanded, setExpanded] = useState(layout === 'detail');
-
+  const [expanded, setExpanded] = useState(false);
   const selected = useMemo(() => job, [job?.id]);
+  const guardBody = guardFullBody ?? detailActions;
 
   React.useEffect(() => {
-    setExpanded(layout === 'detail');
-  }, [selected?.id, layout]);
+    setExpanded(false);
+  }, [selected?.id]);
 
   if (!selected) return null;
 
@@ -54,7 +64,12 @@ export function MapSelectionExperience({
     role === 'guard' ? (
       <JobBillingSummaryFromGuardJob job={selected as GuardJobView} />
     ) : (
-      <JobBillingSummaryFromRequest req={selected as SecurityRequest} variant={role === 'staff' ? 'staff' : 'client'} />
+      <JobBillingSummaryFromRequest
+        req={selected as SecurityRequest}
+        variant={role === 'staff' ? 'staff' : 'client'}
+        crewSettings={role === 'client' ? crewSettings : undefined}
+        hideCrewUpcostNotice={role === 'client'}
+      />
     );
 
   const operationalDetails = 'operationalDetails' in selected ? selected.operationalDetails : undefined;
@@ -67,23 +82,28 @@ export function MapSelectionExperience({
   return (
     <div className={`map-selection-layer ${bottomOffsetClass}`}>
       <MapOfferCard
-        job={selected}
-        role={role}
-        route={route}
-        loadingRoute={loadingRoute}
-        layout={layout}
+        summary={
+          <MapJobPeekSummary
+            role={role}
+            job={selected}
+            route={route}
+            loadingRoute={loadingRoute}
+            guardId={guardId}
+            guards={guards}
+          />
+        }
         expanded={expanded}
         onClose={() => {
-          setExpanded(layout === 'detail');
+          setExpanded(false);
           onClose();
         }}
-        onExpand={layout === 'detail' ? undefined : () => setExpanded(true)}
-        onPrimaryAction={layout === 'detail' ? undefined : onPrimaryAction}
-        primaryLabel={layout === 'detail' ? undefined : primaryLabel}
+        onExpand={() => setExpanded(true)}
+        onPrimaryAction={!expanded ? onPrimaryAction : undefined}
+        primaryLabel={!expanded ? primaryLabel : undefined}
       >
-        {(layout === 'detail' || expanded) && (
-          <>
-            {role !== 'guard' && (
+        {expanded && (
+          <div className="space-y-4">
+            {role === 'client' && (
               <JobListingProfile
                 job={selected}
                 showClientHeader={false}
@@ -95,9 +115,10 @@ export function MapSelectionExperience({
                 jobStatus={jobStatus}
               />
             )}
-            {clientActions}
-            {detailActions}
-          </>
+            {role === 'guard' && guardBody}
+            {role === 'staff' && staffActions}
+            {role === 'client' && clientActions}
+          </div>
         )}
       </MapOfferCard>
     </div>

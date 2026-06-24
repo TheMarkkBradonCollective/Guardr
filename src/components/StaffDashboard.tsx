@@ -469,7 +469,25 @@ export function StaffDashboard({
           />
         );
       case 'map':
-        return <StaffOpsMapScreen requests={requests} />;
+        return (
+          <StaffOpsMapScreen
+            requests={requests}
+            guards={guards}
+            canManageJobs={canManageJobs}
+            canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
+            canUploadSpotCheck={canUploadSpotCheck}
+            canEditJobListing={canEditJobListing}
+            staffRole={currentUser.role}
+            onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
+            onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
+            onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
+            onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
+            onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
+            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
+            onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
+            onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
+          />
+        );
       case 'approvals':
         return (
           <StaffApprovals
