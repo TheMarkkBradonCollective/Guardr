@@ -1788,14 +1788,88 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 /* Sacramento Buy Nothing-style horizontal map browse dock */
 .map-post-fab-layer {
   position: absolute;
-  left: 0.75rem;
+  left: 0.875rem;
   bottom: 0;
   z-index: 1001;
   pointer-events: none;
 }
 
+.map-post-fab-layer--right {
+  left: auto;
+  right: 0.875rem;
+}
+
 .map-post-fab-layer > * {
   pointer-events: auto;
+}
+
+/* Client map: circular New FAB (bottom right) */
+.client-map-new-fab-wrap {
+  position: relative;
+}
+
+.client-map-new-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: var(--brand-primary);
+  color: var(--brand-accent-text);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 80%, var(--brand-border));
+  box-shadow: var(--shadow-float);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.client-map-new-fab:hover {
+  background: var(--brand-primary-hover);
+}
+
+.client-map-new-fab:active {
+  transform: scale(0.94);
+  box-shadow: var(--shadow-sm);
+}
+
+.client-map-new-fab-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 11rem;
+  padding: 0.375rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-nav);
+}
+
+.client-map-new-fab-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--brand-text);
+  transition: background 0.15s ease;
+}
+
+.client-map-new-fab-action:hover {
+  background: color-mix(in srgb, var(--brand-border) 35%, transparent);
+}
+
+/* Client map: center/locate on bottom left above tab bar */
+.client-map-layout .guardr-map-locate-btn {
+  left: 0.875rem;
+  right: auto;
+  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
 }
 
 .map-browse-dock,

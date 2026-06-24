@@ -143,7 +143,7 @@ export function ClientMapScreen({
       )}
 
       {!showShiftOverlay && !selectedBrowseJobId && onPostJob && onRequestGuard && (
-        <div className="map-post-fab-layer map-browse-offset">
+        <div className="map-post-fab-layer map-post-fab-layer--right map-browse-offset">
           <ClientMapPostMenu onPostJob={onPostJob} onRequestGuard={onRequestGuard} />
         </div>
       )}

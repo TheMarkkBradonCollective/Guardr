@@ -12,33 +12,35 @@ interface ClientMapPostMenuProps {
 export function ClientMapPostMenu({ onPostJob, onRequestGuard }: ClientMapPostMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  return (
-    <div className="map-browse-plus-wrap">
-      <button
-        type="button"
-        onClick={() => setMenuOpen((v) => !v)}
-        className="map-browse-plus-card"
-        aria-expanded={menuOpen}
-        aria-label="Post a job or request a guard"
-      >
-        <span className="map-browse-plus-icon">
-          {menuOpen ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-        </span>
-        <span className="map-browse-plus-label">{menuOpen ? 'Close' : 'New'}</span>
-      </button>
+  const runAction = (action: () => void) => {
+    setMenuOpen(false);
+    action();
+  };
 
+  return (
+    <div className="client-map-new-fab-wrap">
       {menuOpen && (
-        <div className="map-browse-plus-menu">
-          <button type="button" onClick={onPostJob} className="map-browse-plus-action">
+        <div className="client-map-new-fab-menu">
+          <button type="button" onClick={() => runAction(onPostJob)} className="client-map-new-fab-action">
             <Plus className="w-4 h-4" />
             Post job offer
           </button>
-          <button type="button" onClick={onRequestGuard} className="map-browse-plus-action">
+          <button type="button" onClick={() => runAction(onRequestGuard)} className="client-map-new-fab-action">
             <UserPlus className="w-4 h-4" />
             Request a guard
           </button>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        className="client-map-new-fab"
+        aria-expanded={menuOpen}
+        aria-label={menuOpen ? 'Close new job menu' : 'New job or guard request'}
+      >
+        {menuOpen ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+      </button>
     </div>
   );
 }
