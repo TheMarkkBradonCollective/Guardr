@@ -726,26 +726,28 @@ export default function App() {
       return;
     }
     if (role === 'guard') {
-      const targetTab = openJobChat || requestId ? 'messages' : 'myJobs';
-      setGuardTabState(targetTab);
+      const openChat = options?.openChat ?? (requestId ? openJobChat : false);
+      const targetTab = openChat ? 'messages' : guardTab;
+      if (openChat) setGuardTabState('messages');
       syncAppRoute(
         buildAppRoute({
           role: 'guard',
           guardTab: targetTab,
           jobChatRequestId: requestId ?? undefined,
-          openJobChat: options?.openChat ?? openJobChat,
+          openJobChat: openChat,
         })
       );
       return;
     }
     if (role === 'client') {
-      setClientViewState('messages');
+      const openChat = options?.openChat ?? !!requestId;
+      if (openChat) setClientViewState('messages');
       syncAppRoute(
         buildAppRoute({
           role: 'client',
-          clientView: 'messages',
+          clientView: openChat ? 'messages' : clientView,
           jobChatRequestId: requestId ?? undefined,
-          openJobChat: options?.openChat ?? true,
+          openJobChat: openChat,
         })
       );
     }
@@ -2019,8 +2021,7 @@ export default function App() {
       return (
         guardTab === 'messages' ||
         guardTab === 'guardChat' ||
-        guardTab === 'support' ||
-        (guardTab === 'myJobs' && !!jobChatRequestId)
+        guardTab === 'support'
       );
     }
     if (role === 'staff') {
