@@ -34,6 +34,7 @@ interface ClientMapScreenProps extends ClientJobActionsBindings {
   onRequestGuard?: () => void;
   initialLiveJobId?: string | null;
   onLiveJobIdChange?: (requestId: string | null) => void;
+  onEditRequest?: (requestId: string, req: Partial<SecurityRequest>) => void;
 }
 
 export function ClientMapScreen({
@@ -129,7 +130,7 @@ export function ClientMapScreen({
         <MapPinFilterStepper
           filters={CLIENT_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
-          onChange={setMapStatusFilter}
+          onChange={(value) => setMapStatusFilter(value as ClientMapStatusFilter)}
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
           routeSlot={

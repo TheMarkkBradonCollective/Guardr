@@ -26,11 +26,13 @@ export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
 }
 
 /** Guards see available, their booked/scheduled, and their past work — not others' completed or cancelled jobs. */
-export function guardMapPinKind(guardId: string, req: SecurityRequest): 'available' | 'scheduled' | 'past' | null {
+export function guardMapPinKind(
+  guardId: string,
+  req: Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status'>
+): 'available' | 'scheduled' | 'past' | null {
   const isMine =
     req.assignedGuardId === guardId ||
     (req.guardSlots ?? []).some((s) => s.guardId === guardId);
-  if (req.status === 'cancelled') return null;
   if (req.status === 'open') return 'available';
   if (isMine && (req.status === 'accepted' || req.status === 'in-progress')) return 'scheduled';
   if (isMine && (req.status === 'completed' || req.status === 'closed')) return 'past';
@@ -79,7 +81,6 @@ export function guardVisibleMapJobs(
 export type StaffMapPinKind = 'open' | 'live' | 'scheduled' | 'past' | 'cancelled' | 'other';
 
 export function staffMapPinKind(req: SecurityRequest): StaffMapPinKind {
-  if (req.status === 'cancelled') return 'cancelled';
   if (req.status === 'completed' || req.status === 'closed') return 'past';
   if (req.status === 'in-progress') return 'live';
   if (req.status === 'accepted') return 'scheduled';
@@ -153,7 +154,6 @@ export function clientJobMatchesMapStatusFilter(
 }
 
 export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null {
-  if (req.status === 'cancelled') return 'cancelled';
   if (req.status === 'completed' || req.status === 'closed') return 'past';
   if (req.status === 'in-progress') return 'live';
   if (req.status === 'accepted') return 'upcoming';

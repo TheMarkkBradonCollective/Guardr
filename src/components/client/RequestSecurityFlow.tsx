@@ -72,7 +72,7 @@ export function RequestSecurityFlow({
     preset === 'recurring' ? 'construction' : 'standing-guard'
   );
   const [address, setAddress] = useState('');
-  const [jobState, setJobState] = useState(DEFAULT_CALIFORNIA_CITY);
+  const [jobState, setJobState] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, preset === 'recurring' ? 12 : 8));

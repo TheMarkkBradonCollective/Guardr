@@ -103,6 +103,7 @@ const QUICK_LINK_META: Record<
   jobs: { label: 'Jobs', icon: Briefcase },
   guards: { label: 'Guards', icon: Shield },
   team: { label: 'Staff', icon: Users },
+  crews: { label: 'Crews', icon: Users },
   clients: { label: 'Clients', icon: Building2 },
   incidents: { label: 'Incidents', icon: AlertTriangle },
   messages: { label: 'Messages', icon: MessagesSquare },

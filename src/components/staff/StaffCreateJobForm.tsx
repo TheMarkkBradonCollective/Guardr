@@ -74,7 +74,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const [serviceId, setServiceId] = useState<ClientServiceId>('standing-guard');
   const [customTitle, setCustomTitle] = useState('');
   const [address, setAddress] = useState('');
-  const [jobState, setJobState] = useState(DEFAULT_CALIFORNIA_CITY);
+  const [jobState, setJobState] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(() => getDefaultShiftStart());
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(getDefaultShiftStart(), 8));

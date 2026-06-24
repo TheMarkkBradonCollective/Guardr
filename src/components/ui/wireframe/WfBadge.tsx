@@ -1,6 +1,6 @@
 import React from 'react';
 
-type WfBadgeTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
+export type WfBadgeTone = 'default' | 'muted' | 'primary' | 'success' | 'warning' | 'danger';
 
 interface WfBadgeProps {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ interface WfBadgeProps {
 
 const TONE_CLASS: Record<WfBadgeTone, string> = {
   default: 'wf-badge',
+  muted: 'wf-badge',
   primary: 'wf-badge wf-badge-primary',
   success: 'wf-badge wf-badge-success',
   warning: 'wf-badge wf-badge-warning',

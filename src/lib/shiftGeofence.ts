@@ -9,7 +9,7 @@ export interface GeofenceLeaveEvent {
 }
 
 export function shouldNotifyGeofenceLeave(
-  job: Pick<SecurityRequest, 'status' | 'checkInAudit'>,
+  job: Pick<SecurityRequest, 'status' | 'checkInAudit' | 'latitude' | 'longitude'>,
   position: Coordinates
 ): boolean {
   if (job.status !== 'in-progress' || !job.checkInAudit?.checkedAt) return false;

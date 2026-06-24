@@ -59,7 +59,7 @@ export function DirectGuardRequestFlow({
   const [jobTitle, setJobTitle] = useState(() => defaultDirectGuardJobTitle('standing-guard', guard.name));
   const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [address, setAddress] = useState('');
-  const [jobState, setJobState] = useState(DEFAULT_CALIFORNIA_CITY);
+  const [jobState, setJobState] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, 8));

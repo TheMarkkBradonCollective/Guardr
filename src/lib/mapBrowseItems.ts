@@ -9,7 +9,7 @@ import {
   staffMapPinKind,
 } from './mapJobVisibility';
 
-function jobLocation(req: SecurityRequest): string {
+function jobLocation(req: { state?: string; address?: string; location?: string }): string {
   return formatCityLabel(req.state) || req.address || req.location || 'Site';
 }
 

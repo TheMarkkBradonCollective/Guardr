@@ -36,7 +36,7 @@ export function EditRequestForm({
   const [title, setTitle] = useState(request.title);
   const [siteName, setSiteName] = useState(request.siteName || '');
   const [address, setAddress] = useState(request.address || request.location);
-  const [state, setState] = useState(() => resolveJobCity(request.state));
+  const [state, setState] = useState<string>(() => resolveJobCity(request.state));
   const [startDate, setStartDate] = useState(toDatetimeLocal(request.startDate));
   const [endDate, setEndDate] = useState(toDatetimeLocal(request.endDate));
   const [guardsNeeded, setGuardsNeeded] = useState(request.guardsNeeded ?? 1);
