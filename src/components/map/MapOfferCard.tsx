@@ -17,11 +17,14 @@ function hourlyDisplay(job: MapOfferJob, role: MapViewerRole): number {
   return 'guardPay' in job ? job.guardPay : (job as SecurityRequest).hourlyRate;
 }
 
+type MapOfferLayout = 'peek' | 'detail';
+
 interface MapOfferCardProps {
   job: MapOfferJob;
   role: MapViewerRole;
   route: MapRouteSummary | null;
   loadingRoute?: boolean;
+  layout?: MapOfferLayout;
   expanded?: boolean;
   onClose: () => void;
   onExpand?: () => void;
@@ -35,6 +38,7 @@ export function MapOfferCard({
   role,
   route,
   loadingRoute,
+  layout = 'peek',
   expanded = false,
   onClose,
   onExpand,
@@ -44,6 +48,38 @@ export function MapOfferCard({
 }: MapOfferCardProps) {
   const pay = hourlyDisplay(job, role);
   const clientName = 'clientName' in job ? job.clientName : '';
+  const isDetailLayout = layout === 'detail';
+
+  if (isDetailLayout) {
+    return (
+      <div className="map-offer-card map-offer-card-expanded map-offer-card-detail">
+        <div className="map-offer-card-handle" aria-hidden />
+        <div className="map-offer-card-detail-toolbar">
+          <button
+            type="button"
+            onClick={onClose}
+            className="map-offer-card-close"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        {(route || loadingRoute) && (
+          <div className="map-offer-card-stats map-offer-card-stats-compact">
+            {loadingRoute ? (
+              <span className="text-xs text-brand-text-muted">Calculating route…</span>
+            ) : route ? (
+              <span className="map-offer-card-route">
+                <Navigation className="w-3.5 h-3.5" />
+                {route.distanceMiles} mi · {formatRouteEta(route.durationMinutes)}
+              </span>
+            ) : null}
+          </div>
+        )}
+        {children && <div className="map-offer-card-body-scroll">{children}</div>}
+      </div>
+    );
+  }
 
   return (
     <div className={`map-offer-card ${expanded ? 'map-offer-card-expanded' : ''}`}>

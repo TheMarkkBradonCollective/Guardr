@@ -46,7 +46,7 @@ interface GuardMyJobsPanelProps {
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
 }
 
-function GuardMyJobDetail({
+export function GuardMyJobDetail({
   job,
   guard,
   jobChatThreads,
