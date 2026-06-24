@@ -588,7 +588,7 @@ export function StaffGuardDetailPanel({
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
               )}
-              {onSetGuardTrusted && (
+              {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
                 <button
                   type="button"
                   onClick={() => void onSetGuardTrusted(!guard.trusted)}
@@ -601,6 +601,11 @@ export function StaffGuardDetailPanel({
                 >
                   {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
                 </button>
+              )}
+              {onSetGuardTrusted && guardAccountStatus !== 'active' && !guard.trusted && (
+                <p className="text-xs text-brand-text-muted">
+                  Guard must be approved and active before they can be marked as trusted.
+                </p>
               )}
               {onDeleteGuard && guardAccountStatus !== 'pending' && (
                 <button
