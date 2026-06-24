@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { isGuardTrusted } from '../../lib/guardTrust';
+import { confirmApplyAsTeamLead } from '../../lib/importantActionConfirm';
 import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from '../../lib/guardTeams';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
@@ -72,7 +73,16 @@ export function GuardTeamPanel({
       )}
 
       {canLead && onApplyAsLead && (
-        <button type="button" onClick={() => void onApplyAsLead()} className="app-button-primary w-full py-2.5 text-sm font-bold">
+        <button
+          type="button"
+          onClick={() => {
+            void (async () => {
+              if (!(await confirmApplyAsTeamLead(job.title))) return;
+              await onApplyAsLead();
+            })();
+          }}
+          className="app-button-primary w-full py-2.5 text-sm font-bold"
+        >
           Apply as team lead
         </button>
       )}

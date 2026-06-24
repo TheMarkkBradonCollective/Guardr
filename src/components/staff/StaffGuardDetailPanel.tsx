@@ -1,5 +1,15 @@
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
+import {
+  confirmApproveGuardProfile,
+  confirmBackgroundCheckToggle,
+  confirmBlockAccount,
+  confirmClearAuditViolations,
+  confirmMarkGuardTrusted,
+  confirmRemoveGuardTrusted,
+  confirmRestoreAccount,
+  confirmSuspendAccount,
+} from '../../lib/importantActionConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
@@ -258,6 +268,49 @@ export function StaffGuardDetailPanel({
     }
   };
 
+  const handleToggleTrusted = async () => {
+    if (!onSetGuardTrusted) return;
+    const confirmed = guard.trusted
+      ? await confirmRemoveGuardTrusted(guard.name)
+      : await confirmMarkGuardTrusted(guard.name);
+    if (!confirmed) return;
+    await onSetGuardTrusted(!guard.trusted);
+  };
+
+  const handleUpdateUserStatus = async (status: 'active' | 'suspended' | 'blocked') => {
+    const confirmed =
+      status === 'suspended'
+        ? await confirmSuspendAccount(guard.name, 'guard')
+        : status === 'blocked'
+        ? await confirmBlockAccount(guard.name, 'guard')
+        : await confirmRestoreAccount(guard.name, 'guard');
+    if (!confirmed) return;
+    onUpdateUserStatus(guard.id, status);
+  };
+
+  const handleApproveProfile = async () => {
+    if (!onApproveGuardAccount || !guardCanStaffApproveProfile(guard)) return;
+    if (!(await confirmApproveGuardProfile(guard.name))) return;
+    try {
+      await onApproveGuardAccount(guard.id);
+    } catch (err) {
+      showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+    }
+  };
+
+  const handleBackgroundCheckToggle = async () => {
+    if (!onUpdateBackgroundChecked) return;
+    if (!(await confirmBackgroundCheckToggle(guard.name, !guard.backgroundChecked))) return;
+    onUpdateBackgroundChecked(guard.id, !guard.backgroundChecked);
+  };
+
+  const handleResetAuditFailures = async () => {
+    if (!onResetAuditFailures) return;
+    const count = guard.failedAudits ?? 0;
+    if (!(await confirmClearAuditViolations(guard.name, count))) return;
+    onResetAuditFailures(guard.id);
+  };
+
   const handleCancelEdit = () => {
     const resolved = resolvePersonNameParts(guard);
     setFirstName(resolved.firstName);
@@ -498,16 +551,7 @@ export function StaffGuardDetailPanel({
               {guardAccountStatus === 'pending' && onApproveGuardAccount && (
                 <button
                   type="button"
-                  onClick={() => {
-                    void (async () => {
-                      if (!guardCanStaffApproveProfile(guard)) return;
-                      try {
-                        await onApproveGuardAccount(guard.id);
-                      } catch (err) {
-                        showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
-                      }
-                    })();
-                  }}
+                  onClick={() => void handleApproveProfile()}
                   disabled={!guardCanStaffApproveProfile(guard)}
                   className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
@@ -560,29 +604,29 @@ export function StaffGuardDetailPanel({
                 </button>
               )}
               {canSuspend && guardAccountStatus !== 'suspended' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'suspended')} className="app-button-outline app-btn-sm">
+                <button type="button" onClick={() => void handleUpdateUserStatus('suspended')} className="app-button-outline app-btn-sm">
                   Suspend
                 </button>
               )}
               {canSuspend && guardAccountStatus !== 'blocked' && guardAccountStatus === 'active' && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'blocked')} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
+                <button type="button" onClick={() => void handleUpdateUserStatus('blocked')} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
                   Flag / Block
                 </button>
               )}
               {canSuspend && (guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked') && (
-                <button type="button" onClick={() => onUpdateUserStatus(guard.id, 'active')} className="app-button-primary app-btn-sm">
+                <button type="button" onClick={() => void handleUpdateUserStatus('active')} className="app-button-primary app-btn-sm">
                   Restore account
                 </button>
               )}
               {(guard.failedAudits ?? 0) > 0 && onResetAuditFailures && (
-                <button type="button" onClick={() => onResetAuditFailures(guard.id)} className="app-button-outline app-btn-sm">
+                <button type="button" onClick={() => void handleResetAuditFailures()} className="app-button-outline app-btn-sm">
                   Clear violations ({guard.failedAudits}/3)
                 </button>
               )}
               {onUpdateBackgroundChecked && (
                 <button
                   type="button"
-                  onClick={() => onUpdateBackgroundChecked(guard.id, !guard.backgroundChecked)}
+                  onClick={() => void handleBackgroundCheckToggle()}
                   className="app-button-outline app-btn-sm"
                 >
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
@@ -591,7 +635,7 @@ export function StaffGuardDetailPanel({
               {onSetGuardTrusted && (guardAccountStatus === 'active' && guard.verified || guard.trusted) && (
                 <button
                   type="button"
-                  onClick={() => void onSetGuardTrusted(!guard.trusted)}
+                  onClick={() => void handleToggleTrusted()}
                   className={`app-button-outline app-btn-sm ${guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
                   title={
                     guard.trusted

@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
 import { teamRosterSummary } from '../../lib/guardTeams';
+import { confirmApproveTeamSlot, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { Check, Clock, UserPlus } from 'lucide-react';
@@ -110,14 +111,24 @@ export function JobTeamRoster({
                   <div className="flex flex-wrap gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => void onApproveSlot!(slot.id!)}
+                      onClick={() => {
+                        void (async () => {
+                          if (!(await confirmApproveTeamSlot(guard.name, job.title))) return;
+                          await onApproveSlot!(slot.id!);
+                        })();
+                      }}
                       className="app-button-primary app-btn-sm"
                     >
                       Approve {guard.name}
                     </button>
                     <button
                       type="button"
-                      onClick={() => void onDenySlot!(slot.id!)}
+                      onClick={() => {
+                        void (async () => {
+                          if (!(await confirmDenyTeamSlot(guard.name, job.title))) return;
+                          await onDenySlot!(slot.id!);
+                        })();
+                      }}
                       className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                     >
                       Decline

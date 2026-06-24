@@ -1,5 +1,12 @@
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
+import {
+  confirmApproveClientAccount,
+  confirmMarkClientTrusted,
+  confirmRemoveClientTrusted,
+  confirmRestoreAccount,
+  confirmSuspendAccount,
+} from '../../lib/importantActionConfirm';
 import React, { useMemo, useState } from 'react';
 import { Client, SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
@@ -69,6 +76,32 @@ export function StaffClientDetailPanel({
     } finally {
       setDeleting(false);
     }
+  };
+
+  const displayName = client.companyName || client.name;
+
+  const handleToggleTrusted = async () => {
+    if (!onSetClientTrusted) return;
+    const confirmed = client.trusted
+      ? await confirmRemoveClientTrusted(displayName)
+      : await confirmMarkClientTrusted(displayName);
+    if (!confirmed) return;
+    await onSetClientTrusted(client.id, !client.trusted);
+  };
+
+  const handleApproveClient = async () => {
+    if (!(await confirmApproveClientAccount(displayName))) return;
+    onApproveClient(client.id);
+  };
+
+  const handleSuspendClient = async () => {
+    if (!(await confirmSuspendAccount(displayName, 'client'))) return;
+    onRejectClient(client.id);
+  };
+
+  const handleRestoreClient = async () => {
+    if (!(await confirmRestoreAccount(displayName, 'client'))) return;
+    onApproveClient(client.id);
   };
 
   const statusTone = isPending ? 'warning' : isSuspended ? 'danger' : 'success';
@@ -141,24 +174,24 @@ export function StaffClientDetailPanel({
           <WfSectionHeader title="Account controls" className="mb-0" />
           <div className="app-action-row--equal">
             {isPending && (
-              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary app-btn-sm">
+              <button type="button" onClick={() => void handleApproveClient()} className="app-button-primary app-btn-sm">
                 Approve client account
               </button>
             )}
             {isSuspended && (
-              <button type="button" onClick={() => onApproveClient(client.id)} className="app-button-primary app-btn-sm">
+              <button type="button" onClick={() => void handleRestoreClient()} className="app-button-primary app-btn-sm">
                 Restore client account
               </button>
             )}
             {!isPending && !isSuspended && (
-              <button type="button" onClick={() => onRejectClient(client.id)} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
+              <button type="button" onClick={() => void handleSuspendClient()} className="app-button-outline app-btn-sm text-red-400 border-red-500/40">
                 Suspend client account
               </button>
             )}
             {onSetClientTrusted && (
               <button
                 type="button"
-                onClick={() => void onSetClientTrusted(client.id, !client.trusted)}
+                onClick={() => void handleToggleTrusted()}
                 className={`app-button-outline app-btn-sm ${client.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
                 title={
                   client.trusted

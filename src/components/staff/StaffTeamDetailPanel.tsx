@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformRole, SecurityGuard, StaffRole } from '../../types';
 import {
+  confirmBlockAccount,
+  confirmRestoreAccount,
+  confirmStaffRoleChange,
+  confirmSuspendAccount,
+} from '../../lib/importantActionConfirm';
+import {
   ROLE_DESCRIPTIONS,
   staffRoleToPlatformRole,
   ROLE_LABELS,
@@ -72,6 +78,7 @@ export function StaffTeamDetailPanel({
 
   const handleRoleSave = async () => {
     if (!onUpdateStaffRole || role === member.staffRole) return;
+    if (!(await confirmStaffRoleChange(member.name, role))) return;
     setRoleError('');
     setRoleMsg('');
     setSavingRole(true);
@@ -83,6 +90,17 @@ export function StaffTeamDetailPanel({
     } finally {
       setSavingRole(false);
     }
+  };
+
+  const handleUpdateUserStatus = async (status: 'active' | 'suspended' | 'blocked') => {
+    const confirmed =
+      status === 'suspended'
+        ? await confirmSuspendAccount(member.name, 'staff')
+        : status === 'blocked'
+        ? await confirmBlockAccount(member.name, 'staff')
+        : await confirmRestoreAccount(member.name, 'staff');
+    if (!confirmed) return;
+    onUpdateUserStatus(member.id, status);
   };
 
   return (
@@ -161,7 +179,7 @@ export function StaffTeamDetailPanel({
             {accountStatus !== 'suspended' && (
               <button
                 type="button"
-                onClick={() => onUpdateUserStatus(member.id, 'suspended')}
+                onClick={() => void handleUpdateUserStatus('suspended')}
                 className="app-button-outline app-btn-sm"
               >
                 Suspend
@@ -170,7 +188,7 @@ export function StaffTeamDetailPanel({
             {accountStatus !== 'blocked' && (
               <button
                 type="button"
-                onClick={() => onUpdateUserStatus(member.id, 'blocked')}
+                onClick={() => void handleUpdateUserStatus('blocked')}
                 className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
               >
                 Block
@@ -179,7 +197,7 @@ export function StaffTeamDetailPanel({
             {accountStatus !== 'active' && (
               <button
                 type="button"
-                onClick={() => onUpdateUserStatus(member.id, 'active')}
+                onClick={() => void handleUpdateUserStatus('active')}
                 className="app-button-primary app-btn-sm"
               >
                 Restore account
