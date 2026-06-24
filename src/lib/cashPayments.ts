@@ -112,26 +112,32 @@ export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
   return isCashAwaitingStripeDeposit(req) && getRemainingStripeDeposit(req) > 0;
 }
 
+/**
+ * Cash payout to guard — always requires job to be complete.
+ * Guardr hands them cash from their own Stripe balance, then records it here.
+ */
 export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-
-  if (isCashClientPayment(req)) {
-    if (req.guardPayoutAvailable) return false;
-    return ['paid', 'held'].includes(req.paymentStatus);
-  }
-
-  return req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus);
+  // Cash to guard is only allowed once the shift is finished
+  if (req.status !== 'completed') return false;
+  if (['paid', 'held'].includes(req.paymentStatus)) return true;
+  return false;
 }
 
-/** Staff releases pay so the guard can choose bank transfer or cash pickup from Pay */
+/**
+ * Staff can deposit/release guard's Stripe share at any time after the client pays —
+ * even before the job starts or completes. Cash payout to guard is handled separately
+ * and still requires job completion.
+ */
 export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (req.guardPayoutAvailable) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-  return req.status === 'completed';
+  // Money is in Guardr's Stripe — can release to guard any time after client pays
+  return ['paid', 'held'].includes(req.paymentStatus);
 }
 
 /** @deprecated Use canDirectorPayGuardCash */

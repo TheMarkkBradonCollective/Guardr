@@ -119,7 +119,7 @@ import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
-import { getGuardPayoutEligibleJobs } from './lib/guardPayoutInvoice';
+import { getGuardCashPayoutEligibleJobs, getGuardStripePayoutEligibleJobs } from './lib/guardPayoutInvoice';
 import {
   createGuardPayoutInvoiceRecord,
   loadGuardPayoutInvoicesFromStorage,
@@ -5132,12 +5132,13 @@ export default function App() {
     }
     const amount = guardPayoutAmount(req);
     const cashClient = isCashClientPayment(req);
+    const jobComplete = req.status === 'completed';
     if (!(await showAppConfirm({
-      title: cashClient ? 'Deposit guard pay?' : 'Make funds available?',
+      title: 'Release guard earnings to Stripe?',
       message: cashClient
-        ? `Deposit $${amount.toFixed(2)} for "${req.title}"? The guard will see it in Ready to collect on Pay and can send a Stripe bank payout.`
-        : `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then choose bank transfer or cash pickup from their Pay screen.`,
-      confirmLabel: cashClient ? 'Deposit for guard' : 'Make available',
+        ? `Release $${amount.toFixed(2)} for "${req.title}"? The guard will be able to request a bank transfer immediately. Cash pickup becomes available once the job is complete.`
+        : `Release $${amount.toFixed(2)} for "${req.title}" to Stripe now${!jobComplete ? ' (job still in progress)' : ''}? The guard can request a bank transfer immediately. Cash pickup is${!jobComplete ? ' only available after the job completes' : ' also available'}.`,
+      confirmLabel: 'Release to Stripe',
     }))) {
       return;
     }
@@ -7649,9 +7650,10 @@ export default function App() {
   const handleGuardRequestCashPayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return;
-    const eligible = getGuardPayoutEligibleJobs(guardId, requests);
+    // Cash payout: only eligible for completed jobs
+    const eligible = getGuardCashPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      appToast('No completed jobs are available for a cash payout invoice.', 'error');
+      appToast('Cash payout is available once a job is marked complete. Completed jobs with released pay will appear here.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'cash', eligible);
@@ -7660,9 +7662,10 @@ export default function App() {
   const handleGuardRequestStripePayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return;
-    const eligible = getGuardPayoutEligibleJobs(guardId, requests);
+    // Stripe payout: available any time Guardr has released the funds
+    const eligible = getGuardStripePayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      appToast('No earnings are available for a bank payout invoice right now.', 'error');
+      appToast('No earnings available for bank transfer yet. Funds are released by Guardr staff — check Pay for updates.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'stripe', eligible);

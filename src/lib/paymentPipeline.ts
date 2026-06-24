@@ -26,7 +26,9 @@ export function getPaymentPipelineStage(req: SecurityRequest): PaymentPipelineSt
   if (req.status === 'closed') return 'closed';
   if (!req.paymentStatus || req.paymentStatus === 'unpaid') return 'awaiting-client';
   if (req.paymentStatus === 'released') return 'settled';
-  if (req.guardPayoutAvailable && req.status === 'completed') return 'guard-collection-pending';
+  // Guard payout released — guard can collect via Stripe at any time,
+  // or via cash once the job is complete.
+  if (req.guardPayoutAvailable) return 'guard-collection-pending';
   // Fee deposit can still be owed after guard cash payout — check before "settled"
   if (isCashAwaitingStripeDeposit(req)) return 'cash-deposit-pending';
   if (req.status === 'completed' && ['paid', 'held'].includes(req.paymentStatus)) {
@@ -42,30 +44,31 @@ export const PIPELINE_SECTION_META: Record<
   'awaiting-guard-payout': {
     title: 'Release guard pay',
     description:
-      'These jobs are finished. Make funds available so the guard can collect from their Pay screen.',
+      'Job is complete. Release guard earnings to Stripe now — the guard will request a bank transfer or cash pickup from Pay.',
   },
   'guard-collection-pending': {
-    title: 'Waiting on guard',
+    title: 'Guard can collect',
     description:
-      'Funds are available. The guard chooses bank transfer or cash pickup from Pay — you fulfill their invoice when they submit one.',
+      'Earnings released. Guard can request a Stripe bank transfer at any time. Cash pickup is available once the job is marked complete.',
   },
   'cash-deposit-pending': {
-    title: 'Platform fee / Stripe deposit pending',
+    title: 'Stripe deposit pending',
     description:
-      'The client paid in cash. Deposit the platform fee or remaining Stripe balance with card. Guard pay is released separately once the job is done.',
+      'Client paid in cash. Deposit the platform fee or full balance to Stripe via card.',
   },
   'awaiting-client': {
-    title: 'Waiting on the client',
+    title: 'Waiting on client payment',
     description:
-      'The client has not paid yet. Approve cash payment requests or mark cash received if they paid on site.',
+      'Client has not paid yet. Approve cash requests or mark cash received when they pay.',
   },
   'client-paid-active': {
-    title: 'Paid — job in progress',
-    description: 'Money is secured. Pay the guard after the job is marked complete.',
+    title: 'Paid — shift in progress',
+    description:
+      'Money is secured in Stripe. You can deposit guard earnings to Stripe now. Cash payout to guard only after job completes.',
   },
   settled: {
-    title: 'Done',
-    description: 'Client paid and the guard has been paid. No action needed.',
+    title: 'Settled',
+    description: 'Client paid, guard has been paid. No action needed.',
   },
 };
 
