@@ -56,7 +56,7 @@ export function MoreMenuSheet({
                 <Icon className="w-5 h-5 shrink-0" />
                 <span className="text-sm font-bold flex-1 tracking-tight">{label}</span>
                 {badge != null && badge > 0 && (
-                  <span className="min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="nav-badge !min-w-[1.25rem] !h-5 !text-[10px]">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}

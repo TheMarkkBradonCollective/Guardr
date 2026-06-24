@@ -66,7 +66,7 @@ export function CertItemCard({
           onClick={() => setShowDetail(true)}
           className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${cert.imageUrl ? ' flex gap-3' : ''}`}
         >
-          {cert.imageUrl && <img src={cert.imageUrl} alt="" className={thumbClass} />}
+          {cert.imageUrl && <img src={cert.imageUrl} alt={`${title} credential preview`} className={thumbClass} />}
           <div className="min-w-0 flex-1">
             {showCategory && (
               <div className="mb-1.5">

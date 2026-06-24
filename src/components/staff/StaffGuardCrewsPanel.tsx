@@ -22,8 +22,8 @@ const PHASE_LABEL: Record<StaffCrewPhase, string> = {
   active: 'On assignment',
 };
 
-const PHASE_TONE: Record<StaffCrewPhase, 'warning' | 'primary' | 'muted' | 'success'> = {
-  recruiting: 'muted',
+const PHASE_TONE: Record<StaffCrewPhase, 'warning' | 'primary' | 'default' | 'success'> = {
+  recruiting: 'default',
   needs_review: 'warning',
   confirmed: 'primary',
   awaiting_client: 'primary',
@@ -252,14 +252,16 @@ export function StaffGuardCrewsPanel({
               title={crew.crewName}
               subtitle={`${crew.jobTitle} · ${crew.clientName}`}
               meta={
-                <span>
-                  {crew.coordinatorName} · {crew.memberCount}/{crew.guardsNeeded} guards
-                  {crew.pendingStaffCount > 0
-                    ? ` · ${crew.pendingStaffCount} awaiting review`
-                    : ''}
-                </span>
+                <div className="flex items-center justify-between gap-3">
+                  <span>
+                    {crew.coordinatorName} · {crew.memberCount}/{crew.guardsNeeded} guards
+                    {crew.pendingStaffCount > 0
+                      ? ` · ${crew.pendingStaffCount} awaiting review`
+                      : ''}
+                  </span>
+                  <WfBadge tone={PHASE_TONE[crew.phase]}>{PHASE_LABEL[crew.phase]}</WfBadge>
+                </div>
               }
-              action={<WfBadge tone={PHASE_TONE[crew.phase]}>{PHASE_LABEL[crew.phase]}</WfBadge>}
             />
           )}
           renderDetail={(crew, options) => {

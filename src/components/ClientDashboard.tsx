@@ -22,6 +22,7 @@ import { ClientMapScreen } from './client/ClientMapScreen';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
+import { AppScreen, AppStatusBanner } from './ui/app/AppPrimitives';
 
 export type ClientView =
   | 'map'
@@ -410,6 +411,20 @@ export function ClientDashboard({
         onOpenCompose={onOpenSupportCompose}
         onOpenReport={onOpenSupportReport}
       />
+    );
+  }
+
+  if (view === 'messages') {
+    return page(
+      'messages-unavailable',
+      <AppScreen className="p-5">
+        <AppStatusBanner title="Messages are temporarily unavailable">
+          <p className="text-sm text-brand-text-muted leading-relaxed">
+            We could not initialize job chat or support messaging for this session. Refresh the app or
+            contact Guardr support if this keeps happening.
+          </p>
+        </AppStatusBanner>
+      </AppScreen>
     );
   }
 

@@ -14,7 +14,7 @@ import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShi
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
-import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity } from '../../lib/californiaCities';
+import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, type CaliforniaCity } from '../../lib/californiaCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -261,7 +261,7 @@ export function DirectGuardRequestFlow({
             />
             <div>
               <label className="uber-label block mb-1">City</label>
-              <select value={jobState} onChange={(e) => setJobState(e.target.value)} className="uber-select w-full" required>
+              <select value={jobState} onChange={(e) => setJobState(e.target.value as CaliforniaCity)} className="uber-select w-full" required>
                 {CALIFORNIA_CITIES.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}
