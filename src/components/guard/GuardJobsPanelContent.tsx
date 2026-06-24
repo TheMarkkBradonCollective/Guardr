@@ -17,9 +17,13 @@ interface GuardJobsPanelContentProps {
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
   onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onRemoveTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (
+    jobId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => void | Promise<void>;
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
-  onOpenTeamChat?: (jobId: string) => void;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
 }
 
@@ -65,9 +69,10 @@ export function GuardJobsPanelContent({
   onDeclineDirectJob,
   onApplyAsTeamLead,
   onInviteTeamGuard,
+  onRemoveTeamGuard,
+  onUpdateCrewProfile,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
-  onOpenTeamChat,
   scheduleRequests,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
@@ -103,6 +108,16 @@ export function GuardJobsPanelContent({
             ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
             : undefined
         }
+        onRemoveGuard={
+          onRemoveTeamGuard && selectedJob.status === 'open'
+            ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
+            : undefined
+        }
+        onUpdateCrewProfile={
+          onUpdateCrewProfile && selectedJob.status === 'open'
+            ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+            : undefined
+        }
         onAcceptInvite={
           onAcceptTeamInvite && selectedJob.status === 'open'
             ? () => void onAcceptTeamInvite(selectedJob.id)
@@ -112,9 +127,6 @@ export function GuardJobsPanelContent({
           onDeclineTeamInvite && selectedJob.status === 'open'
             ? () => void onDeclineTeamInvite(selectedJob.id)
             : undefined
-        }
-        onOpenTeamChat={
-          onOpenTeamChat ? () => onOpenTeamChat(selectedJob.id) : undefined
         }
         scheduleRequests={scheduleRequests}
       />

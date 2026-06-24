@@ -686,6 +686,10 @@ export interface SecurityRequest {
   teamLeadId?: string | null;
   /** Shareable code for crew self-join (multi-guard jobs with a coordinator) */
   teamCode?: string | null;
+  /** Client-visible crew display name (coordinator-editable) */
+  crewName?: string | null;
+  /** Client-visible crew pitch / capabilities summary */
+  crewDescription?: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;
   /** Per-slot roster for multi-guard jobs */

@@ -22,9 +22,13 @@ interface GuardJobCardProps {
   onDeclineDirectJob?: () => void;
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onRemoveGuard?: (guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
-  onOpenTeamChat?: () => void;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   onSelect?: () => void;
   onClose?: () => void;
@@ -39,9 +43,10 @@ export function GuardJobCard({
   onDeclineDirectJob,
   onApplyAsLead,
   onInviteGuard,
+  onRemoveGuard,
+  onUpdateCrewProfile,
   onAcceptInvite,
   onDeclineInvite,
-  onOpenTeamChat,
   scheduleRequests,
   onSelect,
   onClose,
@@ -94,9 +99,10 @@ export function GuardJobCard({
       onDeclineDirectJob={onDeclineDirectJob}
       onApplyAsLead={onApplyAsLead}
       onInviteGuard={onInviteGuard}
+      onRemoveGuard={onRemoveGuard}
+      onUpdateCrewProfile={onUpdateCrewProfile}
       onAcceptInvite={onAcceptInvite}
       onDeclineInvite={onDeclineInvite}
-      onOpenTeamChat={onOpenTeamChat}
       scheduleRequests={scheduleRequests}
       onClose={onClose}
     />

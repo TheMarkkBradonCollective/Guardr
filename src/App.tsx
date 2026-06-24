@@ -157,7 +157,9 @@ import {
   inviteGuardToTeam,
   proposeIndependentGuardToClient,
   promoteFullCrewToClientIfReady,
+  removeGuardFromTeam,
   revokeLeadIfNeeded,
+  updateCrewProfile,
   staffApproveIndependentSlot,
   staffApproveTeamSlot,
 } from './lib/guardTeamFlow';
@@ -1494,6 +1496,8 @@ export default function App() {
           assignedGuardId: r.assigned_guard_id,
           teamLeadId: r.team_lead_id ?? undefined,
           teamCode: r.team_code ?? undefined,
+          crewName: r.crew_name ?? undefined,
+          crewDescription: r.crew_description ?? undefined,
           openedAt: r.opened_at ?? undefined,
           pendingGuardId: r.pending_guard_id ?? undefined,
           staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
@@ -5406,6 +5410,8 @@ export default function App() {
       await persistJobTeamMeta(supabase, nextJob.id, {
         teamLeadId: nextJob.teamLeadId ?? null,
         teamCode: nextJob.teamCode ?? null,
+        crewName: nextJob.crewName ?? null,
+        crewDescription: nextJob.crewDescription ?? null,
         pendingGuardId: nextJob.pendingGuardId ?? null,
         staffApprovedGuardAt: nextJob.staffApprovedGuardAt,
         applicants: nextJob.applicants,
@@ -5569,6 +5575,51 @@ export default function App() {
       });
     }
     appToast(`Invitation sent to ${invitee.name}.`, 'success');
+  };
+
+  const handleRemoveTeamGuard = async (requestId: string, memberId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const member = guards.find((g) => g.id === memberId);
+    const result = removeGuardFromTeam(job, activeGuardId, memberId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && member) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: memberId,
+        requestId,
+        body: `${activeGuard.name} removed you from the crew for "${job.title}".`,
+      });
+    }
+    appToast(`${member?.name ?? 'Guard'} removed from the crew.`, 'success');
+  };
+
+  const handleUpdateCrewProfile = async (
+    requestId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = updateCrewProfile(job, activeGuardId, {
+      crewName: patch.crewName,
+      crewDescription: patch.crewDescription,
+    });
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? result.job : r)));
+    if (isDbConnected) {
+      await persistJobTeamMeta(supabase, requestId, {
+        crewName: result.job.crewName ?? null,
+        crewDescription: result.job.crewDescription ?? null,
+      });
+    }
+    appToast('Crew details saved.', 'success');
   };
 
   const handleAcceptTeamInvite = async (requestId: string) => {
@@ -7623,6 +7674,8 @@ export default function App() {
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onApplyAsTeamLead={handleApplyAsTeamLead}
           onInviteTeamGuard={handleInviteTeamGuard}
+          onRemoveTeamGuard={handleRemoveTeamGuard}
+          onUpdateCrewProfile={handleUpdateCrewProfile}
           onJoinTeamWithCode={handleJoinTeamWithCode}
           onAcceptTeamInvite={handleAcceptTeamInvite}
           onDeclineTeamInvite={handleDeclineTeamInvite}

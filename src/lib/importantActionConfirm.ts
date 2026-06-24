@@ -116,6 +116,15 @@ export async function confirmStaffRoleChange(memberName: string, newRole: string
   });
 }
 
+export async function confirmRemoveTeamMember(guardName: string, crewName: string): Promise<boolean> {
+  return showAppConfirm({
+    title: 'Remove from crew?',
+    message: `Remove ${guardName} from "${crewName}"? They will need a new invite or crew code to rejoin.`,
+    confirmLabel: 'Remove',
+    tone: 'danger',
+  });
+}
+
 export async function confirmApplyAsTeamLead(jobTitle: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Apply as crew coordinator?',

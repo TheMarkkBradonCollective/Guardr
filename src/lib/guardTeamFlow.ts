@@ -1,4 +1,4 @@
-import type { JobGuardSlot, SecurityGuard, SecurityRequest } from '../types';
+import type { JobGuardSlot, JobGuardSlotStatus, SecurityGuard, SecurityRequest } from '../types';
 import type { ScheduleJob } from './guardSchedule';
 import {
   allCrewSlotsInternallyConfirmed,
@@ -112,6 +112,82 @@ export function inviteGuardToTeam(
       : slot
   );
   return { job: { ...job, guardSlots: nextSlots }, slots: nextSlots };
+}
+
+const COORDINATOR_REMOVABLE_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+];
+
+export function removeGuardFromTeam(
+  job: SecurityRequest,
+  leadId: string,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can remove members.' };
+  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
+  if (targetGuardId === leadId) return { error: 'You cannot remove yourself as coordinator.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
+  if (!COORDINATOR_REMOVABLE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
+  }
+  const ts = now.toISOString();
+  const nextSlots = slots.map((s) =>
+    s.id === slot.id
+      ? {
+          ...s,
+          status: 'open' as const,
+          guardId: null,
+          invitedByGuardId: null,
+          invitedAt: undefined,
+          inviteExpiresAt: undefined,
+          staffApprovedAt: undefined,
+          clientApprovedAt: undefined,
+          updatedAt: ts,
+        }
+      : s
+  );
+  const nextApplicants = job.applicants.filter((id) => id !== targetGuardId);
+  const nextPending =
+    job.pendingGuardId === targetGuardId
+      ? nextSlots.find((s) => s.status === 'pending_client')?.guardId
+      : job.pendingGuardId;
+  return {
+    job: {
+      ...job,
+      guardSlots: nextSlots,
+      applicants: nextApplicants,
+      pendingGuardId: nextPending ?? undefined,
+    },
+    slots: nextSlots,
+  };
+}
+
+export function updateCrewProfile(
+  job: SecurityRequest,
+  leadId: string,
+  patch: { crewName?: string | null; crewDescription?: string | null }
+): { job: SecurityRequest } | { error: string } {
+  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can edit crew details.' };
+  if (job.status !== 'open') return { error: 'Crew details can only be edited while the job is open.' };
+  const crewName =
+    patch.crewName !== undefined ? patch.crewName?.trim() || null : job.crewName ?? null;
+  const crewDescription =
+    patch.crewDescription !== undefined
+      ? patch.crewDescription?.trim() || null
+      : job.crewDescription ?? null;
+  if (crewName && crewName.length > 80) {
+    return { error: 'Crew name must be 80 characters or fewer.' };
+  }
+  if (crewDescription && crewDescription.length > 500) {
+    return { error: 'Crew description must be 500 characters or fewer.' };
+  }
+  return { job: { ...job, crewName, crewDescription } };
 }
 
 export function acceptTeamInvite(

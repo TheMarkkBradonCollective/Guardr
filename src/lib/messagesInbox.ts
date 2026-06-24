@@ -11,7 +11,7 @@ import {
 import { guardForRequest } from './clientShift';
 import { isJobChatEligible, isJobChatReadOnly, threadForRequest, threadsForClient } from './jobChat';
 import { isTeamChatEligible, isTeamChatReadOnly, threadForTeamRequest } from './teamChat';
-import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from './guardTeams';
+import { guardHasJobTeamAssociation, getCrewDisplayName, isMultiGuardJob, teamRosterSummary } from './guardTeams';
 import { supportStatusLabel, ticketsForUser } from './support';
 
 export type InboxChannelKind = 'job' | 'team-crew' | 'support' | 'report' | 'guard-community' | 'staff-community';
@@ -200,14 +200,26 @@ export function buildGuardSupportInboxRows({
 export function buildGuardTeamInboxRows({
   jobs,
   guardId,
+  guards = [],
   teamChatThreads,
   teamChatMessages,
 }: {
   jobs: Pick<
     SecurityRequest,
-    'id' | 'title' | 'siteName' | 'location' | 'status' | 'startDate' | 'guardsNeeded' | 'guardSlots' | 'teamLeadId'
+    | 'id'
+    | 'title'
+    | 'siteName'
+    | 'location'
+    | 'status'
+    | 'startDate'
+    | 'guardsNeeded'
+    | 'guardSlots'
+    | 'teamLeadId'
+    | 'crewName'
+    | 'crewDescription'
   >[];
   guardId: string;
+  guards?: Pick<SecurityGuard, 'id' | 'name'>[];
   teamChatThreads: TeamChatThread[];
   teamChatMessages: TeamChatMessage[];
 }): InboxRow[] {
@@ -223,12 +235,17 @@ export function buildGuardTeamInboxRows({
     const thread = threadForTeamRequest(teamChatThreads, job.id);
     const lastMessage = thread ? lastThreadMessage(teamChatMessages, thread.id) : null;
     const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
+    const coordinator = job.teamLeadId ? guards.find((g) => g.id === job.teamLeadId) : undefined;
+    const crewTitle = getCrewDisplayName(job, coordinator?.name);
+    const descPreview = job.crewDescription?.trim();
     rows.push({
       id: `team-${job.id}`,
       channel: 'team-crew',
-      title: job.title,
+      title: crewTitle,
       subtitle: `${job.siteName || job.location} · ${summary.filled}/${summary.total} crew`,
-      preview: lastMessage?.body ?? (eligible ? 'Coordinate with your crew' : 'View team chat history'),
+      preview:
+        lastMessage?.body ??
+        (descPreview ? descPreview.slice(0, 120) : eligible ? 'Coordinate with your crew' : 'View team chat history'),
       updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
       badge: eligible ? 'Team' : readOnly ? 'Archived' : 'Active',
       badgeTone: eligible ? 'primary' : readOnly ? 'default' : 'success',

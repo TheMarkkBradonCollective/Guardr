@@ -18,13 +18,15 @@ export async function persistJobTeamMeta(
   patch: Partial<
     Pick<
       SecurityRequest,
-      'teamLeadId' | 'teamCode' | 'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'
+      'teamLeadId' | 'teamCode' | 'crewName' | 'crewDescription' | 'pendingGuardId' | 'staffApprovedGuardAt' | 'applicants' | 'status' | 'assignedGuardId'
     >
   >
 ): Promise<void> {
   const dbPatch: Record<string, unknown> = {};
   if (patch.teamLeadId !== undefined) dbPatch.team_lead_id = patch.teamLeadId;
   if (patch.teamCode !== undefined) dbPatch.team_code = patch.teamCode;
+  if (patch.crewName !== undefined) dbPatch.crew_name = patch.crewName;
+  if (patch.crewDescription !== undefined) dbPatch.crew_description = patch.crewDescription;
   if (patch.pendingGuardId !== undefined) dbPatch.pending_guard_id = patch.pendingGuardId;
   if (patch.staffApprovedGuardAt !== undefined) dbPatch.staff_approved_guard_at = patch.staffApprovedGuardAt;
   if (patch.applicants !== undefined) dbPatch.applicants = patch.applicants;

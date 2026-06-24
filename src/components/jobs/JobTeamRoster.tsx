@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
-import { teamRosterSummary } from '../../lib/guardTeams';
+import { teamRosterSummary, getCrewDisplayName } from '../../lib/guardTeams';
+import { CrewDetailsEditor } from '../guard/CrewDetailsEditor';
 import { confirmApproveFullTeam, confirmApproveTeamSlot, confirmDenyFullTeam, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
@@ -70,10 +71,26 @@ export function JobTeamRoster({
 
   if (slotIndices.length === 0) return null;
 
+  const coordinator = guards.find((g) => g.id === job.teamLeadId);
+  const crewTitle = getCrewDisplayName(job, coordinator?.name);
+
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface-elevated/40 px-3 py-3 space-y-3">
+      {(job.crewName?.trim() || job.crewDescription?.trim()) && (
+        <CrewDetailsEditor
+          jobTitle={job.title}
+          coordinatorName={coordinator?.name ?? 'Crew coordinator'}
+          crewName={job.crewName}
+          crewDescription={job.crewDescription}
+        />
+      )}
+      {variant === 'client' && showFullTeamActions && !job.crewName?.trim() && !job.crewDescription?.trim() && (
+        <p className="text-sm font-semibold text-brand-text">{crewTitle}</p>
+      )}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-brand-text">{heading}</p>
+        <p className="text-sm font-semibold text-brand-text">
+          {title ?? (variant === 'client' && showFullTeamActions ? 'Full crew request' : heading)}
+        </p>
         {!slotFilter && (
           <WfBadge tone={summary.open > 0 ? 'warning' : 'primary'}>
             {summary.filled}/{summary.total} filled

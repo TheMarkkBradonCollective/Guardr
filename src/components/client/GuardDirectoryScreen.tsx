@@ -9,6 +9,8 @@ import {
   GuardDirectoryFilters,
   GuardSortKey,
 } from '../../lib/guardDirectory';
+import { getBrowsableClientCrews, type ClientCrewListing } from '../../lib/guardTeams';
+import { formatShiftRange } from '../../lib/dates';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -68,6 +70,8 @@ const MIN_EXP_OPTIONS = [
   { value: 10, label: '10+ years' },
 ];
 
+type DirectoryTab = 'guards' | 'teams';
+
 export function GuardDirectoryScreen({
   guards,
   onSelectGuard,
@@ -78,6 +82,8 @@ export function GuardDirectoryScreen({
   requests = [],
   onRequestGuard,
 }: GuardDirectoryScreenProps) {
+  const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('guards');
+  const [selectedTeamJobId, setSelectedTeamJobId] = useState<string | null>(null);
   const [filters, setFilters] = useState<GuardDirectoryFilters>(DEFAULT_GUARD_FILTERS);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -108,6 +114,31 @@ export function GuardDirectoryScreen({
 
   const hasPreviouslyWorked = previouslyWorkedIds.size > 0;
 
+  const clientCrews = useMemo(
+    () => getBrowsableClientCrews(requests, guards),
+    [requests, guards]
+  );
+
+  const filteredTeams = useMemo(() => {
+    const q = filters.query.trim().toLowerCase();
+    if (!q) return clientCrews;
+    return clientCrews.filter(
+      (crew) =>
+        crew.crewName.toLowerCase().includes(q) ||
+        (crew.crewDescription ?? '').toLowerCase().includes(q) ||
+        crew.coordinatorName.toLowerCase().includes(q) ||
+        crew.jobTitle.toLowerCase().includes(q) ||
+        crew.location.toLowerCase().includes(q)
+    );
+  }, [clientCrews, filters.query]);
+
+  const selectedTeam = selectedTeamJobId
+    ? clientCrews.find((c) => c.jobId === selectedTeamJobId) ?? null
+    : null;
+  const selectedTeamJob = selectedTeamJobId
+    ? requests.find((r) => r.id === selectedTeamJobId) ?? null
+    : null;
+
   function updateFilter<K extends keyof GuardDirectoryFilters>(key: K, value: GuardDirectoryFilters[K]) {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }
@@ -132,9 +163,117 @@ export function GuardDirectoryScreen({
 
   const currentSort = SORT_OPTIONS.find((s) => s.id === filters.sortBy) ?? SORT_OPTIONS[0];
 
+  if (selectedTeam && selectedTeamJob) {
+    const coordinator = guards.find((g) => g.id === selectedTeam.coordinatorId);
+    const rosterIds = (selectedTeamJob.guardSlots ?? [])
+      .map((s) => s.guardId)
+      .filter(Boolean) as string[];
+    const rosterGuards = rosterIds
+      .map((id) => guards.find((g) => g.id === id))
+      .filter(Boolean) as SecurityGuard[];
+
+    return (
+      <AppScreen className="app-full-page-detail">
+        <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedTeamJobId(null)} />
+        <div className="px-5 pb-8 space-y-4">
+          {selectedTeam.crewDescription && (
+            <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
+              {selectedTeam.crewDescription}
+            </p>
+          )}
+          <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-2 text-sm">
+            <p className="font-semibold text-brand-text">{selectedTeam.jobTitle}</p>
+            <p className="text-brand-text-muted">{formatShiftRange(selectedTeamJob.startDate, selectedTeamJob.endDate)}</p>
+            <p className="text-brand-text-muted">{selectedTeam.location}</p>
+            <p className="text-brand-text-muted">
+              {selectedTeam.memberCount}/{selectedTeam.guardsNeeded} guards on roster
+              {selectedTeam.armedRequired ? ' · Armed' : ''}
+            </p>
+          </div>
+          {coordinator && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedTeamJobId(null);
+                onSelectGuard(coordinator);
+              }}
+              className="w-full text-left"
+            >
+              <WfListCard
+                avatar={
+                  <ProfileAvatar src={coordinator.avatar} name={coordinator.name} size="md" rounded="xl" className="w-14 h-14 text-base" />
+                }
+                title={`${coordinator.name} · crew coordinator`}
+                subtitle={getGuardDisplayHeadline(coordinator)}
+                meta={
+                  <p className="text-xs text-brand-text-muted mt-1">View coordinator profile</p>
+                }
+              />
+            </button>
+          )}
+          {rosterGuards.length > 0 && (
+            <AppSection title="Crew roster">
+              <AppItemCardStack>
+                {rosterGuards
+                  .filter((g) => g.id !== selectedTeam.coordinatorId)
+                  .map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTeamJobId(null);
+                        onSelectGuard(member);
+                      }}
+                      className="w-full text-left"
+                    >
+                      <WfListCard
+                        avatar={
+                          <ProfileAvatar src={member.avatar} name={member.name} size="sm" rounded="xl" />
+                        }
+                        title={member.name}
+                        subtitle={getGuardDisplayHeadline(member)}
+                      />
+                    </button>
+                  ))}
+              </AppItemCardStack>
+            </AppSection>
+          )}
+        </div>
+      </AppScreen>
+    );
+  }
+
   return (
     <AppScreen>
-      {onBack && <AppSubScreenHeader title="Find a Guard" onBack={onBack} />}
+      {onBack && <AppSubScreenHeader title="Find Guards & Teams" onBack={onBack} />}
+
+      <div className="px-4 pt-2">
+        <div className="app-inbox-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={directoryTab === 'guards'}
+            className={`app-inbox-tab${directoryTab === 'guards' ? ' app-inbox-tab-active' : ''}`}
+            onClick={() => setDirectoryTab('guards')}
+          >
+            <Shield className="w-3.5 h-3.5" strokeWidth={2} />
+            Guards
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={directoryTab === 'teams'}
+            className={`app-inbox-tab${directoryTab === 'teams' ? ' app-inbox-tab-active' : ''}`}
+            onClick={() => setDirectoryTab('teams')}
+          >
+            <Users className="w-3.5 h-3.5" strokeWidth={2} />
+            Teams
+            {clientCrews.length > 0 && (
+              <span className="app-inbox-tab-badge">{clientCrews.length}</span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* ── Search + filter bar ───────────────────────────────────── */}
       <div className="px-4 pb-3 pt-2 space-y-2 border-b border-brand-border sticky top-0 z-20 bg-brand-bg">
@@ -143,7 +282,11 @@ export function GuardDirectoryScreen({
             <WfSearchBar
               value={filters.query}
               onChange={(q) => updateFilter('query', q)}
-              placeholder="Search by name, skills, or specialty…"
+              placeholder={
+                directoryTab === 'teams'
+                  ? 'Search teams by name, coordinator, or location…'
+                  : 'Search by name, skills, or specialty…'
+              }
             />
           </div>
           {/* Filter button */}
@@ -151,11 +294,14 @@ export function GuardDirectoryScreen({
             type="button"
             onClick={() => { setShowFilterPanel((v) => !v); setShowSortMenu(false); }}
             className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-colors shrink-0 ${
-              showFilterPanel || activeFilterCount > 0
+              directoryTab === 'teams'
+                ? 'opacity-40 pointer-events-none border-brand-border text-brand-text-muted'
+                : showFilterPanel || activeFilterCount > 0
                 ? 'bg-brand-primary border-brand-primary text-white'
                 : 'border-brand-border text-brand-text-muted hover:border-brand-primary hover:text-brand-primary'
             }`}
             aria-label="Filters"
+            disabled={directoryTab === 'teams'}
           >
             <SlidersHorizontal className="w-4 h-4" />
             {activeFilterCount > 0 && (
@@ -169,7 +315,11 @@ export function GuardDirectoryScreen({
         {/* ── Sort + result count row ──────────────────────────────── */}
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-brand-text-muted">
-            {filtered.length === 0
+            {directoryTab === 'teams'
+              ? filteredTeams.length === 0
+                ? 'No coordinated crews found'
+                : `${filteredTeams.length} crew${filteredTeams.length !== 1 ? 's' : ''}`
+              : filtered.length === 0
               ? 'No guards found'
               : `${filtered.length} guard${filtered.length !== 1 ? 's' : ''}`}
             {activeFilterCount > 0 && (
@@ -264,7 +414,7 @@ export function GuardDirectoryScreen({
       </div>
 
       {/* ── Expandable filter panel ───────────────────────────────── */}
-      {showFilterPanel && (
+      {showFilterPanel && directoryTab === 'guards' && (
         <div className="border-b border-brand-border bg-brand-bg-sec px-4 py-4 space-y-5">
           {/* Armed */}
           <FilterToggleRow
@@ -400,6 +550,46 @@ export function GuardDirectoryScreen({
       )}
 
       {/* ── Guard list ────────────────────────────────────────────── */}
+      {directoryTab === 'teams' ? (
+        <AppSection title="Coordinated crews">
+          {filteredTeams.length === 0 ? (
+            <p className="app-empty-state text-sm">
+              No open coordinated crews right now. Check back as trusted guards form teams on multi-guard jobs.
+            </p>
+          ) : (
+            <AppItemCardStack>
+              {filteredTeams.map((crew) => (
+                <WfListCard
+                  key={crew.jobId}
+                  avatar={
+                    <div className="w-14 h-14 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-brand-primary" />
+                    </div>
+                  }
+                  title={crew.crewName}
+                  subtitle={`${crew.coordinatorName} · ${crew.location}`}
+                  meta={
+                    <div className="text-sm text-brand-text-muted space-y-1">
+                      <p>{crew.jobTitle}</p>
+                      <p>{formatShiftRange(crew.startDate, crew.endDate)}</p>
+                      {crew.crewDescription && (
+                        <p className="line-clamp-2">{crew.crewDescription}</p>
+                      )}
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        <WfBadge tone="primary">
+                          {crew.memberCount}/{crew.guardsNeeded} on roster
+                        </WfBadge>
+                        {crew.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
+                      </div>
+                    </div>
+                  }
+                  onClick={() => setSelectedTeamJobId(crew.jobId)}
+                />
+              ))}
+            </AppItemCardStack>
+          )}
+        </AppSection>
+      ) : (
       <AppSection title="Guards">
         {filtered.length === 0 ? (
           <GuardEmptyState
@@ -508,6 +698,7 @@ export function GuardDirectoryScreen({
           </AppItemCardStack>
         )}
       </AppSection>
+      )}
     </AppScreen>
   );
 }

@@ -53,6 +53,7 @@ interface GuardMessagesPanelProps {
   upcomingJobs: GuardJobView[];
   pastJobs: GuardJobView[];
   guard: SecurityGuard;
+  coworkerGuards?: SecurityGuard[];
   currentUser: SessionUser;
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
@@ -89,6 +90,7 @@ export function GuardMessagesPanel({
   upcomingJobs,
   pastJobs,
   guard,
+  coworkerGuards = [],
   currentUser,
   jobChatThreads,
   jobChatMessages,
@@ -171,10 +173,11 @@ export function GuardMessagesPanel({
       buildGuardTeamInboxRows({
         jobs: allJobs,
         guardId: guard.id,
+        guards: coworkerGuards,
         teamChatThreads,
         teamChatMessages,
       }),
-    [allJobs, guard.id, teamChatThreads, teamChatMessages]
+    [allJobs, guard.id, coworkerGuards, teamChatThreads, teamChatMessages]
   );
 
   const supportRows = useMemo(

@@ -28,10 +28,14 @@ interface GuardBottomSheetProps {
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
   onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onRemoveTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (
+    jobId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => void | Promise<void>;
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
-  onOpenTeamChat?: (jobId: string) => void;
-  scheduleRequests?: ScheduleJob[];
+  scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
 }
 
 function useViewportHeight(): number {
@@ -64,9 +68,10 @@ export function GuardBottomSheet({
   onDeclineDirectJob,
   onApplyAsTeamLead,
   onInviteTeamGuard,
+  onRemoveTeamGuard,
+  onUpdateCrewProfile,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
-  onOpenTeamChat,
   scheduleRequests,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
@@ -109,9 +114,10 @@ export function GuardBottomSheet({
       onDeclineDirectJob={onDeclineDirectJob}
       onApplyAsTeamLead={onApplyAsTeamLead}
       onInviteTeamGuard={onInviteTeamGuard}
+      onRemoveTeamGuard={onRemoveTeamGuard}
+      onUpdateCrewProfile={onUpdateCrewProfile}
       onAcceptTeamInvite={onAcceptTeamInvite}
       onDeclineTeamInvite={onDeclineTeamInvite}
-      onOpenTeamChat={onOpenTeamChat}
       scheduleRequests={scheduleRequests}
     />
   );

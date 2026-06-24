@@ -98,6 +98,11 @@ interface GuardDashboardProps {
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
   onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onRemoveTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (
+    requestId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => void | Promise<void>;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
@@ -180,6 +185,8 @@ export function GuardDashboard({
   onDeclineDirectJob,
   onApplyAsTeamLead,
   onInviteTeamGuard,
+  onRemoveTeamGuard,
+  onUpdateCrewProfile,
   onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
@@ -780,9 +787,10 @@ export function GuardDashboard({
           onDeclineDirectJob={onDeclineDirectJob}
           onApplyAsTeamLead={onApplyAsTeamLead}
           onInviteTeamGuard={onInviteTeamGuard}
+          onRemoveTeamGuard={onRemoveTeamGuard}
+          onUpdateCrewProfile={onUpdateCrewProfile}
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
-          onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
           scheduleRequests={requests}
         />
       )}
@@ -838,9 +846,10 @@ export function GuardDashboard({
                   scheduleRequests={requests}
                   onApplyAsLead={onApplyAsTeamLead}
                   onInviteGuard={onInviteTeamGuard}
+                  onRemoveGuard={onRemoveTeamGuard}
+                  onUpdateCrewProfile={onUpdateCrewProfile}
                   onAcceptInvite={onAcceptTeamInvite}
                   onDeclineInvite={onDeclineTeamInvite}
-                  onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
                 />
               </div>
             </div>
@@ -869,6 +878,7 @@ export function GuardDashboard({
                   upcomingJobs={upcomingMyJobs}
                   pastJobs={pastMyJobs}
                   guard={guard}
+                  coworkerGuards={coworkerGuards}
                   currentUser={currentUser}
                   jobChatThreads={jobChatThreads}
                   jobChatMessages={jobChatMessages}

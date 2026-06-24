@@ -1,4 +1,4 @@
-import type { JobGuardSlot, JobGuardSlotStatus, SecurityRequest } from '../types';
+import type { JobGuardSlot, JobGuardSlotStatus, SecurityGuard, SecurityRequest } from '../types';
 
 export const MIN_INVITE_TTL_MS = 60 * 60 * 1000;
 
@@ -312,6 +312,61 @@ export function getCoordinatingCrewJobs(
 export function getOpenCrewLeadOpportunities(jobs: SecurityRequest[]): SecurityRequest[] {
   return jobs
     .filter((j) => j.status === 'open' && isMultiGuardJob(j) && !j.teamLeadId)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+}
+
+export type ClientCrewListing = {
+  jobId: string;
+  crewName: string;
+  crewDescription?: string;
+  coordinatorId: string;
+  coordinatorName: string;
+  memberCount: number;
+  guardsNeeded: number;
+  jobTitle: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  armedRequired: boolean;
+};
+
+export function getCrewDisplayName(
+  job: Pick<SecurityRequest, 'crewName' | 'title'>,
+  coordinatorName?: string
+): string {
+  const custom = job.crewName?.trim();
+  if (custom) return custom;
+  if (coordinatorName) return `${coordinatorName}'s crew`;
+  return job.title;
+}
+
+export function getBrowsableClientCrews(
+  jobs: SecurityRequest[],
+  guards: Pick<SecurityGuard, 'id' | 'name'>[]
+): ClientCrewListing[] {
+  const byId = new Map(guards.map((g) => [g.id, g]));
+  return jobs
+    .filter((j) => j.status === 'open' && isMultiGuardJob(j) && !!j.teamLeadId)
+    .map((job) => {
+      const coordinator = byId.get(job.teamLeadId!);
+      const memberCount = (job.guardSlots ?? []).filter(
+        (s) => s.guardId && s.status !== 'open' && s.status !== 'declined' && s.status !== 'expired'
+      ).length;
+      return {
+        jobId: job.id,
+        crewName: getCrewDisplayName(job, coordinator?.name),
+        crewDescription: job.crewDescription?.trim() || undefined,
+        coordinatorId: job.teamLeadId!,
+        coordinatorName: coordinator?.name ?? 'Crew coordinator',
+        memberCount,
+        guardsNeeded: job.guardsNeeded ?? 1,
+        jobTitle: job.title,
+        location: job.siteName || job.location,
+        startDate: job.startDate,
+        endDate: job.endDate,
+        armedRequired: job.armedRequired,
+      };
+    })
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 }
 
