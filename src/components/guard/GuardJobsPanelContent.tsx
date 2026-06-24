@@ -21,6 +21,7 @@ interface GuardJobsPanelContentProps {
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
   onOpenTeamChat?: (jobId: string) => void;
+  scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
 }
 
 function CategoryFilters({
@@ -69,6 +70,7 @@ export function GuardJobsPanelContent({
   onAcceptTeamInvite,
   onDeclineTeamInvite,
   onOpenTeamChat,
+  scheduleRequests,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
     return (
@@ -121,6 +123,7 @@ export function GuardJobsPanelContent({
         onOpenTeamChat={
           onOpenTeamChat ? () => onOpenTeamChat(selectedJob.id) : undefined
         }
+        scheduleRequests={scheduleRequests}
       />
     );
   }

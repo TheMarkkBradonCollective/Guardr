@@ -26,6 +26,7 @@ interface GuardJobCardProps {
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
+  scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   onSelect?: () => void;
   onClose?: () => void;
   compact?: boolean;
@@ -43,6 +44,7 @@ export function GuardJobCard({
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
+  scheduleRequests,
   onSelect,
   onClose,
   compact = false,
@@ -98,6 +100,7 @@ export function GuardJobCard({
       onAcceptInvite={onAcceptInvite}
       onDeclineInvite={onDeclineInvite}
       onOpenTeamChat={onOpenTeamChat}
+      scheduleRequests={scheduleRequests}
       onClose={onClose}
     />
   );

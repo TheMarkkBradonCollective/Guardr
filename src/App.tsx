@@ -129,6 +129,7 @@ import { guardHasApplied } from './lib/jobApplications';
 import { listingDetailDbColumns, buildJobListingDbPayload, mergeJobListingUpdates } from './lib/jobListing';
 import { normalizeJobOperationalDetails, operationalDetailsDbValue } from './lib/jobOperationalDetails';
 import { checkJobRequirements, guardCanApplyToJob } from './lib/guardJobs';
+import { guardScheduleConflictError } from './lib/guardSchedule';
 import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
@@ -5328,6 +5329,11 @@ export default function App() {
       appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
       return;
     }
+    const scheduleBlocked = guardScheduleConflictError(guardId, job, requests, { guardName: guard.name });
+    if (scheduleBlocked) {
+      appToast(scheduleBlocked, 'error');
+      return;
+    }
     const nextApplicants = [...new Set([...job.applicants, guardId])];
     setRequests((prev) =>
       prev.map((r) =>
@@ -5431,7 +5437,7 @@ export default function App() {
   const handleApplyAsTeamLead = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
-    const result = applyAsTeamLead(job, activeGuard);
+    const result = applyAsTeamLead(job, activeGuard, requests);
     if ('error' in result) {
       appToast(result.error, 'error');
       return;
@@ -5476,7 +5482,7 @@ export default function App() {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
     const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
-    const result = applyToOpenTeamSlot(job, activeGuardId, skipStaff);
+    const result = applyToOpenTeamSlot(job, activeGuardId, skipStaff, requests);
     if ('error' in result) {
       appToast(result.error, 'error');
       return;
@@ -5516,7 +5522,7 @@ export default function App() {
     if (!job) return;
     const invitee = guards.find((g) => g.id === inviteeId);
     if (!invitee) return;
-    const result = inviteGuardToTeam(job, activeGuard, inviteeId);
+    const result = inviteGuardToTeam(job, activeGuard, inviteeId, requests, invitee.name);
     if ('error' in result) {
       appToast(result.error, 'error');
       return;
@@ -5536,7 +5542,7 @@ export default function App() {
   const handleAcceptTeamInvite = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
-    const result = acceptTeamInvite(job, activeGuardId);
+    const result = acceptTeamInvite(job, activeGuardId, requests);
     if ('error' in result) {
       appToast(result.error, 'error');
       return;
@@ -5572,6 +5578,17 @@ export default function App() {
   const handleClientApproveTeamSlot = async (requestId: string, slotId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
+    const pendingSlot = job.guardSlots?.find((s) => s.id === slotId);
+    if (pendingSlot?.guardId) {
+      const guard = guards.find((g) => g.id === pendingSlot.guardId);
+      const scheduleBlocked = guardScheduleConflictError(pendingSlot.guardId, job, requests, {
+        guardName: guard?.name,
+      });
+      if (scheduleBlocked) {
+        appToast(scheduleBlocked, 'error');
+        return;
+      }
+    }
     const result = clientApproveTeamSlot(job, slotId);
     if ('error' in result) {
       appToast(result.error, 'error');
@@ -5632,6 +5649,11 @@ export default function App() {
     const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
     if (!canAccept) {
       appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
+      return;
+    }
+    const scheduleBlocked = guardScheduleConflictError(guardId, job, requests, { guardName: guard.name });
+    if (scheduleBlocked) {
+      appToast(scheduleBlocked, 'error');
       return;
     }
     if (shouldSkipClientGuardApproval(job, guardId)) {
@@ -5804,8 +5826,13 @@ export default function App() {
       appToast('You already applied for this job. Staff will review your application.', 'error');
       return;
     }
-    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id))) {
-      const missing = checkJobRequirements(activeGuard, toGuardJobView(job, activeGuard.id))
+    if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id), requests)) {
+      const scheduleBlocked = guardScheduleConflictError(activeGuardId, job, requests);
+      if (scheduleBlocked) {
+        appToast(scheduleBlocked, 'error');
+        return;
+      }
+      const missing = checkJobRequirements(activeGuard, toGuardJobView(job, activeGuard.id), requests)
         .checks.filter((c) => !c.met)
         .map((c) => c.label)
         .join(', ');

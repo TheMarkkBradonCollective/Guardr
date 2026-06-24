@@ -28,6 +28,7 @@ interface GuardJobDetailContentProps {
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
+  scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   onClose?: () => void;
 }
 
@@ -43,6 +44,7 @@ export function GuardJobDetailContent({
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
+  scheduleRequests,
   onClose,
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
@@ -139,6 +141,7 @@ export function GuardJobDetailContent({
                   onAcceptInvite={onAcceptInvite}
                   onDeclineInvite={onDeclineInvite}
                   onOpenTeamChat={onOpenTeamChat}
+                  scheduleRequests={scheduleRequests}
                 />
               )}
 

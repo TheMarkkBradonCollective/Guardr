@@ -1,5 +1,6 @@
-import { SecurityGuard, SecurityRequest, JobType } from '../types';
+import type { SecurityGuard, SecurityRequest, JobType } from '../types';
 import { GuardJobView } from './guardJobView';
+import { findGuardScheduleConflict, type ScheduleJob } from './guardSchedule';
 import { estimateJobDistanceMiles } from './geo';
 import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
@@ -91,7 +92,11 @@ export function getEstimatedGuardEarnings(job: Pick<GuardJobView, 'guardPay' | '
   return Math.round(job.durationHours * job.guardPay * 100) / 100;
 }
 
-export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): { checks: RequirementCheck[]; canAccept: boolean } {
+export function checkJobRequirements(
+  guard: SecurityGuard,
+  job: GuardJobView,
+  allRequests?: ScheduleJob[]
+): { checks: RequirementCheck[]; canAccept: boolean } {
   const jobState = job.state ?? 'CA';
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
@@ -152,7 +157,20 @@ export function checkJobRequirements(guard: SecurityGuard, job: GuardJobView): {
   }
 
   const blockingChecks = checks.filter((c) => !c.recommended);
-  return { checks, canAccept: blockingChecks.every((c) => c.met) };
+  let canAccept = blockingChecks.every((c) => c.met);
+
+  if (canAccept && allRequests) {
+    const conflict = findGuardScheduleConflict(guard.id, job, allRequests);
+    if (conflict) {
+      checks.push({
+        label: `No overlapping shifts (${conflict.title})`,
+        met: false,
+      });
+      canAccept = false;
+    }
+  }
+
+  return { checks, canAccept };
 }
 
 export function minQualificationLabel(level: SecurityRequest['minGuardQualification']): string {
@@ -216,10 +234,14 @@ export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): 
 }
 
 /** Whether a guard meets all requirements to apply to an open job offer */
-export function guardCanApplyToJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
+export function guardCanApplyToJob(
+  guard: SecurityGuard,
+  job: GuardJobVisibility,
+  allRequests?: ScheduleJob[]
+): boolean {
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
-  return checkJobRequirements(guard, job as GuardJobView).canAccept;
+  return checkJobRequirements(guard, job as GuardJobView, allRequests).canAccept;
 }
 
 export function sortJobs<T extends GuardJobLike>(jobs: T[], sortBy: JobSortKey): T[] {

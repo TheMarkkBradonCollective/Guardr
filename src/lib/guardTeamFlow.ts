@@ -1,4 +1,5 @@
 import type { JobGuardSlot, SecurityGuard, SecurityRequest } from '../types';
+import type { ScheduleJob } from './guardSchedule';
 import {
   computeInviteExpiresAt,
   findOpenSlot,
@@ -9,10 +10,22 @@ import {
 } from './guardTeams';
 import { isGuardTrusted } from './guardTrust';
 import { jobRequiresCashStaffConfirmation, shouldSkipStaffGuardReviewForTrusted } from './guardAssignment';
+import { guardScheduleConflictError } from './guardSchedule';
+
+function scheduleError(
+  guardId: string,
+  job: SecurityRequest,
+  allJobs: ScheduleJob[],
+  guardName?: string
+): { error: string } | null {
+  const message = guardScheduleConflictError(guardId, job, allJobs, { guardName });
+  return message ? { error: message } : null;
+}
 
 export function applyAsTeamLead(
   job: SecurityRequest,
   lead: SecurityGuard,
+  allJobs: ScheduleJob[],
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'This job only needs one guard.' };
@@ -21,6 +34,8 @@ export function applyAsTeamLead(
   if (job.teamLeadId && job.teamLeadId !== lead.id) {
     return { error: 'Another guard is already leading this team.' };
   }
+  const blocked = scheduleError(lead.id, job, allJobs);
+  if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
   if (guardHasJobTeamAssociation(slots, lead.id)) {
     return { error: 'You are already on a team for this job.' };
@@ -57,10 +72,14 @@ export function inviteGuardToTeam(
   job: SecurityRequest,
   lead: SecurityGuard,
   inviteeId: string,
+  allJobs: ScheduleJob[],
+  inviteeName?: string,
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'This job only needs one guard.' };
   if (job.teamLeadId !== lead.id) return { error: 'Only the team lead can invite guards.' };
+  const blocked = scheduleError(inviteeId, job, allJobs, inviteeName);
+  if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
   if (guardHasJobTeamAssociation(slots, inviteeId)) {
     return { error: 'That guard is already tied to this job.' };
@@ -90,8 +109,11 @@ export function inviteGuardToTeam(
 export function acceptTeamInvite(
   job: SecurityRequest,
   guardId: string,
+  allJobs: ScheduleJob[],
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  const blocked = scheduleError(guardId, job, allJobs);
+  if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
   const slot = slots.find((s) => s.guardId === guardId && s.status === 'invited');
   if (!slot) return { error: 'No pending invitation found for this job.' };
@@ -156,9 +178,12 @@ export function applyToOpenTeamSlot(
   job: SecurityRequest,
   guardId: string,
   skipStaffReview: boolean,
+  allJobs: ScheduleJob[],
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'Use the standard apply flow for this job.' };
+  const blocked = scheduleError(guardId, job, allJobs);
+  if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
   if (guardHasJobTeamAssociation(slots, guardId)) {
     return { error: 'You are already on a team for this job.' };

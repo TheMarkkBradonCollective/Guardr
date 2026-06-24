@@ -48,6 +48,7 @@ import {
   ShiftPhase,
   sortJobs,
 } from '../lib/guardJobs';
+import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
@@ -386,9 +387,16 @@ export function GuardDashboard({
       return;
     }
     const jobView = requests.find((r) => r.id === jobId) ?? null;
-    if (!jobView || !guardCanApplyToJob(guard, jobView)) {
+    if (!jobView || !guardCanApplyToJob(guard, jobView, requests)) {
+      const scheduleBlocked = jobView
+        ? guardScheduleConflictError(guard.id, jobView, requests)
+        : null;
+      if (scheduleBlocked) {
+        showAppToast(scheduleBlocked, { tone: 'error' });
+        return;
+      }
       const missing = jobView
-        ? checkJobRequirements(guard, jobView).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
+        ? checkJobRequirements(guard, jobView, requests).checks.filter((c) => !c.met).map((c) => c.label).join(', ')
         : 'job requirements';
       showAppToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, { tone: 'error' });
       return;
@@ -751,6 +759,7 @@ export function GuardDashboard({
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
           onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
+          scheduleRequests={requests}
         />
       )}
 

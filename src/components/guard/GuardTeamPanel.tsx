@@ -3,6 +3,7 @@ import { SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { isGuardTrusted } from '../../lib/guardTrust';
 import { confirmApplyAsTeamLead } from '../../lib/importantActionConfirm';
+import { findGuardScheduleConflict, type ScheduleJob } from '../../lib/guardSchedule';
 import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from '../../lib/guardTeams';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
@@ -18,6 +19,7 @@ interface GuardTeamPanelProps {
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
+  scheduleRequests?: ScheduleJob[];
 }
 
 export function GuardTeamPanel({
@@ -30,6 +32,7 @@ export function GuardTeamPanel({
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
+  scheduleRequests = [],
 }: GuardTeamPanelProps) {
   const [inviteGuardId, setInviteGuardId] = useState('');
   const multi = isMultiGuardJob(job);
@@ -39,15 +42,21 @@ export function GuardTeamPanel({
   const isLead = job.teamLeadId === guard.id;
   const myInvite = slots.find((s) => s.guardId === guard.id && s.status === 'invited');
   const onTeam = guardHasJobTeamAssociation(slots, guard.id);
-  const canLead = trusted && multi && !job.teamLeadId && job.status === 'open';
+  const hasScheduleConflict = !!findGuardScheduleConflict(guard.id, job, scheduleRequests);
+  const canLead = trusted && multi && !job.teamLeadId && job.status === 'open' && !hasScheduleConflict;
   const canInvite = isLead && summary.open > 0 && job.status === 'open';
 
   const inviteCandidates = useMemo(() => {
     const taken = new Set(slots.map((s) => s.guardId).filter(Boolean) as string[]);
     return coworkerGuards.filter(
-      (g) => g.id !== guard.id && !taken.has(g.id) && g.userStatus === 'active' && g.verified
+      (g) =>
+        g.id !== guard.id &&
+        !taken.has(g.id) &&
+        g.userStatus === 'active' &&
+        g.verified &&
+        !findGuardScheduleConflict(g.id, job, scheduleRequests)
     );
-  }, [coworkerGuards, guard.id, slots]);
+  }, [coworkerGuards, guard.id, job, scheduleRequests, slots]);
 
   if (!multi) return null;
 
@@ -69,6 +78,12 @@ export function GuardTeamPanel({
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
           Trusted guards can lead a team and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot.
+        </p>
+      )}
+
+      {hasScheduleConflict && job.status === 'open' && !onTeam && (
+        <p className="text-xs text-amber-500/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
+          This shift overlaps another job on your schedule. You cannot join until those times are clear.
         </p>
       )}
 
