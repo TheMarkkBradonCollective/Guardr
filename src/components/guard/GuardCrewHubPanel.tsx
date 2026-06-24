@@ -4,7 +4,7 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getCrewDisplayName } from '../../lib/guardTeams';
 import { GuardTeamPanel } from './GuardTeamPanel';
-import { AppScreen, AppSection } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 
@@ -118,9 +118,9 @@ export function GuardCrewHubPanel({
 
       <AppSection title="Your crews">
         {coordinatingJobs.length === 0 ? (
-          <p className="app-empty-state text-sm">
-            You are not coordinating a crew yet. Start one on an open multi-guard job below.
-          </p>
+          <AppEmptyState icon={<Users className="w-5 h-5" />} title="No active crews">
+            Apply as team lead on an open multi-guard job to start coordinating your crew.
+          </AppEmptyState>
         ) : (
           <div className="space-y-3">
             {coordinatingJobs.map((job) => (
@@ -158,9 +158,9 @@ export function GuardCrewHubPanel({
 
       <AppSection title="Start a crew">
         {leadOpportunityJobs.length === 0 ? (
-          <p className="app-empty-state text-sm">
-            No open multi-guard jobs without a coordinator right now. Check the map for new offers.
-          </p>
+          <AppEmptyState icon={<MapPin className="w-5 h-5" />} title="No opportunities right now">
+            No open multi-guard jobs without a coordinator. Check the map for new offers.
+          </AppEmptyState>
         ) : (
           <div className="space-y-3">
             {leadOpportunityJobs.map((job) => (

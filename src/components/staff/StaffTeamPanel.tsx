@@ -89,11 +89,19 @@ export function StaffTeamPanel({
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
-          {roster.length === 0
-            ? 'No staff accounts yet. Directors and Owners can use Add staff above.'
-            : 'No staff match your search.'}
-        </p>
+        <div className="app-empty-state app-empty-state--dashed">
+          <div className="app-empty-state-icon">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          </div>
+          <p className="app-empty-state-title">
+            {roster.length === 0 ? 'No staff accounts yet' : 'No staff match your search'}
+          </p>
+          <p className="app-empty-state-body">
+            {roster.length === 0
+              ? 'Directors and Owners can add staff accounts above.'
+              : 'Try adjusting your search.'}
+          </p>
+        </div>
       ) : (
         <ListDetailLayout
           items={filtered}
