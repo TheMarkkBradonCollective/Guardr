@@ -774,6 +774,10 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   guard_break_start BOOLEAN NOT NULL DEFAULT true,
   guard_break_end BOOLEAN NOT NULL DEFAULT true,
   reaction_notification BOOLEAN NOT NULL DEFAULT true,
+  guard_trusted_status BOOLEAN NOT NULL DEFAULT true,
+  client_trusted_status BOOLEAN NOT NULL DEFAULT true,
+  job_relisted BOOLEAN NOT NULL DEFAULT true,
+  team_chat_message BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -791,10 +795,18 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_clockout BOO
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_start BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_end BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS reaction_notification BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_trusted_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_trusted_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_relisted BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS team_chat_message BOOLEAN NOT NULL DEFAULT true;
 
 COMMENT ON COLUMN notification_preferences.support_ticket IS 'Staff alert for new support chats and formal reports';
 COMMENT ON COLUMN notification_preferences.support_ticket_status IS 'User alert when staff updates ticket status';
 COMMENT ON COLUMN notification_preferences.dispute_update IS 'Alerts for dispute filings and resolutions';
+COMMENT ON COLUMN notification_preferences.guard_trusted_status IS 'Guard alert when staff mark or remove trusted status';
+COMMENT ON COLUMN notification_preferences.client_trusted_status IS 'Client alert when staff mark or remove trusted status';
+COMMENT ON COLUMN notification_preferences.job_relisted IS 'Client alert when a coordinated crew is dissolved and the job returns to the marketplace';
+COMMENT ON COLUMN notification_preferences.team_chat_message IS 'Crew chat messages for multi-guard coordinated jobs';
 
 CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
