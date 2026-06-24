@@ -21,6 +21,7 @@ import {
   canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
+import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
 import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient, hasIndependentSlotsPendingClient } from '../../lib/guardTeams';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
