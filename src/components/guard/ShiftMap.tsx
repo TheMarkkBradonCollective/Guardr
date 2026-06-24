@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
@@ -10,6 +10,32 @@ import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { MapRouteLayer } from '../map/MapRouteLayer';
 import { MapRouteSummary } from '../../lib/mapRouting';
+
+const MAP_VIEWPORT_KEY = 'guardr_map_viewport';
+
+interface SavedViewport {
+  lat: number;
+  lng: number;
+  zoom: number;
+}
+
+function loadSavedViewport(): SavedViewport | null {
+  try {
+    const raw = localStorage.getItem(MAP_VIEWPORT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedViewport;
+    if (
+      typeof parsed.lat === 'number' &&
+      typeof parsed.lng === 'number' &&
+      typeof parsed.zoom === 'number'
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
   return L.divIcon({
@@ -25,6 +51,21 @@ function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number 
   useEffect(() => {
     map.flyTo(center, zoom, { animate: true, duration: 0.75 });
   }, [center, zoom, map]);
+  return null;
+}
+
+function MapViewportSaver() {
+  useMapEvents({
+    moveend(e) {
+      const { lat, lng } = e.target.getCenter();
+      const zoom = e.target.getZoom();
+      try {
+        localStorage.setItem(MAP_VIEWPORT_KEY, JSON.stringify({ lat, lng, zoom }));
+      } catch {
+        /* private browsing / storage quota */
+      }
+    },
+  });
   return null;
 }
 
@@ -79,11 +120,16 @@ export function ShiftMap({
     [jobPins, selectedJobId]
   );
 
+  const savedViewport = useMemo(() => loadSavedViewport(), []);
+
   const mapCenter: [number, number] = useMemo(() => {
     if (selectedPin) return [selectedPin.coords.lat, selectedPin.coords.lng];
     if (userLocation) return [userLocation.lat, userLocation.lng];
+    if (savedViewport) return [savedViewport.lat, savedViewport.lng];
     return [METRO_CENTER.lat, METRO_CENTER.lng];
-  }, [selectedPin, userLocation]);
+  }, [selectedPin, userLocation, savedViewport]);
+
+  const initialZoom = savedViewport?.zoom ?? 13;
 
   const guardIcon = L.divIcon({
     className: 'guardr-guard-pin',
@@ -110,12 +156,13 @@ export function ShiftMap({
     <div className={`guardr-map-root ${className}`}>
       <MapContainer
         center={mapCenter}
-        zoom={13}
+        zoom={initialZoom}
         zoomControl={false}
         className="guardr-map-container"
         attributionControl={false}
       >
-        {!selectedPin && <MapRecenter center={mapCenter} zoom={userLocation ? 13 : 12} />}
+        <MapViewportSaver />
+        {!selectedPin && <MapRecenter center={mapCenter} zoom={userLocation ? 13 : savedViewport?.zoom ?? 12} />}
         <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
 
         {userLocation && (
