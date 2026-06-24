@@ -8,6 +8,7 @@ import {
   newSlotId,
 } from './guardTeams';
 import { isGuardTrusted } from './guardTrust';
+import { jobRequiresCashStaffConfirmation, shouldSkipStaffGuardReviewForTrusted } from './guardAssignment';
 
 export function applyAsTeamLead(
   job: SecurityRequest,
@@ -25,13 +26,16 @@ export function applyAsTeamLead(
     return { error: 'You are already on a team for this job.' };
   }
   const ts = now.toISOString();
+  const skipStaff = shouldSkipStaffGuardReviewForTrusted(lead, job);
+  const leadStatus = skipStaff ? ('pending_client' as const) : ('pending_staff' as const);
   const nextSlots = slots.map((slot) => {
     if (slot.slotIndex !== 1) return slot;
     return {
       ...slot,
       guardId: lead.id,
       isLead: true,
-      status: 'pending_client' as const,
+      status: leadStatus,
+      staffApprovedAt: skipStaff ? ts : undefined,
       updatedAt: ts,
     };
   });
@@ -42,8 +46,8 @@ export function applyAsTeamLead(
       teamLeadId: lead.id,
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: lead.id,
-      staffApprovedGuardAt: ts,
+      pendingGuardId: skipStaff ? lead.id : undefined,
+      staffApprovedGuardAt: skipStaff ? ts : undefined,
     },
     slots: nextSlots,
   };
@@ -98,9 +102,16 @@ export function acceptTeamInvite(
     return { error: 'You are already on a team for this job.' };
   }
   const ts = now.toISOString();
+  const skipStaff = !jobRequiresCashStaffConfirmation(job);
+  const nextStatus = skipStaff ? ('pending_client' as const) : ('pending_staff' as const);
   const nextSlots = slots.map((s) =>
     s.id === slot.id
-      ? { ...s, status: 'pending_client' as const, updatedAt: ts }
+      ? {
+          ...s,
+          status: nextStatus,
+          staffApprovedAt: skipStaff ? ts : undefined,
+          updatedAt: ts,
+        }
       : s
   );
   const nextApplicants = [...new Set([...job.applicants, guardId])];
@@ -109,7 +120,8 @@ export function acceptTeamInvite(
       ...job,
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: guardId,
+      pendingGuardId: skipStaff ? guardId : job.pendingGuardId,
+      staffApprovedGuardAt: skipStaff ? ts : job.staffApprovedGuardAt,
     },
     slots: nextSlots,
   };
@@ -143,7 +155,7 @@ export function declineTeamInvite(
 export function applyToOpenTeamSlot(
   job: SecurityRequest,
   guardId: string,
-  trusted: boolean,
+  skipStaffReview: boolean,
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'Use the standard apply flow for this job.' };
@@ -154,14 +166,14 @@ export function applyToOpenTeamSlot(
   const openSlot = findOpenSlot(slots);
   if (!openSlot) return { error: 'No open slots on this job.' };
   const ts = now.toISOString();
-  const nextStatus = trusted ? ('pending_client' as const) : ('pending_staff' as const);
+  const nextStatus = skipStaffReview ? ('pending_client' as const) : ('pending_staff' as const);
   const nextSlots = slots.map((s) =>
     s.slotIndex === openSlot.slotIndex
       ? {
           ...s,
           guardId,
           status: nextStatus,
-          staffApprovedAt: trusted ? ts : undefined,
+          staffApprovedAt: skipStaffReview ? ts : undefined,
           updatedAt: ts,
         }
       : s
@@ -172,8 +184,8 @@ export function applyToOpenTeamSlot(
       ...job,
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: trusted ? guardId : job.pendingGuardId,
-      staffApprovedGuardAt: trusted ? ts : job.staffApprovedGuardAt,
+      pendingGuardId: skipStaffReview ? guardId : job.pendingGuardId,
+      staffApprovedGuardAt: skipStaffReview ? ts : job.staffApprovedGuardAt,
     },
     slots: nextSlots,
   };

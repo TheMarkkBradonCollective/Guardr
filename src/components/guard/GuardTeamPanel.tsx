@@ -65,7 +65,7 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can lead a team and invite crew. You can still apply for an open slot.
+          Trusted guards can lead a team and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot.
         </p>
       )}
 

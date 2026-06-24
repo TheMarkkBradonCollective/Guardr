@@ -596,7 +596,7 @@ export function StaffGuardDetailPanel({
                   title={
                     guard.trusted
                       ? 'Remove trusted status — guard will require Guardr applicant review'
-                      : 'Mark as trusted — guard skips Guardr review, can lead teams'
+                      : 'Mark as trusted — skips Guardr review on Stripe jobs; cash always needs staff confirmation'
                   }
                 >
                   {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}

@@ -290,7 +290,8 @@ export interface SecurityGuard {
   credentialGraceHours?: number;
   /**
    * Explicitly trusted by a Director or Owner.
-   * Trusted guards skip Guardr applicant review and may lead multi-guard teams.
+   * Trusted guards skip Guardr applicant review on Stripe jobs and may lead teams.
+   * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */
   trusted?: boolean;
 }

@@ -5374,32 +5374,50 @@ export default function App() {
       appToast(result.error, 'error');
       return;
     }
+    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
     const nextJob = await persistTeamJobUpdate(result.job, result.slots);
     if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: job.clientId,
-        requestId,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        title: 'Approve your guard',
-        body: `${activeGuard.name} applied as team lead for "${job.title}". Confirm to hire them.`,
-      });
+      if (skipStaff) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          title: 'Approve your guard',
+          body: `${activeGuard.name} applied as team lead for "${job.title}". Confirm to hire them.`,
+        });
+      } else {
+        void reportPushEvent(currentUser, {
+          type: 'guard_application',
+          requestId,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          location: job.location,
+          body: `${activeGuard.name} applied as team lead (cash job) for "${job.title}"`,
+        });
+      }
     }
-    appToast('Team lead application sent to client for approval.', 'success');
+    appToast(
+      skipStaff
+        ? 'Team lead application sent to client for approval.'
+        : 'Team lead application submitted. Guardr staff will review (cash job).',
+      'success'
+    );
     await finalizeTeamJobIfReady(nextJob, result.slots);
   };
 
   const handleApplyOpenTeamSlot = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
-    const result = applyToOpenTeamSlot(job, activeGuardId, isGuardTrusted(activeGuard));
+    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
+    const result = applyToOpenTeamSlot(job, activeGuardId, skipStaff);
     if ('error' in result) {
       appToast(result.error, 'error');
       return;
     }
     const nextJob = await persistTeamJobUpdate(result.job, result.slots);
-    if (isGuardTrusted(activeGuard)) {
+    if (skipStaff) {
       if (currentUser) {
         void reportPushEvent(currentUser, {
           type: 'assignment',
@@ -5742,7 +5760,7 @@ export default function App() {
       return;
     }
 
-    if (shouldSkipStaffGuardReviewForTrusted(activeGuard)) {
+    if (shouldSkipStaffGuardReviewForTrusted(activeGuard, job)) {
       const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
       setRequests((prev) =>
         prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))

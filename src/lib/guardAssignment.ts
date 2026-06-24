@@ -1,4 +1,5 @@
 import { SecurityGuard, SecurityRequest } from '../types';
+import { isCashClientPayment, isClientCashPaymentRequested } from './cashPayments';
 import { isGuardTrusted } from './guardTrust';
 
 /** Staff picked a guard — waiting for the client to confirm before the job is picked up. */
@@ -17,12 +18,27 @@ export function shouldSkipClientGuardApproval(
 }
 
 /**
- * Trusted guards skip Guardr applicant review — they go straight to client confirmation.
+ * Cash-funded jobs and cash payment requests always require Guardr staff confirmation.
+ * Cash bypasses the trusted fast-path for mods, admins, and directors.
+ */
+export function jobRequiresCashStaffConfirmation(
+  req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>
+): boolean {
+  return isCashClientPayment(req) || isClientCashPaymentRequested(req);
+}
+
+/**
+ * Trusted guards skip Guardr applicant review (moderators, administrators, directors)
+ * on Stripe/card jobs — they go straight to client guard confirmation.
+ * Cash jobs always use the full Guardr review path; cash payments must still be confirmed by staff.
  */
 export function shouldSkipStaffGuardReviewForTrusted(
-  guard: Pick<SecurityGuard, 'trusted'>
+  guard: Pick<SecurityGuard, 'trusted'>,
+  req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>
 ): boolean {
-  return isGuardTrusted(guard);
+  if (!isGuardTrusted(guard)) return false;
+  if (jobRequiresCashStaffConfirmation(req)) return false;
+  return true;
 }
 
 export function removeGuardFromApplicants(
