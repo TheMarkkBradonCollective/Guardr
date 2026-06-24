@@ -5132,13 +5132,12 @@ export default function App() {
     }
     const amount = guardPayoutAmount(req);
     const cashClient = isCashClientPayment(req);
-    const jobComplete = req.status === 'completed';
     if (!(await showAppConfirm({
-      title: 'Release guard earnings to Stripe?',
+      title: cashClient ? 'Release guard pay?' : 'Make funds available to guard?',
       message: cashClient
-        ? `Release $${amount.toFixed(2)} for "${req.title}"? The guard will be able to request a bank transfer immediately. Cash pickup becomes available once the job is complete.`
-        : `Release $${amount.toFixed(2)} for "${req.title}" to Stripe now${!jobComplete ? ' (job still in progress)' : ''}? The guard can request a bank transfer immediately. Cash pickup is${!jobComplete ? ' only available after the job completes' : ' also available'}.`,
-      confirmLabel: 'Release to Stripe',
+        ? `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then request a bank transfer or cash pickup from their Pay screen.`
+        : `Make $${amount.toFixed(2)} available for "${req.title}"? The guard will choose bank transfer or cash pickup from Pay.`,
+      confirmLabel: 'Release pay',
     }))) {
       return;
     }
@@ -7650,10 +7649,9 @@ export default function App() {
   const handleGuardRequestCashPayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return;
-    // Cash payout: only eligible for completed jobs
     const eligible = getGuardCashPayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      appToast('Cash payout is available once a job is marked complete. Completed jobs with released pay will appear here.', 'error');
+      appToast('No completed jobs are available for a cash payout invoice.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'cash', eligible);
@@ -7662,10 +7660,9 @@ export default function App() {
   const handleGuardRequestStripePayout = async (guardId: string) => {
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) return;
-    // Stripe payout: available any time Guardr has released the funds
     const eligible = getGuardStripePayoutEligibleJobs(guardId, requests);
     if (eligible.length === 0) {
-      appToast('No earnings available for bank transfer yet. Funds are released by Guardr staff — check Pay for updates.', 'error');
+      appToast('No earnings are available for a bank payout invoice right now.', 'error');
       return;
     }
     await submitGuardPayoutInvoice(guard, 'stripe', eligible);

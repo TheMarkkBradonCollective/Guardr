@@ -110,9 +110,8 @@ export function GuardEarningsPanel({
           <button
             type="button"
             onClick={() => void onRequestCashPayout?.()}
-            disabled={(breakdown.cashAvailable ?? 0) <= 0 || cashRequestPending || !onRequestCashPayout}
+            disabled={breakdown.onlineAvailable <= 0 || cashRequestPending || !onRequestCashPayout}
             className="app-button-outline !text-sm !h-auto !py-3 flex-col items-start gap-1 disabled:opacity-40 text-left"
-            title="Cash pickup available once the job is marked complete"
           >
             <span className="flex items-center gap-2 font-semibold">
               {cashRequestPending ? (
@@ -121,9 +120,6 @@ export function GuardEarningsPanel({
                 <Banknote className="w-4 h-4" />
               )}
               Request cash pickup
-            </span>
-            <span className="text-[11px] font-normal opacity-70 leading-snug">
-              ${(breakdown.cashAvailable ?? 0).toFixed(2)} available · completed jobs only
             </span>
           </button>
         </div>

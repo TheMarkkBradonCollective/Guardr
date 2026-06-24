@@ -127,17 +127,16 @@ export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
 }
 
 /**
- * Staff can deposit/release guard's Stripe share at any time after the client pays —
- * even before the job starts or completes. Cash payout to guard is handled separately
- * and still requires job completion.
+ * Guard pay can only be released after the job is complete — early-end refunds
+ * and overtime adjustments must be settled before paying the guard.
+ * This applies to both Stripe bank transfer and cash payout.
  */
 export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (req.guardPayoutAvailable) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-  // Money is in Guardr's Stripe — can release to guard any time after client pays
-  return ['paid', 'held'].includes(req.paymentStatus);
+  return req.status === 'completed';
 }
 
 /** @deprecated Use canDirectorPayGuardCash */

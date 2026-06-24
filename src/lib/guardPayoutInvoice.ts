@@ -5,58 +5,45 @@ import { formatShiftRange } from './dates';
 export type GuardPayoutMethod = 'cash' | 'stripe';
 
 /**
- * Jobs a guard can include in a payout invoice.
+ * Jobs a guard can include in a payout invoice (Stripe bank transfer or cash pickup).
  *
- * Stripe bank transfer: available as soon as Guardr releases the funds
- *   (guardPayoutAvailable), regardless of whether the job is complete.
- *
- * Cash pickup: only available once the job is marked complete — Guardr
- *   hands over cash from their Stripe balance and records it here.
+ * Both methods require the job to be complete — early-end refunds and overtime
+ * adjustments must be settled before the guard is paid.
  */
 export function getGuardPayoutEligibleJobs(
   guardId: string,
-  requests: SecurityRequest[],
-  method?: 'stripe' | 'cash'
+  requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return requests.filter((r) => {
-    if (r.assignedGuardId !== guardId) return false;
-    if (!['paid', 'held'].includes(r.paymentStatus || '')) return false;
-    if (r.guardPayoutMethod === 'cash') return false; // already paid cash
-    if (!r.guardPayoutAvailable) return false;
-
-    if (method === 'cash') {
-      // Cash only once shift is done
-      return r.status === 'completed';
-    }
-    if (method === 'stripe') {
-      // Stripe: any time after payout is released
-      return true;
-    }
-    // Default (no method specified): allow if job is completed for backward compat
-    return r.status === 'completed';
-  });
+  return requests.filter(
+    (r) =>
+      r.assignedGuardId === guardId &&
+      r.status === 'completed' &&
+      ['paid', 'held'].includes(r.paymentStatus || '') &&
+      r.guardPayoutMethod !== 'cash' &&
+      !!r.guardPayoutAvailable
+  );
 }
 
 /**
- * Jobs eligible for a Stripe bank transfer — funds can be collected
- * at any time after Guardr releases them, even mid-shift.
+ * Jobs eligible for a Stripe bank transfer.
+ * Requires job completion so any adjustments are settled first.
  */
 export function getGuardStripePayoutEligibleJobs(
   guardId: string,
   requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return getGuardPayoutEligibleJobs(guardId, requests, 'stripe');
+  return getGuardPayoutEligibleJobs(guardId, requests);
 }
 
 /**
- * Jobs eligible for a cash pickup — requires the shift to be complete
- * since Guardr pays cash from their Stripe balance.
+ * Jobs eligible for a cash pickup.
+ * Same rules — job must be complete and payout released by staff.
  */
 export function getGuardCashPayoutEligibleJobs(
   guardId: string,
   requests: SecurityRequest[]
 ): SecurityRequest[] {
-  return getGuardPayoutEligibleJobs(guardId, requests, 'cash');
+  return getGuardPayoutEligibleJobs(guardId, requests);
 }
 
 export function buildGuardPayoutInvoice(params: {

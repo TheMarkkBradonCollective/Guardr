@@ -20,14 +20,9 @@ function shiftEarnings(job: GuardJobView): number {
 }
 
 /**
- * Split guard earnings by payment status and method.
- *
- * Stripe payout (onlineAvailable): tracks any job where Guardr has released
- * funds, even if the job is still in progress — the guard can bank transfer
- * at any time.
- *
- * Cash pickup (cashAvailable): only tracks completed jobs — Guardr pays cash
- * from their own Stripe balance once the shift is done.
+ * Split completed guard earnings by payment status and method.
+ * Both Stripe and cash payouts require job completion — adjustments
+ * (overtime, early-end refunds) must be settled before paying the guard.
  */
 export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarningsBreakdown {
   let totalEarnings = 0;
@@ -37,34 +32,25 @@ export function computeGuardEarningsBreakdown(jobs: GuardJobView[]): GuardEarnin
   let cashAvailable = 0;
 
   for (const job of jobs) {
-    if (job.assignedGuardId == null) continue;
+    if (job.status !== 'completed' || job.assignedGuardId == null) continue;
     if (job.payoutStatus == null) continue;
 
     const amount = shiftEarnings(job);
+    totalEarnings += amount;
 
-    // Already paid
     if (job.payoutStatus === 'paid' && job.payoutMethod === 'cash') {
-      if (job.status === 'completed') totalEarnings += amount;
       cashPaid += amount;
       continue;
     }
 
     if (job.payoutStatus === 'paid' && job.payoutMethod === 'stripe') {
-      if (job.status === 'completed') totalEarnings += amount;
       stripePaid += amount;
       continue;
     }
 
-    // Count total earnings for completed jobs only
-    if (job.status === 'completed') totalEarnings += amount;
-
-    // Stripe payout available: any status where Guardr released funds
+    // Released by staff — guard can collect via Stripe or cash
     if (job.guardPayoutAvailable && job.payoutMethod !== 'cash') {
       onlineAvailable += amount;
-    }
-
-    // Cash pickup available: only for completed jobs
-    if (job.guardPayoutAvailable && job.payoutMethod !== 'cash' && job.status === 'completed') {
       cashAvailable += amount;
     }
   }

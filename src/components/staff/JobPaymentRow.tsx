@@ -151,10 +151,9 @@ export function JobPaymentRow({
     canDirectorPayGuardCash(req) &&
     onMarkGuardPaidCash &&
     !readOnly;
-  const jobComplete = req.status === 'completed';
   const guardDepositLabel = cashClientJob
-    ? `Release $${guardAmount.toFixed(2)} to Stripe`
-    : `Release $${guardAmount.toFixed(2)} to Stripe${!jobComplete ? ' (in progress)' : ''}`;
+    ? `Deposit $${guardAmount.toFixed(2)} for guard`
+    : `Make $${guardAmount.toFixed(2)} available to guard`;
   const canRefund =
     isDirector &&
     !!req.stripePaymentIntentId &&
