@@ -264,6 +264,7 @@ export function GuardDashboard({
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [myJobsSelectedJobId, setMyJobsSelectedJobId] = useState<string | null>(null);
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
@@ -984,12 +985,18 @@ export function GuardDashboard({
                 currentUser={currentUser}
                 coworkerGuards={coworkerGuards}
                 jobChatThreads={jobChatThreads}
-                initialSelectedJobId={jobChatRequestId}
-                onSelectedJobIdChange={onJobChatRequestIdChange}
+                scheduleRequests={requests}
+                onSelectedJobIdChange={setMyJobsSelectedJobId}
                 onOpenMessages={openMessagesForJob}
                 onApproveOvertime={onApproveOvertime}
                 onAcceptJob={onAcceptJob}
                 onDeclineDirectJob={onDeclineDirectJob}
+                onApplyAsLead={onApplyAsTeamLead}
+                onInviteGuard={onInviteTeamGuard}
+                onRemoveGuard={onRemoveTeamGuard}
+                onUpdateCrewProfile={onUpdateCrewProfile}
+                onAcceptInvite={onAcceptTeamInvite}
+                onDeclineInvite={onDeclineTeamInvite}
               />
             </div>
           )}
@@ -1251,7 +1258,7 @@ export function GuardDashboard({
 
   const shellHideHeader =
     tab === 'messages' ||
-    (tab === 'myJobs' && !!jobChatRequestId);
+    (tab === 'myJobs' && !!myJobsSelectedJobId);
 
   return (
     <RoleAppShell

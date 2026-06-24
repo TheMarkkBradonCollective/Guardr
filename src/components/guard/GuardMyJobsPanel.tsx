@@ -3,6 +3,7 @@ import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../.
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
+import type { ScheduleJob } from '../../lib/guardSchedule';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { canGuardApproveOvertime } from '../../lib/shiftBilling';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
@@ -33,20 +34,49 @@ interface GuardMyJobsPanelProps {
   onAcceptJob?: (jobId: string) => void;
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
+  scheduleRequests?: ScheduleJob[];
+  onApplyAsLead?: (jobId: string) => void | Promise<void>;
+  onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (
+    jobId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => void | Promise<void>;
+  onAcceptInvite?: (jobId: string) => void | Promise<void>;
+  onDeclineInvite?: (jobId: string) => void | Promise<void>;
 }
 
 function GuardMyJobDetail({
   job,
   guard,
   jobChatThreads,
+  coworkerGuards,
+  scheduleRequests,
   onOpenMessages,
   onApproveOvertime,
+  onApplyAsLead,
+  onInviteGuard,
+  onRemoveGuard,
+  onUpdateCrewProfile,
+  onAcceptInvite,
+  onDeclineInvite,
 }: {
   job: GuardJobView;
   guard: SecurityGuard;
   jobChatThreads: JobChatThread[];
+  coworkerGuards?: SecurityGuard[];
+  scheduleRequests?: ScheduleJob[];
   onOpenMessages?: (jobId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
+  onApplyAsLead?: (jobId: string) => void | Promise<void>;
+  onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onUpdateCrewProfile?: (
+    jobId: string,
+    patch: { crewName: string; crewDescription: string }
+  ) => void | Promise<void>;
+  onAcceptInvite?: (jobId: string) => void | Promise<void>;
+  onDeclineInvite?: (jobId: string) => void | Promise<void>;
 }) {
   const [overtimeApproveId, setOvertimeApproveId] = useState<string | null>(null);
   const chatEligible = isJobChatEligible(job);
@@ -57,7 +87,42 @@ function GuardMyJobDetail({
 
   return (
     <div className="px-5 pb-8 space-y-4">
-      <GuardJobCard job={job} guard={guard} compact />
+      <GuardJobCard
+        job={job}
+        guard={guard}
+        coworkerGuards={coworkerGuards}
+        scheduleRequests={scheduleRequests}
+        onApplyAsLead={
+          onApplyAsLead && job.status === 'open'
+            ? () => void onApplyAsLead(job.id)
+            : undefined
+        }
+        onInviteGuard={
+          onInviteGuard && job.status === 'open'
+            ? (guardId) => void onInviteGuard(job.id, guardId)
+            : undefined
+        }
+        onRemoveGuard={
+          onRemoveGuard && job.status === 'open'
+            ? (guardId) => void onRemoveGuard(job.id, guardId)
+            : undefined
+        }
+        onUpdateCrewProfile={
+          onUpdateCrewProfile && job.status === 'open'
+            ? (patch) => void onUpdateCrewProfile(job.id, patch)
+            : undefined
+        }
+        onAcceptInvite={
+          onAcceptInvite && job.status === 'open'
+            ? () => void onAcceptInvite(job.id)
+            : undefined
+        }
+        onDeclineInvite={
+          onDeclineInvite && job.status === 'open'
+            ? () => void onDeclineInvite(job.id)
+            : undefined
+        }
+      />
       {hasIncidents && (
         <div className="space-y-3">
           <p className="text-sm font-semibold">Incident reports filed</p>
@@ -158,6 +223,13 @@ export function GuardMyJobsPanel({
   onAcceptJob,
   onDeclineDirectJob,
   coworkerGuards,
+  scheduleRequests,
+  onApplyAsLead,
+  onInviteGuard,
+  onRemoveGuard,
+  onUpdateCrewProfile,
+  onAcceptInvite,
+  onDeclineInvite,
 }: GuardMyJobsPanelProps) {
   const [activeTab, setActiveTab] = useState<JobTab>('available');
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedJobId);
@@ -190,12 +262,27 @@ export function GuardMyJobsPanel({
               job={selectedJob}
               guard={guard}
               coworkerGuards={coworkerGuards}
+              scheduleRequests={scheduleRequests}
               onAccept={onAcceptJob ? () => { onAcceptJob(selectedJob.id); updateSelectedId(null); } : undefined}
               onDeclineDirectJob={
                 onDeclineDirectJob && selectedJob.requestType === 'direct'
                   ? () => { void onDeclineDirectJob(selectedJob.id); updateSelectedId(null); }
                   : undefined
               }
+              onApplyAsLead={onApplyAsLead ? () => void onApplyAsLead(selectedJob.id) : undefined}
+              onInviteGuard={
+                onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
+              }
+              onRemoveGuard={
+                onRemoveGuard ? (guardId) => void onRemoveGuard(selectedJob.id, guardId) : undefined
+              }
+              onUpdateCrewProfile={
+                onUpdateCrewProfile
+                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+                  : undefined
+              }
+              onAcceptInvite={onAcceptInvite ? () => void onAcceptInvite(selectedJob.id) : undefined}
+              onDeclineInvite={onDeclineInvite ? () => void onDeclineInvite(selectedJob.id) : undefined}
               onClose={() => updateSelectedId(null)}
             />
           </div>
@@ -204,8 +291,16 @@ export function GuardMyJobsPanel({
             job={selectedJob}
             guard={guard}
             jobChatThreads={jobChatThreads}
+            coworkerGuards={coworkerGuards}
+            scheduleRequests={scheduleRequests}
             onOpenMessages={onOpenMessages}
             onApproveOvertime={onApproveOvertime}
+            onApplyAsLead={onApplyAsLead}
+            onInviteGuard={onInviteGuard}
+            onRemoveGuard={onRemoveGuard}
+            onUpdateCrewProfile={onUpdateCrewProfile}
+            onAcceptInvite={onAcceptInvite}
+            onDeclineInvite={onDeclineInvite}
           />
         )}
       </AppScreen>
