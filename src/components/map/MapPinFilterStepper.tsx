@@ -12,6 +12,7 @@ interface MapPinFilterStepperProps<T extends string> {
   onChange: (value: T) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  routeSlot?: React.ReactNode;
 }
 
 export function MapPinFilterStepper<T extends string>({
@@ -20,6 +21,7 @@ export function MapPinFilterStepper<T extends string>({
   onChange,
   onZoomIn,
   onZoomOut,
+  routeSlot,
 }: MapPinFilterStepperProps<T>) {
   const currentIndex = Math.max(
     0,
@@ -53,14 +55,17 @@ export function MapPinFilterStepper<T extends string>({
         </button>
       </div>
 
-      <button
-        type="button"
-        className="map-filter-step-label"
-        onClick={cycleFilter}
-        aria-label={`Job filter: ${current.label}. Tap to change.`}
-      >
-        {current.label}
-      </button>
+      <div className="map-top-right-cluster">
+        {routeSlot}
+        <button
+          type="button"
+          className="map-filter-step-label"
+          onClick={cycleFilter}
+          aria-label={`Job filter: ${current.label}. Tap to change.`}
+        >
+          {current.label}
+        </button>
+      </div>
     </div>
   );
 }

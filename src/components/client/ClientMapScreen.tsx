@@ -107,10 +107,6 @@ export function ClientMapScreen({
 
   return (
     <div className="h-full min-h-0 relative overflow-hidden guard-map-layout client-map-layout">
-      {selectedBrowseJob && !showShiftOverlay && (
-        <MapRouteBanner route={route} loading={routeLoading} label="Your job" />
-      )}
-
       {!showShiftOverlay && (
         <MapPinFilterStepper
           filters={CLIENT_MAP_STATUS_FILTERS}
@@ -118,6 +114,11 @@ export function ClientMapScreen({
           onChange={setMapStatusFilter}
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
+          routeSlot={
+            selectedBrowseJobId ? (
+              <MapRouteBanner route={route} loading={routeLoading} label="Your job" />
+            ) : null
+          }
         />
       )}
 
