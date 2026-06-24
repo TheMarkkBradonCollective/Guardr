@@ -66,6 +66,46 @@ export function clientVisibleMapJobs(
 
 export type ClientMapPinKind = 'upcoming' | 'past' | 'cancelled';
 
+export type GuardMapStatusFilter = 'all' | 'available' | 'upcoming' | 'complete';
+export type ClientMapStatusFilter = 'all' | 'scheduled' | 'complete';
+
+export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'available', label: 'Available' },
+  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'complete', label: 'Complete' },
+];
+
+export const CLIENT_MAP_STATUS_FILTERS: { id: ClientMapStatusFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'scheduled', label: 'Scheduled' },
+  { id: 'complete', label: 'Complete' },
+];
+
+export function guardJobMatchesMapStatusFilter(
+  guardId: string,
+  req: SecurityRequest,
+  filter: GuardMapStatusFilter
+): boolean {
+  if (filter === 'all') return guardMapPinKind(guardId, req) !== null;
+  const kind = guardMapPinKind(guardId, req);
+  if (filter === 'available') return kind === 'available';
+  if (filter === 'upcoming') return kind === 'scheduled';
+  if (filter === 'complete') return kind === 'past';
+  return true;
+}
+
+export function clientJobMatchesMapStatusFilter(
+  req: SecurityRequest,
+  filter: ClientMapStatusFilter
+): boolean {
+  if (filter === 'all') return clientMapPinKind(req) !== null;
+  const kind = clientMapPinKind(req);
+  if (filter === 'scheduled') return kind === 'upcoming';
+  if (filter === 'complete') return kind === 'past';
+  return true;
+}
+
 export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null {
   if (req.status === 'cancelled') return 'cancelled';
   if (req.status === 'completed' || req.status === 'closed') return 'past';
