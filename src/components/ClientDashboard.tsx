@@ -98,6 +98,7 @@ interface ClientDashboardProps {
   onOpenSupportCompose?: () => void;
   onOpenSupportReport?: () => void;
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
+  requestsSelectedId?: string | null;
 }
 
 export function ClientDashboard({
@@ -156,6 +157,7 @@ export function ClientDashboard({
   onOpenSupportCompose,
   onOpenSupportReport,
   onRequestsSelectedIdChange,
+  requestsSelectedId = null,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -479,6 +481,7 @@ export function ClientDashboard({
         jobChatThreads={jobChatThreads}
         onOpenJobChat={openMessages}
         onSelectedJobIdChange={onRequestsSelectedIdChange}
+        initialSelectedId={requestsSelectedId}
       />
     );
   }

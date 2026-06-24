@@ -147,6 +147,8 @@ interface GuardDashboardProps {
   onRequestStripePayout?: () => Promise<void>;
   jobChatRequestId?: string | null;
   openJobChat?: boolean;
+  /** Deep-link job selection without opening chat (notifications) */
+  initialSelectedJobId?: string | null;
   onJobChatRequestIdChange?: (requestId: string | null) => void;
   onJobChatOpenChange?: (open: boolean) => void;
   supportTicketId?: string | null;
@@ -233,6 +235,7 @@ export function GuardDashboard({
   onRequestStripePayout,
   jobChatRequestId = null,
   openJobChat = false,
+  initialSelectedJobId = null,
   onJobChatRequestIdChange,
   onJobChatOpenChange,
   supportTicketId = null,
@@ -459,6 +462,12 @@ export function GuardDashboard({
       .then((s) => setConnectReady(s.payoutsEnabled && s.detailsSubmitted))
       .catch(() => setConnectReady(false));
   }, [guard.stripeConnectAccountId]);
+
+  useEffect(() => {
+    if (initialSelectedJobId && !openJobChat) {
+      setGuardSelectedJobId(initialSelectedJobId);
+    }
+  }, [initialSelectedJobId, openJobChat]);
 
   useEffect(() => {
     if (tab === 'myJobs' && openJobChat && jobChatRequestId) {

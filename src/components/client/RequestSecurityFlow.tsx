@@ -133,11 +133,7 @@ export function RequestSecurityFlow({
       case 5: return effectiveRate >= 20;
       case 6: return true;
       case 7:
-        return (
-          listing.description.trim().length > 10 &&
-          listing.uniformRequirements.trim().length > 3 &&
-          listing.siteInstructions.trim().length > 3
-        );
+        return true;
       case 8:
         return true;
       default: return true;

@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import { jobStatusBadgeTone } from '../../lib/jobStatusBadges';
+import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
-import { LIVE_JOB_STATUS_LABEL, getLiveJobStatus } from '../../lib/staffOps';
 import { isGuardAccountActive } from '../../lib/accountStatus';
 import {
   canStaffEditJobTitleAndLocation,
@@ -89,10 +87,6 @@ export function StaffJobDetailPanel({
     canStaffUploadSelfAuditPhotos(req, staffRole);
   const canAddSpotCheck =
     !!canUploadSpotCheck && !!onUploadSpotCheck && canStaffAddSpotCheck(req);
-  const jobStatus = getLiveJobStatus(req);
-  const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
-  const requestStatusLabel = JOB_STATUS_LABELS[req.status];
-  const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== requestStatusLabel;
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isAwaitingClientGuardApproval(req);
@@ -136,12 +130,7 @@ export function StaffJobDetailPanel({
       {showStatusHeader && (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            {showLiveBadge && (
-              <WfBadge tone="primary">
-                {statusCfg.emoji} {statusCfg.label}
-              </WfBadge>
-            )}
-            <WfBadge tone={jobStatusBadgeTone(req.status)}>{requestStatusLabel}</WfBadge>
+            <JobStatusBadge job={req} variant="staff" />
             {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
             {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
             {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}

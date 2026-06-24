@@ -1,4 +1,5 @@
 import type { SecurityGuard, SecurityRequest, JobType } from '../types';
+import { isJobPaid } from './jobEditRules';
 import { GuardJobView } from './guardJobView';
 import { findGuardScheduleConflict, type ScheduleJob } from './guardSchedule';
 import { estimateJobDistanceMiles } from './geo';
@@ -225,11 +226,23 @@ type GuardJobVisibility = Pick<
   | 'armedRequired'
 >;
 
+/** Marketplace browse requires client payment; direct hires may be visible earlier. */
+export function openMarketplaceJobIsGuardVisible(
+  job: Pick<SecurityRequest, 'paymentStatus' | 'requestType'>
+): boolean {
+  if (job.requestType === 'direct') return true;
+  return isJobPaid(job);
+}
+
 /** Open jobs visible on a guard's map/list — field-ready guards can browse; apply checks are separate. */
-export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
+export function guardCanViewJob(
+  guard: SecurityGuard,
+  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>
+): boolean {
   const licenseState = resolveJobLicenseState(job.state);
   if (!guardCanWorkFieldJobs(guard, licenseState)) return false;
   if (job.status !== 'open') return false;
+  if (!openMarketplaceJobIsGuardVisible(job)) return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
   return true;
 }
@@ -237,10 +250,11 @@ export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): 
 /** Whether a guard meets all requirements to apply to an open job offer */
 export function guardCanApplyToJob(
   guard: SecurityGuard,
-  job: GuardJobVisibility,
+  job: GuardJobVisibility & Pick<SecurityRequest, 'paymentStatus'>,
   allRequests?: ScheduleJob[]
 ): boolean {
   if (job.status !== 'open') return false;
+  if (!openMarketplaceJobIsGuardVisible(job)) return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
   return checkJobRequirements(guard, job as GuardJobView, allRequests).canAccept;
 }

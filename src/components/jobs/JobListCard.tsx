@@ -1,8 +1,8 @@
 import React from 'react';
 import { SecurityRequest } from '../../types';
 import { formatShiftRange } from '../../lib/dates';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import { WfBadge, WfListCard } from '../ui/wireframe';
+import { WfListCard } from '../ui/wireframe';
+import { JobStatusBadge } from './JobStatusBadge';
 import { Briefcase } from 'lucide-react';
 
 interface JobListCardProps {
@@ -34,7 +34,7 @@ export function JobListCard({
       meta={
         meta ?? (
           <div className="flex flex-wrap items-center gap-1.5">
-            {showStatus && <WfBadge>{JOB_STATUS_LABELS[job.status]}</WfBadge>}
+            {showStatus && <JobStatusBadge job={job} />}
             <span>{formatShiftRange(job.startDate, job.endDate)}</span>
           </div>
         )

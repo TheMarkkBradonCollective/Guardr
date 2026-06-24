@@ -44,9 +44,17 @@ function resolveNotificationUrl(type, options = {}) {
     case "missed_checkin":
     case "guard_checkin":
     case "guard_clockout":
+    case "guard_arrived":
+    case "guard_left_site":
     case "guard_break_start":
     case "guard_break_end":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "job_open_to_guards":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "client_cash_payment_requested":
+    case "guard_cash_payout_requested":
+    case "stripe_payment_complete":
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
     case "assignment":
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "emergency_alert":
@@ -101,6 +109,35 @@ function resolveNotificationUrl(type, options = {}) {
 function resolveNotificationUrlForRole(type, role, options = {}) {
   const isStaff = role === "moderator" || role === "administrator" || role === "director" || role === "owner";
   switch (type) {
+    case "guard_arrived":
+    case "guard_left_site":
+      if (role === "client") {
+        return options.requestId ? `/client/map?jc=${encodeURIComponent(options.requestId)}` : "/client/map";
+      }
+      if (role === "guard") {
+        return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
+      }
+      return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/jobs";
+    case "job_open_to_guards":
+      return options.requestId ? `/guard/map?jc=${encodeURIComponent(options.requestId)}` : "/guard/map";
+    case "client_cash_payment_requested":
+    case "guard_cash_payout_requested":
+    case "stripe_payment_complete":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return "/guard/earnings";
+      }
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
+    case "payment_attention":
+      if (role === "client") {
+        return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (role === "guard") {
+        return "/guard/earnings";
+      }
+      return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
     case "support_message":
       if (role === "client") {
         return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
@@ -149,6 +186,9 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return "/guard/guard-chat";
     case "support_ticket":
     case "support_ticket_status":
+      if (role === "client" && options.requestId) {
+        return `/client/requests?jc=${encodeURIComponent(options.requestId)}`;
+      }
       if (role === "client") {
         return options.ticketId ? `/client/support?st=${encodeURIComponent(options.ticketId)}` : "/client/support";
       }
@@ -198,8 +238,16 @@ function rolesForNotificationType(type) {
     case "missed_checkin":
     case "guard_checkin":
     case "guard_clockout":
+    case "guard_arrived":
+    case "guard_left_site":
     case "guard_break_start":
     case "guard_break_end":
+      return ["dispatch", "admin"];
+    case "job_open_to_guards":
+      return ["guard"];
+    case "client_cash_payment_requested":
+    case "guard_cash_payout_requested":
+    case "stripe_payment_complete":
       return ["dispatch", "admin"];
     case "assignment":
       return ["guard"];
@@ -266,6 +314,8 @@ var PREF_COLUMN = {
   assignment: "assignment",
   guard_checkin: "guard_checkin",
   guard_clockout: "guard_clockout",
+  guard_arrived: "guard_arrived",
+  guard_left_site: "guard_left_site",
   guard_break_start: "guard_break_start",
   guard_break_end: "guard_break_end",
   missed_checkin: "missed_checkin",
@@ -275,11 +325,15 @@ var PREF_COLUMN = {
   staff_message: "staff_message",
   guard_message: "guard_message",
   job_submitted: "job_submitted",
+  job_open_to_guards: "job_open_to_guards",
   guard_application: "guard_application",
   guard_pending_approval: "guard_pending_approval",
   client_pending_approval: "client_pending_approval",
   credential_pending: "credential_pending",
   payment_attention: "payment_attention",
+  client_cash_payment_requested: "payment_attention",
+  guard_cash_payout_requested: "payment_attention",
+  stripe_payment_complete: "payment_attention",
   support_ticket: "support_ticket",
   support_ticket_status: "support_ticket_status",
   dispute_update: "dispute_update",
@@ -759,16 +813,12 @@ async function authorizePushEvent(db, session, event) {
       if (isStaffSession(session)) return null;
       if (session.platformRole === "guard" && event.guardId === session.userId) return null;
       return "Only staff or the applying guard can send application notifications";
-    case "payment_attention":
-      if (isStaffSession(session)) return null;
-      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
-        return null;
-      }
-      return "Only staff or job participants can send payment attention notifications";
     case "guard_message":
       return session.platformRole === "guard" ? null : "Only guards can post to guard chat";
     case "guard_checkin":
     case "guard_clockout":
+    case "guard_arrived":
+    case "guard_left_site":
     case "guard_break_start":
     case "guard_break_end":
     case "missed_checkin":
@@ -777,7 +827,34 @@ async function authorizePushEvent(db, session, event) {
       if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
         return null;
       }
-      return "Not authorized to report check-in events for this job";
+      return "Not authorized to report shift events for this job";
+    case "job_open_to_guards":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "client") return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Only staff or the job client can notify guards of open positions";
+    case "client_cash_payment_requested":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "client") return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Only staff or the job client can send cash payment request notifications";
+    case "guard_cash_payout_requested":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard") return null;
+      return "Only staff or guards can send payout request notifications";
+    case "stripe_payment_complete":
+      return isStaffSession(session) ? null : "Only staff can send payment completion notifications";
+    case "payment_attention":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard") return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Only staff, guards, or job participants can send payment attention notifications";
     case "assignment":
       if (isStaffSession(session)) return null;
       if (event.guardId && event.guardId === session.userId) return null;

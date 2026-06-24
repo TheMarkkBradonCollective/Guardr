@@ -2,8 +2,7 @@ import React from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary, formatRouteEta } from '../../lib/mapRouting';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
-import { jobStatusBadgeTone } from '../../lib/jobStatusBadges';
+import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import {
   formatJobDate,
   formatJobTimeRange,
@@ -14,9 +13,7 @@ import {
 } from '../../lib/guardJobs';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatCityLabel } from '../../lib/californiaCities';
-import { clientMapPinKind, guardMapPinKind } from '../../lib/mapJobVisibility';
 import { clientPaymentStatusHint } from '../../lib/paymentDisplay';
-import { getLiveJobStatus, LIVE_JOB_STATUS_LABEL } from '../../lib/staffOps';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { isNoSpotCheckFlagged } from '../../lib/spotChecks';
@@ -29,21 +26,6 @@ import { Clock, MapPin, Navigation } from 'lucide-react';
 import type { MapViewerRole } from './MapOfferCard';
 
 type MapPeekJob = GuardJobView | SecurityRequest;
-
-const CLIENT_PIN_LABELS: Record<NonNullable<ReturnType<typeof clientMapPinKind>>, string> = {
-  open: 'Open',
-  pending: 'Pending',
-  upcoming: 'Upcoming',
-  live: 'Live',
-  past: 'Past',
-  cancelled: 'Canceled',
-};
-
-const GUARD_PIN_LABELS: Record<NonNullable<ReturnType<typeof guardMapPinKind>>, string> = {
-  available: 'Available',
-  scheduled: 'Upcoming',
-  past: 'Past',
-};
 
 function hourlyRate(job: MapPeekJob, role: MapViewerRole): number {
   if (role === 'guard' && 'guardPay' in job) return job.guardPay;
@@ -59,18 +41,12 @@ function GuardPeek({ job, guardId, route, loadingRoute }: {
   const distance = getJobDistance(job);
   const hourlyPay = getGuardHourlyPay(job);
   const estimated = getEstimatedGuardEarnings(job);
-  const pinKind = guardMapPinKind(guardId, job as unknown as SecurityRequest);
-  const isUpcoming = job.status === 'accepted';
   const isDirectRequest = job.requestType === 'direct';
 
   return (
     <div className="space-y-2 min-w-0">
       <div className="flex flex-wrap gap-1.5">
-        <WfBadge tone={job.status === 'open' ? 'primary' : 'default'}>
-          {JOB_STATUS_LABELS[job.status]}
-        </WfBadge>
-        {pinKind && <WfBadge tone="default">{GUARD_PIN_LABELS[pinKind]}</WfBadge>}
-        {isUpcoming && <WfBadge tone="primary">Upcoming</WfBadge>}
+        <JobStatusBadge job={job} />
         {isDirectRequest && job.status === 'open' && (
           <WfBadge tone="warning">Direct</WfBadge>
         )}
@@ -118,14 +94,12 @@ function ClientPeek({ job, route, loadingRoute }: {
   route: MapRouteSummary | null;
   loadingRoute?: boolean;
 }) {
-  const pinKind = clientMapPinKind(job);
   const paymentHint = clientPaymentStatusHint(job.paymentStatus, job.status, job);
 
   return (
     <div className="space-y-2 min-w-0">
       <div className="flex flex-wrap gap-1.5">
-        <WfBadge tone={jobStatusBadgeTone(job.status)}>{JOB_STATUS_LABELS[job.status]}</WfBadge>
-        {pinKind && <WfBadge tone="default">{CLIENT_PIN_LABELS[pinKind]}</WfBadge>}
+        <JobStatusBadge job={job} />
         <WfBadge tone="default">{JOB_TYPE_LABELS[job.type]}</WfBadge>
         {job.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
         {job.requestType === 'direct' && <WfBadge tone="primary">Direct</WfBadge>}
@@ -166,10 +140,6 @@ function ClientPeek({ job, route, loadingRoute }: {
 }
 
 function StaffPeek({ job, guards }: { job: SecurityRequest; guards: SecurityGuard[] }) {
-  const jobStatus = getLiveJobStatus(job);
-  const statusCfg = LIVE_JOB_STATUS_LABEL[jobStatus];
-  const requestStatusLabel = JOB_STATUS_LABELS[job.status];
-  const showLiveBadge = jobStatus === 'incident-flagged' || statusCfg.label !== requestStatusLabel;
   const assigned = guards.find((g) => g.id === job.assignedGuardId);
   const awaitingClientGuard = isAwaitingClientGuardApproval(job);
   const guardLine = assigned
@@ -183,12 +153,7 @@ function StaffPeek({ job, guards }: { job: SecurityRequest; guards: SecurityGuar
   return (
     <div className="space-y-2 min-w-0">
       <div className="flex flex-wrap gap-1.5">
-        {showLiveBadge && (
-          <WfBadge tone="primary">
-            {statusCfg.emoji} {statusCfg.label}
-          </WfBadge>
-        )}
-        <WfBadge tone={jobStatusBadgeTone(job.status)}>{requestStatusLabel}</WfBadge>
+        <JobStatusBadge job={job} variant="staff" />
         {isNoSelfAuditFlagged(job) && <NoSelfAuditBadge />}
         {isNoSpotCheckFlagged(job) && <NoSpotCheckBadge />}
         {isJobLocationCoordsMissing(job) && <NoMapCoordsBadge />}

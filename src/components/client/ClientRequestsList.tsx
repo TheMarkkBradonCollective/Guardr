@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { SecurityRequest, SecurityGuard, JobChatThread, SessionUser } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import type { OvertimeDisputeInput } from '../../lib/shiftBilling';
@@ -54,6 +54,7 @@ interface ClientRequestsListProps {
   jobChatThreads?: JobChatThread[];
   onOpenJobChat?: (requestId: string) => void;
   onSelectedJobIdChange?: (jobId: string | null) => void;
+  initialSelectedId?: string | null;
 }
 
 function JobRow({
@@ -119,11 +120,16 @@ export function ClientRequestsList({
   jobChatThreads = [],
   onOpenJobChat,
   onSelectedJobIdChange,
+  initialSelectedId = null,
 }: ClientRequestsListProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [activeTab, setActiveTab] = useState<JobTab>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+
+  useEffect(() => {
+    setSelectedId(initialSelectedId);
+  }, [initialSelectedId]);
 
   const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
 

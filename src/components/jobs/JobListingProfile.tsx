@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatCityLabel } from '../../lib/californiaCities';
-import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { JobStatusBadge } from './JobStatusBadge';
 import { teamRosterSummary } from '../../lib/guardTeams';
 import {
   getJobRequiredCredentialLabels,
@@ -99,7 +99,7 @@ export function JobListingProfile({
 
       {showBadges && (
         <div className="flex flex-wrap gap-2">
-          {job.status && <WfBadge>{JOB_STATUS_LABELS[job.status]}</WfBadge>}
+          {job.status && <JobStatusBadge job={{ status: job.status }} />}
           <WfBadge tone="default">{typeLabel}</WfBadge>
           {job.armedRequired && <WfBadge tone="warning">Armed post</WfBadge>}
           {job.requestType === 'direct' && <WfBadge tone="primary">Direct request</WfBadge>}
