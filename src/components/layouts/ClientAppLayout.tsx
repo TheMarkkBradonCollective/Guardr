@@ -47,7 +47,7 @@ export function ClientAppLayout({
   children,
   currentUser,
   onSignOut,
-  activeView = 'map',
+  activeView = 'home',
   onNavigate,
   accountPending = false,
   onOpenLegal,

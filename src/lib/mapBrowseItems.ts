@@ -58,7 +58,7 @@ export function clientMapBrowseItems(jobs: SecurityRequest[]): MapBrowseDockItem
 export function guardMapBrowseItems(guardId: string, jobs: GuardJobView[]): MapBrowseDockItem[] {
   return jobs
     .map((job) => {
-      const kind = guardMapPinKind(guardId, job);
+      const kind = guardMapPinKind(guardId, job as SecurityRequest);
       if (!kind) return null;
       const chip = GUARD_CHIP[kind];
       return {

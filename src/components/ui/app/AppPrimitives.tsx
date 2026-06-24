@@ -4,6 +4,22 @@ import { ArrowLeft, ChevronRight, Filter, Search, Send, Check, CheckCheck, X } f
 /** Shared type for reply-to context (also exported from ChatThreadPanel) */
 export type ChatReplyContext = { senderName: string; body: string };
 
+export function AppEmptyState({
+  children,
+  className = '',
+  dashed = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  dashed?: boolean;
+}) {
+  return (
+    <p className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}>
+      {children}
+    </p>
+  );
+}
+
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`app-screen ${className}`}>{children}</div>;
 }

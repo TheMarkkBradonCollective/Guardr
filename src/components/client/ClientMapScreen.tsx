@@ -128,7 +128,7 @@ export function ClientMapScreen({
   return (
     <div className="h-full min-h-0 relative overflow-hidden guard-map-layout client-map-layout">
       {!showShiftOverlay && (
-        <MapPinFilterStepper
+        <MapPinFilterStepper<ClientMapStatusFilter>
           filters={CLIENT_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
           onChange={(value) => setMapStatusFilter(value as ClientMapStatusFilter)}

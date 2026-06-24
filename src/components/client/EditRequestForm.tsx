@@ -182,7 +182,7 @@ export function EditRequestForm({
         </div>
         <div>
           <label className="uber-label block mb-1">City</label>
-          <select value={state} onChange={(e) => setState(e.target.value as CaliforniaCity)} className="uber-input w-full">
+          <select value={state} onChange={(e) => setState(resolveJobCity(e.target.value))} className="uber-input w-full">
             {CALIFORNIA_CITIES.map((city) => (
               <option key={city} value={city}>{city}</option>
             ))}

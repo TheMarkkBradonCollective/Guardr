@@ -39,7 +39,7 @@ import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
-import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
 
@@ -295,9 +295,7 @@ export function StaffApprovals({
   const renderHub = () => (
     <div className="space-y-4">
       {queueEmpty ? (
-        <p className="staff-empty-state border border-dashed border-brand-border rounded-xl">
-          Nothing waiting for approval.
-        </p>
+        <AppEmptyState dashed>Nothing waiting for approval.</AppEmptyState>
       ) : (
         <AppItemCardStack>
           {availableQueues.map((queueId) => {
