@@ -70,7 +70,7 @@ import {
   STAFF_PROVISIONED_DEFAULT_PASSWORD,
 } from './lib/accountPasswords';
 import { GuardDashboard } from './components/GuardDashboard';
-import { StaffDashboard } from './components/StaffDashboard';
+import { StaffDashboard, type StaffSectionSelection } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -414,7 +414,7 @@ export default function App() {
 
   const initialRoute = readAppRouteFromWindow();
   const [clientView, setClientViewState] = useState<ClientView>(
-    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'map'
+    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
     () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
@@ -800,13 +800,21 @@ export default function App() {
     }
   };
 
-  const setStaffSection = (section: StaffSection) => {
+  const setStaffSection = (section: StaffSection, selection: StaffSectionSelection = {}) => {
     const normalizedSection = isStaffMessagesSection(section) ? 'messages' : section;
     setStaffSectionState(normalizedSection);
-    const nextGuardId = normalizedSection === 'guards' ? staffGuardId ?? undefined : undefined;
-    const nextClientId = normalizedSection === 'clients' ? staffClientId ?? undefined : undefined;
-    const nextJobId = normalizedSection === 'jobs' ? staffJobId ?? undefined : undefined;
-    const nextTeamId = normalizedSection === 'team' ? staffTeamId ?? undefined : undefined;
+    const nextGuardId = normalizedSection === 'guards'
+      ? selection.guardId !== undefined ? selection.guardId ?? undefined : staffGuardId ?? undefined
+      : undefined;
+    const nextClientId = normalizedSection === 'clients'
+      ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
+      : undefined;
+    const nextJobId = normalizedSection === 'jobs'
+      ? selection.jobId !== undefined ? selection.jobId ?? undefined : staffJobId ?? undefined
+      : undefined;
+    const nextTeamId = normalizedSection === 'team'
+      ? selection.teamId !== undefined ? selection.teamId ?? undefined : staffTeamId ?? undefined
+      : undefined;
     const keepsMessages = normalizedSection === 'messages';
     const nextJobChatId = keepsMessages ? jobChatRequestId ?? undefined : undefined;
     const nextSupportId = keepsMessages ? supportTicketId ?? undefined : undefined;
@@ -840,6 +848,13 @@ export default function App() {
   const openStaffApprovals = (queue: ApprovalQueueId | null) => {
     setStaffApprovalQueueState(queue);
     setStaffSectionState('approvals');
+    setStaffGuardIdState(null);
+    setStaffClientIdState(null);
+    setStaffJobIdState(null);
+    setStaffTeamIdState(null);
+    setStaffEditState(false);
+    setJobChatRequestIdState(null);
+    setSupportTicketIdState(null);
     syncAppRoute(
       buildAppRoute({
         role: 'staff',
@@ -8157,11 +8172,11 @@ export default function App() {
   };
 
   const handleSubmitIncidentReport = async (requestId: string, input: IncidentReportFormInput) => {
-    if (!currentUser) return;
+    if (!currentUser) throw new Error('Your session expired. Sign in again to file this report.');
     const req = requests.find((r) => r.id === requestId);
-    if (!req) return;
+    if (!req) throw new Error('This job could not be found. Refresh and try again.');
     const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
-    if (!guard) return;
+    if (!guard) throw new Error('Your guard profile could not be loaded. Refresh and try again.');
 
     const detail = createIncidentReportDetail(input, { id: guard.id, name: guard.name });
     const stamp = new Date().toISOString();
@@ -8632,7 +8647,7 @@ export default function App() {
               clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
               activeView={clientView === 'support' ? 'messages' : clientView}
-              onViewChange={setClientView}
+              onViewChange={handleClientNavigate}
               profileGuardId={clientGuardId}
               onProfileGuardIdChange={setClientGuardId}
               directRequestGuardId={clientDirectGuardId}
@@ -8815,5 +8830,15 @@ export default function App() {
     );
   }
 
-  return null;
+  return (
+    <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
+      <p className="text-brand-text font-semibold">This account role is not supported.</p>
+      <p className="text-brand-text-muted text-sm max-w-sm">
+        Sign out and sign in again with a Guardr client, guard, or staff account.
+      </p>
+      <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
+        Sign out
+      </button>
+    </div>
+  );
 }
