@@ -284,6 +284,8 @@ export function ClientDashboard({
       <RequestSecurityFlow
         preset={flowPreset}
         feeConfig={feeConfig}
+        guards={guards}
+        favoriteGuardIds={favoriteGuardIds}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
