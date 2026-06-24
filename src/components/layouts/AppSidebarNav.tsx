@@ -34,7 +34,7 @@ export function AppSidebarNav({ items, activeId, onNavigate }: AppSidebarNavProp
             <span className="flex-1 truncate">{label}</span>
             {badge != null && badge > 0 && (
               <span
-                className={`text-xs font-bold px-1.5 py-0.5 min-w-[1.25rem] text-center ${
+                className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
                   active
                     ? 'bg-brand-accent-text/20 text-brand-accent-text'
                     : 'bg-brand-primary/15 text-brand-primary'

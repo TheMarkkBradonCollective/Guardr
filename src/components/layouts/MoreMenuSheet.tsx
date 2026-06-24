@@ -29,7 +29,7 @@ export function MoreMenuSheet({
         <button
           type="button"
           onClick={onClose}
-          className="p-2 border border-brand-border bg-brand-bg-sec text-brand-text-muted hover:text-brand-text transition-colors"
+          className="p-2 rounded-full border border-brand-border bg-brand-bg-sec text-brand-text-muted hover:text-brand-text transition-colors"
           aria-label="Close"
         >
           <X className="w-4 h-4" />

@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export type AppToastTone = 'success' | 'error' | 'info';
+
+const TOAST_ICONS: Record<AppToastTone, React.ReactNode> = {
+  success: <CheckCircle className="w-4 h-4 shrink-0 text-green-500" strokeWidth={2} />,
+  error: <AlertCircle className="w-4 h-4 shrink-0 text-red-500" strokeWidth={2} />,
+  info: <Info className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={2} />,
+};
 
 export interface AppToastMessage {
   id: number;
@@ -66,6 +73,7 @@ export function AppToastHost() {
   return (
     <div className="app-toast-host" role="status" aria-live="polite">
       <div className={`app-toast app-toast-${toast.tone}`}>
+        {TOAST_ICONS[toast.tone]}
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm leading-snug">{toast.title}</p>
           {toast.body && <p className="text-xs mt-1 opacity-90 leading-relaxed">{toast.body}</p>}
