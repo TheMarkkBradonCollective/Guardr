@@ -195,14 +195,6 @@ export function GuardJobDetailContent({
               )}
 
               {/* Marketplace job — slide to apply */}
-              {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && (
-                <SlideToConfirm
-                  label="Slide to apply for job"
-                  confirmedLabel="Applied"
-                  onConfirm={onAccept}
-                />
-              )}
-
               {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && !canAccept && (
                 <p className="text-sm text-amber-400/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
                   You must meet all requirements above before you can apply for this offer.
@@ -212,6 +204,14 @@ export function GuardJobDetailContent({
           </div>
         }
       />
+
+      {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && (
+        <SlideToConfirm
+          label="Slide to apply for job"
+          confirmedLabel="Applied"
+          onConfirm={onAccept}
+        />
+      )}
     </div>
   );
 }

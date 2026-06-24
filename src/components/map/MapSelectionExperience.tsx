@@ -78,23 +78,23 @@ export function MapSelectionExperience({
         primaryLabel={primaryLabel}
       >
         {expanded && (
-        <div className={`mt-3 overflow-y-auto overscroll-contain pr-1 -mr-1 ${clientActions || detailActions ? 'max-h-[55vh]' : 'max-h-[42vh]'}`}>
-          {role !== 'guard' && (
-            <JobListingProfile
-              job={selected}
-              showClientHeader={false}
-              showBadges={false}
-              distanceMiles={route?.distanceMiles}
-              payLine={payLine}
-              operationalDetails={operationalDetails}
-              operationalBriefingLocked={operationalBriefingLocked}
-              jobStatus={jobStatus}
-            />
-          )}
-          {clientActions}
-          {detailActions}
-        </div>
-      )}
+          <>
+            {role !== 'guard' && (
+              <JobListingProfile
+                job={selected}
+                showClientHeader={false}
+                showBadges={false}
+                distanceMiles={route?.distanceMiles}
+                payLine={payLine}
+                operationalDetails={operationalDetails}
+                operationalBriefingLocked={operationalBriefingLocked}
+                jobStatus={jobStatus}
+              />
+            )}
+            {clientActions}
+            {detailActions}
+          </>
+        )}
       </MapOfferCard>
     </div>
   );

@@ -367,6 +367,8 @@ export function StaffApprovals({
               >
                 <X className="w-3.5 h-3.5" /> Decline
               </button>
+            </div>
+            <div className="pt-2">
               <SlideToConfirm
                 label="Slide to approve job"
                 confirmedLabel="Approved"
@@ -428,6 +430,8 @@ export function StaffApprovals({
               <X className="w-3.5 h-3.5" /> Decline
             </button>
           )}
+        </div>
+        <div className="pt-2">
           <SlideToConfirm
             label={isBilling ? 'Slide to confirm billing & publish' : 'Slide to approve new times'}
             confirmedLabel={isBilling ? 'Confirmed' : 'Approved'}
@@ -824,27 +828,6 @@ export function StaffApprovals({
                       Full profile
                     </button>
                   )}
-                  {!isApprovedGuard && canManageGuardAccounts && onApproveGuardAccount && (
-                    <SlideToConfirm
-                      compact
-                      label="Slide to approve profile"
-                      confirmedLabel="Approved"
-                      tone="success"
-                      disabled={!canTakeAction}
-                      disabledHint={approvalBlockers.join(' · ') || 'Verified government ID required'}
-                      onConfirm={() => {
-                        void (async () => {
-                          if (!canTakeAction) return;
-                          try {
-                            await onApproveGuardAccount(guard.id);
-                            setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
-                          }
-                        })();
-                      }}
-                    />
-                  )}
                   {isApprovedGuard && canManageGuardAccounts && onActivateGuardAccount && (
                     <button
                       type="button"
@@ -877,6 +860,28 @@ export function StaffApprovals({
                     </button>
                   )}
                 </div>
+                {!isApprovedGuard && canManageGuardAccounts && onApproveGuardAccount && (
+                  <div className="pt-2">
+                    <SlideToConfirm
+                      label="Slide to approve profile"
+                      confirmedLabel="Approved"
+                      tone="success"
+                      disabled={!canTakeAction}
+                      disabledHint={approvalBlockers.join(' · ') || 'Verified government ID required'}
+                      onConfirm={() => {
+                        void (async () => {
+                          if (!canTakeAction) return;
+                          try {
+                            await onApproveGuardAccount(guard.id);
+                            setActiveItemId(null);
+                          } catch (err) {
+                            showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+                          }
+                        })();
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </>
           );
