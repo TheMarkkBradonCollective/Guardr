@@ -1,5 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityRequest } from '../../types';
+import { SecurityGuard, SecurityRequest } from '../../types';
+import { getBrowsableGuards } from '../../lib/guardDirectory';
+import { getGuardDisplayHeadline } from '../../lib/guardResume';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { Heart } from 'lucide-react';
 import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
@@ -38,6 +42,8 @@ interface RequestSecurityFlowProps {
   feeConfig: PlatformFeeConfig;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
+  guards?: SecurityGuard[];
+  favoriteGuardIds?: string[];
 }
 
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
@@ -47,6 +53,8 @@ export function RequestSecurityFlow({
   feeConfig,
   onBack,
   onSubmit,
+  guards = [],
+  favoriteGuardIds = [],
 }: RequestSecurityFlowProps) {
   const defaultStart = useMemo(() => {
     if (preset === 'schedule' || preset === 'recurring') {
@@ -83,6 +91,15 @@ export function RequestSecurityFlow({
   const [longitude, setLongitude] = useState<number | undefined>();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
+
+  const [selectedFavoriteGuardId, setSelectedFavoriteGuardId] = useState<string | null>(null);
+
+  // Active favourited guards available to pick from
+  const favouriteGuards = useMemo(() => {
+    if (favoriteGuardIds.length === 0) return [];
+    const browseable = getBrowsableGuards(guards);
+    return browseable.filter((g) => favoriteGuardIds.includes(g.id));
+  }, [guards, favoriteGuardIds]);
 
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
@@ -142,14 +159,15 @@ export function RequestSecurityFlow({
       return;
     }
     onSubmit({
-      requestType: 'marketplace',
+      requestType: selectedFavoriteGuardId ? 'direct' : 'marketplace',
+      targetGuardId: selectedFavoriteGuardId ?? undefined,
       title,
       siteName: siteName || title,
       address,
       state: jobState.toUpperCase(),
       location: siteName ? `${siteName} — ${address}` : address,
       type: serviceToJobType(serviceId),
-      guardsNeeded: effectiveGuards,
+      guardsNeeded: selectedFavoriteGuardId ? 1 : effectiveGuards,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       durationHours,
@@ -392,31 +410,78 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
             </div>
-            <div className="segmented-control segmented-control-full">
-              {GUARD_COUNT_PRESETS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => { setGuardsNeeded(n); setCustomGuards(''); }}
-                  className={`segmented-control-btn flex-1 py-3 text-base ${
-                    guardsNeeded === n && !customGuards ? 'segmented-control-btn-active' : ''
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <div>
-              <label className="uber-label block mb-1.5">Custom</label>
-              <input
-                type="number"
-                min={1}
-                placeholder="Enter count..."
-                value={customGuards}
-                onChange={(e) => setCustomGuards(e.target.value)}
-                className="uber-input rounded-xl"
-              />
-            </div>
+            {/* Disable count picker when a favourite is selected (direct = 1 guard) */}
+            {!selectedFavoriteGuardId && (
+              <>
+                <div className="segmented-control segmented-control-full">
+                  {GUARD_COUNT_PRESETS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => { setGuardsNeeded(n); setCustomGuards(''); }}
+                      className={`segmented-control-btn flex-1 py-3 text-base ${
+                        guardsNeeded === n && !customGuards ? 'segmented-control-btn-active' : ''
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className="uber-label block mb-1.5">Custom</label>
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="Enter count..."
+                    value={customGuards}
+                    onChange={(e) => setCustomGuards(e.target.value)}
+                    className="uber-input rounded-xl"
+                  />
+                </div>
+              </>
+            )}
+
+            {favouriteGuards.length > 0 && (
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <p className="uber-label">Request a favourite guard (optional)</p>
+                </div>
+                <p className="text-xs text-brand-text-muted -mt-1">
+                  Selecting a guard sends the job directly to them instead of the marketplace.
+                </p>
+                <div className="space-y-2">
+                  {favouriteGuards.map((g) => {
+                    const isSelected = selectedFavoriteGuardId === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setSelectedFavoriteGuardId(isSelected ? null : g.id)}
+                        className={`wf-list-card w-full transition-all ${
+                          isSelected ? '!border-brand-primary bg-brand-primary/8' : ''
+                        }`}
+                      >
+                        <ProfileAvatar src={g.avatar} name={g.name} size="sm" rounded="lg" />
+                        <div className="min-w-0 flex-1 text-left">
+                          <p className="font-bold text-sm leading-snug">{g.name}</p>
+                          <p className="text-xs text-brand-text-muted mt-0.5 truncate">{getGuardDisplayHeadline(g)}</p>
+                        </div>
+                        {isSelected
+                          ? <Check className="w-5 h-5 text-brand-primary shrink-0" />
+                          : <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
+                        }
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedFavoriteGuardId && (
+                  <p className="text-xs text-brand-primary font-medium">
+                    Job will be sent directly to {favouriteGuards.find((g) => g.id === selectedFavoriteGuardId)?.name} — 1 guard slot.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 

@@ -24,6 +24,7 @@ interface GuardBottomSheetProps {
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
+  onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
 }
 
 function useViewportHeight(): number {
@@ -52,6 +53,7 @@ export function GuardBottomSheet({
   onSelectCategory,
   onSelectJob,
   onAcceptJob,
+  onDeclineDirectJob,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
@@ -89,6 +91,7 @@ export function GuardBottomSheet({
       onSelectCategory={onSelectCategory}
       onSelectJob={onSelectJob}
       onAcceptJob={onAcceptJob}
+      onDeclineDirectJob={onDeclineDirectJob}
     />
   );
 

@@ -32,6 +32,7 @@ import {
   canUploadJobSelfAuditPhotos,
   canUploadJobSpotCheck,
   hasExecutivePaymentControls,
+  canSetTrustedStatus,
 } from '../lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
@@ -98,6 +99,8 @@ interface StaffDashboardProps {
     guardId: string,
     options?: import('../lib/guardMissingCredentials').ActivateGuardAccountOptions
   ) => Promise<void>;
+  onSetGuardTrusted?: (guardId: string, trusted: boolean) => Promise<void>;
+  onSetClientTrusted?: (clientId: string, trusted: boolean) => Promise<void>;
   onDeleteGuardAccount?: (guardId: string) => Promise<void>;
   onDeleteClientAccount?: (clientId: string) => Promise<void>;
   onSubmitGuardIdentityVerification?: (
@@ -234,6 +237,8 @@ export function StaffDashboard({
   onRejectClient,
   onApproveGuardAccount,
   onActivateGuardAccount,
+  onSetGuardTrusted,
+  onSetClientTrusted,
   onDeleteGuardAccount,
   onDeleteClientAccount,
   onSubmitGuardIdentityVerification,
@@ -374,6 +379,7 @@ export function StaffDashboard({
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
+  const canTrust = canSetTrustedStatus(currentUser);
   const canReviewJobs = canReviewJobRequests(currentUser);
   const canResolveDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
@@ -523,6 +529,7 @@ export function StaffDashboard({
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
             onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
+            onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
             onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
@@ -568,6 +575,7 @@ export function StaffDashboard({
             onApproveClient={onApproveClient}
             onRejectClient={onRejectClient}
             onDeleteClient={canManageClientAccounts ? onDeleteClientAccount : undefined}
+            onSetClientTrusted={canTrust ? onSetClientTrusted : undefined}
             selectedId={selectedClientId}
             onSelectedIdChange={setSelectedClientId}
             initialSelectedId={selectedClientId}

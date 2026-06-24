@@ -89,6 +89,7 @@ interface GuardDashboardProps {
     payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onAcceptJob: (requestId: string) => void;
+  onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
@@ -160,6 +161,7 @@ export function GuardDashboard({
   onAddEducation,
   onSubmitIdentityVerification,
   onAcceptJob,
+  onDeclineDirectJob,
   onUpdateJobAudit,
   onApproveOvertime,
   onRecordAuditViolation,
@@ -708,6 +710,7 @@ export function GuardDashboard({
             }
           }}
           onAcceptJob={handleAcceptJob}
+          onDeclineDirectJob={onDeclineDirectJob}
         />
       )}
 

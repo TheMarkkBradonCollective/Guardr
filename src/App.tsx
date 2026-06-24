@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -130,6 +130,7 @@ import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
   shouldSkipClientGuardApproval,
+  shouldSkipClientGuardApprovalForTrusted,
 } from './lib/guardAssignment';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -1302,6 +1303,7 @@ export default function App() {
           : undefined,
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
+        trusted: g.trusted === true,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1372,6 +1374,8 @@ export default function App() {
         hasPriorSecurityService: c.has_prior_security_service ?? undefined,
         priorSecurityProvider: c.prior_security_provider ?? undefined,
         specialRequirements: c.special_requirements ?? undefined,
+        trusted: c.trusted === true,
+        favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
       };
       }));
 
@@ -3261,6 +3265,61 @@ export default function App() {
     }
   };
 
+  const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a guard as trusted.', 'error');
+      return;
+    }
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
+        appToast('Could not update guard trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleSetClientTrusted = async (clientId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a client as trusted.', 'error');
+      return;
+    }
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted } : c)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('clients').update({ trusted }).eq('id', clientId);
+      if (error) {
+        setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted: !trusted } : c)));
+        appToast('Could not update client trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleToggleFavoriteGuard = async (guardId: string) => {
+    if (!currentUser) return;
+    const clientId = currentUser.id;
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    const existing = client.favoriteGuardIds ?? [];
+    const isFav = existing.includes(guardId);
+    const next = isFav ? existing.filter((id) => id !== guardId) : [...existing, guardId];
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: next } : c))
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('clients')
+        .update({ favorite_guard_ids: next })
+        .eq('id', clientId);
+      if (error) {
+        setClients((prev) =>
+          prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: existing } : c))
+        );
+        appToast('Could not update favourites.', 'error');
+      }
+    }
+  };
+
   const handleSubmitGuardIdentityVerification = async (
     guardId: string,
     payload: {
@@ -3701,6 +3760,12 @@ export default function App() {
     const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const location = siteName ? `${siteName} — ${address}` : address;
 
+    // Trusted clients skip the approval queue unless they're using cash.
+    const clientIsTrusted = clientRecord?.trusted === true;
+    const requestingCash = newRequest.clientPaymentMethod === 'cash';
+    const initialStatus: SecurityRequest['status'] =
+      clientIsTrusted && !requestingCash ? 'open' : 'pending-review';
+
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
       title: newRequest.title || 'Security Guard Deployment',
@@ -3729,7 +3794,7 @@ export default function App() {
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
       estimatedPayout,
-      status: 'pending-review',
+      status: initialStatus,
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
@@ -5213,6 +5278,10 @@ export default function App() {
       await assignGuardToJob(requestId, guardId);
       return;
     }
+    if (shouldSkipClientGuardApprovalForTrusted(guard, job)) {
+      await assignGuardToJob(requestId, guardId);
+      return;
+    }
     if (job.pendingGuardId) {
       if (job.pendingGuardId === guardId) {
         appToast('This guard is already waiting for client approval.', 'error');
@@ -5387,6 +5456,14 @@ export default function App() {
       appToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, 'error');
       return;
     }
+
+    // Direct requests: guard confirms → assign immediately (client already chose them)
+    if (job.requestType === 'direct' && job.targetGuardId === activeGuardId) {
+      await assignGuardToJob(requestId, activeGuardId);
+      appToast('Job confirmed — check your schedule.', 'success');
+      return;
+    }
+
     const nextApplicants = [...job.applicants, activeGuardId];
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
@@ -5405,6 +5482,41 @@ export default function App() {
       });
     }
     appToast('Application submitted. Guardr staff will review applicants and send the best fit for client approval.', 'success');
+  };
+
+  const handleGuardDeclineDirectJob = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    if (job.requestType !== 'direct' || job.targetGuardId !== activeGuardId) {
+      appToast('This is not a direct request for you.', 'error');
+      return;
+    }
+    if (job.status !== 'open') {
+      appToast('This job is no longer open.', 'error');
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, requestType: 'marketplace' as const, targetGuardId: undefined }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ request_type: 'marketplace', target_guard_id: null })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'job_submitted',
+        requestId,
+        location: job.location,
+        body: `Guard declined direct request for "${job.title}" — now open to all guards`,
+      });
+    }
+    appToast('Job declined — it\'s now listed for all guards.', 'info');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
@@ -6691,6 +6803,7 @@ export default function App() {
             handleSubmitGuardIdentityVerification(activeGuard.id, payload)
           }
           onAcceptJob={handleApplyToJob}
+          onDeclineDirectJob={handleGuardDeclineDirectJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
@@ -6842,6 +6955,8 @@ export default function App() {
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
+              favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
+              onToggleFavoriteGuard={handleToggleFavoriteGuard}
               paymentGates={clientPaymentGatesMemo}
               feeConfig={platformSettings.feeConfig}
               currentUser={currentUser}
@@ -6912,6 +7027,8 @@ export default function App() {
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
           onActivateGuardAccount={handleActivateGuardAccount}
+          onSetGuardTrusted={handleSetGuardTrusted}
+          onSetClientTrusted={handleSetClientTrusted}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}

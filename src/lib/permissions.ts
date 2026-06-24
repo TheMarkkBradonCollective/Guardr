@@ -301,6 +301,11 @@ export function canRecordCashPayments(user: Pick<SessionUser, 'role'>): boolean 
   return hasExecutivePaymentControls(user);
 }
 
+/** Only Directors and Owners may mark guards or clients as trusted. */
+export function canSetTrustedStatus(user: Pick<SessionUser, 'role'>): boolean {
+  return hasExecutivePaymentControls(user);
+}
+
 /** Director and Owner create jobs for clients and assign guards */
 export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'director.manage_company_operations');

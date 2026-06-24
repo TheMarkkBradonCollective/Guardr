@@ -18,6 +18,7 @@ interface GuardJobDetailContentProps {
   job: GuardJobView;
   guard: SecurityGuard;
   onAccept?: () => void;
+  onDeclineDirectJob?: () => void;
   onClose?: () => void;
 }
 
@@ -25,6 +26,7 @@ export function GuardJobDetailContent({
   job,
   guard,
   onAccept,
+  onDeclineDirectJob,
   onClose,
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
@@ -108,15 +110,62 @@ export function GuardJobDetailContent({
                 </p>
               )}
 
-              {onAccept && job.status === 'open' && !hasApplied && canAccept && (
+              {/* Direct request to this guard — confirm or decline */}
+              {isDirectRequest && job.status === 'open' && !hasApplied && (
+                <div className="space-y-2.5">
+                  <p className="text-sm text-brand-text-muted">
+                    A client requested you for this job. Accept to take it or decline to open it to other guards.
+                  </p>
+                  {canAccept ? (
+                    <div className="flex gap-2">
+                      {onAccept && (
+                        <button
+                          type="button"
+                          onClick={onAccept}
+                          className="app-button-primary flex-1 py-3 text-sm font-bold"
+                        >
+                          Accept job
+                        </button>
+                      )}
+                      {onDeclineDirectJob && (
+                        <button
+                          type="button"
+                          onClick={onDeclineDirectJob}
+                          className="app-button-outline flex-1 py-3 text-sm text-red-400 border-red-500/40"
+                        >
+                          Decline
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-amber-400/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
+                        You must meet all requirements above before you can accept this offer.
+                      </p>
+                      {onDeclineDirectJob && (
+                        <button
+                          type="button"
+                          onClick={onDeclineDirectJob}
+                          className="app-button-outline w-full py-3 text-sm text-red-400 border-red-500/40"
+                        >
+                          Decline — open to other guards
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Marketplace job — slide to apply */}
+              {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && (
                 <SlideToConfirm
-                  label={isDirectRequest ? 'Slide to claim job' : 'Slide to apply for job'}
-                  confirmedLabel={isDirectRequest ? 'Claimed' : 'Applied'}
+                  label="Slide to apply for job"
+                  confirmedLabel="Applied"
                   onConfirm={onAccept}
                 />
               )}
 
-              {onAccept && job.status === 'open' && !hasApplied && !canAccept && (
+              {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && !canAccept && (
                 <p className="text-sm text-amber-400/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2.5">
                   You must meet all requirements above before you can apply for this offer.
                 </p>

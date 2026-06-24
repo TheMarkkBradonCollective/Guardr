@@ -13,6 +13,7 @@ interface GuardJobsPanelContentProps {
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
+  onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
 }
 
 function CategoryFilters({
@@ -53,6 +54,7 @@ export function GuardJobsPanelContent({
   onSelectCategory,
   onSelectJob,
   onAcceptJob,
+  onDeclineDirectJob,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
     return (
@@ -64,6 +66,14 @@ export function GuardJobsPanelContent({
           selectedJob.status === 'open'
             ? () => {
                 onAcceptJob(selectedJob.id);
+                onSelectJob(null);
+              }
+            : undefined
+        }
+        onDeclineDirectJob={
+          onDeclineDirectJob && selectedJob.status === 'open'
+            ? () => {
+                void onDeclineDirectJob(selectedJob.id);
                 onSelectJob(null);
               }
             : undefined

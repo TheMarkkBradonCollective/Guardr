@@ -170,6 +170,15 @@ export interface Client {
   priorSecurityProvider?: string;
   /** Any special licensing, compliance, or site requirements */
   specialRequirements?: string;
+
+  /**
+   * Explicitly trusted by a Director or Owner.
+   * Trusted clients skip the job posting approval queue for non-cash jobs.
+   */
+  trusted?: boolean;
+
+  /** Guard IDs this client has favourited — shown first in the guard directory. */
+  favoriteGuardIds?: string[];
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
@@ -279,6 +288,11 @@ export interface SecurityGuard {
   credentialGraceMissing?: string[];
   /** Staff-granted grace window length in hours (set at activation) */
   credentialGraceHours?: number;
+  /**
+   * Explicitly trusted by a Director or Owner.
+   * Trusted guards skip client confirmation when placed on non-cash jobs.
+   */
+  trusted?: boolean;
 }
 
 export interface StaffSpotCheck {
