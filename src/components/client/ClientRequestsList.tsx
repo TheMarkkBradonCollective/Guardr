@@ -55,7 +55,7 @@ import {
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
-import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient } from '../../lib/guardTeams';
+import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient, hasIndependentSlotsPendingClient } from '../../lib/guardTeams';
 import { confirmApproveFullTeam, confirmDenyFullTeam } from '../../lib/importantActionConfirm';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
@@ -272,6 +272,7 @@ export function ClientRequestsList({
       : undefined;
     const awaitingClientGuard = isIndependentGuardPendingForClient(req);
     const fullCrewAwaitingClient = isFullCrewAwaitingClientApproval(req);
+    const independentSlotsPending = hasIndependentSlotsPendingClient(req);
     return (
             <div className="staff-detail-pane space-y-4">
                       <JobListingProfile
@@ -290,6 +291,26 @@ export function ClientRequestsList({
 
                       {isMultiGuardJob(req) && billingSettings && fullCrewAwaitingClient && (
                         <CrewTeamUpcostNotice req={req} crewSettings={billingSettings} />
+                      )}
+
+                      {independentSlotsPending && (
+                        <JobTeamRoster
+                          job={req}
+                          guards={guards}
+                          variant="client"
+                          showIndependentSlotActions
+                          slotFilter={(slot) => slot.status === 'pending_client' && !!slot.guardId}
+                          onApproveSlot={
+                            onApproveTeamSlot
+                              ? (slotId) => void onApproveTeamSlot(req.id, slotId)
+                              : undefined
+                          }
+                          onDenySlot={
+                            onDenyTeamSlot
+                              ? (slotId) => void onDenyTeamSlot(req.id, slotId)
+                              : undefined
+                          }
+                        />
                       )}
 
                       {fullCrewAwaitingClient && (
@@ -361,7 +382,7 @@ export function ClientRequestsList({
       
                       {req.status === 'open' && (
                         <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && (
+                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && !isMultiGuardJob(req) && (
                             <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
                               <div className="flex items-start gap-3">
                                 <ProfileAvatar src={pendingGuard.avatar} name={pendingGuard.name} size="sm" />
@@ -485,10 +506,12 @@ export function ClientRequestsList({
                             </p>
                           )}
                           <p className="text-sm text-brand-text-muted">
-                            {fullCrewAwaitingClient && awaitingClientGuard ? (
-                              <>You have an independent guard request and a full coordinated crew ready — choose which option to approve.</>
+                            {fullCrewAwaitingClient && independentSlotsPending ? (
+                              <>You have independent guard requests and a full coordinated crew ready — approve guards individually or the full crew.</>
                             ) : fullCrewAwaitingClient ? (
                               <>A coordinated crew of {req.guardsNeeded} guards is ready for your approval.</>
+                            ) : independentSlotsPending ? (
+                              <>Independent guards are ready for your approval — confirm each one you want on this job.</>
                             ) : awaitingClientGuard ? (
                               <>Waiting for your approval on the independent guard Guardr recommended.</>
                             ) : req.applicants.length === 0 ? (
@@ -782,6 +805,7 @@ export function ClientRequestsList({
           {filtered.map((req) => {
             const awaitingIndependentGuard = isIndependentGuardPendingForClient(req);
             const awaitingFullCrew = isFullCrewAwaitingClientApproval(req);
+            const independentPending = hasIndependentSlotsPendingClient(req);
             return (
               <JobListCard
                 key={req.id}
@@ -793,7 +817,12 @@ export function ClientRequestsList({
                       {jobPostingTypeLabel(req.requestType)}
                     </WfBadge>
                     <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                    {awaitingIndependentGuard && (
+                    {independentPending && (
+                      <WfBadge tone="warning">
+                        {req.guardSlots?.filter((s) => s.status === 'pending_client').length ?? 1} independent pending
+                      </WfBadge>
+                    )}
+                    {awaitingIndependentGuard && !independentPending && !isMultiGuardJob(req) && (
                       <WfBadge tone="warning">Independent guard pending</WfBadge>
                     )}
                     {awaitingFullCrew && (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
 import { teamRosterSummary } from '../../lib/guardTeams';
-import { confirmApproveFullTeam, confirmDenyFullTeam } from '../../lib/importantActionConfirm';
+import { confirmApproveFullTeam, confirmApproveTeamSlot, confirmDenyFullTeam, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { Check, Clock, UserPlus } from 'lucide-react';
@@ -26,8 +26,12 @@ interface JobTeamRosterProps {
   onApproveSlot?: (slotId: string) => void | Promise<void>;
   onDenySlot?: (slotId: string) => void | Promise<void>;
   showFullTeamActions?: boolean;
+  showIndependentSlotActions?: boolean;
   onApproveFullTeam?: () => void | Promise<void>;
   onDenyFullTeam?: () => void | Promise<void>;
+  /** When set, only render these slot indices (for independent pending view). */
+  slotFilter?: (slot: JobGuardSlot) => boolean;
+  title?: string;
 }
 
 export function JobTeamRoster({
@@ -35,26 +39,47 @@ export function JobTeamRoster({
   guards,
   variant = 'client',
   currentGuardId,
+  onApproveSlot,
+  onDenySlot,
   showFullTeamActions = false,
+  showIndependentSlotActions = false,
   onApproveFullTeam,
   onDenyFullTeam,
+  slotFilter,
+  title,
 }: JobTeamRosterProps) {
   const guardsNeeded = job.guardsNeeded ?? 1;
   if (guardsNeeded <= 1 && !(job.guardSlots?.length ?? 0)) return null;
 
   const slots = job.guardSlots ?? [];
   const summary = teamRosterSummary(slots, guardsNeeded);
+  const heading =
+    title ??
+    (variant === 'client' && showFullTeamActions
+      ? 'Full crew request'
+      : variant === 'client' && showIndependentSlotActions
+        ? 'Independent guard requests'
+        : 'Team roster');
+
+  const slotIndices = Array.from({ length: guardsNeeded }, (_, i) => i + 1).filter((slotIndex) => {
+    const slot =
+      slots.find((s) => s.slotIndex === slotIndex) ??
+      ({ slotIndex, status: 'open' as const, isLead: slotIndex === 1 } as JobGuardSlot);
+    return slotFilter ? slotFilter(slot) : true;
+  });
+
+  if (slotIndices.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface-elevated/40 px-3 py-3 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-brand-text">
-          {variant === 'client' && showFullTeamActions ? 'Full crew request' : 'Team roster'}
-        </p>
-        <WfBadge tone={summary.open > 0 ? 'warning' : 'primary'}>
-          {summary.filled}/{summary.total} filled
-          {summary.open > 0 ? ` · ${summary.open} open` : ''}
-        </WfBadge>
+        <p className="text-sm font-semibold text-brand-text">{heading}</p>
+        {!slotFilter && (
+          <WfBadge tone={summary.open > 0 ? 'warning' : 'primary'}>
+            {summary.filled}/{summary.total} filled
+            {summary.open > 0 ? ` · ${summary.open} open` : ''}
+          </WfBadge>
+        )}
       </div>
 
       {variant === 'client' && showFullTeamActions && (
@@ -63,9 +88,14 @@ export function JobTeamRoster({
         </p>
       )}
 
+      {variant === 'client' && showIndependentSlotActions && (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Approve guards individually to build your roster, or choose a full coordinated crew if one is also ready.
+        </p>
+      )}
+
       <div className="space-y-2">
-        {Array.from({ length: guardsNeeded }, (_, i) => {
-          const slotIndex = i + 1;
+        {slotIndices.map((slotIndex) => {
           const slot =
             slots.find((s) => s.slotIndex === slotIndex) ??
             ({
@@ -75,6 +105,13 @@ export function JobTeamRoster({
             } as JobGuardSlot);
           const guard = slot.guardId ? guards.find((g) => g.id === slot.guardId) : undefined;
           const isSelf = currentGuardId && slot.guardId === currentGuardId;
+          const showClientActions =
+            variant === 'client' &&
+            showIndependentSlotActions &&
+            slot.status === 'pending_client' &&
+            !!onApproveSlot &&
+            !!onDenySlot &&
+            !!guard;
 
           return (
             <div
@@ -100,7 +137,9 @@ export function JobTeamRoster({
                       Open slot — needs a guard
                     </span>
                   )}
-                  {slot.isLead && guard && <WfBadge tone="primary">Coordinator</WfBadge>}
+                  {slot.isLead && guard && showFullTeamActions && (
+                    <WfBadge tone="primary">Coordinator</WfBadge>
+                  )}
                 </div>
                 <p className="text-xs text-brand-text-muted">{SLOT_STATUS_LABEL[slot.status]}</p>
                 {slot.status === 'invited' && slot.inviteExpiresAt && (
@@ -114,6 +153,34 @@ export function JobTeamRoster({
                     <Check className="w-3 h-3" />
                     Confirmed for this job
                   </p>
+                )}
+                {showClientActions && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void (async () => {
+                          if (!(await confirmApproveTeamSlot(guard.name, job.title))) return;
+                          await onApproveSlot!(slot.id!);
+                        })();
+                      }}
+                      className="app-button-primary app-btn-sm"
+                    >
+                      Approve {guard.name}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void (async () => {
+                          if (!(await confirmDenyTeamSlot(guard.name, job.title))) return;
+                          await onDenySlot!(slot.id!);
+                        })();
+                      }}
+                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                    >
+                      Decline
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

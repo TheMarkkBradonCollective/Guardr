@@ -201,7 +201,7 @@ export function GuardTeamPanel({
 
       {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !job.teamLeadId && (
         <p className="text-xs text-brand-text-muted">
-          No crew coordinator yet. Use Apply on this job to submit an independent application, or wait for a trusted guard to start a coordinated crew.
+          No crew coordinator yet. Tap Apply on this job to request independently, or wait for a trusted guard to start a coordinated crew.
         </p>
       )}
 

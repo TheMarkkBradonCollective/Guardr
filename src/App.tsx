@@ -140,6 +140,7 @@ import {
 import { isGuardTrusted } from './lib/guardTrust';
 import {
   attachSlotsToRequests,
+  hasIndependentSlotsPendingClient,
   isMultiGuardJob,
   slotFromDbRow,
 } from './lib/guardTeams';
@@ -155,8 +156,10 @@ import {
   ensureSlotIds,
   joinTeamWithCode,
   inviteGuardToTeam,
+  proposeIndependentGuardToClient,
   promoteFullCrewToClientIfReady,
   revokeLeadIfNeeded,
+  staffApproveIndependentSlot,
   staffApproveTeamSlot,
 } from './lib/guardTeamFlow';
 import {
@@ -5425,7 +5428,11 @@ export default function App() {
 
   const finalizeTeamJobIfReady = async (job: SecurityRequest, slots: JobGuardSlot[]) => {
     if (!teamJobReadyForAcceptance(job, slots)) return;
-    const leadId = job.teamLeadId ?? slots.find((s) => s.isLead && s.guardId)?.guardId ?? null;
+    const leadId =
+      job.teamLeadId ??
+      slots.find((s) => s.isLead && s.guardId)?.guardId ??
+      slots.find((s) => s.status === 'approved' && s.guardId)?.guardId ??
+      null;
     if (!leadId) return;
     const acceptedJob: SecurityRequest = {
       ...job,
@@ -5778,6 +5785,37 @@ export default function App() {
       await assignGuardToJob(requestId, guardId);
       return;
     }
+
+    if (isMultiGuardJob(job)) {
+      const result = proposeIndependentGuardToClient(job, guardId, true, requests);
+      if ('error' in result) {
+        appToast(result.error, 'error');
+        return;
+      }
+      const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots, {
+        notifyClientFullTeam: false,
+      });
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId,
+          guardName: guard.name,
+          title: 'Independent guard request',
+          body: `Guardr approved ${guard.name} for "${job.title}". Confirm to add them to your roster.`,
+        });
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: guardId,
+          requestId,
+          body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
+        });
+      }
+      appToast(`${guard.name} sent to ${job.clientName} for independent approval.`, 'success');
+      return;
+    }
+
     if (job.pendingGuardId) {
       if (job.pendingGuardId === guardId) {
         appToast('This guard is already waiting for client approval.', 'error');
@@ -5887,7 +5925,23 @@ export default function App() {
       appToast('You cannot approve guards on this job.', 'error');
       return;
     }
-    if (!isAwaitingClientGuardApproval(job) || !job.pendingGuardId) {
+    if (!isAwaitingClientGuardApproval(job) && !hasIndependentSlotsPendingClient(job)) {
+      appToast('No guard is waiting for your approval on this job.', 'error');
+      return;
+    }
+    if (isMultiGuardJob(job)) {
+      const slot =
+        job.guardSlots?.find(
+          (s) => s.guardId === job.pendingGuardId && s.status === 'pending_client'
+        ) ?? job.guardSlots?.find((s) => s.status === 'pending_client' && s.guardId);
+      if (slot?.id) {
+        await handleClientApproveTeamSlot(requestId, slot.id);
+        return;
+      }
+      appToast('No independent guard is waiting for your approval.', 'error');
+      return;
+    }
+    if (!job.pendingGuardId) {
       appToast('No guard is waiting for your approval on this job.', 'error');
       return;
     }
@@ -5901,6 +5955,27 @@ export default function App() {
     if (!job || job.clientId !== currentUser.id) {
       appToast('You cannot update this job.', 'error');
       return;
+    }
+    if (isMultiGuardJob(job)) {
+      const slot = job.guardSlots?.find(
+        (s) =>
+          s.guardId === job.pendingGuardId &&
+          (s.status === 'pending_client' || s.status === 'pending_staff')
+      ) ?? job.guardSlots?.find((s) => s.status === 'pending_client' && s.guardId);
+      if (slot?.id) {
+        if (
+          !(await showAppConfirm({
+            title: 'Decline this guard?',
+            message: `Decline ${job.title} for this guard and reopen the slot?`,
+            confirmLabel: 'Decline guard',
+            tone: 'danger',
+          }))
+        ) {
+          return;
+        }
+        await handleClientDenyTeamSlot(requestId, slot.id);
+        return;
+      }
     }
     if (!job.pendingGuardId) {
       appToast('No guard is waiting for your approval.', 'error');
@@ -5967,14 +6042,23 @@ export default function App() {
 
     if (isMultiGuardJob(job)) {
       if (shouldSkipStaffGuardReviewForTrusted(activeGuard, job)) {
-        const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
-        setRequests((prev) =>
-          prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
-        );
-        if (isDbConnected) {
-          await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
+        const result = proposeIndependentGuardToClient(job, activeGuardId, true, requests);
+        if ('error' in result) {
+          appToast(result.error, 'error');
+          return;
         }
-        await proposeGuardForClientApproval(requestId, activeGuardId);
+        await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
+        if (currentUser) {
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: job.clientId,
+            requestId,
+            guardId: activeGuardId,
+            guardName: activeGuard.name,
+            title: 'Independent guard request',
+            body: `${activeGuard.name} applied independently for "${job.title}".`,
+          });
+        }
         appToast('Independent application sent to client for approval.', 'success');
         return;
       }
@@ -6085,41 +6169,93 @@ export default function App() {
       return;
     }
     if (isMultiGuardJob(job)) {
-      const onTeamRoster = (job.guardSlots ?? []).some(
-        (s) => s.guardId === guardId && ['pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
+      const onCrewRoster = (job.guardSlots ?? []).some(
+        (s) =>
+          s.guardId === guardId &&
+          ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
       );
-      if (onTeamRoster) {
-        const result = staffApproveTeamSlot(job, guardId);
+      if (onCrewRoster && job.teamLeadId) {
+        const pendingStaff = (job.guardSlots ?? []).find(
+          (s) => s.guardId === guardId && s.status === 'pending_staff'
+        );
+        if (pendingStaff) {
+          const result = staffApproveTeamSlot(job, guardId);
+          if ('error' in result) {
+            appToast(result.error, 'error');
+            return;
+          }
+          const guard = guards.find((g) => g.id === guardId);
+          const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+            result.job,
+            result.slots,
+            { notifyClientFullTeam: true }
+          );
+          if (currentUser && guard) {
+            void reportPushEvent(currentUser, {
+              type: 'assignment',
+              recipientUserId: guardId,
+              requestId,
+              body: promoted
+                ? `Full crew for "${job.title}" is ready for client review.`
+                : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
+            });
+          }
+          appToast(
+            promoted
+              ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
+              : `${guard?.name ?? 'Guard'} confirmed on crew — waiting for remaining guards.`,
+            'success'
+          );
+          await finalizeTeamJobIfReady(nextJob, nextSlots);
+          return;
+        }
+      }
+      const independentStaff = (job.guardSlots ?? []).find(
+        (s) => s.guardId === guardId && s.status === 'pending_staff'
+      );
+      if (independentStaff) {
+        const result = staffApproveIndependentSlot(job, guardId);
         if ('error' in result) {
           appToast(result.error, 'error');
           return;
         }
         const guard = guards.find((g) => g.id === guardId);
-        const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-          result.job,
-          result.slots,
-          { notifyClientFullTeam: true }
-        );
+        const { job: nextJob } = await persistTeamJobUpdate(result.job, result.slots, {
+          notifyClientFullTeam: false,
+        });
         if (currentUser && guard) {
           void reportPushEvent(currentUser, {
             type: 'assignment',
-            recipientUserId: guardId,
+            recipientUserId: nextJob.clientId,
             requestId,
-            body: promoted
-              ? `Full crew for "${job.title}" is ready for client review.`
-              : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
+            guardId,
+            guardName: guard.name,
+            title: 'Independent guard request',
+            body: `Guardr approved ${guard.name} for "${job.title}".`,
           });
         }
-        appToast(
-          promoted
-            ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
-            : `${guard?.name ?? 'Guard'} confirmed on crew — waiting for remaining guards.`,
-          'success'
-        );
-        await finalizeTeamJobIfReady(nextJob, nextSlots);
+        appToast(`${guard?.name ?? 'Guard'} sent to client for independent approval.`, 'success');
         return;
       }
-      await proposeGuardForClientApproval(requestId, guardId);
+      const result = proposeIndependentGuardToClient(job, guardId, true, requests);
+      if ('error' in result) {
+        appToast(result.error, 'error');
+        return;
+      }
+      const guard = guards.find((g) => g.id === guardId);
+      await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
+      if (currentUser && guard) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId,
+          guardName: guard.name,
+          title: 'Independent guard request',
+          body: `Guardr approved ${guard.name} for "${job.title}".`,
+        });
+      }
+      appToast(`${guard?.name ?? 'Guard'} sent to client for independent approval.`, 'success');
       return;
     }
     await proposeGuardForClientApproval(requestId, guardId);

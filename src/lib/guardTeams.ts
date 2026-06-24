@@ -221,12 +221,38 @@ export function isFullCrewAwaitingClientApproval(
   );
 }
 
-/** Client-facing independent guard proposal (separate from coordinated crew). */
+/** Independent guard(s) sent to the client one-by-one (not a coordinated full-crew batch). */
+export function hasIndependentSlotsPendingClient(
+  job: Pick<SecurityRequest, 'guardsNeeded' | 'guardSlots' | 'teamLeadId'>
+): boolean {
+  if (!isMultiGuardJob(job) || isFullCrewAwaitingClientApproval(job)) return false;
+  return (job.guardSlots ?? []).some((s) => s.status === 'pending_client' && !!s.guardId);
+}
+
+export function independentPendingClientSlots(
+  job: Pick<SecurityRequest, 'guardSlots' | 'teamLeadId' | 'guardsNeeded'>
+): JobGuardSlot[] {
+  if (isFullCrewAwaitingClientApproval(job as SecurityRequest)) return [];
+  return (job.guardSlots ?? []).filter((s) => s.status === 'pending_client' && !!s.guardId);
+}
+
+export function countApprovedIndependentSlots(
+  slots: JobGuardSlot[] | undefined,
+  guardsNeeded: number
+): number {
+  return crewSlotsForJob(slots, guardsNeeded).filter((s) => s.status === 'approved' && !!s.guardId).length;
+}
+
+/** Client-facing independent guard proposal (legacy single pendingGuardId or slot-based). */
 export function isIndependentGuardPendingForClient(
   job: Pick<SecurityRequest, 'status' | 'pendingGuardId' | 'assignedGuardId' | 'teamLeadId' | 'guardSlots' | 'guardsNeeded'>
 ): boolean {
-  if (job.status !== 'open' || !job.pendingGuardId || job.assignedGuardId) return false;
-  if (!isMultiGuardJob(job)) return true;
+  if (job.status !== 'open' || job.assignedGuardId) return false;
+  if (!isMultiGuardJob(job)) {
+    return !!job.pendingGuardId;
+  }
+  if (hasIndependentSlotsPendingClient(job)) return true;
+  if (!job.pendingGuardId) return false;
   const onActiveCrew = (job.guardSlots ?? []).some(
     (s) =>
       s.guardId === job.pendingGuardId &&
