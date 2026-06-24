@@ -1731,7 +1731,8 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 2.75rem;
+  height: 2.75rem;
+  box-sizing: border-box;
   padding: 0 0.875rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
@@ -1739,6 +1740,32 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   border: 1px solid var(--brand-border);
   box-shadow: var(--shadow-float);
   max-width: min(calc(100vw - 8.5rem), 20rem);
+}
+
+.map-top-right-cluster {
+  position: absolute;
+  top: 10px;
+  right: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(100% - 5rem);
+  pointer-events: none;
+}
+
+.map-top-right-cluster > * {
+  pointer-events: auto;
+}
+
+.map-top-right-cluster .map-route-banner {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+  z-index: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(14rem, 42vw);
 }
 
 .map-route-banner-text {
@@ -1792,16 +1819,18 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 }
 
 .map-filter-step-label {
-  position: absolute;
-  top: 10px;
-  right: 0.875rem;
+  position: relative;
+  top: auto;
+  right: auto;
   left: auto;
   transform: none;
   pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
+  flex-shrink: 0;
+  height: 2.75rem;
+  box-sizing: border-box;
   padding: 0 0.875rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
@@ -1825,11 +1854,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .map-filter-step-label:active {
   transform: scale(0.97);
-}
-
-.guard-map-layout .map-route-banner,
-.client-map-layout .map-route-banner {
-  top: 10px;
 }
 
 .map-selection-layer {
@@ -2336,10 +2360,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(calc(100vw - 8.5rem), 18rem);
+  max-width: min(12rem, 34vw);
 }
 
 .guardr-bottom-sheet {
@@ -2671,10 +2692,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
 
 body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: min(calc(62vw - 8.5rem), 20rem);
+  max-width: min(12rem, 34vw);
 }
 
 @media (min-width: 1024px) {

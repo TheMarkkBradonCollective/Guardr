@@ -835,14 +835,6 @@ export function GuardDashboard({
         </div>
       )}
 
-      {activeTab === 'map' && selectedJobId && !showShiftOverlay && (
-        <MapRouteBanner
-          route={mapRoute}
-          loading={mapRouteLoading}
-          label="Route to offer"
-        />
-      )}
-
       {activeTab === 'map' && !showShiftOverlay && (
         <MapPinFilterStepper
           filters={GUARD_MAP_STATUS_FILTERS}
@@ -850,6 +842,15 @@ export function GuardDashboard({
           onChange={setMapStatusFilter}
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
+          routeSlot={
+            selectedJobId ? (
+              <MapRouteBanner
+                route={mapRoute}
+                loading={mapRouteLoading}
+                label="Route to offer"
+              />
+            ) : null
+          }
         />
       )}
 
