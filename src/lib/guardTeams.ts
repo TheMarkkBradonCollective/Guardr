@@ -295,6 +295,26 @@ export function slotToDbRow(slot: JobGuardSlot) {
   };
 }
 
+export function getCoordinatingCrewJobs(
+  guardId: string,
+  jobs: SecurityRequest[]
+): SecurityRequest[] {
+  return jobs
+    .filter(
+      (j) =>
+        isMultiGuardJob(j) &&
+        j.teamLeadId === guardId &&
+        (j.status === 'open' || j.status === 'accepted' || j.status === 'in-progress')
+    )
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+}
+
+export function getOpenCrewLeadOpportunities(jobs: SecurityRequest[]): SecurityRequest[] {
+  return jobs
+    .filter((j) => j.status === 'open' && isMultiGuardJob(j) && !j.teamLeadId)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+}
+
 export function attachSlotsToRequests(
   requests: SecurityRequest[],
   slots: JobGuardSlot[]

@@ -21,6 +21,7 @@ import { GuardBottomSheet } from './guard/GuardBottomSheet';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
+import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
 import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
@@ -36,7 +37,7 @@ import { RoleAppShell } from './layouts/RoleAppShell';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users } from 'lucide-react';
 import {
   filterJobsByCategory,
   guardCanApplyToJob,
@@ -49,6 +50,8 @@ import {
   sortJobs,
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
+import { getCoordinatingCrewJobs, getOpenCrewLeadOpportunities } from '../lib/guardTeams';
+import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
@@ -145,7 +148,7 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide';
+export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
@@ -158,6 +161,7 @@ const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   profile: 'Profile',
   settings: 'Settings',
   guide: 'General guide',
+  crew: 'Crew',
 };
 
 export function GuardDashboard({
@@ -335,6 +339,24 @@ export function GuardDashboard({
     () => openGuardPayoutInvoices(guardPayoutInvoices, guard.id, 'stripe').length,
     [guardPayoutInvoices, guard.id]
   );
+
+  const trustedGuard = isGuardTrusted(guard);
+
+  const coordinatingCrewJobs = useMemo(
+    () => getCoordinatingCrewJobs(guard.id, requests),
+    [requests, guard.id]
+  );
+
+  const crewLeadOpportunityJobs = useMemo(() => {
+    if (!trustedGuard) return [];
+    return getOpenCrewLeadOpportunities(requests).filter((job) => guardCanViewJob(guard, job));
+  }, [requests, guard, trustedGuard]);
+
+  useEffect(() => {
+    if (tab === 'crew' && !trustedGuard) {
+      setTab('map');
+    }
+  }, [tab, trustedGuard, setTab]);
 
   useEffect(() => {
     if (!guard.stripeConnectAccountId) return;
@@ -683,6 +705,9 @@ export function GuardDashboard({
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
     { id: 'map', icon: Map, label: 'Map' },
+    ...(trustedGuard
+      ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }]
+      : []),
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
@@ -799,6 +824,25 @@ export function GuardDashboard({
                 onOpenMessages={openMessagesForJob}
                 onApproveOvertime={onApproveOvertime}
               />
+            </div>
+          )}
+
+          {tab === 'crew' && trustedGuard && (
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+              <div className="guard-scroll-panel flex-1">
+                <GuardCrewHubPanel
+                  guard={guard}
+                  coordinatingJobs={coordinatingCrewJobs}
+                  leadOpportunityJobs={crewLeadOpportunityJobs}
+                  coworkerGuards={coworkerGuards}
+                  scheduleRequests={requests}
+                  onApplyAsLead={onApplyAsTeamLead}
+                  onInviteGuard={onInviteTeamGuard}
+                  onAcceptInvite={onAcceptTeamInvite}
+                  onDeclineInvite={onDeclineTeamInvite}
+                  onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}
+                />
+              </div>
             </div>
           )}
 

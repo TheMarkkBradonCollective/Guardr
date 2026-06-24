@@ -59,6 +59,8 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   profile: 'profile',
   settings: 'settings',
   guide: 'guide',
+  crew: 'crew',
+  team: 'crew',
 };
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
@@ -71,6 +73,7 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   profile: 'profile',
   settings: 'settings',
   guide: 'guide',
+  crew: 'crew',
 };
 
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
