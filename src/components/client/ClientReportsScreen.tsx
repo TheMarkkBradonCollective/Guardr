@@ -2,9 +2,9 @@ import React from 'react';
 import { ClientReportCard } from '../../lib/clientCoverage';
 import { IncidentReportViewContext } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
-import { AppList, AppListRow, AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppList, AppListRow, AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, FileText } from 'lucide-react';
 
 interface ClientReportsScreenProps {
   reports: ClientReportCard[];
@@ -45,9 +45,12 @@ export function ClientReportsScreen({
   return (
     <AppScreen className="pb-8">
       {reports.length === 0 ? (
-        <p className="app-empty-state text-sm">
-          No reports yet. Completed jobs with activity logs and incident reports appear here.
-        </p>
+        <AppEmptyState
+          icon={<FileText className="w-5 h-5" />}
+          title="No reports yet"
+        >
+          Activity logs and incident reports from completed jobs will appear here.
+        </AppEmptyState>
       ) : (
         <AppList>
           {reports.map((report) => {

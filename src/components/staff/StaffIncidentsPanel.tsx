@@ -4,6 +4,7 @@ import { IncidentReportViewContext } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
 import { WfBadge } from '../ui/wireframe';
 import { AppList, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AlertTriangle } from 'lucide-react';
 
 interface StaffIncidentsPanelProps {
   incidents: OpsIncident[];
@@ -55,7 +56,13 @@ export function StaffIncidentsPanel({
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
       {incidents.length === 0 ? (
-        <p className="staff-empty-state border-t border-brand-border">No incident reports on file.</p>
+        <div className="app-empty-state">
+          <div className="app-empty-state-icon">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <p className="app-empty-state-title">No incidents on file</p>
+          <p className="app-empty-state-body">Incident reports submitted during active shifts will appear here.</p>
+        </div>
       ) : (
         <AppList>
           {incidents.map((inc) => {

@@ -102,11 +102,19 @@ export function StaffClientsPanel({
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-brand-text-muted py-12 text-center border border-dashed border-brand-border rounded-xl">
-          {clients.length === 0
-            ? 'No clients yet. Use Add client above to onboard the first account.'
-            : 'No clients match your search.'}
-        </p>
+        <div className="app-empty-state app-empty-state--dashed">
+          <div className="app-empty-state-icon">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          </div>
+          <p className="app-empty-state-title">
+            {clients.length === 0 ? 'No clients yet' : 'No clients match your search'}
+          </p>
+          <p className="app-empty-state-body">
+            {clients.length === 0
+              ? 'Add the first client account to get started.'
+              : 'Try adjusting your search term.'}
+          </p>
+        </div>
       ) : (
         <ListDetailLayout
           items={filtered}

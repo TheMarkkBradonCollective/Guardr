@@ -77,10 +77,12 @@ export function StaffDisputesPanel({
   if (openDisputes.length === 0) {
     return (
       <div className="animate-fade-in -mx-4 sm:-mx-5 px-4 sm:px-5">
-        <div className="app-empty-state py-16">
-          <Scale className="w-10 h-10 text-brand-text-muted mx-auto mb-3" strokeWidth={1.5} />
-          <p className="font-semibold text-sm">No open disputes</p>
-          <p className="text-sm text-brand-text-muted mt-1 max-w-xs mx-auto">
+        <div className="app-empty-state">
+          <div className="app-empty-state-icon">
+            <Scale className="w-5 h-5" />
+          </div>
+          <p className="app-empty-state-title">No open disputes</p>
+          <p className="app-empty-state-body">
             Overtime billing disputes and guard vs client conflicts will appear here when they need staff review.
           </p>
         </div>

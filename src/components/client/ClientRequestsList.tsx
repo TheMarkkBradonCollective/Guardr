@@ -6,12 +6,14 @@ import { formatShiftRange } from '../../lib/dates';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import {
+  AppEmptyState,
   AppItemCard,
   AppItemCardStack,
   AppScreen,
   AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { ClipboardList, Clock, CheckCircle2, Plus } from 'lucide-react';
 import {
   isJobScheduleLocked,
   canClientReschedulePaidSchedule,
@@ -223,16 +225,22 @@ export function ClientRequestsList({
       {activeTab === 'open' && (
         <div className="app-section-body pt-4">
           {openJobs.length === 0 ? (
-            <div className="space-y-4">
-              <p className="app-empty-state">No open offers right now.</p>
-              <button
-                type="button"
-                onClick={onRequestNew}
-                className="app-button-primary !w-auto !h-10 !px-5 !text-sm mx-auto block"
-              >
-                + Post offer
-              </button>
-            </div>
+            <AppEmptyState
+              icon={<ClipboardList className="w-5 h-5" />}
+              title="No open offers"
+              action={
+                <button
+                  type="button"
+                  onClick={onRequestNew}
+                  className="app-button-primary app-btn-md app-btn-inline flex items-center gap-2 mx-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  Post a job
+                </button>
+              }
+            >
+              Post your first security request to get matched with licensed guards.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {openJobs.map((job) => (
@@ -251,7 +259,12 @@ export function ClientRequestsList({
       {activeTab === 'upcoming' && (
         <div className="app-section-body pt-4">
           {upcomingJobs.length === 0 ? (
-            <p className="app-empty-state">No upcoming jobs.</p>
+            <AppEmptyState
+              icon={<Clock className="w-5 h-5" />}
+              title="No upcoming coverage"
+            >
+              Accepted jobs will appear here leading up to their start date.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {upcomingJobs.map((job) => (
@@ -270,7 +283,12 @@ export function ClientRequestsList({
       {activeTab === 'past' && (
         <div className="app-section-body pt-4">
           {pastJobs.length === 0 ? (
-            <p className="app-empty-state">No completed jobs yet.</p>
+            <AppEmptyState
+              icon={<CheckCircle2 className="w-5 h-5" />}
+              title="No completed jobs yet"
+            >
+              Your shift history will appear here once jobs are closed out.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {pastJobs.map((job) => (

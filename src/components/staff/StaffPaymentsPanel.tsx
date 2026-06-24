@@ -239,9 +239,13 @@ export function StaffPaymentsPanel({
           summary.guardCollectionPending.length === 0 &&
           summary.clientPaidActive.length === 0 &&
           summary.settled.length === 0 && (
-            <p className="staff-empty-state border-t border-brand-border">
-              No payment activity yet. Jobs appear here once clients post requests.
-            </p>
+            <div className="app-empty-state">
+              <div className="app-empty-state-icon">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="app-empty-state-title">No payment activity yet</p>
+              <p className="app-empty-state-body">Jobs will appear here once clients post security requests.</p>
+            </div>
           )}
       </div>
     </div>

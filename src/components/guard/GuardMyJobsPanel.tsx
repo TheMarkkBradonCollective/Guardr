@@ -6,12 +6,14 @@ import { getGuardHourlyPay } from '../../lib/guardJobs';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import {
+  AppEmptyState,
   AppItemCard,
   AppItemCardStack,
   AppScreen,
   AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { Briefcase, Clock, CheckCircle2, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
 export type { GuardMyJobDetailProps } from './GuardMyJobDetail';
@@ -184,7 +186,12 @@ export function GuardMyJobsPanel({
       {activeTab === 'available' && (
         <div className="app-section-body pt-4">
           {availableJobs.length === 0 ? (
-            <p className="app-empty-state">No available jobs right now.</p>
+            <AppEmptyState
+              icon={<Map className="w-5 h-5" />}
+              title="No open jobs right now"
+            >
+              Check the map to browse available shifts near you.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {availableJobs.map((job) => (
@@ -203,7 +210,12 @@ export function GuardMyJobsPanel({
       {activeTab === 'upcoming' && (
         <div className="app-section-body pt-4">
           {upcomingJobs.length === 0 ? (
-            <p className="app-empty-state">No upcoming jobs.</p>
+            <AppEmptyState
+              icon={<Clock className="w-5 h-5" />}
+              title="No upcoming shifts"
+            >
+              Accepted jobs will appear here before they start.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {upcomingJobs.map((job) => (
@@ -222,7 +234,12 @@ export function GuardMyJobsPanel({
       {activeTab === 'past' && (
         <div className="app-section-body pt-4">
           {pastJobs.length === 0 ? (
-            <p className="app-empty-state">No completed jobs yet.</p>
+            <AppEmptyState
+              icon={<CheckCircle2 className="w-5 h-5" />}
+              title="No completed shifts yet"
+            >
+              Your shift history will show up here after you complete jobs.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {pastJobs.map((job) => (

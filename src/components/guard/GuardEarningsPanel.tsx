@@ -7,7 +7,7 @@ import {
 } from '../../lib/guardJobView';
 import { getEstimatedGuardEarnings } from '../../lib/guardJobs';
 import { formatShiftRange } from '../../lib/dates';
-import { AppFormSection, AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppFormSection, AppList, AppListRow, AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { Banknote, CreditCard, Link2, Loader2 } from 'lucide-react';
 
 interface GuardEarningsPanelProps {
@@ -174,7 +174,12 @@ export function GuardEarningsPanel({
         </p>
 
       {sortedShifts.length === 0 ? (
-        <p className="app-empty-state">Complete jobs to see earnings here.</p>
+        <AppEmptyState
+          icon={<Banknote className="w-5 h-5" />}
+          title="No completed shifts yet"
+        >
+          Your earnings history will appear here after you complete jobs.
+        </AppEmptyState>
       ) : (
         <AppList>
           {sortedShifts.map((job) => {

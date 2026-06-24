@@ -10,6 +10,7 @@ import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
 import type { StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
+import { Briefcase, Search } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
 
@@ -174,7 +175,15 @@ export function StaffJobsPanel({
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-center text-sm text-brand-text-muted py-12">No jobs match your filters.</p>
+        <div className="app-empty-state">
+          <div className="app-empty-state-icon">
+            {search ? <Search className="w-5 h-5" /> : <Briefcase className="w-5 h-5" />}
+          </div>
+          <p className="app-empty-state-title">{search ? 'No matching jobs' : 'No jobs yet'}</p>
+          <p className="app-empty-state-body">
+            {search ? `No jobs match "${search}". Try adjusting your search or filters.` : 'Jobs will appear here once clients post coverage requests.'}
+          </p>
+        </div>
       ) : (
         <ListDetailLayout
           items={filtered}

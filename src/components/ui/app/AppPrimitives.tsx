@@ -8,11 +8,27 @@ export function AppEmptyState({
   children,
   className = '',
   dashed = false,
+  icon,
+  title,
+  action,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   dashed?: boolean;
+  icon?: React.ReactNode;
+  title?: string;
+  action?: React.ReactNode;
 }) {
+  if (icon || title) {
+    return (
+      <div className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}>
+        {icon && <div className="app-empty-state-icon">{icon}</div>}
+        {title && <p className="app-empty-state-title">{title}</p>}
+        {children && <p className="app-empty-state-body">{children}</p>}
+        {action}
+      </div>
+    );
+  }
   return (
     <p className={`app-empty-state ${dashed ? 'app-empty-state--dashed' : ''} ${className}`.trim()}>
       {children}
