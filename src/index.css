@@ -1679,10 +1679,11 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   box-shadow: 0 0 0 6px color-mix(in srgb, #d97706 30%, transparent), var(--shadow-float);
 }
 
-/* ─── Locate / center-on-me button ──────────────────────────────────────── */
+/* ─── Locate / center-on-me button (bottom left) ─────────────────────────── */
 .guardr-map-locate-btn {
   position: absolute;
-  right: 0.875rem;
+  left: 0.875rem;
+  right: auto;
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   z-index: 1001;
   width: 40px;
@@ -1944,13 +1945,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .client-map-new-fab-action:hover {
   background: color-mix(in srgb, var(--brand-border) 35%, transparent);
-}
-
-/* Client map: locate in bottom left */
-.client-map-layout .guardr-map-locate-btn {
-  left: 0.875rem;
-  right: auto;
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Client map: align New FAB with locate button */
