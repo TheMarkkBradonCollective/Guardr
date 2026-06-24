@@ -95,18 +95,13 @@ export async function authorizePushEvent(
       if (session.platformRole === 'guard' && event.guardId === session.userId) return null;
       return 'Only staff or the applying guard can send application notifications';
 
-    case 'payment_attention':
-      if (isStaffSession(session)) return null;
-      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
-        return null;
-      }
-      return 'Only staff or job participants can send payment attention notifications';
-
     case 'guard_message':
       return session.platformRole === 'guard' ? null : 'Only guards can post to guard chat';
 
     case 'guard_checkin':
     case 'guard_clockout':
+    case 'guard_arrived':
+    case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
     case 'missed_checkin':
@@ -115,7 +110,39 @@ export async function authorizePushEvent(
       if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
         return null;
       }
-      return 'Not authorized to report check-in events for this job';
+      return 'Not authorized to report shift events for this job';
+
+    case 'job_open_to_guards':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'client') return null;
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Only staff or the job client can notify guards of open positions';
+
+    case 'client_cash_payment_requested':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'client') return null;
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Only staff or the job client can send cash payment request notifications';
+
+    case 'guard_cash_payout_requested':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard') return null;
+      return 'Only staff or guards can send payout request notifications';
+
+    case 'stripe_payment_complete':
+      return isStaffSession(session) ? null : 'Only staff can send payment completion notifications';
+
+    case 'payment_attention':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard') return null;
+      if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+        return null;
+      }
+      return 'Only staff, guards, or job participants can send payment attention notifications';
 
     case 'assignment':
       if (isStaffSession(session)) return null;

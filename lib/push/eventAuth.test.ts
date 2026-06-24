@@ -65,6 +65,82 @@ describe('authorizePushEvent', () => {
     const err = await authorizePushEvent(db, clientSession, { type: 'staff_message' });
     assert.equal(err, 'Only staff can send this notification type');
   });
+
+  it('allows guards to report guard_arrived for themselves', async () => {
+    const err = await authorizePushEvent(db, guardSession, {
+      type: 'guard_arrived',
+      guardId: 'guard-1',
+      requestId: 'req-1',
+    });
+    assert.equal(err, null);
+  });
+
+  it('allows guards to report guard_left_site for themselves', async () => {
+    const err = await authorizePushEvent(db, guardSession, {
+      type: 'guard_left_site',
+      guardId: 'guard-1',
+      requestId: 'req-1',
+    });
+    assert.equal(err, null);
+  });
+
+  it('blocks non-participants from reporting guard_arrived', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'guard_arrived',
+      guardId: 'other-guard',
+    });
+    assert.notEqual(err, null);
+  });
+
+  it('allows clients to send job_open_to_guards', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'job_open_to_guards',
+      requestId: 'req-1',
+    });
+    assert.equal(err, null);
+  });
+
+  it('blocks guards from sending job_open_to_guards', async () => {
+    const err = await authorizePushEvent(db, guardSession, {
+      type: 'job_open_to_guards',
+    });
+    assert.notEqual(err, null);
+  });
+
+  it('allows clients to send client_cash_payment_requested', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'client_cash_payment_requested',
+    });
+    assert.equal(err, null);
+  });
+
+  it('allows guards to send guard_cash_payout_requested', async () => {
+    const err = await authorizePushEvent(db, guardSession, {
+      type: 'guard_cash_payout_requested',
+    });
+    assert.equal(err, null);
+  });
+
+  it('blocks clients from sending guard_cash_payout_requested', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'guard_cash_payout_requested',
+    });
+    assert.notEqual(err, null);
+  });
+
+  it('allows guards to send payment_attention without requestId', async () => {
+    const err = await authorizePushEvent(db, guardSession, {
+      type: 'payment_attention',
+    });
+    assert.equal(err, null);
+  });
+
+  it('blocks unrelated clients from sending payment_attention without requestId', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'payment_attention',
+    });
+    assert.notEqual(err, null);
+  });
 });
 
 describe('isStaffSession', () => {

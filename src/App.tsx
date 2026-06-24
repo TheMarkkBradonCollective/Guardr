@@ -3445,6 +3445,17 @@ export default function App() {
         throw new Error(result.error);
       }
     }
+    if (currentUser) {
+      const graceNote = options?.graceHours
+        ? ` A grace period of ${options.graceHours}h applies to any missing credentials.`
+        : '';
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: guardId,
+        title: 'Account activated',
+        body: `Your guard account is fully active. You can now browse and accept jobs on Guardr.${graceNote}`,
+      });
+    }
   };
 
   const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
@@ -4738,6 +4749,13 @@ export default function App() {
         .eq('id', requestId);
     }
     appToast('Overtime approved. Pay the difference to settle the bill.', 'success');
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        body: `${req.clientName} approved the overtime charge of $${(req.overtimeAmount ?? 0).toFixed(2)} for "${req.title}". Payment pending.`,
+      });
+    }
   };
 
   const handleClientDisputeOvertime = async (requestId: string, input: OvertimeDisputeInput) => {
@@ -4886,6 +4904,23 @@ export default function App() {
           ? 'Original overtime charge upheld — client can pay.'
           : `Overtime adjusted to ${patch.overtimeHours}h ($${(patch.overtimeAmount ?? 0).toFixed(2)}).`;
     appToast(toastMessage, 'success');
+
+    if (currentUser) {
+      const resolutionBody =
+        action === 'waive'
+          ? `Overtime charge waived for "${req.title}". No additional payment required.`
+          : action === 'uphold'
+            ? `Overtime charge upheld for "${req.title}" — $${(req.overtimeAmount ?? 0).toFixed(2)} due.`
+            : `Overtime adjusted to ${patch.overtimeHours}h ($${(patch.overtimeAmount ?? 0).toFixed(2)}) for "${req.title}".`;
+      void reportPushEvent(currentUser, {
+        type: 'dispute_update',
+        requestId,
+        clientId: req.clientId,
+        guardId: req.assignedGuardId ?? undefined,
+        title: 'Overtime dispute resolved',
+        body: resolutionBody,
+      });
+    }
   };
 
   const handleClientRequestOvertimeCash = async (requestId: string) => {

@@ -895,6 +895,8 @@ export interface NotificationPreferences {
   assignment: boolean;
   guardCheckin: boolean;
   guardClockout: boolean;
+  guardArrived: boolean;
+  guardLeftSite: boolean;
   guardBreakStart: boolean;
   guardBreakEnd: boolean;
   missedCheckin: boolean;
@@ -904,6 +906,7 @@ export interface NotificationPreferences {
   staffMessage: boolean;
   guardMessage: boolean;
   jobSubmitted: boolean;
+  jobOpenToGuards: boolean;
   guardApplication: boolean;
   guardPendingApproval: boolean;
   clientPendingApproval: boolean;

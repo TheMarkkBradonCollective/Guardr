@@ -38,11 +38,21 @@ export function resolveNotificationUrl(
     case 'missed_checkin':
     case 'guard_checkin':
     case 'guard_clockout':
+    case 'guard_arrived':
+    case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
       return options.requestId
         ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
         : '/staff/jobs';
+    case 'job_open_to_guards':
+      return '/guard/map';
+    case 'client_cash_payment_requested':
+    case 'guard_cash_payout_requested':
+    case 'stripe_payment_complete':
+      return options.requestId
+        ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/payments';
     case 'assignment':
       return options.requestId
         ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
@@ -133,6 +143,53 @@ export function resolveNotificationUrlForRole(
     role === 'owner';
 
   switch (type) {
+    case 'guard_arrived':
+    case 'guard_left_site':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/map?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/map';
+      }
+      if (role === 'guard') {
+        return options.requestId
+          ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}`
+          : '/guard/my-jobs';
+      }
+      return options.requestId
+        ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/jobs';
+
+    case 'job_open_to_guards':
+      return '/guard/map';
+
+    case 'client_cash_payment_requested':
+    case 'guard_cash_payout_requested':
+    case 'stripe_payment_complete':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/requests';
+      }
+      if (role === 'guard') {
+        return '/guard/earnings';
+      }
+      return options.requestId
+        ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/payments';
+
+    case 'payment_attention':
+      if (role === 'client') {
+        return options.requestId
+          ? `/client/requests?jc=${encodeURIComponent(options.requestId)}`
+          : '/client/requests';
+      }
+      if (role === 'guard') {
+        return '/guard/earnings';
+      }
+      return options.requestId
+        ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
+        : '/staff/payments';
+
     case 'support_message':
       if (role === 'client') {
         return options.ticketId
@@ -279,8 +336,16 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
     case 'missed_checkin':
     case 'guard_checkin':
     case 'guard_clockout':
+    case 'guard_arrived':
+    case 'guard_left_site':
     case 'guard_break_start':
     case 'guard_break_end':
+      return ['dispatch', 'admin'];
+    case 'job_open_to_guards':
+      return ['guard'];
+    case 'client_cash_payment_requested':
+    case 'guard_cash_payout_requested':
+    case 'stripe_payment_complete':
       return ['dispatch', 'admin'];
     case 'assignment':
       return ['guard'];
