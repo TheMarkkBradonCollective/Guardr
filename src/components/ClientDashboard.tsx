@@ -312,6 +312,9 @@ export function ClientDashboard({
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
         onAddReview={onAddReview}
+        onCancelRequest={onCancelRequest}
+        onEditRequest={onEditRequest}
+        onUpdateStatus={onUpdateStatus}
       />
     );
   }

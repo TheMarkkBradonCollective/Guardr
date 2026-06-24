@@ -900,12 +900,12 @@ export function GuardDashboard({
         <MapSelectionExperience
           job={selectedJob}
           role="guard"
-          layout="detail"
+          guardId={guard.id}
           route={mapRoute}
           loadingRoute={mapRouteLoading}
           onClose={() => handleGuardSelectedJobChange(null)}
           bottomOffsetClass="map-browse-offset"
-          detailActions={
+          guardFullBody={
             <GuardJobDetailView
               job={selectedJob}
               guard={guard}

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import type { PlatformSettings } from '../../lib/platformSettings';
 import { ShiftMap, type MapZoomControls } from '../guard/ShiftMap';
 import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
@@ -18,6 +19,11 @@ import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLi
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 import { ClientMapPostMenu } from './ClientMapBrowseDock';
 import type { ClientJobActionsBindings } from './clientJobActionsTypes';
+import {
+  canClientReschedulePaidSchedule,
+  isJobScheduleLocked,
+} from '../../lib/jobEditRules';
+import { EditRequestSheet } from '../jobs/EditRequestSheet';
 
 interface ClientMapScreenProps extends ClientJobActionsBindings {
   requests: SecurityRequest[];
@@ -39,8 +45,11 @@ export function ClientMapScreen({
   onRequestGuard,
   initialLiveJobId = null,
   onLiveJobIdChange,
+  crewSettings,
+  teamLeadSettings,
   ...jobActions
 }: ClientMapScreenProps) {
+  const billingSettings = crewSettings ?? teamLeadSettings;
   const clockedInJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
   const primaryLiveJob = useMemo(() => getPrimaryClientLiveJob(requests), [requests]);
   const [selectedLiveJobId, setSelectedLiveJobId] = useState<string | null>(
@@ -51,6 +60,9 @@ export function ClientMapScreen({
   const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const editingRequest = editingId ? requests.find((r) => r.id === editingId) ?? null : null;
 
   const activeLiveJob = useMemo(() => {
     if (selectedLiveJobId) {
@@ -166,17 +178,34 @@ export function ClientMapScreen({
           role="client"
           route={route}
           loadingRoute={routeLoading}
+          crewSettings={billingSettings}
           onClose={() => setSelectedBrowseJobId(null)}
           bottomOffsetClass="map-browse-offset"
           clientActions={
             selectedBrowseJob && currentUser ? (
               <ClientJobActionsPanel
                 request={selectedBrowseJob}
-                context="map"
+                context="jobs"
+                crewSettings={billingSettings}
                 {...mapActionProps}
+                onRequestEdit={setEditingId}
               />
             ) : null
           }
+        />
+      )}
+
+      {editingRequest && (
+        <EditRequestSheet
+          open
+          request={editingRequest}
+          scheduleLocked={isJobScheduleLocked(editingRequest)}
+          paidReschedule={canClientReschedulePaidSchedule(editingRequest)}
+          onSave={async (requestId, updates) => {
+            await jobActions.onEditRequest?.(requestId, updates);
+            setEditingId(null);
+          }}
+          onClose={() => setEditingId(null)}
         />
       )}
 
