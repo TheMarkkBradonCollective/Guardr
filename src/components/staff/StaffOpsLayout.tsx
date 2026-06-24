@@ -24,6 +24,7 @@ import {
   Settings,
   Shield,
   Users,
+  UsersRound,
   X,
 } from 'lucide-react';
 
@@ -51,6 +52,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   map: 'Operations map',
   guards: 'Field guards',
   team: 'Staff',
+  crews: 'Teams',
   clients: 'Clients',
   incidents: 'Client incidents',
   messages: 'Messages',
@@ -97,6 +99,7 @@ export function StaffOpsLayout({
     { id: 'approvals', label: 'Approvals', icon: ClipboardCheck, badge: badges.approvals },
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'guards', label: 'Guards', icon: Shield },
+    { id: 'crews', label: 'Teams', icon: UsersRound, badge: badges.crews },
     { id: 'team', label: 'Staff', icon: Users },
     { id: 'messages', label: 'Messages', icon: MessagesSquare, badge: badges.messages },
     { id: 'payments', label: 'Payments', icon: DollarSign, badge: badges.payments, financeOnly: true },

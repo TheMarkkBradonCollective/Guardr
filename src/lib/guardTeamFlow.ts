@@ -120,23 +120,13 @@ const COORDINATOR_REMOVABLE_STATUSES: JobGuardSlotStatus[] = [
   'crew_confirmed',
 ];
 
-export function removeGuardFromTeam(
+function reopenCrewMemberSlot(
   job: SecurityRequest,
-  leadId: string,
+  slots: JobGuardSlot[],
+  slot: JobGuardSlot,
   targetGuardId: string,
-  now = new Date()
-): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
-  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can remove members.' };
-  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
-  if (targetGuardId === leadId) return { error: 'You cannot remove yourself as coordinator.' };
-  const slots = mergeJobSlots(job, job.guardSlots);
-  const slot = slots.find((s) => s.guardId === targetGuardId);
-  if (!slot) return { error: 'That guard is not on this crew.' };
-  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
-  if (!COORDINATOR_REMOVABLE_STATUSES.includes(slot.status)) {
-    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
-  }
-  const ts = now.toISOString();
+  ts: string
+): { job: SecurityRequest; slots: JobGuardSlot[] } {
   const nextSlots = slots.map((s) =>
     s.id === slot.id
       ? {
@@ -166,6 +156,68 @@ export function removeGuardFromTeam(
     },
     slots: nextSlots,
   };
+}
+
+export function removeGuardFromTeam(
+  job: SecurityRequest,
+  leadId: string,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can remove members.' };
+  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
+  if (targetGuardId === leadId) return { error: 'You cannot remove yourself as coordinator.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
+  if (!COORDINATOR_REMOVABLE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, targetGuardId, now.toISOString());
+}
+
+const STAFF_CREW_MANAGE_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+];
+
+export function staffRemoveGuardFromTeam(
+  job: SecurityRequest,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
+  if (job.teamLeadId === targetGuardId) {
+    return { error: 'Staff cannot remove the crew coordinator — reassign the lead first.' };
+  }
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
+  if (!STAFF_CREW_MANAGE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, targetGuardId, now.toISOString());
+}
+
+export function staffDenyCrewSlot(
+  job: SecurityRequest,
+  guardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.status !== 'open') return { error: 'This crew is no longer open for changes.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === guardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (!['pending_staff', 'invited', 'crew_confirmed'].includes(slot.status)) {
+    return { error: 'This guard cannot be declined at their current stage.' };
+  }
+  if (job.teamLeadId === guardId) {
+    return { error: 'Staff cannot decline the crew coordinator slot.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, guardId, now.toISOString());
 }
 
 export function updateCrewProfile(

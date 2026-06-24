@@ -159,6 +159,8 @@ import {
   promoteFullCrewToClientIfReady,
   removeGuardFromTeam,
   revokeLeadIfNeeded,
+  staffDenyCrewSlot,
+  staffRemoveGuardFromTeam,
   updateCrewProfile,
   staffApproveIndependentSlot,
   staffApproveTeamSlot,
@@ -6306,6 +6308,125 @@ export default function App() {
     await denyGuardApplication(requestId, guardId, { deniedBy: 'staff' });
   };
 
+  const handleStaffApproveCrewMember = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to approve crew members.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.status !== 'open') {
+      appToast('This job is not open for crew changes.', 'error');
+      return;
+    }
+    const pendingStaff = (job.guardSlots ?? []).find(
+      (s) => s.guardId === guardId && s.status === 'pending_staff'
+    );
+    if (!pendingStaff) {
+      appToast('This guard is not awaiting staff review on this crew.', 'error');
+      return;
+    }
+    const result = job.teamLeadId
+      ? staffApproveTeamSlot(job, guardId)
+      : staffApproveIndependentSlot(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: !!job.teamLeadId }
+    );
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: promoted
+          ? `Full crew for "${job.title}" is ready for client review.`
+          : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
+      });
+    }
+    appToast(
+      promoted
+        ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
+        : `${guard?.name ?? 'Guard'} confirmed on crew.`,
+      'success'
+    );
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
+  };
+
+  const handleStaffDenyCrewMember = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to decline crew members.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const guard = guards.find((g) => g.id === guardId);
+    if (
+      !(await showAppConfirm({
+        title: 'Decline crew member?',
+        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
+        confirmLabel: 'Decline',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    const result = staffDenyCrewSlot(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Guardr declined your crew placement on "${job.title}".`,
+      });
+    }
+    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
+  };
+
+  const handleStaffRemoveFromCrew = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to manage crews.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const guard = guards.find((g) => g.id === guardId);
+    if (
+      !(await showAppConfirm({
+        title: 'Remove from crew?',
+        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
+        confirmLabel: 'Remove',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    const result = staffRemoveGuardFromTeam(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Guardr removed you from the crew for "${job.title}".`,
+      });
+    }
+    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
+  };
+
   // ── Audit lifecycle ────────────────────────────────────────
   const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; status?: SecurityRequest['status']; }) => {
     const req = requests.find((r) => r.id === requestId);
@@ -7956,6 +8077,9 @@ export default function App() {
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}
+          onApproveCrewMember={handleStaffApproveCrewMember}
+          onDenyCrewMember={handleStaffDenyCrewMember}
+          onRemoveCrewMember={handleStaffRemoveFromCrew}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}
