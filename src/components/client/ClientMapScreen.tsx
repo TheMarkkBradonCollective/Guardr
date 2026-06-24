@@ -15,7 +15,6 @@ interface ClientMapScreenProps extends ClientJobActionsBindings {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   currentUser?: SessionUser;
-  onOpenCoverage?: () => void;
   onOpenJobChat?: (requestId: string) => void;
   initialLiveJobId?: string | null;
   onLiveJobIdChange?: (requestId: string | null) => void;
@@ -25,7 +24,6 @@ export function ClientMapScreen({
   requests,
   guards,
   currentUser,
-  onOpenCoverage,
   onOpenJobChat,
   initialLiveJobId = null,
   onLiveJobIdChange,
@@ -107,11 +105,11 @@ export function ClientMapScreen({
         <ClientActiveShift
           request={activeLiveJob}
           guard={activeGuard}
+          guards={guards}
           allLiveRequests={liveJobs}
           onOpenJobChat={
             onOpenJobChat && currentUser ? () => onOpenJobChat(activeLiveJob.id) : undefined
           }
-          onOpenCoverage={onOpenCoverage}
           onSwitchJob={liveJobs.length > 1 ? switchLiveJob : undefined}
           jobActions={mapActionProps}
         />

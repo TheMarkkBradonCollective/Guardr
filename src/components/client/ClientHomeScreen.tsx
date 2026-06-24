@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import {
   ClientReportCard,
-  computeSiteStatus,
   formatCoverageDateLabel,
   formatShiftTimeRange,
   getUpcomingCoverage,
@@ -31,12 +30,10 @@ import {
   Map,
   Star,
   ChevronRight,
-  AlertTriangle,
-  CheckCircle2,
   Radio,
 } from 'lucide-react';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'coverage' | 'requests' | 'guards' | 'messages' | 'map';
+export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -64,12 +61,6 @@ const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
   activity: 'Activity report',
   property: 'Property report',
 };
-
-const SITE_STATUS = {
-  secured: { label: 'All sites secure', tone: 'text-emerald-500', icon: CheckCircle2 },
-  attention: { label: 'Needs your review', tone: 'text-amber-500', icon: AlertTriangle },
-  incident: { label: 'Incident reported', tone: 'text-red-500', icon: AlertTriangle },
-} as const;
 
 function timeGreeting(): string {
   const hour = new Date().getHours();
@@ -114,9 +105,6 @@ export function ClientHomeScreen({
     (r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review'
   ).length;
   const hasLiveCoverage = coverage.activeAssignments > 0;
-  const siteStatus = useMemo(() => computeSiteStatus(requests), [requests]);
-  const statusMeta = SITE_STATUS[siteStatus];
-  const StatusIcon = statusMeta.icon;
   const pendingActions = useMemo(() => clientActionCount(requests), [requests]);
 
   const todayLabel = new Date().toLocaleDateString('en-US', {
@@ -163,10 +151,6 @@ export function ClientHomeScreen({
                 <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-primary flex items-center gap-1.5">
                   <Radio className="w-3.5 h-3.5" />
                   Live now
-                </p>
-                <p className={`text-sm font-semibold mt-1.5 flex items-center gap-1.5 ${statusMeta.tone}`}>
-                  <StatusIcon className="w-4 h-4 shrink-0" />
-                  {statusMeta.label}
                 </p>
               </div>
               <span className="client-home-live-map-pill">

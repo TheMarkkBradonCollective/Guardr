@@ -534,7 +534,7 @@ export default function App() {
     setClientViewState(resolvedView);
     const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
-    const keepsJobChatId = resolvedView === 'coverage' || resolvedView === 'messages' || resolvedView === 'map';
+    const keepsJobChatId = resolvedView === 'messages' || resolvedView === 'map';
     const nextJobChatId = keepsJobChatId ? jobChatRequestId ?? undefined : undefined;
     const inMessagesFlow =
       resolvedView === 'messages' ||

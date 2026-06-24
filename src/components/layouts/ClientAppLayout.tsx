@@ -30,7 +30,6 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
   home: 'Home',
   guards: 'Guards',
-  coverage: 'Live coverage',
   requests: 'Jobs',
   'support-compose': 'Contact support',
   'support-report': 'File a report',
@@ -57,7 +56,7 @@ export function ClientAppLayout({
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
-  const fullBleed = activeView === 'map' || activeView === 'coverage';
+  const fullBleed = activeView === 'map';
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
   const navHighlightView = messagesViews.includes(activeView)
     ? 'messages'
