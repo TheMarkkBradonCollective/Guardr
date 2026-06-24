@@ -363,7 +363,6 @@ function JobDetailPanel({
         open={auditUploadOpen && canUploadAudit}
         onClose={() => setAuditUploadOpen(false)}
         title="Upload self-audit photos"
-        subtitle="Add uniform, shoes, and selfie photos for this shift."
       >
         {canUploadAudit && onUploadSelfAuditPhotos && (
           <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos} />
@@ -373,7 +372,6 @@ function JobDetailPanel({
         open={spotCheckOpen && canAddSpotCheck}
         onClose={() => setSpotCheckOpen(false)}
         title="Spot check photo"
-        subtitle="Upload a spot-check image for this job."
       >
         {canAddSpotCheck && onUploadSpotCheck && (
           <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck} />

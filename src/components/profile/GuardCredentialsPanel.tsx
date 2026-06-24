@@ -370,11 +370,6 @@ export function GuardCredentialsPanel({
         <p className="text-sm font-semibold text-brand-primary">
           {editing ? 'Upload credentials' : 'Credentials'}
         </p>
-        <p className="text-xs text-brand-text-muted leading-relaxed">
-          {editing
-            ? `Government ID and BSIS Guard Card are required before profile approval. ${CERT_IMAGE_POLICY_HINT}`
-            : 'Government ID, guard card, and other licenses. Tap any item to view details and photos — staff can upload on the guard’s behalf when you have the document.'}
-        </p>
       </div>
 
       {!guard.isStaff && idStatus === 'rejected' && guard.idVerificationRejectionReason && (
@@ -427,7 +422,7 @@ export function GuardCredentialsPanel({
         renderCertActions={renderCertActions}
       />
       {showSection(refresherItems.length) && (
-      <div className="mt-8 pt-6 border-t border-brand-border">
+      <div className="mt-14 pt-8 border-t border-b border-brand-border pb-5">
       <section className="app-form-section space-y-3 !pt-0 !border-t-0">
         <CredentialRowHeader
           rawTitle
@@ -437,12 +432,7 @@ export function GuardCredentialsPanel({
               {refresherEntry?.name ?? '8-Hour BSIS Refresher'}
             </p>
           }
-          subtitle={
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Separate from the 32-hour block —{' '}
-              {refresherEntry?.description ?? 'upload when applicable for guard card renewals.'}
-            </p>
-          }
+          subtitle={undefined}
           action={
             canUpload ? (
               <CredentialRowAction
@@ -474,7 +464,7 @@ export function GuardCredentialsPanel({
       </div>
       )}
       {showSection(otherBsisItems.length) && (
-      <section className="app-form-section space-y-3">
+      <section className="app-form-section space-y-3 pb-4 border-b border-brand-border">
         <CredentialRowHeader
           rawTitle
           title={
@@ -483,11 +473,7 @@ export function GuardCredentialsPanel({
               Other BSIS Training
             </p>
           }
-          subtitle={
-            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-              Supplemental BSIS courses — not part of the Active pathway or 32-hour block.
-            </p>
-          }
+          subtitle={undefined}
           action={
             canUpload && otherBsisCatalogOptions.length > 0 ? (
               <CredentialRowAction
@@ -524,7 +510,7 @@ export function GuardCredentialsPanel({
         const catalogOptions = getCertsByCategory(category);
 
         const sectionCard = (
-          <section key={category} className="app-form-section space-y-3">
+          <section key={category} className="app-form-section space-y-3 pb-4 border-b border-brand-border">
             <CredentialRowHeader
               rawTitle
               title={

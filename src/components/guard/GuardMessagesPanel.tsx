@@ -129,8 +129,8 @@ export function GuardMessagesPanel({
     id: 'guard-community',
     channel: 'guard-community',
     title: 'Guard chat',
-    subtitle: 'Community channel for all guards',
-    preview: 'Message other guards on active shifts',
+    subtitle: '',
+    preview: '',
     updatedAt: guardChannelUpdatedAt,
     badge: 'Community',
     badgeTone: 'primary',
@@ -285,7 +285,6 @@ export function GuardMessagesPanel({
         <div className="h-full flex flex-col min-h-0 app-full-page-screen">
           <AppChatHeader
             title="Guard chat"
-            subtitle="Community channel — not visible to clients or staff"
             onBack={backToList}
             hideBackOnDesktop
           />

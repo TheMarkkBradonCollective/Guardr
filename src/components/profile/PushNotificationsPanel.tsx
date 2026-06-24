@@ -184,9 +184,6 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="uber-label">Push notifications</p>
-          <p className="text-xs text-brand-text-muted mt-1">
-            Receive job, chat, and operational alerts when Guardr is closed.
-          </p>
         </div>
         {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
       </div>

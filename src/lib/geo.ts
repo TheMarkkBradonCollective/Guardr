@@ -1,6 +1,6 @@
 /** Map coordinates — geocoded pins preferred, hash fallback for legacy rows */
 
-export const METRO_CENTER = { lat: 40.758, lng: -73.9855 };
+export const METRO_CENTER = { lat: 34.0522, lng: -118.2437 };
 
 export interface GeoCoords {
   lat: number;

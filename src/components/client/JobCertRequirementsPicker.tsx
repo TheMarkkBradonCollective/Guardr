@@ -35,24 +35,10 @@ export function JobCertRequirementsPicker({
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-bold">Guard requirements</h2>
-        <p className="text-sm text-brand-text-muted mt-1">
-          Select certifications guards must have on file. Guard Card is always required for{' '}
-          {jobState ? `${jobState} ` : ''}jobs.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 p-3 text-sm">
-        <span className="font-semibold text-brand-primary">Always required:</span> Valid BSIS Guard Card uploaded for{' '}
-        {jobState ? `${jobState} ` : ''}jobs ({GUARD_STATUS_LABELS.active} with guard card). Guardr verification is shown to
-        clients as a trust badge.
       </div>
 
       <div className="space-y-2">
         <p className="text-sm font-semibold">Minimum guard status</p>
-        <p className="text-xs text-brand-text-muted">
-          All guards need a valid guard card, government ID, PTA/UOF, and the 32-hour BSIS course block on file to
-          work field jobs. Choose whether you prefer guards with full training verified on file.
-        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(['pending', 'active'] as MinGuardQualification[]).map((level) => {
             const active = minGuardQualification === level;

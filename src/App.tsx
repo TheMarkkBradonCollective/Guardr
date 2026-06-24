@@ -24,7 +24,7 @@ import {
   StaffMessage,
   GuardMessage,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -130,6 +130,7 @@ import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
   shouldSkipClientGuardApproval,
+  shouldSkipClientGuardApprovalForTrusted,
 } from './lib/guardAssignment';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
@@ -1302,6 +1303,7 @@ export default function App() {
           : undefined,
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
+        trusted: g.trusted === true,
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1352,6 +1354,28 @@ export default function App() {
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
         password: c.password ?? undefined,
         mustChangePassword: c.must_change_password ?? false,
+        businessType: c.business_type ?? undefined,
+        industries: Array.isArray(c.industries) ? c.industries : undefined,
+        businessLicense: c.business_license ?? undefined,
+        website: c.website ?? undefined,
+        serviceDescription: c.service_description ?? undefined,
+        serviceTypes: Array.isArray(c.service_types) ? c.service_types : undefined,
+        estimatedGuardsNeeded: c.estimated_guards_needed ?? undefined,
+        armedPreference: c.armed_preference ?? undefined,
+        serviceFrequencies: Array.isArray(c.service_frequencies) ? c.service_frequencies : undefined,
+        estimatedStartDate: c.estimated_start_date ?? undefined,
+        budgetRange: c.budget_range ?? undefined,
+        serviceCity: c.service_city ?? undefined,
+        serviceState: c.service_state ?? undefined,
+        propertyTypes: Array.isArray(c.property_types) ? c.property_types : undefined,
+        referredBy: c.referred_by ?? undefined,
+        referredById: c.referred_by_id ?? undefined,
+        howHeardAboutUs: c.how_heard_about_us ?? undefined,
+        hasPriorSecurityService: c.has_prior_security_service ?? undefined,
+        priorSecurityProvider: c.prior_security_provider ?? undefined,
+        specialRequirements: c.special_requirements ?? undefined,
+        trusted: c.trusted === true,
+        favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
       };
       }));
 
@@ -2007,6 +2031,7 @@ export default function App() {
       const client = profile as Client;
       const accountStatus = client.accountStatus ?? 'pending';
       try {
+        // Base insert — only original columns that are guaranteed to exist
         await supabase.from('clients').insert({
           id: client.id,
           name: client.name,
@@ -2023,20 +2048,56 @@ export default function App() {
           password,
           must_change_password: false,
         });
-        setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
-        await loadFromSupabase();
-        if (accountStatus !== 'active') {
-          void reportPushEvent(
-            { id: client.id, email: emailLower, role: 'client', name: client.name },
-            {
-              type: 'client_pending_approval',
-              body: `New client sign-up: ${client.companyName || client.name}`,
-            }
-          );
-        }
       } catch (e) {
         console.error('Client DB insert error:', e);
         throw new Error('Could not create client account. This email may already be registered.');
+      }
+
+      // Intake fields — written in a separate update so a missing migration
+      // column never breaks the core sign-up flow
+      const intakePayload: Record<string, unknown> = {
+        business_type: client.businessType ?? null,
+        industries: client.industries ?? null,
+        business_license: client.businessLicense ?? null,
+        website: client.website ?? null,
+        service_description: client.serviceDescription ?? null,
+        service_types: client.serviceTypes ?? null,
+        estimated_guards_needed: client.estimatedGuardsNeeded ?? null,
+        armed_preference: client.armedPreference ?? null,
+        service_frequencies: client.serviceFrequencies ?? null,
+        estimated_start_date: client.estimatedStartDate ?? null,
+        budget_range: client.budgetRange ?? null,
+        service_city: client.serviceCity ?? null,
+        service_state: client.serviceState ?? null,
+        property_types: client.propertyTypes ?? null,
+        referred_by: client.referredBy ?? null,
+        referred_by_id: client.referredById ?? null,
+        how_heard_about_us: client.howHeardAboutUs ?? null,
+        has_prior_security_service: client.hasPriorSecurityService ?? null,
+        prior_security_provider: client.priorSecurityProvider ?? null,
+        special_requirements: client.specialRequirements ?? null,
+      };
+      // Only bother if there is at least one non-null intake value
+      const hasIntakeData = Object.values(intakePayload).some((v) => v !== null);
+      if (hasIntakeData) {
+        try {
+          await supabase.from('clients').update(intakePayload).eq('id', client.id);
+        } catch (intakeErr) {
+          // Non-fatal — intake columns may not exist yet if the migration hasn't been applied
+          console.warn('Client intake fields not saved (migration may be pending):', intakeErr);
+        }
+      }
+
+      setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
+      await loadFromSupabase();
+      if (accountStatus !== 'active') {
+        void reportPushEvent(
+          { id: client.id, email: emailLower, role: 'client', name: client.name },
+          {
+            type: 'client_pending_approval',
+            body: `New client sign-up: ${client.companyName || client.name}`,
+          }
+        );
       }
       return;
     }
@@ -3078,6 +3139,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('clients').update({ approved: true, account_status: 'active' }).eq('id', clientId);
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: clientId,
+      title: 'Account approved',
+      body: 'Your client account is active. You can now request security coverage on Guardr.',
+    });
   };
 
   const handleRejectClient = async (clientId: string) => {
@@ -3093,6 +3160,12 @@ export default function App() {
     if (isDbConnected) {
       await supabase.from('clients').update({ approved: false, account_status: 'suspended' }).eq('id', clientId);
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: clientId,
+      title: 'Account not approved',
+      body: 'Your client account request was not approved. Contact Guardr support if you have questions.',
+    });
   };
 
   const handleApproveGuardAccount = async (guardId: string) => {
@@ -3135,6 +3208,12 @@ export default function App() {
         throw new Error(result.error);
       }
     }
+    void reportPushEvent(currentUser, {
+      type: 'support_ticket_status',
+      recipientUserId: guardId,
+      title: 'Account approved',
+      body: 'Your guard profile is approved. Complete activation to start accepting jobs.',
+    });
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
@@ -3182,6 +3261,61 @@ export default function App() {
       if (result.ok === false) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? guard : g)));
         throw new Error(result.error);
+      }
+    }
+  };
+
+  const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a guard as trusted.', 'error');
+      return;
+    }
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
+        appToast('Could not update guard trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleSetClientTrusted = async (clientId: string, trusted: boolean) => {
+    if (!currentUser || !canSetTrustedStatus(currentUser)) {
+      appToast('Only Directors and Owners can set a client as trusted.', 'error');
+      return;
+    }
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted } : c)));
+    if (isDbConnected) {
+      const { error } = await supabase.from('clients').update({ trusted }).eq('id', clientId);
+      if (error) {
+        setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted: !trusted } : c)));
+        appToast('Could not update client trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleToggleFavoriteGuard = async (guardId: string) => {
+    if (!currentUser) return;
+    const clientId = currentUser.id;
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    const existing = client.favoriteGuardIds ?? [];
+    const isFav = existing.includes(guardId);
+    const next = isFav ? existing.filter((id) => id !== guardId) : [...existing, guardId];
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: next } : c))
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('clients')
+        .update({ favorite_guard_ids: next })
+        .eq('id', clientId);
+      if (error) {
+        setClients((prev) =>
+          prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: existing } : c))
+        );
+        appToast('Could not update favourites.', 'error');
       }
     }
   };
@@ -3626,6 +3760,12 @@ export default function App() {
     const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
     const location = siteName ? `${siteName} — ${address}` : address;
 
+    // Trusted clients skip the approval queue unless they're using cash.
+    const clientIsTrusted = clientRecord?.trusted === true;
+    const requestingCash = newRequest.clientPaymentMethod === 'cash';
+    const initialStatus: SecurityRequest['status'] =
+      clientIsTrusted && !requestingCash ? 'open' : 'pending-review';
+
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
       title: newRequest.title || 'Security Guard Deployment',
@@ -3654,7 +3794,7 @@ export default function App() {
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
       estimatedPayout,
-      status: 'pending-review',
+      status: initialStatus,
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
@@ -4939,8 +5079,17 @@ export default function App() {
       appToast('You do not have permission to approve job requests.', 'error');
       return;
     }
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'open' }).eq('id', requestId);
+    if (job) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: job.clientId,
+        title: 'Job approved',
+        body: `"${job.title}" is now live on the marketplace.`,
+      });
+    }
   };
 
   const handleDenyRequest = async (requestId: string) => {
@@ -4948,8 +5097,17 @@ export default function App() {
       appToast('You do not have permission to decline job requests.', 'error');
       return;
     }
+    const job = requests.find((r) => r.id === requestId);
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
+    if (job) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: job.clientId,
+        title: 'Job declined',
+        body: `Guardr staff declined "${job.title}". Contact support if you need to revise and resubmit.`,
+      });
+    }
   };
 
   const handleCancelRequest = async (requestId: string) => {
@@ -5117,6 +5275,10 @@ export default function App() {
       return;
     }
     if (shouldSkipClientGuardApproval(job, guardId)) {
+      await assignGuardToJob(requestId, guardId);
+      return;
+    }
+    if (shouldSkipClientGuardApprovalForTrusted(guard, job)) {
       await assignGuardToJob(requestId, guardId);
       return;
     }
@@ -5294,6 +5456,14 @@ export default function App() {
       appToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, 'error');
       return;
     }
+
+    // Direct requests: guard confirms → assign immediately (client already chose them)
+    if (job.requestType === 'direct' && job.targetGuardId === activeGuardId) {
+      await assignGuardToJob(requestId, activeGuardId);
+      appToast('Job confirmed — check your schedule.', 'success');
+      return;
+    }
+
     const nextApplicants = [...job.applicants, activeGuardId];
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
@@ -5312,6 +5482,41 @@ export default function App() {
       });
     }
     appToast('Application submitted. Guardr staff will review applicants and send the best fit for client approval.', 'success');
+  };
+
+  const handleGuardDeclineDirectJob = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    if (job.requestType !== 'direct' || job.targetGuardId !== activeGuardId) {
+      appToast('This is not a direct request for you.', 'error');
+      return;
+    }
+    if (job.status !== 'open') {
+      appToast('This job is no longer open.', 'error');
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, requestType: 'marketplace' as const, targetGuardId: undefined }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ request_type: 'marketplace', target_guard_id: null })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'job_submitted',
+        requestId,
+        location: job.location,
+        body: `Guard declined direct request for "${job.title}" — now open to all guards`,
+      });
+    }
+    appToast('Job declined — it\'s now listed for all guards.', 'info');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
@@ -6287,6 +6492,8 @@ export default function App() {
       if (ticket.category === 'safety' && ticket.priority === 'urgent') {
         void reportPushEvent(currentUser, {
           type: 'emergency_alert',
+          ticketId: ticket.id,
+          requestId: ticket.relatedRequestId,
           body: `Urgent safety support ticket from ${ticket.userName}`,
         });
       }
@@ -6596,6 +6803,7 @@ export default function App() {
             handleSubmitGuardIdentityVerification(activeGuard.id, payload)
           }
           onAcceptJob={handleApplyToJob}
+          onDeclineDirectJob={handleGuardDeclineDirectJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
@@ -6747,6 +6955,8 @@ export default function App() {
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
+              favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
+              onToggleFavoriteGuard={handleToggleFavoriteGuard}
               paymentGates={clientPaymentGatesMemo}
               feeConfig={platformSettings.feeConfig}
               currentUser={currentUser}
@@ -6817,6 +7027,8 @@ export default function App() {
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}
           onActivateGuardAccount={handleActivateGuardAccount}
+          onSetGuardTrusted={handleSetGuardTrusted}
+          onSetClientTrusted={handleSetClientTrusted}
           onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
           onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
           onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}

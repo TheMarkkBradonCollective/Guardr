@@ -69,6 +69,8 @@ interface ClientDashboardProps {
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
+  favoriteGuardIds?: string[];
+  onToggleFavoriteGuard?: (guardId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
   feeConfig: PlatformFeeConfig;
   currentUser?: SessionUser;
@@ -116,6 +118,8 @@ export function ClientDashboard({
   onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
+  favoriteGuardIds = [],
+  onToggleFavoriteGuard,
   paymentGates,
   feeConfig,
   currentUser,
@@ -280,6 +284,8 @@ export function ClientDashboard({
       <RequestSecurityFlow
         preset={flowPreset}
         feeConfig={feeConfig}
+        guards={guards}
+        favoriteGuardIds={favoriteGuardIds}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
@@ -323,12 +329,19 @@ export function ClientDashboard({
           currentUser={currentUser}
           onSendJobChatMessage={onSendJobChatMessage}
           onOpenJobChat={onOpenJobChat ?? openMessages}
+          isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
+          onToggleFavorite={onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined}
         />
       );
     }
     return page(
       'guards',
-      <GuardDirectoryScreen guards={guards} onSelectGuard={setSelectedGuard} />
+      <GuardDirectoryScreen
+        guards={guards}
+        onSelectGuard={setSelectedGuard}
+        favoriteGuardIds={favoriteGuardIds}
+        onToggleFavorite={onToggleFavoriteGuard}
+      />
     );
   }
 

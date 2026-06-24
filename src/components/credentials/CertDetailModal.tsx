@@ -352,18 +352,6 @@ export function CertDetailModal({
               </div>
             </dl>
 
-            {photosLocked && cert.imageUrl && cert.status !== 'rejected' && (
-              <p className="text-xs text-brand-text-muted">
-                Credential details are locked while your submission is on file. Tap Edit after staff requests a
-                resubmit.
-              </p>
-            )}
-
-            {entry?.description && (
-              <p className="text-xs text-brand-text-muted leading-relaxed border-t border-brand-border pt-4">
-                {entry.description}
-              </p>
-            )}
           </>
         )}
       </div>

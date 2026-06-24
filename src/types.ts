@@ -123,6 +123,62 @@ export interface Client {
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
   mustChangePassword?: boolean;
+
+  // --- Sign-up intake fields (used by staff to evaluate pending accounts) ---
+
+  /** Business entity type, e.g. LLC, Corporation, Sole Proprietor */
+  businessType?: string;
+  /** Industries / sectors — multi-select */
+  industries?: string[];
+  /** Business license number or EIN / Tax ID */
+  businessLicense?: string;
+  /** Company website URL */
+  website?: string;
+
+  /** Client's own description of what security coverage they need */
+  serviceDescription?: string;
+  /** Types of security service requested */
+  serviceTypes?: string[];
+  /** Rough estimate of how many guards they need */
+  estimatedGuardsNeeded?: number;
+  /** Armed vs unarmed preference */
+  armedPreference?: 'armed' | 'unarmed' | 'no-preference';
+  /** Engagement frequency — multi-select, clients may need more than one type */
+  serviceFrequencies?: string[];
+  /** Approximate start date or timeframe */
+  estimatedStartDate?: string;
+  /** Rough budget tier */
+  budgetRange?: string;
+
+  /** City where security coverage is needed */
+  serviceCity?: string;
+  /** US state where coverage is needed */
+  serviceState?: string;
+  /** Types of property — multi-select, clients may cover more than one site type */
+  propertyTypes?: string[];
+
+  /** Freehand name of the guard or staff member who referred this client */
+  referredBy?: string;
+  /** Platform ID of the referring guard or staff member, if found */
+  referredById?: string;
+  /** How the client heard about the platform */
+  howHeardAboutUs?: string;
+
+  /** Whether the client has used a security company before */
+  hasPriorSecurityService?: boolean;
+  /** Previous security provider name */
+  priorSecurityProvider?: string;
+  /** Any special licensing, compliance, or site requirements */
+  specialRequirements?: string;
+
+  /**
+   * Explicitly trusted by a Director or Owner.
+   * Trusted clients skip the job posting approval queue for non-cash jobs.
+   */
+  trusted?: boolean;
+
+  /** Guard IDs this client has favourited — shown first in the guard directory. */
+  favoriteGuardIds?: string[];
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
@@ -232,6 +288,11 @@ export interface SecurityGuard {
   credentialGraceMissing?: string[];
   /** Staff-granted grace window length in hours (set at activation) */
   credentialGraceHours?: number;
+  /**
+   * Explicitly trusted by a Director or Owner.
+   * Trusted guards skip client confirmation when placed on non-cash jobs.
+   */
+  trusted?: boolean;
 }
 
 export interface StaffSpotCheck {

@@ -56,10 +56,6 @@ export function SupportReportPage({
       <AppScreen className="client-form-shell">
         <AppSubScreenHeader title="File a report" onBack={onBack} />
 
-        <p className="text-sm text-brand-text-muted px-5 mb-6">
-          Describe the issue — staff will review and follow up.
-        </p>
-
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 px-5 pb-24">
           <div>
             <label className="uber-label block mb-1">Category</label>

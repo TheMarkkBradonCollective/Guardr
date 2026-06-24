@@ -62,6 +62,7 @@ interface StaffGuardDetailPanelProps {
     guardId: string,
     options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
   ) => void | Promise<void>;
+  onSetGuardTrusted?: (trusted: boolean) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -104,6 +105,7 @@ export function StaffGuardDetailPanel({
   onAddEducation,
   onApproveGuardAccount,
   onActivateGuardAccount,
+  onSetGuardTrusted,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -586,6 +588,20 @@ export function StaffGuardDetailPanel({
                   {guard.backgroundChecked ? 'Clear background check' : 'Mark background checked'}
                 </button>
               )}
+              {onSetGuardTrusted && (
+                <button
+                  type="button"
+                  onClick={() => void onSetGuardTrusted(!guard.trusted)}
+                  className={`app-button-outline app-btn-sm ${guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
+                  title={
+                    guard.trusted
+                      ? 'Remove trusted status — guard will require normal approvals'
+                      : 'Mark as trusted — guard skips client confirmation on non-cash jobs'
+                  }
+                >
+                  {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}
+                </button>
+              )}
               {onDeleteGuard && guardAccountStatus !== 'pending' && (
                 <button
                   type="button"
@@ -693,12 +709,9 @@ export function StaffGuardDetailPanel({
         </>
       )}
 
-      {guard.isStaff && (
+      {guard.isStaff && guard.phone && (
         <section className="staff-detail-section">
-          <p className="text-sm text-brand-text-muted">
-            Staff platform account — field credential verification does not apply.
-          </p>
-          {guard.phone && <p className="text-sm mt-2">{guard.phone}</p>}
+          <p className="text-sm mt-2">{guard.phone}</p>
         </section>
       )}
 

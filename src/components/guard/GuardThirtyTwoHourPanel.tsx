@@ -90,6 +90,15 @@ export function GuardThirtyTwoHourPanel({
 
   const rollupCerts = useMemo(() => rollupCertsForGuard(guard), [guard.certifications]);
 
+  const hasIndividualCourseCerts = useMemo(
+    () => THIRTY_TWO_HOUR_COURSE_IDS.some((id) => certsForCatalogId(guard, id).length > 0),
+    [guard]
+  );
+  const hasAnyCerts = rollupCerts.length > 0 || hasIndividualCourseCerts;
+  const effectivePath: CredentialUploadPath = hasAnyCerts
+    ? (rollupCerts.length > 0 ? 'combined' : 'individual')
+    : uploadPath;
+
   const progressPct = progress.thirtyTwoHourProgressPercent;
   const courseStatusSummary = formatCredentialSlotStatusSummary(
     countThirtyTwoHourCourseSlotStatuses(guard)
@@ -224,7 +233,7 @@ export function GuardThirtyTwoHourPanel({
   const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
 
   return (
-    <section className="app-form-section space-y-4">
+    <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
       <div>
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
@@ -249,14 +258,16 @@ export function GuardThirtyTwoHourPanel({
         </div>
       </div>
 
-      <CredentialPathToggle
-        value={uploadPath}
-        onChange={setUploadPath}
-        combinedLabel="Completion certificate"
-        individualLabel="Individual courses"
-      />
+      {!hasAnyCerts && (
+        <CredentialPathToggle
+          value={uploadPath}
+          onChange={setUploadPath}
+          combinedLabel="Combined certificate"
+          individualLabel="Individual parts"
+        />
+      )}
 
-      {uploadPath === 'combined' ? (
+      {effectivePath === 'combined' ? (
         <div className="border-t border-brand-border pt-3 space-y-3">
           <CredentialRowHeader
             rawTitle
@@ -288,7 +299,7 @@ export function GuardThirtyTwoHourPanel({
       ) : (
         <div className="border-t border-brand-border pt-3 space-y-3">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted">
-            Individual courses ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
+            Individual parts ({THIRTY_TWO_HOUR_COURSE_IDS.length} required)
           </p>
           {courses.map((course) =>
             renderCourseRow({

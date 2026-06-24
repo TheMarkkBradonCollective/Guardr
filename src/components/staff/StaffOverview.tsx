@@ -115,7 +115,7 @@ const QUICK_LINK_META: Record<
   settings: { label: 'Settings', icon: Settings },
   guide: { label: 'General guide', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },
-  preferences: { label: 'Settings', icon: Settings },
+  preferences: { label: 'Preferences', icon: Settings },
 };
 
 function formatOverviewDate(): string {

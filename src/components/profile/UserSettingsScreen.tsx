@@ -26,9 +26,6 @@ export function UserSettingsScreen({
   return (
     <AppScreen>
       <AppFormSection title="Appearance">
-        <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-2">
-          Choose how Guardr looks on this device.
-        </p>
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
       </AppFormSection>
 

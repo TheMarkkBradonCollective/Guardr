@@ -20,7 +20,12 @@ import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import {
+  GUARD_APPROVED_BADGE_LABEL,
+  GUARD_TRUSTED_BADGE_LABEL,
+  isGuardProfileApproved,
+  isGuardTrusted,
+} from '../../lib/guardTrust';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import {
   BookOpen,
@@ -28,6 +33,7 @@ import {
   Check,
   Clock,
   GraduationCap,
+  Heart,
   MapPin,
   MessageCircle,
 } from 'lucide-react';
@@ -43,6 +49,8 @@ interface GuardProfileScreenProps {
   currentUser?: SessionUser;
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onOpenJobChat?: (requestId: string) => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void | Promise<void>;
 }
 
 const STATUS_LABEL: Record<SecurityRequest['status'], string> = {
@@ -66,6 +74,8 @@ export function GuardProfileScreen({
   currentUser,
   onSendJobChatMessage,
   onOpenJobChat,
+  isFavorite = false,
+  onToggleFavorite,
 }: GuardProfileScreenProps) {
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),
@@ -111,7 +121,19 @@ export function GuardProfileScreen({
               <div className="flex items-start gap-4">
                 <ProfileAvatar src={guard.avatar} name={guard.name} size="2xl" rounded="xl" />
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl font-bold">{guard.name}</h1>
+                  <div className="flex items-center justify-between gap-2">
+                    <h1 className="text-2xl font-bold">{guard.name}</h1>
+                    {onToggleFavorite && (
+                      <button
+                        type="button"
+                        aria-label={isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+                        onClick={() => void onToggleFavorite()}
+                        className="shrink-0 p-1.5 rounded-full text-brand-text-muted hover:text-rose-500 transition-colors"
+                      >
+                        <Heart className={`w-6 h-6 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+                      </button>
+                    )}
+                  </div>
                   <p className="text-base text-brand-primary font-medium mt-1">{getGuardDisplayHeadline(guard)}</p>
                   <p className="text-sm text-brand-text-muted mt-2 leading-relaxed">{getGuardDisplaySummary(guard)}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
@@ -121,6 +143,12 @@ export function GuardProfileScreen({
                       <WfMetricTile label="Experience" value={`${guard.yearsExperience}+ yrs`} />
                     )}
                   </div>
+                  {isGuardProfileApproved(guard) && (
+                    <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
+                      <Check className="w-4 h-4" />
+                      {GUARD_APPROVED_BADGE_LABEL}
+                    </p>
+                  )}
                   {isGuardTrusted(guard) && (
                     <p className="inline-flex items-center gap-1 text-sm text-brand-primary mt-3">
                       <Check className="w-4 h-4" />

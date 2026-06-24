@@ -66,9 +66,6 @@ export function ClientReportsScreen({
                 <p className="text-sm text-brand-text-muted">{report.siteName}</p>
                 <WfBadge tone={meta.tone}>{meta.emoji} {meta.label}</WfBadge>
                 <p className="text-sm text-brand-text-muted leading-relaxed line-clamp-3">{report.summary}</p>
-                {isIncident && (
-                  <p className="text-xs text-brand-primary font-medium">Tap to view full incident details</p>
-                )}
                 <p className="text-xs text-brand-text-muted">
                   {new Date(report.submittedAt).toLocaleString('en-US', {
                     month: 'short',

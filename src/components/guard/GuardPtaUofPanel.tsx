@@ -96,6 +96,11 @@ export function GuardPtaUofPanel({
   const ptaCerts = useMemo(() => certsForCatalogId(guard, LEGACY_PTA_ID), [guard]);
   const secondPartCerts = useMemo(() => certsForSecondPart(guard), [guard]);
 
+  const hasAnyCerts = combinedCerts.length > 0 || ptaCerts.length > 0 || secondPartCerts.length > 0;
+  const effectivePath: CredentialUploadPath = hasAnyCerts
+    ? (combinedCerts.length > 0 ? 'combined' : 'individual')
+    : uploadPath;
+
   const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
   const sectionStatus = getAggregateSectionStatus(ptaUofStatusSummary, progress.complete);
 
@@ -236,14 +241,11 @@ export function GuardPtaUofPanel({
   );
 
   return (
-    <section className="app-form-section space-y-4">
+    <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
       <div>
         <p className="uber-label flex items-center gap-2 flex-wrap">
           <BookOpen className="w-4 h-4" strokeWidth={1.5} />
           Power to Arrest &amp; Appropriate Use of Force
-        </p>
-        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          Required to work. {PTA_UOF_UPLOAD_GUIDANCE}
         </p>
         <div className="mt-2 space-y-2">
           <CredentialSectionStatusDisplay status={sectionStatus} />
@@ -263,14 +265,16 @@ export function GuardPtaUofPanel({
         </div>
       </div>
 
-      <CredentialPathToggle
-        value={uploadPath}
-        onChange={setUploadPath}
-        combinedLabel="Combined certificate"
-        individualLabel="Individual parts"
-      />
+      {!hasAnyCerts && (
+        <CredentialPathToggle
+          value={uploadPath}
+          onChange={setUploadPath}
+          combinedLabel="Combined certificate"
+          individualLabel="Individual parts"
+        />
+      )}
 
-      {uploadPath === 'combined' ? (
+      {effectivePath === 'combined' ? (
         <div className="border-t border-brand-border pt-3 space-y-3">
           <CredentialRowHeader
             rawTitle

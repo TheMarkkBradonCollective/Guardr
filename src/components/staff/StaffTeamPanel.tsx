@@ -68,10 +68,6 @@ export function StaffTeamPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Guardr platform staff — operations and administration only, not field jobs.
-              {!canManageStaff && ' Directors and Owners manage staff accounts; you have view-only access here.'}
-            </p>
             {canManageStaff && onAddStaff && assignableRoles.length > 0 && (
               <StaffAddStaffForm
                 assignableRoles={assignableRoles}

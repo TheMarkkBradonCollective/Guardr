@@ -174,9 +174,6 @@ export function DirectGuardRequestFlow({
               <p className="text-sm text-brand-text-muted">{getGuardDisplayHeadline(guard)}</p>
             </div>
           </div>
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            This is separate from a general marketplace post. Only {guard.name.split(' ')[0]} will see this request.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -398,7 +395,6 @@ export function DirectGuardRequestFlow({
         {step === 8 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Review & send</h2>
-            <p className="text-sm text-brand-text-muted">Only {guard.name.split(' ')[0]} will see this listing.</p>
             <JobListingPreview
               job={{
                 title,

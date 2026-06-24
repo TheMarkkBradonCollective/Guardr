@@ -184,7 +184,7 @@ export function GuardCardPanel({
       open={showForm && canUpload}
       onClose={resetForm}
       title={items.length ? 'Add another guard card' : 'Add guard card'}
-      subtitle={`BSIS Guard Card — required before profile approval. ${CERT_IMAGE_POLICY_HINT}`}
+      subtitle="BSIS Guard Card"
     >
       {uploadForm}
     </AppFormSheet>
@@ -210,9 +210,6 @@ export function GuardCardPanel({
           }
           subtitle={
             <>
-              <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-                Your state guard license — required to work field jobs. {CERT_IMAGE_POLICY_HINT}
-              </p>
               <div className="mt-2">
                 <CredentialSectionStatusDisplay status={sectionStatus} />
               </div>

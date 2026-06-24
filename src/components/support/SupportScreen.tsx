@@ -170,11 +170,11 @@ export function SupportScreen({
                     <p className="font-semibold text-sm">
                       {activeChatTicket ? 'Continue support chat' : 'Contact support'}
                     </p>
-                    <p className="text-sm text-brand-text-muted mt-0.5">
-                      {activeChatTicket
-                        ? `Resume your conversation: ${activeChatTicket.subject}`
-                        : 'Direct line to the Guardr operations team.'}
-                    </p>
+                    {activeChatTicket && (
+                      <p className="text-sm text-brand-text-muted mt-0.5">
+                        Resume your conversation: {activeChatTicket.subject}
+                      </p>
+                    )}
                   </div>
                   <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
                 </AppItemCard>

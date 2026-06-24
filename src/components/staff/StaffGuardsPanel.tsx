@@ -44,6 +44,7 @@ interface StaffGuardsPanelProps {
     guardId: string,
     options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
   ) => void | Promise<void>;
+  onSetGuardTrusted?: (guardId: string, trusted: boolean) => void | Promise<void>;
   onDeleteGuard?: (guardId: string) => void | Promise<void>;
   onSubmitIdentityVerification?: (
     guardId: string,
@@ -89,6 +90,7 @@ export function StaffGuardsPanel({
   onAddEducation,
   onApproveGuardAccount,
   onActivateGuardAccount,
+  onSetGuardTrusted,
   onDeleteGuard,
   onSubmitIdentityVerification,
   onApproveIdentityVerification,
@@ -159,6 +161,7 @@ export function StaffGuardsPanel({
       onAddEducation: onAddEducation ? (edu: Omit<GuardEducation, 'id'>) => onAddEducation(guard.id, edu) : undefined,
       onApproveGuardAccount,
       onActivateGuardAccount,
+      onSetGuardTrusted: onSetGuardTrusted ? (trusted: boolean) => onSetGuardTrusted(guard.id, trusted) : undefined,
       onDeleteGuard,
       onSubmitIdentityVerification: onSubmitIdentityVerification
         ? (payload) => onSubmitIdentityVerification(guard.id, payload)
@@ -187,9 +190,6 @@ export function StaffGuardsPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Field guards who accept jobs — staff can add profiles, edit credentials, verify documents, and manage accounts.
-            </p>
             {canManage && onAddGuard && (
               <StaffAddGuardForm
                 onAdd={onAddGuard}

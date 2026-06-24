@@ -15,6 +15,7 @@ interface StaffClientsPanelProps {
   onApproveClient: (id: string) => void;
   onRejectClient: (id: string) => void;
   onDeleteClient?: (id: string) => void | Promise<void>;
+  onSetClientTrusted?: (clientId: string, trusted: boolean) => void | Promise<void>;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   initialSelectedId?: string | null;
@@ -29,6 +30,7 @@ export function StaffClientsPanel({
   onApproveClient,
   onRejectClient,
   onDeleteClient,
+  onSetClientTrusted,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   initialSelectedId = null,
@@ -67,6 +69,7 @@ export function StaffClientsPanel({
         onApproveClient={onApproveClient}
         onRejectClient={onRejectClient}
         onDeleteClient={onDeleteClient}
+        onSetClientTrusted={onSetClientTrusted}
         onOpenJob={onOpenJob}
         onBack={options?.onBack}
       />
@@ -78,9 +81,6 @@ export function StaffClientsPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <p className="text-sm text-brand-text-muted flex-1">
-              Staff can add client accounts, approve them, and suspend or restore access.
-            </p>
             {canManage && onAddClient && (
               <StaffAddClientForm
                 onAdd={onAddClient}

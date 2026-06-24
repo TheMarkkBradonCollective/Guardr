@@ -25,7 +25,7 @@ export function GuardRosterStatusBadges({
       <div className="flex flex-nowrap items-center gap-1.5">
         <WfBadge tone={getGuardRosterAccountBadgeTone(guard)}>{getGuardRosterAccountLabel(guard)}</WfBadge>
         {guard.backgroundChecked && <WfBadge tone="primary">Background checked</WfBadge>}
-        {isGuardTrusted(guard) && <WfBadge tone="success">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
+        {isGuardTrusted(guard) && <WfBadge tone="primary">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
       </div>
       {graceNotice && (
         <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 leading-snug">

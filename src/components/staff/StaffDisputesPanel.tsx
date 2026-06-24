@@ -90,10 +90,6 @@ export function StaffDisputesPanel({
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
-      <p className="text-sm text-brand-text-muted px-4 sm:px-5 pb-4">
-        Review evidence and resolve contested charges or conflicts.
-      </p>
-
       <div className="border-t border-brand-border">
         {openDisputes.map((d) => {
           const isOvertime = d.type === 'overtime';
