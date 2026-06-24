@@ -5943,42 +5943,45 @@ export default function App() {
     await persistJobListingUpdate(requestId, existing, updates);
   };
 
-  const assignGuardToJob = async (requestId: string, guardId: string) => {
+  const assignGuardToJob = async (requestId: string, guardId: string): Promise<boolean> => {
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
-    if (!job || !guard) return;
+    if (!job) {
+      appToast('Job not found. Please refresh and try again.', 'error');
+      return false;
+    }
+    if (!guard) {
+      appToast('Guard profile not found. Please refresh and try again.', 'error');
+      return false;
+    }
     const workBlocked = guardWorkBlockedMessage(guard, job.state);
     if (workBlocked) {
       appToast(workBlocked, 'error');
-      return;
+      return false;
     }
     const { canAccept } = checkJobRequirements(guard, toGuardJobView(job, guard.id));
     if (!canAccept) {
       appToast(`${guard.name} does not meet the requirements for this job.`, 'error');
-      return;
+      return false;
     }
     const scheduleBlocked = guardScheduleConflictError(guardId, job, requests, { guardName: guard.name });
     if (scheduleBlocked) {
       appToast(scheduleBlocked, 'error');
-      return;
+      return false;
     }
     const nextApplicants = [...new Set([...job.applicants, guardId])];
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: 'accepted',
-              assignedGuardId: guardId,
-              pendingGuardId: undefined,
-              staffApprovedGuardAt: undefined,
-              applicants: nextApplicants,
-            }
-          : r
-      )
-    );
+    const previousRequest = job;
+    const acceptedJob: SecurityRequest = {
+      ...job,
+      status: 'accepted',
+      assignedGuardId: guardId,
+      pendingGuardId: undefined,
+      staffApprovedGuardAt: undefined,
+      applicants: nextApplicants,
+    };
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? acceptedJob : r)));
     if (isDbConnected) {
-      await supabase
+      const { error } = await supabase
         .from('security_requests')
         .update({
           status: 'accepted',
@@ -5988,6 +5991,12 @@ export default function App() {
           applicants: nextApplicants,
         })
         .eq('id', requestId);
+      if (error) {
+        console.error('assignGuardToJob update error:', error);
+        setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
+        appToast('Could not confirm guard. Please try again.', 'error');
+        return false;
+      }
     }
     if (currentUser && guardId !== currentUser.id) {
       void reportPushEvent(currentUser, {
@@ -6009,7 +6018,8 @@ export default function App() {
         body: `${guard.name} is booked for "${job.title}".`,
       });
     }
-    await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
+    await ensureJobChatThread(acceptedJob);
+    return true;
   };
 
   const persistTeamJobUpdate = async (
@@ -6598,8 +6608,10 @@ export default function App() {
       appToast('No guard is waiting for your approval on this job.', 'error');
       return;
     }
-    await assignGuardToJob(requestId, job.pendingGuardId);
-    appToast('Guard confirmed for this job.', 'success');
+    const assigned = await assignGuardToJob(requestId, job.pendingGuardId);
+    if (assigned) {
+      appToast('Guard confirmed for this job.', 'success');
+    }
   };
 
   const handleClientDenyPendingGuard = async (requestId: string) => {
@@ -6688,8 +6700,10 @@ export default function App() {
 
     // Direct requests: guard confirms → assign immediately (client already chose them)
     if (job.requestType === 'direct' && job.targetGuardId === activeGuardId) {
-      await assignGuardToJob(requestId, activeGuardId);
-      appToast('Job confirmed — check your schedule.', 'success');
+      const assigned = await assignGuardToJob(requestId, activeGuardId);
+      if (assigned) {
+        appToast('Job confirmed — check your schedule.', 'success');
+      }
       return;
     }
 
