@@ -1,13 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { JobChatThread, SecurityGuard, SecurityRequest, SessionUser } from '../../types';
+import { JobChatThread, SecurityGuard, SessionUser } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardHourlyPay } from '../../lib/guardJobs';
 import type { ScheduleJob } from '../../lib/guardSchedule';
-import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
-import { canGuardApproveOvertime } from '../../lib/shiftBilling';
-import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
-import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
+import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import {
   AppItemCard,
   AppItemCardStack,
@@ -15,10 +12,10 @@ import {
   AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
-import { GuardJobCard } from './GuardJobCard';
-import { CheckCircle2, Loader2, MessageCircle } from 'lucide-react';
+import { GuardJobDetailView } from './GuardJobDetailView';
 
-type JobTab = 'available' | 'upcoming' | 'past';
+export type { GuardMyJobDetailProps } from './GuardMyJobDetail';
+export { GuardMyJobDetail } from './GuardMyJobDetail';
 
 interface GuardMyJobsPanelProps {
   availableJobs: GuardJobView[];
@@ -27,8 +24,10 @@ interface GuardMyJobsPanelProps {
   guard: SecurityGuard;
   currentUser: SessionUser;
   jobChatThreads?: JobChatThread[];
-  initialSelectedJobId?: string | null;
+  selectedJobId?: string | null;
   onSelectedJobIdChange?: (jobId: string | null) => void;
+  activeTab?: GuardJobsBrowseTab;
+  onActiveTabChange?: (tab: GuardJobsBrowseTab) => void;
   onOpenMessages?: (jobId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onAcceptJob?: (jobId: string) => void;
@@ -44,135 +43,6 @@ interface GuardMyJobsPanelProps {
   ) => void | Promise<void>;
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
-}
-
-export function GuardMyJobDetail({
-  job,
-  guard,
-  jobChatThreads,
-  coworkerGuards,
-  scheduleRequests,
-  onOpenMessages,
-  onApproveOvertime,
-  onApplyAsLead,
-  onInviteGuard,
-  onRemoveGuard,
-  onUpdateCrewProfile,
-  onAcceptInvite,
-  onDeclineInvite,
-}: {
-  job: GuardJobView;
-  guard: SecurityGuard;
-  jobChatThreads: JobChatThread[];
-  coworkerGuards?: SecurityGuard[];
-  scheduleRequests?: ScheduleJob[];
-  onOpenMessages?: (jobId: string) => void;
-  onApproveOvertime?: (requestId: string) => void | Promise<void>;
-  onApplyAsLead?: (jobId: string) => void | Promise<void>;
-  onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
-  onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
-  onUpdateCrewProfile?: (
-    jobId: string,
-    patch: { crewName: string; crewDescription: string }
-  ) => void | Promise<void>;
-  onAcceptInvite?: (jobId: string) => void | Promise<void>;
-  onDeclineInvite?: (jobId: string) => void | Promise<void>;
-}) {
-  const [overtimeApproveId, setOvertimeApproveId] = useState<string | null>(null);
-  const chatEligible = isJobChatEligible(job);
-  const hasChat = chatEligible || threadForRequest(jobChatThreads, job.id);
-  const jobAsRequest = job as unknown as SecurityRequest;
-  const jobIncidents = buildIncidentReportViews([jobAsRequest], [guard]);
-  const hasIncidents = listIncidentReportsForRequest(jobAsRequest).length > 0;
-
-  return (
-    <div className="px-5 pb-8 space-y-4">
-      <GuardJobCard
-        job={job}
-        guard={guard}
-        coworkerGuards={coworkerGuards}
-        scheduleRequests={scheduleRequests}
-        onApplyAsLead={
-          onApplyAsLead && job.status === 'open'
-            ? () => void onApplyAsLead(job.id)
-            : undefined
-        }
-        onInviteGuard={
-          onInviteGuard && job.status === 'open'
-            ? (guardId) => void onInviteGuard(job.id, guardId)
-            : undefined
-        }
-        onRemoveGuard={
-          onRemoveGuard && job.status === 'open'
-            ? (guardId) => void onRemoveGuard(job.id, guardId)
-            : undefined
-        }
-        onUpdateCrewProfile={
-          onUpdateCrewProfile && job.status === 'open'
-            ? (patch) => void onUpdateCrewProfile(job.id, patch)
-            : undefined
-        }
-        onAcceptInvite={
-          onAcceptInvite && job.status === 'open'
-            ? () => void onAcceptInvite(job.id)
-            : undefined
-        }
-        onDeclineInvite={
-          onDeclineInvite && job.status === 'open'
-            ? () => void onDeclineInvite(job.id)
-            : undefined
-        }
-      />
-      {hasIncidents && (
-        <div className="space-y-3">
-          <p className="text-sm font-semibold">Incident reports filed</p>
-          {jobIncidents.map((incident) => (
-            <div key={incident.id} className="rounded-xl border border-red-500/25 bg-red-500/5 p-4">
-              <IncidentReportDetailView report={incident} compact />
-            </div>
-          ))}
-        </div>
-      )}
-      {canGuardApproveOvertime(job) && onApproveOvertime && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 space-y-3">
-          <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>
-          <p className="text-xs text-brand-text-muted leading-relaxed">
-            You clocked out {(job.overtimeHours ?? 0)}h after scheduled end.
-            Confirm to request ${(job.overtimeGuardEarnings ?? 0).toFixed(2)} in additional pay.
-          </p>
-          <button
-            type="button"
-            onClick={async () => {
-              setOvertimeApproveId(job.id);
-              try {
-                await onApproveOvertime(job.id);
-              } finally {
-                setOvertimeApproveId(null);
-              }
-            }}
-            disabled={overtimeApproveId === job.id}
-            className="w-full app-button-primary !h-10 gap-1.5 disabled:opacity-50"
-          >
-            {overtimeApproveId === job.id ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
-            ) : (
-              <><CheckCircle2 className="w-4 h-4" /> Approve overtime</>
-            )}
-          </button>
-        </div>
-      )}
-      {onOpenMessages && hasChat && (
-        <button
-          type="button"
-          onClick={() => onOpenMessages(job.id)}
-          className="w-full app-button-outline !h-11 flex items-center justify-center gap-2"
-        >
-          <MessageCircle className="w-4 h-4" />
-          {chatEligible ? 'Message client' : 'View job chat'}
-        </button>
-      )}
-    </div>
-  );
 }
 
 function JobRow({
@@ -204,7 +74,7 @@ function JobRow({
   );
 }
 
-const TAB_OPTIONS: { id: JobTab; label: string }[] = [
+const TAB_OPTIONS: { id: GuardJobsBrowseTab; label: string }[] = [
   { id: 'available', label: 'Available' },
   { id: 'upcoming', label: 'Upcoming' },
   { id: 'past', label: 'Past' },
@@ -216,8 +86,10 @@ export function GuardMyJobsPanel({
   pastJobs,
   guard,
   jobChatThreads = [],
-  initialSelectedJobId = null,
+  selectedJobId: selectedJobIdProp,
   onSelectedJobIdChange,
+  activeTab: activeTabProp,
+  onActiveTabChange,
   onOpenMessages,
   onApproveOvertime,
   onAcceptJob,
@@ -231,19 +103,33 @@ export function GuardMyJobsPanel({
   onAcceptInvite,
   onDeclineInvite,
 }: GuardMyJobsPanelProps) {
-  const [activeTab, setActiveTab] = useState<JobTab>('available');
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedJobId);
+  const [internalTab, setInternalTab] = useState<GuardJobsBrowseTab>('available');
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (initialSelectedJobId) {
-      setSelectedId(initialSelectedJobId);
-    }
-  }, [initialSelectedJobId]);
+  const activeTab = activeTabProp ?? internalTab;
+  const selectedId = selectedJobIdProp !== undefined ? selectedJobIdProp : internalSelectedId;
+
+  const setActiveTab = (tab: GuardJobsBrowseTab) => {
+    if (activeTabProp === undefined) setInternalTab(tab);
+    onActiveTabChange?.(tab);
+  };
 
   const updateSelectedId = (jobId: string | null) => {
-    setSelectedId(jobId);
+    if (selectedJobIdProp === undefined) setInternalSelectedId(jobId);
     onSelectedJobIdChange?.(jobId);
   };
+
+  useEffect(() => {
+    if (selectedJobIdProp !== undefined) {
+      setInternalSelectedId(selectedJobIdProp);
+    }
+  }, [selectedJobIdProp]);
+
+  useEffect(() => {
+    if (activeTabProp !== undefined) {
+      setInternalTab(activeTabProp);
+    }
+  }, [activeTabProp]);
 
   const allJobs = useMemo(
     () => [...availableJobs, ...upcomingJobs, ...pastJobs],
@@ -251,65 +137,45 @@ export function GuardMyJobsPanel({
   );
   const selectedJob = allJobs.find((j) => j.id === selectedId) ?? null;
 
+  const detailHandlers = (job: GuardJobView) => ({
+    onAccept: onAcceptJob ? () => { onAcceptJob(job.id); updateSelectedId(null); } : undefined,
+    onDeclineDirectJob:
+      onDeclineDirectJob && job.requestType === 'direct'
+        ? () => { void onDeclineDirectJob(job.id); updateSelectedId(null); }
+        : undefined,
+    onApplyAsLead: onApplyAsLead ? () => void onApplyAsLead(job.id) : undefined,
+    onInviteGuard: onInviteGuard ? (guardId: string) => void onInviteGuard(job.id, guardId) : undefined,
+    onRemoveGuard: onRemoveGuard ? (guardId: string) => void onRemoveGuard(job.id, guardId) : undefined,
+    onUpdateCrewProfile: onUpdateCrewProfile
+      ? (patch: { crewName: string; crewDescription: string }) =>
+          void onUpdateCrewProfile(job.id, patch)
+      : undefined,
+    onAcceptInvite: onAcceptInvite ? () => void onAcceptInvite(job.id) : undefined,
+    onDeclineInvite: onDeclineInvite ? () => void onDeclineInvite(job.id) : undefined,
+  });
+
   if (selectedJob) {
-    const isAvailable = selectedJob.status === 'open';
     return (
       <AppScreen className="app-full-page-detail">
         <AppSubScreenHeader title={selectedJob.title} onBack={() => updateSelectedId(null)} />
-        {isAvailable ? (
-          <div className="px-5 pb-8">
-            <GuardJobCard
-              job={selectedJob}
-              guard={guard}
-              coworkerGuards={coworkerGuards}
-              scheduleRequests={scheduleRequests}
-              onAccept={onAcceptJob ? () => { onAcceptJob(selectedJob.id); updateSelectedId(null); } : undefined}
-              onDeclineDirectJob={
-                onDeclineDirectJob && selectedJob.requestType === 'direct'
-                  ? () => { void onDeclineDirectJob(selectedJob.id); updateSelectedId(null); }
-                  : undefined
-              }
-              onApplyAsLead={onApplyAsLead ? () => void onApplyAsLead(selectedJob.id) : undefined}
-              onInviteGuard={
-                onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
-              }
-              onRemoveGuard={
-                onRemoveGuard ? (guardId) => void onRemoveGuard(selectedJob.id, guardId) : undefined
-              }
-              onUpdateCrewProfile={
-                onUpdateCrewProfile
-                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
-                  : undefined
-              }
-              onAcceptInvite={onAcceptInvite ? () => void onAcceptInvite(selectedJob.id) : undefined}
-              onDeclineInvite={onDeclineInvite ? () => void onDeclineInvite(selectedJob.id) : undefined}
-              onClose={() => updateSelectedId(null)}
-            />
-          </div>
-        ) : (
-          <GuardMyJobDetail
-            job={selectedJob}
-            guard={guard}
-            jobChatThreads={jobChatThreads}
-            coworkerGuards={coworkerGuards}
-            scheduleRequests={scheduleRequests}
-            onOpenMessages={onOpenMessages}
-            onApproveOvertime={onApproveOvertime}
-            onApplyAsLead={onApplyAsLead}
-            onInviteGuard={onInviteGuard}
-            onRemoveGuard={onRemoveGuard}
-            onUpdateCrewProfile={onUpdateCrewProfile}
-            onAcceptInvite={onAcceptInvite}
-            onDeclineInvite={onDeclineInvite}
-          />
-        )}
+        <GuardJobDetailView
+          job={selectedJob}
+          guard={guard}
+          jobChatThreads={jobChatThreads}
+          coworkerGuards={coworkerGuards}
+          scheduleRequests={scheduleRequests}
+          onOpenMessages={onOpenMessages}
+          onApproveOvertime={onApproveOvertime}
+          onClose={() => updateSelectedId(null)}
+          {...detailHandlers(selectedJob)}
+        />
       </AppScreen>
     );
   }
 
   return (
     <AppScreen>
-      <AppSegmentedControl<JobTab>
+      <AppSegmentedControl<GuardJobsBrowseTab>
         options={TAB_OPTIONS}
         value={activeTab}
         onChange={setActiveTab}

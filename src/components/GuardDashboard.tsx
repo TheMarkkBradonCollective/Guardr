@@ -18,13 +18,20 @@ import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
-import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, guardMapShouldRouteToJob, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
+import { guardMapPinKind, GUARD_MAP_STATUS_FILTERS, guardMapShouldRouteToJob, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
+import {
+  filterGuardBrowseJobs,
+  getGuardBrowseJobLists,
+  guardBrowseTabFromMapFilter,
+  mapFilterFromBrowseTab,
+  type GuardJobsBrowseTab,
+} from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
-import { GuardJobCard } from './guard/GuardJobCard';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
-import { GuardMyJobsPanel, GuardMyJobDetail } from './guard/GuardMyJobsPanel';
+import { GuardJobDetailView } from './guard/GuardJobDetailView';
+import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
@@ -43,22 +50,19 @@ import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
 import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users } from 'lucide-react';
 import {
-  filterJobsByCategory,
   guardCanApplyToJob,
   guardCanViewJob,
   checkJobRequirements,
-  JobCategoryId,
   loadShiftPhase,
   saveShiftPhase,
   ShiftPhase,
-  sortJobs,
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
 import { getCoordinatingCrewJobs, getOpenCrewLeadOpportunities } from '../lib/guardTeams';
 import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
-import { GuardJobView, GuardPayoutView, toGuardJobView } from '../lib/guardJobView';
+import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
@@ -263,13 +267,12 @@ export function GuardDashboard({
   useEffect(() => {
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [myJobsSelectedJobId, setMyJobsSelectedJobId] = useState<string | null>(null);
+  const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
+  const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
   const [mapRouteLoading, setMapRouteLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
   const [showSelfAudit, setShowSelfAudit] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showLateClockOutPrompt, setShowLateClockOutPrompt] = useState(false);
@@ -284,40 +287,25 @@ export function GuardDashboard({
   const [connectPending, setConnectPending] = useState(false);
   const [connectReady, setConnectReady] = useState(false);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
-  const availableJobs = useMemo(
-    () => requests.filter((r) => guardCanViewJob(guard, r)),
-    [requests, guard]
+
+  const browseJobLists = useMemo(
+    () => getGuardBrowseJobLists(guard.id, requests),
+    [guard.id, requests]
   );
+
+  const upcomingForMessages = useMemo(() => {
+    const inProgress = requests.filter(
+      (r) => r.assignedGuardId === guard.id && r.status === 'in-progress'
+    );
+    return [...inProgress, ...browseJobLists.upcoming];
+  }, [requests, guard.id, browseJobLists.upcoming]);
+
   const assignedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status !== 'completed' && r.status !== 'closed'),
     [requests, guard.id]
   );
   const completedJobs = useMemo(
     () => requests.filter((r) => r.assignedGuardId === guard.id && r.status === 'completed'),
-    [requests, guard.id]
-  );
-
-  const upcomingMyJobs = useMemo(
-    () =>
-      requests
-        .filter(
-          (r) =>
-            r.assignedGuardId === guard.id &&
-            (r.status === 'accepted' || r.status === 'in-progress')
-        )
-        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
-    [requests, guard.id]
-  );
-
-  const pastMyJobs = useMemo(
-    () =>
-      requests
-        .filter(
-          (r) =>
-            r.assignedGuardId === guard.id &&
-            (r.status === 'completed' || r.status === 'closed')
-        )
-        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()),
     [requests, guard.id]
   );
 
@@ -333,34 +321,10 @@ export function GuardDashboard({
     return shiftPhases[activeShiftJob.id] ?? loadShiftPhase(guard.id, activeShiftJob.id);
   }, [activeShiftJob, shiftPhases, guard.id]);
 
-  const filteredBrowseJobs = useMemo(
-    () =>
-      sortJobs(
-        filterJobsByCategory(
-          availableJobs.filter(
-            (j) =>
-              j.assignedGuardId !== guard.id &&
-              !(j.status === 'accepted' && j.assignedGuardId === guard.id)
-          ),
-          selectedCategory
-        ),
-        'distance'
-      ),
-    [availableJobs, selectedCategory, guard.id]
+  const selectedJob = useMemo(
+    () => browseJobLists.all.find((j) => j.id === guardSelectedJobId) ?? null,
+    [browseJobLists.all, guardSelectedJobId]
   );
-
-  const scheduledMapJobs = useMemo(
-    () =>
-      assignedJobs.filter(
-        (j) => j.status === 'accepted' && j.assignedGuardId === guard.id
-      ),
-    [assignedJobs, guard.id]
-  );
-
-  const selectedJob = useMemo(() => {
-    const visible = guardVisibleMapJobs(guard.id, requests, requests);
-    return visible.find((j) => j.id === selectedJobId) ?? null;
-  }, [requests, guard.id, selectedJobId]);
 
   const selectedJobShouldRoute = useMemo(
     () =>
@@ -371,37 +335,72 @@ export function GuardDashboard({
   );
 
   const mapJobs = useMemo(() => {
-    const visible = guardVisibleMapJobs(guard.id, requests, requests);
     const onDutyOverlay =
       activeTab === 'map' &&
       activeShiftJob?.status === 'in-progress' &&
       activePhase &&
       activePhase !== 'complete';
-    const base = onDutyOverlay
-      ? visible.filter((j) => j.status === 'in-progress' && j.assignedGuardId === guard.id)
-      : visible.filter((j) => j.status !== 'in-progress');
-    if (onDutyOverlay) return base;
-    return base.filter((j) =>
-      guardJobMatchesMapStatusFilter(guard.id, j as unknown as SecurityRequest, mapStatusFilter)
-    );
-  }, [requests, guard.id, activeTab, activeShiftJob, activePhase, mapStatusFilter]);
+    if (onDutyOverlay) {
+      return requests.filter(
+        (j) => j.status === 'in-progress' && j.assignedGuardId === guard.id
+      );
+    }
+    return filterGuardBrowseJobs(guard.id, browseJobLists.all, mapStatusFilter);
+  }, [
+    requests,
+    guard.id,
+    activeTab,
+    activeShiftJob,
+    activePhase,
+    mapStatusFilter,
+    browseJobLists.all,
+  ]);
 
   useEffect(() => {
-    if (selectedJobId && !mapJobs.some((j) => j.id === selectedJobId)) {
-      setSelectedJobId(null);
+    if (
+      guardSelectedJobId &&
+      activeTab === 'map' &&
+      !(
+        activeShiftJob?.status === 'in-progress' &&
+        activePhase &&
+        activePhase !== 'complete'
+      ) &&
+      !mapJobs.some((j) => j.id === guardSelectedJobId)
+    ) {
+      setGuardSelectedJobId(null);
       setMapRoute(null);
       setMapRouteLoading(false);
     }
-  }, [mapJobs, selectedJobId]);
+  }, [mapJobs, guardSelectedJobId, activeTab, activeShiftJob, activePhase]);
 
-  const browseMapJobs = useMemo(() => {
-    const visible = guardVisibleMapJobs(guard.id, requests, requests);
-    return visible.filter((j) => j.status !== 'in-progress');
-  }, [requests, guard.id]);
+  const handleMapFilterChange = useCallback((filter: GuardMapStatusFilter) => {
+    setMapStatusFilter(filter);
+    if (filter !== 'all') {
+      setGuardBrowseTab(guardBrowseTabFromMapFilter(filter));
+    }
+  }, []);
 
-  const availableJobsForPanel = useMemo(
-    () => browseMapJobs.filter((j) => j.status === 'open'),
-    [browseMapJobs]
+  const handleBrowseTabChange = useCallback((tab: GuardJobsBrowseTab) => {
+    setGuardBrowseTab(tab);
+    setMapStatusFilter(mapFilterFromBrowseTab(tab));
+  }, []);
+
+  const handleGuardSelectedJobChange = useCallback(
+    (jobId: string | null) => {
+      setGuardSelectedJobId(jobId);
+      if (!jobId) {
+        setMapRoute(null);
+        setMapRouteLoading(false);
+        return;
+      }
+      const job = browseJobLists.all.find((j) => j.id === jobId);
+      if (!job) return;
+      const kind = guardMapPinKind(guard.id, job as unknown as SecurityRequest);
+      if (kind === 'available') handleBrowseTabChange('available');
+      else if (kind === 'scheduled') handleBrowseTabChange('upcoming');
+      else if (kind === 'past') handleBrowseTabChange('past');
+    },
+    [browseJobLists.all, guard.id, handleBrowseTabChange]
   );
 
   const userLocation = useUserLocation(activeTab === 'map');
@@ -520,7 +519,7 @@ export function GuardDashboard({
       return;
     }
     onAcceptJob(jobId);
-    setSelectedJobId(null);
+    setGuardSelectedJobId(null);
   };
 
   const handleArrived = async () => {
@@ -848,7 +847,7 @@ export function GuardDashboard({
         <MapPinFilterStepper
           filters={GUARD_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
-          onChange={setMapStatusFilter}
+          onChange={handleMapFilterChange}
           onZoomIn={() => mapZoomRef.current?.zoomIn()}
           onZoomOut={() => mapZoomRef.current?.zoomOut()}
           routeSlot={
@@ -866,8 +865,8 @@ export function GuardDashboard({
       {activeTab === 'map' && (
         <ShiftMap
           jobs={mapJobs}
-          selectedJobId={selectedJobId}
-          onSelectJob={setSelectedJobId}
+          selectedJobId={guardSelectedJobId}
+          onSelectJob={handleGuardSelectedJobChange}
           drawRoute={selectedJobShouldRoute}
           onRouteChange={setMapRoute}
           onRouteLoadingChange={setMapRouteLoading}
@@ -904,76 +903,49 @@ export function GuardDashboard({
           layout="detail"
           route={mapRoute}
           loadingRoute={mapRouteLoading}
-          onClose={() => {
-            setSelectedJobId(null);
-            setMapRoute(null);
-            setMapRouteLoading(false);
-          }}
+          onClose={() => handleGuardSelectedJobChange(null)}
           bottomOffsetClass="map-browse-offset"
           detailActions={
-            selectedJob.status === 'open' ? (
-              <div className="px-5 pb-8">
-                <GuardJobCard
-                job={selectedJob}
-                guard={guard}
-                coworkerGuards={coworkerGuards}
-                scheduleRequests={requests}
-                onAccept={() => handleAcceptJob(selectedJob.id)}
-                onDeclineDirectJob={
-                  onDeclineDirectJob && selectedJob.requestType === 'direct'
-                    ? () => void onDeclineDirectJob(selectedJob.id)
-                    : undefined
-                }
-                onApplyAsLead={
-                  onApplyAsTeamLead && selectedJob.status === 'open'
-                    ? () => void onApplyAsTeamLead(selectedJob.id)
-                    : undefined
-                }
-                onInviteGuard={
-                  onInviteTeamGuard && selectedJob.status === 'open'
-                    ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
-                    : undefined
-                }
-                onRemoveGuard={
-                  onRemoveTeamGuard && selectedJob.status === 'open'
-                    ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
-                    : undefined
-                }
-                onUpdateCrewProfile={
-                  onUpdateCrewProfile && selectedJob.status === 'open'
-                    ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
-                    : undefined
-                }
-                onAcceptInvite={
-                  onAcceptTeamInvite && selectedJob.status === 'open'
-                    ? () => void onAcceptTeamInvite(selectedJob.id)
-                    : undefined
-                }
-                onDeclineInvite={
-                  onDeclineTeamInvite && selectedJob.status === 'open'
-                    ? () => void onDeclineTeamInvite(selectedJob.id)
-                    : undefined
-                }
-                onClose={() => setSelectedJobId(null)}
-              />
-              </div>
-            ) : (
-              <GuardMyJobDetail
-                job={selectedJob}
-                guard={guard}
-                jobChatThreads={jobChatThreads}
-                coworkerGuards={coworkerGuards}
-                scheduleRequests={requests}
-                onOpenMessages={openMessagesForJob}
-                onApproveOvertime={onApproveOvertime}
-                onApplyAsLead={onApplyAsTeamLead}
-                onInviteGuard={onInviteTeamGuard}
-                onRemoveGuard={onRemoveTeamGuard}
-                onUpdateCrewProfile={onUpdateCrewProfile}
-                onAcceptInvite={onAcceptTeamInvite}
-                onDeclineInvite={onDeclineTeamInvite}
-              />
-            )
+            <GuardJobDetailView
+              job={selectedJob}
+              guard={guard}
+              jobChatThreads={jobChatThreads}
+              coworkerGuards={coworkerGuards}
+              scheduleRequests={requests}
+              onAccept={() => handleAcceptJob(selectedJob.id)}
+              onDeclineDirectJob={
+                onDeclineDirectJob && selectedJob.requestType === 'direct'
+                  ? () => void onDeclineDirectJob(selectedJob.id)
+                  : undefined
+              }
+              onApplyAsLead={
+                onApplyAsTeamLead ? () => void onApplyAsTeamLead(selectedJob.id) : undefined
+              }
+              onInviteGuard={
+                onInviteTeamGuard
+                  ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
+                  : undefined
+              }
+              onRemoveGuard={
+                onRemoveTeamGuard
+                  ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
+                  : undefined
+              }
+              onUpdateCrewProfile={
+                onUpdateCrewProfile
+                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+                  : undefined
+              }
+              onAcceptInvite={
+                onAcceptTeamInvite ? () => void onAcceptTeamInvite(selectedJob.id) : undefined
+              }
+              onDeclineInvite={
+                onDeclineTeamInvite ? () => void onDeclineTeamInvite(selectedJob.id) : undefined
+              }
+              onOpenMessages={openMessagesForJob}
+              onApproveOvertime={onApproveOvertime}
+              onClose={() => handleGuardSelectedJobChange(null)}
+            />
           }
         />
       )}
@@ -1005,18 +977,21 @@ export function GuardDashboard({
           {tab === 'myJobs' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <GuardMyJobsPanel
-                availableJobs={availableJobsForPanel}
-                upcomingJobs={upcomingMyJobs}
-                pastJobs={pastMyJobs}
+                availableJobs={browseJobLists.available}
+                upcomingJobs={browseJobLists.upcoming}
+                pastJobs={browseJobLists.past}
                 guard={guard}
                 currentUser={currentUser}
                 coworkerGuards={coworkerGuards}
                 jobChatThreads={jobChatThreads}
                 scheduleRequests={requests}
-                onSelectedJobIdChange={setMyJobsSelectedJobId}
+                selectedJobId={guardSelectedJobId}
+                onSelectedJobIdChange={handleGuardSelectedJobChange}
+                activeTab={guardBrowseTab}
+                onActiveTabChange={handleBrowseTabChange}
                 onOpenMessages={openMessagesForJob}
                 onApproveOvertime={onApproveOvertime}
-                onAcceptJob={onAcceptJob}
+                onAcceptJob={handleAcceptJob}
                 onDeclineDirectJob={onDeclineDirectJob}
                 onApplyAsLead={onApplyAsTeamLead}
                 onInviteGuard={onInviteTeamGuard}
@@ -1068,8 +1043,8 @@ export function GuardDashboard({
                 />
               ) : (
                 <GuardMessagesPanel
-                  upcomingJobs={upcomingMyJobs}
-                  pastJobs={pastMyJobs}
+                  upcomingJobs={upcomingForMessages}
+                  pastJobs={browseJobLists.past}
                   guard={guard}
                   coworkerGuards={coworkerGuards}
                   currentUser={currentUser}
@@ -1285,7 +1260,7 @@ export function GuardDashboard({
 
   const shellHideHeader =
     tab === 'messages' ||
-    (tab === 'myJobs' && !!myJobsSelectedJobId);
+    (tab === 'myJobs' && !!guardSelectedJobId);
 
   return (
     <RoleAppShell

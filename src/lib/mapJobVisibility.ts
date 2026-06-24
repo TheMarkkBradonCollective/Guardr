@@ -116,7 +116,7 @@ export const GUARD_MAP_STATUS_FILTERS: { id: GuardMapStatusFilter; label: string
   { id: 'all', label: 'All' },
   { id: 'available', label: 'Available' },
   { id: 'upcoming', label: 'Upcoming' },
-  { id: 'complete', label: 'Complete' },
+  { id: 'complete', label: 'Past' },
 ];
 
 export const CLIENT_MAP_STATUS_FILTERS: { id: ClientMapStatusFilter; label: string }[] = [
