@@ -1739,7 +1739,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   max-width: min(92vw, 22rem);
 }
 
-/* Map status filter: −/+ stacked top-left, label top-right */
+/* Map controls: zoom +/− stacked top-left, tap filter pill top-right */
 .map-filter-stepper {
   position: absolute;
   inset: 0;
@@ -1786,7 +1786,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   right: 0.875rem;
   left: auto;
   transform: none;
-  pointer-events: none;
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1803,6 +1803,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   text-transform: uppercase;
   color: var(--brand-text);
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.map-filter-step-label:hover {
+  background: color-mix(in srgb, var(--brand-surface) 100%, transparent);
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+}
+
+.map-filter-step-label:active {
+  transform: scale(0.97);
 }
 
 .guard-map-layout .map-route-banner,
