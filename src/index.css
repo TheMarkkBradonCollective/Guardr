@@ -1739,7 +1739,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   max-width: min(92vw, 22rem);
 }
 
-/* Map status filter: − top-left, label center, + top-right */
+/* Map status filter: −/+ stacked top-left, label top-right */
 .map-filter-stepper {
   position: absolute;
   inset: 0;
@@ -1747,10 +1747,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   pointer-events: none;
 }
 
-.map-filter-step-btn {
+.map-filter-step-controls {
   position: absolute;
   top: 10px;
+  left: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
   pointer-events: auto;
+}
+
+.map-filter-step-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1762,14 +1769,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   box-shadow: var(--shadow-float);
   color: var(--brand-text);
   transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.map-filter-step-btn--minus {
-  left: 0.875rem;
-}
-
-.map-filter-step-btn--plus {
-  right: 0.875rem;
 }
 
 .map-filter-step-btn:hover {
@@ -1784,8 +1783,9 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 .map-filter-step-label {
   position: absolute;
   top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0.875rem;
+  left: auto;
+  transform: none;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -1807,7 +1807,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .guard-map-layout .map-route-banner,
 .client-map-layout .map-route-banner {
-  top: calc(10px + 2.75rem + 0.5rem);
+  top: calc(10px + 6rem + 0.5rem);
 }
 
 .map-selection-layer {
@@ -2321,7 +2321,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
-  top: calc(10px + 2.75rem + 0.5rem);
+  top: calc(10px + 6rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: 18rem;
@@ -2656,7 +2656,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
 
 body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
-  top: calc(10px + 2.75rem + 0.5rem);
+  top: calc(10px + 6rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: min(calc(62vw - 2rem), 20rem);

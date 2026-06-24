@@ -30,25 +30,26 @@ export function MapPinFilterStepper<T extends string>({
 
   return (
     <div className="map-filter-stepper" role="group" aria-label="Map job filter">
-      <button
-        type="button"
-        className="map-filter-step-btn map-filter-step-btn--minus"
-        onClick={() => step(-1)}
-        aria-label={`Previous filter: ${filters[(currentIndex - 1 + filters.length) % filters.length].label}`}
-      >
-        <Minus className="w-4 h-4" strokeWidth={2.5} />
-      </button>
+      <div className="map-filter-step-controls">
+        <button
+          type="button"
+          className="map-filter-step-btn"
+          onClick={() => step(-1)}
+          aria-label={`Previous filter: ${filters[(currentIndex - 1 + filters.length) % filters.length].label}`}
+        >
+          <Minus className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          className="map-filter-step-btn"
+          onClick={() => step(1)}
+          aria-label={`Next filter: ${filters[(currentIndex + 1) % filters.length].label}`}
+        >
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+      </div>
 
       <span className="map-filter-step-label">{current.label}</span>
-
-      <button
-        type="button"
-        className="map-filter-step-btn map-filter-step-btn--plus"
-        onClick={() => step(1)}
-        aria-label={`Next filter: ${filters[(currentIndex + 1) % filters.length].label}`}
-      >
-        <Plus className="w-4 h-4" strokeWidth={2.5} />
-      </button>
     </div>
   );
 }
