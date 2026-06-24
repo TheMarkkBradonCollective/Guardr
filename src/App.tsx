@@ -1375,6 +1375,7 @@ export default function App() {
         priorSecurityProvider: c.prior_security_provider ?? undefined,
         specialRequirements: c.special_requirements ?? undefined,
         trusted: c.trusted === true,
+        favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
       };
       }));
 
@@ -3256,6 +3257,31 @@ export default function App() {
       if (error) {
         setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, trusted: !trusted } : c)));
         appToast('Could not update client trusted status.', 'error');
+      }
+    }
+  };
+
+  const handleToggleFavoriteGuard = async (guardId: string) => {
+    if (!currentUser) return;
+    const clientId = currentUser.id;
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    const existing = client.favoriteGuardIds ?? [];
+    const isFav = existing.includes(guardId);
+    const next = isFav ? existing.filter((id) => id !== guardId) : [...existing, guardId];
+    setClients((prev) =>
+      prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: next } : c))
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('clients')
+        .update({ favorite_guard_ids: next })
+        .eq('id', clientId);
+      if (error) {
+        setClients((prev) =>
+          prev.map((c) => (c.id === clientId ? { ...c, favoriteGuardIds: existing } : c))
+        );
+        appToast('Could not update favourites.', 'error');
       }
     }
   };
@@ -6831,6 +6857,8 @@ export default function App() {
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
+              favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
+              onToggleFavoriteGuard={handleToggleFavoriteGuard}
               paymentGates={clientPaymentGatesMemo}
               feeConfig={platformSettings.feeConfig}
               currentUser={currentUser}

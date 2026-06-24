@@ -176,6 +176,9 @@ export interface Client {
    * Trusted clients skip the job posting approval queue for non-cash jobs.
    */
   trusted?: boolean;
+
+  /** Guard IDs this client has favourited — shown first in the guard directory. */
+  favoriteGuardIds?: string[];
 }
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'held' | 'released';
