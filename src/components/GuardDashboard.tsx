@@ -20,7 +20,8 @@ import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
 import { MapBrowseDock } from './map/MapBrowseDock';
 import { guardMapBrowseItems } from '../lib/mapBrowseItems';
-import { guardVisibleMapJobs } from '../lib/mapJobVisibility';
+import { guardVisibleMapJobs, guardMapPinKind } from '../lib/mapJobVisibility';
+import type { SecurityRequest } from '../types';
 import { GuardJobCard } from './guard/GuardJobCard';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
@@ -832,6 +833,7 @@ export function GuardDashboard({
           onSelectJob={setSelectedJobId}
           onRouteChange={setMapRoute}
           onRouteLoadingChange={setMapRouteLoading}
+          getPinKind={(job) => guardMapPinKind(guard.id, job as unknown as SecurityRequest)}
         />
       )}
 

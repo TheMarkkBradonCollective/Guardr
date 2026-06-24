@@ -1640,6 +1640,72 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   background: color-mix(in srgb, var(--brand-primary) 75%, #ef4444);
 }
 
+/* ─── Pin kind colors (status-coded blips, matching browse chip palette) ─── */
+.guardr-shift-pin-kind--available .guardr-shift-pin-inner,
+.guardr-shift-pin-kind--open .guardr-shift-pin-inner {
+  background: #059669;
+  color: #ffffff;
+}
+.guardr-shift-pin-kind--live .guardr-shift-pin-inner {
+  background: #dc2626;
+  color: #ffffff;
+}
+.guardr-shift-pin-kind--scheduled .guardr-shift-pin-inner,
+.guardr-shift-pin-kind--upcoming .guardr-shift-pin-inner {
+  background: #d97706;
+  color: #ffffff;
+}
+.guardr-shift-pin-kind--past .guardr-shift-pin-inner {
+  background: var(--brand-text-muted);
+  color: var(--brand-bg);
+  opacity: 0.72;
+}
+.guardr-shift-pin-kind--cancelled .guardr-shift-pin-inner {
+  background: #ef4444;
+  color: #ffffff;
+  opacity: 0.78;
+}
+
+/* Selection glow ring tinted to match each kind (kind + selected are sibling classes on outer div) */
+.guardr-shift-pin-kind--available.guardr-shift-pin-selected .guardr-shift-pin-inner,
+.guardr-shift-pin-kind--open.guardr-shift-pin-selected .guardr-shift-pin-inner {
+  box-shadow: 0 0 0 6px color-mix(in srgb, #059669 30%, transparent), var(--shadow-float);
+}
+.guardr-shift-pin-kind--live.guardr-shift-pin-selected .guardr-shift-pin-inner {
+  box-shadow: 0 0 0 6px color-mix(in srgb, #dc2626 30%, transparent), var(--shadow-float);
+}
+.guardr-shift-pin-kind--scheduled.guardr-shift-pin-selected .guardr-shift-pin-inner,
+.guardr-shift-pin-kind--upcoming.guardr-shift-pin-selected .guardr-shift-pin-inner {
+  box-shadow: 0 0 0 6px color-mix(in srgb, #d97706 30%, transparent), var(--shadow-float);
+}
+
+/* ─── Locate / center-on-me button (SBN-style) ──────────────────────────── */
+.guardr-map-locate-btn {
+  position: absolute;
+  right: 0.875rem;
+  /* float above bottom nav + browse dock; z-index sits above both */
+  bottom: calc(8.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 1004;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-float);
+  color: var(--brand-primary);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  touch-action: manipulation;
+}
+.guardr-map-locate-btn:active {
+  background: var(--brand-bg-sec);
+  box-shadow: var(--shadow-sm);
+  transform: scale(0.94);
+}
+
 .guardr-guard-pin-inner {
   width: 18px;
   height: 18px;

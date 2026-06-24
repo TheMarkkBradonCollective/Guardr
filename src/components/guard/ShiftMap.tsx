@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
@@ -37,20 +37,68 @@ function loadSavedViewport(): SavedViewport | null {
   }
 }
 
-function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean) {
+function createShiftIcon(hourlyPay: number, selected: boolean, armed: boolean, kind?: string | null) {
+  // All modifier classes go on the outer div so that CSS descendant selectors work:
+  //   .guardr-shift-pin-selected .guardr-shift-pin-inner { ... }
+  const mods = [
+    kind ? `guardr-shift-pin-kind--${kind}` : '',
+    selected ? 'guardr-shift-pin-selected' : '',
+    armed ? 'guardr-shift-pin-armed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return L.divIcon({
-    className: 'guardr-shift-pin',
-    html: `<div class="guardr-shift-pin-inner ${selected ? 'guardr-shift-pin-selected' : ''} ${armed ? 'guardr-shift-pin-armed' : ''}">$${hourlyPay}</div>`,
+    className: `guardr-shift-pin${mods ? ` ${mods}` : ''}`,
+    html: `<div class="guardr-shift-pin-inner">$${hourlyPay}</div>`,
     iconSize: [48, 48],
     iconAnchor: [24, 24],
   });
 }
 
-function MapRecenter({ center, zoom }: { center: [number, number]; zoom: number }) {
+interface MapControllerProps {
+  selectedPin: { coords: { lat: number; lng: number }; job: { id: string } } | null;
+  userLocation: { lat: number; lng: number } | null;
+  hadSavedViewport: boolean;
+  recenterRef: React.MutableRefObject<(() => void) | null>;
+}
+
+/**
+ * SBN-style map controller: centers once on first GPS fix (if no saved viewport),
+ * flies to a pin when it is first selected, and exposes a recenter callback for the
+ * locate button. Does NOT auto-follow the user — free roam otherwise.
+ */
+function MapController({ selectedPin, userLocation, hadSavedViewport, recenterRef }: MapControllerProps) {
   const map = useMap();
+  const prevSelectedPinIdRef = useRef<string | null>(null);
+  const hasInitialGPSCenteredRef = useRef(false);
+
+  // Keep the recenter callback current so the locate button always flies to latest position
   useEffect(() => {
-    map.flyTo(center, zoom, { animate: true, duration: 0.75 });
-  }, [center, zoom, map]);
+    recenterRef.current = () => {
+      if (userLocation) {
+        map.flyTo([userLocation.lat, userLocation.lng], 14, { animate: true, duration: 0.75 });
+      }
+    };
+  }, [userLocation, map, recenterRef]);
+
+  // Center once on the first GPS fix — only when there is no saved viewport (fresh session)
+  useEffect(() => {
+    if (userLocation && !hasInitialGPSCenteredRef.current) {
+      hasInitialGPSCenteredRef.current = true;
+      if (!hadSavedViewport) {
+        map.flyTo([userLocation.lat, userLocation.lng], 14, { animate: true, duration: 0.75 });
+      }
+    }
+  }, [userLocation, map, hadSavedViewport]);
+
+  // Fly to a pin the moment it becomes selected (not on every re-render)
+  useEffect(() => {
+    if (selectedPin && selectedPin.job.id !== prevSelectedPinIdRef.current) {
+      map.flyTo([selectedPin.coords.lat, selectedPin.coords.lng], 14, { animate: true, duration: 0.75 });
+    }
+    prevSelectedPinIdRef.current = selectedPin?.job.id ?? null;
+  }, [selectedPin, map]);
+
   return null;
 }
 
@@ -81,6 +129,8 @@ interface ShiftMapProps {
   drawRoute?: boolean;
   onRouteChange?: (route: MapRouteSummary | null) => void;
   onRouteLoadingChange?: (loading: boolean) => void;
+  /** Return the status kind for a job to color-code its blip. Return null to use the default brand color. */
+  getPinKind?: (job: ShiftMapJob) => string | null;
 }
 
 function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff' | 'client'): number {
@@ -99,10 +149,12 @@ export function ShiftMap({
   drawRoute = true,
   onRouteChange,
   onRouteLoadingChange,
+  getPinKind,
 }: ShiftMapProps) {
   const themeMode = useThemeMode();
   const userLocation = useUserLocation(true);
   const userLocStyle = mapUserLocationColors(themeMode);
+  const recenterRef = useRef<(() => void) | null>(null);
 
   const jobPins = useMemo(
     () =>
@@ -120,15 +172,18 @@ export function ShiftMap({
     [jobPins, selectedJobId]
   );
 
+  // Computed once at mount — MapContainer only uses center/zoom props for initial placement
   const savedViewport = useMemo(() => loadSavedViewport(), []);
+  const hadSavedViewport = useMemo(() => !!savedViewport, [savedViewport]);
 
-  const mapCenter: [number, number] = useMemo(() => {
-    if (selectedPin) return [selectedPin.coords.lat, selectedPin.coords.lng];
-    if (userLocation) return [userLocation.lat, userLocation.lng];
-    if (savedViewport) return [savedViewport.lat, savedViewport.lng];
-    return [METRO_CENTER.lat, METRO_CENTER.lng];
-  }, [selectedPin, userLocation, savedViewport]);
-
+  const initialCenter: [number, number] = useMemo(
+    () =>
+      savedViewport
+        ? [savedViewport.lat, savedViewport.lng]
+        : [METRO_CENTER.lat, METRO_CENTER.lng],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [] // intentionally once — MapContainer ignores center prop changes after mount
+  );
   const initialZoom = savedViewport?.zoom ?? 13;
 
   const guardIcon = L.divIcon({
@@ -155,14 +210,19 @@ export function ShiftMap({
   return (
     <div className={`guardr-map-root ${className}`}>
       <MapContainer
-        center={mapCenter}
+        center={initialCenter}
         zoom={initialZoom}
         zoomControl={false}
         className="guardr-map-container"
         attributionControl={false}
       >
         <MapViewportSaver />
-        {!selectedPin && <MapRecenter center={mapCenter} zoom={userLocation ? 13 : savedViewport?.zoom ?? 12} />}
+        <MapController
+          selectedPin={selectedPin}
+          userLocation={userLocation}
+          hadSavedViewport={hadSavedViewport}
+          recenterRef={recenterRef}
+        />
         <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
 
         {userLocation && (
@@ -194,13 +254,33 @@ export function ShiftMap({
           <Marker
             key={job.id}
             position={[coords.lat, coords.lng]}
-            icon={createShiftIcon(pinHourlyRate(job, pinMode), selectedJobId === job.id, job.armedRequired)}
+            icon={createShiftIcon(
+              pinHourlyRate(job, pinMode),
+              selectedJobId === job.id,
+              job.armedRequired,
+              getPinKind?.(job) ?? null
+            )}
             eventHandlers={{
               click: () => onSelectJob(selectedJobId === job.id ? null : job.id),
             }}
           />
         ))}
       </MapContainer>
+
+      {userLocation && (
+        <button
+          type="button"
+          className="guardr-map-locate-btn"
+          onClick={() => recenterRef.current?.()}
+          aria-label="Center map on my location"
+        >
+          {/* Crosshair / locate icon */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
