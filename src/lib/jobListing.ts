@@ -31,6 +31,7 @@ export type JobListingLike = Pick<
   | 'type'
   | 'armedRequired'
   | 'guardsNeeded'
+  | 'guardSlots'
   | 'uniformRequirements'
   | 'equipmentRequirements'
   | 'siteInstructions'

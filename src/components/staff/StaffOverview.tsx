@@ -114,6 +114,7 @@ const QUICK_LINK_META: Record<
   analytics: { label: 'Analytics', icon: BarChart3 },
   settings: { label: 'Settings', icon: Settings },
   guide: { label: 'General guide', icon: LayoutDashboard },
+  'dev-updates': { label: 'Dev updates', icon: LayoutDashboard },
   profile: { label: 'Profile', icon: UserCheck },
   preferences: { label: 'Preferences', icon: Settings },
 };

@@ -350,6 +350,8 @@ export function StaffMessagesPanel({
       );
     }
 
+    if (effectiveSelection.kind !== 'support') return null;
+
     const ticket = supportTickets.find((t) => t.id === effectiveSelection.ticketId);
     if (!ticket) return null;
 

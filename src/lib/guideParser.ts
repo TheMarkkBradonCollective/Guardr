@@ -1,4 +1,4 @@
-import workflowMarkdown from '../../docs/guardr-general-guide.md?raw';
+import guideMarkdown from '../../docs/guardr-general-guide.md?raw';
 
 export interface GuideBlock {
   type: 'paragraph' | 'list' | 'ordered-list' | 'table' | 'code' | 'hr' | 'italic' | 'h4';
@@ -62,7 +62,7 @@ function splitAtH3(raw: string): { topRaw: string; subsections: GuideSubsection[
 }
 
 export function parseGuide(): GuideSection[] {
-  const lines = workflowMarkdown.split('\n');
+  const lines = guideMarkdown.split('\n');
   const sections: GuideSection[] = [];
 
   let currentTitle = '';

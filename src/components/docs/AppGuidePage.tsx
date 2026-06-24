@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Activity,
+  ArrowRight,
   BookOpen,
   Building2,
   ChevronDown,
@@ -9,8 +10,6 @@ import {
   LifeBuoy,
   Shield,
   Users,
-  ArrowLeft,
-  ArrowRight,
 } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
@@ -29,17 +28,17 @@ const SECTION_META: Record<string, SectionMeta> = {
     icon: Activity,
     description: 'All job statuses, what each one means, and how jobs move through the platform.',
   },
-  'client-workflow': {
+  'client-guide': {
     icon: Building2,
     description: 'Post jobs, pay, approve guards, confirm coverage, and review reports.',
     audience: 'client',
   },
-  'guard-workflow': {
+  'guard-guide': {
     icon: Shield,
     description: 'Credentials, onboarding, shifts, reports, overtime, and pay.',
     audience: 'guard',
   },
-  'staff-workflow': {
+  'staff-guide': {
     icon: Users,
     description: 'Approvals, operations, payments, disputes, and team management.',
     audience: 'staff',
@@ -116,9 +115,6 @@ function SectionDetail({
   section: GuideSection;
   onBack: () => void;
 }) {
-  const meta = getSectionMeta(section);
-  const Icon = meta.icon;
-
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
       <AppSubScreenHeader title={section.title} onBack={onBack} />

@@ -295,10 +295,12 @@ export function slotToDbRow(slot: JobGuardSlot) {
   };
 }
 
-export function getCoordinatingCrewJobs(
+type CrewJobSummary = Pick<SecurityRequest, 'guardsNeeded' | 'teamLeadId' | 'status' | 'startDate'>;
+
+export function getCoordinatingCrewJobs<T extends CrewJobSummary>(
   guardId: string,
-  jobs: SecurityRequest[]
-): SecurityRequest[] {
+  jobs: T[]
+): T[] {
   return jobs
     .filter(
       (j) =>
@@ -309,7 +311,7 @@ export function getCoordinatingCrewJobs(
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 }
 
-export function getOpenCrewLeadOpportunities(jobs: SecurityRequest[]): SecurityRequest[] {
+export function getOpenCrewLeadOpportunities<T extends CrewJobSummary>(jobs: T[]): T[] {
   return jobs
     .filter((j) => j.status === 'open' && isMultiGuardJob(j) && !j.teamLeadId)
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
