@@ -5992,10 +5992,21 @@ export default function App() {
     if (currentUser && guardId !== currentUser.id) {
       void reportPushEvent(currentUser, {
         type: 'assignment',
-        guardId,
+        recipientUserId: guardId,
         requestId,
         location: job.location,
         body: `You picked up ${job.title}`,
+      });
+    }
+    if (currentUser && job.clientId && job.clientId !== currentUser.id) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId,
+        guardName: guard.name,
+        title: 'Guard confirmed',
+        body: `${guard.name} is booked for "${job.title}".`,
       });
     }
     await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
@@ -6388,7 +6399,11 @@ export default function App() {
     appToast('Guard declined — slot reopened.', 'success');
   };
 
-  const proposeGuardForClientApproval = async (requestId: string, guardId: string) => {
+  const proposeGuardForClientApproval = async (
+    requestId: string,
+    guardId: string,
+    options?: { initiatedByGuard?: boolean }
+  ) => {
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
     if (!job || !guard) return;
@@ -6484,14 +6499,18 @@ export default function App() {
         .eq('id', requestId);
     }
     if (currentUser) {
+      const clientTitle = options?.initiatedByGuard ? 'Guard application' : 'Approve your guard';
+      const clientBody = options?.initiatedByGuard
+        ? `${guard.name} applied for "${job.title}". Confirm to hire them.`
+        : `Guardr approved ${guard.name} for "${job.title}". Confirm to hire them.`;
       void reportPushEvent(currentUser, {
         type: 'assignment',
         recipientUserId: job.clientId,
         requestId,
         guardId,
         guardName: guard.name,
-        title: 'Approve your guard',
-        body: `Guardr approved ${guard.name} for "${job.title}". Confirm to hire them.`,
+        title: clientTitle,
+        body: clientBody,
       });
       void reportPushEvent(currentUser, {
         type: 'assignment',
@@ -6728,7 +6747,7 @@ export default function App() {
       if (isDbConnected) {
         await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
       }
-      await proposeGuardForClientApproval(requestId, activeGuardId);
+      await proposeGuardForClientApproval(requestId, activeGuardId, { initiatedByGuard: true });
       appToast('Application sent to client for approval.', 'success');
       return;
     }

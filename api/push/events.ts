@@ -165,8 +165,12 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       }
       return options.ticketId ? `/staff/disputes?st=${encodeURIComponent(options.ticketId)}` : "/staff/disputes";
     case "assignment":
+    case "guard_application":
       if (role === "client") {
         return options.requestId ? `/client/requests?jc=${encodeURIComponent(options.requestId)}` : "/client/requests";
+      }
+      if (type === "guard_application") {
+        return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=applications";
       }
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "guard_trusted_status":
@@ -199,6 +203,8 @@ function rolesForNotificationType(type) {
       return ["dispatch", "admin"];
     case "assignment":
       return ["guard"];
+    case "guard_application":
+      return ["dispatch", "admin"];
     case "emergency_alert":
       return ["guard", "client", "dispatch", "admin"];
     case "support_message":
@@ -210,7 +216,6 @@ function rolesForNotificationType(type) {
     case "guard_message":
       return ["guard"];
     case "job_submitted":
-    case "guard_application":
     case "guard_pending_approval":
     case "client_pending_approval":
     case "credential_pending":
@@ -590,11 +595,6 @@ function basePayload(event) {
     title: event.title ?? fallback.title,
     body: event.body ?? fallback.body,
     type: event.type,
-    url: resolveNotificationUrl(event.type, {
-      guardId: event.guardId,
-      requestId: event.requestId,
-      ticketId: event.ticketId
-    }),
     guardId: event.guardId,
     requestId: event.requestId,
     ticketId: event.ticketId,
@@ -664,6 +664,15 @@ async function buildEventDispatchPayloads(db, event) {
   if (event.type === "job_open_to_guards") {
     return [{ ...payload, role: "guard" }];
   }
+  if (event.type === "guard_application") {
+    const payloads = [{ ...payload, role: "dispatch" }];
+    if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    } else if (event.clientId) {
+      payloads.push({ ...payload, userId: event.clientId });
+    }
+    return payloads;
+  }
   if (event.type === "stripe_payment_complete" || event.type === "client_cash_payment_requested" || event.type === "guard_cash_payout_requested") {
     return [{ ...payload, role: "dispatch" }];
   }
@@ -677,7 +686,7 @@ async function buildEventDispatchPayloads(db, event) {
     else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
     return payloads;
   }
-  if (event.type === "staff_message" || event.type === "job_submitted" || event.type === "guard_application" || event.type === "guard_pending_approval" || event.type === "client_pending_approval" || event.type === "credential_pending" || event.type === "payment_attention" || event.type === "client_cash_payment_requested" || event.type === "guard_cash_payout_requested" || event.type === "stripe_payment_complete" || event.type === "support_message" && !event.recipientUserId || event.type === "job_chat_message" && !event.recipientUserId) {
+  if (event.type === "staff_message" || event.type === "job_submitted" || event.type === "guard_pending_approval" || event.type === "client_pending_approval" || event.type === "credential_pending" || event.type === "payment_attention" || event.type === "client_cash_payment_requested" || event.type === "guard_cash_payout_requested" || event.type === "stripe_payment_complete" || event.type === "support_message" && !event.recipientUserId || event.type === "job_chat_message" && !event.recipientUserId) {
     return [{ ...payload, role: "dispatch" }];
   }
   if (event.type === "guard_message") {
