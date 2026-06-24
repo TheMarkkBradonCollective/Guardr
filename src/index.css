@@ -1679,13 +1679,12 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   box-shadow: 0 0 0 6px color-mix(in srgb, #d97706 30%, transparent), var(--shadow-float);
 }
 
-/* ─── Locate / center-on-me button (SBN-style) ──────────────────────────── */
+/* ─── Locate / center-on-me button ──────────────────────────────────────── */
 .guardr-map-locate-btn {
   position: absolute;
   right: 0.875rem;
-  /* float above bottom nav + browse dock; z-index sits above both */
-  bottom: calc(8.75rem + env(safe-area-inset-bottom, 0px));
-  z-index: 1004;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 1001;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1772,12 +1771,12 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .client-map-offer-offset.map-jobs-browse-sheet,
 .map-jobs-browse-sheet.client-map-offer-offset {
-  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
 .client-map-offer-offset,
 .map-browse-offset {
-  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
 .map-selection-layer.map-browse-offset .map-offer-card,
@@ -1865,11 +1864,11 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   background: color-mix(in srgb, var(--brand-border) 35%, transparent);
 }
 
-/* Client map: center/locate on bottom left above tab bar */
+/* Client map: locate in bottom left */
 .client-map-layout .guardr-map-locate-btn {
   left: 0.875rem;
   right: auto;
-  bottom: calc(3.75rem + 10px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .map-browse-dock,
@@ -2241,7 +2240,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 body[data-form-factor="tablet"] .client-map-layout .map-selection-layer,
 body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
-  bottom: 1rem;
+  bottom: 10px;
 }
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
