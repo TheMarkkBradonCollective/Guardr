@@ -3270,6 +3270,13 @@ export default function App() {
       appToast('Only Directors and Owners can set a guard as trusted.', 'error');
       return;
     }
+    if (trusted) {
+      const guard = guards.find((g) => g.id === guardId);
+      if (!guard || guard.userStatus !== 'active' || !guard.verified) {
+        appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
+        return;
+      }
+    }
     setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
     if (isDbConnected) {
       const { error } = await supabase.from('guards').update({ trusted }).eq('id', guardId);
