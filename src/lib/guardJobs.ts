@@ -5,7 +5,7 @@ import { estimateJobDistanceMiles } from './geo';
 import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
-import { resolveGuardCardLicenseState } from './californiaCities';
+import { resolveJobLicenseState } from './californiaCities';
 import { requirementLabel } from './certCatalog';
 import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
 import {
@@ -99,7 +99,7 @@ export function checkJobRequirements(
   allRequests?: ScheduleJob[]
 ): { checks: RequirementCheck[]; canAccept: boolean } {
   const jobCity = job.state ?? 'CA';
-  const licenseState = resolveGuardCardLicenseState(jobCity);
+  const licenseState = resolveJobLicenseState(jobCity);
   const minLevel = job.minGuardQualification ?? 'pending';
   const stateLabel = stateLicenseRequirementLabel(job);
 
@@ -227,7 +227,7 @@ type GuardJobVisibility = Pick<
 
 /** Open jobs visible on a guard's map/list — field-ready guards can browse; apply checks are separate. */
 export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
-  const licenseState = resolveGuardCardLicenseState(job.state);
+  const licenseState = resolveJobLicenseState(job.state);
   if (!guardCanWorkFieldJobs(guard, licenseState)) return false;
   if (job.status !== 'open') return false;
   if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;

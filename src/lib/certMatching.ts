@@ -5,7 +5,7 @@ import {
   resolveCertCatalogId,
 } from './certCatalog';
 import { guardCanWorkInState } from './guardLicenses';
-import { resolveGuardCardLicenseState } from './californiaCities';
+import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import {
   guardHasCredentialOnFile,
   isRequiredPathwayCredential,
@@ -29,7 +29,7 @@ export function guardHasStaffVerifiedCert(
     const licenseState = jobState ? resolveGuardCardLicenseState(jobState) : undefined;
     return guard.certifications.some((c) => {
       if (c.status !== 'verified' || !isGuardCardOnFile(c)) return false;
-      if (licenseState) return c.state?.toUpperCase() === licenseState.toUpperCase();
+      if (licenseState) return licenseStatesMatch(c.state, licenseState);
       return true;
     });
   }

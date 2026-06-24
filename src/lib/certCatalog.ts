@@ -285,7 +285,7 @@ export const BSIS_REFRESHER_CATALOG_ID = 'bsis-8-hour-refresher';
 
 /** Client job-posting quick filters */
 export const JOB_CERT_FILTER_OPTIONS: { id: string; label: string; description: string }[] = [
-  { id: 'bsis-guard-card', label: 'Guard Card', description: 'Always required — valid BSIS guard card for job state' },
+  { id: 'bsis-guard-card', label: 'Guard Card', description: 'Always required — valid California BSIS guard card on file' },
   { id: 'bsis-baton', label: 'Baton Required', description: 'BSIS baton permit on file (if applicable)' },
   { id: 'bsis-chemical-agent', label: 'OC / Pepper Spray', description: 'BSIS chemical agent permit on file (if applicable)' },
   { id: 'bsis-exposed-firearm', label: 'Firearm Required', description: 'BSIS exposed firearm permit on file (armed jobs)' },

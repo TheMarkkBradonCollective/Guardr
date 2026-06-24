@@ -82,7 +82,7 @@ export function formatCityLabel(city: string | undefined): string {
 
 /**
  * Job `state` stores the work city (e.g. Los Angeles).
- * BSIS guard cards are California statewide — always match against CA.
+ * BSIS guard cards and government IDs are state-issued — map job location to CA.
  */
 export function resolveGuardCardLicenseState(jobCityOrState?: string): string {
   const raw = jobCityOrState?.trim();
@@ -91,6 +91,25 @@ export function resolveGuardCardLicenseState(jobCityOrState?: string): string {
   if (upper === 'CA' || upper === 'CALIFORNIA') return GUARDR_HOME_LICENSE_STATE;
   if (isCaliforniaCity(raw)) return GUARDR_HOME_LICENSE_STATE;
   return GUARDR_HOME_LICENSE_STATE;
+}
+
+/** @alias resolveGuardCardLicenseState — license jurisdiction for a job site */
+export const resolveJobLicenseState = resolveGuardCardLicenseState;
+
+/**
+ * Compare stored credential / ID state against required license jurisdiction.
+ * Handles legacy rows where a California city was stored instead of `CA`.
+ */
+export function licenseStatesMatch(
+  storedState: string | undefined,
+  requiredLicenseState: string
+): boolean {
+  const stored = storedState?.trim();
+  if (!stored) return false;
+  const required = requiredLicenseState.trim().toUpperCase();
+  if (stored.toUpperCase() === required) return true;
+  if (required === GUARDR_HOME_LICENSE_STATE && isCaliforniaCity(stored)) return true;
+  return false;
 }
 
 /** Normalize stored job location — legacy 2-letter state codes map to default city. */

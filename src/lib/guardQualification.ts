@@ -39,28 +39,36 @@ import {
   guardGraceWaivesTrainingCredential,
   guardHasActiveCredentialGrace,
 } from './guardCredentialGrace';
-import { resolveGuardCardLicenseState } from './californiaCities';
+import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
 import { getGuardActivationChecklist } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
+  guardIdMatchesWorkLicenseState,
   guardIdVerificationPhotosComplete,
   isIdExpired,
 } from './guardIdentityVerification';
 
+function normalizeWorkLicenseState(jobCityOrState?: string): string {
+  return resolveGuardCardLicenseState(jobCityOrState);
+}
+
 export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): GuardDisplayStatus {
+  const licenseState = normalizeWorkLicenseState(state);
   const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'pending' || userStatus === 'approved') return 'inactive';
   if (userStatus === 'suspended') return 'suspended';
   if (userStatus === 'blocked') return 'blocked';
-  return guardCanWorkFieldJobs(guard, state) ? 'active' : 'inactive';
+  return guardCanWorkFieldJobs(guard, licenseState) ? 'active' : 'inactive';
 }
 
 /** Active account + verified ID, valid guard card, and PTA/UOF (or active staff grace). */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
+  const licenseState = normalizeWorkLicenseState(state);
   if (guard.isStaff) return false;
   if (!isGuardAccountActive(guard)) return false;
   if (!guardHasVerifiedIdForWork(guard)) return false;
-  if (!guardMeetsLevel1(guard, state)) return false;
+  if (!guardIdMatchesWorkLicenseState(guard, licenseState)) return false;
+  if (!guardMeetsLevel1(guard, licenseState)) return false;
   if (guardMeetsPtaUofTraining(guard)) return true;
   return guardHasActiveCredentialGrace(guard);
 }
@@ -79,14 +87,17 @@ export function guardHasExpiredIdOnFile(guard: SecurityGuard): boolean {
 }
 
 export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): boolean {
+  const licenseState = normalizeWorkLicenseState(state);
   return (
     guardHasVerifiedIdForWork(guard) &&
-    guardMeetsLevel1(guard, state) &&
+    guardIdMatchesWorkLicenseState(guard, licenseState) &&
+    guardMeetsLevel1(guard, licenseState) &&
     guardMeetsPtaUofTraining(guard)
   );
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
+  const licenseState = normalizeWorkLicenseState(state);
   if (guard.isStaff) {
     return 'Staff accounts cannot work field jobs.';
   }
@@ -123,14 +134,17 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     }
     return 'Submit and verify your government ID in Credentials before working jobs.';
   }
-  if (!guardMeetsLevel1(guard, state)) {
-    const licenseState = resolveGuardCardLicenseState(state);
+  if (!guardIdMatchesWorkLicenseState(guard, licenseState)) {
+    const stateName = licenseState === 'CA' ? 'California' : licenseState;
+    return `Your government ID must be issued by ${stateName} to work Guardr jobs in that state.`;
+  }
+  if (!guardMeetsLevel1(guard, licenseState)) {
     const stateName = licenseState === 'CA' ? 'California' : licenseState;
     return `Upload a valid BSIS Guard Card for ${stateName} to accept and work jobs.`;
   }
   if (
     !guardMeetsPtaUofTraining(guard) &&
-    !guardGraceWaivesTrainingCredential(guard, 'pta-uof', state)
+    !guardGraceWaivesTrainingCredential(guard, 'pta-uof', licenseState)
   ) {
     return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
@@ -343,7 +357,7 @@ function matchingCredentials(
     if (cert.status === 'rejected') return false;
     if (!certMatchesCatalogId(cert, catalogId)) return false;
     if (catalogId === 'bsis-guard-card' && guardCardState) {
-      return cert.state?.toUpperCase() === guardCardState.toUpperCase();
+      return licenseStatesMatch(cert.state, guardCardState);
     }
     return true;
   });
@@ -398,10 +412,10 @@ export function guardHasGuardrVerifiedCredential(
 
 /** Guard card uploaded but past expiry — keeps guard Inactive. */
 export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'): boolean {
-  const state = jobState || 'CA';
+  const licenseState = normalizeWorkLicenseState(jobState);
   return (
-    guardHasCredentialUploaded(guard, 'bsis-guard-card', state) &&
-    !guardHasCredentialOnFile(guard, 'bsis-guard-card', state)
+    guardHasCredentialUploaded(guard, 'bsis-guard-card', licenseState) &&
+    !guardHasCredentialOnFile(guard, 'bsis-guard-card', licenseState)
   );
 }
 
@@ -504,8 +518,8 @@ export function guardMeetsLevel2Training(guard: SecurityGuard): boolean {
 }
 
 export function guardMeetsLevel1(guard: SecurityGuard, state = 'CA'): boolean {
-  const jobState = state || 'CA';
-  return guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState);
+  const licenseState = normalizeWorkLicenseState(state);
+  return guardHasCredentialOnFile(guard, 'bsis-guard-card', licenseState);
 }
 
 export function guardMeetsLevel2(guard: SecurityGuard, state = 'CA'): boolean {
@@ -529,7 +543,7 @@ export function guardMeetsQualificationLevel(
 }
 
 export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
-  const jobState = state || 'CA';
+  const licenseState = normalizeWorkLicenseState(state);
   const ptaUofCombined = guardHasCredentialOnFile(guard, BSIS_PTA_UOF_COMBINED_ID);
   const legacyPta = guardHasCredentialOnFile(guard, LEGACY_PTA_ID);
   const legacyUof = guardHasCredentialOnFile(guard, LEGACY_UOF_ID);
@@ -545,13 +559,14 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
   const ptaUofProgress = computePtaUofProgress(guard);
 
   return {
-    level: getGuardQualificationLevel(guard, jobState),
+    level: getGuardQualificationLevel(guard, licenseState),
     governmentId: guardHasIdOnFile(guard),
     governmentIdExpired: guardHasExpiredIdOnFile(guard),
     governmentIdVerified: guardHasVerifiedIdForWork(guard),
-    guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState),
-    guardCardExpired: guardHasExpiredGuardCard(guard, jobState),
-    guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', jobState),
+    governmentIdMatchesWorkState: guardIdMatchesWorkLicenseState(guard, licenseState),
+    guardCard: guardHasCredentialOnFile(guard, 'bsis-guard-card', licenseState),
+    guardCardExpired: guardHasExpiredGuardCard(guard, licenseState),
+    guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', licenseState),
     ptaUofTraining: guardMeetsPtaUofTraining(guard),
     ptaUofCombined,
     ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
