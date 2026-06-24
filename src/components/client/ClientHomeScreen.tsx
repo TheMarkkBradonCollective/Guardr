@@ -13,6 +13,7 @@ import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClien
 import { hasUnconfirmedSpotChecks } from '../../lib/spotChecks';
 import {
   AppDashboardZone,
+  AppEmptyState,
   AppItemCard,
   AppScreen,
   AppStatusBanner,
@@ -337,7 +338,9 @@ export function ClientHomeScreen({
         onAction={upcoming.length > 0 ? () => runAction('requests') : undefined}
       >
         {upcoming.length === 0 ? (
-          <p className="app-empty-state px-5">No upcoming coverage. Post a job offer to get started.</p>
+          <AppEmptyState icon={<Calendar className="w-5 h-5" />} title="No upcoming coverage">
+            Post a job to get matched with licensed guards.
+          </AppEmptyState>
         ) : (
           <div className="flex flex-col gap-2 px-5">
             {upcoming.slice(0, 4).map((req) => (
@@ -364,7 +367,9 @@ export function ClientHomeScreen({
         onAction={recentReports.length > 0 ? () => runAction('reports') : undefined}
       >
         {recentReports.length === 0 ? (
-          <p className="app-empty-state px-5">Reports from completed jobs will appear here.</p>
+          <AppEmptyState icon={<FileText className="w-5 h-5" />} title="No reports yet">
+            Activity and incident reports from completed jobs will appear here.
+          </AppEmptyState>
         ) : (
           <div className="app-item-card-stack px-5">
             {recentReports.slice(0, 3).map((report) => (

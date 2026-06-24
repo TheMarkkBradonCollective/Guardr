@@ -10897,19 +10897,7 @@ p, li {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--brand-text-muted);
-  padding: 0.875rem 1.25rem 0.5rem;
-  border-top: 1px solid var(--brand-border);
-  border-bottom: 1px solid var(--brand-border);
-  background: var(--brand-bg-sec);
-  margin: 0 -1.25rem 0;
-}
-
-.app-form-section {
-  padding: 1.25rem;
-}
-
-.app-form-section:first-child .app-form-section-title {
-  border-top: none;
+  margin-bottom: 0.875rem;
 }
 
 /* ─── SIDEBAR BRAND AREA: GUARDR IDENTITY ────────────────────────────────── */
