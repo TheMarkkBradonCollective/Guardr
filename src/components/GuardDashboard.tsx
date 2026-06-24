@@ -14,7 +14,7 @@ import {
   TeamChatThread,
   TeamChatMessage,
 } from '../types';
-import { ShiftMap } from './guard/ShiftMap';
+import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
@@ -265,6 +265,7 @@ export function GuardDashboard({
   }, [controlledTab, isControlled]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
+  const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
   const [mapRouteLoading, setMapRouteLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
@@ -847,6 +848,8 @@ export function GuardDashboard({
           filters={GUARD_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
           onChange={setMapStatusFilter}
+          onZoomIn={() => mapZoomRef.current?.zoomIn()}
+          onZoomOut={() => mapZoomRef.current?.zoomOut()}
         />
       )}
 
@@ -858,6 +861,7 @@ export function GuardDashboard({
           onRouteChange={setMapRoute}
           onRouteLoadingChange={setMapRouteLoading}
           getPinKind={(job) => guardMapPinKind(guard.id, job as unknown as SecurityRequest)}
+          zoomRef={mapZoomRef}
         />
       )}
 

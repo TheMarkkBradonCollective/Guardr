@@ -10,12 +10,16 @@ interface MapPinFilterStepperProps<T extends string> {
   filters: MapPinFilterOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
 }
 
 export function MapPinFilterStepper<T extends string>({
   filters,
   value,
   onChange,
+  onZoomIn,
+  onZoomOut,
 }: MapPinFilterStepperProps<T>) {
   const currentIndex = Math.max(
     0,
@@ -23,33 +27,40 @@ export function MapPinFilterStepper<T extends string>({
   );
   const current = filters[currentIndex] ?? filters[0];
 
-  const step = (delta: number) => {
-    const nextIndex = (currentIndex + delta + filters.length) % filters.length;
+  const cycleFilter = () => {
+    const nextIndex = (currentIndex + 1) % filters.length;
     onChange(filters[nextIndex].id);
   };
 
   return (
-    <div className="map-filter-stepper" role="group" aria-label="Map job filter">
+    <div className="map-filter-stepper" role="group" aria-label="Map controls">
       <div className="map-filter-step-controls">
         <button
           type="button"
           className="map-filter-step-btn"
-          onClick={() => step(1)}
-          aria-label={`Next filter: ${filters[(currentIndex + 1) % filters.length].label}`}
+          onClick={onZoomIn}
+          aria-label="Zoom in"
         >
           <Plus className="w-4 h-4" strokeWidth={2.5} />
         </button>
         <button
           type="button"
           className="map-filter-step-btn"
-          onClick={() => step(-1)}
-          aria-label={`Previous filter: ${filters[(currentIndex - 1 + filters.length) % filters.length].label}`}
+          onClick={onZoomOut}
+          aria-label="Zoom out"
         >
           <Minus className="w-4 h-4" strokeWidth={2.5} />
         </button>
       </div>
 
-      <span className="map-filter-step-label">{current.label}</span>
+      <button
+        type="button"
+        className="map-filter-step-label"
+        onClick={cycleFilter}
+        aria-label={`Job filter: ${current.label}. Tap to change.`}
+      >
+        {current.label}
+      </button>
     </div>
   );
 }

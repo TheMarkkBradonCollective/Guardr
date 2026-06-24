@@ -61,6 +61,12 @@ interface MapControllerProps {
   userLocation: { lat: number; lng: number } | null;
   hadSavedViewport: boolean;
   recenterRef: React.MutableRefObject<(() => void) | null>;
+  zoomRef?: React.MutableRefObject<MapZoomControls | null>;
+}
+
+export interface MapZoomControls {
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 /**
@@ -103,6 +109,22 @@ function MapController({ selectedPin, userLocation, hadSavedViewport, recenterRe
   return null;
 }
 
+function MapZoomBridge({ zoomRef }: { zoomRef: React.MutableRefObject<MapZoomControls | null> }) {
+  const map = useMap();
+
+  useEffect(() => {
+    zoomRef.current = {
+      zoomIn: () => map.zoomIn(),
+      zoomOut: () => map.zoomOut(),
+    };
+    return () => {
+      zoomRef.current = null;
+    };
+  }, [map, zoomRef]);
+
+  return null;
+}
+
 function MapViewportSaver() {
   useMapEvents({
     moveend(e) {
@@ -132,6 +154,7 @@ interface ShiftMapProps {
   onRouteLoadingChange?: (loading: boolean) => void;
   /** Return the status kind for a job to color-code its blip. Return null to use the default brand color. */
   getPinKind?: (job: ShiftMapJob) => string | null;
+  zoomRef?: React.MutableRefObject<MapZoomControls | null>;
 }
 
 function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff' | 'client'): number {
@@ -151,6 +174,7 @@ export function ShiftMap({
   onRouteChange,
   onRouteLoadingChange,
   getPinKind,
+  zoomRef,
 }: ShiftMapProps) {
   const themeMode = useThemeMode();
   const userLocation = useUserLocation(true);
@@ -242,6 +266,7 @@ export function ShiftMap({
         attributionControl={false}
       >
         <MapViewportSaver />
+        {zoomRef && <MapZoomBridge zoomRef={zoomRef} />}
         <MapController
           selectedPin={selectedPin}
           userLocation={userLocation}

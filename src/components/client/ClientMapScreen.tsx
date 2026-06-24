@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SecurityGuard, SecurityRequest, SessionUser } from '../../types';
-import { ShiftMap } from '../guard/ShiftMap';
+import { ShiftMap, type MapZoomControls } from '../guard/ShiftMap';
 import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
@@ -47,6 +47,7 @@ export function ClientMapScreen({
   );
   const [selectedBrowseJobId, setSelectedBrowseJobId] = useState<string | null>(null);
   const [mapStatusFilter, setMapStatusFilter] = useState<ClientMapStatusFilter>('all');
+  const mapZoomRef = useRef<MapZoomControls | null>(null);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
@@ -115,6 +116,8 @@ export function ClientMapScreen({
           filters={CLIENT_MAP_STATUS_FILTERS}
           value={mapStatusFilter}
           onChange={setMapStatusFilter}
+          onZoomIn={() => mapZoomRef.current?.zoomIn()}
+          onZoomOut={() => mapZoomRef.current?.zoomOut()}
         />
       )}
 
@@ -133,6 +136,7 @@ export function ClientMapScreen({
         onRouteChange={setRoute}
         onRouteLoadingChange={setRouteLoading}
         getPinKind={(job) => clientMapPinKind(job as SecurityRequest)}
+        zoomRef={mapZoomRef}
       />
 
       {showShiftOverlay && activeLiveJob && activeGuard && (
