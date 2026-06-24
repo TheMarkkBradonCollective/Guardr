@@ -223,14 +223,13 @@ type GuardJobVisibility = Pick<
   | 'armedRequired'
 >;
 
-/** Open jobs visible on a guard's map/list — guards need a valid guard card to browse marketplace offers */
+/** Open jobs visible on a guard's map/list — field-ready guards can browse; apply checks are separate. */
 export function guardCanViewJob(guard: SecurityGuard, job: GuardJobVisibility): boolean {
   const jobState = job.state ?? 'CA';
   if (!guardCanWorkFieldJobs(guard, jobState)) return false;
   if (job.status !== 'open') return false;
-  if (job.requestType === 'direct' && job.targetGuardId !== guard.id) return false;
-  if (job.requestType === 'direct' && job.targetGuardId === guard.id) return true;
-  return checkJobRequirements(guard, job as GuardJobView).canAccept;
+  if (job.requestType === 'direct' && job.targetGuardId && job.targetGuardId !== guard.id) return false;
+  return true;
 }
 
 /** Whether a guard meets all requirements to apply to an open job offer */
