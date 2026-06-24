@@ -12,56 +12,101 @@ const LOADING_PARTICLES = Array.from({ length: 24 }, (_, i) => ({
   size: 2 + (i % 4),
 }));
 
-// Five independent lightning bolts spread across the screen.
-// Each bolt has a main zigzag channel + a short branch fork.
-// Coordinates live in a 0-100 x 0-100 SVG viewBox that maps to full-screen
-// via preserveAspectRatio="none"; vector-effect="non-scaling-stroke" keeps
-// strokes at a consistent pixel width regardless of viewport stretch.
+// Ten independent lightning bolts spread across the full screen width.
+// Shorter cycle times (3.5–8 s) and staggered delays ensure strikes fire
+// roughly every 0.5–1.5 s somewhere on screen — visibly chaotic.
+// Coordinates are in a 0-100 × 0-100 SVG viewBox (preserveAspectRatio="none").
+// vector-effect="non-scaling-stroke" keeps stroke width pixel-consistent.
 const LIGHTNING_BOLTS = [
   {
-    id: 'a',
-    main: 'M 28,0 L 24,14 L 30,28 L 22,44 L 28,58 L 20,74 L 25,90',
-    branch: 'M 22,44 L 32,56 L 36,68',
-    duration: '8s',
+    id: '1',
+    main: 'M 5,0 L 1,9 L 10,18 L 3,29 L 13,40 L 2,51 L 12,62 L 1,74 L 11,85 L 0,97',
+    branch: 'M 13,40 L 21,50 L 28,62 L 23,74',
+    duration: '5s',
     delay: '0s',
-    flashCx: '25',
-    flashCy: '45',
+    flashCx: '6',
+    flashCy: '50',
   },
   {
-    id: 'b',
-    main: 'M 74,0 L 78,16 L 71,30 L 77,46 L 69,62 L 75,78 L 67,92',
-    branch: 'M 77,46 L 68,58 L 63,70',
-    duration: '10s',
-    delay: '3.1s',
-    flashCx: '72',
+    id: '2',
+    main: 'M 25,0 L 20,11 L 30,22 L 18,34 L 29,45 L 17,57 L 28,68 L 16,80 L 27,92',
+    branch: 'M 29,45 L 37,55 L 43,65 L 39,77',
+    duration: '7s',
+    delay: '1.4s',
+    flashCx: '24',
     flashCy: '48',
   },
   {
-    id: 'c',
-    main: 'M 42,0 L 38,12 L 44,24 L 36,38 L 43,52 L 34,66',
-    branch: 'M 43,52 L 50,63 L 54,72',
-    duration: '7s',
-    delay: '1.7s',
-    flashCx: '40',
+    id: '3',
+    main: 'M 48,0 L 43,10 L 53,21 L 41,33 L 52,44 L 39,56 L 51,67 L 38,79 L 50,92',
+    branch: 'M 39,56 L 31,66 L 26,78 L 30,88',
+    duration: '4.5s',
+    delay: '2.1s',
+    flashCx: '46',
+    flashCy: '50',
+  },
+  {
+    id: '4',
+    main: 'M 68,0 L 73,12 L 63,23 L 72,35 L 62,46 L 71,58 L 61,70 L 70,82',
+    branch: 'M 62,46 L 56,56 L 51,66 L 54,76',
+    duration: '6s',
+    delay: '0.6s',
+    flashCx: '67',
+    flashCy: '44',
+  },
+  {
+    id: '5',
+    main: 'M 88,0 L 83,11 L 92,22 L 82,34 L 91,46 L 81,58 L 90,70 L 79,82 L 89,94',
+    branch: 'M 91,46 L 97,56 L 100,68',
+    duration: '5.5s',
+    delay: '3.2s',
+    flashCx: '87',
+    flashCy: '48',
+  },
+  {
+    id: '6',
+    main: 'M 14,5 L 19,16 L 10,28 L 18,40 L 9,52 L 17,64 L 7,76',
+    branch: 'M 10,28 L 4,38 L 0,50',
+    duration: '3.5s',
+    delay: '1.8s',
+    flashCx: '13',
+    flashCy: '42',
+  },
+  {
+    id: '7',
+    main: 'M 36,0 L 31,13 L 40,26 L 29,39 L 39,52 L 28,64 L 38,76 L 26,90',
+    branch: 'M 29,39 L 22,49 L 17,61 L 21,72',
+    duration: '8s',
+    delay: '4.0s',
+    flashCx: '35',
+    flashCy: '46',
+  },
+  {
+    id: '8',
+    main: 'M 57,2 L 63,14 L 54,26 L 62,38 L 53,50 L 61,62 L 51,74',
+    branch: 'M 54,26 L 47,36 L 42,48',
+    duration: '4s',
+    delay: '2.7s',
+    flashCx: '57',
     flashCy: '40',
   },
   {
-    id: 'd',
-    main: 'M 88,2 L 84,16 L 90,28 L 83,42 L 89,56',
-    branch: 'M 90,28 L 95,38 L 97,48',
-    duration: '9s',
-    delay: '5.4s',
-    flashCx: '87',
-    flashCy: '32',
+    id: '9',
+    main: 'M 78,0 L 73,14 L 82,28 L 72,42 L 81,56 L 71,70 L 80,84',
+    branch: 'M 81,56 L 87,67 L 91,78 L 88,88',
+    duration: '6.5s',
+    delay: '5.3s',
+    flashCx: '78',
+    flashCy: '44',
   },
   {
-    id: 'e',
-    main: 'M 8,0 L 12,16 L 6,30 L 11,46 L 5,62 L 10,78',
-    branch: 'M 11,46 L 16,57 L 20,66',
-    duration: '11s',
-    delay: '6.8s',
-    flashCx: '10',
-    flashCy: '48',
+    id: '10',
+    main: 'M 95,3 L 98,16 L 92,29 L 97,43 L 90,57 L 96,71 L 89,85',
+    branch: 'M 92,29 L 87,39 L 82,51',
+    duration: '5s',
+    delay: '0.9s',
+    flashCx: '93',
+    flashCy: '46',
   },
 ];
 
@@ -92,16 +137,16 @@ export function LoadingScreen() {
         {/* Lightning storm: flash overlay + bolt SVG per strike */}
         {LIGHTNING_BOLTS.map((bolt) => (
           <React.Fragment key={`lightning-${bolt.id}`}>
-            {/* Full-screen radial flash that illuminates the background and particles */}
+            {/* Radial flash tints the background on each strike */}
             <div
               className="guardr-lightning-flash"
               style={{
                 animationDuration: bolt.duration,
                 animationDelay: bolt.delay,
-                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(200,230,255,0.55), rgba(180,215,255,0.12) 45%, transparent 70%)`,
+                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(150,185,255,0.85), rgba(175,205,255,0.28) 45%, transparent 70%)`,
               }}
             />
-            {/* The bolt itself: glow layer + bright core + dimmer branch */}
+            {/* Layered SVG: wide glow + bright core + dimmer branch */}
             <svg
               className="guardr-lightning-bolt"
               viewBox="0 0 100 100"

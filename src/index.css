@@ -4530,14 +4530,9 @@ html.theme-light .staff-ops-btn-primary:hover {
   100% { transform: translateX(320%); }
 }
 
-/* ─── LIGHTNING STORM: CINEMATIC THUNDERSTORM OVERLAY ──────── */
+/* ─── LIGHTNING STORM: CRAZY THUNDERSTORM ON WHITE ─────────── */
 
-/* Deep-black thunderstorm atmosphere regardless of theme */
-.guardr-loading-screen {
-  background: #020408 !important;
-}
-
-/* Per-bolt radial flash that illuminates background and particles */
+/* Per-bolt radial flash — multiply darkens white to an electric-sky blue */
 .guardr-lightning-flash {
   position: absolute;
   inset: 0;
@@ -4546,7 +4541,7 @@ html.theme-light .staff-ops-btn-primary:hover {
   animation-name: guardr-lightning-flash-pulse;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  mix-blend-mode: screen;
+  mix-blend-mode: multiply;
 }
 
 /* SVG container for each bolt — covers the full ambient area */
@@ -4561,26 +4556,27 @@ html.theme-light .staff-ops-btn-primary:hover {
   animation-name: guardr-lightning-strike;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  /* Double drop-shadow builds a soft electric halo around the bolt */
-  filter: drop-shadow(0 0 5px rgba(160, 215, 255, 0.85))
-          drop-shadow(0 0 14px rgba(120, 180, 255, 0.45));
+  /* Triple-layer halo: tight bright ring + wide atmospheric bloom */
+  filter: drop-shadow(0 0 4px rgba(60, 110, 240, 1))
+          drop-shadow(0 0 10px rgba(80, 140, 255, 0.75))
+          drop-shadow(0 0 22px rgba(100, 160, 255, 0.45));
 }
 
-/* Outer glow layer — wide, electric-blue, low opacity */
+/* Outer corona — wider, blue, semi-transparent; visible on light backgrounds */
 .guardr-lightning-glow {
   fill: none;
-  stroke: rgba(140, 200, 255, 0.5);
-  stroke-width: 6;
+  stroke: rgba(80, 140, 255, 0.65);
+  stroke-width: 8;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
-/* Inner core — thin, near-white, high opacity */
+/* Inner core — dark indigo, clearly visible on white */
 .guardr-lightning-core {
   fill: none;
-  stroke: rgba(240, 250, 255, 0.95);
-  stroke-width: 1.5;
+  stroke: rgba(22, 46, 210, 0.95);
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -4591,31 +4587,37 @@ html.theme-light .staff-ops-btn-primary:hover {
   opacity: 0.55;
 }
 
-/* ── Bolt: instantaneous double-flash then long dark silence ── */
+/* ── Triple-flash: three rapid bursts then long silence ─────── */
 @keyframes guardr-lightning-strike {
   0%      { opacity: 0; }
-  0.50%   { opacity: 0; }
-  0.51%   { opacity: 1; }    /* first flash: instant on  */
-  1.40%   { opacity: 1; }    /* hold bright              */
-  1.41%   { opacity: 0; }    /* instant off              */
-  2.10%   { opacity: 0; }    /* brief dark gap           */
-  2.11%   { opacity: 0.75; } /* second flash: instant on */
-  3.20%   { opacity: 0.75; } /* hold                     */
-  3.21%   { opacity: 0; }    /* instant off              */
-  3.22%,
-  100%    { opacity: 0; }    /* dark for rest of cycle   */
+  0.30%   { opacity: 0; }
+  0.31%   { opacity: 1; }    /* flash 1 — instant on     */
+  0.90%   { opacity: 1; }    /* hold                     */
+  0.91%   { opacity: 0; }    /* instant off              */
+  1.40%   { opacity: 0; }    /* dark gap                 */
+  1.41%   { opacity: 0.88; } /* flash 2 — instant on     */
+  2.00%   { opacity: 0.88; } /* hold                     */
+  2.01%   { opacity: 0; }    /* instant off              */
+  2.50%   { opacity: 0; }    /* dark gap                 */
+  2.51%   { opacity: 0.55; } /* flash 3 — dimmer echo    */
+  3.10%   { opacity: 0.55; } /* hold                     */
+  3.11%   { opacity: 0; }    /* instant off              */
+  3.12%,
+  100%    { opacity: 0; }    /* silence for rest of cycle */
 }
 
-/* ── Flash overlay: instant on, gradual multi-step fade ─────── */
+/* ── Flash overlay: instant peak, staggered triple-fade ─────── */
 @keyframes guardr-lightning-flash-pulse {
   0%      { opacity: 0; }
-  0.45%   { opacity: 0; }
-  0.46%   { opacity: 1; }    /* snap to full brightness  */
-  1.80%   { opacity: 0.4; }  /* first fade               */
-  2.50%   { opacity: 0.65; } /* uptick on second flash   */
-  4.00%   { opacity: 0.1; }  /* trail off                */
-  4.50%   { opacity: 0; }    /* done                     */
-  4.51%,
+  0.25%   { opacity: 0; }
+  0.26%   { opacity: 1; }    /* snap to full tint        */
+  1.20%   { opacity: 0.55; } /* partial fade             */
+  1.80%   { opacity: 0.75; } /* uptick on flash 2        */
+  2.60%   { opacity: 0.3; }  /* second fade              */
+  3.20%   { opacity: 0.45; } /* uptick on flash 3        */
+  4.20%   { opacity: 0.1; }  /* trail off                */
+  4.80%   { opacity: 0; }    /* done                     */
+  4.81%,
   100%    { opacity: 0; }
 }
 
