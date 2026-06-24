@@ -6,6 +6,7 @@ import {
   hasScheduleDateChange,
   isDurationExtension,
   paidScheduleDurationHours,
+  resolveScheduleChangeAfterApproval,
   scheduleChangeRequiresStaffApproval,
 } from './jobScheduleChange.ts';
 
@@ -71,5 +72,51 @@ describe('jobScheduleChange', () => {
   it('flags duration extension with tolerance', () => {
     assert.equal(isDurationExtension(8, 8.005), false);
     assert.equal(isDurationExtension(8, 8.02), true);
+  });
+
+  it('staff client-initiated extension on stripe awaits payment after staff approval', () => {
+    const job = baseJob({
+      scheduleChangeRequestedBy: 'client',
+      pendingDurationHours: 10,
+      pendingEstimatedPayout: 300,
+    });
+    assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'staff'), {
+      action: 'awaiting_payment',
+      extraAmount: 60,
+    });
+  });
+
+  it('staff client-initiated same duration on stripe applies immediately', () => {
+    const job = baseJob({
+      scheduleChangeRequestedBy: 'client',
+      pendingDurationHours: 8,
+      pendingStartDate: '2026-07-02T10:00:00.000Z',
+      pendingEndDate: '2026-07-02T18:00:00.000Z',
+    });
+    assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'staff'), { action: 'apply' });
+  });
+
+  it('staff-proposed change on cash job needs billing confirmation after client approval', () => {
+    const job = baseJob({
+      clientPaymentMethod: 'cash',
+      scheduleChangeRequestedBy: 'staff',
+      pendingDurationHours: 8,
+    });
+    assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'client'), {
+      action: 'pending_staff_billing',
+      extraAmount: 0,
+    });
+  });
+
+  it('staff-proposed extension on stripe awaits payment after client approval', () => {
+    const job = baseJob({
+      scheduleChangeRequestedBy: 'staff',
+      pendingDurationHours: 10,
+      pendingEstimatedPayout: 300,
+    });
+    assert.deepEqual(resolveScheduleChangeAfterApproval(job, 'client'), {
+      action: 'awaiting_payment',
+      extraAmount: 60,
+    });
   });
 });

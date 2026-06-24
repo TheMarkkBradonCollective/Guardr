@@ -7,4 +7,4 @@ ALTER TABLE security_requests
   ADD COLUMN IF NOT EXISTS schedule_change_status TEXT NOT NULL DEFAULT 'none',
   ADD COLUMN IF NOT EXISTS schedule_change_requested_at TIMESTAMPTZ;
 
-COMMENT ON COLUMN security_requests.schedule_change_status IS 'none | pending_staff';
+COMMENT ON COLUMN security_requests.schedule_change_status IS 'none | pending_staff | pending_client | awaiting_payment | pending_staff_billing';

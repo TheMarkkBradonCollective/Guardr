@@ -77,8 +77,12 @@ export function canClientReschedulePaidSchedule(req: SecurityRequest): boolean {
   return (
     isJobPaid(req) &&
     ['open', 'accepted', 'in-progress'].includes(req.status) &&
-    req.scheduleChangeStatus !== 'pending_staff'
+    (!req.scheduleChangeStatus || req.scheduleChangeStatus === 'none')
   );
+}
+
+export function canStaffReschedulePaidSchedule(req: SecurityRequest): boolean {
+  return canClientReschedulePaidSchedule(req);
 }
 
 /** Whether the edit form should show schedule fields (unpaid full edit or paid reschedule). */
@@ -110,6 +114,15 @@ export function jobEditBlockedReason(req: SecurityRequest): string | null {
 export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
   if (req.scheduleChangeStatus === 'pending_staff') {
     return 'A schedule change is awaiting staff approval.';
+  }
+  if (req.scheduleChangeStatus === 'pending_client') {
+    return 'A schedule change is awaiting your approval.';
+  }
+  if (req.scheduleChangeStatus === 'awaiting_payment') {
+    return 'Pay the schedule extension before times update.';
+  }
+  if (req.scheduleChangeStatus === 'pending_staff_billing') {
+    return 'Schedule change is awaiting staff billing confirmation.';
   }
   if (canClientReschedulePaidSchedule(req)) {
     return null;

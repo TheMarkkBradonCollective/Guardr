@@ -282,6 +282,7 @@ import {
   canClientEditRequest,
   canClientRequestCashPayment,
   canClientReschedulePaidSchedule,
+  canStaffReschedulePaidSchedule,
   canEditJobTitleAndLocation,
   canStaffEditJobTitleAndLocation,
   isJobPaid,
@@ -291,9 +292,12 @@ import {
 } from './lib/jobEditRules';
 import {
   clearScheduleChangePending,
+  computeScheduleChangeExtraAmount,
   guardsToNotifyForScheduleChange,
   hasScheduleDateChange,
   jobHasAssignedOrOnDutyGuards,
+  pendingScheduleChangeFromJob,
+  resolveScheduleChangeAfterApproval,
   resolveScheduleChangeFromUpdate,
   scheduleChangePendingDbColumns,
   scheduleChangeRequiresStaffApproval,
@@ -1520,8 +1524,26 @@ export default function App() {
           pendingEstimatedPayout:
             r.pending_estimated_payout != null ? Number(r.pending_estimated_payout) : undefined,
           scheduleChangeStatus:
-            r.schedule_change_status === 'pending_staff' ? 'pending_staff' : 'none',
+            r.schedule_change_status === 'pending_staff'
+              ? 'pending_staff'
+              : r.schedule_change_status === 'pending_client'
+                ? 'pending_client'
+                : r.schedule_change_status === 'awaiting_payment'
+                  ? 'awaiting_payment'
+                  : r.schedule_change_status === 'pending_staff_billing'
+                    ? 'pending_staff_billing'
+                    : 'none',
           scheduleChangeRequestedAt: r.schedule_change_requested_at ?? undefined,
+          scheduleChangeRequestedBy:
+            r.schedule_change_requested_by === 'staff'
+              ? 'staff'
+              : r.schedule_change_requested_by === 'client'
+                ? 'client'
+                : undefined,
+          scheduleChangeExtraAmount:
+            r.schedule_change_extra_amount != null
+              ? Number(r.schedule_change_extra_amount)
+              : undefined,
           pendingGuardId: r.pending_guard_id ?? undefined,
           staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
           requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
@@ -5480,6 +5502,109 @@ export default function App() {
     return merged;
   };
 
+  const submitPendingScheduleChange = async (
+    requestId: string,
+    baseJob: SecurityRequest,
+    change: {
+      startDate: string;
+      endDate: string;
+      durationHours: number;
+      estimatedPayout?: number;
+    },
+    options: {
+      status: 'pending_staff' | 'pending_client';
+      requestedBy: 'client' | 'staff';
+    }
+  ) => {
+    const requestedAt = new Date().toISOString();
+    const extraAmount = computeScheduleChangeExtraAmount(
+      baseJob,
+      change.durationHours,
+      change.estimatedPayout
+    );
+    const pendingJob: SecurityRequest = {
+      ...baseJob,
+      pendingStartDate: change.startDate,
+      pendingEndDate: change.endDate,
+      pendingDurationHours: change.durationHours,
+      pendingEstimatedPayout: change.estimatedPayout,
+      scheduleChangeStatus: options.status,
+      scheduleChangeRequestedAt: requestedAt,
+      scheduleChangeRequestedBy: options.requestedBy,
+      scheduleChangeExtraAmount: extraAmount > 0 ? extraAmount : undefined,
+    };
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('security_requests')
+        .update(scheduleChangePendingDbColumns(pendingJob))
+        .eq('id', requestId);
+      if (error) {
+        appToast(`Could not submit schedule change: ${error.message}`, 'error');
+        throw new Error(error.message);
+      }
+    }
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? pendingJob : r)));
+    return pendingJob;
+  };
+
+  const processScheduleChangeResolution = async (
+    requestId: string,
+    existing: SecurityRequest,
+    approver: 'staff' | 'client'
+  ) => {
+    const pending = pendingScheduleChangeFromJob(existing);
+    if (!pending) {
+      appToast('Pending schedule data is incomplete.', 'error');
+      return;
+    }
+
+    const resolution = resolveScheduleChangeAfterApproval(existing, approver);
+
+    if (resolution.action === 'apply') {
+      await applyApprovedScheduleChange(requestId, existing, pending);
+      return 'applied' as const;
+    }
+
+    const nextJob: SecurityRequest = {
+      ...existing,
+      scheduleChangeStatus:
+        resolution.action === 'awaiting_payment' ? 'awaiting_payment' : 'pending_staff_billing',
+      scheduleChangeExtraAmount: resolution.extraAmount,
+    };
+
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('security_requests')
+        .update(scheduleChangePendingDbColumns(nextJob))
+        .eq('id', requestId);
+      if (error) {
+        appToast(`Could not update schedule change: ${error.message}`, 'error');
+        throw new Error(error.message);
+      }
+    }
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? nextJob : r)));
+
+    if (currentUser) {
+      if (resolution.action === 'awaiting_payment') {
+        void reportPushEvent(currentUser, {
+          type: 'support_ticket_status',
+          recipientUserId: existing.clientId,
+          title: 'Schedule change approved — payment due',
+          body: `Pay $${resolution.extraAmount.toFixed(2)} to update "${existing.title}" to ${formatShiftRange(pending.startDate, pending.endDate)}.`,
+        });
+      } else {
+        void reportPushEvent(currentUser, {
+          type: 'payment_attention',
+          requestId,
+          location: existing.location,
+          body: `Client approved schedule change for "${existing.title}" — confirm cash billing before times go live.`,
+        });
+      }
+    }
+
+    return resolution.action;
+  };
+
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canClientEditJobListing(existing)) {
@@ -5513,27 +5638,10 @@ export default function App() {
           : existing;
 
       if (scheduleChangeRequiresStaffApproval(refreshed, scheduleChange.durationHours)) {
-        const requestedAt = new Date().toISOString();
-        const pendingJob: SecurityRequest = {
-          ...refreshed,
-          pendingStartDate: scheduleChange.startDate,
-          pendingEndDate: scheduleChange.endDate,
-          pendingDurationHours: scheduleChange.durationHours,
-          pendingEstimatedPayout: scheduleChange.estimatedPayout,
-          scheduleChangeStatus: 'pending_staff',
-          scheduleChangeRequestedAt: requestedAt,
-        };
-        if (isDbConnected) {
-          const { error } = await supabase
-            .from('security_requests')
-            .update(scheduleChangePendingDbColumns(pendingJob))
-            .eq('id', requestId);
-          if (error) {
-            appToast(`Could not submit schedule change: ${error.message}`, 'error');
-            return;
-          }
-        }
-        setRequests((prev) => prev.map((r) => (r.id === requestId ? pendingJob : r)));
+        await submitPendingScheduleChange(requestId, refreshed, scheduleChange, {
+          status: 'pending_staff',
+          requestedBy: 'client',
+        });
         if (currentUser) {
           void reportPushEvent(currentUser, {
             type: 'payment_attention',
@@ -5573,27 +5681,96 @@ export default function App() {
       appToast('No pending schedule change for this job.', 'error');
       return;
     }
-    if (!existing.pendingStartDate || !existing.pendingEndDate || existing.pendingDurationHours == null) {
-      appToast('Pending schedule data is incomplete.', 'error');
-      return;
-    }
 
-    await applyApprovedScheduleChange(requestId, existing, {
-      startDate: existing.pendingStartDate,
-      endDate: existing.pendingEndDate,
-      durationHours: existing.pendingDurationHours,
-      estimatedPayout: existing.pendingEstimatedPayout,
-    });
+    const outcome = await processScheduleChangeResolution(requestId, existing, 'staff');
 
-    if (currentUser) {
+    if (outcome === 'applied' && currentUser) {
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: existing.clientId,
         title: 'Schedule change approved',
-        body: `Guardr approved your new times for "${existing.title}".`,
+        body: `Guardr approved your new times for "${existing.title}". Guards have been notified.`,
+      });
+      appToast('Schedule change approved and guards notified.', 'success');
+    } else if (outcome === 'awaiting_payment') {
+      appToast('Schedule change approved. Client must pay the extension before times go live.', 'success');
+    } else if (outcome === 'pending_staff_billing') {
+      appToast('Schedule change awaiting billing confirmation.', 'success');
+    }
+  };
+
+  const handleApproveScheduleChangeBilling = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to confirm schedule billing.', 'error');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || existing.scheduleChangeStatus !== 'pending_staff_billing') {
+      appToast('No schedule billing confirmation pending for this job.', 'error');
+      return;
+    }
+    const pending = pendingScheduleChangeFromJob(existing);
+    if (!pending) {
+      appToast('Pending schedule data is incomplete.', 'error');
+      return;
+    }
+
+    await applyApprovedScheduleChange(requestId, existing, pending);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: existing.clientId,
+        title: 'Schedule change live',
+        body: `Guardr confirmed billing and updated times for "${existing.title}".`,
       });
     }
-    appToast('Schedule change approved and guards notified.', 'success');
+    appToast('Schedule change confirmed and guards notified.', 'success');
+  };
+
+  const handleClientApproveScheduleChange = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || existing.scheduleChangeStatus !== 'pending_client') {
+      appToast('This schedule change cannot be approved right now.', 'error');
+      return;
+    }
+
+    const outcome = await processScheduleChangeResolution(requestId, existing, 'client');
+
+    if (outcome === 'applied') {
+      appToast('New shift times approved. Guards have been notified.', 'success');
+    } else if (outcome === 'awaiting_payment') {
+      appToast('Times approved. Pay the extension to update the listing.', 'success');
+    } else if (outcome === 'pending_staff_billing') {
+      appToast('Times approved. Guardr will confirm cash billing before guards are notified.', 'info');
+    }
+  };
+
+  const handleClientRejectScheduleChange = async (requestId: string) => {
+    if (!currentUser || currentUser.role !== 'client') return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || existing.scheduleChangeStatus !== 'pending_client') {
+      appToast('This schedule change cannot be declined right now.', 'error');
+      return;
+    }
+
+    const cleared = { ...existing, ...clearScheduleChangePending() };
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? cleared : r)));
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update(scheduleChangePendingDbColumns(cleared))
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: existing.location,
+        body: `Client declined Guardr's proposed schedule change for "${existing.title}".`,
+      });
+    }
+    appToast('Schedule change declined.', 'info');
   };
 
   const handleRejectScheduleChange = async (requestId: string) => {
@@ -5636,6 +5813,45 @@ export default function App() {
       appToast(existing ? 'This job cannot be edited in its current status.' : 'Job not found.', 'error');
       return;
     }
+
+    const scheduleChange = isJobPaid(existing)
+      ? resolveScheduleChangeFromUpdate(existing, updates)
+      : null;
+
+    if (scheduleChange) {
+      if (!canStaffReschedulePaidSchedule(existing)) {
+        appToast('This job cannot be rescheduled right now.', 'error');
+        return;
+      }
+      const scheduleError = validateShiftSchedule(scheduleChange.startDate, scheduleChange.endDate);
+      if (scheduleError) {
+        appToast(scheduleError, 'error');
+        return;
+      }
+
+      const listingOnly = sanitizeJobListingUpdates(existing, updates);
+      const refreshed =
+        Object.keys(listingOnly).length > 0
+          ? await persistJobListingUpdate(requestId, existing, listingOnly)
+          : existing;
+
+      await submitPendingScheduleChange(requestId, refreshed, scheduleChange, {
+        status: 'pending_client',
+        requestedBy: 'staff',
+      });
+
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'support_ticket_status',
+          recipientUserId: refreshed.clientId,
+          title: 'Schedule change proposed',
+          body: `Guardr proposed new times for "${refreshed.title}": ${formatShiftRange(scheduleChange.startDate, scheduleChange.endDate)}. Approve in your jobs list.`,
+        });
+      }
+      appToast('Schedule change sent to client for approval.', 'success');
+      return;
+    }
+
     if (!isJobPaid(existing)) {
       const startDate = updates.startDate || existing.startDate;
       const endDate = updates.endDate || existing.endDate;
@@ -8272,6 +8488,8 @@ export default function App() {
               onApproveOvertime={handleClientApproveOvertime}
               onDisputeOvertime={handleClientDisputeOvertime}
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
+              onApproveScheduleChange={handleClientApproveScheduleChange}
+              onRejectScheduleChange={handleClientRejectScheduleChange}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
               onApproveTeamSlot={handleClientApproveTeamSlot}
@@ -8349,6 +8567,7 @@ export default function App() {
           onDenyRequest={handleDenyRequest}
           onApproveScheduleChange={handleApproveScheduleChange}
           onRejectScheduleChange={handleRejectScheduleChange}
+          onApproveScheduleChangeBilling={handleApproveScheduleChangeBilling}
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}

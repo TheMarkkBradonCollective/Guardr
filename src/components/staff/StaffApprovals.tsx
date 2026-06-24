@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { canStaffEditJobTitleAndLocation, isJobScheduleLocked } from '../../lib/jobEditRules';
+import { canStaffEditJobTitleAndLocation, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
@@ -51,6 +51,7 @@ interface StaffApprovalsProps {
   onDenyRequest: (requestId: string) => void;
   onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
   onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChangeBilling?: (requestId: string) => void | Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
@@ -153,6 +154,7 @@ export function StaffApprovals({
   onDenyRequest,
   onApproveScheduleChange,
   onRejectScheduleChange,
+  onApproveScheduleChangeBilling,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -383,6 +385,7 @@ export function StaffApprovals({
       req.pendingStartDate && req.pendingEndDate
         ? formatShiftRange(req.pendingStartDate, req.pendingEndDate)
         : '—';
+    const isBilling = req.scheduleChangeStatus === 'pending_staff_billing';
 
     return (
       <div className="staff-detail-pane space-y-3">
@@ -390,7 +393,10 @@ export function StaffApprovals({
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
             <p className="font-semibold text-sm">{req.title}</p>
-            <WfBadge tone="warning">Schedule change</WfBadge>
+            <WfBadge tone="warning">{isBilling ? 'Confirm billing' : 'Schedule change'}</WfBadge>
+            {req.scheduleChangeRequestedBy === 'staff' && (
+              <WfBadge tone="default">Staff proposed</WfBadge>
+            )}
           </div>
           <p className="text-sm text-brand-text-muted">{req.clientName}</p>
           <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
@@ -402,24 +408,33 @@ export function StaffApprovals({
             {req.durationHours > 0 ? ` · ${formatDuration(req.durationHours)}` : ''}
           </p>
           <p className="text-xs text-brand-primary mt-1 font-medium">
-            Requested: {requestedRange}
+            {isBilling ? 'Approved times' : 'Requested'}: {requestedRange}
             {req.pendingDurationHours != null ? ` · ${formatDuration(req.pendingDurationHours)}` : ''}
           </p>
+          {(req.scheduleChangeExtraAmount ?? 0) > 0 && (
+            <p className="text-xs text-amber-300 mt-1">
+              Additional billing: ${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)}
+            </p>
+          )}
         </div>
         <JobBillingSummaryFromRequest req={req} variant="staff" />
         <div className="app-action-row--equal pt-2 border-t border-brand-border">
-          <button
-            type="button"
-            onClick={() => onRejectScheduleChange?.(req.id)}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-          >
-            <X className="w-3.5 h-3.5" /> Decline
-          </button>
+          {!isBilling && (
+            <button
+              type="button"
+              onClick={() => onRejectScheduleChange?.(req.id)}
+              className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+            >
+              <X className="w-3.5 h-3.5" /> Decline
+            </button>
+          )}
           <SlideToConfirm
-            label="Slide to approve new times"
-            confirmedLabel="Approved"
+            label={isBilling ? 'Slide to confirm billing & publish' : 'Slide to approve new times'}
+            confirmedLabel={isBilling ? 'Confirmed' : 'Approved'}
             tone="success"
-            onConfirm={() => onApproveScheduleChange?.(req.id)}
+            onConfirm={() =>
+              isBilling ? onApproveScheduleChangeBilling?.(req.id) : onApproveScheduleChange?.(req.id)
+            }
           />
         </div>
       </div>
@@ -485,7 +500,9 @@ export function StaffApprovals({
               <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
                 <p className="font-semibold text-sm truncate">{req.title}</p>
                 <p className="text-xs text-brand-text-muted truncate">{req.clientName} · {req.location}</p>
-                <WfBadge tone="warning" className="mt-1.5 w-fit">Schedule change</WfBadge>
+                <WfBadge tone="warning" className="mt-1.5 w-fit">
+                  {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
+                </WfBadge>
               </AppItemCard>
             ))}
           </AppItemCardStack>
@@ -1166,6 +1183,7 @@ export function StaffApprovals({
           open={editingJobId !== null}
           request={editingJob}
           scheduleLocked={isJobScheduleLocked(editingJob)}
+          paidReschedule={canStaffReschedulePaidSchedule(editingJob)}
           onSave={async (requestId, updates) => {
             await onEditJobListing(requestId, updates);
             setEditingJobId(null);

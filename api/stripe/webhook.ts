@@ -191,6 +191,96 @@ async function markCashDeposit(
   }
 }
 
+async function applyPaidScheduleChange(
+  jobId: string,
+  paymentIntentId: string | null,
+  sessionId: string,
+  amountCents: number
+) {
+  const db = await getSupabaseAdmin();
+  if (!db) return;
+
+  const amount = amountCents / 100;
+  const paidAt = new Date().toISOString();
+
+  const { data: job } = await db
+    .from('security_requests')
+    .select(
+      'pending_start_date, pending_end_date, pending_duration_hours, pending_estimated_payout, hourly_rate, guards_needed, guard_pay'
+    )
+    .eq('id', jobId)
+    .maybeSingle();
+
+  if (!job?.pending_start_date || !job.pending_end_date || job.pending_duration_hours == null) {
+    return;
+  }
+
+  const guardsNeeded = Number(job.guards_needed ?? 1);
+  const durationHours = Number(job.pending_duration_hours);
+  const estimatedPayout =
+    job.pending_estimated_payout != null
+      ? Number(job.pending_estimated_payout)
+      : Math.round(durationHours * Number(job.hourly_rate) * guardsNeeded * 100) / 100;
+
+  await db
+    .from('security_requests')
+    .update({
+      start_date: job.pending_start_date,
+      end_date: job.pending_end_date,
+      duration_hours: durationHours,
+      estimated_payout: estimatedPayout,
+      guard_pay: job.guard_pay,
+      pending_start_date: null,
+      pending_end_date: null,
+      pending_duration_hours: null,
+      pending_estimated_payout: null,
+      schedule_change_status: 'none',
+      schedule_change_requested_at: null,
+      schedule_change_requested_by: null,
+      schedule_change_extra_amount: null,
+    })
+    .eq('id', jobId);
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount,
+        payment_method: 'stripe',
+        updated_at: paidAt,
+      })
+      .eq('id', existing.id);
+  } else {
+    await db.from('payments').insert({
+      id: `pay-schedule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      job_id: jobId,
+      amount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+  }
+
+  try {
+    const { notifyPaymentAttention } = await import('../../lib/push/paymentNotifications');
+    await notifyPaymentAttention(db, {
+      requestId: jobId,
+      body: `Schedule extension paid — $${amount.toFixed(2)}. Shift times are now live.`,
+    });
+  } catch (err) {
+    console.warn('Schedule change payment push notification failed:', err);
+  }
+}
+
 async function markOvertimePaid(
   jobId: string,
   paymentIntentId: string | null,
@@ -313,6 +403,8 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
         await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else if (session.metadata?.checkout_type === 'overtime') {
         await markOvertimePaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+      } else if (session.metadata?.checkout_type === 'schedule_change') {
+        await applyPaidScheduleChange(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else {
         await markJobPaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       }
@@ -379,6 +471,16 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
             })
             .eq('stripe_payment_intent_id', intent.id);
         }
+        break;
+      }
+
+      if (intent.metadata?.checkout_type === 'schedule_change') {
+        await applyPaidScheduleChange(
+          jobId,
+          intent.id,
+          intent.id,
+          intent.amount_received ?? intent.amount
+        );
         break;
       }
 

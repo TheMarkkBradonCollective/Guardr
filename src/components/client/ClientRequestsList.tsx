@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
-import { createCheckoutSession, createOvertimeCheckoutSession } from '../../lib/stripeApi';
+import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession } from '../../lib/stripeApi';
 import {
   canClientApproveOvertime,
   canClientDisputeOvertime,
@@ -17,7 +17,11 @@ import {
   isOvertimeWaived,
   type OvertimeDisputeInput,
 } from '../../lib/shiftBilling';
-import { toDatetimeLocal } from '../../lib/dates';
+import { toDatetimeLocal, formatShiftRange } from '../../lib/dates';
+import {
+  canClientApproveStaffScheduleChange,
+  canClientPayScheduleChangeExtension,
+} from '../../lib/jobScheduleChange';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { JobBillingSummaryFromRequest, CrewTeamUpcostNotice } from '../jobs/JobBillingSummary';
@@ -79,6 +83,8 @@ interface ClientRequestsListProps {
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
@@ -136,6 +142,8 @@ export function ClientRequestsList({
   onApproveOvertime,
   onDisputeOvertime,
   onRequestOvertimeCash,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
   onApprovePendingGuard,
   onDenyPendingGuard,
   onApproveTeamSlot,
@@ -164,6 +172,9 @@ export function ClientRequestsList({
   const [overtimeDisputeReason, setOvertimeDisputeReason] = useState('');
   const [overtimeDisputeClockOutLocal, setOvertimeDisputeClockOutLocal] = useState('');
   const [overtimeDisputingJobId, setOvertimeDisputingJobId] = useState<string | null>(null);
+  const [scheduleApproveJobId, setScheduleApproveJobId] = useState<string | null>(null);
+  const [scheduleRejectJobId, setScheduleRejectJobId] = useState<string | null>(null);
+  const [payingScheduleJobId, setPayingScheduleJobId] = useState<string | null>(null);
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -248,6 +259,26 @@ export function ClientRequestsList({
       showAppToast(e instanceof Error ? e.message : 'Unable to start overtime checkout', { tone: 'error' });
     } finally {
       setPayingOvertimeJobId(null);
+    }
+  };
+
+  const handlePayScheduleExtension = async (req: SecurityRequest) => {
+    setPayingScheduleJobId(req.id);
+    try {
+      const amountCents = Math.round((req.scheduleChangeExtraAmount ?? 0) * 100);
+      const { url } = await createScheduleChangeCheckoutSession({
+        jobId: req.id,
+        clientEmail,
+        jobTitle: req.title,
+        amountCents,
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (e: unknown) {
+      showAppToast(e instanceof Error ? e.message : 'Unable to start schedule payment', { tone: 'error' });
+    } finally {
+      setPayingScheduleJobId(null);
     }
   };
 
@@ -687,6 +718,91 @@ export function ClientRequestsList({
                           )}
                         </div>
                       )}
+
+                      {(req.scheduleChangeStatus === 'pending_client' ||
+                        req.scheduleChangeStatus === 'awaiting_payment' ||
+                        req.scheduleChangeStatus === 'pending_staff_billing') && (
+                        <div className="border-t border-brand-border pt-3 space-y-3 w-full">
+                          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2.5">
+                            <p className="text-sm font-semibold text-sky-300">Schedule change</p>
+                            <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                              {req.scheduleChangeStatus === 'pending_client' && req.pendingStartDate && req.pendingEndDate && (
+                                <>
+                                  Guardr proposed new times:{' '}
+                                  <span className="text-brand-text">
+                                    {formatShiftRange(req.pendingStartDate, req.pendingEndDate)}
+                                  </span>
+                                  {(req.scheduleChangeExtraAmount ?? 0) > 0
+                                    ? ` · additional $${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} if approved`
+                                    : ''}
+                                </>
+                              )}
+                              {req.scheduleChangeStatus === 'awaiting_payment' &&
+                                ` Approved extension: $${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} — pay to update the listing.`}
+                              {req.scheduleChangeStatus === 'pending_staff_billing' &&
+                                ' Approved — Guardr is confirming cash billing before guards are notified.'}
+                            </p>
+                          </div>
+
+                          {canClientApproveStaffScheduleChange(req) && onApproveScheduleChange && onRejectScheduleChange && (
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setScheduleApproveJobId(req.id);
+                                  try {
+                                    await onApproveScheduleChange(req.id);
+                                  } finally {
+                                    setScheduleApproveJobId(null);
+                                  }
+                                }}
+                                disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
+                                className="app-button-primary !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                              >
+                                {scheduleApproveJobId === req.id ? (
+                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                                ) : (
+                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Approve new times</>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setScheduleRejectJobId(req.id);
+                                  try {
+                                    await onRejectScheduleChange(req.id);
+                                  } finally {
+                                    setScheduleRejectJobId(null);
+                                  }
+                                }}
+                                disabled={scheduleApproveJobId === req.id || scheduleRejectJobId === req.id}
+                                className="app-button-outline !h-9 !text-xs flex-1 gap-1.5 disabled:opacity-50"
+                              >
+                                {scheduleRejectJobId === req.id ? (
+                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Declining...</>
+                                ) : (
+                                  'Decline'
+                                )}
+                              </button>
+                            </div>
+                          )}
+
+                          {canClientPayScheduleChangeExtension(req) && paymentGates.allowStripe && (
+                            <button
+                              type="button"
+                              onClick={() => handlePayScheduleExtension(req)}
+                              disabled={payingScheduleJobId === req.id}
+                              className="app-button-primary !h-9 !text-xs w-full gap-1.5 disabled:opacity-50"
+                            >
+                              {payingScheduleJobId === req.id ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting checkout...</>
+                              ) : (
+                                <><CreditCard className="w-3.5 h-3.5" /> Pay ${(req.scheduleChangeExtraAmount ?? 0).toFixed(2)} extension</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
       
                       {onConfirmSelfAudit && (
                         <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />
@@ -836,6 +952,12 @@ export function ClientRequestsList({
                     )}
                     {req.scheduleChangeStatus === 'pending_staff' && (
                       <WfBadge tone="warning">Schedule change pending</WfBadge>
+                    )}
+                    {req.scheduleChangeStatus === 'pending_client' && (
+                      <WfBadge tone="warning">Guardr schedule proposal</WfBadge>
+                    )}
+                    {req.scheduleChangeStatus === 'awaiting_payment' && (
+                      <WfBadge tone="warning">Schedule extension due</WfBadge>
                     )}
                     <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                   </div>

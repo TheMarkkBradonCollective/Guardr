@@ -4,7 +4,14 @@ import { jobRequiresCashStaffConfirmation } from './guardAssignment';
 import { approvedTeamSlotGuardIds } from './guardSchedule';
 import { isJobPaid } from './jobEditRules';
 
-export type ScheduleChangeStatus = 'none' | 'pending_staff';
+export type ScheduleChangeStatus =
+  | 'none'
+  | 'pending_staff'
+  | 'pending_client'
+  | 'awaiting_payment'
+  | 'pending_staff_billing';
+
+export type ScheduleChangeRequestedBy = 'client' | 'staff';
 
 const RESCHEDULE_STATUSES: SecurityRequest['status'][] = ['open', 'accepted', 'in-progress'];
 
@@ -15,6 +22,10 @@ const ACTIVE_CREW_SLOT_STATUSES = new Set([
   'pending_client',
   'approved',
 ]);
+
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100;
+}
 
 /** Hours the client already paid for — preserved when overtime billing adjusts duration. */
 export function paidScheduleDurationHours(
@@ -35,7 +46,7 @@ export function isDurationExtension(paidHours: number, newDurationHours: number)
   return newDurationHours > paidHours + 0.01;
 }
 
-/** Cash jobs always need staff approval; longer shifts always need staff approval. */
+/** Cash jobs always need staff approval when the client requests a change. */
 export function scheduleChangeRequiresStaffApproval(
   job: Pick<
     SecurityRequest,
@@ -47,10 +58,93 @@ export function scheduleChangeRequiresStaffApproval(
   return isDurationExtension(paidScheduleDurationHours(job), newDurationHours);
 }
 
-export function canClientReschedulePaidJob(
-  job: Pick<SecurityRequest, 'status' | 'paymentStatus'>
+export function computeScheduleChangeExtraAmount(
+  job: Pick<
+    SecurityRequest,
+    'estimatedPayout' | 'hourlyRate' | 'guardsNeeded' | 'scheduledDurationHours' | 'durationHours'
+  >,
+  newDurationHours: number,
+  newEstimatedPayout?: number
+): number {
+  const paidHours = paidScheduleDurationHours(job);
+  if (!isDurationExtension(paidHours, newDurationHours)) return 0;
+  const guardsNeeded = job.guardsNeeded ?? 1;
+  const nextPayout =
+    newEstimatedPayout ??
+    roundMoney(newDurationHours * job.hourlyRate * guardsNeeded);
+  return Math.max(0, roundMoney(nextPayout - job.estimatedPayout));
+}
+
+export type ScheduleChangeResolution =
+  | { action: 'apply' }
+  | { action: 'awaiting_payment'; extraAmount: number }
+  | { action: 'pending_staff_billing'; extraAmount: number };
+
+/** What happens after staff or client approves a pending schedule change. */
+export function resolveScheduleChangeAfterApproval(
+  job: SecurityRequest,
+  approver: 'staff' | 'client'
+): ScheduleChangeResolution {
+  const newDuration = job.pendingDurationHours ?? job.durationHours;
+  const extraAmount = computeScheduleChangeExtraAmount(
+    job,
+    newDuration,
+    job.pendingEstimatedPayout
+  );
+  const cashJob = jobRequiresCashStaffConfirmation(job);
+
+  if (approver === 'staff' && job.scheduleChangeRequestedBy === 'client') {
+    if (cashJob) return { action: 'apply' };
+    if (extraAmount > 0) return { action: 'awaiting_payment', extraAmount };
+    return { action: 'apply' };
+  }
+
+  if (approver === 'client' && job.scheduleChangeRequestedBy === 'staff') {
+    if (cashJob) return { action: 'pending_staff_billing', extraAmount };
+    if (extraAmount > 0) return { action: 'awaiting_payment', extraAmount };
+    return { action: 'apply' };
+  }
+
+  return { action: 'apply' };
+}
+
+export function isScheduleChangePending(
+  job: Pick<SecurityRequest, 'scheduleChangeStatus'>
 ): boolean {
-  return isJobPaid(job) && RESCHEDULE_STATUSES.includes(job.status);
+  return !!job.scheduleChangeStatus && job.scheduleChangeStatus !== 'none';
+}
+
+export function canClientReschedulePaidSchedule(
+  job: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'scheduleChangeStatus'>
+): boolean {
+  return (
+    isJobPaid(job) &&
+    RESCHEDULE_STATUSES.includes(job.status) &&
+    (!job.scheduleChangeStatus || job.scheduleChangeStatus === 'none')
+  );
+}
+
+export function canStaffReschedulePaidSchedule(
+  job: Pick<SecurityRequest, 'status' | 'paymentStatus' | 'scheduleChangeStatus'>
+): boolean {
+  return canClientReschedulePaidSchedule(job);
+}
+
+export function canClientApproveStaffScheduleChange(
+  job: Pick<SecurityRequest, 'scheduleChangeStatus' | 'scheduleChangeRequestedBy'>
+): boolean {
+  return (
+    job.scheduleChangeStatus === 'pending_client' && job.scheduleChangeRequestedBy === 'staff'
+  );
+}
+
+export function canClientPayScheduleChangeExtension(
+  job: Pick<SecurityRequest, 'scheduleChangeStatus' | 'scheduleChangeExtraAmount'>
+): boolean {
+  return (
+    job.scheduleChangeStatus === 'awaiting_payment' &&
+    (job.scheduleChangeExtraAmount ?? 0) > 0
+  );
 }
 
 export function jobHasAssignedOrOnDutyGuards(job: SecurityRequest): boolean {
@@ -82,17 +176,27 @@ export function guardsToNotifyForScheduleChange(job: SecurityRequest): string[] 
   return [...ids];
 }
 
-export function isScheduleChangePending(
-  job: Pick<SecurityRequest, 'scheduleChangeStatus'>
-): boolean {
-  return job.scheduleChangeStatus === 'pending_staff';
-}
-
 export function getPendingScheduleChangeApprovals(
   requests: SecurityRequest[]
 ): SecurityRequest[] {
   return [...requests]
-    .filter((r) => r.scheduleChangeStatus === 'pending_staff')
+    .filter(
+      (r) =>
+        r.scheduleChangeStatus === 'pending_staff' ||
+        r.scheduleChangeStatus === 'pending_staff_billing'
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.scheduleChangeRequestedAt ?? b.startDate).getTime() -
+        new Date(a.scheduleChangeRequestedAt ?? a.startDate).getTime()
+    );
+}
+
+export function getPendingStaffBillingScheduleChanges(
+  requests: SecurityRequest[]
+): SecurityRequest[] {
+  return [...requests]
+    .filter((r) => r.scheduleChangeStatus === 'pending_staff_billing')
     .sort(
       (a, b) =>
         new Date(b.scheduleChangeRequestedAt ?? b.startDate).getTime() -
@@ -128,6 +232,20 @@ export function resolveScheduleChangeFromUpdate(
   };
 }
 
+export function pendingScheduleChangeFromJob(
+  job: SecurityRequest
+): ResolvedScheduleChange | null {
+  if (!job.pendingStartDate || !job.pendingEndDate || job.pendingDurationHours == null) {
+    return null;
+  }
+  return {
+    startDate: job.pendingStartDate,
+    endDate: job.pendingEndDate,
+    durationHours: job.pendingDurationHours,
+    estimatedPayout: job.pendingEstimatedPayout,
+  };
+}
+
 export function scheduleChangePendingDbColumns(
   job: Pick<
     SecurityRequest,
@@ -137,6 +255,8 @@ export function scheduleChangePendingDbColumns(
     | 'pendingEstimatedPayout'
     | 'scheduleChangeStatus'
     | 'scheduleChangeRequestedAt'
+    | 'scheduleChangeRequestedBy'
+    | 'scheduleChangeExtraAmount'
   >
 ) {
   return {
@@ -146,6 +266,8 @@ export function scheduleChangePendingDbColumns(
     pending_estimated_payout: job.pendingEstimatedPayout ?? null,
     schedule_change_status: job.scheduleChangeStatus ?? 'none',
     schedule_change_requested_at: job.scheduleChangeRequestedAt ?? null,
+    schedule_change_requested_by: job.scheduleChangeRequestedBy ?? null,
+    schedule_change_extra_amount: job.scheduleChangeExtraAmount ?? null,
   };
 }
 
@@ -156,6 +278,8 @@ export function clearScheduleChangePending(): {
   pendingEstimatedPayout: undefined;
   scheduleChangeStatus: 'none';
   scheduleChangeRequestedAt: undefined;
+  scheduleChangeRequestedBy: undefined;
+  scheduleChangeExtraAmount: undefined;
 } {
   return {
     pendingStartDate: undefined,
@@ -164,5 +288,7 @@ export function clearScheduleChangePending(): {
     pendingEstimatedPayout: undefined,
     scheduleChangeStatus: 'none',
     scheduleChangeRequestedAt: undefined,
+    scheduleChangeRequestedBy: undefined,
+    scheduleChangeExtraAmount: undefined,
   };
 }
