@@ -23,6 +23,8 @@ interface MapSelectionExperienceProps {
   clientActions?: React.ReactNode;
   /** Role-specific actions in the expanded card (guard crew controls, etc.) */
   detailActions?: React.ReactNode;
+  /** Guard map — full job detail (same as Jobs tab) instead of peek + expand */
+  layout?: 'peek' | 'detail';
 }
 
 export function MapSelectionExperience({
@@ -36,14 +38,15 @@ export function MapSelectionExperience({
   bottomOffsetClass = '',
   clientActions,
   detailActions,
+  layout = 'peek',
 }: MapSelectionExperienceProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(layout === 'detail');
 
   const selected = useMemo(() => job, [job?.id]);
 
   React.useEffect(() => {
-    setExpanded(false);
-  }, [selected?.id]);
+    setExpanded(layout === 'detail');
+  }, [selected?.id, layout]);
 
   if (!selected) return null;
 
@@ -68,16 +71,17 @@ export function MapSelectionExperience({
         role={role}
         route={route}
         loadingRoute={loadingRoute}
+        layout={layout}
         expanded={expanded}
         onClose={() => {
-          setExpanded(false);
+          setExpanded(layout === 'detail');
           onClose();
         }}
-        onExpand={() => setExpanded(true)}
-        onPrimaryAction={onPrimaryAction}
-        primaryLabel={primaryLabel}
+        onExpand={layout === 'detail' ? undefined : () => setExpanded(true)}
+        onPrimaryAction={layout === 'detail' ? undefined : onPrimaryAction}
+        primaryLabel={layout === 'detail' ? undefined : primaryLabel}
       >
-        {expanded && (
+        {(layout === 'detail' || expanded) && (
           <>
             {role !== 'guard' && (
               <JobListingProfile

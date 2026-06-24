@@ -18,13 +18,13 @@ import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
-import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, guardMapShouldRouteToJob, guardMapIsUnclaimedOpenOffer, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
+import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, guardMapShouldRouteToJob, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
 import { GuardJobCard } from './guard/GuardJobCard';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
-import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
+import { GuardMyJobsPanel, GuardMyJobDetail } from './guard/GuardMyJobsPanel';
 import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
 import { GuardSelfAuditModal } from './guard/GuardSelfAuditModal';
 import { GuardRatingModal } from './guard/GuardRatingModal';
@@ -368,11 +368,6 @@ export function GuardDashboard({
         ? guardMapShouldRouteToJob(guard.id, selectedJob as unknown as SecurityRequest)
         : false,
     [selectedJob, guard.id]
-  );
-
-  const selectedJobIsUnclaimedOffer = useMemo(
-    () => (selectedJob ? guardMapIsUnclaimedOpenOffer(guard, selectedJob, requests) : false),
-    [selectedJob, guard, requests]
   );
 
   const mapJobs = useMemo(() => {
@@ -906,6 +901,7 @@ export function GuardDashboard({
         <MapSelectionExperience
           job={selectedJob}
           role="guard"
+          layout="detail"
           route={mapRoute}
           loadingRoute={mapRouteLoading}
           onClose={() => {
@@ -913,54 +909,71 @@ export function GuardDashboard({
             setMapRoute(null);
             setMapRouteLoading(false);
           }}
-          onPrimaryAction={
-            selectedJobIsUnclaimedOffer ? () => handleAcceptJob(selectedJob.id) : undefined
-          }
-          primaryLabel="Slide to accept"
           bottomOffsetClass="map-browse-offset"
           detailActions={
-            <GuardJobCard
-              job={selectedJob}
-              guard={guard}
-              coworkerGuards={coworkerGuards}
-              onClose={() => setSelectedJobId(null)}
-              onDeclineDirectJob={
-                onDeclineDirectJob && selectedJob.status === 'open'
-                  ? () => void onDeclineDirectJob(selectedJob.id)
-                  : undefined
-              }
-              onApplyAsLead={
-                onApplyAsTeamLead && selectedJob.status === 'open'
-                  ? () => void onApplyAsTeamLead(selectedJob.id)
-                  : undefined
-              }
-              onInviteGuard={
-                onInviteTeamGuard && selectedJob.status === 'open'
-                  ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
-                  : undefined
-              }
-              onRemoveGuard={
-                onRemoveTeamGuard && selectedJob.status === 'open'
-                  ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
-                  : undefined
-              }
-              onUpdateCrewProfile={
-                onUpdateCrewProfile && selectedJob.status === 'open'
-                  ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
-                  : undefined
-              }
-              onAcceptInvite={
-                onAcceptTeamInvite && selectedJob.status === 'open'
-                  ? () => void onAcceptTeamInvite(selectedJob.id)
-                  : undefined
-              }
-              onDeclineInvite={
-                onDeclineTeamInvite && selectedJob.status === 'open'
-                  ? () => void onDeclineTeamInvite(selectedJob.id)
-                  : undefined
-              }
-              scheduleRequests={requests}
-            />
+            selectedJob.status === 'open' ? (
+              <div className="px-5 pb-8">
+                <GuardJobCard
+                job={selectedJob}
+                guard={guard}
+                coworkerGuards={coworkerGuards}
+                scheduleRequests={requests}
+                onAccept={() => handleAcceptJob(selectedJob.id)}
+                onDeclineDirectJob={
+                  onDeclineDirectJob && selectedJob.requestType === 'direct'
+                    ? () => void onDeclineDirectJob(selectedJob.id)
+                    : undefined
+                }
+                onApplyAsLead={
+                  onApplyAsTeamLead && selectedJob.status === 'open'
+                    ? () => void onApplyAsTeamLead(selectedJob.id)
+                    : undefined
+                }
+                onInviteGuard={
+                  onInviteTeamGuard && selectedJob.status === 'open'
+                    ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
+                    : undefined
+                }
+                onRemoveGuard={
+                  onRemoveTeamGuard && selectedJob.status === 'open'
+                    ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
+                    : undefined
+                }
+                onUpdateCrewProfile={
+                  onUpdateCrewProfile && selectedJob.status === 'open'
+                    ? (patch) => void onUpdateCrewProfile(selectedJob.id, patch)
+                    : undefined
+                }
+                onAcceptInvite={
+                  onAcceptTeamInvite && selectedJob.status === 'open'
+                    ? () => void onAcceptTeamInvite(selectedJob.id)
+                    : undefined
+                }
+                onDeclineInvite={
+                  onDeclineTeamInvite && selectedJob.status === 'open'
+                    ? () => void onDeclineTeamInvite(selectedJob.id)
+                    : undefined
+                }
+                onClose={() => setSelectedJobId(null)}
+              />
+              </div>
+            ) : (
+              <GuardMyJobDetail
+                job={selectedJob}
+                guard={guard}
+                jobChatThreads={jobChatThreads}
+                coworkerGuards={coworkerGuards}
+                scheduleRequests={requests}
+                onOpenMessages={openMessagesForJob}
+                onApproveOvertime={onApproveOvertime}
+                onApplyAsLead={onApplyAsTeamLead}
+                onInviteGuard={onInviteTeamGuard}
+                onRemoveGuard={onRemoveTeamGuard}
+                onUpdateCrewProfile={onUpdateCrewProfile}
+                onAcceptInvite={onAcceptTeamInvite}
+                onDeclineInvite={onDeclineTeamInvite}
+              />
+            )
           }
         />
       )}

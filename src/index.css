@@ -2348,6 +2348,21 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   flex-shrink: 0;
 }
 
+.map-offer-card-detail .map-offer-card-detail-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+.map-offer-card-detail .map-offer-card-stats-compact {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.map-offer-card-detail .map-offer-card-body-scroll {
+  margin-top: 0;
+}
+
 .map-offer-card-handle {
   width: 2.5rem;
   height: 0.25rem;
