@@ -283,6 +283,45 @@ export function applyOvertimePaidBilling(
   };
 }
 
+export interface EarlyClockOutRefund {
+  /** Actual hours worked (checkOut - checkIn). */
+  actualHours: number;
+  /** Scheduled hours the client was billed for. */
+  scheduledHours: number;
+  /** Hours not worked = scheduledHours - actualHours. */
+  unusedHours: number;
+  /** Amount to refund client (unusedHours × hourlyRate × guards). */
+  clientRefundAmount: number;
+  /** Guard earns only actual hours × guardPayRate × guards. */
+  guardActualEarnings: number;
+}
+
+/**
+ * Compute early clock-out refund when a guard ends before the scheduled end time.
+ * Returns null if guard worked the full shift or longer.
+ */
+export function computeEarlyClockOutRefund(
+  req: Pick<SecurityRequest, 'durationHours' | 'hourlyRate' | 'guardsNeeded' | 'guardPay' | 'checkInAudit' | 'checkOutAudit'>
+): EarlyClockOutRefund | null {
+  const checkInAt = req.checkInAudit?.checkedAt;
+  const checkOutAt = req.checkOutAudit?.checkedAt;
+  if (!checkInAt || !checkOutAt) return null;
+
+  const workedMs = new Date(checkOutAt).getTime() - new Date(checkInAt).getTime();
+  if (workedMs <= 0) return null;
+  const actualHours = roundMoney(workedMs / 3_600_000);
+  const scheduledHours = req.durationHours;
+  if (actualHours >= scheduledHours) return null;
+
+  const unusedHours = roundMoney(scheduledHours - actualHours);
+  const guards = req.guardsNeeded ?? 1;
+  const clientRefundAmount = roundMoney(unusedHours * req.hourlyRate * guards);
+  const guardRate = req.guardPay ?? computeGuardEarnings(1, req.hourlyRate) / 1;
+  const guardActualEarnings = roundMoney(actualHours * guardRate * guards);
+
+  return { actualHours, scheduledHours, unusedHours, clientRefundAmount, guardActualEarnings };
+}
+
 export function overtimeStatusLabel(status?: OvertimeStatus): string {
   switch (status) {
     case 'pending_guard':

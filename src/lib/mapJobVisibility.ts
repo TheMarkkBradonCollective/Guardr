@@ -22,8 +22,9 @@ export function clientOwnsRequest(
 export type MapViewerRole = 'guard' | 'client' | 'staff';
 type GuardMapJobLike = Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status'>;
 
+/** Staff sees all jobs — active, completed, past, and cancelled. */
 export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
-  return requests.filter((r) => r.status !== 'closed' || r.status === 'closed');
+  return [...requests];
 }
 
 /** Guards see available, their booked/scheduled, and their past work — not others' completed or cancelled jobs. */
@@ -82,7 +83,8 @@ export function staffMapPinKind(req: SecurityRequest): StaffMapPinKind {
   if (req.status === 'completed' || req.status === 'closed') return 'past';
   if (req.status === 'in-progress') return 'live';
   if (req.status === 'accepted') return 'scheduled';
-  if (req.status === 'open') return 'open';
+  if (req.status === 'open' || req.status === 'pending-review') return 'open';
+  if (req.status === 'cancelled') return 'cancelled';
   return 'other';
 }
 
@@ -157,6 +159,7 @@ export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null 
   if (req.status === 'accepted') return 'upcoming';
   if (req.status === 'open') return 'open';
   if (req.status === 'pending-review') return 'pending';
+  if (req.status === 'cancelled') return 'cancelled';
   return null;
 }
 

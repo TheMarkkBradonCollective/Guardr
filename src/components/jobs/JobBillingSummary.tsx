@@ -202,6 +202,26 @@ export function JobBillingSummaryFromRequest({
           )}
         </div>
       )}
+      {!hasOvertime && (req.earlyClockOutRefundAmount ?? 0) > 0 && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm border-t border-brand-border pt-3">
+          <span className="text-brand-text-muted">
+            Early clock-out: <strong className="text-brand-text">{req.earlyClockOutActualHours}h worked</strong>
+            {' '}of {req.durationHours}h scheduled
+          </span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            Client refund due: <strong>-${(req.earlyClockOutRefundAmount ?? 0).toFixed(2)}</strong>
+          </span>
+          {req.earlyClockOutRefundStatus === 'pending' && (
+            <span className="text-amber-400">Refund pending — staff to process</span>
+          )}
+          {req.earlyClockOutRefundStatus === 'returned_stripe' && (
+            <span className="text-emerald-600 dark:text-emerald-400">Refunded via Stripe</span>
+          )}
+          {req.earlyClockOutRefundStatus === 'returned_cash' && (
+            <span className="text-emerald-600 dark:text-emerald-400">Refunded in cash</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

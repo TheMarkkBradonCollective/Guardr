@@ -324,6 +324,7 @@ import {
 import { activeShiftBreak } from './lib/shiftBreaks';
 import {
   detectLateClockOutOvertime,
+  computeEarlyClockOutRefund,
   applyOvertimePaidBilling,
   computeOvertimeAmount,
   validateDisputeClaimedClockOut,
@@ -1529,6 +1530,9 @@ export default function App() {
           overtimeGuardPayoutAvailable: !!r.overtime_guard_payout_available,
           overtimeGuardPayoutAvailableAt: r.overtime_guard_payout_available_at || undefined,
           overtimeGuardPayoutMethod: parsePaymentMethod(r.overtime_guard_payout_method),
+          earlyClockOutActualHours: r.early_clock_out_actual_hours != null ? Number(r.early_clock_out_actual_hours) : undefined,
+          earlyClockOutRefundAmount: r.early_clock_out_refund_amount != null ? Number(r.early_clock_out_refund_amount) : undefined,
+          earlyClockOutRefundStatus: r.early_clock_out_refund_status ?? undefined,
           guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
           platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
           estimatedPayout: r.estimated_payout,
@@ -7160,6 +7164,14 @@ export default function App() {
       req && payload.status === 'completed' && checkOutAt
         ? detectLateClockOutOvertime(req, checkOutAt, { guardClaimedOvertime, checkInAt })
         : null;
+    // Early clock-out: guard left before scheduled end — calculate client refund
+    const earlyCheckoutRefund =
+      req && payload.status === 'completed' && !detectedOvertime
+        ? computeEarlyClockOutRefund({
+            ...req,
+            checkOutAudit: payload.checkOutAudit ?? req.checkOutAudit,
+          })
+        : null;
 
     setRequests(prev => prev.map(r => {
       if (r.id !== requestId) return r;
@@ -7177,6 +7189,11 @@ export default function App() {
         updated.overtimeStatus = detectedOvertime.overtimeStatus;
         updated.overtimeGuardApprovedAt = guardConfirmedAt;
         updated.overtimePaymentStatus = 'unpaid';
+      }
+      if (earlyCheckoutRefund) {
+        updated.earlyClockOutActualHours = earlyCheckoutRefund.actualHours;
+        updated.earlyClockOutRefundAmount = earlyCheckoutRefund.clientRefundAmount;
+        updated.earlyClockOutRefundStatus = 'pending';
       }
       if (payload.status) {
         updated.status = payload.status;
@@ -7206,6 +7223,11 @@ export default function App() {
         updates.overtime_status = detectedOvertime.overtimeStatus;
         updates.overtime_guard_approved_at = guardConfirmedAt;
         updates.overtime_payment_status = 'unpaid';
+      }
+      if (earlyCheckoutRefund) {
+        updates.early_clock_out_actual_hours = earlyCheckoutRefund.actualHours;
+        updates.early_clock_out_refund_amount = earlyCheckoutRefund.clientRefundAmount;
+        updates.early_clock_out_refund_status = 'pending';
       }
       if (payload.status) {
         updates.status = payload.status;
@@ -7313,6 +7335,16 @@ export default function App() {
           body: latest?.description ?? 'Incident reported on active shift',
         });
       }
+    }
+
+    if (earlyCheckoutRefund && earlyCheckoutRefund.clientRefundAmount > 0 && currentUser) {
+      const earlyReq = requests.find((r) => r.id === requestId);
+      void reportPushEvent(currentUser, {
+        type: 'payment_attention',
+        requestId,
+        location: earlyReq?.location,
+        body: `Early clock-out on "${earlyReq?.title}" — guard worked ${earlyCheckoutRefund.actualHours}h of ${earlyCheckoutRefund.scheduledHours}h. Client refund due: $${earlyCheckoutRefund.clientRefundAmount.toFixed(2)}.`,
+      });
     }
 
     if (detectedOvertime && detectedOvertime.overtimeAmount > 0 && currentUser) {

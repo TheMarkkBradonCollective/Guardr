@@ -655,6 +655,15 @@ export interface SecurityRequest {
   overtimeGuardPayoutAvailable?: boolean;
   overtimeGuardPayoutAvailableAt?: string;
   overtimeGuardPayoutMethod?: 'cash' | 'stripe';
+
+  // --- Early clock-out refund ---
+  /** Actual hours worked when guard clocked out before scheduled end. */
+  earlyClockOutActualHours?: number;
+  /** Amount owed back to client for unused scheduled time. */
+  earlyClockOutRefundAmount?: number;
+  /** Refund return status — pending until staff processes it. */
+  earlyClockOutRefundStatus?: 'pending' | 'returned_stripe' | 'returned_cash' | 'waived';
+
   status: JobStatus;
   stripePaymentIntentId?: string;
   paymentStatus?: PaymentStatus;
