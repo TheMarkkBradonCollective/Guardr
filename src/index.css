@@ -1739,6 +1739,77 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   max-width: min(92vw, 22rem);
 }
 
+/* Map status filter: − top-left, label center, + top-right */
+.map-filter-stepper {
+  position: absolute;
+  inset: 0;
+  z-index: 1003;
+  pointer-events: none;
+}
+
+.map-filter-step-btn {
+  position: absolute;
+  top: 10px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-float);
+  color: var(--brand-text);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.map-filter-step-btn--minus {
+  left: 0.875rem;
+}
+
+.map-filter-step-btn--plus {
+  right: 0.875rem;
+}
+
+.map-filter-step-btn:hover {
+  background: var(--brand-bg-sec);
+}
+
+.map-filter-step-btn:active {
+  transform: scale(0.94);
+  box-shadow: var(--shadow-sm);
+}
+
+.map-filter-step-label {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--shadow-float);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-text);
+  white-space: nowrap;
+}
+
+.guard-map-layout .map-route-banner,
+.client-map-layout .map-route-banner {
+  top: calc(10px + 2.75rem + 0.5rem);
+}
+
 .map-selection-layer {
   position: absolute;
   left: 0;
@@ -2245,7 +2316,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
-  top: 10px;
+  top: calc(10px + 2.75rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: 18rem;
@@ -2580,7 +2651,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
 
 body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
-  top: 10px;
+  top: calc(10px + 2.75rem + 0.5rem);
   left: 1rem;
   transform: none;
   max-width: min(calc(62vw - 2rem), 20rem);

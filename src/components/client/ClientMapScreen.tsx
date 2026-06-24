@@ -5,7 +5,14 @@ import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { ClientActiveShift } from './ClientActiveShift';
-import { clientBrowseMapJobs, clientMapPinKind } from '../../lib/mapJobVisibility';
+import {
+  clientBrowseMapJobs,
+  clientMapPinKind,
+  clientJobMatchesMapStatusFilter,
+  CLIENT_MAP_STATUS_FILTERS,
+  type ClientMapStatusFilter,
+} from '../../lib/mapJobVisibility';
+import { MapPinFilterStepper } from '../map/MapPinFilterStepper';
 import { getClientLiveJobs, getPrimaryClientLiveJob, guardForRequest, isClientLiveJob } from '../../lib/clientShift';
 import { ClientJobActionsPanel } from './ClientJobActionsPanel';
 import { ClientMapPostMenu } from './ClientMapBrowseDock';
@@ -39,6 +46,7 @@ export function ClientMapScreen({
     initialLiveJobId ?? primaryLiveJob?.id ?? null
   );
   const [selectedBrowseJobId, setSelectedBrowseJobId] = useState<string | null>(null);
+  const [mapStatusFilter, setMapStatusFilter] = useState<ClientMapStatusFilter>('all');
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
@@ -57,12 +65,23 @@ export function ClientMapScreen({
     return clientBrowseMapJobs(currentUser.id, currentUser.clientName, requests);
   }, [requests, currentUser]);
 
-  const mapJobs = showShiftOverlay ? clockedInJobs : browseJobs;
+  const filteredBrowseJobs = useMemo(
+    () => browseJobs.filter((job) => clientJobMatchesMapStatusFilter(job, mapStatusFilter)),
+    [browseJobs, mapStatusFilter]
+  );
+
+  const mapJobs = showShiftOverlay ? clockedInJobs : filteredBrowseJobs;
 
   const selectedBrowseJob = useMemo(
-    () => browseJobs.find((j) => j.id === selectedBrowseJobId) ?? null,
-    [browseJobs, selectedBrowseJobId]
+    () => filteredBrowseJobs.find((j) => j.id === selectedBrowseJobId) ?? null,
+    [filteredBrowseJobs, selectedBrowseJobId]
   );
+
+  useEffect(() => {
+    if (selectedBrowseJobId && !filteredBrowseJobs.some((j) => j.id === selectedBrowseJobId)) {
+      setSelectedBrowseJobId(null);
+    }
+  }, [filteredBrowseJobs, selectedBrowseJobId]);
 
   useEffect(() => {
     if (initialLiveJobId) setSelectedLiveJobId(initialLiveJobId);
@@ -89,6 +108,14 @@ export function ClientMapScreen({
     <div className="h-full min-h-0 relative overflow-hidden guard-map-layout client-map-layout">
       {selectedBrowseJob && !showShiftOverlay && (
         <MapRouteBanner route={route} loading={routeLoading} label="Your job" />
+      )}
+
+      {!showShiftOverlay && (
+        <MapPinFilterStepper
+          filters={CLIENT_MAP_STATUS_FILTERS}
+          value={mapStatusFilter}
+          onChange={setMapStatusFilter}
+        />
       )}
 
       <ShiftMap

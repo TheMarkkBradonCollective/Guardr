@@ -18,7 +18,8 @@ import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
-import { guardVisibleMapJobs, guardMapPinKind } from '../lib/mapJobVisibility';
+import { guardVisibleMapJobs, guardMapPinKind, guardJobMatchesMapStatusFilter, GUARD_MAP_STATUS_FILTERS, type GuardMapStatusFilter } from '../lib/mapJobVisibility';
+import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
 import { GuardJobCard } from './guard/GuardJobCard';
 import { GuardActiveShift } from './guard/GuardActiveShift';
@@ -263,6 +264,7 @@ export function GuardDashboard({
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const [mapRoute, setMapRoute] = useState<MapRouteSummary | null>(null);
   const [mapRouteLoading, setMapRouteLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<JobCategoryId | null>(null);
@@ -365,11 +367,22 @@ export function GuardDashboard({
       activeShiftJob?.status === 'in-progress' &&
       activePhase &&
       activePhase !== 'complete';
-    if (onDutyOverlay) {
-      return visible.filter((j) => j.status === 'in-progress' && j.assignedGuardId === guard.id);
+    const base = onDutyOverlay
+      ? visible.filter((j) => j.status === 'in-progress' && j.assignedGuardId === guard.id)
+      : visible.filter((j) => j.status !== 'in-progress');
+    if (onDutyOverlay) return base;
+    return base.filter((j) =>
+      guardJobMatchesMapStatusFilter(guard.id, j as unknown as SecurityRequest, mapStatusFilter)
+    );
+  }, [requests, guard.id, activeTab, activeShiftJob, activePhase, mapStatusFilter]);
+
+  useEffect(() => {
+    if (selectedJobId && !mapJobs.some((j) => j.id === selectedJobId)) {
+      setSelectedJobId(null);
+      setMapRoute(null);
+      setMapRouteLoading(false);
     }
-    return visible.filter((j) => j.status !== 'in-progress');
-  }, [requests, guard.id, activeTab, activeShiftJob, activePhase]);
+  }, [mapJobs, selectedJobId]);
 
   const browseMapJobs = useMemo(() => {
     const visible = guardVisibleMapJobs(guard.id, requests, requests);
@@ -826,6 +839,14 @@ export function GuardDashboard({
           route={mapRoute}
           loading={mapRouteLoading}
           label="Route to offer"
+        />
+      )}
+
+      {activeTab === 'map' && !showShiftOverlay && (
+        <MapPinFilterStepper
+          filters={GUARD_MAP_STATUS_FILTERS}
+          value={mapStatusFilter}
+          onChange={setMapStatusFilter}
         />
       )}
 
