@@ -247,12 +247,12 @@ export function ClientHomeScreen({
         {upcoming.length === 0 ? (
           <p className="app-empty-state">No upcoming coverage. Post a job offer to get started.</p>
         ) : (
-          <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
+          <div className="flex flex-col gap-2">
             {upcoming.map((req) => (
               <AppItemCard
                 key={req.id}
                 onClick={() => onAction('requests')}
-                className="flex-col !items-stretch gap-2 snap-start shrink-0 w-[min(100%,260px)] !border !border-brand-border"
+                className="flex-col !items-stretch gap-2 !border !border-brand-border w-full"
               >
                 <div className="flex items-start gap-2">
                   <Shield className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
