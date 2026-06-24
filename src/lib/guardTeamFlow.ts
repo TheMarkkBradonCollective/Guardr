@@ -1,9 +1,11 @@
 import type { JobGuardSlot, SecurityGuard, SecurityRequest } from '../types';
 import type { ScheduleJob } from './guardSchedule';
 import {
+  allCrewSlotsInternallyConfirmed,
   computeInviteExpiresAt,
   findOpenSlot,
   guardHasJobTeamAssociation,
+  isFullCrewAwaitingClientApproval,
   isMultiGuardJob,
   mergeJobSlots,
   newSlotId,
@@ -21,6 +23,12 @@ function scheduleError(
 ): { error: string } | null {
   const message = guardScheduleConflictError(guardId, job, allJobs, { guardName });
   return message ? { error: message } : null;
+}
+
+function internalCrewSlotStatus(
+  skipStaff: boolean
+): 'crew_confirmed' | 'pending_staff' {
+  return skipStaff ? 'crew_confirmed' : 'pending_staff';
 }
 
 export function applyAsTeamLead(
@@ -43,7 +51,7 @@ export function applyAsTeamLead(
   }
   const ts = now.toISOString();
   const skipStaff = shouldSkipStaffGuardReviewForTrusted(lead, job);
-  const leadStatus = skipStaff ? ('pending_client' as const) : ('pending_staff' as const);
+  const leadStatus = internalCrewSlotStatus(skipStaff);
   const nextSlots = slots.map((slot) => {
     if (slot.slotIndex !== 1) return slot;
     return {
@@ -63,8 +71,6 @@ export function applyAsTeamLead(
       teamCode: job.teamCode ?? generateUniqueTeamCode(allJobs),
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: skipStaff ? lead.id : undefined,
-      staffApprovedGuardAt: skipStaff ? ts : undefined,
     },
     slots: nextSlots,
   };
@@ -126,14 +132,14 @@ export function acceptTeamInvite(
     return { error: 'You are already on a team for this job.' };
   }
   const ts = now.toISOString();
-  const skipStaff = !jobRequiresCashStaffConfirmation(job);
-  const nextStatus = skipStaff ? ('pending_client' as const) : ('pending_staff' as const);
+  const requiresStaff = jobRequiresCashStaffConfirmation(job);
+  const nextStatus = internalCrewSlotStatus(!requiresStaff);
   const nextSlots = slots.map((s) =>
     s.id === slot.id
       ? {
           ...s,
           status: nextStatus,
-          staffApprovedAt: skipStaff ? ts : undefined,
+          staffApprovedAt: requiresStaff ? undefined : ts,
           updatedAt: ts,
         }
       : s
@@ -144,8 +150,6 @@ export function acceptTeamInvite(
       ...job,
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: skipStaff ? guardId : job.pendingGuardId,
-      staffApprovedGuardAt: skipStaff ? ts : job.staffApprovedGuardAt,
     },
     slots: nextSlots,
   };
@@ -184,6 +188,9 @@ export function applyToOpenTeamSlot(
   now = new Date()
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'Use the standard apply flow for this job.' };
+  if (!job.teamLeadId) {
+    return { error: 'Apply independently for this job — no crew coordinator yet.' };
+  }
   const blocked = scheduleError(guardId, job, allJobs);
   if (blocked) return blocked;
   const slots = mergeJobSlots(job, job.guardSlots);
@@ -193,7 +200,7 @@ export function applyToOpenTeamSlot(
   const openSlot = findOpenSlot(slots);
   if (!openSlot) return { error: 'No open slots on this job.' };
   const ts = now.toISOString();
-  const nextStatus = skipStaffReview ? ('pending_client' as const) : ('pending_staff' as const);
+  const nextStatus = internalCrewSlotStatus(skipStaffReview);
   const nextSlots = slots.map((s) =>
     s.slotIndex === openSlot.slotIndex
       ? {
@@ -211,8 +218,6 @@ export function applyToOpenTeamSlot(
       ...job,
       guardSlots: nextSlots,
       applicants: nextApplicants,
-      pendingGuardId: skipStaffReview ? guardId : job.pendingGuardId,
-      staffApprovedGuardAt: skipStaffReview ? ts : job.staffApprovedGuardAt,
     },
     slots: nextSlots,
   };
@@ -246,15 +251,105 @@ export function staffApproveTeamSlot(
   const ts = now.toISOString();
   const nextSlots = slots.map((s) =>
     s.id === slot.id
-      ? { ...s, status: 'pending_client' as const, staffApprovedAt: ts, updatedAt: ts }
+      ? { ...s, status: 'crew_confirmed' as const, staffApprovedAt: ts, updatedAt: ts }
       : s
   );
   return {
     job: {
       ...job,
       guardSlots: nextSlots,
-      pendingGuardId: guardId,
-      staffApprovedGuardAt: ts,
+    },
+    slots: nextSlots,
+  };
+}
+
+/** When every crew slot is internally confirmed, expose the full roster to the client at once. */
+export function promoteFullCrewToClientIfReady(
+  job: SecurityRequest,
+  slots: JobGuardSlot[],
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[]; promoted: boolean } {
+  if (!job.teamLeadId || !isMultiGuardJob(job)) {
+    return { job, slots, promoted: false };
+  }
+  const needed = job.guardsNeeded ?? 1;
+  if (!allCrewSlotsInternallyConfirmed(slots, needed)) {
+    return { job, slots, promoted: false };
+  }
+  if (isFullCrewAwaitingClientApproval({ ...job, guardSlots: slots })) {
+    return { job, slots, promoted: false };
+  }
+  const ts = now.toISOString();
+  const nextSlots = slots.map((s) =>
+    s.status === 'crew_confirmed'
+      ? { ...s, status: 'pending_client' as const, updatedAt: ts }
+      : s
+  );
+  return {
+    job: { ...job, guardSlots: nextSlots },
+    slots: nextSlots,
+    promoted: true,
+  };
+}
+
+export function clientApproveFullTeam(
+  job: SecurityRequest,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (!isFullCrewAwaitingClientApproval(job)) {
+    return { error: 'This coordinated crew is not ready for your approval yet.' };
+  }
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const ts = now.toISOString();
+  const nextSlots = slots.map((s) =>
+    s.status === 'pending_client'
+      ? { ...s, status: 'approved' as const, clientApprovedAt: ts, updatedAt: ts }
+      : s
+  );
+  return {
+    job: {
+      ...job,
+      guardSlots: nextSlots,
+      pendingGuardId: undefined,
+      staffApprovedGuardAt: undefined,
+    },
+    slots: nextSlots,
+  };
+}
+
+export function clientDenyFullTeam(
+  job: SecurityRequest,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (!isFullCrewAwaitingClientApproval(job)) {
+    return { error: 'This coordinated crew is not awaiting your approval.' };
+  }
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const ts = now.toISOString();
+  const removedGuardIds = new Set<string>();
+  const nextSlots = slots.map((s) => {
+    if (s.status !== 'pending_client' || !s.guardId) return s;
+    removedGuardIds.add(s.guardId);
+    return {
+      ...s,
+      status: 'open' as const,
+      guardId: null,
+      invitedByGuardId: null,
+      invitedAt: undefined,
+      inviteExpiresAt: undefined,
+      staffApprovedAt: undefined,
+      clientApprovedAt: undefined,
+      updatedAt: ts,
+    };
+  });
+  const nextApplicants = job.applicants.filter((id) => !removedGuardIds.has(id));
+  return {
+    job: {
+      ...job,
+      guardSlots: nextSlots,
+      applicants: nextApplicants,
+      teamLeadId: undefined,
+      teamCode: undefined,
     },
     slots: nextSlots,
   };

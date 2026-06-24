@@ -55,8 +55,8 @@ import {
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
-import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
-import { isMultiGuardJob } from '../../lib/guardTeams';
+import { isMultiGuardJob, isFullCrewAwaitingClientApproval, isIndependentGuardPendingForClient } from '../../lib/guardTeams';
+import { confirmApproveFullTeam, confirmDenyFullTeam } from '../../lib/importantActionConfirm';
 import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -82,6 +82,8 @@ interface ClientRequestsListProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onApproveFullTeam?: (requestId: string) => void | Promise<void>;
+  onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   crewSettings?: PlatformSettings;
   /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
@@ -137,6 +139,8 @@ export function ClientRequestsList({
   onDenyPendingGuard,
   onApproveTeamSlot,
   onDenyTeamSlot,
+  onApproveFullTeam,
+  onDenyFullTeam,
   crewSettings,
   teamLeadSettings,
   onRequestNew,
@@ -266,7 +270,8 @@ export function ClientRequestsList({
     const pendingGuard = req.pendingGuardId
       ? guards.find((g) => g.id === req.pendingGuardId)
       : undefined;
-    const awaitingClientGuard = isAwaitingClientGuardApproval(req);
+    const awaitingClientGuard = isIndependentGuardPendingForClient(req);
+    const fullCrewAwaitingClient = isFullCrewAwaitingClientApproval(req);
     return (
             <div className="staff-detail-pane space-y-4">
                       <JobListingProfile
@@ -283,23 +288,26 @@ export function ClientRequestsList({
                         }
                       />
 
-                      {isMultiGuardJob(req) && billingSettings && (
+                      {isMultiGuardJob(req) && billingSettings && fullCrewAwaitingClient && (
                         <CrewTeamUpcostNotice req={req} crewSettings={billingSettings} />
                       )}
 
-                      {isMultiGuardJob(req) && (
+                      {fullCrewAwaitingClient && (
                         <JobTeamRoster
                           job={req}
                           guards={guards}
                           variant="client"
-                          onApproveSlot={
-                            onApproveTeamSlot
-                              ? (slotId) => void onApproveTeamSlot(req.id, slotId)
+                          showFullTeamActions={
+                            !!(onApproveFullTeam && onDenyFullTeam)
+                          }
+                          onApproveFullTeam={
+                            onApproveFullTeam
+                              ? () => void onApproveFullTeam(req.id)
                               : undefined
                           }
-                          onDenySlot={
-                            onDenyTeamSlot
-                              ? (slotId) => void onDenyTeamSlot(req.id, slotId)
+                          onDenyFullTeam={
+                            onDenyFullTeam
+                              ? () => void onDenyFullTeam(req.id)
                               : undefined
                           }
                         />
@@ -353,15 +361,30 @@ export function ClientRequestsList({
       
                       {req.status === 'open' && (
                         <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && !isMultiGuardJob(req) && (
+                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && (
                             <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
                               <div className="flex items-start gap-3">
                                 <ProfileAvatar src={pendingGuard.avatar} name={pendingGuard.name} size="sm" />
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-brand-text">Approve your guard</p>
+                                  <p className="text-sm font-semibold text-brand-text">
+                                    {isMultiGuardJob(req) ? 'Independent guard request' : 'Approve your guard'}
+                                  </p>
                                   <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
-                                    Guardr approved <span className="font-medium text-brand-text">{pendingGuard.name}</span> for this job.
-                                    Confirm to hire them, or decline to send the job back to the applicant list.
+                                    {isMultiGuardJob(req) ? (
+                                      <>
+                                        Guardr approved{' '}
+                                        <span className="font-medium text-brand-text">{pendingGuard.name}</span>{' '}
+                                        as an independent applicant. This is separate from any coordinated crew
+                                        forming for this job.
+                                      </>
+                                    ) : (
+                                      <>
+                                        Guardr approved{' '}
+                                        <span className="font-medium text-brand-text">{pendingGuard.name}</span>{' '}
+                                        for this job. Confirm to hire them, or decline to send the job back to the
+                                        applicant list.
+                                      </>
+                                    )}
                                   </p>
                                   <p className="text-xs text-brand-text-muted mt-1">
                                     ★ {pendingGuard.rating.toFixed(1)} · {pendingGuard.jobsCompleted} jobs completed
@@ -462,8 +485,12 @@ export function ClientRequestsList({
                             </p>
                           )}
                           <p className="text-sm text-brand-text-muted">
-                            {awaitingClientGuard ? (
-                              <>Waiting for your approval on the guard Guardr recommended.</>
+                            {fullCrewAwaitingClient && awaitingClientGuard ? (
+                              <>You have an independent guard request and a full coordinated crew ready — choose which option to approve.</>
+                            ) : fullCrewAwaitingClient ? (
+                              <>A coordinated crew of {req.guardsNeeded} guards is ready for your approval.</>
+                            ) : awaitingClientGuard ? (
+                              <>Waiting for your approval on the independent guard Guardr recommended.</>
                             ) : req.applicants.length === 0 ? (
                               <>Guards can apply to this offer. Guardr staff will review applicants and send the best fit for your approval.</>
                             ) : (
@@ -753,7 +780,8 @@ export function ClientRequestsList({
       ) : (
         <AppItemCardStack>
           {filtered.map((req) => {
-            const awaitingClientGuard = isAwaitingClientGuardApproval(req);
+            const awaitingIndependentGuard = isIndependentGuardPendingForClient(req);
+            const awaitingFullCrew = isFullCrewAwaitingClientApproval(req);
             return (
               <JobListCard
                 key={req.id}
@@ -765,8 +793,11 @@ export function ClientRequestsList({
                       {jobPostingTypeLabel(req.requestType)}
                     </WfBadge>
                     <WfBadge tone={statusBadgeTone(req.status)}>{JOB_STATUS_LABELS[req.status]}</WfBadge>
-                    {awaitingClientGuard && (
-                      <WfBadge tone="warning">Guard pending your approval</WfBadge>
+                    {awaitingIndependentGuard && (
+                      <WfBadge tone="warning">Independent guard pending</WfBadge>
+                    )}
+                    {awaitingFullCrew && (
+                      <WfBadge tone="warning">Full crew pending</WfBadge>
                     )}
                     <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                   </div>

@@ -147,12 +147,15 @@ import {
   acceptTeamInvite,
   applyAsTeamLead,
   applyToOpenTeamSlot,
+  clientApproveFullTeam,
   clientApproveTeamSlot,
+  clientDenyFullTeam,
   clientDenyTeamSlot,
   declineTeamInvite,
   ensureSlotIds,
   joinTeamWithCode,
   inviteGuardToTeam,
+  promoteFullCrewToClientIfReady,
   revokeLeadIfNeeded,
   staffApproveTeamSlot,
 } from './lib/guardTeamFlow';
@@ -5376,11 +5379,22 @@ export default function App() {
     await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
   };
 
-  const persistTeamJobUpdate = async (updatedJob: SecurityRequest, slots: JobGuardSlot[]) => {
-    const normalizedSlots = ensureSlotIds(updatedJob, slots);
+  const persistTeamJobUpdate = async (
+    updatedJob: SecurityRequest,
+    slots: JobGuardSlot[],
+    options?: { notifyClientFullTeam?: boolean }
+  ) => {
+    let normalizedSlots = ensureSlotIds(updatedJob, slots);
     let nextJob = revokeLeadIfNeeded({ ...updatedJob, guardSlots: normalizedSlots }, normalizedSlots);
     if (nextJob.teamLeadId && isMultiGuardJob(nextJob) && !nextJob.teamCode) {
       nextJob = { ...nextJob, teamCode: generateUniqueTeamCode(requests) };
+    }
+    const promotion = promoteFullCrewToClientIfReady(nextJob, normalizedSlots);
+    let promoted = false;
+    if (promotion.promoted) {
+      nextJob = promotion.job;
+      normalizedSlots = promotion.slots;
+      promoted = true;
     }
     setRequests((prev) =>
       prev.map((r) => (r.id === nextJob.id ? nextJob : r))
@@ -5397,7 +5411,16 @@ export default function App() {
         assignedGuardId: nextJob.assignedGuardId,
       });
     }
-    return nextJob;
+    if (promoted && currentUser && options?.notifyClientFullTeam !== false) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: nextJob.clientId,
+        requestId: nextJob.id,
+        title: 'Full crew ready for approval',
+        body: `A coordinated crew of ${nextJob.guardsNeeded ?? 1} guards is ready for "${nextJob.title}". Review the full team or your independent guard option.`,
+      });
+    }
+    return { job: nextJob, slots: normalizedSlots, promoted };
   };
 
   const finalizeTeamJobIfReady = async (job: SecurityRequest, slots: JobGuardSlot[]) => {
@@ -5450,39 +5473,33 @@ export default function App() {
       return;
     }
     const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
-    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: true }
+    );
     if (isMultiGuardJob(nextJob)) {
       await ensureTeamChatThread(nextJob);
     }
-    if (currentUser) {
-      if (skipStaff) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: job.clientId,
-          requestId,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          title: 'Approve your guard',
-          body: `${activeGuard.name} applied as crew coordinator for "${job.title}". Confirm to hire them.`,
-        });
-      } else {
-        void reportPushEvent(currentUser, {
-          type: 'guard_application',
-          requestId,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          location: job.location,
-          body: `${activeGuard.name} applied as crew coordinator (cash job) for "${job.title}"`,
-        });
-      }
+    if (currentUser && !skipStaff) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_application',
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        location: job.location,
+        body: `${activeGuard.name} applied as crew coordinator (cash job) for "${job.title}"`,
+      });
     }
     appToast(
-      skipStaff
-        ? 'Crew coordinator application sent to client for approval.'
-        : 'Crew coordinator application submitted. Guardr staff will review (cash job).',
+      promoted
+        ? 'Full crew is ready — the client can now review your team.'
+        : skipStaff
+          ? 'You are coordinating this crew. The client will review once every guard confirms.'
+          : 'Crew coordinator application submitted. Guardr staff will review (cash job).',
       'success'
     );
-    await finalizeTeamJobIfReady(nextJob, result.slots);
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
   const handleApplyOpenTeamSlot = async (requestId: string) => {
@@ -5494,34 +5511,30 @@ export default function App() {
       appToast(result.error, 'error');
       return;
     }
-    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
-    if (skipStaff) {
-      if (currentUser) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: job.clientId,
-          requestId,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          title: 'Approve your guard',
-          body: `${activeGuard.name} applied for an open slot on "${job.title}".`,
-        });
-      }
-      appToast('Open slot application sent to client for approval.', 'success');
-    } else {
-      if (currentUser) {
-        void reportPushEvent(currentUser, {
-          type: 'guard_application',
-          requestId,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          location: job.location,
-          body: `${activeGuard.name} applied for an open slot on "${job.title}"`,
-        });
-      }
-      appToast('Application submitted. Guardr staff will review your open-slot application.', 'success');
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: true }
+    );
+    if (!skipStaff && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_application',
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        location: job.location,
+        body: `${activeGuard.name} applied for an open slot on "${job.title}"`,
+      });
     }
-    await finalizeTeamJobIfReady(nextJob, result.slots);
+    appToast(
+      promoted
+        ? 'Full crew is ready — the client can now review your team.'
+        : skipStaff
+          ? 'You joined the crew. The client will review once every guard confirms.'
+          : 'Application submitted. Guardr staff will review your crew slot request.',
+      'success'
+    );
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
   const handleJoinTeamWithCode = async (rawCode: string) => {
@@ -5536,36 +5549,30 @@ export default function App() {
       appToast(result.error, 'error');
       return;
     }
-    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser) {
-      if (skipStaff) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: nextJob.clientId,
-          requestId: nextJob.id,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          title: 'Approve your guard',
-          body: `${activeGuard.name} joined "${nextJob.title}" with your team code.`,
-        });
-      } else {
-        void reportPushEvent(currentUser, {
-          type: 'guard_application',
-          requestId: nextJob.id,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          location: nextJob.location,
-          body: `${activeGuard.name} joined "${nextJob.title}" with a team code`,
-        });
-      }
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: true }
+    );
+    if (!skipStaff && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_application',
+        requestId: nextJob.id,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        location: nextJob.location,
+        body: `${activeGuard.name} joined "${nextJob.title}" with a team code`,
+      });
     }
     appToast(
-      skipStaff
-        ? `Joined "${nextJob.title}" — sent to client for approval.`
-        : `Joined "${nextJob.title}" — Guardr staff will review your slot request.`,
+      promoted
+        ? `Full crew for "${nextJob.title}" is ready for client review.`
+        : skipStaff
+          ? `Joined "${nextJob.title}". The client will review once every guard confirms.`
+          : `Joined "${nextJob.title}" — Guardr staff will review your slot request.`,
       'success'
     );
-    await finalizeTeamJobIfReady(nextJob, result.slots);
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
   const handleInviteTeamGuard = async (requestId: string, inviteeId: string) => {
@@ -5598,20 +5605,18 @@ export default function App() {
       appToast(result.error, 'error');
       return;
     }
-    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: job.clientId,
-        requestId,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        title: 'Approve your guard',
-        body: `${activeGuard.name} accepted a team invite for "${job.title}".`,
-      });
-    }
-    appToast('Invite accepted — awaiting client approval.', 'success');
-    await finalizeTeamJobIfReady(nextJob, result.slots);
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: true }
+    );
+    appToast(
+      promoted
+        ? 'Full crew is ready — the client can now review your team.'
+        : 'Invite accepted — waiting for the rest of the crew to confirm.',
+      'success'
+    );
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
   const handleDeclineTeamInvite = async (requestId: string) => {
@@ -5624,6 +5629,66 @@ export default function App() {
     }
     await persistTeamJobUpdate(result.job, result.slots);
     appToast('Invitation declined.', 'info');
+  };
+
+  const handleClientApproveFullTeam = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    for (const slot of job.guardSlots ?? []) {
+      if (!slot.guardId || slot.status !== 'pending_client') continue;
+      const guard = guards.find((g) => g.id === slot.guardId);
+      const scheduleBlocked = guardScheduleConflictError(slot.guardId, job, requests, {
+        guardName: guard?.name,
+      });
+      if (scheduleBlocked) {
+        appToast(scheduleBlocked, 'error');
+        return;
+      }
+    }
+    const result = clientApproveFullTeam(job);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots, {
+      notifyClientFullTeam: false,
+    });
+    if (currentUser) {
+      for (const slot of nextSlots.filter((s) => s.status === 'approved' && s.guardId)) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: slot.guardId!,
+          requestId,
+          body: `The client approved your coordinated crew for "${job.title}".`,
+        });
+      }
+    }
+    appToast('Full crew approved.', 'success');
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
+  };
+
+  const handleClientDenyFullTeam = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = clientDenyFullTeam(job);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
+    if (currentUser) {
+      for (const slot of job.guardSlots ?? []) {
+        if (slot.guardId && slot.status === 'pending_client') {
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: slot.guardId,
+            requestId,
+            body: `The client declined the coordinated crew for "${job.title}".`,
+          });
+        }
+      }
+    }
+    appToast('Coordinated crew declined — slots reopened.', 'info');
   };
 
   const handleClientApproveTeamSlot = async (requestId: string, slotId: string) => {
@@ -5646,7 +5711,9 @@ export default function App() {
       return;
     }
     const slot = result.slots.find((s) => s.id === slotId);
-    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots, {
+      notifyClientFullTeam: false,
+    });
     if (slot?.guardId && currentUser) {
       void reportPushEvent(currentUser, {
         type: 'assignment',
@@ -5656,7 +5723,7 @@ export default function App() {
       });
     }
     appToast('Guard approved for this slot.', 'success');
-    await finalizeTeamJobIfReady(nextJob, result.slots);
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
   const handleClientDenyTeamSlot = async (requestId: string, slotId: string) => {
@@ -5899,7 +5966,39 @@ export default function App() {
     }
 
     if (isMultiGuardJob(job)) {
-      appToast('Use Apply as crew coordinator or Apply for open slot on this job.', 'info');
+      if (shouldSkipStaffGuardReviewForTrusted(activeGuard, job)) {
+        const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
+        setRequests((prev) =>
+          prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
+        );
+        if (isDbConnected) {
+          await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
+        }
+        await proposeGuardForClientApproval(requestId, activeGuardId);
+        appToast('Independent application sent to client for approval.', 'success');
+        return;
+      }
+      const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
+      setRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
+      );
+      if (isDbConnected) {
+        await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
+      }
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'guard_application',
+          requestId,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          location: job.location,
+          body: `${activeGuard.name} applied independently for "${job.title}"`,
+        });
+      }
+      appToast(
+        'Independent application submitted. Guardr staff may send you to the client separately from coordinated crews.',
+        'success'
+      );
       return;
     }
 
@@ -5986,32 +6085,41 @@ export default function App() {
       return;
     }
     if (isMultiGuardJob(job)) {
-      const result = staffApproveTeamSlot(job, guardId);
-      if ('error' in result) {
-        appToast(result.error, 'error');
+      const onTeamRoster = (job.guardSlots ?? []).some(
+        (s) => s.guardId === guardId && ['pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
+      );
+      if (onTeamRoster) {
+        const result = staffApproveTeamSlot(job, guardId);
+        if ('error' in result) {
+          appToast(result.error, 'error');
+          return;
+        }
+        const guard = guards.find((g) => g.id === guardId);
+        const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+          result.job,
+          result.slots,
+          { notifyClientFullTeam: true }
+        );
+        if (currentUser && guard) {
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: guardId,
+            requestId,
+            body: promoted
+              ? `Full crew for "${job.title}" is ready for client review.`
+              : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
+          });
+        }
+        appToast(
+          promoted
+            ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
+            : `${guard?.name ?? 'Guard'} confirmed on crew — waiting for remaining guards.`,
+          'success'
+        );
+        await finalizeTeamJobIfReady(nextJob, nextSlots);
         return;
       }
-      const guard = guards.find((g) => g.id === guardId);
-      const nextJob = await persistTeamJobUpdate(result.job, result.slots);
-      if (currentUser && guard) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: job.clientId,
-          requestId,
-          guardId,
-          guardName: guard.name,
-          title: 'Approve your guard',
-          body: `Guardr approved ${guard.name} for an open slot on "${job.title}".`,
-        });
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: guardId,
-          requestId,
-          body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
-        });
-      }
-      appToast(`${guard?.name ?? 'Guard'} sent to client for slot approval.`, 'success');
-      await finalizeTeamJobIfReady(nextJob, result.slots);
+      await proposeGuardForClientApproval(requestId, guardId);
       return;
     }
     await proposeGuardForClientApproval(requestId, guardId);
@@ -7573,6 +7681,8 @@ export default function App() {
               onDenyPendingGuard={handleClientDenyPendingGuard}
               onApproveTeamSlot={handleClientApproveTeamSlot}
               onDenyTeamSlot={handleClientDenyTeamSlot}
+              onApproveFullTeam={handleClientApproveFullTeam}
+              onDenyFullTeam={handleClientDenyFullTeam}
               crewSettings={platformSettings}
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}

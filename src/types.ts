@@ -568,6 +568,8 @@ export type JobGuardSlotStatus =
   | 'open'
   | 'invited'
   | 'pending_staff'
+  /** Guard confirmed on crew internally — waiting for full roster before client review. */
+  | 'crew_confirmed'
   | 'pending_client'
   | 'approved'
   | 'declined'

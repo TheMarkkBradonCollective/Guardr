@@ -193,10 +193,16 @@ export function GuardTeamPanel({
         />
       )}
 
-      {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && onApplyOpenSlot && (
+      {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && onApplyOpenSlot && !!job.teamLeadId && (
         <button type="button" onClick={() => void onApplyOpenSlot()} className="app-button-outline w-full py-2.5 text-sm">
-          Apply for open slot
+          Apply for open crew slot
         </button>
+      )}
+
+      {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !job.teamLeadId && (
+        <p className="text-xs text-brand-text-muted">
+          No crew coordinator yet. Use Apply on this job to submit an independent application, or wait for a trusted guard to start a coordinated crew.
+        </p>
       )}
 
       {rosterGuards.length > 0 && (

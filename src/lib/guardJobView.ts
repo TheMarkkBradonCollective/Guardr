@@ -239,7 +239,7 @@ function guardHasSlotOnJob(req: SecurityRequest, guardId: string): boolean {
   return (req.guardSlots ?? []).some(
     (s) =>
       s.guardId === guardId &&
-      ['invited', 'pending_staff', 'pending_client', 'approved'].includes(s.status)
+      ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
   );
 }
 

@@ -124,6 +124,23 @@ export async function confirmApplyAsTeamLead(jobTitle: string): Promise<boolean>
   });
 }
 
+export async function confirmDenyFullTeam(jobTitle: string, guardCount: number): Promise<boolean> {
+  return showAppConfirm({
+    title: 'Decline full crew?',
+    message: `Decline this coordinated crew of ${guardCount} guards for "${jobTitle}"? Independent guard options will remain available if staff sent any.`,
+    confirmLabel: 'Decline crew',
+    tone: 'danger',
+  });
+}
+
+export async function confirmApproveFullTeam(jobTitle: string, guardCount: number): Promise<boolean> {
+  return showAppConfirm({
+    title: 'Approve full crew?',
+    message: `Approve all ${guardCount} guards on the coordinated crew for "${jobTitle}"? This locks in the full team for this job.`,
+    confirmLabel: 'Approve full crew',
+  });
+}
+
 export async function confirmApproveTeamSlot(guardName: string, jobTitle: string): Promise<boolean> {
   return showAppConfirm({
     title: 'Approve crew member?',

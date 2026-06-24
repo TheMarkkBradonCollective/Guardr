@@ -67,7 +67,9 @@ export function slotBlocksGuardAssociation(
   guardId: string
 ): boolean {
   if (slot.guardId !== guardId) return false;
-  return ['invited', 'pending_staff', 'pending_client', 'approved'].includes(slot.status);
+  return ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(
+    slot.status
+  );
 }
 
 export function guardHasJobTeamAssociation(
@@ -122,12 +124,12 @@ export function teamRosterSummary(
 ): { filled: number; open: number; pending: number; total: number } {
   const merged = mergeJobSlots({ id: '', guardsNeeded }, slots);
   const active = merged.filter((s) =>
-    ['invited', 'pending_staff', 'pending_client', 'approved'].includes(s.status)
+    ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
   );
   const approved = merged.filter((s) => s.status === 'approved');
   const open = merged.filter((s) => s.status === 'open').length;
   const pending = merged.filter((s) =>
-    ['invited', 'pending_staff', 'pending_client'].includes(s.status)
+    ['invited', 'pending_staff', 'crew_confirmed', 'pending_client'].includes(s.status)
   ).length;
   return {
     filled: approved.length,
@@ -181,6 +183,56 @@ export function normalizeSlotsAfterExpiry(slots: JobGuardSlot[]): JobGuardSlot[]
 
 export function jobUsesTeamSlots(job: Pick<SecurityRequest, 'guardsNeeded' | 'guardSlots' | 'teamLeadId'>): boolean {
   return isMultiGuardJob(job) || (job.guardSlots?.length ?? 0) > 0 || !!job.teamLeadId;
+}
+
+export function coordinatedTeamStarted(
+  job: Pick<SecurityRequest, 'teamLeadId' | 'guardSlots'>
+): boolean {
+  return !!job.teamLeadId;
+}
+
+export function crewSlotsForJob(
+  slots: JobGuardSlot[] | undefined,
+  guardsNeeded: number
+): JobGuardSlot[] {
+  return mergeJobSlots({ id: '', guardsNeeded }, slots).filter((s) => s.slotIndex <= guardsNeeded);
+}
+
+/** Every required slot has a guard who accepted and passed staff review (if required). */
+export function allCrewSlotsInternallyConfirmed(
+  slots: JobGuardSlot[] | undefined,
+  guardsNeeded: number
+): boolean {
+  const merged = crewSlotsForJob(slots, guardsNeeded);
+  if (merged.length < guardsNeeded) return false;
+  return merged.every((s) => !!s.guardId && s.status === 'crew_confirmed');
+}
+
+/** Full coordinated crew is waiting for a single client decision. */
+export function isFullCrewAwaitingClientApproval(
+  job: Pick<SecurityRequest, 'guardsNeeded' | 'guardSlots' | 'teamLeadId'>
+): boolean {
+  if (!job.teamLeadId || !isMultiGuardJob(job)) return false;
+  const needed = job.guardsNeeded ?? 1;
+  const merged = crewSlotsForJob(job.guardSlots, needed);
+  return (
+    merged.length >= needed &&
+    merged.every((s) => !!s.guardId && s.status === 'pending_client')
+  );
+}
+
+/** Client-facing independent guard proposal (separate from coordinated crew). */
+export function isIndependentGuardPendingForClient(
+  job: Pick<SecurityRequest, 'status' | 'pendingGuardId' | 'assignedGuardId' | 'teamLeadId' | 'guardSlots' | 'guardsNeeded'>
+): boolean {
+  if (job.status !== 'open' || !job.pendingGuardId || job.assignedGuardId) return false;
+  if (!isMultiGuardJob(job)) return true;
+  const onActiveCrew = (job.guardSlots ?? []).some(
+    (s) =>
+      s.guardId === job.pendingGuardId &&
+      ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
+  );
+  return !onActiveCrew;
 }
 
 export function slotFromDbRow(row: Record<string, unknown>): JobGuardSlot {

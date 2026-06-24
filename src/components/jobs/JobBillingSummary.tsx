@@ -99,7 +99,8 @@ export function CrewTeamUpcostNotice({
   );
   if (bump.totalUpcost <= 0) return null;
 
-  const pendingCrew = (req.guardSlots ?? []).some((s) => s.status === 'pending_client');
+  const pendingCrew = (req.guardSlots ?? []).every((s) => s.status === 'pending_client') &&
+    (req.guardSlots ?? []).some((s) => s.status === 'pending_client');
   const isCompact = variant === 'compact';
 
   return (

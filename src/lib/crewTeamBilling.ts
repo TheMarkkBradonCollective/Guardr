@@ -24,7 +24,7 @@ export function countCrewGuardsForBilling(
   const active = (slots ?? []).filter(
     (s) =>
       s.guardId &&
-      ['invited', 'pending_staff', 'pending_client', 'approved'].includes(s.status)
+      ['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved'].includes(s.status)
   ).length;
   if (active > 0) return active;
   return Math.max(guardsNeeded, 1);

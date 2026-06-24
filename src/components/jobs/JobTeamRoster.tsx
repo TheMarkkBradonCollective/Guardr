@@ -1,7 +1,7 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
 import { teamRosterSummary } from '../../lib/guardTeams';
-import { confirmApproveTeamSlot, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
+import { confirmApproveFullTeam, confirmDenyFullTeam } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { Check, Clock, UserPlus } from 'lucide-react';
@@ -10,6 +10,7 @@ const SLOT_STATUS_LABEL: Record<JobGuardSlot['status'], string> = {
   open: 'Open slot',
   invited: 'Invited — awaiting response',
   pending_staff: 'Awaiting Guardr review',
+  crew_confirmed: 'Confirmed on crew — waiting for full roster',
   pending_client: 'Awaiting client approval',
   approved: 'Approved',
   declined: 'Declined',
@@ -24,6 +25,9 @@ interface JobTeamRosterProps {
   currentGuardId?: string;
   onApproveSlot?: (slotId: string) => void | Promise<void>;
   onDenySlot?: (slotId: string) => void | Promise<void>;
+  showFullTeamActions?: boolean;
+  onApproveFullTeam?: () => void | Promise<void>;
+  onDenyFullTeam?: () => void | Promise<void>;
 }
 
 export function JobTeamRoster({
@@ -31,8 +35,9 @@ export function JobTeamRoster({
   guards,
   variant = 'client',
   currentGuardId,
-  onApproveSlot,
-  onDenySlot,
+  showFullTeamActions = false,
+  onApproveFullTeam,
+  onDenyFullTeam,
 }: JobTeamRosterProps) {
   const guardsNeeded = job.guardsNeeded ?? 1;
   if (guardsNeeded <= 1 && !(job.guardSlots?.length ?? 0)) return null;
@@ -43,12 +48,20 @@ export function JobTeamRoster({
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface-elevated/40 px-3 py-3 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-brand-text">Team roster</p>
+        <p className="text-sm font-semibold text-brand-text">
+          {variant === 'client' && showFullTeamActions ? 'Full crew request' : 'Team roster'}
+        </p>
         <WfBadge tone={summary.open > 0 ? 'warning' : 'primary'}>
           {summary.filled}/{summary.total} filled
           {summary.open > 0 ? ` · ${summary.open} open` : ''}
         </WfBadge>
       </div>
+
+      {variant === 'client' && showFullTeamActions && (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Every guard on this coordinated crew has confirmed. Approve or decline the full team as one request.
+        </p>
+      )}
 
       <div className="space-y-2">
         {Array.from({ length: guardsNeeded }, (_, i) => {
@@ -62,11 +75,6 @@ export function JobTeamRoster({
             } as JobGuardSlot);
           const guard = slot.guardId ? guards.find((g) => g.id === slot.guardId) : undefined;
           const isSelf = currentGuardId && slot.guardId === currentGuardId;
-          const showClientActions =
-            variant === 'client' &&
-            slot.status === 'pending_client' &&
-            !!onApproveSlot &&
-            !!onDenySlot;
 
           return (
             <div
@@ -107,39 +115,40 @@ export function JobTeamRoster({
                     Confirmed for this job
                   </p>
                 )}
-                {showClientActions && guard && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void (async () => {
-                          if (!(await confirmApproveTeamSlot(guard.name, job.title))) return;
-                          await onApproveSlot!(slot.id!);
-                        })();
-                      }}
-                      className="app-button-primary app-btn-sm"
-                    >
-                      Approve {guard.name}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void (async () => {
-                          if (!(await confirmDenyTeamSlot(guard.name, job.title))) return;
-                          await onDenySlot!(slot.id!);
-                        })();
-                      }}
-                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {showFullTeamActions && onApproveFullTeam && onDenyFullTeam && (
+        <div className="flex flex-wrap gap-2 pt-1 border-t border-brand-border">
+          <button
+            type="button"
+            onClick={() => {
+              void (async () => {
+                if (!(await confirmApproveFullTeam(job.title, guardsNeeded))) return;
+                await onApproveFullTeam();
+              })();
+            }}
+            className="app-button-primary app-btn-sm"
+          >
+            Approve full crew
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void (async () => {
+                if (!(await confirmDenyFullTeam(job.title, guardsNeeded))) return;
+                await onDenyFullTeam();
+              })();
+            }}
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+          >
+            Decline full crew
+          </button>
+        </div>
+      )}
     </div>
   );
 }

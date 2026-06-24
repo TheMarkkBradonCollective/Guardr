@@ -72,6 +72,8 @@ interface ClientDashboardProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onApproveFullTeam?: (requestId: string) => void | Promise<void>;
+  onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   crewSettings?: PlatformSettings;
   /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
@@ -126,6 +128,8 @@ export function ClientDashboard({
   onDenyPendingGuard,
   onApproveTeamSlot,
   onDenyTeamSlot,
+  onApproveFullTeam,
+  onDenyFullTeam,
   crewSettings,
   teamLeadSettings,
   favoriteGuardIds = [],
@@ -434,6 +438,8 @@ export function ClientDashboard({
         onDenyPendingGuard={onDenyPendingGuard}
         onApproveTeamSlot={onApproveTeamSlot}
         onDenyTeamSlot={onDenyTeamSlot}
+        onApproveFullTeam={onApproveFullTeam}
+        onDenyFullTeam={onDenyFullTeam}
         crewSettings={crewSettings ?? teamLeadSettings}
         onRequestNew={() => {
           setFlowPreset('default');
