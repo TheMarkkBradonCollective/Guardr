@@ -37,6 +37,7 @@ export type StaffSection =
   | 'analytics'
   | 'settings'
   | 'guide'
+  | 'dev-updates'
   | 'profile'
   | 'preferences';
 
@@ -59,7 +60,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
   }
   const valid: StaffSection[] = [
     'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'clients',
-    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'profile', 'preferences',
+    'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
 }

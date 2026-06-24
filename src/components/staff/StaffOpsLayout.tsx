@@ -14,6 +14,7 @@ import {
   Building2,
   Briefcase,
   ClipboardCheck,
+  ClipboardList,
   DollarSign,
   LayoutDashboard,
   Map,
@@ -61,6 +62,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   analytics: 'Analytics',
   settings: 'System Settings',
   guide: 'General guide',
+  'dev-updates': 'Dev updates',
   profile: 'Profile',
   preferences: 'Settings',
 };
@@ -102,6 +104,7 @@ export function StaffOpsLayout({
     { id: 'disputes', label: 'Disputes', icon: Scale, badge: badges.disputes, disputesOnly: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'guide', label: 'General guide', icon: BookOpen },
+    { id: 'dev-updates', label: 'Dev updates', icon: ClipboardList, financeOnly: true },
     { id: 'settings', label: 'Settings', icon: Settings, settingsOnly: true },
   ];
 

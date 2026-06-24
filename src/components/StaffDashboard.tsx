@@ -73,6 +73,7 @@ import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
+import { DevUpdatesPage } from './docs/DevUpdatesPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
@@ -678,6 +679,17 @@ export function StaffDashboard({
         );
       case 'guide':
         return <AppGuidePage audience="staff" />;
+      case 'dev-updates':
+        return showFinance ? (
+          <DevUpdatesPage />
+        ) : (
+          <div className="app-screen animate-fade-in max-w-lg">
+            <h2 className="app-screen-title">Dev updates</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
+              Development release notes are limited to Director and Owner roles.
+            </p>
+          </div>
+        );
       case 'settings':
         return showSettings ? (
           <StaffSettingsPanel
