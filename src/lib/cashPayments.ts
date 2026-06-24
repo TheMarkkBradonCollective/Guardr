@@ -113,30 +113,69 @@ export function canDirectorDepositCashToStripe(req: SecurityRequest): boolean {
 }
 
 /**
- * Cash payout to guard — always requires job to be complete.
- * Guardr hands them cash from their own Stripe balance, then records it here.
+ * Cash payout to guard — requires job complete and all adjustments settled.
+ * Same rules as canMakeGuardPayoutAvailable: overtime paid and refunds returned first.
  */
 export function canDirectorPayGuardCash(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-  // Cash to guard is only allowed once the shift is finished
-  if (req.status !== 'completed') return false;
-  if (['paid', 'held'].includes(req.paymentStatus)) return true;
-  return false;
+  if (!['paid', 'held'].includes(req.paymentStatus)) return false;
+  // Must satisfy the same adjustment gates as the Stripe release
+  if (guardPayoutBlockedReason(req) !== null) return false;
+  return true;
 }
 
 /**
- * Guard pay can only be released after the job is complete — early-end refunds
- * and overtime adjustments must be settled before paying the guard.
- * This applies to both Stripe bank transfer and cash payout.
+ * Guard pay can only be released once:
+ * 1. Job is complete
+ * 2. All overtime is settled (client paid OR waived — not pending or awaiting payment)
+ * 3. Any early clock-out refund has been returned to the client (not pending)
+ *
+ * Client must pay/receive money before the guard gets paid.
  */
 export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
   if (!req.assignedGuardId) return false;
   if (req.guardPayoutAvailable) return false;
   if (!req.paymentStatus || req.paymentStatus === 'unpaid' || req.paymentStatus === 'released') return false;
   if (isCashGuardPayout(req)) return false;
-  return req.status === 'completed';
+  if (req.status !== 'completed') return false;
+
+  // Overtime must be fully settled before paying the guard
+  const ot = req.overtimeStatus;
+  if (ot && ot !== 'none' && ot !== 'paid' && ot !== 'waived') {
+    // pending_client, pending_guard, awaiting_payment, disputed — not settled
+    return false;
+  }
+
+  // Early clock-out refund must be returned to client before paying guard
+  if ((req.earlyClockOutRefundAmount ?? 0) > 0 && req.earlyClockOutRefundStatus === 'pending') {
+    return false;
+  }
+
+  return true;
+}
+
+/** Reason why guard pay cannot be released yet (for UI hints). */
+export function guardPayoutBlockedReason(req: SecurityRequest): string | null {
+  if (req.status !== 'completed') return 'Job must be complete before releasing guard pay.';
+
+  const ot = req.overtimeStatus;
+  if (ot === 'pending_client' || ot === 'pending_guard') {
+    return 'Overtime is pending client approval. Wait for the client to confirm before releasing guard pay.';
+  }
+  if (ot === 'awaiting_payment') {
+    return 'Client approved overtime but has not paid yet. Guard pay releases after overtime is collected.';
+  }
+  if (ot === 'disputed') {
+    return 'Overtime is under dispute. Resolve the dispute before releasing guard pay.';
+  }
+
+  if ((req.earlyClockOutRefundAmount ?? 0) > 0 && req.earlyClockOutRefundStatus === 'pending') {
+    return `Client refund of $${(req.earlyClockOutRefundAmount ?? 0).toFixed(2)} is pending. Return the refund to the client before releasing guard pay.`;
+  }
+
+  return null;
 }
 
 /** @deprecated Use canDirectorPayGuardCash */

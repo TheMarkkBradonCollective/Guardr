@@ -44,7 +44,7 @@ export const PIPELINE_SECTION_META: Record<
   'awaiting-guard-payout': {
     title: 'Release guard pay',
     description:
-      'Job complete — all adjustments (overtime, early end) settled. Release guard earnings so they can collect via bank transfer or cash pickup.',
+      'Job complete and all billing settled. Release guard earnings — any overtime must be paid by client and early-end refunds returned before guard pay releases.',
   },
   'guard-collection-pending': {
     title: 'Guard can collect',
