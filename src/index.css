@@ -1724,7 +1724,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 /* Uber-style map route + offer cards */
 .map-route-banner {
   position: absolute;
-  top: max(0.75rem, env(safe-area-inset-top));
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1003;
@@ -2160,10 +2160,6 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   min-width: 0;
 }
 
-body[data-form-factor="mobile"] .guard-map-layout .map-route-banner {
-  top: max(4.25rem, calc(env(safe-area-inset-top) + 3rem));
-}
-
 body[data-form-factor="tablet"] .client-map-layout .map-selection-layer,
 body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
   bottom: 1rem;
@@ -2171,6 +2167,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer {
 
 body[data-form-factor="tablet"] .guard-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
+  top: 10px;
   left: 1rem;
   transform: none;
   max-width: 18rem;
@@ -2505,6 +2502,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
 
 body[data-form-factor="tablet"] .client-map-layout .map-route-banner,
 body[data-form-factor="desktop"] .client-map-layout .map-route-banner {
+  top: 10px;
   left: 1rem;
   transform: none;
   max-width: min(calc(62vw - 2rem), 20rem);
