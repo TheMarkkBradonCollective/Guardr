@@ -4224,6 +4224,95 @@ html.theme-light .staff-ops-btn-primary:hover {
   100% { transform: translateX(320%); }
 }
 
+/* ─── LIGHTNING STORM: CINEMATIC THUNDERSTORM OVERLAY ──────── */
+
+/* Deep-black thunderstorm atmosphere regardless of theme */
+.guardr-loading-screen {
+  background: #020408 !important;
+}
+
+/* Per-bolt radial flash that illuminates background and particles */
+.guardr-lightning-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  animation-name: guardr-lightning-flash-pulse;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  mix-blend-mode: screen;
+}
+
+/* SVG container for each bolt — covers the full ambient area */
+.guardr-lightning-bolt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  overflow: visible;
+  pointer-events: none;
+  animation-name: guardr-lightning-strike;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  /* Double drop-shadow builds a soft electric halo around the bolt */
+  filter: drop-shadow(0 0 5px rgba(160, 215, 255, 0.85))
+          drop-shadow(0 0 14px rgba(120, 180, 255, 0.45));
+}
+
+/* Outer glow layer — wide, electric-blue, low opacity */
+.guardr-lightning-glow {
+  fill: none;
+  stroke: rgba(140, 200, 255, 0.5);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Inner core — thin, near-white, high opacity */
+.guardr-lightning-core {
+  fill: none;
+  stroke: rgba(240, 250, 255, 0.95);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Branch fork: dimmer than the main channel */
+.guardr-lightning-branch {
+  opacity: 0.55;
+}
+
+/* ── Bolt: instantaneous double-flash then long dark silence ── */
+@keyframes guardr-lightning-strike {
+  0%      { opacity: 0; }
+  0.50%   { opacity: 0; }
+  0.51%   { opacity: 1; }    /* first flash: instant on  */
+  1.40%   { opacity: 1; }    /* hold bright              */
+  1.41%   { opacity: 0; }    /* instant off              */
+  2.10%   { opacity: 0; }    /* brief dark gap           */
+  2.11%   { opacity: 0.75; } /* second flash: instant on */
+  3.20%   { opacity: 0.75; } /* hold                     */
+  3.21%   { opacity: 0; }    /* instant off              */
+  3.22%,
+  100%    { opacity: 0; }    /* dark for rest of cycle   */
+}
+
+/* ── Flash overlay: instant on, gradual multi-step fade ─────── */
+@keyframes guardr-lightning-flash-pulse {
+  0%      { opacity: 0; }
+  0.45%   { opacity: 0; }
+  0.46%   { opacity: 1; }    /* snap to full brightness  */
+  1.80%   { opacity: 0.4; }  /* first fade               */
+  2.50%   { opacity: 0.65; } /* uptick on second flash   */
+  4.00%   { opacity: 0.1; }  /* trail off                */
+  4.50%   { opacity: 0; }    /* done                     */
+  4.51%,
+  100%    { opacity: 0; }
+}
+
 /* Avatars stay circular — universal convention */
 .rounded-full[class*='ProfileAvatar'],
 .profile-avatar,
