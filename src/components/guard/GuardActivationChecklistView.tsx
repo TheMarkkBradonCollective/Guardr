@@ -21,7 +21,7 @@ interface GuardActivationChecklistProps {
 
 function StepRow({ done, label, detail }: { done: boolean; label: string; detail?: string }) {
   return (
-    <div className="flex items-start gap-3 py-0.5">
+    <div className="flex items-start gap-3">
       <span className="shrink-0 mt-0.5">
         {done ? (
           <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center">
@@ -41,7 +41,7 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
 
 function OptionalNote({ label, detail }: { label: string; detail: string }) {
   return (
-    <div className="flex items-start gap-3 pt-3 mt-2 border-t border-brand-border">
+    <div className="flex items-start gap-3 pt-3">
       <span className="w-5 h-5 rounded-full bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center shrink-0 mt-0.5">
         <Plus className="w-3 h-3 text-brand-primary" strokeWidth={2.5} />
       </span>

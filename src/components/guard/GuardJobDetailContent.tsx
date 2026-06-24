@@ -73,30 +73,32 @@ export function GuardJobDetailContent({
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Your qualification checklist</p>
               </div>
-              {checks.map((c) => (
-                <div key={c.label} className="flex items-center gap-2.5 text-sm py-0.5">
-                  {c.met ? (
-                    <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              <div className="divide-y divide-brand-border">
+                {checks.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2.5 text-sm py-2.5">
+                    {c.met ? (
+                      <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </span>
+                    ) : c.recommended ? (
+                      <span className="w-4 h-4 shrink-0 text-center text-brand-text-muted text-xs leading-4">·</span>
+                    ) : (
+                      <X className="w-4 h-4 text-red-400 shrink-0" />
+                    )}
+                    <span
+                      className={
+                        c.met
+                          ? 'text-brand-text'
+                          : c.recommended
+                            ? 'text-brand-text-muted'
+                            : 'text-red-400'
+                      }
+                    >
+                      {c.label}
                     </span>
-                  ) : c.recommended ? (
-                    <span className="w-4 h-4 shrink-0 text-center text-brand-text-muted text-xs leading-4">·</span>
-                  ) : (
-                    <X className="w-4 h-4 text-red-400 shrink-0" />
-                  )}
-                  <span
-                    className={
-                      c.met
-                        ? 'text-brand-text'
-                        : c.recommended
-                          ? 'text-brand-text-muted'
-                          : 'text-red-400'
-                    }
-                  >
-                    {c.label}
-                  </span>
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
 
               {hasApplied && job.status === 'open' && job.pendingGuardId === guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5 font-semibold">
