@@ -143,7 +143,7 @@ export function LoadingScreen() {
               style={{
                 animationDuration: bolt.duration,
                 animationDelay: bolt.delay,
-                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(150,185,255,0.85), rgba(175,205,255,0.28) 45%, transparent 70%)`,
+                background: `radial-gradient(ellipse 90% 60% at ${bolt.flashCx}% ${bolt.flashCy}%, rgba(156,175,136,0.85), rgba(175,190,160,0.28) 45%, transparent 70%)`,
               }}
             />
             {/* Layered SVG: wide glow + bright core + dimmer branch */}
