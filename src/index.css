@@ -11074,3 +11074,364 @@ html, body, #root {
 }
 
 /* ─── END INTERACTION POLISH LAYER v2.1 ─────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — FINAL CONSISTENCY PASS
+   Targeted fixes for specific components and edge cases.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── SHIFT PERIOD STATUS BAR: MORE PREMIUM ─────────────────────────────── */
+
+.shift-period-status-bar {
+  border-radius: var(--radius-app-lg) !important;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  background: var(--brand-bg-sec);
+}
+
+/* ─── AUTH PAGE: CONSISTENT FORM LOOK ───────────────────────────────────── */
+
+/* Auth page header matches the app chrome */
+.auth-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--brand-bg);
+}
+
+/* ─── GUARD JOB DETAIL CARD: FULL-WIDTH ─────────────────────────────────── */
+
+.guard-job-detail-section {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+/* ─── GUARD ACTIVITY LOG: CLEAN TIMELINE ────────────────────────────────── */
+
+.guard-activity-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.guard-activity-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+  margin-top: 0.375rem;
+}
+
+/* ─── CREDENTIAL CATEGORY BADGE: POLISHED ───────────────────────────────── */
+
+.cred-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ─── GUARD APPROVAL STATUS: VISUAL INDICATORS ──────────────────────────── */
+
+.guard-status-pending {
+  color: var(--status-warning);
+}
+
+.guard-status-active {
+  color: var(--status-success);
+}
+
+.guard-status-suspended {
+  color: var(--status-danger);
+}
+
+/* ─── MAP SECTION HEADERS ────────────────────────────────────────────────── */
+
+.map-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+/* ─── APP TOAST HOST: POSITION FIX ──────────────────────────────────────── */
+
+.app-toast-host {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top, 1rem));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.app-toast {
+  pointer-events: auto;
+  width: 100%;
+  max-width: min(calc(100vw - 2rem), 28rem);
+}
+
+/* ─── SLIDEOUT PANEL HEADINGS ────────────────────────────────────────────── */
+
+.slideout-panel-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+/* ─── GUARDR OVERVIEW ROLE BADGES ───────────────────────────────────────── */
+
+.staff-overview-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.staff-overview-role-badge--owner {
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  color: #b45309;
+  border: 1px solid color-mix(in srgb, #f59e0b 25%, transparent);
+}
+
+html.theme-dark .staff-overview-role-badge--owner,
+html.theme-grey .staff-overview-role-badge--owner {
+  color: #fbbf24;
+}
+
+.staff-overview-role-badge--director {
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--brand-primary);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+}
+
+.staff-overview-role-badge--administrator {
+  background: color-mix(in srgb, var(--status-info) 12%, transparent);
+  color: var(--status-info);
+  border: 1px solid color-mix(in srgb, var(--status-info) 25%, transparent);
+}
+
+.staff-overview-role-badge--operator {
+  background: color-mix(in srgb, var(--brand-text-muted) 12%, transparent);
+  color: var(--brand-text-muted);
+  border: 1px solid color-mix(in srgb, var(--brand-text-muted) 20%, transparent);
+}
+
+/* ─── STAFF OVERVIEW: LIVE JOBS TICKER ──────────────────────────────────── */
+
+.staff-overview-live-job-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--brand-border);
+  font-size: 0.875rem;
+}
+
+.staff-overview-live-job-row:last-child {
+  border-bottom: none;
+}
+
+.staff-overview-live-job-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--status-danger);
+  animation: uber-online-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ─── GUARD MESSAGES TAB BADGES ─────────────────────────────────────────── */
+
+/* When messages inbox tab has unread */
+.app-inbox-tab-badge-active {
+  background: color-mix(in srgb, var(--brand-primary) 15%, transparent) !important;
+  color: var(--brand-primary) !important;
+}
+
+/* ─── LEGAL INFO CARDS: CONSISTENT ──────────────────────────────────────── */
+
+.legal-info-card {
+  border-radius: var(--radius-app-lg) !important;
+  border: 1px solid var(--brand-border);
+  padding: 1.25rem;
+  transition: border-color 0.15s ease;
+}
+
+.legal-info-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+}
+
+/* ─── CREW CARD: MEMBER GRID ─────────────────────────────────────────────── */
+
+.crew-member-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+/* ─── SPLASH SCREEN: MOBILE ──────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* ─── SELECTION OVERRIDES: CONSISTENT BRANDING ──────────────────────────── */
+
+::selection {
+  background: color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  color: var(--brand-text);
+}
+
+/* ─── HR / DIVIDERS: BRANDED ─────────────────────────────────────────────── */
+
+hr {
+  border-color: var(--brand-border);
+  opacity: 1;
+}
+
+/* ─── LOADING SKELETON CONTAINERS ────────────────────────────────────────── */
+
+.skeleton-card {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.skeleton-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+.skeleton-line { display: block; }
+.skeleton-line + .skeleton-line { margin-top: 0.5rem; }
+
+/* ─── PROFILE SCREEN: BETTER HEADER ─────────────────────────────────────── */
+
+.profile-header-band {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-primary) 6%, var(--brand-bg)) 0%,
+    var(--brand-bg) 100%
+  );
+  padding: 2rem 1.25rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+/* ─── GUARD CARD PANEL ───────────────────────────────────────────────────── */
+
+.guard-card-stats-row {
+  display: flex;
+  border-top: 1px solid var(--brand-border);
+}
+
+.guard-card-stat {
+  flex: 1;
+  text-align: center;
+  padding: 0.875rem 0.5rem;
+  border-right: 1px solid var(--brand-border);
+}
+
+.guard-card-stat:last-child {
+  border-right: none;
+}
+
+.guard-card-stat-value {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.guard-card-stat-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ─── INLINE NOTIFICATION BUBBLE ────────────────────────────────────────── */
+
+.inline-notification {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.inline-notification-success {
+  background: color-mix(in srgb, var(--status-success) 10%, transparent);
+  color: var(--status-success);
+}
+
+.inline-notification-warning {
+  background: color-mix(in srgb, var(--status-warning) 10%, transparent);
+  color: var(--status-warning);
+}
+
+.inline-notification-info {
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-primary);
+}
+
+/* ─── MARK TEXT (SEARCH HIGHLIGHTS) ─────────────────────────────────────── */
+
+mark {
+  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  color: var(--brand-text);
+  border-radius: 0.25rem;
+  padding: 0 0.1em;
+}
+
+/* ─── DISABLED STATE: CONSISTENT ────────────────────────────────────────── */
+
+[disabled], [aria-disabled="true"] {
+  opacity: 0.55;
+}
+
+[disabled]:not(.app-button-primary):not(.app-button-outline):not(.app-button-danger) {
+  cursor: not-allowed;
+}
+
+/* ─── GUARDR BRAND GRADIENT ACCENT ──────────────────────────────────────── */
+
+.guardr-brand-accent {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@supports not (-webkit-text-fill-color: transparent) {
+  .guardr-brand-accent {
+    background: none;
+    color: var(--brand-primary);
+  }
+}
+
+/* ─── END FINAL CONSISTENCY PASS ────────────────────────────────────────── */
