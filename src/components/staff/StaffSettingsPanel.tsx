@@ -419,7 +419,7 @@ export function StaffSettingsPanel({
       <AppFormSection title="Crew team pay bump">
         <div className="pb-6 space-y-4">
           <p className="text-sm text-brand-text-muted">
-            Each guard on a coordinated all-in-one crew earns this extra amount per hour. The full bump is added to the client&apos;s job cost.
+            Each guard rostered on a coordinated crew for that specific job earns this extra amount per hour. Independent applicants and guards on other jobs do not receive it.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
             <label className="block space-y-1">

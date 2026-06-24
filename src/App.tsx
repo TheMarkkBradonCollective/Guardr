@@ -7492,7 +7492,7 @@ export default function App() {
         </div>
       );
     }
-    const guardJobs = getGuardVisibleJobs(activeGuard, requests);
+    const guardJobs = getGuardVisibleJobs(activeGuard, requests, platformSettings);
     const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
 
     return (

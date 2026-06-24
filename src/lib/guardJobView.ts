@@ -1,5 +1,7 @@
 import { JobOperationalDetails, JobGuardSlot, Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
+import { effectiveGuardPayForJob } from './crewTeamBilling';
 import { computeGuardPay, computeGuardEarnings } from './payments';
+import type { PlatformSettings } from './platformSettings';
 import { guardCanViewJob } from './guardJobs';
 import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
 import { overtimeGuardEarnings } from './shiftBilling';
@@ -158,8 +160,14 @@ export function getShiftPayDisplay(
 }
 
 /** Strip client billing and platform payment fields before data reaches guard UI */
-export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJobView {
-  const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate);
+export function toGuardJobView(
+  req: SecurityRequest,
+  guardId?: string,
+  crewSettings?: Pick<PlatformSettings, 'crewTeamPayBumpPerHour' | 'teamLeadBonusPerGuardPerHour'>
+): GuardJobView {
+  const guardPay = crewSettings
+    ? effectiveGuardPayForJob(req, guardId, crewSettings as PlatformSettings)
+    : req.guardPay ?? computeGuardPay(req.hourlyRate);
   const canViewBriefing = guardId ? guardCanViewOperationalBriefing(guardId, req) : false;
   const sensitiveBriefingExists = jobHasSensitiveBriefing(req);
 
@@ -224,7 +232,11 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
 }
 
 /** Guards only receive browseable open jobs plus their own assignments */
-export function getGuardVisibleJobs(guard: SecurityGuard, requests: SecurityRequest[]): GuardJobView[] {
+export function getGuardVisibleJobs(
+  guard: SecurityGuard,
+  requests: SecurityRequest[],
+  crewSettings?: Pick<PlatformSettings, 'crewTeamPayBumpPerHour' | 'teamLeadBonusPerGuardPerHour'>
+): GuardJobView[] {
   return requests
     .filter(
       (r) =>
@@ -232,7 +244,7 @@ export function getGuardVisibleJobs(guard: SecurityGuard, requests: SecurityRequ
         guardHasSlotOnJob(r, guard.id) ||
         guardCanViewJob(guard, r)
     )
-    .map((req) => toGuardJobView(req, guard.id));
+    .map((req) => toGuardJobView(req, guard.id, crewSettings));
 }
 
 function guardHasSlotOnJob(req: SecurityRequest, guardId: string): boolean {

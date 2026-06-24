@@ -14,7 +14,7 @@ export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
   feeConfig: PlatformFeeConfig;
-  /** Extra pay per crew guard per hour on coordinated multi-guard jobs (default $1). */
+  /** Extra pay per hour for guards rostered on a coordinated crew for that specific job. */
   crewTeamPayBumpPerHour?: number;
   /** @deprecated Use crewTeamPayBumpPerHour — kept for DB/localStorage compatibility. */
   teamLeadBonusPerGuardPerHour?: number;

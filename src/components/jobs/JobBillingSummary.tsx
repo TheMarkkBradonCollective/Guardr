@@ -2,9 +2,13 @@ import React from 'react';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
-import { computeCrewTeamPayBumpBreakdown, jobHasCrewTeamPayBump } from '../../lib/crewTeamBilling';
+import {
+  computeCrewTeamPayBumpBreakdown,
+  effectiveGuardPayForJob,
+  guardQualifiesForCrewPayBumpOnJob,
+  jobHasCrewTeamPayBump,
+} from '../../lib/crewTeamBilling';
 import type { PlatformSettings } from '../../lib/platformSettings';
-import { isMultiGuardJob } from '../../lib/guardTeams';
 import { Users } from 'lucide-react';
 
 export type JobBillingVariant = 'staff' | 'client' | 'guard';
@@ -86,18 +90,13 @@ export function CrewTeamUpcostNotice({
   crewSettings,
   variant = 'client',
 }: {
-  req: Pick<SecurityRequest, 'guardsNeeded' | 'guardSlots' | 'durationHours' | 'status'>;
+  req: Pick<SecurityRequest, 'guardsNeeded' | 'teamLeadId' | 'guardSlots' | 'durationHours' | 'status'>;
   crewSettings?: PlatformSettings;
   variant?: 'client' | 'compact';
 }) {
   if (!crewSettings || !jobHasCrewTeamPayBump(req)) return null;
-  const bump = computeCrewTeamPayBumpBreakdown(
-    crewSettings,
-    req.guardSlots,
-    req.guardsNeeded ?? 1,
-    req.durationHours
-  );
-  if (bump.totalUpcost <= 0) return null;
+  const bump = computeCrewTeamPayBumpBreakdown(crewSettings, req);
+  if (!bump || bump.totalUpcost <= 0) return null;
 
   const pendingCrew = (req.guardSlots ?? []).every((s) => s.status === 'pending_client') &&
     (req.guardSlots ?? []).some((s) => s.status === 'pending_client');
@@ -117,8 +116,8 @@ export function CrewTeamUpcostNotice({
           </p>
           <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
             {pendingCrew
-              ? 'This coordinated crew is requesting your approval. Each guard earns an additional '
-              : 'Each guard on this coordinated crew earns an additional '}
+              ? 'This coordinated crew is requesting your approval. Each guard on this crew earns an additional '
+              : 'Each guard on this job\'s coordinated crew earns an additional '}
             <strong className="text-brand-text">${bump.perGuardPerHour}/hr</strong>
             {' '}for working as a unified team — added to your total job cost.
           </p>
@@ -141,6 +140,7 @@ export function JobBillingSummaryFromRequest({
   crewSettings,
   teamLeadSettings,
   hideCrewUpcostNotice = false,
+  guardId,
 }: {
   req: SecurityRequest;
   variant?: JobBillingVariant;
@@ -148,20 +148,19 @@ export function JobBillingSummaryFromRequest({
   /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
   hideCrewUpcostNotice?: boolean;
+  /** When set, guard variant shows crew bump only if this guard is on the job roster. */
+  guardId?: string;
 }) {
   const settings = crewSettings ?? teamLeadSettings;
   const hasOvertime = (req.overtimeAmount ?? 0) > 0;
   const scheduledPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
   const overtimeSettled = req.overtimeStatus === 'paid';
-  const crewBump =
-    settings && isMultiGuardJob(req)
-      ? computeCrewTeamPayBumpBreakdown(
-          settings,
-          req.guardSlots,
-          req.guardsNeeded ?? 1,
-          req.durationHours
-        )
-      : null;
+  const crewBump = settings ? computeCrewTeamPayBumpBreakdown(settings, req) : null;
+  const guardOnCrew = guardQualifiesForCrewPayBumpOnJob(guardId, req);
+  const displayGuardPay =
+    variant === 'guard' && guardId && settings
+      ? effectiveGuardPayForJob(req, guardId, settings)
+      : req.guardPay;
 
   return (
     <div className="space-y-3">
@@ -170,15 +169,15 @@ export function JobBillingSummaryFromRequest({
         hourlyRate={req.hourlyRate}
         durationHours={hasOvertime && !overtimeSettled ? (req.scheduledDurationHours ?? req.durationHours) : req.durationHours}
         estimatedPayout={hasOvertime && !overtimeSettled ? scheduledPayout : req.estimatedPayout}
-        guardPay={req.guardPay}
+        guardPay={displayGuardPay}
         platformFeePerHour={req.platformFeePerHour}
       />
-      {variant === 'client' && !hideCrewUpcostNotice && crewBump && crewBump.guardCount > 0 && (
+      {variant === 'client' && !hideCrewUpcostNotice && crewBump && (
         <CrewTeamUpcostNotice req={req} crewSettings={settings} variant="compact" />
       )}
-      {crewBump && crewBump.guardCount > 0 && variant === 'guard' && (
+      {variant === 'guard' && guardOnCrew && crewBump && (
         <p className="text-xs text-brand-primary border-t border-brand-border pt-3">
-          Crew jobs include +${crewBump.perGuardPerHour}/hr on your guard rate when you are on the roster.
+          +${crewBump.perGuardPerHour}/hr crew pay bump on this job — you are on the coordinated crew roster.
         </p>
       )}
       {hasOvertime && (
