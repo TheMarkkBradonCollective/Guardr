@@ -19,6 +19,23 @@ export function computeLateClockOutHours(checkOutAt: string, endDate: string): n
   return Math.round((lateMs / 3_600_000) * 100) / 100;
 }
 
+/**
+ * Compute overtime hours based on ACTUAL time worked vs scheduled duration.
+ * Early clock-in counts — if guard started early and total worked > scheduled, difference is OT.
+ * Formula: max(0, (checkOutAt - checkInAt) - scheduledHours)
+ */
+export function computeActualOvertimeHours(
+  checkInAt: string,
+  checkOutAt: string,
+  scheduledDurationHours: number
+): number {
+  const workedMs = new Date(checkOutAt).getTime() - new Date(checkInAt).getTime();
+  if (workedMs <= 0) return 0;
+  const workedHours = workedMs / 3_600_000;
+  const overtime = workedHours - scheduledDurationHours;
+  return overtime > 0 ? Math.round(overtime * 100) / 100 : 0;
+}
+
 export interface DetectedOvertime {
   scheduledDurationHours: number;
   scheduledEstimatedPayout: number;
@@ -39,19 +56,27 @@ export function computeOvertimeAmount(
   return roundMoney(overtimeHours * hourlyRate * guardsNeeded);
 }
 
-/** Record overtime when the guard claimed it (I stayed, or departure time after scheduled end). */
+/**
+ * Record overtime when the guard claimed it.
+ * Uses actual time worked vs scheduled duration — early clock-in counts toward total.
+ * If checkInAt is provided, uses (checkOut - checkIn) vs scheduledDuration.
+ * Falls back to (checkOut - scheduledEnd) for backward compatibility.
+ */
 export function detectLateClockOutOvertime(
   req: Pick<
     SecurityRequest,
     'durationHours' | 'estimatedPayout' | 'hourlyRate' | 'guardsNeeded' | 'endDate' | 'overtimeStatus'
   >,
   checkOutAt: string,
-  options?: { guardClaimedOvertime?: boolean }
+  options?: { guardClaimedOvertime?: boolean; checkInAt?: string }
 ): DetectedOvertime | null {
   if (!options?.guardClaimedOvertime) return null;
   if (req.overtimeStatus && req.overtimeStatus !== 'none') return null;
 
-  const overtimeHours = computeLateClockOutHours(checkOutAt, req.endDate);
+  const overtimeHours = options?.checkInAt
+    ? computeActualOvertimeHours(options.checkInAt, checkOutAt, req.durationHours)
+    : computeLateClockOutHours(checkOutAt, req.endDate);
+
   if (overtimeHours <= 0) return null;
 
   const guards = req.guardsNeeded ?? 1;

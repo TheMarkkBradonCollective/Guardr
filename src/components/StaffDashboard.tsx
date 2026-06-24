@@ -779,7 +779,7 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Dev notes</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Development release notes are limited to Director and Owner roles.
+              Dev notes are available to Director and Owner accounts.
             </p>
           </div>
         );

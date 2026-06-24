@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY } from '../lib/californiaCities';
 import { Logo } from './Logo';
 import {
   Shield,
@@ -201,8 +202,7 @@ export function AuthPage({
   const [serviceFrequencies, setServiceFrequencies] = useState<string[]>([]);
   const [estimatedStartDate, setEstimatedStartDate] = useState('');
   const [budgetRange, setBudgetRange] = useState('');
-  const [serviceCity, setServiceCity] = useState('');
-  const [serviceState, setServiceState] = useState('');
+  const [serviceCity, setServiceCity] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
   const [referredByText, setReferredByText] = useState('');
   const [referredById, setReferredById] = useState('');
@@ -285,8 +285,8 @@ export function AuthPage({
           serviceFrequencies: serviceFrequencies.length > 0 ? serviceFrequencies : undefined,
           estimatedStartDate: estimatedStartDate.trim() || undefined,
           budgetRange: budgetRange || undefined,
-          serviceCity: serviceCity.trim() || undefined,
-          serviceState: serviceState.trim() || undefined,
+          serviceCity: serviceCity || DEFAULT_CALIFORNIA_CITY,
+          serviceState: 'CA',
           propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
           referredBy: referredByText.trim() || undefined,
           referredById: referredById || undefined,
@@ -904,31 +904,22 @@ export function AuthPage({
 
                   {/* ── Location ── */}
                   <p className="uber-label pt-2 border-t border-brand-border">Location</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="uber-label block mb-2">City <span className="font-normal">(optional)</span></label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
-                        <input
-                          type="text"
-                          placeholder="Los Angeles"
-                          value={serviceCity}
-                          onChange={(e) => setServiceCity(e.target.value)}
-                          className="uber-input pl-10"
-                        />
-                      </div>
+                  <div>
+                    <label className="uber-label block mb-2">Primary city of operations</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      <select
+                        value={serviceCity}
+                        onChange={(e) => setServiceCity(e.target.value)}
+                        className="uber-select pl-10"
+                      >
+                        {CALIFORNIA_CITIES.map((city) => (
+                          <option key={city} value={city}>{city}, CA</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                     </div>
-                    <div>
-                      <label className="uber-label block mb-2">State <span className="font-normal">(optional)</span></label>
-                      <input
-                        type="text"
-                        placeholder="CA"
-                        maxLength={2}
-                        value={serviceState}
-                        onChange={(e) => setServiceState(e.target.value.toUpperCase())}
-                        className="uber-input"
-                      />
-                    </div>
+                    <p className="text-xs text-brand-text-muted mt-1.5">Guardr operates in California only. All licensing follows CA BSIS rules.</p>
                   </div>
                   <div>
                     <label className="uber-label block mb-2">Property type <span className="font-normal">(optional — select all that apply)</span></label>

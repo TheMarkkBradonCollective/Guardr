@@ -7154,10 +7154,11 @@ export default function App() {
       payload.status === 'completed' && req?.assignedGuardId ? req.assignedGuardId : null;
 
     const checkOutAt = payload.checkOutAudit?.checkedAt;
+    const checkInAt = req?.checkInAudit?.checkedAt;
     const guardClaimedOvertime = payload.checkOutAudit?.overtimeClaimed === true;
     const detectedOvertime =
       req && payload.status === 'completed' && checkOutAt
-        ? detectLateClockOutOvertime(req, checkOutAt, { guardClaimedOvertime })
+        ? detectLateClockOutOvertime(req, checkOutAt, { guardClaimedOvertime, checkInAt })
         : null;
 
     setRequests(prev => prev.map(r => {

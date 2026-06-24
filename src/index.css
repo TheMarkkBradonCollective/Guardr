@@ -11435,3 +11435,65 @@ mark {
 }
 
 /* ─── END FINAL CONSISTENCY PASS ────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — ROLE CHROME: CLIENT & GUARD HEADER/NAV USE BRAND CHROME COLOR
+   Makes the client and guard shell chrome match the staff sidebar personality.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Role chrome — use brand-chrome (sage-tinted) for header + bottom nav */
+.role-experience-client,
+.role-experience-guard {
+  --uber-chrome-bg: var(--brand-chrome);
+  --uber-chrome-deep: var(--brand-chrome-deep);
+  --uber-chrome-text: var(--brand-chrome-text);
+  --uber-chrome-muted: var(--brand-chrome-muted);
+  --uber-chrome-border: var(--brand-chrome-border);
+}
+
+/* Light theme: use white chrome for clean contrast */
+html.theme-light .role-experience-client,
+html.theme-light .role-experience-guard {
+  --uber-chrome-bg: var(--brand-surface);
+  --uber-chrome-deep: var(--brand-elevated);
+  --uber-chrome-text: var(--brand-text);
+  --uber-chrome-muted: var(--brand-text-muted);
+  --uber-chrome-border: var(--brand-border);
+}
+
+/* Override glass backdrop from the identity layer — let chrome bg show through */
+.role-experience-client .bottom-nav-bar,
+.role-experience-guard .bottom-nav-bar {
+  background: color-mix(in srgb, var(--uber-chrome-bg) 95%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  border-top-color: var(--uber-chrome-border) !important;
+}
+
+/* Override app-screen-header glass to use chrome bg */
+.role-experience-client .app-screen-header:not(.app-screen-header--map),
+.role-experience-guard .app-screen-header:not(.app-screen-header--map) {
+  background: color-mix(in srgb, var(--uber-chrome-bg) 96%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.15) !important;
+  border-bottom-color: var(--uber-chrome-border) !important;
+  color: var(--uber-chrome-text) !important;
+}
+
+.role-experience-client .app-screen-header h1,
+.role-experience-guard .app-screen-header h1 {
+  color: var(--uber-chrome-text) !important;
+}
+
+/* Active nav item stays brand-primary color */
+.role-experience-client .bottom-nav-item[aria-current="page"],
+.role-experience-guard .bottom-nav-item[aria-current="page"] {
+  color: var(--brand-primary) !important;
+}
+
+/* Center map button in active state */
+.role-experience-guard .bottom-nav-center-map-active .bottom-nav-center-map-icon,
+.role-experience-client .bottom-nav-center-map-active .bottom-nav-center-map-icon {
+  background: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+}
+
+/* End role chrome section */

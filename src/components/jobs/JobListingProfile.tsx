@@ -148,7 +148,7 @@ export function JobListingProfile({
           {(job.breakMinutes ?? 0) > 0 && (
             <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
               <Coffee className="w-3.5 h-3.5 text-brand-primary" />
-              {job.breakMinutes} min unpaid break
+              {job.breakMinutes} min {(job as { breakPaid?: boolean }).breakPaid === false ? 'unpaid' : 'paid'} break
             </p>
           )}
         </div>

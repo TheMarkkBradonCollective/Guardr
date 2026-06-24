@@ -13,7 +13,7 @@
 | Calendar span | 19 days (Jun 6 → Jun 24) |
 | Active development days | 11 days with commits |
 | Markeith White direct commits | 22 commits (~8 hours active time) |
-| Total project commits | 673 (Markeith White: 22 · Cursor: 520 · cursor[bot]: 131) |
+| Total project commits | 673 (Markeith White: 22 · Cursor: 651) |
 | Estimated total dev time | ~92 hours (~3 days 20 hours, or ~11.5 eight-hour workdays) |
 
 _Times below come from git commit timestamps. They reflect when work was committed, not offline planning or testing without commits._
@@ -43,7 +43,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Sunday, June 7, 2026 — Major MVP build
 
-**Contributors:** Cursor Agent, You  
+**Contributors:** Cursor, Markeith White  
 **Activity:** 1:19 AM – 10:04 PM · 30 commits (3 PR merges)
 
 | Time | Update |
@@ -71,7 +71,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Monday, June 8, 2026 — UI polish and deployment
 
-**Contributors:** Cursor Agent  
+**Contributors:** Cursor  
 **Activity:** 4:42 AM – 11:35 PM · 21 commits
 
 | Time | Update |
@@ -91,7 +91,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Tuesday, June 9, 2026 — Navigation, BSIS, payments, wireframe UI
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 12:04 AM – 10:24 PM · 127 commits (9 PR merges)
 
 ### Morning (12:04 AM – 6:10 AM)
@@ -149,7 +149,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Wednesday, June 10, 2026 — Job workflows and audits
 
-**Contributors:** Cursor Agent  
+**Contributors:** Cursor  
 **Activity:** 12:13 AM – 11:58 PM · 33 commits
 
 | Time | Update |
@@ -177,7 +177,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Thursday, June 11, 2026 — Credential polish
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 12:04 AM – 12:10 AM · 6 commits (3 PR merges)
 
 - Credential photos locked after upload
@@ -190,7 +190,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Saturday, June 20, 2026 — Payments and messaging return
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 1:14 AM – 9:23 PM · 24 commits (11 PR merges)
 
 | Time | Update |
@@ -210,7 +210,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Sunday, June 21, 2026 — Auth tweak
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 4:47 AM · 2 commits (1 PR merge)
 
 - Staff-provisioned accounts get default password with change prompt on first login
@@ -219,7 +219,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Monday, June 22, 2026 — Production polish
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 1:26 AM – 11:31 PM · 163 commits (32 PR merges)
 
 ### Early morning (1:26 – 6:40 AM)
@@ -283,7 +283,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Tuesday, June 23, 2026 — Responsive overhaul, overtime, messenger
 
-**Contributors:** Cursor Agent, You, cursor[bot]  
+**Contributors:** Cursor, Markeith White  
 **Activity:** 12:24 AM – 11:35 PM · 227 commits (80 PR merges)
 
 ### Overnight/early morning (12:24 – 8:27 AM)
@@ -308,7 +308,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 - Route persistence and browser back navigation hardened
 - Configurable platform fee models beyond flat $5/hr
 
-### Your commit
+### Markeith White
 
 | Time | Update |
 |------|--------|
@@ -336,7 +336,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Wednesday, June 24, 2026 — Today
 
-**Contributors:** Cursor Agent, cursor[bot]  
+**Contributors:** Cursor  
 **Activity:** 12:05 AM – 6:11 AM · 25 commits (5 PR merges)
 
 | Time | Update |
