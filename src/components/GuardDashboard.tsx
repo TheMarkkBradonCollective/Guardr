@@ -94,7 +94,6 @@ interface GuardDashboardProps {
   onAcceptJob: (requestId: string) => void;
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
-  onApplyOpenTeamSlot?: (requestId: string) => void | Promise<void>;
   onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
@@ -176,7 +175,6 @@ export function GuardDashboard({
   onAcceptJob,
   onDeclineDirectJob,
   onApplyAsTeamLead,
-  onApplyOpenTeamSlot,
   onInviteTeamGuard,
   onJoinTeamWithCode,
   onAcceptTeamInvite,
@@ -756,7 +754,6 @@ export function GuardDashboard({
           onAcceptJob={handleAcceptJob}
           onDeclineDirectJob={onDeclineDirectJob}
           onApplyAsTeamLead={onApplyAsTeamLead}
-          onApplyOpenTeamSlot={onApplyOpenTeamSlot}
           onInviteTeamGuard={onInviteTeamGuard}
           onJoinTeamWithCode={onJoinTeamWithCode}
           onAcceptTeamInvite={onAcceptTeamInvite}

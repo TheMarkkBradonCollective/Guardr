@@ -29,8 +29,12 @@ export function UserSettingsScreen({
   return (
     <AppScreen>
       {currentUser.role === 'guard' && onJoinTeamWithCode && (
-        <AppFormSection title="Crew team code">
-          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} />
+        <AppFormSection title="Join a crew">
+          <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-1">
+            Crew codes are only for joining an existing coordinated crew. To apply for a job on your
+            own, use Apply on the job listing.
+          </p>
+          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
         </AppFormSection>
       )}
 

@@ -1,6 +1,7 @@
 import type { SecurityRequest } from '../types';
 import { isMultiGuardJob } from './guardTeams';
 
+/** Shareable code for joining an existing coordinated crew on a multi-guard job. */
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 export function normalizeTeamCode(raw: string): string {

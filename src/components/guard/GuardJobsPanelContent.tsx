@@ -16,7 +16,6 @@ interface GuardJobsPanelContentProps {
   onAcceptJob: (jobId: string) => void;
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
-  onApplyOpenTeamSlot?: (jobId: string) => void | Promise<void>;
   onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
@@ -66,7 +65,6 @@ export function GuardJobsPanelContent({
   onAcceptJob,
   onDeclineDirectJob,
   onApplyAsTeamLead,
-  onApplyOpenTeamSlot,
   onInviteTeamGuard,
   onJoinTeamWithCode,
   onAcceptTeamInvite,
@@ -100,11 +98,6 @@ export function GuardJobsPanelContent({
         onApplyAsLead={
           onApplyAsTeamLead && selectedJob.status === 'open'
             ? () => void onApplyAsTeamLead(selectedJob.id)
-            : undefined
-        }
-        onApplyOpenSlot={
-          onApplyOpenTeamSlot && selectedJob.status === 'open'
-            ? () => void onApplyOpenTeamSlot(selectedJob.id)
             : undefined
         }
         onInviteGuard={

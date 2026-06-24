@@ -147,7 +147,6 @@ import {
 import {
   acceptTeamInvite,
   applyAsTeamLead,
-  applyToOpenTeamSlot,
   clientApproveFullTeam,
   clientApproveTeamSlot,
   clientDenyFullTeam,
@@ -5509,45 +5508,13 @@ export default function App() {
     await finalizeTeamJobIfReady(nextJob, nextSlots);
   };
 
-  const handleApplyOpenTeamSlot = async (requestId: string) => {
-    const job = requests.find((r) => r.id === requestId);
-    if (!job) return;
-    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
-    const result = applyToOpenTeamSlot(job, activeGuardId, skipStaff, requests);
-    if ('error' in result) {
-      appToast(result.error, 'error');
-      return;
-    }
-    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
-      result.job,
-      result.slots,
-      { notifyClientFullTeam: true }
-    );
-    if (!skipStaff && currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'guard_application',
-        requestId,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        location: job.location,
-        body: `${activeGuard.name} applied for an open slot on "${job.title}"`,
-      });
-    }
-    appToast(
-      promoted
-        ? 'Full crew is ready — the client can now review your team.'
-        : skipStaff
-          ? 'You joined the crew. The client will review once every guard confirms.'
-          : 'Application submitted. Guardr staff will review your crew slot request.',
-      'success'
-    );
-    await finalizeTeamJobIfReady(nextJob, nextSlots);
-  };
-
   const handleJoinTeamWithCode = async (rawCode: string) => {
     const jobPreview = findOpenTeamJobByCode(rawCode, requests);
     if (!jobPreview) {
-      appToast('Team code not found or this crew is no longer accepting members.', 'error');
+      appToast(
+        'Crew code not found. Codes only work for joining an existing coordinated crew with open slots.',
+        'error'
+      );
       return;
     }
     const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, jobPreview);
@@ -7655,7 +7622,6 @@ export default function App() {
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onApplyAsTeamLead={handleApplyAsTeamLead}
-          onApplyOpenTeamSlot={handleApplyOpenTeamSlot}
           onInviteTeamGuard={handleInviteTeamGuard}
           onJoinTeamWithCode={handleJoinTeamWithCode}
           onAcceptTeamInvite={handleAcceptTeamInvite}

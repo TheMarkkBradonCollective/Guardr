@@ -18,7 +18,6 @@ interface GuardTeamPanelProps {
   guard: SecurityGuard;
   coworkerGuards: SecurityGuard[];
   onApplyAsLead?: () => void | Promise<void>;
-  onApplyOpenSlot?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onJoinWithTeamCode?: (code: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
@@ -32,7 +31,6 @@ export function GuardTeamPanel({
   guard,
   coworkerGuards,
   onApplyAsLead,
-  onApplyOpenSlot,
   onInviteGuard,
   onJoinWithTeamCode,
   onAcceptInvite,
@@ -97,7 +95,7 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. You can still apply for an open slot or join with a crew code.
+          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. To join an existing crew, use a crew code from your coordinator or accept their invite.
         </p>
       )}
 
@@ -145,7 +143,7 @@ export function GuardTeamPanel({
             </button>
           </div>
           <p className="text-xs text-brand-text-muted">
-            Share this code so guards can join your crew instantly from Settings or this job.
+            Share this code so guards can join your coordinated crew from Settings.
           </p>
         </div>
       )}
@@ -189,14 +187,14 @@ export function GuardTeamPanel({
         <TeamCodeJoinPanel
           onJoin={onJoinWithTeamCode}
           compact
-          hint="Have a code from your coordinator? Join this crew without waiting for an invite."
+          hint="Have a code from your coordinator? Enter it here to join their crew."
         />
       )}
 
-      {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && onApplyOpenSlot && !!job.teamLeadId && (
-        <button type="button" onClick={() => void onApplyOpenSlot()} className="app-button-outline w-full py-2.5 text-sm">
-          Apply for open crew slot
-        </button>
+      {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !!job.teamLeadId && (
+        <p className="text-xs text-brand-text-muted">
+          This job has a coordinated crew. Join with a crew code from your coordinator or wait for their invite. To work this job independently, use Apply on the job card.
+        </p>
       )}
 
       {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !job.teamLeadId && (

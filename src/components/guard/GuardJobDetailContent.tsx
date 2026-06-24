@@ -23,7 +23,6 @@ interface GuardJobDetailContentProps {
   onAccept?: () => void;
   onDeclineDirectJob?: () => void;
   onApplyAsLead?: () => void | Promise<void>;
-  onApplyOpenSlot?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onJoinWithTeamCode?: (code: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
@@ -40,7 +39,6 @@ export function GuardJobDetailContent({
   onAccept,
   onDeclineDirectJob,
   onApplyAsLead,
-  onApplyOpenSlot,
   onInviteGuard,
   onJoinWithTeamCode,
   onAcceptInvite,
@@ -138,7 +136,6 @@ export function GuardJobDetailContent({
                   guard={guard}
                   coworkerGuards={coworkerGuards}
                   onApplyAsLead={onApplyAsLead}
-                  onApplyOpenSlot={onApplyOpenSlot}
                   onInviteGuard={onInviteGuard}
                   onJoinWithTeamCode={onJoinWithTeamCode}
                   onAcceptInvite={onAcceptInvite}

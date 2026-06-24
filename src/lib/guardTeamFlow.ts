@@ -189,7 +189,7 @@ export function applyToOpenTeamSlot(
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   if (!isMultiGuardJob(job)) return { error: 'Use the standard apply flow for this job.' };
   if (!job.teamLeadId) {
-    return { error: 'Apply independently for this job — no crew coordinator yet.' };
+    return { error: 'No coordinated crew on this job yet — apply independently instead.' };
   }
   const blocked = scheduleError(guardId, job, allJobs);
   if (blocked) return blocked;
@@ -232,7 +232,10 @@ export function joinTeamWithCode(
 ): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
   const job = findOpenTeamJobByCode(rawCode, allJobs);
   if (!job) {
-    return { error: 'Team code not found or this crew is no longer accepting members.' };
+    return {
+      error:
+        'Crew code not found. Codes only work for joining an existing coordinated crew with open slots.',
+    };
   }
   if (job.teamLeadId === guardId) {
     return { error: 'You are already the crew coordinator for this job.' };
