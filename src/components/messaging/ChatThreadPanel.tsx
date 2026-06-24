@@ -90,7 +90,7 @@ export interface ChatBubbleMessage {
 interface ChatThreadPanelProps {
   messages: ChatBubbleMessage[];
   currentUserId: string;
-  onSend: (body: string) => void | Promise<void>;
+  onSend?: (body: string) => void | Promise<void>;
   placeholder?: string;
   readOnly?: boolean;
   readOnlyMessage?: string;
@@ -222,7 +222,7 @@ export function ChatThreadPanel({
   };
 
   const handleSend = async () => {
-    if (!draft.trim() || readOnly) return;
+    if (!draft.trim() || readOnly || !onSend) return;
     setSubmitting(true);
     try {
       const body = replyTo ? encodeReply(replyTo, draft.trim()) : draft.trim();

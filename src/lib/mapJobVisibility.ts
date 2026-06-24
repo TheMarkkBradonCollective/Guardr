@@ -20,13 +20,14 @@ export function clientOwnsRequest(
 }
 
 export type MapViewerRole = 'guard' | 'client' | 'staff';
+type GuardMapJobLike = Pick<SecurityRequest, 'assignedGuardId' | 'guardSlots' | 'status'>;
 
 export function staffMapJobs(requests: SecurityRequest[]): SecurityRequest[] {
   return requests.filter((r) => r.status !== 'closed' || r.status === 'closed');
 }
 
 /** Guards see available, their booked/scheduled, and their past work — not others' completed or cancelled jobs. */
-export function guardMapPinKind(guardId: string, req: SecurityRequest): 'available' | 'scheduled' | 'past' | null {
+export function guardMapPinKind(guardId: string, req: GuardMapJobLike): 'available' | 'scheduled' | 'past' | null {
   const isMine =
     req.assignedGuardId === guardId ||
     (req.guardSlots ?? []).some((s) => s.guardId === guardId);
