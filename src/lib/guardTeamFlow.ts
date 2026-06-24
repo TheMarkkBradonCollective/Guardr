@@ -9,6 +9,7 @@ import {
   isMultiGuardJob,
   mergeJobSlots,
   newSlotId,
+  emptySlotsForJob,
 } from './guardTeams';
 import { isGuardTrusted } from './guardTrust';
 import { jobRequiresCashStaffConfirmation, shouldSkipStaffGuardReviewForTrusted } from './guardAssignment';
@@ -120,23 +121,13 @@ const COORDINATOR_REMOVABLE_STATUSES: JobGuardSlotStatus[] = [
   'crew_confirmed',
 ];
 
-export function removeGuardFromTeam(
+function reopenCrewMemberSlot(
   job: SecurityRequest,
-  leadId: string,
+  slots: JobGuardSlot[],
+  slot: JobGuardSlot,
   targetGuardId: string,
-  now = new Date()
-): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
-  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can remove members.' };
-  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
-  if (targetGuardId === leadId) return { error: 'You cannot remove yourself as coordinator.' };
-  const slots = mergeJobSlots(job, job.guardSlots);
-  const slot = slots.find((s) => s.guardId === targetGuardId);
-  if (!slot) return { error: 'That guard is not on this crew.' };
-  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
-  if (!COORDINATOR_REMOVABLE_STATUSES.includes(slot.status)) {
-    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
-  }
-  const ts = now.toISOString();
+  ts: string
+): { job: SecurityRequest; slots: JobGuardSlot[] } {
   const nextSlots = slots.map((s) =>
     s.id === slot.id
       ? {
@@ -166,6 +157,68 @@ export function removeGuardFromTeam(
     },
     slots: nextSlots,
   };
+}
+
+export function removeGuardFromTeam(
+  job: SecurityRequest,
+  leadId: string,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.teamLeadId !== leadId) return { error: 'Only the crew coordinator can remove members.' };
+  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
+  if (targetGuardId === leadId) return { error: 'You cannot remove yourself as coordinator.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
+  if (!COORDINATOR_REMOVABLE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, targetGuardId, now.toISOString());
+}
+
+const STAFF_CREW_MANAGE_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+];
+
+export function staffRemoveGuardFromTeam(
+  job: SecurityRequest,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.status !== 'open') return { error: 'This crew is no longer open for roster changes.' };
+  if (job.teamLeadId === targetGuardId) {
+    return { error: 'Staff cannot remove the crew coordinator — reassign the lead first.' };
+  }
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (slot.isLead) return { error: 'You cannot remove the crew coordinator slot.' };
+  if (!STAFF_CREW_MANAGE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard cannot be removed — they are already in client review or approved.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, targetGuardId, now.toISOString());
+}
+
+export function staffDenyCrewSlot(
+  job: SecurityRequest,
+  guardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.status !== 'open') return { error: 'This crew is no longer open for changes.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === guardId);
+  if (!slot) return { error: 'That guard is not on this crew.' };
+  if (!['pending_staff', 'invited', 'crew_confirmed'].includes(slot.status)) {
+    return { error: 'This guard cannot be declined at their current stage.' };
+  }
+  if (job.teamLeadId === guardId) {
+    return { error: 'Staff cannot decline the crew coordinator slot.' };
+  }
+  return reopenCrewMemberSlot(job, slots, slot, guardId, now.toISOString());
 }
 
 export function updateCrewProfile(
@@ -592,6 +645,131 @@ export function revokeLeadIfNeeded(job: SecurityRequest, slots: JobGuardSlot[]):
     return { ...job, teamLeadId: undefined };
   }
   return job;
+}
+
+const TRUSTED_REVOCATION_SLOT_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+  'pending_client',
+  'approved',
+];
+
+export type TrustedRevocationJobUpdate = {
+  job: SecurityRequest;
+  slots: JobGuardSlot[];
+  removedGuardIds: string[];
+  relisted: boolean;
+};
+
+/** Scheduled/open jobs where revoking trusted status requires roster or listing changes. */
+export function jobAffectedByTrustedRevocation(
+  guardId: string,
+  job: SecurityRequest
+): boolean {
+  if (!['open', 'accepted'].includes(job.status)) return false;
+  if (job.assignedGuardId === guardId) return true;
+  if (job.teamLeadId === guardId) return true;
+  return (job.guardSlots ?? []).some(
+    (s) => s.guardId === guardId && TRUSTED_REVOCATION_SLOT_STATUSES.includes(s.status)
+  );
+}
+
+function relistJobToMarketplace(
+  job: SecurityRequest,
+  now = new Date()
+): TrustedRevocationJobUpdate {
+  const ts = now.toISOString();
+  const removedGuardIds = new Set<string>();
+  if (job.assignedGuardId) removedGuardIds.add(job.assignedGuardId);
+  if (job.teamLeadId) removedGuardIds.add(job.teamLeadId);
+  if (job.pendingGuardId) removedGuardIds.add(job.pendingGuardId);
+  for (const slot of job.guardSlots ?? []) {
+    if (slot.guardId) removedGuardIds.add(slot.guardId);
+  }
+
+  const slots = isMultiGuardJob(job)
+    ? emptySlotsForJob(job).map((s) => ({ ...s, updatedAt: ts }))
+    : [];
+  const nextApplicants = job.applicants.filter((id) => !removedGuardIds.has(id));
+
+  return {
+    job: {
+      ...job,
+      status: 'open',
+      assignedGuardId: null,
+      pendingGuardId: undefined,
+      staffApprovedGuardAt: undefined,
+      teamLeadId: undefined,
+      teamCode: undefined,
+      crewName: undefined,
+      crewDescription: undefined,
+      guardSlots: isMultiGuardJob(job) ? slots : undefined,
+      applicants: nextApplicants,
+    },
+    slots,
+    removedGuardIds: [...removedGuardIds],
+    relisted: true,
+  };
+}
+
+/** Apply trusted-status removal side effects for one job (crew dissolve, slot removal, or re-list). */
+export function applyTrustedRevocationToJob(
+  job: SecurityRequest,
+  guardId: string,
+  now = new Date()
+): TrustedRevocationJobUpdate | null {
+  if (!jobAffectedByTrustedRevocation(guardId, job)) return null;
+
+  const isCoordinator = job.teamLeadId === guardId;
+  const isAssigned = job.assignedGuardId === guardId;
+  const onActiveCrew = (job.guardSlots ?? []).some(
+    (s) => s.guardId === guardId && TRUSTED_REVOCATION_SLOT_STATUSES.includes(s.status)
+  );
+
+  const fullReset =
+    job.status === 'accepted' || isCoordinator || isAssigned || (isMultiGuardJob(job) && isCoordinator);
+
+  if (fullReset) {
+    return relistJobToMarketplace(job, now);
+  }
+
+  if (onActiveCrew) {
+    const slots = mergeJobSlots(job, job.guardSlots);
+    const slot = slots.find((s) => s.guardId === guardId);
+    if (!slot) return null;
+    const reopened = reopenCrewMemberSlot(job, slots, slot, guardId, now.toISOString());
+    return {
+      job: reopened.job,
+      slots: reopened.slots,
+      removedGuardIds: [guardId],
+      relisted: false,
+    };
+  }
+
+  if (job.applicants.includes(guardId)) {
+    return {
+      job: { ...job, applicants: job.applicants.filter((id) => id !== guardId) },
+      slots: mergeJobSlots(job, job.guardSlots),
+      removedGuardIds: [guardId],
+      relisted: false,
+    };
+  }
+
+  return null;
+}
+
+export function applyTrustedRevocationToJobs(
+  guardId: string,
+  jobs: SecurityRequest[],
+  now = new Date()
+): TrustedRevocationJobUpdate[] {
+  const updates: TrustedRevocationJobUpdate[] = [];
+  for (const job of jobs) {
+    const update = applyTrustedRevocationToJob(job, guardId, now);
+    if (update) updates.push(update);
+  }
+  return updates;
 }
 
 export function ensureSlotIds(job: SecurityRequest, slots: JobGuardSlot[]): JobGuardSlot[] {

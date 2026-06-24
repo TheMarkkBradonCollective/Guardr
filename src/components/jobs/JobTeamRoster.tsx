@@ -30,6 +30,9 @@ interface JobTeamRosterProps {
   showIndependentSlotActions?: boolean;
   onApproveFullTeam?: () => void | Promise<void>;
   onDenyFullTeam?: () => void | Promise<void>;
+  onStaffApproveSlot?: (guardId: string) => void | Promise<void>;
+  onStaffDenySlot?: (guardId: string) => void | Promise<void>;
+  onStaffRemoveFromCrew?: (guardId: string) => void | Promise<void>;
   /** When set, only render these slot indices (for independent pending view). */
   slotFilter?: (slot: JobGuardSlot) => boolean;
   title?: string;
@@ -46,6 +49,9 @@ export function JobTeamRoster({
   showIndependentSlotActions = false,
   onApproveFullTeam,
   onDenyFullTeam,
+  onStaffApproveSlot,
+  onStaffDenySlot,
+  onStaffRemoveFromCrew,
   slotFilter,
   title,
 }: JobTeamRosterProps) {
@@ -129,6 +135,19 @@ export function JobTeamRoster({
             !!onApproveSlot &&
             !!onDenySlot &&
             !!guard;
+          const showStaffReviewActions =
+            variant === 'staff' &&
+            slot.status === 'pending_staff' &&
+            !!guard &&
+            !!onStaffApproveSlot &&
+            !!onStaffDenySlot;
+          const showStaffRemoveAction =
+            variant === 'staff' &&
+            !!guard &&
+            !!onStaffRemoveFromCrew &&
+            ['invited', 'pending_staff', 'crew_confirmed'].includes(slot.status) &&
+            slot.guardId !== job.teamLeadId &&
+            !slot.isLead;
 
           return (
             <div
@@ -196,6 +215,35 @@ export function JobTeamRoster({
                       className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
                     >
                       Decline
+                    </button>
+                  </div>
+                )}
+                {showStaffReviewActions && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void onStaffApproveSlot!(guard!.id)}
+                      className="app-button-primary app-btn-sm"
+                    >
+                      Approve for crew
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void onStaffDenySlot!(guard!.id)}
+                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
+                {showStaffRemoveAction && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void onStaffRemoveFromCrew!(guard!.id)}
+                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                    >
+                      Remove from crew
                     </button>
                   </div>
                 )}

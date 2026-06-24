@@ -1,4 +1,4 @@
-import { showAppToast } from '../ui/AppToast';
+import { jobAffectedByTrustedRevocation } from '../../lib/guardTeamFlow';
 import { showAppConfirm } from '../ui/AppConfirm';
 import {
   confirmApproveGuardProfile,
@@ -270,8 +270,14 @@ export function StaffGuardDetailPanel({
 
   const handleToggleTrusted = async () => {
     if (!onSetGuardTrusted) return;
+    const affectedJobs = guard.trusted
+      ? requests.filter((j) => jobAffectedByTrustedRevocation(guard.id, j))
+      : [];
     const confirmed = guard.trusted
-      ? await confirmRemoveGuardTrusted(guard.name)
+      ? await confirmRemoveGuardTrusted(guard.name, {
+          crewJobCount: affectedJobs.filter((j) => j.teamLeadId === guard.id).length,
+          scheduledJobCount: affectedJobs.filter((j) => j.status === 'accepted').length,
+        })
       : await confirmMarkGuardTrusted(guard.name);
     if (!confirmed) return;
     await onSetGuardTrusted(!guard.trusted);

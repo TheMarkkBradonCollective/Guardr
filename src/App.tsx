@@ -159,9 +159,13 @@ import {
   promoteFullCrewToClientIfReady,
   removeGuardFromTeam,
   revokeLeadIfNeeded,
+  staffDenyCrewSlot,
+  staffRemoveGuardFromTeam,
   updateCrewProfile,
   staffApproveIndependentSlot,
   staffApproveTeamSlot,
+  applyTrustedRevocationToJobs,
+  jobAffectedByTrustedRevocation,
 } from './lib/guardTeamFlow';
 import {
   persistJobGuardSlots,
@@ -3385,11 +3389,46 @@ export default function App() {
       appToast('Only Directors and Owners can set a guard as trusted.', 'error');
       return;
     }
+    const guard = guards.find((g) => g.id === guardId);
     if (trusted) {
-      const guard = guards.find((g) => g.id === guardId);
       if (!guard || guard.userStatus !== 'active' || !guard.verified) {
         appToast('A guard must be approved and active before they can be marked as trusted.', 'error');
         return;
+      }
+    } else if (guard) {
+      const affectedJobs = requests.filter((j) => jobAffectedByTrustedRevocation(guardId, j));
+      const revocationUpdates = applyTrustedRevocationToJobs(guardId, affectedJobs);
+      for (const update of revocationUpdates) {
+        await persistTeamJobUpdate(update.job, update.slots);
+        if (update.relisted && currentUser) {
+          void reportPushEvent(currentUser, {
+            type: 'job_submitted',
+            recipientUserId: update.job.clientId,
+            requestId: update.job.id,
+            body: `"${update.job.title}" is back on the marketplace — the coordinated crew was dissolved.`,
+          });
+        }
+        for (const removedId of update.removedGuardIds) {
+          if (!currentUser) continue;
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: removedId,
+            requestId: update.job.id,
+            body:
+              removedId === guardId
+                ? `You lost trusted status and were removed from "${update.job.title}".`
+                : `You were removed from "${update.job.title}" because the crew coordinator is no longer trusted.`,
+          });
+        }
+      }
+      if (revocationUpdates.length > 0) {
+        const relistedCount = revocationUpdates.filter((u) => u.relisted).length;
+        appToast(
+          relistedCount > 0
+            ? `${guard.name} is no longer trusted. ${relistedCount} job${relistedCount === 1 ? '' : 's'} re-listed and coordinated crews dissolved.`
+            : `${guard.name} is no longer trusted and was removed from open crew rosters.`,
+          'success'
+        );
       }
     }
     setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted } : g)));
@@ -3398,7 +3437,11 @@ export default function App() {
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === guardId ? { ...g, trusted: !trusted } : g)));
         appToast('Could not update guard trusted status.', 'error');
+        return;
       }
+    }
+    if (trusted && guard) {
+      appToast(`${guard.name} is now a trusted guard.`, 'success');
     }
   };
 
@@ -6306,6 +6349,125 @@ export default function App() {
     await denyGuardApplication(requestId, guardId, { deniedBy: 'staff' });
   };
 
+  const handleStaffApproveCrewMember = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to approve crew members.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || job.status !== 'open') {
+      appToast('This job is not open for crew changes.', 'error');
+      return;
+    }
+    const pendingStaff = (job.guardSlots ?? []).find(
+      (s) => s.guardId === guardId && s.status === 'pending_staff'
+    );
+    if (!pendingStaff) {
+      appToast('This guard is not awaiting staff review on this crew.', 'error');
+      return;
+    }
+    const result = job.teamLeadId
+      ? staffApproveTeamSlot(job, guardId)
+      : staffApproveIndependentSlot(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
+      result.job,
+      result.slots,
+      { notifyClientFullTeam: !!job.teamLeadId }
+    );
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: promoted
+          ? `Full crew for "${job.title}" is ready for client review.`
+          : `Guardr approved you for "${job.title}" — waiting for the rest of the crew to confirm.`,
+      });
+    }
+    appToast(
+      promoted
+        ? `${guard?.name ?? 'Crew'} confirmed — full team sent to client.`
+        : `${guard?.name ?? 'Guard'} confirmed on crew.`,
+      'success'
+    );
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
+  };
+
+  const handleStaffDenyCrewMember = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to decline crew members.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const guard = guards.find((g) => g.id === guardId);
+    if (
+      !(await showAppConfirm({
+        title: 'Decline crew member?',
+        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
+        confirmLabel: 'Decline',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    const result = staffDenyCrewSlot(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Guardr declined your crew placement on "${job.title}".`,
+      });
+    }
+    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
+  };
+
+  const handleStaffRemoveFromCrew = async (requestId: string, guardId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to manage crews.', 'error');
+      return;
+    }
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const guard = guards.find((g) => g.id === guardId);
+    if (
+      !(await showAppConfirm({
+        title: 'Remove from crew?',
+        message: `Remove ${guard?.name ?? 'this guard'} from the crew roster for "${job.title}"?`,
+        confirmLabel: 'Remove',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
+    const result = staffRemoveGuardFromTeam(job, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && guard) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Guardr removed you from the crew for "${job.title}".`,
+      });
+    }
+    appToast(`${guard?.name ?? 'Guard'} removed from the crew.`, 'success');
+  };
+
   // ── Audit lifecycle ────────────────────────────────────────
   const handleUpdateJobAudit = async (requestId: string, payload: { checkInAudit?: any; midShiftAudit?: any; checkOutAudit?: any; shiftBreaks?: SecurityRequest['shiftBreaks']; status?: SecurityRequest['status']; }) => {
     const req = requests.find((r) => r.id === requestId);
@@ -7956,6 +8118,9 @@ export default function App() {
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}
+          onApproveCrewMember={handleStaffApproveCrewMember}
+          onDenyCrewMember={handleStaffDenyCrewMember}
+          onRemoveCrewMember={handleStaffRemoveFromCrew}
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
           onSignOut={handleSignOut}

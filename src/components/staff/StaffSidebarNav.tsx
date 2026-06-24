@@ -30,6 +30,7 @@ const OPERATIONS_IDS: StaffSection[] = [
   'approvals',
   'clients',
   'guards',
+  'crews',
   'team',
   'messages',
   'payments',

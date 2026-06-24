@@ -21,10 +21,23 @@ export async function confirmMarkGuardTrusted(guardName: string): Promise<boolea
   });
 }
 
-export async function confirmRemoveGuardTrusted(guardName: string): Promise<boolean> {
+export async function confirmRemoveGuardTrusted(
+  guardName: string,
+  options?: { crewJobCount?: number; scheduledJobCount?: number }
+): Promise<boolean> {
+  const crewJobs = options?.crewJobCount ?? 0;
+  const scheduledJobs = options?.scheduledJobCount ?? 0;
+  const impact =
+    crewJobs > 0 || scheduledJobs > 0
+      ? ` Any coordinated crews they lead will be dissolved${
+          scheduledJobs > 0
+            ? ` and ${scheduledJobs} scheduled job${scheduledJobs === 1 ? '' : 's'} will be re-listed on the marketplace`
+            : ''
+        }.`
+      : ' Any coordinated crews they lead will be dissolved and scheduled jobs will be re-listed.';
   return showAppConfirm({
     title: 'Remove trusted status?',
-    message: `${guardName} will require Guardr applicant review on future job applications and cannot coordinate crews until marked trusted again.`,
+    message: `${guardName} will require Guardr applicant review on future job applications, cannot coordinate crews until marked trusted again, and will be removed from scheduled jobs.${impact}`,
     confirmLabel: 'Remove trusted',
     tone: 'danger',
   });

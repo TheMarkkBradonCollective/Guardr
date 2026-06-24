@@ -63,12 +63,14 @@ import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
 import type { StaffAddClientInput } from './staff/StaffAddClientForm';
 import { StaffTeamPanel } from './staff/StaffTeamPanel';
+import { StaffGuardCrewsPanel } from './staff/StaffGuardCrewsPanel';
 import { StaffClientsPanel } from './staff/StaffClientsPanel';
 import { StaffIncidentsPanel } from './staff/StaffIncidentsPanel';
 import { StaffDisputesPanel } from './staff/StaffDisputesPanel';
 import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
+import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -128,6 +130,9 @@ interface StaffDashboardProps {
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
+  onApproveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDenyCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
+  onRemoveCrewMember?: (requestId: string, guardId: string) => void | Promise<void>;
   onUpdateBackgroundChecked: (guardId: string, checked: boolean) => void;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onResetAuditFailures?: (guardId: string) => void;
@@ -259,6 +264,9 @@ export function StaffDashboard({
   onRejectCert,
   onApproveGuardApplication,
   onDenyGuardApplication,
+  onApproveCrewMember,
+  onDenyCrewMember,
+  onRemoveCrewMember,
   onUpdateBackgroundChecked,
   onResetAuditFailures,
   onMakeGuardPayoutAvailable,
@@ -337,6 +345,7 @@ export function StaffDashboard({
   const [internalClientId, setInternalClientId] = useState<string | null>(null);
   const [internalJobId, setInternalJobId] = useState<string | null>(null);
   const [internalTeamId, setInternalTeamId] = useState<string | null>(null);
+  const [internalCrewJobId, setInternalCrewJobId] = useState<string | null>(null);
 
   const selectedGuardId = controlledGuardId !== undefined ? controlledGuardId : internalGuardId;
   const selectedClientId = controlledClientId !== undefined ? controlledClientId : internalClientId;
@@ -379,6 +388,7 @@ export function StaffDashboard({
     onSectionChange?.(next);
     if (next !== 'guards') setSelectedGuardId(null);
     if (next !== 'team') setSelectedTeamId(null);
+    if (next !== 'crews') setInternalCrewJobId(null);
     if (next !== 'clients') setSelectedClientId(null);
     if (next !== 'jobs') setSelectedJobId(null);
   };
@@ -424,6 +434,7 @@ export function StaffDashboard({
       support: openTicketCount(supportTickets),
       messages: staffMessagesBadge(jobChatThreads, supportTickets),
       payments: openPayoutInvoices,
+      crews: countStaffCrewsNeedingReview(requests),
     }),
     [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
@@ -573,6 +584,21 @@ export function StaffDashboard({
             selectedId={selectedTeamId}
             onSelectedIdChange={setSelectedTeamId}
             initialSelectedId={selectedTeamId}
+          />
+        );
+      case 'crews':
+        return (
+          <StaffGuardCrewsPanel
+            requests={requests}
+            guards={guards}
+            canManage={canReviewJobs}
+            selectedJobId={internalCrewJobId}
+            onSelectedJobIdChange={setInternalCrewJobId}
+            onOpenJob={openJob}
+            onOpenMessages={() => navigateSection('messages')}
+            onApproveCrewMember={canReviewJobs ? onApproveCrewMember : undefined}
+            onDenyCrewMember={canReviewJobs ? onDenyCrewMember : undefined}
+            onRemoveCrewMember={canReviewJobs ? onRemoveCrewMember : undefined}
           />
         );
       case 'clients':

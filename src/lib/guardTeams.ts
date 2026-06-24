@@ -1,4 +1,9 @@
-import type { JobGuardSlot, JobGuardSlotStatus, SecurityGuard, SecurityRequest } from '../types';
+import type {
+  JobGuardSlot,
+  JobGuardSlotStatus,
+  SecurityGuard,
+  SecurityRequest,
+} from '../types';
 
 export const MIN_INVITE_TTL_MS = 60 * 60 * 1000;
 
@@ -370,6 +375,114 @@ export function getBrowsableClientCrews(
       };
     })
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+}
+
+export type StaffCrewPhase =
+  | 'recruiting'
+  | 'needs_review'
+  | 'awaiting_client'
+  | 'confirmed'
+  | 'active';
+
+export type StaffCrewListing = {
+  jobId: string;
+  crewName: string;
+  crewDescription?: string;
+  coordinatorId: string | null;
+  coordinatorName: string;
+  clientName: string;
+  jobTitle: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  jobStatus: SecurityRequest['status'];
+  guardsNeeded: number;
+  memberCount: number;
+  pendingStaffCount: number;
+  openSlots: number;
+  phase: StaffCrewPhase;
+};
+
+const ACTIVE_CREW_SLOT_STATUSES: JobGuardSlotStatus[] = [
+  'invited',
+  'pending_staff',
+  'crew_confirmed',
+  'pending_client',
+  'approved',
+];
+
+/** Multi-guard job with a coordinated crew roster in play (not independent slot-only flows). */
+export function jobHasActiveCrewCoordination(
+  job: Pick<SecurityRequest, 'guardsNeeded' | 'teamLeadId' | 'guardSlots'>
+): boolean {
+  if (!isMultiGuardJob(job)) return false;
+  if (job.teamLeadId) return true;
+  return (job.guardSlots ?? []).some((s) => ACTIVE_CREW_SLOT_STATUSES.includes(s.status));
+}
+
+export function getStaffManagedCrewJobs(jobs: SecurityRequest[]): SecurityRequest[] {
+  return jobs
+    .filter(
+      (j) =>
+        jobHasActiveCrewCoordination(j) &&
+        ['open', 'accepted', 'in-progress'].includes(j.status)
+    )
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+}
+
+export function countStaffCrewsNeedingReview(jobs: SecurityRequest[]): number {
+  return getStaffManagedCrewJobs(jobs).filter((j) =>
+    (j.guardSlots ?? []).some((s) => s.status === 'pending_staff')
+  ).length;
+}
+
+export function resolveStaffCrewPhase(job: SecurityRequest): StaffCrewPhase {
+  if (job.status === 'accepted' || job.status === 'in-progress') return 'active';
+  if (isFullCrewAwaitingClientApproval(job)) return 'awaiting_client';
+  const needed = job.guardsNeeded ?? 1;
+  const slots = job.guardSlots ?? [];
+  if (slots.some((s) => s.status === 'pending_staff')) return 'needs_review';
+  if (allCrewSlotsInternallyConfirmed(slots, needed)) return 'confirmed';
+  return 'recruiting';
+}
+
+export function buildStaffCrewListing(
+  job: SecurityRequest,
+  guards: Pick<SecurityGuard, 'id' | 'name'>[]
+): StaffCrewListing {
+  const byId = new Map(guards.map((g) => [g.id, g]));
+  const coordinator = job.teamLeadId ? byId.get(job.teamLeadId) : undefined;
+  const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded ?? 1);
+  const memberCount = (job.guardSlots ?? []).filter(
+    (s) => s.guardId && ACTIVE_CREW_SLOT_STATUSES.includes(s.status)
+  ).length;
+  const pendingStaffCount = (job.guardSlots ?? []).filter((s) => s.status === 'pending_staff').length;
+
+  return {
+    jobId: job.id,
+    crewName: getCrewDisplayName(job, coordinator?.name),
+    crewDescription: job.crewDescription?.trim() || undefined,
+    coordinatorId: job.teamLeadId ?? null,
+    coordinatorName: coordinator?.name ?? 'No coordinator yet',
+    clientName: job.clientName,
+    jobTitle: job.title,
+    location: job.siteName || job.location,
+    startDate: job.startDate,
+    endDate: job.endDate,
+    jobStatus: job.status,
+    guardsNeeded: job.guardsNeeded ?? 1,
+    memberCount,
+    pendingStaffCount,
+    openSlots: summary.open,
+    phase: resolveStaffCrewPhase(job),
+  };
+}
+
+export function getStaffCrewListings(
+  jobs: SecurityRequest[],
+  guards: Pick<SecurityGuard, 'id' | 'name'>[]
+): StaffCrewListing[] {
+  return getStaffManagedCrewJobs(jobs).map((job) => buildStaffCrewListing(job, guards));
 }
 
 export function attachSlotsToRequests(
