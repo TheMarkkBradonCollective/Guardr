@@ -1709,11 +1709,13 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
 
-.client-map-offer-offset {
+.client-map-offer-offset,
+.map-browse-offset {
   bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* Client map — Sacramento Buy Nothing-style horizontal browse dock */
+/* Sacramento Buy Nothing-style horizontal map browse dock */
+.map-browse-dock,
 .client-map-browse-dock {
   position: absolute;
   left: 0;
@@ -1723,10 +1725,12 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   pointer-events: none;
 }
 
+.map-browse-dock > *,
 .client-map-browse-dock > * {
   pointer-events: auto;
 }
 
+.map-browse-dock-inner,
 .client-map-browse-dock-inner {
   margin: 0 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
   padding: 0.5rem 0 0.25rem;
@@ -1738,6 +1742,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   );
 }
 
+.map-browse-scroll,
 .client-map-browse-scroll {
   display: flex;
   gap: 0.625rem;
@@ -1748,12 +1753,14 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   -webkit-overflow-scrolling: touch;
 }
 
+.map-browse-plus-wrap,
 .client-map-browse-plus-wrap {
   position: relative;
   flex-shrink: 0;
   scroll-snap-align: start;
 }
 
+.map-browse-plus-card,
 .client-map-browse-plus-card {
   display: flex;
   flex-direction: column;
@@ -1770,11 +1777,13 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+.map-browse-plus-card:hover,
 .client-map-browse-plus-card:hover {
   background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
   border-color: color-mix(in srgb, var(--brand-primary) 50%, var(--brand-border));
 }
 
+.map-browse-plus-icon,
 .client-map-browse-plus-icon {
   display: flex;
   align-items: center;
@@ -1785,6 +1794,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-surface));
 }
 
+.map-browse-plus-label,
 .client-map-browse-plus-label {
   font-size: 0.6875rem;
   font-weight: 800;
@@ -1792,6 +1802,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   letter-spacing: 0.06em;
 }
 
+.map-browse-plus-menu,
 .client-map-browse-plus-menu {
   position: absolute;
   left: 0;
@@ -1808,6 +1819,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   box-shadow: var(--shadow-nav);
 }
 
+.map-browse-plus-action,
 .client-map-browse-plus-action {
   display: flex;
   align-items: center;
@@ -1822,10 +1834,12 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   transition: background 0.15s ease;
 }
 
+.map-browse-plus-action:hover,
 .client-map-browse-plus-action:hover {
   background: var(--brand-bg-sec);
 }
 
+.map-browse-job-card,
 .client-map-browse-job-card {
   flex-shrink: 0;
   scroll-snap-align: start;
@@ -1841,14 +1855,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
+.map-browse-job-card:hover,
 .client-map-browse-job-card:hover {
   border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
 }
 
+.map-browse-job-card:active,
 .client-map-browse-job-card:active {
   transform: scale(0.98);
 }
 
+.map-browse-job-chip,
 .client-map-browse-job-chip {
   display: inline-block;
   font-size: 0.5625rem;
@@ -1860,21 +1877,50 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   margin-bottom: 0.5rem;
 }
 
+.map-browse-job-chip--upcoming,
 .client-map-browse-job-chip--upcoming {
   color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
 }
 
+.map-browse-job-chip--past,
 .client-map-browse-job-chip--past {
   color: var(--brand-text-muted);
   background: color-mix(in srgb, var(--brand-border) 50%, transparent);
 }
 
+.map-browse-job-chip--cancelled,
 .client-map-browse-job-chip--cancelled {
   color: #ef4444;
   background: color-mix(in srgb, #ef4444 12%, transparent);
 }
 
+.map-browse-job-chip--available {
+  color: #059669;
+  background: color-mix(in srgb, #059669 12%, transparent);
+}
+
+.map-browse-job-chip--scheduled {
+  color: #d97706;
+  background: color-mix(in srgb, #d97706 12%, transparent);
+}
+
+.map-browse-job-chip--live {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+}
+
+.map-browse-job-chip--open {
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+}
+
+.map-browse-job-chip--default {
+  color: var(--brand-text-muted);
+  background: color-mix(in srgb, var(--brand-border) 45%, transparent);
+}
+
+.map-browse-job-title,
 .client-map-browse-job-title {
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1885,6 +1931,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   overflow: hidden;
 }
 
+.map-browse-job-meta,
 .client-map-browse-job-meta {
   display: flex;
   align-items: center;
@@ -1895,12 +1942,59 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   line-height: 1.3;
 }
 
+.map-browse-empty,
 .client-map-browse-empty {
   padding: 0 1rem 0.75rem;
   font-size: 0.75rem;
   color: var(--brand-text-muted);
   line-height: 1.45;
   text-align: center;
+}
+
+.bottom-nav-center-map {
+  position: relative;
+  top: -0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 4.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--brand-text-muted);
+}
+
+.bottom-nav-center-map-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--brand-surface);
+  border: 2px solid var(--brand-border);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--brand-text) 12%, transparent);
+  color: var(--brand-text);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.bottom-nav-center-map-active .bottom-nav-center-map-icon {
+  background: var(--brand-primary);
+  border-color: color-mix(in srgb, var(--brand-primary) 80%, var(--brand-border));
+  color: var(--brand-accent-text);
+  transform: scale(1.03);
+}
+
+.bottom-nav-center-map-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.bottom-nav-center-map-active {
+  color: var(--brand-text);
 }
 
 .map-offer-card {

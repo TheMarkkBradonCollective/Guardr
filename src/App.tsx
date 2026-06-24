@@ -414,7 +414,7 @@ export default function App() {
 
   const initialRoute = readAppRouteFromWindow();
   const [clientView, setClientViewState] = useState<ClientView>(
-    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
+    () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'map'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
     () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'

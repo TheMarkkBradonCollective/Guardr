@@ -128,7 +128,7 @@ export function ClientMapScreen({
           route={route}
           loadingRoute={routeLoading}
           onClose={() => setSelectedBrowseJobId(null)}
-          bottomOffsetClass="client-map-offer-offset"
+          bottomOffsetClass="map-browse-offset"
           clientActions={
             selectedBrowseJob && currentUser ? (
               <ClientJobActionsPanel
@@ -148,7 +148,7 @@ export function ClientMapScreen({
           onSelectJob={setSelectedBrowseJobId}
           onPostJob={onPostJob}
           onRequestGuard={onRequestGuard}
-          bottomOffsetClass="client-map-offer-offset"
+          bottomOffsetClass="map-browse-offset"
         />
       )}
     </div>

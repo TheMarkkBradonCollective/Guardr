@@ -5,13 +5,14 @@ import { MapRouteBanner } from '../map/MapRouteBanner';
 import { MapSelectionExperience } from '../map/MapSelectionExperience';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { staffVisibleMapJobs } from '../../lib/mapJobVisibility';
-import { MapJobsBrowseSheet } from '../map/MapJobsBrowseSheet';
+import { MapBrowseDock } from '../map/MapBrowseDock';
+import { staffMapBrowseItems } from '../../lib/mapBrowseItems';
 
 interface StaffOpsMapScreenProps {
   requests: SecurityRequest[];
 }
 
-/** Platform ops map — route to live offers with listing detail cards */
+/** Platform ops map — all jobs with Sacramento Buy Nothing-style browse dock. */
 export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
@@ -43,15 +44,15 @@ export function StaffOpsMapScreen({ requests }: StaffOpsMapScreenProps) {
         route={route}
         loadingRoute={routeLoading}
         onClose={() => setSelectedJobId(null)}
+        bottomOffsetClass="map-browse-offset"
       />
-      {!selectedJob && mapJobs.length > 0 && (
-        <MapJobsBrowseSheet
-          jobs={mapJobs}
-          selectedJobId={selectedJobId}
-          onSelectJob={setSelectedJobId}
-          title={`Jobs on map (${mapJobs.length})`}
-        />
-      )}
+      <MapBrowseDock
+        items={staffMapBrowseItems(mapJobs)}
+        selectedId={selectedJobId}
+        onSelect={setSelectedJobId}
+        bottomOffsetClass="map-browse-offset"
+        emptyMessage="All platform jobs appear on the map."
+      />
     </div>
   );
 }
