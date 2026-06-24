@@ -168,7 +168,7 @@ export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
-  myJobs: 'My jobs',
+  myJobs: 'Jobs',
   earnings: 'Pay',
   messages: 'Messages',
   guardChat: 'Messages',
@@ -377,6 +377,11 @@ export function GuardDashboard({
     const visible = guardVisibleMapJobs(guard.id, requests, requests);
     return visible.filter((j) => j.status !== 'in-progress');
   }, [requests, guard.id]);
+
+  const availableJobsForPanel = useMemo(
+    () => browseMapJobs.filter((j) => j.status === 'open'),
+    [browseMapJobs]
+  );
 
   const userLocation = useUserLocation(activeTab === 'map');
   const geofenceNotifiedRef = useRef(false);
@@ -799,7 +804,7 @@ export function GuardDashboard({
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
+    { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
@@ -958,15 +963,19 @@ export function GuardDashboard({
           {tab === 'myJobs' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <GuardMyJobsPanel
+                availableJobs={availableJobsForPanel}
                 upcomingJobs={upcomingMyJobs}
                 pastJobs={pastMyJobs}
                 guard={guard}
                 currentUser={currentUser}
+                coworkerGuards={coworkerGuards}
                 jobChatThreads={jobChatThreads}
                 initialSelectedJobId={jobChatRequestId}
                 onSelectedJobIdChange={onJobChatRequestIdChange}
                 onOpenMessages={openMessagesForJob}
                 onApproveOvertime={onApproveOvertime}
+                onAcceptJob={onAcceptJob}
+                onDeclineDirectJob={onDeclineDirectJob}
               />
             </div>
           )}
