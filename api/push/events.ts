@@ -605,14 +605,39 @@ async function authorizePushEvent(db, session, event) {
   switch (type) {
     case "test":
       return "Test notifications must use /api/push/test";
-    case "job_submitted":
-    case "guard_application":
-    case "guard_pending_approval":
-    case "client_pending_approval":
-    case "credential_pending":
-    case "payment_attention":
     case "staff_message":
       return isStaffSession(session) ? null : "Only staff can send this notification type";
+    case "client_pending_approval":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "client") return null;
+      return "Only staff or the registering client can notify about pending approval";
+    case "guard_pending_approval":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard" && (!event.guardId || event.guardId === session.userId)) {
+        return null;
+      }
+      return "Only staff or the registering guard can notify about pending approval";
+    case "credential_pending":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard" && event.guardId === session.userId) return null;
+      return "Only staff or the submitting guard can send credential review notifications";
+    case "job_submitted":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "client") return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Only staff or the submitting client can notify about new jobs";
+    case "guard_application":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard" && event.guardId === session.userId) return null;
+      return "Only staff or the applying guard can send application notifications";
+    case "payment_attention":
+      if (isStaffSession(session)) return null;
+      if (event.requestId && await isJobParticipant(db, event.requestId, session.userId)) {
+        return null;
+      }
+      return "Only staff or job participants can send payment attention notifications";
     case "guard_message":
       return session.platformRole === "guard" ? null : "Only guards can post to guard chat";
     case "guard_checkin":
