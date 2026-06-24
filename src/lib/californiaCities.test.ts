@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  formatServiceAreaLabel,
+  guardServesJobCity,
   licenseStatesMatch,
+  normalizeGuardServiceAreas,
   resolveGuardCardLicenseState,
   resolveJobLicenseState,
 } from './californiaCities.ts';
@@ -41,5 +44,26 @@ describe('licenseStatesMatch', () => {
   it('rejects non-matching states', () => {
     assert.equal(licenseStatesMatch('NV', 'CA'), false);
     assert.equal(licenseStatesMatch(undefined, 'CA'), false);
+  });
+});
+
+describe('guard service areas', () => {
+  it('normalizes California cities and drops legacy state codes', () => {
+    assert.deepEqual(normalizeGuardServiceAreas(['CA', 'los angeles', 'San Diego']), [
+      'Los Angeles',
+      'San Diego',
+    ]);
+  });
+
+  it('formats legacy statewide markers for display', () => {
+    assert.equal(formatServiceAreaLabel('CA'), 'California');
+    assert.equal(formatServiceAreaLabel('Los Angeles'), 'Los Angeles');
+  });
+
+  it('matches guards to job cities with legacy statewide coverage', () => {
+    assert.equal(guardServesJobCity(['CA'], 'Los Angeles'), true);
+    assert.equal(guardServesJobCity(['Los Angeles'], 'Los Angeles'), true);
+    assert.equal(guardServesJobCity(['San Diego'], 'Los Angeles'), false);
+    assert.equal(guardServesJobCity([], 'Los Angeles'), true);
   });
 });

@@ -132,3 +132,41 @@ export function cityFromGeocode(addressLine?: string, stateCode?: string): Calif
   }
   return DEFAULT_CALIFORNIA_CITY;
 }
+
+/** Legacy guard service area before city-based selection (statewide California). */
+export function isStatewideServiceAreaMarker(value: string): boolean {
+  const upper = value.trim().toUpperCase();
+  return upper === 'CA' || upper === 'CALIFORNIA';
+}
+
+/** Canonical California cities for guard service areas — drops legacy state codes. */
+export function normalizeGuardServiceAreas(areas: string[] | undefined): string[] {
+  if (!areas?.length) return [];
+  const cities = new Set<string>();
+  for (const area of areas) {
+    if (isStatewideServiceAreaMarker(area)) continue;
+    if (isCaliforniaCity(area)) {
+      cities.add(formatCityLabel(area));
+    }
+  }
+  return [...cities].sort((a, b) => a.localeCompare(b));
+}
+
+export function formatServiceAreaLabel(area: string): string {
+  if (isStatewideServiceAreaMarker(area)) return 'California';
+  if (isCaliforniaCity(area)) return formatCityLabel(area);
+  return area.trim();
+}
+
+/** Whether a guard advertises availability for a job's work city. */
+export function guardServesJobCity(
+  serviceAreas: string[] | undefined,
+  jobCity: string | undefined
+): boolean {
+  if (!serviceAreas?.length) return true;
+  if (serviceAreas.some(isStatewideServiceAreaMarker)) return true;
+  const city = jobCity?.trim();
+  if (!city) return true;
+  const normalized = formatCityLabel(city).toLowerCase();
+  return serviceAreas.some((area) => formatCityLabel(area).toLowerCase() === normalized);
+}

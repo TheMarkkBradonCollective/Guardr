@@ -41,7 +41,7 @@ import {
   IncidentReportFormInput,
 } from './lib/incidentReports';
 import type { StaffCreateJobInput } from './components/staff/StaffCreateJobForm';
-import { formatCityLabel, resolveJobCity } from './lib/californiaCities';
+import { formatCityLabel, normalizeGuardServiceAreas, resolveJobCity } from './lib/californiaCities';
 import {
   canDirectorMarkClientPaidCash,
   canDirectorMarkOvertimePaidCash,
@@ -1352,7 +1352,7 @@ export default function App() {
         about: g.about || undefined,
         skills: parseJsonStringArray(g.skills),
         languages: parseJsonStringArray(g.languages),
-        serviceAreas: parseJsonStringArray(g.service_areas),
+        serviceAreas: normalizeGuardServiceAreas(parseJsonStringArray(g.service_areas)),
         specialties: parseJsonStringArray(g.specialties),
         yearsExperience: g.years_experience ?? undefined,
         availabilityNotes: g.availability_notes || undefined,
@@ -2883,7 +2883,7 @@ export default function App() {
               about: payload.about ?? g.about,
               skills: payload.skills ?? g.skills,
               languages: payload.languages ?? g.languages,
-              serviceAreas: payload.serviceAreas ?? g.serviceAreas,
+              serviceAreas: normalizeGuardServiceAreas(payload.serviceAreas ?? g.serviceAreas),
               specialties: payload.specialties ?? g.specialties,
               yearsExperience: payload.yearsExperience ?? g.yearsExperience,
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
@@ -2915,7 +2915,7 @@ export default function App() {
           about: payload.about ?? '',
           skills: payload.skills ?? [],
           languages: payload.languages ?? [],
-          service_areas: payload.serviceAreas ?? [],
+          service_areas: normalizeGuardServiceAreas(payload.serviceAreas ?? []),
           specialties: payload.specialties ?? [],
           years_experience: payload.yearsExperience ?? null,
           availability_notes: payload.availabilityNotes ?? '',
