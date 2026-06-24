@@ -6,7 +6,12 @@ import {
   getGuardUserStatus,
   GuardUserStatus,
 } from '../../lib/accountStatus';
-import { GUARD_TRUSTED_BADGE_LABEL, isGuardTrusted } from '../../lib/guardTrust';
+import {
+  GUARD_APPROVED_BADGE_LABEL,
+  GUARD_TRUSTED_BADGE_LABEL,
+  isGuardProfileApproved,
+  isGuardTrusted,
+} from '../../lib/guardTrust';
 import { guardCredentialGraceNotice } from '../../lib/guardCredentialGrace';
 import { WfBadge } from '../ui/wireframe';
 
@@ -24,6 +29,7 @@ export function GuardRosterStatusBadges({
     <div className={`flex flex-col items-start gap-1.5 ${className ?? ''}`.trim()}>
       <div className="flex flex-nowrap items-center gap-1.5">
         <WfBadge tone={getGuardRosterAccountBadgeTone(guard)}>{getGuardRosterAccountLabel(guard)}</WfBadge>
+        {isGuardProfileApproved(guard) && <WfBadge tone="success">{GUARD_APPROVED_BADGE_LABEL}</WfBadge>}
         {guard.backgroundChecked && <WfBadge tone="primary">Background checked</WfBadge>}
         {isGuardTrusted(guard) && <WfBadge tone="primary">{GUARD_TRUSTED_BADGE_LABEL}</WfBadge>}
       </div>
