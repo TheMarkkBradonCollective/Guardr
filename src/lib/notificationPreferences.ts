@@ -289,6 +289,7 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     guard_trusted_status: prefs.guardTrustedStatus,
     client_trusted_status: prefs.clientTrustedStatus,
     job_relisted: prefs.jobRelisted,
+    job_schedule_changed: prefs.assignment,
     team_chat_message: prefs.teamChatMessage,
     updated_at: prefs.updatedAt,
   };

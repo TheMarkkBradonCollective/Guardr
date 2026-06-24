@@ -72,6 +72,20 @@ export function isJobScheduleLocked(req: SecurityRequest): boolean {
   return isJobPaid(req);
 }
 
+/** Paid jobs may reschedule times (same paid hours, or staff-approved extension). */
+export function canClientReschedulePaidSchedule(req: SecurityRequest): boolean {
+  return (
+    isJobPaid(req) &&
+    ['open', 'accepted', 'in-progress'].includes(req.status) &&
+    req.scheduleChangeStatus !== 'pending_staff'
+  );
+}
+
+/** Whether the edit form should show schedule fields (unpaid full edit or paid reschedule). */
+export function canClientEditScheduleFields(req: SecurityRequest): boolean {
+  return canEditJobSchedule(req) || canClientReschedulePaidSchedule(req);
+}
+
 /** Client may change schedule and billing only before payment clears */
 export function canClientEditRequest(req: SecurityRequest): boolean {
   return canEditJobSchedule(req);
@@ -94,6 +108,12 @@ export function jobEditBlockedReason(req: SecurityRequest): string | null {
 }
 
 export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
+  if (req.scheduleChangeStatus === 'pending_staff') {
+    return 'A schedule change is awaiting staff approval.';
+  }
+  if (canClientReschedulePaidSchedule(req)) {
+    return null;
+  }
   if (isJobScheduleLocked(req)) {
     return 'Schedule is locked after payment. Update title and location only, or contact staff.';
   }

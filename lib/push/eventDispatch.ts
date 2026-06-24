@@ -124,6 +124,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Job back on marketplace',
     body: event.body || 'A job was re-listed and is open for guards again',
   }),
+  job_schedule_changed: (event) => ({
+    title: 'Shift time changed',
+    body: event.body || 'Your job schedule was updated',
+  }),
   team_chat_message: (event) => ({
     title: 'Crew chat',
     body: event.body || 'New message in crew chat',
@@ -227,7 +231,8 @@ export async function buildEventDispatchPayloads(
   if (
     (event.type === 'guard_trusted_status' ||
       event.type === 'client_trusted_status' ||
-      event.type === 'job_relisted') &&
+      event.type === 'job_relisted' ||
+      event.type === 'job_schedule_changed') &&
     event.recipientUserId
   ) {
     return [{ ...payload, userId: event.recipientUserId }];

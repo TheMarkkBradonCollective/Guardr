@@ -99,6 +99,8 @@ interface StaffDashboardProps {
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
   onApproveRequest: (requestId: string) => Promise<void>;
   onDenyRequest: (requestId: string) => Promise<void>;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApproveClient: (clientId: string) => Promise<void>;
   onRejectClient: (clientId: string) => Promise<void>;
   onApproveGuardAccount?: (guardId: string) => Promise<void>;
@@ -246,6 +248,8 @@ export function StaffDashboard({
   onUpdateGuardUserStatus,
   onApproveRequest,
   onDenyRequest,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
   onApproveClient,
   onRejectClient,
   onApproveGuardAccount,
@@ -472,6 +476,8 @@ export function StaffDashboard({
             clients={clients}
             onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
             onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
+            onApproveScheduleChange={canReviewJobs ? onApproveScheduleChange : undefined}
+            onRejectScheduleChange={canReviewJobs ? onRejectScheduleChange : undefined}
             onApproveCert={onApproveCert}
             onRejectCert={onRejectCert}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : async () => {}}

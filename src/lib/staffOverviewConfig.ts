@@ -146,6 +146,7 @@ function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boo
     case 'credentials':
       return canReviewCertifications({ role });
     case 'job-offers':
+    case 'schedule-changes':
     case 'applications':
       return canReviewJobRequests({ role });
     case 'accounts':

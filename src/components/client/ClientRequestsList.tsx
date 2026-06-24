@@ -52,6 +52,7 @@ import {
   canClientPayForJob,
   canClientRequestCashPayment,
   isJobScheduleLocked,
+  canClientReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
@@ -334,7 +335,7 @@ export function ClientRequestsList({
                         />
                       )}
       
-                      {isJobScheduleLocked(req) && (
+                      {isJobScheduleLocked(req) && !canClientReschedulePaidSchedule(req) && (
                         <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
                           Schedule is locked after payment. You can still update the job title and location.
                         </p>
@@ -347,7 +348,12 @@ export function ClientRequestsList({
                             onClick={() => setEditingId(req.id)}
                             className="app-button-outline !w-auto !h-9 !px-4 !text-xs"
                           >
-                            <Pencil className="w-3 h-3 inline" /> {isJobScheduleLocked(req) ? 'Edit title & location' : 'Edit'}
+                            <Pencil className="w-3 h-3 inline" />{' '}
+                            {canClientReschedulePaidSchedule(req)
+                              ? 'Reschedule'
+                              : isJobScheduleLocked(req)
+                                ? 'Edit title & location'
+                                : 'Edit'}
                           </button>
                           {canClientCancelRequest(req) && (
                             <button
@@ -828,6 +834,9 @@ export function ClientRequestsList({
                     {awaitingFullCrew && (
                       <WfBadge tone="warning">Full crew pending</WfBadge>
                     )}
+                    {req.scheduleChangeStatus === 'pending_staff' && (
+                      <WfBadge tone="warning">Schedule change pending</WfBadge>
+                    )}
                     <WfBadge tone={paymentBadgeTone(req.paymentStatus, req)}>{clientPaymentStatusLabel(req.paymentStatus, req)}</WfBadge>
                   </div>
                 }
@@ -846,6 +855,7 @@ export function ClientRequestsList({
         open={!!editingRequest}
         request={editingRequest}
         scheduleLocked={editingRequest ? isJobScheduleLocked(editingRequest) : false}
+        paidReschedule={editingRequest ? canClientReschedulePaidSchedule(editingRequest) : false}
         onSave={onEditRequest}
         onClose={() => setEditingId(null)}
       />

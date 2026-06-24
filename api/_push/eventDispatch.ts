@@ -112,6 +112,26 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Dispute update',
     body: event.body || 'A dispute needs your attention',
   }),
+  guard_trusted_status: (event) => ({
+    title: event.title ?? 'Trusted guard update',
+    body: event.body || 'Your trusted guard status changed',
+  }),
+  client_trusted_status: (event) => ({
+    title: event.title ?? 'Trusted client update',
+    body: event.body || 'Your trusted client status changed',
+  }),
+  job_relisted: (event) => ({
+    title: 'Job back on marketplace',
+    body: event.body || 'A job was re-listed and is open for guards again',
+  }),
+  job_schedule_changed: (event) => ({
+    title: 'Shift time changed',
+    body: event.body || 'Your job schedule was updated',
+  }),
+  team_chat_message: (event) => ({
+    title: 'Crew chat',
+    body: event.body || 'New message in crew chat',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -205,6 +225,27 @@ export async function buildEventDispatchPayloads(
   }
 
   if (event.type === 'support_ticket_status' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (
+    (event.type === 'guard_trusted_status' ||
+      event.type === 'client_trusted_status' ||
+      event.type === 'job_relisted' ||
+      event.type === 'job_schedule_changed') &&
+    event.recipientUserId
+  ) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'team_chat_message') {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    return [{ ...payload, role: 'dispatch' }];
+  }
+
+  if (event.type === 'job_submitted' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
 

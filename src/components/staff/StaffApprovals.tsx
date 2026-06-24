@@ -11,6 +11,7 @@ import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGu
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
+import { getPendingScheduleChangeApprovals } from '../../lib/jobScheduleChange';
 import {
   getApprovedGuardsAwaitingActivation,
   getGuardActivationChecklist,
@@ -48,6 +49,8 @@ interface StaffApprovalsProps {
   clients?: Client[];
   onApproveRequest: (requestId: string) => void;
   onDenyRequest: (requestId: string) => void;
+  onApproveScheduleChange?: (requestId: string) => void | Promise<void>;
+  onRejectScheduleChange?: (requestId: string) => void | Promise<void>;
   onApproveCert: (guardId: string, certId: string) => void;
   onRejectCert: (guardId: string, certId: string) => void;
   onApproveGuardApplication: (requestId: string, guardId: string) => void;
@@ -98,6 +101,11 @@ const QUEUE_META: Record<
     description: '',
     icon: <Briefcase className="w-4 h-4" />,
   },
+  'schedule-changes': {
+    title: 'Schedule changes',
+    description: '',
+    icon: <Briefcase className="w-4 h-4" />,
+  },
   applications: {
     title: 'Guard applications',
     description: '',
@@ -143,6 +151,8 @@ export function StaffApprovals({
   clients = [],
   onApproveRequest,
   onDenyRequest,
+  onApproveScheduleChange,
+  onRejectScheduleChange,
   onApproveCert,
   onRejectCert,
   onApproveGuardApplication,
@@ -170,6 +180,7 @@ export function StaffApprovals({
   onQueueChange,
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
+  const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
   const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards);
@@ -248,6 +259,7 @@ export function StaffApprovals({
   const queueCounts = useMemo(
     () => ({
       'job-offers': pendingJobs.length,
+      'schedule-changes': pendingScheduleChanges.length,
       applications: jobsWithApplications.length,
       credentials: pendingCerts.length,
       accounts:
@@ -257,6 +269,7 @@ export function StaffApprovals({
     }),
     [
       pendingJobs.length,
+      pendingScheduleChanges.length,
       jobsWithApplications.length,
       pendingCerts.length,
       pendingGuardAccounts.length,
@@ -268,7 +281,9 @@ export function StaffApprovals({
   const availableQueues = (Object.keys(QUEUE_META) as ApprovalQueueId[]).filter((id) => {
     if (queueCounts[id] === 0) return false;
     if (id === 'credentials') return true;
-    if (id === 'job-offers' || id === 'applications') return canReviewJobRequests;
+    if (id === 'job-offers' || id === 'schedule-changes' || id === 'applications') {
+      return canReviewJobRequests;
+    }
     if (id === 'accounts') return canManageGuardAccounts || canManageClientAccounts;
     return false;
   });
@@ -362,6 +377,55 @@ export function StaffApprovals({
     );
   };
 
+  const renderScheduleChangeDetail = (req: SecurityRequest) => {
+    const currentRange = formatShiftRange(req.startDate, req.endDate);
+    const requestedRange =
+      req.pendingStartDate && req.pendingEndDate
+        ? formatShiftRange(req.pendingStartDate, req.pendingEndDate)
+        : '—';
+
+    return (
+      <div className="staff-detail-pane space-y-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
+            <p className="font-semibold text-sm">{req.title}</p>
+            <WfBadge tone="warning">Schedule change</WfBadge>
+          </div>
+          <p className="text-sm text-brand-text-muted">{req.clientName}</p>
+          <p className="text-xs text-brand-text-muted mt-1 flex items-center gap-1">
+            <MapPin className="w-3 h-3 shrink-0" />
+            {req.location}
+          </p>
+          <p className="text-xs text-brand-text-muted mt-2">
+            Current: {currentRange}
+            {req.durationHours > 0 ? ` · ${formatDuration(req.durationHours)}` : ''}
+          </p>
+          <p className="text-xs text-brand-primary mt-1 font-medium">
+            Requested: {requestedRange}
+            {req.pendingDurationHours != null ? ` · ${formatDuration(req.pendingDurationHours)}` : ''}
+          </p>
+        </div>
+        <JobBillingSummaryFromRequest req={req} variant="staff" />
+        <div className="app-action-row--equal pt-2 border-t border-brand-border">
+          <button
+            type="button"
+            onClick={() => onRejectScheduleChange?.(req.id)}
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+          >
+            <X className="w-3.5 h-3.5" /> Decline
+          </button>
+          <SlideToConfirm
+            label="Slide to approve new times"
+            confirmedLabel="Approved"
+            tone="success"
+            onConfirm={() => onApproveScheduleChange?.(req.id)}
+          />
+        </div>
+      </div>
+    );
+  };
+
   const editingJob =
     editingJobId != null ? pendingJobs.find((r) => r.id === editingJobId) ?? null : null;
 
@@ -392,6 +456,36 @@ export function StaffApprovals({
                 <p className="font-semibold text-sm truncate">{req.title}</p>
                 <p className="text-xs text-brand-text-muted truncate">{req.clientName} · {req.location}</p>
                 <WfBadge tone="warning" className="mt-1.5 w-fit">Review & approve</WfBadge>
+              </AppItemCard>
+            ))}
+          </AppItemCardStack>
+        </>
+      );
+    }
+
+    if (activeQueue === 'schedule-changes') {
+      if (activeItemId) {
+        const req = pendingScheduleChanges.find((r) => r.id === activeItemId);
+        if (!req) {
+          setActiveItemId(null);
+          return null;
+        }
+        return (
+          <>
+            <ApprovalBackBar title={req.title} subtitle="Client schedule change" onBack={() => setActiveItemId(null)} />
+            {renderScheduleChangeDetail(req)}
+          </>
+        );
+      }
+      return (
+        <>
+          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <AppItemCardStack>
+            {pendingScheduleChanges.map((req) => (
+              <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
+                <p className="font-semibold text-sm truncate">{req.title}</p>
+                <p className="text-xs text-brand-text-muted truncate">{req.clientName} · {req.location}</p>
+                <WfBadge tone="warning" className="mt-1.5 w-fit">Schedule change</WfBadge>
               </AppItemCard>
             ))}
           </AppItemCardStack>

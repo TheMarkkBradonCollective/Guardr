@@ -692,6 +692,13 @@ export interface SecurityRequest {
   crewDescription?: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;
+  /** Client-requested schedule change awaiting staff approval */
+  pendingStartDate?: string;
+  pendingEndDate?: string;
+  pendingDurationHours?: number;
+  pendingEstimatedPayout?: number;
+  scheduleChangeStatus?: 'none' | 'pending_staff';
+  scheduleChangeRequestedAt?: string;
   /** Per-slot roster for multi-guard jobs */
   guardSlots?: JobGuardSlot[];
   /** marketplace = open post for any guard; direct = client sent from a guard profile */

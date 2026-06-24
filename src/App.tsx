@@ -114,7 +114,7 @@ import {
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
 } from './lib/guardIdentityVerification';
-import { computeDurationHours } from './lib/dates';
+import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
@@ -281,6 +281,7 @@ import {
   canClientEditJobListing,
   canClientEditRequest,
   canClientRequestCashPayment,
+  canClientReschedulePaidSchedule,
   canEditJobTitleAndLocation,
   canStaffEditJobTitleAndLocation,
   isJobPaid,
@@ -288,6 +289,15 @@ import {
   sanitizeJobListingUpdates,
   validateShiftSchedule,
 } from './lib/jobEditRules';
+import {
+  clearScheduleChangePending,
+  guardsToNotifyForScheduleChange,
+  hasScheduleDateChange,
+  jobHasAssignedOrOnDutyGuards,
+  resolveScheduleChangeFromUpdate,
+  scheduleChangePendingDbColumns,
+  scheduleChangeRequiresStaffApproval,
+} from './lib/jobScheduleChange';
 import {
   clientPaymentGates,
   loadPlatformSettingsFromStorage,
@@ -1503,6 +1513,15 @@ export default function App() {
           crewName: r.crew_name ?? undefined,
           crewDescription: r.crew_description ?? undefined,
           openedAt: r.opened_at ?? undefined,
+          pendingStartDate: r.pending_start_date ?? undefined,
+          pendingEndDate: r.pending_end_date ?? undefined,
+          pendingDurationHours:
+            r.pending_duration_hours != null ? Number(r.pending_duration_hours) : undefined,
+          pendingEstimatedPayout:
+            r.pending_estimated_payout != null ? Number(r.pending_estimated_payout) : undefined,
+          scheduleChangeStatus:
+            r.schedule_change_status === 'pending_staff' ? 'pending_staff' : 'none',
+          scheduleChangeRequestedAt: r.schedule_change_requested_at ?? undefined,
           pendingGuardId: r.pending_guard_id ?? undefined,
           staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
           requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
@@ -5326,6 +5345,87 @@ export default function App() {
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
   };
 
+  const dispatchScheduleChangeNotifications = (
+    actor: SessionUser,
+    previous: SecurityRequest,
+    updated: SecurityRequest
+  ) => {
+    const oldRange = formatShiftRange(previous.startDate, previous.endDate);
+    const newRange = formatShiftRange(updated.startDate, updated.endDate);
+
+    if (updated.status === 'open') {
+      void reportPushEvent(actor, {
+        type: 'assignment',
+        requestId: updated.id,
+        location: updated.location,
+        body: `New shift: ${updated.title} — ${newRange}`,
+      });
+      return;
+    }
+
+    for (const guardId of guardsToNotifyForScheduleChange(updated)) {
+      void reportPushEvent(actor, {
+        type: 'job_schedule_changed',
+        recipientUserId: guardId,
+        requestId: updated.id,
+        body: `Your job time has changed from ${oldRange} to ${newRange}`,
+      });
+    }
+  };
+
+  const applyApprovedScheduleChange = async (
+    requestId: string,
+    existing: SecurityRequest,
+    change: {
+      startDate: string;
+      endDate: string;
+      durationHours: number;
+      estimatedPayout?: number;
+      guardPay?: number;
+    }
+  ) => {
+    const guardsNeeded = existing.guardsNeeded ?? 1;
+    const estimatedPayout =
+      change.estimatedPayout ??
+      Math.round(change.durationHours * existing.hourlyRate * guardsNeeded * 100) / 100;
+    const guardPay = change.guardPay ?? computeGuardPay(existing.hourlyRate);
+
+    const merged: SecurityRequest = {
+      ...existing,
+      startDate: change.startDate,
+      endDate: change.endDate,
+      durationHours: change.durationHours,
+      estimatedPayout,
+      guardPay,
+      ...clearScheduleChangePending(),
+    };
+
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('security_requests')
+        .update({
+          start_date: merged.startDate,
+          end_date: merged.endDate,
+          duration_hours: merged.durationHours,
+          estimated_payout: merged.estimatedPayout,
+          guard_pay: merged.guardPay,
+          ...scheduleChangePendingDbColumns(merged),
+        })
+        .eq('id', requestId);
+      if (error) {
+        console.error('Schedule change apply error:', error);
+        appToast(`Could not apply schedule change: ${error.message}`, 'error');
+        throw new Error(error.message);
+      }
+    }
+
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? merged : r)));
+    if (currentUser) {
+      dispatchScheduleChangeNotifications(currentUser, existing, merged);
+    }
+    return merged;
+  };
+
   const persistJobListingUpdate = async (requestId: string, existing: SecurityRequest, raw: Partial<SecurityRequest>) => {
     const safe = sanitizeJobListingUpdates(existing, raw);
     const siteName = safe.siteName ?? existing.siteName ?? '';
@@ -5363,6 +5463,21 @@ export default function App() {
     }
 
     setRequests((prev) => prev.map((r) => (r.id === requestId ? merged : r)));
+
+    if (
+      currentUser &&
+      merged.status === 'open' &&
+      hasScheduleDateChange(existing, merged.startDate, merged.endDate)
+    ) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        requestId: merged.id,
+        location: merged.location,
+        body: `New shift: ${merged.title} — ${formatShiftRange(merged.startDate, merged.endDate)}`,
+      });
+    }
+
+    return merged;
   };
 
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
@@ -5371,6 +5486,71 @@ export default function App() {
       appToast(existing ? jobEditBlockedReason(existing) ?? 'This job cannot be edited.' : 'Job not found.', 'error');
       return;
     }
+
+    const scheduleChange = isJobPaid(existing)
+      ? resolveScheduleChangeFromUpdate(existing, updates)
+      : null;
+
+    if (scheduleChange) {
+      if (!canClientReschedulePaidSchedule(existing)) {
+        appToast('This job cannot be rescheduled right now.', 'error');
+        return;
+      }
+      if (jobHasAssignedOrOnDutyGuards(existing) && !isJobPaid(existing)) {
+        appToast('Payment must clear before changing times for assigned guards.', 'error');
+        return;
+      }
+      const scheduleError = validateShiftSchedule(scheduleChange.startDate, scheduleChange.endDate);
+      if (scheduleError) {
+        appToast(scheduleError, 'error');
+        return;
+      }
+
+      const listingOnly = sanitizeJobListingUpdates(existing, updates);
+      const refreshed =
+        Object.keys(listingOnly).length > 0
+          ? await persistJobListingUpdate(requestId, existing, listingOnly)
+          : existing;
+
+      if (scheduleChangeRequiresStaffApproval(refreshed, scheduleChange.durationHours)) {
+        const requestedAt = new Date().toISOString();
+        const pendingJob: SecurityRequest = {
+          ...refreshed,
+          pendingStartDate: scheduleChange.startDate,
+          pendingEndDate: scheduleChange.endDate,
+          pendingDurationHours: scheduleChange.durationHours,
+          pendingEstimatedPayout: scheduleChange.estimatedPayout,
+          scheduleChangeStatus: 'pending_staff',
+          scheduleChangeRequestedAt: requestedAt,
+        };
+        if (isDbConnected) {
+          const { error } = await supabase
+            .from('security_requests')
+            .update(scheduleChangePendingDbColumns(pendingJob))
+            .eq('id', requestId);
+          if (error) {
+            appToast(`Could not submit schedule change: ${error.message}`, 'error');
+            return;
+          }
+        }
+        setRequests((prev) => prev.map((r) => (r.id === requestId ? pendingJob : r)));
+        if (currentUser) {
+          void reportPushEvent(currentUser, {
+            type: 'payment_attention',
+            requestId,
+            location: refreshed.location,
+            body: `${refreshed.clientName} requested a schedule change for "${refreshed.title}" (${formatShiftRange(scheduleChange.startDate, scheduleChange.endDate)})`,
+          });
+        }
+        appToast('Schedule change submitted for staff approval.', 'info');
+        return;
+      }
+
+      await applyApprovedScheduleChange(requestId, refreshed, scheduleChange);
+      appToast('Shift times updated. Guards have been notified.', 'success');
+      return;
+    }
+
     if (!isJobPaid(existing)) {
       const startDate = updates.startDate || existing.startDate;
       const endDate = updates.endDate || existing.endDate;
@@ -5381,6 +5561,69 @@ export default function App() {
       }
     }
     await persistJobListingUpdate(requestId, existing, updates);
+  };
+
+  const handleApproveScheduleChange = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to approve schedule changes.', 'error');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || existing.scheduleChangeStatus !== 'pending_staff') {
+      appToast('No pending schedule change for this job.', 'error');
+      return;
+    }
+    if (!existing.pendingStartDate || !existing.pendingEndDate || existing.pendingDurationHours == null) {
+      appToast('Pending schedule data is incomplete.', 'error');
+      return;
+    }
+
+    await applyApprovedScheduleChange(requestId, existing, {
+      startDate: existing.pendingStartDate,
+      endDate: existing.pendingEndDate,
+      durationHours: existing.pendingDurationHours,
+      estimatedPayout: existing.pendingEstimatedPayout,
+    });
+
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: existing.clientId,
+        title: 'Schedule change approved',
+        body: `Guardr approved your new times for "${existing.title}".`,
+      });
+    }
+    appToast('Schedule change approved and guards notified.', 'success');
+  };
+
+  const handleRejectScheduleChange = async (requestId: string) => {
+    if (!currentUser || !canReviewJobRequests(currentUser)) {
+      appToast('You do not have permission to decline schedule changes.', 'error');
+      return;
+    }
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing || existing.scheduleChangeStatus !== 'pending_staff') {
+      appToast('No pending schedule change for this job.', 'error');
+      return;
+    }
+
+    const cleared = { ...existing, ...clearScheduleChangePending() };
+    setRequests((prev) => prev.map((r) => (r.id === requestId ? cleared : r)));
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update(scheduleChangePendingDbColumns(cleared))
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: existing.clientId,
+        title: 'Schedule change declined',
+        body: `Guardr declined the requested time change for "${existing.title}". Contact support if you need help.`,
+      });
+    }
+    appToast('Schedule change declined.', 'info');
   };
 
   const handleStaffEditJobListing = async (requestId: string, updates: Partial<SecurityRequest>) => {
@@ -8104,6 +8347,8 @@ export default function App() {
           onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
           onApproveRequest={handleApproveRequest}
           onDenyRequest={handleDenyRequest}
+          onApproveScheduleChange={handleApproveScheduleChange}
+          onRejectScheduleChange={handleRejectScheduleChange}
           onApproveClient={handleApproveClient}
           onRejectClient={handleRejectClient}
           onApproveGuardAccount={handleApproveGuardAccount}

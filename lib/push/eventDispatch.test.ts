@@ -155,6 +155,18 @@ describe('buildEventDispatchPayloads', () => {
     assert.equal(payloads[0].userId, 'client-4');
   });
 
+  it('targets schedule change notifications to the assigned guard', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'job_schedule_changed',
+      recipientUserId: 'guard-5',
+      requestId: 'job-2',
+      body: 'Your job time has changed',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-5');
+  });
+
   it('targets crew chat to a specific guard or staff dispatch', async () => {
     const direct = await buildEventDispatchPayloads(mockDb(), {
       type: 'team_chat_message',
