@@ -2,9 +2,6 @@ import { JobStatus, PlatformRole, SecurityRequest } from '../types';
 import type { ClientPaymentGates } from './platformSettings';
 import { computeDurationHours } from './dates';
 
-const FULL_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open'];
-
-/** Title and location may be updated through in-progress (not after completed/closed). */
 const LISTING_EDIT_STATUSES: JobStatus[] = ['pending-review', 'open', 'accepted', 'in-progress'];
 
 const TITLE_LOCATION_FIELDS = [
@@ -64,7 +61,19 @@ export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: Plat
 }
 
 export function canEditJobSchedule(req: SecurityRequest): boolean {
-  return FULL_EDIT_STATUSES.includes(req.status) && !isJobPaid(req);
+  return !isJobPaid(req) && LISTING_EDIT_STATUSES.includes(req.status);
+}
+
+/** Unpaid jobs — client or staff may change times freely on any active job (no approval workflow). */
+export function canEditUnpaidJobSchedule(req: SecurityRequest): boolean {
+  return canEditJobSchedule(req);
+}
+
+/** Staff may edit unpaid schedules wherever they can edit the listing (directors: any non-closed job). */
+export function canStaffEditUnpaidJobSchedule(req: SecurityRequest, role: PlatformRole): boolean {
+  if (isJobPaid(req)) return false;
+  if (role === 'director' || role === 'owner') return req.status !== 'closed';
+  return LISTING_EDIT_STATUSES.includes(req.status);
 }
 
 /** Schedule is locked once the client has paid — title/location stay editable. */
@@ -127,13 +136,13 @@ export function scheduleEditBlockedReason(req: SecurityRequest): string | null {
   if (canClientReschedulePaidSchedule(req)) {
     return null;
   }
+  if (canEditUnpaidJobSchedule(req)) {
+    return null;
+  }
   if (isJobScheduleLocked(req)) {
     return 'Schedule is locked after payment. Update title and location only, or contact staff.';
   }
-  if (!FULL_EDIT_STATUSES.includes(req.status)) {
-    return 'Schedule can only be changed on open unpaid jobs.';
-  }
-  return null;
+  return 'Schedule cannot be changed in this job status.';
 }
 
 /** Strip schedule/billing fields when payment has cleared. */
