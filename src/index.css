@@ -1713,6 +1713,196 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Client map — Sacramento Buy Nothing-style horizontal browse dock */
+.client-map-browse-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+.client-map-browse-dock > * {
+  pointer-events: auto;
+}
+
+.client-map-browse-dock-inner {
+  margin: 0 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0 0.25rem;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--brand-bg) 92%, transparent) 0%,
+    color-mix(in srgb, var(--brand-bg) 55%, transparent) 70%,
+    transparent 100%
+  );
+}
+
+.client-map-browse-scroll {
+  display: flex;
+  gap: 0.625rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0 0.75rem 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.client-map-browse-plus-wrap {
+  position: relative;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.client-map-browse-plus-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 5.5rem;
+  min-height: 7.5rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 1rem;
+  border: 2px dashed color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface));
+  color: var(--brand-primary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.client-map-browse-plus-card:hover {
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 50%, var(--brand-border));
+}
+
+.client-map-browse-plus-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-surface));
+}
+
+.client-map-browse-plus-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.client-map-browse-plus-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 11rem;
+  padding: 0.375rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-nav);
+}
+
+.client-map-browse-plus-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--brand-text);
+  transition: background 0.15s ease;
+}
+
+.client-map-browse-plus-action:hover {
+  background: var(--brand-bg-sec);
+}
+
+.client-map-browse-job-card {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 10.5rem;
+  min-height: 7.5rem;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-nav);
+  text-align: left;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.client-map-browse-job-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
+}
+
+.client-map-browse-job-card:active {
+  transform: scale(0.98);
+}
+
+.client-map-browse-job-chip {
+  display: inline-block;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+}
+
+.client-map-browse-job-chip--upcoming {
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+}
+
+.client-map-browse-job-chip--past {
+  color: var(--brand-text-muted);
+  background: color-mix(in srgb, var(--brand-border) 50%, transparent);
+}
+
+.client-map-browse-job-chip--cancelled {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+}
+
+.client-map-browse-job-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.client-map-browse-job-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+  font-size: 0.625rem;
+  color: var(--brand-text-muted);
+  line-height: 1.3;
+}
+
+.client-map-browse-empty {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+  line-height: 1.45;
+  text-align: center;
+}
+
 .map-offer-card {
   margin: 0 0.75rem 0.75rem;
   padding: 0.75rem 1rem 1rem;

@@ -50,6 +50,29 @@ export function clientVisibleMapJobs(
   });
 }
 
+export type ClientMapPinKind = 'upcoming' | 'past' | 'cancelled';
+
+export function clientMapPinKind(req: SecurityRequest): ClientMapPinKind | null {
+  if (req.status === 'cancelled') return 'cancelled';
+  if (req.status === 'completed' || req.status === 'closed') return 'past';
+  if (req.status === 'accepted') return 'upcoming';
+  return null;
+}
+
+/** Map blips when no guard is clocked in — past, upcoming (accepted), and cancelled only. */
+export function clientBrowseMapJobs(
+  clientId: string,
+  clientName: string | undefined,
+  requests: SecurityRequest[]
+): SecurityRequest[] {
+  return requests
+    .filter((r) => {
+      const isMine = r.clientId === clientId || r.clientName === clientName;
+      return isMine && clientMapPinKind(r) !== null;
+    })
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+}
+
 export function unpaidStaffScheduleChangeNeedsClientApproval(
   existing: SecurityRequest,
   updates: Partial<SecurityRequest>

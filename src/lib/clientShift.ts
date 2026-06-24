@@ -4,10 +4,10 @@ import { formatShiftRange } from './dates';
 
 export type ClientShiftPhase = 'scheduled' | 'en-route' | 'on-site' | 'on-duty' | 'complete';
 
-const LIVE_STATUSES = new Set<SecurityRequest['status']>(['accepted', 'in-progress']);
+const CLOCKED_IN_STATUS = 'in-progress' as const;
 
 export function isClientLiveJob(req: SecurityRequest): boolean {
-  return LIVE_STATUSES.has(req.status) && !!req.assignedGuardId;
+  return req.status === CLOCKED_IN_STATUS && !!req.assignedGuardId;
 }
 
 export function getClientLiveJobs(requests: SecurityRequest[]): SecurityRequest[] {

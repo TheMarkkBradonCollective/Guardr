@@ -288,6 +288,11 @@ export function ClientDashboard({
         crewSettings={crewSettings ?? teamLeadSettings}
         jobChatThreads={jobChatThreads}
         onOpenJobChat={openMessages}
+        onPostJob={() => {
+          setFlowPreset('default');
+          navigate('request');
+        }}
+        onRequestGuard={() => navigate('guards')}
         initialLiveJobId={jobChatRequestId}
         onLiveJobIdChange={onJobChatRequestIdChange}
         onConfirmSelfAudit={onConfirmSelfAudit}
