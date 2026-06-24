@@ -15,5 +15,19 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    build: {
+      // Split heavy vendor libraries so the initial app shell loads faster and
+      // long-lived dependencies stay cached across deploys.
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-map': ['leaflet', 'react-leaflet'],
+            'vendor-motion': ['motion'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-icons': ['lucide-react'],
+          },
+        },
+      },
+    },
   };
 });
