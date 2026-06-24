@@ -481,7 +481,7 @@ export function StaffGuardDetailPanel({
             </div>
           )}
           {!guard.isStaff && (
-            <div className="flex flex-nowrap items-center gap-2 mt-3 overflow-x-auto">
+            <div className="flex flex-wrap items-center gap-2 mt-3">
               <GuardRosterStatusBadges guard={guard} className="shrink-0" />
               <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
             </div>

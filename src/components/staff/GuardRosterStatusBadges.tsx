@@ -38,7 +38,7 @@ export function GuardRosterStatusBadges({
 
   return (
     <div className={`flex flex-col items-start gap-1.5 ${className ?? ''}`.trim()}>
-      <div className="flex flex-nowrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
         {showStatusFallback && (
           <WfBadge tone={getGuardRosterAccountBadgeTone(guard)}>{getGuardRosterAccountLabel(guard)}</WfBadge>
         )}
