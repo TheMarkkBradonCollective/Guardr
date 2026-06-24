@@ -7,7 +7,10 @@ import {
   SecurityGuard,
 } from '../../types';
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
-import { US_STATES } from '../../lib/states';
+import {
+  CALIFORNIA_CITIES,
+  formatCityLabel,
+} from '../../lib/californiaCities';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
@@ -89,11 +92,12 @@ export function GuardResumeEditor({
     onChange({ specialties: [...set] });
   };
 
-  const toggleServiceArea = (code: string) => {
-    const set = new Set(payload.serviceAreas);
-    if (set.has(code)) set.delete(code);
-    else set.add(code);
-    onChange({ serviceAreas: [...set] });
+  const toggleServiceArea = (city: string) => {
+    const label = formatCityLabel(city);
+    const set = new Set(payload.serviceAreas.map(formatCityLabel));
+    if (set.has(label)) set.delete(label);
+    else set.add(label);
+    onChange({ serviceAreas: [...set].sort((a, b) => a.localeCompare(b)) });
   };
 
   const submitExperience = async (e: React.FormEvent) => {
@@ -217,19 +221,21 @@ export function GuardResumeEditor({
       </section>
 
       <section className="app-form-section space-y-3">
-        <p className="uber-label">Service areas (states)</p>
-        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-          {US_STATES.map(({ code, name }) => {
-            const active = payload.serviceAreas.includes(code);
+        <p className="uber-label">Service areas (cities)</p>
+        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+          {CALIFORNIA_CITIES.map((city) => {
+            const active = payload.serviceAreas.some(
+              (area) => formatCityLabel(area).toLowerCase() === city.toLowerCase()
+            );
             return (
               <button
-                key={code}
+                key={city}
                 type="button"
                 disabled={!editing}
-                onClick={() => toggleServiceArea(code)}
+                onClick={() => toggleServiceArea(city)}
                 className={`chip text-xs ${active ? 'chip-active' : 'chip-inactive'} ${!editing ? 'opacity-80' : ''}`}
               >
-                {name}
+                {city}
               </button>
             );
           })}

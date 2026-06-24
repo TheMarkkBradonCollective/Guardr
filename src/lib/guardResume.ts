@@ -1,7 +1,7 @@
 import { Certification, SecurityGuard } from '../types';
+import { formatServiceAreaLabel, isStatewideServiceAreaMarker, normalizeGuardServiceAreas } from './californiaCities';
 import { resolveCertCatalogId, getCertCatalogEntry } from './certCatalog';
 import { isGuardCardCert } from './guardLicenses';
-import { formatStateName } from './states';
 
 /** BSIS guard cards only */
 export function getGuardLicenses(guard: SecurityGuard): Certification[] {
@@ -33,7 +33,12 @@ export function formatSkillList(skills: string[] | undefined): string {
 
 export function formatServiceAreas(areas: string[] | undefined): string {
   if (!areas?.length) return '';
-  return areas.map((code) => formatStateName(code)).join(', ');
+  const hasStatewide = areas.some(isStatewideServiceAreaMarker);
+  const cities = normalizeGuardServiceAreas(areas);
+  if (hasStatewide && cities.length === 0) return 'California';
+  const parts = cities.map(formatServiceAreaLabel);
+  if (hasStatewide && cities.length > 0) parts.unshift('California');
+  return parts.join(', ');
 }
 
 export function parseTagInput(value: string): string[] {

@@ -246,7 +246,7 @@ export interface SecurityGuard {
   about?: string;
   skills?: string[];
   languages?: string[];
-  /** US state codes where guard advertises availability */
+  /** California cities where the guard advertises availability */
   serviceAreas?: string[];
   specialties?: string[];
   yearsExperience?: number;
