@@ -119,6 +119,9 @@ export function GuardActiveShift({
   const breakRemaining = breakMinutesRemaining(job);
   const breakAllowed = (job.breakMinutes ?? 0) > 0;
   const breakBlocked = guardBreakBlockedMessage(job);
+  const jobHasCoords = typeof job.latitude === 'number' && typeof job.longitude === 'number';
+  const gpsRequired = jobHasCoords;
+  const notOnSiteBlocked = gpsRequired && !onSite;
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1001] guardr-bottom-sheet guardr-active-shift rounded-t-2xl flex flex-col overflow-hidden">
@@ -214,27 +217,31 @@ export function GuardActiveShift({
           <div className="space-y-3">
             {onSite ? (
               <SlideToConfirm
-                label="Slide to arrive and start self audit"
-                confirmedLabel="Starting…"
+                label="Slide to clock in"
+                confirmedLabel="Clocking in…"
                 onConfirm={onBeginAudit}
                 disabled={!clockInOpen}
                 disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
               />
             ) : (
               <SlideToConfirm
-                label="Slide to arrive on site"
+                label={gpsRequired ? 'Must be on site to clock in' : 'Slide to arrive on site'}
                 confirmedLabel="Arrived"
                 onConfirm={onArrived}
-                disabled={!clockInOpen}
+                disabled={!clockInOpen || notOnSiteBlocked}
                 disabledHint={
-                  clockInMsg ??
-                  `Move within range of the site pin. Clock-in opens at ${clockInOpensLabel}.`
+                  notOnSiteBlocked
+                    ? 'GPS requires you to be within 150m of the site pin to clock in.'
+                    : clockInMsg ??
+                      `Move within range of the site pin. Clock-in opens at ${clockInOpensLabel}.`
                 }
               />
             )}
             {!onSite && (
-              <p className="text-xs text-amber-700 dark:text-amber-300 text-center">
-                GPS shows you are not on site yet — the Arrived step glows when you are in range.
+              <p className={`text-xs text-center ${notOnSiteBlocked ? 'text-amber-700 dark:text-amber-300' : 'text-brand-text-muted'}`}>
+                {notOnSiteBlocked
+                  ? 'GPS location required — move to the job site to enable clock-in.'
+                  : 'The Arrived step glows when you are within range of the site.'}
               </p>
             )}
           </div>

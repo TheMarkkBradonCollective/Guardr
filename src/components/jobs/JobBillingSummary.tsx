@@ -189,7 +189,12 @@ export function JobBillingSummaryFromRequest({
             Overtime charge: <strong className="text-brand-text">+${(req.overtimeAmount ?? 0).toFixed(2)}</strong>
           </span>
           {!overtimeSettled ? (
-            <span className="text-amber-400">Pending guard and client approval</span>
+            <span className="text-amber-400">
+              {req.overtimeStatus === 'pending_client' ? 'Awaiting client approval' :
+               req.overtimeStatus === 'awaiting_payment' ? 'Client approved — payment pending' :
+               req.overtimeStatus === 'disputed' ? 'Disputed — staff reviewing' :
+               'Pending approval'}
+            </span>
           ) : (
             <span>
               Total bill: <strong className="text-brand-primary">${req.estimatedPayout.toFixed(2)}</strong>

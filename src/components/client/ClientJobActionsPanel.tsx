@@ -448,7 +448,7 @@ export function ClientJobActionsPanel({
               <p className="text-sm font-semibold text-amber-300">Late clock-out overtime</p>
               <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
                 Your guard clocked out {(req.overtimeHours ?? 0)}h after the scheduled end.
-                {req.overtimeStatus === 'pending_guard' && ' Waiting for the guard to confirm overtime.'}
+                {req.overtimeStatus === 'pending_guard' && ' Overtime recorded — awaiting your confirmation.'}
                 {req.overtimeStatus === 'pending_client' && ` Additional charge: $${(req.overtimeAmount ?? 0).toFixed(2)} — approve to proceed.`}
                 {isOvertimeDisputed(req) && (
                   <>

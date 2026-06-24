@@ -16,6 +16,27 @@ import {
 import { Briefcase, Clock, CheckCircle2, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
 
+/** Format time until a shift in a human-friendly way. */
+function formatTimeUntilShift(startDate: string): string {
+  const now = new Date();
+  const start = new Date(startDate);
+  const diffMs = start.getTime() - now.getTime();
+  if (diffMs <= 0) return 'Now';
+  const diffHours = diffMs / 3_600_000;
+  if (diffHours < 1) {
+    const mins = Math.round(diffMs / 60_000);
+    return `In ${mins} min${mins === 1 ? '' : 's'}`;
+  }
+  if (diffHours < 24) {
+    const hours = Math.floor(diffHours);
+    const mins = Math.round((diffHours - hours) * 60);
+    return mins > 0 ? `In ${hours}h ${mins}m` : `In ${hours}h`;
+  }
+  // > 24 hours — show date + time
+  return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+    ' at ' + start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
 export type { GuardMyJobDetailProps } from './GuardMyJobDetail';
 export { GuardMyJobDetail } from './GuardMyJobDetail';
 
@@ -51,11 +72,15 @@ function JobRow({
   job,
   onSelect,
   showPay = false,
+  showTimeUntil = false,
 }: {
   job: GuardJobView;
   onSelect: () => void;
   showPay?: boolean;
+  showTimeUntil?: boolean;
 }) {
+  const timeUntil = showTimeUntil ? formatTimeUntilShift(job.startDate) : null;
+
   return (
     <AppItemCard
       onClick={onSelect}
@@ -66,6 +91,12 @@ function JobRow({
         <p className="text-sm text-brand-text-muted mt-1 truncate">
           {formatShiftRange(job.startDate, job.endDate)}
         </p>
+        {timeUntil && (
+          <p className="text-xs font-semibold text-brand-primary flex items-center gap-1 mt-1">
+            <Clock className="w-3 h-3 shrink-0" />
+            {timeUntil}
+          </p>
+        )}
         {showPay && (
           <p className="text-sm font-medium text-brand-primary mt-1">
             ${getGuardHourlyPay(job)}/hr
@@ -224,6 +255,7 @@ export function GuardMyJobsPanel({
                   job={job}
                   onSelect={() => updateSelectedId(job.id)}
                   showPay
+                  showTimeUntil
                 />
               ))}
             </AppItemCardStack>
