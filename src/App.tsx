@@ -5404,6 +5404,14 @@ export default function App() {
       appToast(`You must qualify before applying: ${missing}. Upload the required credentials in your profile.`, 'error');
       return;
     }
+
+    // Direct requests: guard confirms → assign immediately (client already chose them)
+    if (job.requestType === 'direct' && job.targetGuardId === activeGuardId) {
+      await assignGuardToJob(requestId, activeGuardId);
+      appToast('Job confirmed — check your schedule.', 'success');
+      return;
+    }
+
     const nextApplicants = [...job.applicants, activeGuardId];
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
@@ -5422,6 +5430,41 @@ export default function App() {
       });
     }
     appToast('Application submitted. Guardr staff will review applicants and send the best fit for client approval.', 'success');
+  };
+
+  const handleGuardDeclineDirectJob = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    if (job.requestType !== 'direct' || job.targetGuardId !== activeGuardId) {
+      appToast('This is not a direct request for you.', 'error');
+      return;
+    }
+    if (job.status !== 'open') {
+      appToast('This job is no longer open.', 'error');
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, requestType: 'marketplace' as const, targetGuardId: undefined }
+          : r
+      )
+    );
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({ request_type: 'marketplace', target_guard_id: null })
+        .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'job_submitted',
+        requestId,
+        location: job.location,
+        body: `Guard declined direct request for "${job.title}" — now open to all guards`,
+      });
+    }
+    appToast('Job declined — it\'s now listed for all guards.', 'info');
   };
 
   const handleStaffApproveGuardApplication = async (requestId: string, guardId: string) => {
@@ -6706,6 +6749,7 @@ export default function App() {
             handleSubmitGuardIdentityVerification(activeGuard.id, payload)
           }
           onAcceptJob={handleApplyToJob}
+          onDeclineDirectJob={handleGuardDeclineDirectJob}
           onUpdateJobAudit={handleUpdateJobAudit}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}

@@ -18,12 +18,13 @@ interface GuardJobCardProps {
   job: GuardJobView;
   guard: SecurityGuard;
   onAccept?: () => void;
+  onDeclineDirectJob?: () => void;
   onSelect?: () => void;
   onClose?: () => void;
   compact?: boolean;
 }
 
-export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact = false }: GuardJobCardProps) {
+export function GuardJobCard({ job, guard, onAccept, onDeclineDirectJob, onSelect, onClose, compact = false }: GuardJobCardProps) {
   const hourlyPay = getGuardHourlyPay(job);
   const estimated = getEstimatedGuardEarnings(job);
 
@@ -67,6 +68,7 @@ export function GuardJobCard({ job, guard, onAccept, onSelect, onClose, compact 
       job={job}
       guard={guard}
       onAccept={onAccept}
+      onDeclineDirectJob={onDeclineDirectJob}
       onClose={onClose}
     />
   );
