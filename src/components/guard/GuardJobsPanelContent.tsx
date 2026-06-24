@@ -8,12 +8,18 @@ import { GuardJobCard } from './GuardJobCard';
 interface GuardJobsPanelContentProps {
   jobs: GuardJobView[];
   guard: SecurityGuard;
+  coworkerGuards?: SecurityGuard[];
   selectedJob: GuardJobView | null;
   selectedCategory: JobCategoryId | null;
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
+  onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
+  onApplyOpenTeamSlot?: (jobId: string) => void | Promise<void>;
+  onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
+  onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
 }
 
 function CategoryFilters({
@@ -49,18 +55,25 @@ function CategoryFilters({
 export function GuardJobsPanelContent({
   jobs,
   guard,
+  coworkerGuards,
   selectedJob,
   selectedCategory,
   onSelectCategory,
   onSelectJob,
   onAcceptJob,
   onDeclineDirectJob,
+  onApplyAsTeamLead,
+  onApplyOpenTeamSlot,
+  onInviteTeamGuard,
+  onAcceptTeamInvite,
+  onDeclineTeamInvite,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
     return (
       <GuardJobCard
         job={selectedJob}
         guard={guard}
+        coworkerGuards={coworkerGuards}
         onClose={() => onSelectJob(null)}
         onAccept={
           selectedJob.status === 'open'
@@ -76,6 +89,31 @@ export function GuardJobsPanelContent({
                 void onDeclineDirectJob(selectedJob.id);
                 onSelectJob(null);
               }
+            : undefined
+        }
+        onApplyAsLead={
+          onApplyAsTeamLead && selectedJob.status === 'open'
+            ? () => void onApplyAsTeamLead(selectedJob.id)
+            : undefined
+        }
+        onApplyOpenSlot={
+          onApplyOpenTeamSlot && selectedJob.status === 'open'
+            ? () => void onApplyOpenTeamSlot(selectedJob.id)
+            : undefined
+        }
+        onInviteGuard={
+          onInviteTeamGuard && selectedJob.status === 'open'
+            ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
+            : undefined
+        }
+        onAcceptInvite={
+          onAcceptTeamInvite && selectedJob.status === 'open'
+            ? () => void onAcceptTeamInvite(selectedJob.id)
+            : undefined
+        }
+        onDeclineInvite={
+          onDeclineTeamInvite && selectedJob.status === 'open'
+            ? () => void onDeclineTeamInvite(selectedJob.id)
             : undefined
         }
       />

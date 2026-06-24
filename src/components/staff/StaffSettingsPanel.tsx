@@ -80,6 +80,9 @@ export function StaffSettingsPanel({
   const [savingModes, setSavingModes] = useState(false);
   const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
   const [savingFees, setSavingFees] = useState(false);
+  const [teamBonusRate, setTeamBonusRate] = useState(platformSettings.teamLeadBonusPerGuardPerHour ?? 1);
+  const [teamClientShare, setTeamClientShare] = useState(platformSettings.teamLeadBonusClientSharePercent ?? 50);
+  const [savingTeamBonus, setSavingTeamBonus] = useState(false);
 
   useEffect(() => {
     setCashEnabled(platformSettings.paymentCashEnabled);
@@ -89,6 +92,15 @@ export function StaffSettingsPanel({
   useEffect(() => {
     setFeeDraft(platformSettings.feeConfig);
   }, [platformSettings.feeConfig]);
+
+  useEffect(() => {
+    setTeamBonusRate(platformSettings.teamLeadBonusPerGuardPerHour ?? 1);
+    setTeamClientShare(platformSettings.teamLeadBonusClientSharePercent ?? 50);
+  }, [platformSettings.teamLeadBonusPerGuardPerHour, platformSettings.teamLeadBonusClientSharePercent]);
+
+  const teamBonusDirty =
+    teamBonusRate !== (platformSettings.teamLeadBonusPerGuardPerHour ?? 1) ||
+    teamClientShare !== (platformSettings.teamLeadBonusClientSharePercent ?? 50);
 
   const feeDirty = useMemo(
     () => JSON.stringify(feeDraft) !== JSON.stringify(platformSettings.feeConfig),
@@ -125,6 +137,23 @@ export function StaffSettingsPanel({
       });
     } finally {
       setSavingFees(false);
+    }
+  };
+
+  const persistTeamBonusSettings = async () => {
+    if (!onUpdatePlatformSettings || !canEditFees) return;
+    setSavingTeamBonus(true);
+    try {
+      const clientShare = Math.min(100, Math.max(0, Math.round(teamClientShare)));
+      await onUpdatePlatformSettings({
+        ...platformSettings,
+        teamLeadBonusPerGuardPerHour: Math.max(0, teamBonusRate),
+        teamLeadBonusClientSharePercent: clientShare,
+        teamLeadBonusPlatformSharePercent: 100 - clientShare,
+        updatedAt: new Date().toISOString(),
+      });
+    } finally {
+      setSavingTeamBonus(false);
     }
   };
 
@@ -380,6 +409,54 @@ export function StaffSettingsPanel({
             <p className="text-xs text-brand-text-muted">
               Only Directors and Owners can edit platform fees.
             </p>
+          )}
+        </div>
+      </AppFormSection>
+
+      <AppFormSection title="Team lead bonus">
+        <div className="pb-6 space-y-4">
+          <p className="text-sm text-brand-text-muted">
+            Trusted team leads earn a bonus per confirmed crew guard per hour. The total is split between client bill and platform margin.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+            <label className="block space-y-1">
+              <span className="uber-label">Bonus per crew guard / hour</span>
+              <input
+                type="number"
+                min={0}
+                step={0.25}
+                value={teamBonusRate}
+                disabled={!canEditFees}
+                onChange={(e) => setTeamBonusRate(Number(e.target.value))}
+                className="uber-input w-full"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="uber-label">Client share (%)</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={teamClientShare}
+                disabled={!canEditFees}
+                onChange={(e) => setTeamClientShare(Number(e.target.value))}
+                className="uber-input w-full"
+              />
+              <span className="text-xs text-brand-text-muted">Platform pays {100 - Math.min(100, Math.max(0, teamClientShare))}%</span>
+            </label>
+          </div>
+          {canEditFees ? (
+            <button
+              type="button"
+              className="app-button-primary !w-auto !h-10 !px-5"
+              disabled={!teamBonusDirty || savingTeamBonus}
+              onClick={() => void persistTeamBonusSettings()}
+            >
+              {savingTeamBonus ? 'Saving…' : 'Save team bonus settings'}
+            </button>
+          ) : (
+            <p className="text-xs text-brand-text-muted">Only Directors and Owners can edit team bonus settings.</p>
           )}
         </div>
       </AppFormSection>

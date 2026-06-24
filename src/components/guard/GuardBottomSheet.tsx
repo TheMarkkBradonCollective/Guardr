@@ -19,12 +19,18 @@ const SNAP_MAX_PX = 520;
 interface GuardBottomSheetProps {
   jobs: GuardJobView[];
   guard: SecurityGuard;
+  coworkerGuards?: SecurityGuard[];
   selectedJob: GuardJobView | null;
   selectedCategory: JobCategoryId | null;
   onSelectCategory: (id: JobCategoryId | null) => void;
   onSelectJob: (job: GuardJobView | null) => void;
   onAcceptJob: (jobId: string) => void;
   onDeclineDirectJob?: (jobId: string) => void | Promise<void>;
+  onApplyAsTeamLead?: (jobId: string) => void | Promise<void>;
+  onApplyOpenTeamSlot?: (jobId: string) => void | Promise<void>;
+  onInviteTeamGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
+  onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
 }
 
 function useViewportHeight(): number {
@@ -48,12 +54,18 @@ function useViewportHeight(): number {
 export function GuardBottomSheet({
   jobs,
   guard,
+  coworkerGuards,
   selectedJob,
   selectedCategory,
   onSelectCategory,
   onSelectJob,
   onAcceptJob,
   onDeclineDirectJob,
+  onApplyAsTeamLead,
+  onApplyOpenTeamSlot,
+  onInviteTeamGuard,
+  onAcceptTeamInvite,
+  onDeclineTeamInvite,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
@@ -86,12 +98,18 @@ export function GuardBottomSheet({
     <GuardJobsPanelContent
       jobs={jobs}
       guard={guard}
+      coworkerGuards={coworkerGuards}
       selectedJob={selectedJob}
       selectedCategory={selectedCategory}
       onSelectCategory={onSelectCategory}
       onSelectJob={onSelectJob}
       onAcceptJob={onAcceptJob}
       onDeclineDirectJob={onDeclineDirectJob}
+      onApplyAsTeamLead={onApplyAsTeamLead}
+      onApplyOpenTeamSlot={onApplyOpenTeamSlot}
+      onInviteTeamGuard={onInviteTeamGuard}
+      onAcceptTeamInvite={onAcceptTeamInvite}
+      onDeclineTeamInvite={onDeclineTeamInvite}
     />
   );
 

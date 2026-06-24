@@ -8,7 +8,7 @@ import { getClientRehireableGuards } from '../lib/guardDirectory';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { isClientAccountPending } from '../lib/accountStatus';
-import type { ClientPaymentGates } from '../lib/platformSettings';
+import type { ClientPaymentGates, PlatformSettings } from '../lib/platformSettings';
 import type { PlatformFeeConfig } from '../lib/payments';
 import type { OvertimeDisputeInput } from '../lib/shiftBilling';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
@@ -70,6 +70,9 @@ interface ClientDashboardProps {
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
+  onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  teamLeadSettings?: PlatformSettings;
   favoriteGuardIds?: string[];
   onToggleFavoriteGuard?: (guardId: string) => void | Promise<void>;
   paymentGates: ClientPaymentGates;
@@ -119,6 +122,9 @@ export function ClientDashboard({
   onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
+  onApproveTeamSlot,
+  onDenyTeamSlot,
+  teamLeadSettings,
   favoriteGuardIds = [],
   onToggleFavoriteGuard,
   paymentGates,
@@ -423,6 +429,9 @@ export function ClientDashboard({
         onRequestOvertimeCash={onRequestOvertimeCash}
         onApprovePendingGuard={onApprovePendingGuard}
         onDenyPendingGuard={onDenyPendingGuard}
+        onApproveTeamSlot={onApproveTeamSlot}
+        onDenyTeamSlot={onDenyTeamSlot}
+        teamLeadSettings={teamLeadSettings}
         onRequestNew={() => {
           setFlowPreset('default');
           navigate('request');

@@ -17,14 +17,34 @@ import { MapPin } from 'lucide-react';
 interface GuardJobCardProps {
   job: GuardJobView;
   guard: SecurityGuard;
+  coworkerGuards?: SecurityGuard[];
   onAccept?: () => void;
   onDeclineDirectJob?: () => void;
+  onApplyAsLead?: () => void | Promise<void>;
+  onApplyOpenSlot?: () => void | Promise<void>;
+  onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onAcceptInvite?: () => void | Promise<void>;
+  onDeclineInvite?: () => void | Promise<void>;
   onSelect?: () => void;
   onClose?: () => void;
   compact?: boolean;
 }
 
-export function GuardJobCard({ job, guard, onAccept, onDeclineDirectJob, onSelect, onClose, compact = false }: GuardJobCardProps) {
+export function GuardJobCard({
+  job,
+  guard,
+  coworkerGuards,
+  onAccept,
+  onDeclineDirectJob,
+  onApplyAsLead,
+  onApplyOpenSlot,
+  onInviteGuard,
+  onAcceptInvite,
+  onDeclineInvite,
+  onSelect,
+  onClose,
+  compact = false,
+}: GuardJobCardProps) {
   const hourlyPay = getGuardHourlyPay(job);
   const estimated = getEstimatedGuardEarnings(job);
 
@@ -67,8 +87,14 @@ export function GuardJobCard({ job, guard, onAccept, onDeclineDirectJob, onSelec
     <GuardJobDetailContent
       job={job}
       guard={guard}
+      coworkerGuards={coworkerGuards}
       onAccept={onAccept}
       onDeclineDirectJob={onDeclineDirectJob}
+      onApplyAsLead={onApplyAsLead}
+      onApplyOpenSlot={onApplyOpenSlot}
+      onInviteGuard={onInviteGuard}
+      onAcceptInvite={onAcceptInvite}
+      onDeclineInvite={onDeclineInvite}
       onClose={onClose}
     />
   );

@@ -1,4 +1,4 @@
-import { JobOperationalDetails, Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
+import { JobOperationalDetails, JobGuardSlot, Payment, PaymentMethod, PaymentStatus, SecurityGuard, SecurityRequest } from '../types';
 import { computeGuardPay, computeGuardEarnings } from './payments';
 import { guardCanViewJob } from './guardJobs';
 import { guardCanViewOperationalBriefing, hasJobOperationalDetails } from './jobOperationalDetails';
@@ -29,6 +29,8 @@ export interface GuardJobView {
   type: SecurityRequest['type'];
   armedRequired: boolean;
   guardsNeeded?: number;
+  guardSlots?: JobGuardSlot[];
+  teamLeadId?: string | null;
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
@@ -181,6 +183,8 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
     type: req.type,
     armedRequired: req.armedRequired,
     guardsNeeded: req.guardsNeeded,
+    guardSlots: req.guardSlots,
+    teamLeadId: req.teamLeadId,
     uniformRequirements: req.uniformRequirements,
     equipmentRequirements: req.equipmentRequirements,
     siteInstructions: canViewBriefing ? req.siteInstructions : undefined,
@@ -220,8 +224,21 @@ export function toGuardJobView(req: SecurityRequest, guardId?: string): GuardJob
 /** Guards only receive browseable open jobs plus their own assignments */
 export function getGuardVisibleJobs(guard: SecurityGuard, requests: SecurityRequest[]): GuardJobView[] {
   return requests
-    .filter((r) => r.assignedGuardId === guard.id || guardCanViewJob(guard, r))
+    .filter(
+      (r) =>
+        r.assignedGuardId === guard.id ||
+        guardHasSlotOnJob(r, guard.id) ||
+        guardCanViewJob(guard, r)
+    )
     .map((req) => toGuardJobView(req, guard.id));
+}
+
+function guardHasSlotOnJob(req: SecurityRequest, guardId: string): boolean {
+  return (req.guardSlots ?? []).some(
+    (s) =>
+      s.guardId === guardId &&
+      ['invited', 'pending_staff', 'pending_client', 'approved'].includes(s.status)
+  );
 }
 
 export function getGuardShiftEarnings(job: Pick<GuardJobView, 'guardPay' | 'durationHours'>): number {
@@ -245,7 +262,13 @@ export function getGuardPayoutHistory(
   payments: Payment[]
 ): GuardPayoutView[] {
   const assignedJobIds = new Set(
-    requests.filter((r) => r.assignedGuardId === guardId).map((r) => r.id)
+    requests
+      .filter(
+        (r) =>
+          r.assignedGuardId === guardId ||
+          (r.guardSlots ?? []).some((s) => s.guardId === guardId && s.status === 'approved')
+      )
+      .map((r) => r.id)
   );
   return payments
     .filter((p) => assignedJobIds.has(p.jobId))

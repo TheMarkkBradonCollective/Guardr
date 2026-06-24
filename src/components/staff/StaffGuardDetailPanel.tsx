@@ -595,8 +595,8 @@ export function StaffGuardDetailPanel({
                   className={`app-button-outline app-btn-sm ${guard.trusted ? 'text-amber-500 border-amber-500/40' : ''}`}
                   title={
                     guard.trusted
-                      ? 'Remove trusted status — guard will require normal approvals'
-                      : 'Mark as trusted — guard skips client confirmation on non-cash jobs'
+                      ? 'Remove trusted status — guard will require Guardr applicant review'
+                      : 'Mark as trusted — guard skips Guardr review, can lead teams'
                   }
                 >
                   {guard.trusted ? 'Remove trusted' : 'Mark as trusted'}

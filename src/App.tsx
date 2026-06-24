@@ -7,6 +7,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallba
 import {
   SecurityGuard,
   SecurityRequest,
+  JobGuardSlot,
   Certification,
   Client,
   SessionUser,
@@ -130,8 +131,31 @@ import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
   shouldSkipClientGuardApproval,
-  shouldSkipClientGuardApprovalForTrusted,
+  shouldSkipStaffGuardReviewForTrusted,
 } from './lib/guardAssignment';
+import { isGuardTrusted } from './lib/guardTrust';
+import {
+  attachSlotsToRequests,
+  isMultiGuardJob,
+  slotFromDbRow,
+} from './lib/guardTeams';
+import {
+  acceptTeamInvite,
+  applyAsTeamLead,
+  applyToOpenTeamSlot,
+  clientApproveTeamSlot,
+  clientDenyTeamSlot,
+  declineTeamInvite,
+  ensureSlotIds,
+  inviteGuardToTeam,
+  revokeLeadIfNeeded,
+  staffApproveTeamSlot,
+} from './lib/guardTeamFlow';
+import {
+  persistJobGuardSlots,
+  persistJobTeamMeta,
+  teamJobReadyForAcceptance,
+} from './lib/guardTeamDb';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isClientAccountPending } from './lib/accountStatus';
@@ -1379,85 +1403,102 @@ export default function App() {
       };
       }));
 
-      setRequests((dbRequests ?? []).map((r: any) => ({
-        id: r.id, title: r.title, description: r.description,
-        clientId: r.client_id, clientName: r.client_name, clientLogo: r.client_logo,
-        clientRating: r.client_rating != null ? Number(r.client_rating) : undefined,
-        siteName: r.site_name || undefined,
-        address: r.address || undefined,
-        state: r.state || undefined,
-        latitude: r.latitude != null ? Number(r.latitude) : undefined,
-        longitude: r.longitude != null ? Number(r.longitude) : undefined,
-        contactName: r.contact_name || undefined,
-        contactPhone: r.contact_phone || undefined,
-        parkingInstructions: r.parking_instructions || undefined,
-        accessInstructions: r.access_instructions || undefined,
-        location: r.location, type: r.type,
-        armedRequired: r.armed_required,
-        guardsNeeded: r.guards_needed ?? 1,
-        uniformRequirements: r.uniform_requirements || undefined,
-        equipmentRequirements: r.equipment_requirements || undefined,
-        siteInstructions: r.site_instructions || undefined,
-        operationalDetails: normalizeJobOperationalDetails(r.operational_details),
-        startDate: r.start_date, endDate: r.end_date,
-        durationHours: r.duration_hours, hourlyRate: r.hourly_rate,
-        scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
-        scheduledEstimatedPayout: r.scheduled_estimated_payout != null ? Number(r.scheduled_estimated_payout) : undefined,
-        overtimeHours: r.overtime_hours != null ? Number(r.overtime_hours) : undefined,
-        overtimeAmount: r.overtime_amount != null ? Number(r.overtime_amount) : undefined,
-        overtimeStatus: r.overtime_status ?? undefined,
-        overtimeGuardApprovedAt: r.overtime_guard_approved_at || undefined,
-        overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
-        overtimeDisputeReason: r.overtime_dispute_reason || undefined,
-        overtimeDisputedAt: r.overtime_disputed_at || undefined,
-        overtimeDisputeClaimedClockOutAt: r.overtime_dispute_claimed_clock_out_at || undefined,
-        overtimeDisputeResolvedAt: r.overtime_dispute_resolved_at || undefined,
-        overtimeDisputeResolution: r.overtime_dispute_resolution || undefined,
-        overtimeOriginalHours: r.overtime_original_hours != null ? Number(r.overtime_original_hours) : undefined,
-        overtimeOriginalAmount: r.overtime_original_amount != null ? Number(r.overtime_original_amount) : undefined,
-        overtimePaymentStatus: r.overtime_payment_status ?? undefined,
-        overtimeClientPaymentMethod: parsePaymentMethod(r.overtime_client_payment_method),
-        overtimeClientCashPaymentRequested: !!r.overtime_client_cash_payment_requested,
-        overtimeClientCashPaymentRequestedAt: r.overtime_client_cash_payment_requested_at || undefined,
-        overtimeGuardPayoutAvailable: !!r.overtime_guard_payout_available,
-        overtimeGuardPayoutAvailableAt: r.overtime_guard_payout_available_at || undefined,
-        overtimeGuardPayoutMethod: parsePaymentMethod(r.overtime_guard_payout_method),
-        guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
-        platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
-        estimatedPayout: r.estimated_payout,
-        status: normalizeJobStatus(r.status),
-        assignedGuardId: r.assigned_guard_id,
-        pendingGuardId: r.pending_guard_id ?? undefined,
-        staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
-        requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
-        targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
-        requiredCertifications: r.required_certifications || [],
-        minGuardQualification: r.min_guard_qualification === 'active' ? 'active' : 'pending',
-        applicants: r.applicants || [],
-        ratingGiven: r.rating_given ?? undefined,
-        reviewText: r.review_text ?? undefined,
-        stripePaymentIntentId: r.stripe_payment_intent_id || undefined,
-        paymentStatus: r.payment_status || 'unpaid',
-        clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
-        guardPayoutMethod: parsePaymentMethod(r.guard_payout_method),
-        cashDepositedToStripe: !!r.cash_deposited_to_stripe,
-        cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
-        cashDepositedAt: r.cash_deposited_at || undefined,
-        cashDepositedManually: !!r.cash_deposited_manually,
-        platformFeePaidCash: !!r.platform_fee_paid_cash,
-        guardCashPayoutRequested: !!r.guard_cash_payout_requested,
-        guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
-        guardPayoutAvailable: !!r.guard_payout_available,
-        guardPayoutAvailableAt: r.guard_payout_available_at || undefined,
-        clientCashPaymentRequested: !!r.client_cash_payment_requested,
-        clientCashPaymentRequestedAt: r.client_cash_payment_requested_at || undefined,
-        checkInAudit: r.check_in_audit ?? undefined,
-        spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
-        midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
-        breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
-        shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
-        checkOutAudit: r.check_out_audit ?? undefined,
-      })));
+      const { data: dbSlots, error: slotsErr } = await supabase.from('job_guard_slots').select('*');
+      if (slotsErr && slotsErr.code !== '42P01') {
+        console.warn('Job guard slots load (run migration if missing):', slotsErr);
+      }
+      const loadedRequests = attachSlotsToRequests(
+        (dbRequests ?? []).map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          clientId: r.client_id,
+          clientName: r.client_name,
+          clientLogo: r.client_logo,
+          clientRating: r.client_rating != null ? Number(r.client_rating) : undefined,
+          siteName: r.site_name || undefined,
+          address: r.address || undefined,
+          state: r.state || undefined,
+          latitude: r.latitude != null ? Number(r.latitude) : undefined,
+          longitude: r.longitude != null ? Number(r.longitude) : undefined,
+          contactName: r.contact_name || undefined,
+          contactPhone: r.contact_phone || undefined,
+          parkingInstructions: r.parking_instructions || undefined,
+          accessInstructions: r.access_instructions || undefined,
+          location: r.location,
+          type: r.type,
+          armedRequired: r.armed_required,
+          guardsNeeded: r.guards_needed ?? 1,
+          uniformRequirements: r.uniform_requirements || undefined,
+          equipmentRequirements: r.equipment_requirements || undefined,
+          siteInstructions: r.site_instructions || undefined,
+          operationalDetails: normalizeJobOperationalDetails(r.operational_details),
+          startDate: r.start_date,
+          endDate: r.end_date,
+          durationHours: r.duration_hours,
+          hourlyRate: r.hourly_rate,
+          scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
+          scheduledEstimatedPayout: r.scheduled_estimated_payout != null ? Number(r.scheduled_estimated_payout) : undefined,
+          overtimeHours: r.overtime_hours != null ? Number(r.overtime_hours) : undefined,
+          overtimeAmount: r.overtime_amount != null ? Number(r.overtime_amount) : undefined,
+          overtimeStatus: r.overtime_status ?? undefined,
+          overtimeGuardApprovedAt: r.overtime_guard_approved_at || undefined,
+          overtimeClientApprovedAt: r.overtime_client_approved_at || undefined,
+          overtimeDisputeReason: r.overtime_dispute_reason || undefined,
+          overtimeDisputedAt: r.overtime_disputed_at || undefined,
+          overtimeDisputeClaimedClockOutAt: r.overtime_dispute_claimed_clock_out_at || undefined,
+          overtimeDisputeResolvedAt: r.overtime_dispute_resolved_at || undefined,
+          overtimeDisputeResolution: r.overtime_dispute_resolution || undefined,
+          overtimeOriginalHours: r.overtime_original_hours != null ? Number(r.overtime_original_hours) : undefined,
+          overtimeOriginalAmount: r.overtime_original_amount != null ? Number(r.overtime_original_amount) : undefined,
+          overtimePaymentStatus: r.overtime_payment_status ?? undefined,
+          overtimeClientPaymentMethod: parsePaymentMethod(r.overtime_client_payment_method),
+          overtimeClientCashPaymentRequested: !!r.overtime_client_cash_payment_requested,
+          overtimeClientCashPaymentRequestedAt: r.overtime_client_cash_payment_requested_at || undefined,
+          overtimeGuardPayoutAvailable: !!r.overtime_guard_payout_available,
+          overtimeGuardPayoutAvailableAt: r.overtime_guard_payout_available_at || undefined,
+          overtimeGuardPayoutMethod: parsePaymentMethod(r.overtime_guard_payout_method),
+          guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
+          platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
+          estimatedPayout: r.estimated_payout,
+          status: normalizeJobStatus(r.status),
+          assignedGuardId: r.assigned_guard_id,
+          teamLeadId: r.team_lead_id ?? undefined,
+          openedAt: r.opened_at ?? undefined,
+          pendingGuardId: r.pending_guard_id ?? undefined,
+          staffApprovedGuardAt: r.staff_approved_guard_at || undefined,
+          requestType: r.request_type === 'direct' ? 'direct' : 'marketplace',
+          targetGuardId: r.target_guard_id ?? r.preferred_guard_id ?? undefined,
+          requiredCertifications: r.required_certifications || [],
+          minGuardQualification: r.min_guard_qualification === 'active' ? 'active' : 'pending',
+          applicants: r.applicants || [],
+          ratingGiven: r.rating_given ?? undefined,
+          reviewText: r.review_text ?? undefined,
+          stripePaymentIntentId: r.stripe_payment_intent_id || undefined,
+          paymentStatus: r.payment_status || 'unpaid',
+          clientPaymentMethod: parsePaymentMethod(r.client_payment_method),
+          guardPayoutMethod: parsePaymentMethod(r.guard_payout_method),
+          cashDepositedToStripe: !!r.cash_deposited_to_stripe,
+          cashDepositedAmount: r.cash_deposited_amount != null ? Number(r.cash_deposited_amount) : undefined,
+          cashDepositedAt: r.cash_deposited_at || undefined,
+          cashDepositedManually: !!r.cash_deposited_manually,
+          platformFeePaidCash: !!r.platform_fee_paid_cash,
+          guardCashPayoutRequested: !!r.guard_cash_payout_requested,
+          guardCashPayoutRequestedAt: r.guard_cash_payout_requested_at || undefined,
+          guardPayoutAvailable: !!r.guard_payout_available,
+          guardPayoutAvailableAt: r.guard_payout_available_at || undefined,
+          clientCashPaymentRequested: !!r.client_cash_payment_requested,
+          clientCashPaymentRequestedAt: r.client_cash_payment_requested_at || undefined,
+          checkInAudit: r.check_in_audit ?? undefined,
+          spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
+          midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
+          breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
+          shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
+          checkOutAudit: r.check_out_audit ?? undefined,
+        })),
+        (dbSlots ?? []).map(slotFromDbRow)
+      );
+      setRequests(loadedRequests);
 
       setPayments((dbPayments ?? []).map((p: any) => ({
         id: p.id,
@@ -3772,6 +3813,7 @@ export default function App() {
     const requestingCash = newRequest.clientPaymentMethod === 'cash';
     const initialStatus: SecurityRequest['status'] =
       clientIsTrusted && !requestingCash ? 'open' : 'pending-review';
+    const openedAt = clientIsTrusted && !requestingCash ? new Date().toISOString() : undefined;
 
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
@@ -3802,6 +3844,7 @@ export default function App() {
       platformFeePerHour,
       estimatedPayout,
       status: initialStatus,
+      openedAt,
       paymentStatus: 'unpaid',
       assignedGuardId: null,
       requestType: newRequest.requestType ?? 'marketplace',
@@ -3882,6 +3925,7 @@ export default function App() {
           duration_hours: freshJob.durationHours, hourly_rate: freshJob.hourlyRate,
           guard_pay: freshJob.guardPay, platform_fee_per_hour: freshJob.platformFeePerHour,
           estimated_payout: freshJob.estimatedPayout, status: freshJob.status,
+          opened_at: freshJob.openedAt ?? null,
           payment_status: 'unpaid',
           assigned_guard_id: freshJob.assignedGuardId,
           request_type: freshJob.requestType ?? 'marketplace',
@@ -5087,8 +5131,11 @@ export default function App() {
       return;
     }
     const job = requests.find((r) => r.id === requestId);
-    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open' } : r));
-    if (isDbConnected) await supabase.from('security_requests').update({ status: 'open' }).eq('id', requestId);
+    const openedAt = new Date().toISOString();
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'open', openedAt } : r));
+    if (isDbConnected) {
+      await supabase.from('security_requests').update({ status: 'open', opened_at: openedAt }).eq('id', requestId);
+    }
     if (job) {
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
@@ -5259,6 +5306,229 @@ export default function App() {
     await ensureJobChatThread({ ...job, status: 'accepted', assignedGuardId: guardId });
   };
 
+  const persistTeamJobUpdate = async (updatedJob: SecurityRequest, slots: JobGuardSlot[]) => {
+    const normalizedSlots = ensureSlotIds(updatedJob, slots);
+    const nextJob = revokeLeadIfNeeded({ ...updatedJob, guardSlots: normalizedSlots }, normalizedSlots);
+    setRequests((prev) =>
+      prev.map((r) => (r.id === nextJob.id ? nextJob : r))
+    );
+    if (isDbConnected) {
+      await persistJobGuardSlots(supabase, normalizedSlots);
+      await persistJobTeamMeta(supabase, nextJob.id, {
+        teamLeadId: nextJob.teamLeadId ?? null,
+        pendingGuardId: nextJob.pendingGuardId ?? null,
+        staffApprovedGuardAt: nextJob.staffApprovedGuardAt,
+        applicants: nextJob.applicants,
+        status: nextJob.status,
+        assignedGuardId: nextJob.assignedGuardId,
+      });
+    }
+    return nextJob;
+  };
+
+  const finalizeTeamJobIfReady = async (job: SecurityRequest, slots: JobGuardSlot[]) => {
+    if (!teamJobReadyForAcceptance(job, slots)) return;
+    const leadId = job.teamLeadId ?? slots.find((s) => s.isLead && s.guardId)?.guardId ?? null;
+    if (!leadId) return;
+    const acceptedJob: SecurityRequest = {
+      ...job,
+      status: 'accepted',
+      assignedGuardId: leadId,
+      pendingGuardId: undefined,
+      staffApprovedGuardAt: undefined,
+      guardSlots: slots,
+    };
+    setRequests((prev) => prev.map((r) => (r.id === job.id ? acceptedJob : r)));
+    if (isDbConnected) {
+      await supabase
+        .from('security_requests')
+        .update({
+          status: 'accepted',
+          assigned_guard_id: leadId,
+          pending_guard_id: null,
+          staff_approved_guard_at: null,
+        })
+        .eq('id', job.id);
+      await persistJobGuardSlots(supabase, ensureSlotIds(job, slots));
+    }
+    for (const slot of slots.filter((s) => s.guardId && s.status === 'approved')) {
+      if (currentUser && slot.guardId && slot.guardId !== currentUser.id) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          guardId: slot.guardId,
+          requestId: job.id,
+          location: job.location,
+          body: `Team confirmed for ${job.title}`,
+        });
+      }
+    }
+    await ensureJobChatThread({ ...acceptedJob, status: 'accepted', assignedGuardId: leadId });
+    appToast('Full team confirmed — job is locked in.', 'success');
+  };
+
+  const handleApplyAsTeamLead = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = applyAsTeamLead(job, activeGuard);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        title: 'Approve your guard',
+        body: `${activeGuard.name} applied as team lead for "${job.title}". Confirm to hire them.`,
+      });
+    }
+    appToast('Team lead application sent to client for approval.', 'success');
+    await finalizeTeamJobIfReady(nextJob, result.slots);
+  };
+
+  const handleApplyOpenTeamSlot = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = applyToOpenTeamSlot(job, activeGuardId, isGuardTrusted(activeGuard));
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (isGuardTrusted(activeGuard)) {
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          title: 'Approve your guard',
+          body: `${activeGuard.name} applied for an open slot on "${job.title}".`,
+        });
+      }
+      appToast('Open slot application sent to client for approval.', 'success');
+    } else {
+      if (currentUser) {
+        void reportPushEvent(currentUser, {
+          type: 'guard_application',
+          requestId,
+          guardId: activeGuardId,
+          guardName: activeGuard.name,
+          location: job.location,
+          body: `${activeGuard.name} applied for an open slot on "${job.title}"`,
+        });
+      }
+      appToast('Application submitted. Guardr staff will review your open-slot application.', 'success');
+    }
+    await finalizeTeamJobIfReady(nextJob, result.slots);
+  };
+
+  const handleInviteTeamGuard = async (requestId: string, inviteeId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const invitee = guards.find((g) => g.id === inviteeId);
+    if (!invitee) return;
+    const result = inviteGuardToTeam(job, activeGuard, inviteeId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: inviteeId,
+        requestId,
+        body: `${activeGuard.name} invited you to join "${job.title}"`,
+      });
+    }
+    appToast(`Invitation sent to ${invitee.name}.`, 'success');
+  };
+
+  const handleAcceptTeamInvite = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = acceptTeamInvite(job, activeGuardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard.name,
+        title: 'Approve your guard',
+        body: `${activeGuard.name} accepted a team invite for "${job.title}".`,
+      });
+    }
+    appToast('Invite accepted — awaiting client approval.', 'success');
+    await finalizeTeamJobIfReady(nextJob, result.slots);
+  };
+
+  const handleDeclineTeamInvite = async (requestId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = declineTeamInvite(job, activeGuardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    appToast('Invitation declined.', 'info');
+  };
+
+  const handleClientApproveTeamSlot = async (requestId: string, slotId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = clientApproveTeamSlot(job, slotId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const slot = result.slots.find((s) => s.id === slotId);
+    const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+    if (slot?.guardId && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: slot.guardId,
+        requestId,
+        body: `The client approved you for "${job.title}".`,
+      });
+    }
+    appToast('Guard approved for this slot.', 'success');
+    await finalizeTeamJobIfReady(nextJob, result.slots);
+  };
+
+  const handleClientDenyTeamSlot = async (requestId: string, slotId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = clientDenyTeamSlot(job, slotId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const deniedGuardId = job.guardSlots?.find((s) => s.id === slotId)?.guardId;
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (deniedGuardId && currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: deniedGuardId,
+        requestId,
+        body: `The client declined you for "${job.title}".`,
+      });
+    }
+    appToast('Guard declined — slot reopened.', 'success');
+  };
+
   const proposeGuardForClientApproval = async (requestId: string, guardId: string) => {
     const job = requests.find((r) => r.id === requestId);
     const guard = guards.find((g) => g.id === guardId);
@@ -5282,10 +5552,6 @@ export default function App() {
       return;
     }
     if (shouldSkipClientGuardApproval(job, guardId)) {
-      await assignGuardToJob(requestId, guardId);
-      return;
-    }
-    if (shouldSkipClientGuardApprovalForTrusted(guard, job)) {
       await assignGuardToJob(requestId, guardId);
       return;
     }
@@ -5471,6 +5737,24 @@ export default function App() {
       return;
     }
 
+    if (isMultiGuardJob(job)) {
+      appToast('Use Apply as team lead or Apply for open slot on this job.', 'info');
+      return;
+    }
+
+    if (shouldSkipStaffGuardReviewForTrusted(activeGuard)) {
+      const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
+      setRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
+      );
+      if (isDbConnected) {
+        await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
+      }
+      await proposeGuardForClientApproval(requestId, activeGuardId);
+      appToast('Application sent to client for approval.', 'success');
+      return;
+    }
+
     const nextApplicants = [...job.applicants, activeGuardId];
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
@@ -5538,6 +5822,35 @@ export default function App() {
     }
     if (!job.applicants.includes(guardId)) {
       appToast('This guard has not applied for the job.', 'error');
+      return;
+    }
+    if (isMultiGuardJob(job)) {
+      const result = staffApproveTeamSlot(job, guardId);
+      if ('error' in result) {
+        appToast(result.error, 'error');
+        return;
+      }
+      const guard = guards.find((g) => g.id === guardId);
+      const nextJob = await persistTeamJobUpdate(result.job, result.slots);
+      if (currentUser && guard) {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId,
+          guardName: guard.name,
+          title: 'Approve your guard',
+          body: `Guardr approved ${guard.name} for an open slot on "${job.title}".`,
+        });
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: guardId,
+          requestId,
+          body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
+        });
+      }
+      appToast(`${guard?.name ?? 'Guard'} sent to client for slot approval.`, 'success');
+      await finalizeTeamJobIfReady(nextJob, result.slots);
       return;
     }
     await proposeGuardForClientApproval(requestId, guardId);
@@ -6811,6 +7124,12 @@ export default function App() {
           }
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
+          onApplyAsTeamLead={handleApplyAsTeamLead}
+          onApplyOpenTeamSlot={handleApplyOpenTeamSlot}
+          onInviteTeamGuard={handleInviteTeamGuard}
+          onAcceptTeamInvite={handleAcceptTeamInvite}
+          onDeclineTeamInvite={handleDeclineTeamInvite}
+          coworkerGuards={getBrowsableGuards(verifiedGuards)}
           onUpdateJobAudit={handleUpdateJobAudit}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
@@ -6962,6 +7281,9 @@ export default function App() {
               onRequestOvertimeCash={handleClientRequestOvertimeCash}
               onApprovePendingGuard={handleClientApprovePendingGuard}
               onDenyPendingGuard={handleClientDenyPendingGuard}
+              onApproveTeamSlot={handleClientApproveTeamSlot}
+              onDenyTeamSlot={handleClientDenyTeamSlot}
+              teamLeadSettings={platformSettings}
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}
               paymentGates={clientPaymentGatesMemo}

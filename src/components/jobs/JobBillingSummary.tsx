@@ -2,6 +2,8 @@ import React from 'react';
 import { GuardJobView } from '../../lib/guardJobView';
 import { computeGuardPay, PLATFORM_FEE_PER_HOUR } from '../../lib/payments';
 import { SecurityRequest } from '../../types';
+import { computeTeamLeadBonusBreakdown } from '../../lib/teamLeadBilling';
+import type { PlatformSettings } from '../../lib/platformSettings';
 
 export type JobBillingVariant = 'staff' | 'client' | 'guard';
 
@@ -81,13 +83,24 @@ export function JobBillingSummary({
 export function JobBillingSummaryFromRequest({
   req,
   variant = 'staff',
+  teamLeadSettings,
 }: {
   req: SecurityRequest;
   variant?: JobBillingVariant;
+  teamLeadSettings?: PlatformSettings;
 }) {
   const hasOvertime = (req.overtimeAmount ?? 0) > 0;
   const scheduledPayout = req.scheduledEstimatedPayout ?? req.estimatedPayout;
   const overtimeSettled = req.overtimeStatus === 'paid';
+  const teamBonus =
+    teamLeadSettings && (req.guardsNeeded ?? 1) > 1
+      ? computeTeamLeadBonusBreakdown(
+          teamLeadSettings,
+          req.guardSlots,
+          req.teamLeadId,
+          req.durationHours
+        )
+      : null;
 
   return (
     <div className="space-y-3">
@@ -99,6 +112,18 @@ export function JobBillingSummaryFromRequest({
         guardPay={req.guardPay}
         platformFeePerHour={req.platformFeePerHour}
       />
+      {teamBonus && teamBonus.crewCount > 0 && variant === 'client' && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
+          <span>
+            Team coordination (est.):{' '}
+            <strong className="text-brand-text">${teamBonus.clientShare.toFixed(2)}</strong>
+          </span>
+          <span className="text-xs">
+            {teamBonus.crewCount} confirmed crew × ${teamBonus.perGuardPerHour}/hr × {teamBonus.durationHours}h
+            {' '}({teamBonus.clientSharePercent}% client / {teamBonus.platformSharePercent}% platform)
+          </span>
+        </div>
+      )}
       {hasOvertime && (
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
           <span>

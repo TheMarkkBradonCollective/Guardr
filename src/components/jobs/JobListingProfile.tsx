@@ -17,6 +17,7 @@ import {
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { formatStateName } from '../../lib/states';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
+import { teamRosterSummary } from '../../lib/guardTeams';
 import {
   getJobRequiredCredentialLabels,
   guardJobMinQualificationLabel,
@@ -103,7 +104,14 @@ export function JobListingProfile({
           {job.armedRequired && <WfBadge tone="warning">Armed post</WfBadge>}
           {job.requestType === 'direct' && <WfBadge tone="primary">Direct request</WfBadge>}
           {job.guardsNeeded != null && job.guardsNeeded > 1 && (
-            <WfBadge>{job.guardsNeeded} guards needed</WfBadge>
+            <WfBadge>
+              {(() => {
+                const summary = teamRosterSummary(job.guardSlots, job.guardsNeeded);
+                return summary.filled > 0
+                  ? `${summary.filled}/${summary.total} filled${summary.open > 0 ? ` · ${summary.open} open` : ''}`
+                  : `${job.guardsNeeded} guards needed`;
+              })()}
+            </WfBadge>
           )}
         </div>
       )}

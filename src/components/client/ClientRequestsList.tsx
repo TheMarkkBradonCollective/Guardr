@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { SecurityRequest, SecurityGuard, JobStatus } from '../../types';
-import type { ClientPaymentGates } from '../../lib/platformSettings';
+import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import { JOB_STATUS_LABELS, jobPostingTypeLabel } from '../../lib/jobStatus';
 import { createCheckoutSession, createOvertimeCheckoutSession } from '../../lib/stripeApi';
 import {
@@ -56,6 +56,8 @@ import {
 import { clientPaymentStatusHint, clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { isClientCashPaymentPendingApproval } from '../../lib/cashPayments';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
+import { isMultiGuardJob } from '../../lib/guardTeams';
+import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
@@ -78,6 +80,9 @@ interface ClientRequestsListProps {
   onRequestOvertimeCash?: (requestId: string) => void | Promise<void>;
   onApprovePendingGuard?: (requestId: string) => void | Promise<void>;
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
+  onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  teamLeadSettings?: PlatformSettings;
   onRequestNew: () => void;
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
@@ -128,6 +133,9 @@ export function ClientRequestsList({
   onRequestOvertimeCash,
   onApprovePendingGuard,
   onDenyPendingGuard,
+  onApproveTeamSlot,
+  onDenyTeamSlot,
+  teamLeadSettings,
   onRequestNew,
   currentUser,
   jobChatThreads = [],
@@ -261,8 +269,26 @@ export function ClientRequestsList({
                         job={req}
                         showClientHeader={false}
                         showBadges={false}
-                        payLine={<JobBillingSummaryFromRequest req={req} variant="client" />}
+                        payLine={<JobBillingSummaryFromRequest req={req} variant="client" teamLeadSettings={teamLeadSettings} />}
                       />
+
+                      {isMultiGuardJob(req) && (
+                        <JobTeamRoster
+                          job={req}
+                          guards={guards}
+                          variant="client"
+                          onApproveSlot={
+                            onApproveTeamSlot
+                              ? (slotId) => void onApproveTeamSlot(req.id, slotId)
+                              : undefined
+                          }
+                          onDenySlot={
+                            onDenyTeamSlot
+                              ? (slotId) => void onDenyTeamSlot(req.id, slotId)
+                              : undefined
+                          }
+                        />
+                      )}
       
                       {isJobScheduleLocked(req) && (
                         <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">
@@ -312,7 +338,7 @@ export function ClientRequestsList({
       
                       {req.status === 'open' && (
                         <div className="border-t border-brand-border pt-3 space-y-3 w-full">
-                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && (
+                          {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && !isMultiGuardJob(req) && (
                             <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
                               <div className="flex items-start gap-3">
                                 <ProfileAvatar src={pendingGuard.avatar} name={pendingGuard.name} size="sm" />

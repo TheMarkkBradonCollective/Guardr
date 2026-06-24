@@ -173,7 +173,7 @@ export interface Client {
 
   /**
    * Explicitly trusted by a Director or Owner.
-   * Trusted clients skip the job posting approval queue for non-cash jobs.
+   * Trusted clients skip Guardr job posting review for non-cash jobs.
    */
   trusted?: boolean;
 
@@ -290,7 +290,7 @@ export interface SecurityGuard {
   credentialGraceHours?: number;
   /**
    * Explicitly trusted by a Director or Owner.
-   * Trusted guards skip client confirmation when placed on non-cash jobs.
+   * Trusted guards skip Guardr applicant review and may lead multi-guard teams.
    */
   trusted?: boolean;
 }
@@ -563,6 +563,31 @@ export interface JobOperationalDetails {
   customBriefingFields?: JobOperationalCustomField[];
 }
 
+export type JobGuardSlotStatus =
+  | 'open'
+  | 'invited'
+  | 'pending_staff'
+  | 'pending_client'
+  | 'approved'
+  | 'declined'
+  | 'expired'
+  | 'withdrawn';
+
+export interface JobGuardSlot {
+  id: string;
+  jobId: string;
+  slotIndex: number;
+  guardId?: string | null;
+  isLead: boolean;
+  status: JobGuardSlotStatus;
+  invitedByGuardId?: string | null;
+  invitedAt?: string;
+  inviteExpiresAt?: string;
+  staffApprovedAt?: string;
+  clientApprovedAt?: string;
+  updatedAt?: string;
+}
+
 export interface SecurityRequest {
   id: string;
   title: string;
@@ -650,10 +675,16 @@ export interface SecurityRequest {
   cashDepositedManually?: boolean;
   /** Director manually deposited platform fee (off-Stripe) */
   platformFeePaidCash?: boolean;
-  /** Staff approved this guard — awaiting client confirmation */
+  /** Staff approved this guard — awaiting client confirmation (single-guard jobs) */
   pendingGuardId?: string | null;
   staffApprovedGuardAt?: string;
   assignedGuardId: string | null;
+  /** Trusted lead for multi-guard team jobs */
+  teamLeadId?: string | null;
+  /** When the job listing went live (open) — used for invite expiry */
+  openedAt?: string;
+  /** Per-slot roster for multi-guard jobs */
+  guardSlots?: JobGuardSlot[];
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;
   /** Set only when requestType is direct */

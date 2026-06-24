@@ -159,10 +159,11 @@ const ASSIGNED_BRIEFING_STATUSES: SecurityRequest['status'][] = [
 /** Guards see codes, keys, and full briefing only after staff approves them for the shift. */
 export function guardCanViewOperationalBriefing(
   guardId: string | undefined,
-  job: Pick<SecurityRequest, 'assignedGuardId' | 'status'>
+  job: Pick<SecurityRequest, 'assignedGuardId' | 'status' | 'guardSlots'>
 ): boolean {
-  if (!guardId || !job.assignedGuardId || job.assignedGuardId !== guardId) return false;
-  return ASSIGNED_BRIEFING_STATUSES.includes(job.status);
+  if (!guardId || !ASSIGNED_BRIEFING_STATUSES.includes(job.status)) return false;
+  if (job.assignedGuardId === guardId) return true;
+  return (job.guardSlots ?? []).some((s) => s.guardId === guardId && s.status === 'approved');
 }
 
 export function operationalBriefingLockedMessage(job: Pick<SecurityRequest, 'status'>): string {

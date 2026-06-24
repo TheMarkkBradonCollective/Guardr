@@ -90,6 +90,12 @@ interface GuardDashboardProps {
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onAcceptJob: (requestId: string) => void;
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
+  onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
+  onApplyOpenTeamSlot?: (requestId: string) => void | Promise<void>;
+  onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
+  onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
+  coworkerGuards?: SecurityGuard[];
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
@@ -162,6 +168,12 @@ export function GuardDashboard({
   onSubmitIdentityVerification,
   onAcceptJob,
   onDeclineDirectJob,
+  onApplyAsTeamLead,
+  onApplyOpenTeamSlot,
+  onInviteTeamGuard,
+  onAcceptTeamInvite,
+  onDeclineTeamInvite,
+  coworkerGuards = [],
   onUpdateJobAudit,
   onApproveOvertime,
   onRecordAuditViolation,
@@ -699,6 +711,7 @@ export function GuardDashboard({
         <GuardBottomSheet
           jobs={filteredBrowseJobs}
           guard={guard}
+          coworkerGuards={coworkerGuards}
           selectedJob={selectedJob}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
@@ -711,6 +724,11 @@ export function GuardDashboard({
           }}
           onAcceptJob={handleAcceptJob}
           onDeclineDirectJob={onDeclineDirectJob}
+          onApplyAsTeamLead={onApplyAsTeamLead}
+          onApplyOpenTeamSlot={onApplyOpenTeamSlot}
+          onInviteTeamGuard={onInviteTeamGuard}
+          onAcceptTeamInvite={onAcceptTeamInvite}
+          onDeclineTeamInvite={onDeclineTeamInvite}
         />
       )}
 

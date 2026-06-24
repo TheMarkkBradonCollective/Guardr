@@ -10,7 +10,7 @@ export function isGuardProfileApproved(guard: Pick<SecurityGuard, 'verified'>): 
 
 /**
  * Badge shown when a Director or Owner has explicitly marked a guard as trusted.
- * Trusted guards skip client confirmation when placed on non-cash jobs.
+ * Trusted guards skip Guardr applicant review and may lead multi-guard teams.
  */
 export const GUARD_TRUSTED_BADGE_LABEL = 'Trusted';
 

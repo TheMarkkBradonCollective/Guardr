@@ -7,6 +7,8 @@ import {
 } from '../../lib/guardJobs';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { guardHasApplied } from '../../lib/jobApplications';
+import { isMultiGuardJob } from '../../lib/guardTeams';
+import { GuardTeamPanel } from './GuardTeamPanel';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobListingProfile } from '../jobs/JobListingProfile';
@@ -17,16 +19,28 @@ import { Check, X } from 'lucide-react';
 interface GuardJobDetailContentProps {
   job: GuardJobView;
   guard: SecurityGuard;
+  coworkerGuards?: SecurityGuard[];
   onAccept?: () => void;
   onDeclineDirectJob?: () => void;
+  onApplyAsLead?: () => void | Promise<void>;
+  onApplyOpenSlot?: () => void | Promise<void>;
+  onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onAcceptInvite?: () => void | Promise<void>;
+  onDeclineInvite?: () => void | Promise<void>;
   onClose?: () => void;
 }
 
 export function GuardJobDetailContent({
   job,
   guard,
+  coworkerGuards = [],
   onAccept,
   onDeclineDirectJob,
+  onApplyAsLead,
+  onApplyOpenSlot,
+  onInviteGuard,
+  onAcceptInvite,
+  onDeclineInvite,
   onClose,
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
@@ -102,14 +116,27 @@ export function GuardJobDetailContent({
 
               {hasApplied && job.status === 'open' && job.pendingGuardId === guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5 font-semibold">
-                  Guardr approved you for this job — awaiting client confirmation.
+                  Awaiting client confirmation for this job.
                 </p>
               )}
 
-              {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && (
+              {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && !isMultiGuardJob(job) && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
                   Application submitted. Guardr staff will review applicants and send the best fit for client approval.
                 </p>
+              )}
+
+              {isMultiGuardJob(job) && job.status === 'open' && (
+                <GuardTeamPanel
+                  job={job}
+                  guard={guard}
+                  coworkerGuards={coworkerGuards}
+                  onApplyAsLead={onApplyAsLead}
+                  onApplyOpenSlot={onApplyOpenSlot}
+                  onInviteGuard={onInviteGuard}
+                  onAcceptInvite={onAcceptInvite}
+                  onDeclineInvite={onDeclineInvite}
+                />
               )}
 
               {/* Direct request to this guard — confirm or decline */}
@@ -159,7 +186,7 @@ export function GuardJobDetailContent({
               )}
 
               {/* Marketplace job — slide to apply */}
-              {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && (
+              {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && (
                 <SlideToConfirm
                   label="Slide to apply for job"
                   confirmedLabel="Applied"
