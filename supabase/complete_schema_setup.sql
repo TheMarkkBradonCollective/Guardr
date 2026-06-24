@@ -162,7 +162,30 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NU
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS account_status TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS favorite_guard_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_type TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS industries TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_license TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_description TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_types TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS estimated_guards_needed INTEGER;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS armed_preference TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_frequencies TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS estimated_start_date TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS budget_range TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_city TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_state TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS property_types TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS referred_by TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS referred_by_id TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS how_heard_about_us TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_prior_security_service BOOLEAN;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
 
+UPDATE clients SET favorite_guard_ids = '[]'::jsonb WHERE favorite_guard_ids IS NULL;
+UPDATE guards SET trusted = FALSE WHERE trusted IS NULL;
+UPDATE clients SET trusted = FALSE WHERE trusted IS NULL;
 UPDATE clients SET approved = TRUE WHERE approved IS NULL;
 UPDATE clients
 SET account_status = CASE
@@ -612,6 +635,122 @@ CREATE TABLE IF NOT EXISTS guard_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE IF NOT EXISTS message_reactions (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  message_type TEXT NOT NULL
+    CHECK (message_type IN ('job_chat', 'staff', 'guard', 'support')),
+  message_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  user_name TEXT NOT NULL DEFAULT '',
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE (message_type, message_id, user_id, emoji)
+);
+
+CREATE INDEX IF NOT EXISTS message_reactions_lookup_idx
+  ON message_reactions (message_type, message_id);
+CREATE INDEX IF NOT EXISTS message_reactions_user_idx
+  ON message_reactions (user_id);
+
+CREATE TABLE IF NOT EXISTS chat_read_receipts (
+  user_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL
+    CHECK (channel_type IN ('job_chat', 'staff', 'guard', 'support')),
+  channel_id TEXT NOT NULL,
+  last_read_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  PRIMARY KEY (user_id, channel_type, channel_id)
+);
+
+CREATE INDEX IF NOT EXISTS chat_read_receipts_channel_idx
+  ON chat_read_receipts (channel_type, channel_id);
+
+CREATE OR REPLACE FUNCTION mark_channel_read(
+  p_user_id TEXT,
+  p_channel_type TEXT,
+  p_channel_id TEXT
+)
+RETURNS VOID
+LANGUAGE sql
+AS $$
+  INSERT INTO chat_read_receipts (user_id, channel_type, channel_id, last_read_at)
+  VALUES (p_user_id, p_channel_type, p_channel_id, timezone('utc'::text, now()))
+  ON CONFLICT (user_id, channel_type, channel_id)
+  DO UPDATE SET last_read_at = EXCLUDED.last_read_at;
+$$;
+
+CREATE OR REPLACE FUNCTION unread_counts(p_user_id TEXT)
+RETURNS TABLE (
+  channel_type TEXT,
+  channel_id TEXT,
+  unread_count BIGINT
+)
+LANGUAGE sql STABLE
+AS $$
+  SELECT
+    'job_chat'::TEXT AS channel_type,
+    t.id AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM job_chat_threads t
+  JOIN job_chat_messages m ON m.thread_id = t.id
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'job_chat'
+   AND r.channel_id = t.id
+  WHERE t.client_id = p_user_id OR t.guard_id = p_user_id
+  GROUP BY t.id, r.last_read_at
+
+  UNION ALL
+
+  SELECT
+    'guard'::TEXT AS channel_type,
+    'guard-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM guard_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'guard'
+   AND r.channel_id = 'guard-community'
+
+  UNION ALL
+
+  SELECT
+    'staff'::TEXT AS channel_type,
+    'staff-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM staff_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'staff'
+   AND r.channel_id = 'staff-community'
+
+  UNION ALL
+
+  SELECT
+    'support'::TEXT AS channel_type,
+    t.id AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM support_tickets t
+  JOIN support_messages m ON m.ticket_id = t.id
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'support'
+   AND r.channel_id = t.id
+  WHERE t.user_id = p_user_id
+  GROUP BY t.id, r.last_read_at
+$$;
+
 CREATE TABLE IF NOT EXISTS notification_preferences (
   user_id TEXT PRIMARY KEY,
   assignment BOOLEAN NOT NULL DEFAULT true,
@@ -634,6 +773,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   guard_clockout BOOLEAN NOT NULL DEFAULT true,
   guard_break_start BOOLEAN NOT NULL DEFAULT true,
   guard_break_end BOOLEAN NOT NULL DEFAULT true,
+  reaction_notification BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -650,6 +790,7 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS dispute_update BOO
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_clockout BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_start BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_end BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS reaction_notification BOOLEAN NOT NULL DEFAULT true;
 
 COMMENT ON COLUMN notification_preferences.support_ticket IS 'Staff alert for new support chats and formal reports';
 COMMENT ON COLUMN notification_preferences.support_ticket_status IS 'User alert when staff updates ticket status';
@@ -741,6 +882,8 @@ ALTER TABLE job_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE message_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_read_receipts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 
@@ -752,7 +895,8 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'notification_preferences',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages',
+    'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings'
   ]
   LOOP
@@ -776,6 +920,8 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'job_chat_messages_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'staff_messages_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'guard_messages_all', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'message_reactions_all', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'chat_read_receipts_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'notification_preferences_all', tbl);
 
     EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (true)', tbl || '_select', tbl);
@@ -794,7 +940,7 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages'
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'message_reactions'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
@@ -934,7 +1080,26 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'clients'
-  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name')
+  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name', 'trusted', 'favorite_guard_ids', 'business_type', 'service_description', 'service_city', 'service_state')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN ('trusted')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'message_reactions'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'chat_read_receipts'
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
@@ -952,7 +1117,7 @@ WHERE table_schema = 'public'
     'job_submitted', 'guard_application', 'guard_pending_approval',
     'client_pending_approval', 'credential_pending', 'payment_attention',
     'support_ticket', 'support_ticket_status', 'dispute_update',
-    'guard_clockout', 'guard_break_start', 'guard_break_end'
+    'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification'
   )
 ORDER BY column_name;
 
