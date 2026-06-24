@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   SecurityGuard,
   Certification,
@@ -65,6 +65,8 @@ import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from './credentials/CertDetailModal';
 import { captureIdentitySelfie } from '../lib/idVerificationPhoto';
+import { verifyOnSiteForJob, formatSiteProximityHint, isWithinSiteRadius } from '../lib/siteProximity';
+import { shouldNotifyGeofenceLeave } from '../lib/shiftGeofence';
 import {
   canGuardClockIn,
   canGuardClockOut,
@@ -108,6 +110,8 @@ interface GuardDashboardProps {
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
+  onGuardArrived?: (requestId: string) => void;
+  onGeofenceLeave?: (requestId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onRecordAuditViolation: (guardId: string, reason?: string) => void;
   onUpdateStripeAccount?: (guardId: string, accountId: string) => void;
@@ -192,6 +196,8 @@ export function GuardDashboard({
   onDeclineTeamInvite,
   coworkerGuards = [],
   onUpdateJobAudit,
+  onGuardArrived,
+  onGeofenceLeave,
   onApproveOvertime,
   onRecordAuditViolation,
   onUpdateStripeAccount,
@@ -319,8 +325,27 @@ export function GuardDashboard({
   }, [activeShiftJob, shiftPhases, guard.id]);
 
   const filteredBrowseJobs = useMemo(
-    () => sortJobs(filterJobsByCategory(availableJobs, selectedCategory), 'distance'),
-    [availableJobs, selectedCategory]
+    () =>
+      sortJobs(
+        filterJobsByCategory(
+          availableJobs.filter(
+            (j) =>
+              j.assignedGuardId !== guard.id &&
+              !(j.status === 'accepted' && j.assignedGuardId === guard.id)
+          ),
+          selectedCategory
+        ),
+        'distance'
+      ),
+    [availableJobs, selectedCategory, guard.id]
+  );
+
+  const scheduledMapJobs = useMemo(
+    () =>
+      assignedJobs.filter(
+        (j) => j.status === 'accepted' && j.assignedGuardId === guard.id
+      ),
+    [assignedJobs, guard.id]
   );
 
   const selectedJob = useMemo(() => {
@@ -329,9 +354,27 @@ export function GuardDashboard({
   }, [filteredBrowseJobs, assignedJobs, selectedJobId]);
 
   const mapJobs = useMemo(
-    () => [...availableJobs, ...assignedJobs.filter((j) => j.status === 'accepted')],
-    [availableJobs, assignedJobs]
+    () => [...filteredBrowseJobs, ...scheduledMapJobs],
+    [filteredBrowseJobs, scheduledMapJobs]
   );
+
+  const userLocation = useUserLocation(activeTab === 'map');
+  const geofenceNotifiedRef = useRef(false);
+
+  useEffect(() => {
+    geofenceNotifiedRef.current = false;
+  }, [activeShiftJob?.id]);
+
+  useEffect(() => {
+    if (!activeShiftJob || activeShiftJob.status !== 'in-progress' || !userLocation) return;
+    if (!shouldNotifyGeofenceLeave(activeShiftJob, userLocation)) {
+      geofenceNotifiedRef.current = false;
+      return;
+    }
+    if (geofenceNotifiedRef.current) return;
+    geofenceNotifiedRef.current = true;
+    onGeofenceLeave?.(activeShiftJob.id);
+  }, [activeShiftJob, userLocation, onGeofenceLeave]);
 
   const earningsBreakdown = useMemo(
     () => computeGuardEarningsBreakdown(completedJobs),
@@ -434,7 +477,7 @@ export function GuardDashboard({
     setSelectedJobId(null);
   };
 
-  const handleArrived = () => {
+  const handleArrived = async () => {
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
@@ -444,12 +487,21 @@ export function GuardDashboard({
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
       showAppToast(blocked, { tone: 'error' });
+      return;
+    }
+    const proximity = await verifyOnSiteForJob(activeShiftJob);
+    if (!proximity.onSite) {
+      showAppToast('Not on site yet', {
+        tone: 'error',
+        body: formatSiteProximityHint(proximity.distanceMeters),
+      });
       return;
     }
     updatePhase(activeShiftJob.id, 'arrived');
+    onGuardArrived?.(activeShiftJob.id);
   };
 
-  const handleBeginAudit = () => {
+  const handleBeginAudit = async () => {
     if (!activeShiftJob) return;
     const workBlocked = guardWorkBlockedMessage(guard, activeShiftJob.state);
     if (workBlocked) {
@@ -459,6 +511,14 @@ export function GuardDashboard({
     const blocked = guardClockInBlockedMessage(activeShiftJob);
     if (blocked) {
       showAppToast(blocked, { tone: 'error' });
+      return;
+    }
+    const proximity = await verifyOnSiteForJob(activeShiftJob);
+    if (!proximity.onSite) {
+      showAppToast('Must be on site to clock in', {
+        tone: 'error',
+        body: formatSiteProximityHint(proximity.distanceMeters),
+      });
       return;
     }
     setShowSelfAudit(true);
@@ -707,17 +767,19 @@ export function GuardDashboard({
     );
   }
 
-  const showShiftOverlay = activeTab === 'map' && activeShiftJob && activePhase && activePhase !== 'complete';
+  const showShiftOverlay =
+    activeTab === 'map' &&
+    activeShiftJob?.status === 'in-progress' &&
+    activePhase &&
+    activePhase !== 'complete';
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
   const NAV_TABS: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'map', icon: Map, label: 'Map' },
-    ...(trustedGuard
-      ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }]
-      : []),
     { id: 'myJobs', icon: Briefcase, label: 'My jobs' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
+    { id: 'map', icon: Map, label: 'Map' },
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
+    ...(trustedGuard ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
   const guardMainPanel = (
@@ -754,6 +816,9 @@ export function GuardDashboard({
         <GuardActiveShift
           job={activeShiftJob}
           phase={activePhase}
+          onSite={
+            userLocation ? isWithinSiteRadius(userLocation, activeShiftJob) : false
+          }
           onArrived={handleArrived}
           onBeginAudit={handleBeginAudit}
           onSkipAudit={handleSkipSelfAudit}
@@ -792,6 +857,7 @@ export function GuardDashboard({
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
           scheduleRequests={requests}
+          scheduledJobs={scheduledMapJobs}
         />
       )}
 

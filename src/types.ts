@@ -751,8 +751,10 @@ export interface SecurityRequest {
     uniformVerified: boolean;
     equipmentVerified: boolean;
   }>;
-  /** Total unpaid break minutes allowed during the shift (set by client). */
+  /** Break minutes allowed during the shift (set by client). */
   breakMinutes?: number;
+  /** When false, break time is subtracted from client billing. */
+  breakPaid?: boolean;
   /** Guard break sessions during an active shift. */
   shiftBreaks?: Array<{
     id: string;

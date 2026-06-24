@@ -1572,6 +1572,7 @@ export default function App() {
           spotChecks: Array.isArray(r.spot_checks) ? r.spot_checks : [],
           midShiftAudits: Array.isArray(r.mid_shift_audits) ? r.mid_shift_audits : [],
           breakMinutes: r.break_minutes != null ? Number(r.break_minutes) : 0,
+          breakPaid: r.break_paid !== false,
           shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
           checkOutAudit: r.check_out_audit ?? undefined,
         })),
@@ -4455,6 +4456,14 @@ export default function App() {
         location: req.location,
         body: `Cash payment recorded for "${req.title}" — $${req.estimatedPayout.toFixed(2)}`,
       });
+      if (req.status === 'open') {
+        void reportPushEvent(currentUser, {
+          type: 'job_open_to_guards',
+          requestId,
+          location: req.location,
+          body: `"${req.title}" is paid and open on the map — browse and apply.`,
+        });
+      }
     }
   };
 
@@ -4492,6 +4501,14 @@ export default function App() {
           client_cash_payment_requested_at: requestedAt,
         })
         .eq('id', requestId);
+    }
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'client_cash_payment_requested',
+        requestId,
+        location: req.location,
+        body: `${req.clientName} requested to pay $${req.estimatedPayout.toFixed(2)} in cash for "${req.title}".`,
+      });
     }
     appToast('Cash payment requested — staff will confirm once received.', 'success');
   };
@@ -4664,7 +4681,7 @@ export default function App() {
   const handleClientApproveOvertime = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     const req = requests.find((r) => r.id === requestId);
-    if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
+    if (!req || req.overtimeStatus !== 'pending_client') {
       appToast('This overtime request cannot be approved right now.', 'error');
       return;
     }
@@ -4696,7 +4713,7 @@ export default function App() {
       return;
     }
     const req = requests.find((r) => r.id === requestId);
-    if (!req || req.overtimeStatus !== 'pending_client' || !req.overtimeGuardApprovedAt) {
+    if (!req || req.overtimeStatus !== 'pending_client') {
       appToast('This overtime charge cannot be disputed right now.', 'error');
       return;
     }
@@ -5853,6 +5870,36 @@ export default function App() {
     }
 
     if (!isJobPaid(existing)) {
+      const unpaidScheduleChange = resolveScheduleChangeFromUpdate(existing, updates);
+      if (unpaidScheduleChange) {
+        const scheduleError = validateShiftSchedule(
+          unpaidScheduleChange.startDate,
+          unpaidScheduleChange.endDate
+        );
+        if (scheduleError) {
+          appToast(scheduleError, 'error');
+          return;
+        }
+        const listingOnly = sanitizeJobListingUpdates(existing, updates);
+        const refreshed =
+          Object.keys(listingOnly).length > 0
+            ? await persistJobListingUpdate(requestId, existing, listingOnly)
+            : existing;
+        await submitPendingScheduleChange(requestId, refreshed, unpaidScheduleChange, {
+          status: 'pending_client',
+          requestedBy: 'staff',
+        });
+        if (currentUser) {
+          void reportPushEvent(currentUser, {
+            type: 'support_ticket_status',
+            recipientUserId: refreshed.clientId,
+            title: 'Schedule change proposed',
+            body: `Guardr proposed new times for "${refreshed.title}": ${formatShiftRange(unpaidScheduleChange.startDate, unpaidScheduleChange.endDate)}. Approve in your jobs list.`,
+          });
+        }
+        appToast('Schedule change sent to client for approval.', 'success');
+        return;
+      }
       const startDate = updates.startDate || existing.startDate;
       const endDate = updates.endDate || existing.endDate;
       const scheduleError = validateShiftSchedule(startDate, endDate);
@@ -7005,11 +7052,13 @@ export default function App() {
       if (payload.shiftBreaks) updated.shiftBreaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updated.checkOutAudit = payload.checkOutAudit;
       if (detectedOvertime) {
+        const guardConfirmedAt = new Date().toISOString();
         updated.scheduledDurationHours = detectedOvertime.scheduledDurationHours;
         updated.scheduledEstimatedPayout = detectedOvertime.scheduledEstimatedPayout;
         updated.overtimeHours = detectedOvertime.overtimeHours;
         updated.overtimeAmount = detectedOvertime.overtimeAmount;
         updated.overtimeStatus = detectedOvertime.overtimeStatus;
+        updated.overtimeGuardApprovedAt = guardConfirmedAt;
         updated.overtimePaymentStatus = 'unpaid';
       }
       if (payload.status) {
@@ -7032,11 +7081,13 @@ export default function App() {
       if (payload.shiftBreaks) updates.shift_breaks = payload.shiftBreaks;
       if (payload.checkOutAudit) updates.check_out_audit = payload.checkOutAudit;
       if (detectedOvertime) {
+        const guardConfirmedAt = new Date().toISOString();
         updates.scheduled_duration_hours = detectedOvertime.scheduledDurationHours;
         updates.scheduled_estimated_payout = detectedOvertime.scheduledEstimatedPayout;
         updates.overtime_hours = detectedOvertime.overtimeHours;
         updates.overtime_amount = detectedOvertime.overtimeAmount;
         updates.overtime_status = detectedOvertime.overtimeStatus;
+        updates.overtime_guard_approved_at = guardConfirmedAt;
         updates.overtime_payment_status = 'unpaid';
       }
       if (payload.status) {
@@ -7153,8 +7204,16 @@ export default function App() {
         type: 'payment_attention',
         requestId,
         location: req?.location,
-        body: `Late clock-out on "${req?.title}" — guard must approve ${detectedOvertime.overtimeHours}h overtime before billing.`,
+        body: `Late clock-out on "${req?.title}" — ${detectedOvertime.overtimeHours}h overtime awaiting client approval.`,
       });
+      if (req?.clientId) {
+        void reportPushEvent(currentUser, {
+          type: 'support_ticket_status',
+          recipientUserId: req.clientId,
+          title: 'Overtime approval needed',
+          body: `Guard stayed ${detectedOvertime.overtimeHours}h past schedule on "${req.title}" — approve overtime in your jobs list.`,
+        });
+      }
     }
 
     if (payload.status === 'completed') {
@@ -8277,6 +8336,8 @@ export default function App() {
         <HomePage
           themeMode={themeMode}
           onChangeTheme={changeThemeMode}
+          ownerMessage={platformSettings.ownerMessage}
+          directorMessage={platformSettings.directorMessage}
           onNavigateToAuth={(role, mode) => {
             openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
@@ -8337,6 +8398,31 @@ export default function App() {
           onDeclineTeamInvite={handleDeclineTeamInvite}
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
           onUpdateJobAudit={handleUpdateJobAudit}
+          onGuardArrived={(requestId) => {
+            if (!currentUser) return;
+            const req = requests.find((r) => r.id === requestId);
+            const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+            void reportPushEvent(currentUser, {
+              type: 'guard_arrived',
+              guardId: guard?.id,
+              guardName: guard?.name,
+              requestId,
+              location: req?.location,
+            });
+          }}
+          onGeofenceLeave={(requestId) => {
+            if (!currentUser) return;
+            const req = requests.find((r) => r.id === requestId);
+            const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
+            void reportPushEvent(currentUser, {
+              type: 'guard_left_site',
+              guardId: guard?.id,
+              guardName: guard?.name,
+              requestId,
+              location: req?.location,
+              priority: 'high',
+            });
+          }}
           onApproveOvertime={handleGuardApproveOvertime}
           onRecordAuditViolation={handleRecordAuditViolation}
           onUpdateStripeAccount={handleUpdateGuardStripeAccount}
@@ -8641,6 +8727,7 @@ export default function App() {
           teamChatThreads={teamChatThreads}
           teamChatMessages={teamChatMessages}
           staffMessages={staffMessages}
+          guardMessages={guardMessages}
           onSendStaffMessage={handleSendStaffMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}

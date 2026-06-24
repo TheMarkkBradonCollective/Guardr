@@ -31,6 +31,18 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
       ? `${event.guardName} clocked out${event.location ? ` at ${event.location}` : ''}`
       : 'A guard clocked out',
   }),
+  guard_arrived: (event) => ({
+    title: 'Guard arrived on site',
+    body: event.guardName
+      ? `${event.guardName} arrived${event.location ? ` at ${event.location}` : ''}`
+      : 'Your guard arrived on site',
+  }),
+  guard_left_site: (event) => ({
+    title: 'Guard left job site',
+    body: event.guardName
+      ? `${event.guardName} left the job site${event.location ? ` at ${event.location}` : ''}`
+      : 'A guard left the job site during an active shift',
+  }),
   guard_break_start: (event) => ({
     title: 'Guard on break',
     body: event.guardName
@@ -99,6 +111,22 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
   payment_attention: (event) => ({
     title: 'Payment attention',
     body: event.body || 'A payment or payout needs staff action',
+  }),
+  client_cash_payment_requested: (event) => ({
+    title: 'Client cash payment request',
+    body: event.body || 'A client requested to pay in cash',
+  }),
+  guard_cash_payout_requested: (event) => ({
+    title: 'Guard cash payout request',
+    body: event.body || 'A guard requested cash payout',
+  }),
+  stripe_payment_complete: (event) => ({
+    title: 'Stripe payment received',
+    body: event.body || 'A card payment completed successfully',
+  }),
+  job_open_to_guards: (event) => ({
+    title: 'New job on the map',
+    body: event.body || 'A paid job is now open for guards',
   }),
   support_ticket: (event) => ({
     title: 'Support ticket',
@@ -249,6 +277,14 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, userId: event.recipientUserId }];
   }
 
+  if (event.type === 'job_open_to_guards') {
+    return [{ ...payload, role: 'guard' }];
+  }
+
+  if (event.type === 'stripe_payment_complete' || event.type === 'client_cash_payment_requested' || event.type === 'guard_cash_payout_requested') {
+    return [{ ...payload, role: 'dispatch' }];
+  }
+
   if (event.type === 'support_ticket') {
     return [{ ...payload, role: 'dispatch' }];
   }
@@ -269,6 +305,9 @@ export async function buildEventDispatchPayloads(
     event.type === 'client_pending_approval' ||
     event.type === 'credential_pending' ||
     event.type === 'payment_attention' ||
+    event.type === 'client_cash_payment_requested' ||
+    event.type === 'guard_cash_payout_requested' ||
+    event.type === 'stripe_payment_complete' ||
     (event.type === 'support_message' && !event.recipientUserId) ||
     (event.type === 'job_chat_message' && !event.recipientUserId)
   ) {
@@ -279,8 +318,32 @@ export async function buildEventDispatchPayloads(
     return [{ ...payload, role: 'guard' }];
   }
 
-  if (event.type === 'guard_checkin' || event.type === 'guard_clockout' || event.type === 'guard_break_start' || event.type === 'guard_break_end') {
-    return [{ ...payload, role: 'dispatch' }];
+  if (
+    event.type === 'guard_checkin' ||
+    event.type === 'guard_clockout' ||
+    event.type === 'guard_arrived' ||
+    event.type === 'guard_break_start' ||
+    event.type === 'guard_break_end' ||
+    event.type === 'guard_left_site'
+  ) {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.requestId) {
+      const { clientId, guardId } = await loadJobParticipants(db, event.requestId);
+      if (clientId) payloads.push({ ...payload, userId: clientId });
+      if (event.type === 'guard_left_site' && guardId) {
+        payloads.push({
+          ...payload,
+          userId: guardId,
+          title: 'You left the job site',
+          body: event.location
+            ? `You moved away from ${event.location} during your shift`
+            : 'You left the job site during your active shift',
+        });
+      }
+    } else if (event.recipientUserId) {
+      payloads.push({ ...payload, userId: event.recipientUserId });
+    }
+    return payloads;
   }
 
   return [payload];

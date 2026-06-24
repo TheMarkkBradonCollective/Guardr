@@ -3283,9 +3283,21 @@ html.theme-light .app-button-primary:hover {
 
 .role-experience-client .app-screen-header:not(.app-screen-header--map),
 .role-experience-guard .app-screen-header:not(.app-screen-header--map) {
-  background: var(--uber-chrome-bg);
-  color: var(--uber-chrome-text);
-  border-bottom-color: var(--uber-chrome-border);
+  background: var(--uber-chrome-bg, var(--brand-bg-sec));
+  color: var(--uber-chrome-text, var(--brand-text));
+  border-bottom-color: var(--uber-chrome-border, var(--brand-border));
+}
+
+.role-experience-client .bottom-nav-bar,
+.role-experience-guard .bottom-nav-bar {
+  background: var(--uber-chrome-bg, var(--brand-bg-sec));
+  border-top-color: var(--uber-chrome-border, var(--brand-border));
+}
+
+.guard-arrived-on-site-glow {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 55%, transparent),
+    0 0 12px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+  border-radius: 0.5rem;
 }
 
 .role-experience-client .app-screen-header h1,

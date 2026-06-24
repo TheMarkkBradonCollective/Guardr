@@ -24,7 +24,7 @@ export interface DetectedOvertime {
   scheduledEstimatedPayout: number;
   overtimeHours: number;
   overtimeAmount: number;
-  overtimeStatus: 'pending_guard';
+  overtimeStatus: 'pending_client';
 }
 
 function roundMoney(value: number): number {
@@ -39,7 +39,7 @@ export function computeOvertimeAmount(
   return roundMoney(overtimeHours * hourlyRate * guardsNeeded);
 }
 
-/** Record overtime on clock-out — does not change billed totals until client pays. */
+/** Record overtime on clock-out — goes straight to client approval (guard already confirmed by staying). */
 export function detectLateClockOutOvertime(
   req: Pick<
     SecurityRequest,
@@ -60,8 +60,38 @@ export function detectLateClockOutOvertime(
     scheduledEstimatedPayout: req.estimatedPayout,
     overtimeHours,
     overtimeAmount,
-    overtimeStatus: 'pending_guard',
+    overtimeStatus: 'pending_client',
   };
+}
+
+/** Billable hours for client — subtracts unpaid break time used. */
+export function billableDurationHours(
+  req: Pick<SecurityRequest, 'durationHours' | 'breakMinutes' | 'breakPaid' | 'shiftBreaks'>
+): number {
+  const base = req.durationHours;
+  if (req.breakPaid !== false || (req.breakMinutes ?? 0) <= 0) return base;
+  let breakMs = 0;
+  for (const brk of req.shiftBreaks ?? []) {
+    if (!brk.endedAt) continue;
+    const start = new Date(brk.startedAt).getTime();
+    const end = new Date(brk.endedAt).getTime();
+    if (!Number.isNaN(start) && !Number.isNaN(end) && end > start) {
+      breakMs += end - start;
+    }
+  }
+  const breakHours = breakMs / 3_600_000;
+  return Math.max(0, roundMoney(base - breakHours));
+}
+
+export function billableEstimatedPayout(
+  req: Pick<
+    SecurityRequest,
+    'durationHours' | 'hourlyRate' | 'guardsNeeded' | 'breakMinutes' | 'breakPaid' | 'shiftBreaks' | 'estimatedPayout'
+  >
+): number {
+  const hours = billableDurationHours(req);
+  const guards = req.guardsNeeded ?? 1;
+  return roundMoney(hours * req.hourlyRate * guards);
 }
 
 export function overtimeGuardEarnings(
@@ -82,9 +112,9 @@ export function canGuardApproveOvertime(
 }
 
 export function canClientApproveOvertime(
-  req: Pick<SecurityRequest, 'overtimeStatus' | 'overtimeGuardApprovedAt'>
+  req: Pick<SecurityRequest, 'overtimeStatus'>
 ): boolean {
-  return req.overtimeStatus === 'pending_client' && !!req.overtimeGuardApprovedAt;
+  return req.overtimeStatus === 'pending_client';
 }
 
 export function canClientDisputeOvertime(req: SecurityRequest): boolean {
@@ -217,7 +247,7 @@ export function applyOvertimePaidBilling(
 export function overtimeStatusLabel(status?: OvertimeStatus): string {
   switch (status) {
     case 'pending_guard':
-      return 'Awaiting guard approval';
+      return 'Awaiting client approval';
     case 'pending_client':
       return 'Awaiting client approval';
     case 'disputed':

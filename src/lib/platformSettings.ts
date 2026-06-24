@@ -14,6 +14,12 @@ export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
   feeConfig: PlatformFeeConfig;
+  /** Homepage message from the Owner account — editable by Owner only. */
+  ownerMessage?: string;
+  ownerMessageUpdatedAt?: string;
+  /** Homepage message from the Director account — editable by Director and Owner. */
+  directorMessage?: string;
+  directorMessageUpdatedAt?: string;
   /** Extra pay per hour for guards rostered on a coordinated crew for that specific job. */
   crewTeamPayBumpPerHour?: number;
   /** @deprecated Use crewTeamPayBumpPerHour — kept for DB/localStorage compatibility. */
@@ -119,6 +125,10 @@ export function platformSettingsFromDbRow(row: {
   team_lead_bonus_per_guard_per_hour?: number | null;
   team_lead_bonus_client_share_percent?: number | null;
   team_lead_bonus_platform_share_percent?: number | null;
+  owner_message?: string | null;
+  owner_message_updated_at?: string | null;
+  director_message?: string | null;
+  director_message_updated_at?: string | null;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
@@ -128,6 +138,10 @@ export function platformSettingsFromDbRow(row: {
       feeConfig: normalizePlatformFeeConfig(
         row.fee_config as Partial<PlatformFeeConfig> | null | undefined
       ),
+      ownerMessage: row.owner_message ?? undefined,
+      ownerMessageUpdatedAt: row.owner_message_updated_at ?? undefined,
+      directorMessage: row.director_message ?? undefined,
+      directorMessageUpdatedAt: row.director_message_updated_at ?? undefined,
       crewTeamPayBumpPerHour:
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
@@ -150,6 +164,10 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     payment_cash_enabled: settings.paymentCashEnabled,
     payment_stripe_enabled: settings.paymentStripeEnabled,
     fee_config: settings.feeConfig,
+    owner_message: settings.ownerMessage ?? null,
+    owner_message_updated_at: settings.ownerMessageUpdatedAt ?? null,
+    director_message: settings.directorMessage ?? null,
+    director_message_updated_at: settings.directorMessageUpdatedAt ?? null,
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

@@ -117,7 +117,11 @@ export function groupRequestsByPipeline(requests: SecurityRequest[]) {
 
 export function paymentPipelineSummary(requests: SecurityRequest[]) {
   const groups = groupRequestsByPipeline(requests);
-  const awaitingClientTotal = groups.awaitingClient.reduce((s, r) => s + r.estimatedPayout, 0);
+  const awaitingClientTotal =
+    groups.awaitingClient.reduce((s, r) => s + r.estimatedPayout, 0) +
+    requests
+      .filter((r) => r.overtimeStatus === 'awaiting_payment' && (r.overtimeAmount ?? 0) > 0)
+      .reduce((s, r) => s + (r.overtimeAmount ?? 0), 0);
   const cashDepositTotal = groups.cashDepositPending.reduce((s, r) => s + getRemainingStripeDeposit(r), 0);
   const guardPayoutDue = groups.awaitingGuardPayout.reduce(
     (s, r) => s + computeGuardEarnings(r.durationHours, r.hourlyRate),

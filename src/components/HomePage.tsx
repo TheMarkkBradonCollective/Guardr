@@ -28,6 +28,8 @@ interface HomePageProps {
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onOpenLegal: (page: LegalPageId) => void;
+  ownerMessage?: string;
+  directorMessage?: string;
 }
 
 const CLIENT_FEATURES = [
@@ -179,7 +181,14 @@ function LandingPathCards({
   );
 }
 
-export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLegal }: HomePageProps) {
+export function HomePage({
+  onNavigateToAuth,
+  themeMode,
+  onChangeTheme,
+  onOpenLegal,
+  ownerMessage,
+  directorMessage,
+}: HomePageProps) {
   const { formFactor } = useDevice();
   const isMobile = formFactor === 'mobile';
   const isTablet = formFactor === 'tablet';
@@ -270,6 +279,32 @@ export function HomePage({ onNavigateToAuth, themeMode, onChangeTheme, onOpenLeg
               Clients post jobs. Licensed guards choose assignments.
               Maps, messaging, and payments — all in one place.
             </motion.p>
+
+            {(ownerMessage?.trim() || directorMessage?.trim()) && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.12 }}
+                className="landing-leadership-messages space-y-3 mb-6 max-w-xl"
+              >
+                {ownerMessage?.trim() && (
+                  <blockquote className="rounded-xl border border-brand-border bg-brand-surface-elevated/80 p-4 text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
+                      Markeith White · Owner
+                    </p>
+                    <p className="text-sm leading-relaxed text-brand-text whitespace-pre-wrap">{ownerMessage}</p>
+                  </blockquote>
+                )}
+                {directorMessage?.trim() && (
+                  <blockquote className="rounded-xl border border-brand-border bg-brand-surface-elevated/80 p-4 text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
+                      Tyrone Johnson · Director
+                    </p>
+                    <p className="text-sm leading-relaxed text-brand-text whitespace-pre-wrap">{directorMessage}</p>
+                  </blockquote>
+                )}
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 14 }}

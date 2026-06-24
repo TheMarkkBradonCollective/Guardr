@@ -77,7 +77,7 @@ import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
-import { DevUpdatesPage } from './docs/DevUpdatesPage';
+import { DevNotesPage } from './docs/DevNotesPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
@@ -94,6 +94,7 @@ interface StaffDashboardProps {
   teamChatThreads?: TeamChatThread[];
   teamChatMessages?: TeamChatMessage[];
   staffMessages?: StaffMessage[];
+  guardMessages?: import('../types').GuardMessage[];
   payments?: Payment[];
   guardPayoutInvoices?: GuardPayoutInvoice[];
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
@@ -244,6 +245,7 @@ export function StaffDashboard({
   teamChatThreads = [],
   teamChatMessages = [],
   staffMessages = [],
+  guardMessages = [],
   payments = [],
   guardPayoutInvoices = [],
   onUpdateGuardUserStatus,
@@ -643,6 +645,7 @@ export function StaffDashboard({
               teamChatThreads={teamChatThreads}
               teamChatMessages={teamChatMessages}
               staffMessages={staffMessages}
+              guardMessages={guardMessages}
               supportTickets={supportTickets}
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
@@ -727,10 +730,10 @@ export function StaffDashboard({
         return <AppGuidePage audience="staff" />;
       case 'dev-updates':
         return showFinance ? (
-          <DevUpdatesPage />
+          <DevNotesPage />
         ) : (
           <div className="app-screen animate-fade-in max-w-lg">
-            <h2 className="app-screen-title">Dev updates</h2>
+            <h2 className="app-screen-title">Dev notes</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
               Development release notes are limited to Director and Owner roles.
             </p>

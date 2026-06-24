@@ -36,6 +36,7 @@ interface GuardBottomSheetProps {
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
+  scheduledJobs?: GuardJobView[];
 }
 
 function useViewportHeight(): number {
@@ -73,6 +74,7 @@ export function GuardBottomSheet({
   onAcceptTeamInvite,
   onDeclineTeamInvite,
   scheduleRequests,
+  scheduledJobs,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
@@ -119,6 +121,7 @@ export function GuardBottomSheet({
       onAcceptTeamInvite={onAcceptTeamInvite}
       onDeclineTeamInvite={onDeclineTeamInvite}
       scheduleRequests={scheduleRequests}
+      scheduledJobs={scheduledJobs}
     />
   );
 

@@ -265,6 +265,7 @@ export function buildStaffInboxRows({
   teamChatMessages = [],
   supportTickets,
   staffMessagesUpdatedAt,
+  guardMessagesUpdatedAt,
 }: {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
@@ -274,6 +275,7 @@ export function buildStaffInboxRows({
   teamChatMessages?: TeamChatMessage[];
   supportTickets: SupportTicket[];
   staffMessagesUpdatedAt?: string;
+  guardMessagesUpdatedAt?: string;
 }): InboxRow[] {
   const rows: InboxRow[] = [];
 
@@ -286,6 +288,17 @@ export function buildStaffInboxRows({
     updatedAt: staffMessagesUpdatedAt ?? new Date(0).toISOString(),
     badge: 'Team',
     badgeTone: 'primary',
+  });
+
+  rows.push({
+    id: 'guard-community',
+    channel: 'guard-community',
+    title: 'Guard chat',
+    subtitle: 'All-guards channel',
+    preview: 'Read and monitor the guard community channel',
+    updatedAt: guardMessagesUpdatedAt ?? staffMessagesUpdatedAt ?? new Date(0).toISOString(),
+    badge: 'Guards',
+    badgeTone: 'default',
   });
 
   const activeJobs = requests.filter(

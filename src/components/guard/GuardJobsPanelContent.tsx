@@ -4,9 +4,11 @@ import { GuardJobView } from '../../lib/guardJobView';
 import { JOB_CATEGORIES, JobCategoryId } from '../../lib/guardJobs';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { GuardJobCard } from './GuardJobCard';
+import { formatScheduledJobWhen, sortScheduledJobs } from '../../lib/guardScheduledJobs';
 
 interface GuardJobsPanelContentProps {
   jobs: GuardJobView[];
+  scheduledJobs?: GuardJobView[];
   guard: SecurityGuard;
   coworkerGuards?: SecurityGuard[];
   selectedJob: GuardJobView | null;
@@ -59,6 +61,7 @@ function CategoryFilters({
 
 export function GuardJobsPanelContent({
   jobs,
+  scheduledJobs = [],
   guard,
   coworkerGuards,
   selectedJob,
@@ -135,6 +138,31 @@ export function GuardJobsPanelContent({
 
   return (
     <div className="space-y-5">
+      {scheduledJobs.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-brand-text-muted">Scheduled</p>
+          <AppItemCardStack>
+            {sortScheduledJobs(scheduledJobs).map((job) => (
+              <button
+                key={job.id}
+                type="button"
+                onClick={() => onSelectJob(job)}
+                className="app-list-row w-full text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold truncate">{job.title}</p>
+                  <p className="text-xs text-brand-text-muted truncate mt-0.5">
+                    {job.siteName || job.location}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-brand-primary shrink-0">
+                  {formatScheduledJobWhen(job.startDate)}
+                </span>
+              </button>
+            ))}
+          </AppItemCardStack>
+        </div>
+      )}
       <CategoryFilters selectedCategory={selectedCategory} onSelectCategory={onSelectCategory} />
       <div className="space-y-2">
         <p className="text-sm font-medium text-brand-text-muted">Available offers</p>

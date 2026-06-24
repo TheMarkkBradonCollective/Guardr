@@ -15,7 +15,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { formatStateName } from '../../lib/states';
+import { formatCityLabel } from '../../lib/californiaCities';
 import { JOB_STATUS_LABELS } from '../../lib/jobStatus';
 import { teamRosterSummary } from '../../lib/guardTeams';
 import {
@@ -132,7 +132,7 @@ export function JobListingProfile({
           {job.address && <p className="text-sm">{job.address}</p>}
           {job.state && (
             <p className="text-xs text-brand-text-muted">
-              {formatStateName(job.state)}
+              {formatCityLabel(job.state)}
               {distanceMiles != null ? ` · ${distanceMiles} mi away` : ''}
             </p>
           )}

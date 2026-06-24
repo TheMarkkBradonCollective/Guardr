@@ -19,11 +19,11 @@ interface ClientAppLayoutProps {
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'map', label: 'Map', icon: Map },
   { id: 'home', label: 'Home', icon: Home },
-  { id: 'messages', label: 'Messages', icon: MessagesSquare },
   { id: 'guards', label: 'Guards', icon: Users },
+  { id: 'map', label: 'Map', icon: Map },
   { id: 'requests', label: 'Jobs', icon: ClipboardList },
+  { id: 'messages', label: 'Messages', icon: MessagesSquare },
 ];
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {

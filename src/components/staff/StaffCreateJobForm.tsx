@@ -17,7 +17,7 @@ import {
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
-import { US_STATES } from '../../lib/states';
+import { CALIFORNIA_CITIES } from '../../lib/californiaCities';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
@@ -309,15 +309,15 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         </div>
 
         <div>
-          <label className="uber-label block mb-1">State</label>
+          <label className="uber-label block mb-1">City</label>
           <select
             value={jobState}
             onChange={(e) => setJobState(e.target.value)}
             className="uber-input w-full"
           >
-            {US_STATES.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.name}
+            {CALIFORNIA_CITIES.map((city) => (
+              <option key={city} value={city}>
+                {city}
               </option>
             ))}
           </select>

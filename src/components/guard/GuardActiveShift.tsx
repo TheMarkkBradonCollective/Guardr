@@ -39,6 +39,7 @@ import {
 interface GuardActiveShiftProps {
   job: GuardJobView;
   phase: ShiftPhase;
+  onSite?: boolean;
   onArrived: () => void;
   onBeginAudit: () => void;
   onSkipAudit: () => void;
@@ -71,6 +72,7 @@ function formatClockWindowTime(d: Date): string {
 export function GuardActiveShift({
   job,
   phase,
+  onSite = false,
   onArrived,
   onBeginAudit,
   onSkipAudit,
@@ -151,6 +153,7 @@ export function GuardActiveShift({
             const stepIdx = statusSteps.indexOf(step);
             const isReached = stepIdx <= currentIdx;
             const isCurrent = step === phase;
+            const glowArrived = step === 'arrived' && (phase === 'arrived' || (phase === 'upcoming' && onSite));
             return (
               <span
                 key={step}
@@ -158,6 +161,7 @@ export function GuardActiveShift({
                   'segmented-control-btn flex-1 text-center py-2 text-[11px] sm:text-xs',
                   isReached && 'segmented-control-btn-active',
                   isCurrent && 'segmented-control-btn-current',
+                  glowArrived && 'guard-arrived-on-site-glow',
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -207,13 +211,33 @@ export function GuardActiveShift({
         )}
 
         {phase === 'upcoming' && (
-          <SlideToConfirm
-            label="Slide to arrive on site"
-            confirmedLabel="Arrived"
-            onConfirm={onArrived}
-            disabled={!clockInOpen}
-            disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
-          />
+          <div className="space-y-3">
+            {onSite ? (
+              <SlideToConfirm
+                label="Slide to arrive and start self audit"
+                confirmedLabel="Starting…"
+                onConfirm={onBeginAudit}
+                disabled={!clockInOpen}
+                disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
+              />
+            ) : (
+              <SlideToConfirm
+                label="Slide to arrive on site"
+                confirmedLabel="Arrived"
+                onConfirm={onArrived}
+                disabled={!clockInOpen}
+                disabledHint={
+                  clockInMsg ??
+                  `Move within range of the site pin. Clock-in opens at ${clockInOpensLabel}.`
+                }
+              />
+            )}
+            {!onSite && (
+              <p className="text-xs text-amber-700 dark:text-amber-300 text-center">
+                GPS shows you are not on site yet — the Arrived step glows when you are in range.
+              </p>
+            )}
+          </div>
         )}
 
         {phase === 'arrived' && (
@@ -222,8 +246,12 @@ export function GuardActiveShift({
               label="Slide to start shift"
               confirmedLabel="Starting…"
               onConfirm={onBeginAudit}
-              disabled={!clockInOpen}
-              disabledHint={clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`}
+              disabled={!clockInOpen || !onSite}
+              disabledHint={
+                !onSite
+                  ? 'Move within range of the site pin to clock in.'
+                  : clockInMsg ?? `Clock-in opens at ${clockInOpensLabel} (15 min before start).`
+              }
             />
             <button
               type="button"

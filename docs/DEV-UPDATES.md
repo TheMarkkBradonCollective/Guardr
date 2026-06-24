@@ -1,6 +1,4 @@
-# Guardr Development Updates
-
-_Internal release notes from the development team for **Director** and **Owner** roles._
+# Guardr Development Notes
 
 **Project start:** Saturday, June 6, 2026  
 **Last updated:** Wednesday, June 24, 2026  
@@ -14,8 +12,8 @@ _Internal release notes from the development team for **Director** and **Owner**
 |--------|-------|
 | Calendar span | 19 days (Jun 6 → Jun 24) |
 | Active development days | 11 days with commits |
-| Your direct commits | 22 commits (~8 hours active time) |
-| Total project commits | 673 (You: 22 · Cursor Agent: 520 · cursor[bot]: 131) |
+| Markeith White direct commits | 22 commits (~8 hours active time) |
+| Total project commits | 673 (Markeith White: 22 · Cursor: 520 · cursor[bot]: 131) |
 | Estimated total dev time | ~92 hours (~3 days 20 hours, or ~11.5 eight-hour workdays) |
 
 _Times below come from git commit timestamps. They reflect when work was committed, not offline planning or testing without commits._
@@ -24,7 +22,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ## Saturday, June 6, 2026 — Project kickoff
 
-**Contributors:** You  
+**Contributors:** Markeith White  
 **Activity:** 2:49 PM – 7:42 PM · 15 commits (4 PR merges)
 
 | Time | Update |
@@ -392,4 +390,4 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ---
 
-_This document is maintained by the development team and updated with each significant release. Visible in the staff console under **Dev updates** (Director and Owner only)._
+_Visible in the staff console under **Dev notes** (Director and Owner only)._

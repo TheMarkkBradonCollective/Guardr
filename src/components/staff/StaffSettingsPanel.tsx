@@ -450,6 +450,50 @@ export function StaffSettingsPanel({
         </div>
       </AppFormSection>
 
+      <AppFormSection title="Homepage messages">
+        <div className="pb-6 space-y-4">
+          <label className="block space-y-1.5">
+            <span className="uber-label">Owner message (Markeith White)</span>
+            <textarea
+              value={platformSettings.ownerMessage ?? ''}
+              disabled={currentUser.role !== 'owner'}
+              onChange={(e) =>
+                canEditPaymentModes &&
+                onUpdatePlatformSettings?.({
+                  ...platformSettings,
+                  ownerMessage: e.target.value,
+                  ownerMessageUpdatedAt: new Date().toISOString(),
+                })
+              }
+              rows={4}
+              className="uber-input w-full resize-y"
+              placeholder="Message shown on the public homepage from the Owner account."
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="uber-label">Director message (Tyrone Johnson)</span>
+            <textarea
+              value={platformSettings.directorMessage ?? ''}
+              disabled={currentUser.role !== 'owner' && currentUser.role !== 'director'}
+              onChange={(e) =>
+                (currentUser.role === 'owner' || currentUser.role === 'director') &&
+                onUpdatePlatformSettings?.({
+                  ...platformSettings,
+                  directorMessage: e.target.value,
+                  directorMessageUpdatedAt: new Date().toISOString(),
+                })
+              }
+              rows={4}
+              className="uber-input w-full resize-y"
+              placeholder="Message shown on the public homepage from the Director account."
+            />
+          </label>
+          {currentUser.role !== 'owner' && currentUser.role !== 'director' && (
+            <p className="text-xs text-brand-text-muted">Homepage leadership messages are read-only for your role.</p>
+          )}
+        </div>
+      </AppFormSection>
+
       <AppFormSection title="Approval rules">
         <div className="pb-6">
           <label className="uber-label block mb-1">Job posting review</label>

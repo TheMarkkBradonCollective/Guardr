@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  GuardMessage,
   JobChatMessage,
   JobChatThread,
   SecurityGuard,
@@ -11,6 +12,7 @@ import {
   TeamChatMessage,
   TeamChatThread,
 } from '../../types';
+import { sortedGuardMessages } from '../../lib/guardMessenger';
 import { threadForRequest } from '../../lib/jobChat';
 import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
@@ -39,6 +41,7 @@ import {
 
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
+  | { kind: 'guard-channel' }
   | { kind: 'job'; requestId: string }
   | { kind: 'team'; requestId: string }
   | { kind: 'support'; ticketId: string };
@@ -53,6 +56,7 @@ interface StaffMessagesPanelProps {
   teamChatThreads?: TeamChatThread[];
   teamChatMessages?: TeamChatMessage[];
   staffMessages: StaffMessage[];
+  guardMessages?: GuardMessage[];
   supportTickets: SupportTicket[];
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
@@ -87,6 +91,7 @@ export function StaffMessagesPanel({
   teamChatThreads = [],
   teamChatMessages = [],
   staffMessages,
+  guardMessages = [],
   supportTickets,
   currentUser,
   onSendJobChat,
@@ -120,6 +125,11 @@ export function StaffMessagesPanel({
     return sorted[sorted.length - 1]?.createdAt;
   }, [staffMessages]);
 
+  const guardUpdatedAt = useMemo(() => {
+    const sorted = sortedGuardMessages(guardMessages);
+    return sorted[sorted.length - 1]?.createdAt;
+  }, [guardMessages]);
+
   const allRows = useMemo(
     () =>
       buildStaffInboxRows({
@@ -131,12 +141,13 @@ export function StaffMessagesPanel({
         teamChatMessages,
         supportTickets,
         staffMessagesUpdatedAt: staffUpdatedAt,
+        guardMessagesUpdatedAt: guardUpdatedAt,
       }),
     [requests, guards, threads, messages, teamChatThreads, teamChatMessages, supportTickets, staffUpdatedAt]
   );
 
   const teamRows = useMemo(
-    () => allRows.filter((r) => r.channel === 'staff-community' || r.channel === 'team-crew'),
+    () => allRows.filter((r) => r.channel === 'staff-community' || r.channel === 'team-crew' || r.channel === 'guard-community'),
     [allRows]
   );
   const jobRows     = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
@@ -156,6 +167,12 @@ export function StaffMessagesPanel({
   const selectRow = (row: InboxRow) => {
     if (row.channel === 'staff-community') {
       setSelection({ kind: 'staff-channel' });
+      onSelectedJobChatRequestIdChange?.(null);
+      onSelectedSupportTicketIdChange?.(null);
+      return;
+    }
+    if (row.channel === 'guard-community') {
+      setSelection({ kind: 'guard-channel' });
       onSelectedJobChatRequestIdChange?.(null);
       onSelectedSupportTicketIdChange?.(null);
       return;
@@ -203,6 +220,7 @@ export function StaffMessagesPanel({
 
   const isRowSelected = (row: InboxRow) => {
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
+    if (row.channel === 'guard-community' && effectiveSelection?.kind === 'guard-channel') return true;
     if (row.requestId && row.channel === 'team-crew' && effectiveSelection?.kind === 'team' && effectiveSelection.requestId === row.requestId) return true;
     if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
     if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) return true;
@@ -273,6 +291,8 @@ export function StaffMessagesPanel({
               leading={
                 row.channel === 'staff-community' ? (
                   <MessagesSquare className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'guard-community' ? (
+                  <MessageCircle className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'team-crew' ? (
                   <Users className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'report' ? (
@@ -295,6 +315,27 @@ export function StaffMessagesPanel({
   // ── Detail view ────────────────────────────────────────
   const detailView = (() => {
     if (!effectiveSelection) return null;
+
+    if (effectiveSelection.kind === 'guard-channel') {
+      return (
+        <div className="flex flex-col h-full min-h-0 app-full-page-screen">
+          <AppChatHeader
+            title="Guard chat"
+            subtitle="All-guards community channel"
+            onBack={clearSelection}
+            hideBackOnDesktop
+          />
+          <div className="flex-1 min-h-0">
+            <ChatThreadPanel
+              messages={sortedGuardMessages(guardMessages)}
+              currentUserId={currentUser.id}
+              placeholder="Staff monitor this channel — guards post here"
+              readOnly
+            />
+          </div>
+        </div>
+      );
+    }
 
     if (effectiveSelection.kind === 'staff-channel') {
       return (
