@@ -18,8 +18,6 @@ import { ShiftMap } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
-import { MapBrowseDock } from './map/MapBrowseDock';
-import { guardMapBrowseItems } from '../lib/mapBrowseItems';
 import { guardVisibleMapJobs, guardMapPinKind } from '../lib/mapJobVisibility';
 import type { SecurityRequest } from '../types';
 import { GuardJobCard } from './guard/GuardJobCard';
@@ -923,16 +921,6 @@ export function GuardDashboard({
               scheduleRequests={requests}
             />
           }
-        />
-      )}
-
-      {activeTab === 'map' && !showShiftOverlay && (
-        <MapBrowseDock
-          items={guardMapBrowseItems(guard.id, browseMapJobs)}
-          selectedId={selectedJobId}
-          onSelect={setSelectedJobId}
-          bottomOffsetClass="map-browse-offset"
-          emptyMessage="Available, scheduled, and past jobs appear here."
         />
       )}
 

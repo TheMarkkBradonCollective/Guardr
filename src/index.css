@@ -1781,6 +1781,18 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 }
 
 /* Sacramento Buy Nothing-style horizontal map browse dock */
+.map-post-fab-layer {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+.map-post-fab-layer > * {
+  pointer-events: auto;
+}
+
 .map-browse-dock,
 .client-map-browse-dock {
   position: absolute;

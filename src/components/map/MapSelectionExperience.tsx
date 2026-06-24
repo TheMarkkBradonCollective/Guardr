@@ -17,7 +17,7 @@ interface MapSelectionExperienceProps {
   onClose: () => void;
   onPrimaryAction?: () => void;
   primaryLabel?: string;
-  /** Bottom offset when another sheet (e.g. guard browse) is visible */
+  /** Bottom offset when bottom nav is visible */
   bottomOffsetClass?: string;
   /** Client approvals / payments rendered inside the expanded card */
   clientActions?: React.ReactNode;
