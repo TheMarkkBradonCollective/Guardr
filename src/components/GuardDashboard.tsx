@@ -755,7 +755,6 @@ export function GuardDashboard({
           onDeclineDirectJob={onDeclineDirectJob}
           onApplyAsTeamLead={onApplyAsTeamLead}
           onInviteTeamGuard={onInviteTeamGuard}
-          onJoinTeamWithCode={onJoinTeamWithCode}
           onAcceptTeamInvite={onAcceptTeamInvite}
           onDeclineTeamInvite={onDeclineTeamInvite}
           onOpenTeamChat={onSendTeamChatMessage ? openMessagesForTeam : undefined}

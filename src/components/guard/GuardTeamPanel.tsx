@@ -7,7 +7,6 @@ import { findGuardScheduleConflict, type ScheduleJob } from '../../lib/guardSche
 import { guardHasJobTeamAssociation, isMultiGuardJob, teamRosterSummary } from '../../lib/guardTeams';
 import { formatTeamCodeDisplay } from '../../lib/teamCode';
 import { TeamGuardInvitePicker } from './TeamGuardInvitePicker';
-import { TeamCodeJoinPanel } from './TeamCodeJoinPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
@@ -19,7 +18,6 @@ interface GuardTeamPanelProps {
   coworkerGuards: SecurityGuard[];
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
-  onJoinWithTeamCode?: (code: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
@@ -32,7 +30,6 @@ export function GuardTeamPanel({
   coworkerGuards,
   onApplyAsLead,
   onInviteGuard,
-  onJoinWithTeamCode,
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
@@ -48,14 +45,6 @@ export function GuardTeamPanel({
   const hasScheduleConflict = !!findGuardScheduleConflict(guard.id, job, scheduleRequests);
   const canLead = trusted && multi && !job.teamLeadId && job.status === 'open' && !hasScheduleConflict;
   const canInvite = isLead && summary.open > 0 && job.status === 'open';
-  const showTeamCodeJoin =
-    !!onJoinWithTeamCode &&
-    job.status === 'open' &&
-    !onTeam &&
-    !myInvite &&
-    summary.open > 0 &&
-    !!job.teamLeadId &&
-    !isLead;
 
   const rosterGuards = useMemo(() => {
     const byId = new Map(coworkerGuards.map((g) => [g.id, g]));
@@ -95,7 +84,7 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. To join an existing crew, use a crew code from your coordinator or accept their invite.
+          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. To join an existing crew, enter the crew code in Settings or accept a coordinator invite.
         </p>
       )}
 
@@ -183,17 +172,9 @@ export function GuardTeamPanel({
         />
       )}
 
-      {showTeamCodeJoin && (
-        <TeamCodeJoinPanel
-          onJoin={onJoinWithTeamCode}
-          compact
-          hint="Have a code from your coordinator? Enter it here to join their crew."
-        />
-      )}
-
       {!onTeam && !myInvite && summary.open > 0 && job.status === 'open' && !!job.teamLeadId && (
         <p className="text-xs text-brand-text-muted">
-          This job has a coordinated crew. Join with a crew code from your coordinator or wait for their invite. To work this job independently, use Apply on the job card.
+          This job has a coordinated crew. Enter the crew code in Settings or wait for a coordinator invite. To work this job independently, use Apply on the job card.
         </p>
       )}
 

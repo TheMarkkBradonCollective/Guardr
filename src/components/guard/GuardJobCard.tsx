@@ -22,7 +22,6 @@ interface GuardJobCardProps {
   onDeclineDirectJob?: () => void;
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
-  onJoinWithTeamCode?: (code: string) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
   onOpenTeamChat?: () => void;
@@ -40,7 +39,6 @@ export function GuardJobCard({
   onDeclineDirectJob,
   onApplyAsLead,
   onInviteGuard,
-  onJoinWithTeamCode,
   onAcceptInvite,
   onDeclineInvite,
   onOpenTeamChat,
@@ -96,7 +94,6 @@ export function GuardJobCard({
       onDeclineDirectJob={onDeclineDirectJob}
       onApplyAsLead={onApplyAsLead}
       onInviteGuard={onInviteGuard}
-      onJoinWithTeamCode={onJoinWithTeamCode}
       onAcceptInvite={onAcceptInvite}
       onDeclineInvite={onDeclineInvite}
       onOpenTeamChat={onOpenTeamChat}
