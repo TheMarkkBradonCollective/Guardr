@@ -2027,6 +2027,7 @@ export default function App() {
       const client = profile as Client;
       const accountStatus = client.accountStatus ?? 'pending';
       try {
+        // Base insert — only original columns that are guaranteed to exist
         await supabase.from('clients').insert({
           id: client.id,
           name: client.name,
@@ -2042,42 +2043,57 @@ export default function App() {
           account_status: accountStatus,
           password,
           must_change_password: false,
-          // Intake fields
-          business_type: client.businessType ?? null,
-          industries: client.industries ?? null,
-          business_license: client.businessLicense ?? null,
-          website: client.website ?? null,
-          service_description: client.serviceDescription ?? null,
-          service_types: client.serviceTypes ?? null,
-          estimated_guards_needed: client.estimatedGuardsNeeded ?? null,
-          armed_preference: client.armedPreference ?? null,
-          service_frequencies: client.serviceFrequencies ?? null,
-          estimated_start_date: client.estimatedStartDate ?? null,
-          budget_range: client.budgetRange ?? null,
-          service_city: client.serviceCity ?? null,
-          service_state: client.serviceState ?? null,
-          property_types: client.propertyTypes ?? null,
-          referred_by: client.referredBy ?? null,
-          referred_by_id: client.referredById ?? null,
-          how_heard_about_us: client.howHeardAboutUs ?? null,
-          has_prior_security_service: client.hasPriorSecurityService ?? null,
-          prior_security_provider: client.priorSecurityProvider ?? null,
-          special_requirements: client.specialRequirements ?? null,
         });
-        setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
-        await loadFromSupabase();
-        if (accountStatus !== 'active') {
-          void reportPushEvent(
-            { id: client.id, email: emailLower, role: 'client', name: client.name },
-            {
-              type: 'client_pending_approval',
-              body: `New client sign-up: ${client.companyName || client.name}`,
-            }
-          );
-        }
       } catch (e) {
         console.error('Client DB insert error:', e);
         throw new Error('Could not create client account. This email may already be registered.');
+      }
+
+      // Intake fields — written in a separate update so a missing migration
+      // column never breaks the core sign-up flow
+      const intakePayload: Record<string, unknown> = {
+        business_type: client.businessType ?? null,
+        industries: client.industries ?? null,
+        business_license: client.businessLicense ?? null,
+        website: client.website ?? null,
+        service_description: client.serviceDescription ?? null,
+        service_types: client.serviceTypes ?? null,
+        estimated_guards_needed: client.estimatedGuardsNeeded ?? null,
+        armed_preference: client.armedPreference ?? null,
+        service_frequencies: client.serviceFrequencies ?? null,
+        estimated_start_date: client.estimatedStartDate ?? null,
+        budget_range: client.budgetRange ?? null,
+        service_city: client.serviceCity ?? null,
+        service_state: client.serviceState ?? null,
+        property_types: client.propertyTypes ?? null,
+        referred_by: client.referredBy ?? null,
+        referred_by_id: client.referredById ?? null,
+        how_heard_about_us: client.howHeardAboutUs ?? null,
+        has_prior_security_service: client.hasPriorSecurityService ?? null,
+        prior_security_provider: client.priorSecurityProvider ?? null,
+        special_requirements: client.specialRequirements ?? null,
+      };
+      // Only bother if there is at least one non-null intake value
+      const hasIntakeData = Object.values(intakePayload).some((v) => v !== null);
+      if (hasIntakeData) {
+        try {
+          await supabase.from('clients').update(intakePayload).eq('id', client.id);
+        } catch (intakeErr) {
+          // Non-fatal — intake columns may not exist yet if the migration hasn't been applied
+          console.warn('Client intake fields not saved (migration may be pending):', intakeErr);
+        }
+      }
+
+      setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
+      await loadFromSupabase();
+      if (accountStatus !== 'active') {
+        void reportPushEvent(
+          { id: client.id, email: emailLower, role: 'client', name: client.name },
+          {
+            type: 'client_pending_approval',
+            body: `New client sign-up: ${client.companyName || client.name}`,
+          }
+        );
       }
       return;
     }
