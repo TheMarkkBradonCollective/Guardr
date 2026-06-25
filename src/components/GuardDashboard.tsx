@@ -840,6 +840,8 @@ export function GuardDashboard({
 
   const userStatus = getGuardUserStatus(guard);
   const accountNeedsActivation = !isGuardAccountActive(guard);
+  const showPendingGate =
+    accountNeedsActivation && !GUARD_ACTIVATION_ALLOWED_TABS.includes(tab);
   const accountPreActive = isGuardAccountPreActive(guard);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
@@ -868,7 +870,7 @@ export function GuardDashboard({
     ...(trustedGuard ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
-  const guardMainPanel = (
+  const renderGuardMainPanel = () => (
     <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {!accountPreActive && activeTab !== 'profile' && (
         <GuardCredentialGraceBanner guard={guard} onOpenCredentials={() => setTab('profile')} />
@@ -1275,8 +1277,6 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate =
-    accountNeedsActivation && !GUARD_ACTIVATION_ALLOWED_TABS.includes(tab);
   const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
@@ -1292,7 +1292,7 @@ export function GuardDashboard({
       onSaveInsurance={onSaveInsurance}
     />
   ) : (
-    guardMainPanel
+    renderGuardMainPanel()
   );
 
   if (isEmbedded) {
@@ -1354,7 +1354,7 @@ export function GuardDashboard({
             ],
       }}
       navItems={accountNeedsActivation ? [] : NAV_TABS}
-      activeNavId={tab}
+      activeNavId={showPendingGate ? 'activation' : tab}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       variant={shellVariant}

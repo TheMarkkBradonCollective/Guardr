@@ -252,6 +252,7 @@ import {
 } from './lib/supportNotifications';
 import { playWalkieChirpSound } from './lib/walkieChirpSound';
 import {
+  normalizeGuardTabForAccount,
   clearPersistedAppRoute,
   defaultRouteForRole,
   buildAppPath,
@@ -418,6 +419,8 @@ export default function App() {
 
   // ── DB state ───────────────────────────────────────────────
   const [guards,   setGuards]   = useState<SecurityGuard[]>([]);
+  const guardsRef = useRef(guards);
+  guardsRef.current = guards;
   const [clients,  setClients]  = useState<Client[]>([]);
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -539,7 +542,10 @@ export default function App() {
     if (route.guardTab) {
       const tab =
         route.guardTab === 'guardChat' || route.guardTab === 'support' ? 'messages' : route.guardTab;
-      setGuardTabState(tab);
+      const user = currentUserRef.current;
+      const guard =
+        user?.role === 'guard' ? findGuardProfileForUser(user, guardsRef.current) : undefined;
+      setGuardTabState(normalizeGuardTabForAccount(tab, guard));
     }
     if (route.staffSection) {
       const section =
@@ -684,19 +690,9 @@ export default function App() {
   };
 
   const setGuardTab = (tab: GuardTab) => {
-    let normalizedTab: GuardTab =
-      tab === 'guardChat' || tab === 'support' ? 'messages' : tab;
-    if (currentUser?.role === 'guard') {
-      const guard = guards.find((g) => g.id === currentUser.id);
-      if (
-        guard &&
-        !isGuardAccountActive(guard) &&
-        normalizedTab !== 'settings' &&
-        normalizedTab !== 'activation'
-      ) {
-        normalizedTab = 'activation';
-      }
-    }
+    const guard =
+      currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, guards) : undefined;
+    const normalizedTab = normalizeGuardTabForAccount(tab, guard);
     setGuardTabState(normalizedTab);
     const keepsMessages = normalizedTab === 'messages';
     const keepsMyJobs = normalizedTab === 'myJobs';
@@ -2208,22 +2204,24 @@ export default function App() {
   // ── Derived ────────────────────────────────────────────────
   // Only real guards (not clients/auditors/staff-only accounts)
   const verifiedGuards = guards.filter(g => !g.id.startsWith('client-') && !g.id.startsWith('auditor-'));
+  const sessionGuard =
+    currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, verifiedGuards) : undefined;
   const activeGuard =
-    (currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, verifiedGuards) : undefined) ??
-    verifiedGuards.find((g) => g.id === activeGuardId) ??
-    verifiedGuards[0] ??
+    sessionGuard ??
+    (activeGuardId ? verifiedGuards.find((g) => g.id === activeGuardId) : undefined) ??
     ({} as SecurityGuard);
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;
     const guard = findGuardProfileForUser(currentUser, verifiedGuards);
     if (!guard?.id || isGuardAccountActive(guard)) return;
-    if (guardTab === 'settings' || guardTab === 'activation') return;
-    setGuardTabState('activation');
+    const normalizedTab = normalizeGuardTabForAccount(guardTab, guard);
+    if (normalizedTab === guardTab) return;
+    setGuardTabState(normalizedTab);
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
-        guardTab: 'activation',
+        guardTab: normalizedTab,
         jobChatRequestId: jobChatRequestId ?? undefined,
         openJobChat: openJobChat || undefined,
         supportTicketId: supportTicketId ?? undefined,

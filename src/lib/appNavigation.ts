@@ -1,5 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
+import type { SecurityGuard } from '../types';
+import { isGuardAccountActive } from './accountStatus';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
 
@@ -77,6 +79,18 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   guide: 'guide',
   crew: 'crew',
 };
+
+/** Inactive guards may only use settings; all other tabs route to activation. */
+export function normalizeGuardTabForAccount(
+  tab: GuardTab | undefined,
+  guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null | undefined
+): GuardTab {
+  const resolved: GuardTab =
+    tab === 'guardChat' || tab === 'support' ? 'messages' : tab ?? 'map';
+  if (!guard || isGuardAccountActive(guard)) return resolved;
+  if (resolved === 'settings') return 'settings';
+  return 'activation';
+}
 
 const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   home: 'home',
