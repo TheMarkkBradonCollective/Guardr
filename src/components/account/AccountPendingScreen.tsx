@@ -1,16 +1,10 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
-import { guardHasValidInsurance } from '../../lib/guardInsurance';
-import {
-  guardHasVerifiedIdForWork,
-  guardMeets32HourBlock,
-  guardMeetsLevel1,
-  guardMeetsPtaUofTraining,
-} from '../../lib/guardQualification';
-import { Clock, Check, User } from 'lucide-react';
+import { getGuardApplicationProgress } from '../../lib/guardApplicationProgress';
+import { User } from 'lucide-react';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
-import { AppPageLead, AppScreen } from '../ui/app/AppPrimitives';
+import { AppScreen } from '../ui/app/AppPrimitives';
 
 interface AccountPendingScreenProps {
   role: 'guard' | 'client';
@@ -18,65 +12,64 @@ interface AccountPendingScreenProps {
   onOpenProfile: () => void;
 }
 
-function guardMarketplaceEligibilityLead(guard: SecurityGuard, approved: boolean): string {
-  if (!approved) {
-    return 'Upload your government ID, BSIS guard card, Certificate of Insurance (COI), and other credentials. Staff verifies them for marketplace eligibility — not employment onboarding.';
+function guardActivationSubtitle(approved: boolean, percent: number): string {
+  if (approved) {
+    return percent >= 100
+      ? 'All requirements are in — Guardr staff will activate your account when ready.'
+      : 'Your profile is approved — finish any remaining credentials below.';
   }
-
-  const verified: string[] = [];
-  if (guardHasVerifiedIdForWork(guard)) verified.push('government ID');
-  if (guardMeetsLevel1(guard)) verified.push('guard card');
-  if (guardHasValidInsurance(guard)) verified.push('COI');
-
-  const missing: string[] = [];
-  if (!guardHasValidInsurance(guard)) missing.push('Certificate of Insurance (COI)');
-  if (!guardMeetsPtaUofTraining(guard)) missing.push('PTA/UOF training');
-  if (!guardMeets32HourBlock(guard)) missing.push('32-hour BSIS block');
-
-  let message =
-    verified.length > 0
-      ? `Your ${verified.join(', ')} ${verified.length === 1 ? 'is' : 'are'} verified.`
-      : 'Staff is reviewing your credentials.';
-
-  if (missing.length > 0) {
-    message += ` Upload ${missing.join(', ')} and any remaining items so staff can confirm marketplace eligibility.`;
-  } else {
-    message +=
-      ' Guardr staff will activate your account when marketplace eligibility is confirmed — you cannot browse jobs until then.';
+  if (percent >= 100) {
+    return 'Requirements submitted — staff is reviewing your credentials for marketplace eligibility.';
   }
-
-  return message;
+  return 'Upload your credentials below. Staff verifies them for marketplace eligibility — not employment onboarding.';
 }
 
 export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPendingScreenProps) {
   const isGuard = role === 'guard';
   const approved = isGuard && guard ? isGuardAccountApproved(guard) : false;
+  const applicationProgress = isGuard && guard ? getGuardApplicationProgress(guard) : null;
+
+  const title = isGuard
+    ? approved
+      ? 'Awaiting account activation'
+      : 'Complete your application'
+    : 'Account pending approval';
+
+  const subtitle = isGuard && applicationProgress
+    ? guardActivationSubtitle(approved, applicationProgress.percent)
+    : 'Your account is pending staff approval.';
 
   return (
     <AppScreen className="flex flex-col justify-center min-h-full">
-      <div className="px-5 py-10 text-center border-b border-brand-border">
-        {approved ? (
-          <span className="w-14 h-14 rounded-full bg-brand-primary flex items-center justify-center mx-auto mb-5 shadow-[0_4px_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
-            <Check className="w-7 h-7 text-white" strokeWidth={2.5} />
-          </span>
-        ) : (
-          <span className="w-14 h-14 rounded-full border-2 border-brand-border bg-brand-bg-sec flex items-center justify-center mx-auto mb-5">
-            <Clock className="w-7 h-7 text-brand-primary" />
-          </span>
+      <div className="px-5 pt-8 pb-6 border-b border-brand-border">
+        <h1 className="text-2xl font-black tracking-tight text-brand-text text-left">{title}</h1>
+        <p className="text-sm text-brand-text-muted mt-2 text-left leading-relaxed">{subtitle}</p>
+
+        {applicationProgress && (
+          <div className="mt-5">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <span className="text-xs font-semibold text-brand-text-muted">
+                {applicationProgress.requirementLabel}
+              </span>
+              <span className="text-xs font-bold text-brand-primary tabular-nums">
+                {applicationProgress.percent}%
+              </span>
+            </div>
+            <div
+              className="h-2 w-full rounded-full overflow-hidden bg-brand-border"
+              role="progressbar"
+              aria-valuenow={applicationProgress.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Application progress"
+            >
+              <div
+                className="h-full rounded-full bg-brand-primary transition-all duration-300"
+                style={{ width: `${applicationProgress.percent}%` }}
+              />
+            </div>
+          </div>
         )}
-        <AppPageLead
-          kicker="Marketplace eligibility"
-          title={
-            approved
-              ? 'Awaiting account activation'
-              : 'Eligibility review'
-          }
-        />
-        <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
-          {isGuard && guard
-            ? guardMarketplaceEligibilityLead(guard, approved)
-            : 'Your account is pending staff approval.'}
-        </p>
       </div>
 
       {isGuard && guard && <GuardActivationChecklistView guard={guard} />}
