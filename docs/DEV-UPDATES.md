@@ -1,8 +1,8 @@
 # Guardr Development Notes
 
 **Project start:** Saturday, June 6, 2026  
-**Last updated:** Wednesday, June 25, 2026  
-**Total commits:** 673 across 11 active days (19 calendar days)
+**Last updated:** Thursday, June 25, 2026  
+**Total commits:** 824 across 12 active days (20 calendar days)
 
 ---
 
@@ -10,13 +10,28 @@
 
 | Metric | Value |
 |--------|-------|
-| Calendar span | 19 days (Jun 6 → Jun 24) |
-| Active development days | 11 days with commits |
-| Markeith White direct commits | 22 commits (~8 hours active time) |
-| Total project commits | 673 (Markeith White: 22 · Cursor: 651) |
+| Calendar span | 20 days (Jun 6 → Jun 25) |
+| Active development days | 12 days with commits |
+| Markeith White direct commits | 23 commits (~8 hours active time) |
+| Total project commits | 824 (Markeith White: 23 · Cursor: 801) |
 | Estimated total dev time | ~92 hours (~3 days 20 hours, or ~11.5 eight-hour workdays) |
 
 _Times below come from git commit timestamps. They reflect when work was committed, not offline planning or testing without commits._
+
+---
+
+## Major platform milestones
+
+1. **Jun 6** — Project started; Guardr brand, Supabase, staff roles, self-audit foundation
+2. **Jun 7** — Uber-inspired redesign; Stripe payments; PWA and cross-platform base
+3. **Jun 8** — guardr.co live on Vercel
+4. **Jun 9** — Sidebar navigation, BSIS compliance engine, payments pipeline, realtime sync
+5. **Jun 10** — Job applications, self-audit and spot-check workflows
+6. **Jun 20** — Owner role; messaging hub; director financial controls
+7. **Jun 22** — ID verification, profile approval flow, production-ready polish
+8. **Jun 23** — Full responsive overhaul; overtime/disputes; messenger v2; workflow guide
+9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
+10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, no cash/spot checks, auto Stripe payout, marketplace eligibility framing, COI credential-row UI
 
 ---
 
@@ -94,56 +109,47 @@ _Times below come from git commit timestamps. They reflect when work was committ
 **Contributors:** Cursor  
 **Activity:** 12:04 AM – 10:24 PM · 127 commits (9 PR merges)
 
-### Morning (12:04 AM – 6:10 AM)
-
-- Staff given full guard map/shift experience
-- Sidebar navigation for all staff screens
-- Support section (messaging staff, filing reports)
-- Staff ops and guard shift unified into one dashboard
-- Bottom nav replaced with sidebar for all roles
-- "Dispatch" terminology removed app-wide
-- Unapproved client request gates toggled then removed — platform made self-service
-- Staff separated from field guards
-- **Web Push notifications** for PWA added
-- Vercel push API crash fixes
-
-### Mid-morning (5:54 AM – 9:06 AM)
-
-- BSIS qualification aligned to 2024 rules (8-hr PTA/UOF, 32-hr block for Level 2)
-- Guards can add supplemental credentials
-- Maps center on user location
-- Credential badges: on-file vs verification pills
-- Duplicate cert/license numbers blocked system-wide
-- Staff click-through profiles for guards and clients
-- **Supabase realtime sync** across the app
-- Profile photo upload for guards and clients
-- Complete Supabase schema setup SQL
-
-### Late morning (9:24 AM – 12:38 PM)
-
-- Director-only cash payment workflow
-- Staff Payments pipeline layout
-- Cash-to-Stripe deposit step
-- Paid jobs locked from edits; 15-min clock-in/out windows
-- Staff Jobs tab added
-- Guard earnings split: cash vs Stripe
-
-### Afternoon/evening (12:38 PM – 10:24 PM)
-
-- **Wireframe UI redesign** — bottom task bar, flat full-screen layout
-- Healthcare wireframe design system applied
-- Cards only for clickable entities (guards, clients, jobs, certs)
-- Staff left sidebar with sage themes
-- Grey theme renamed to **Shade**
-- Guard nav: My Jobs vs map for available listings
-- Inactive guards blocked from working
-- Payments UX redesigned with plain-language flow
-- Route persistence in URL (refresh stays on page)
-- Credential cards open detail view with document photo
-- Guardr marketing home page restored; separate security login
-- Staff Overview redesigned as operations command center
-- Directors can add staff, change roles, create jobs, assign guards
-- "Shift" terminology replaced with "jobs" sitewide
+| Time | Update |
+|------|--------|
+| 12:04 AM | Staff given full guard map/shift experience |
+| 12:04 AM | Sidebar navigation for all staff screens |
+| 12:04 AM | Support section (messaging staff, filing reports) |
+| 12:04 AM | Staff ops and guard shift unified into one dashboard |
+| 12:04 AM | Bottom nav replaced with sidebar for all roles |
+| 12:04 AM | "Dispatch" terminology removed app-wide |
+| 12:04 AM | Unapproved client request gates toggled then removed — platform made self-service |
+| 12:04 AM | Staff separated from field guards |
+| 12:04 AM | **Web Push notifications** for PWA added |
+| 12:04 AM | Vercel push API crash fixes |
+| 5:54 AM | BSIS qualification aligned to 2024 rules (8-hr PTA/UOF, 32-hr block for Level 2) |
+| 5:54 AM | Guards can add supplemental credentials |
+| 5:54 AM | Maps center on user location |
+| 5:54 AM | Credential badges: on-file vs verification pills |
+| 5:54 AM | Duplicate cert/license numbers blocked system-wide |
+| 5:54 AM | Staff click-through profiles for guards and clients |
+| 5:54 AM | **Supabase realtime sync** across the app |
+| 5:54 AM | Profile photo upload for guards and clients |
+| 5:54 AM | Complete Supabase schema setup SQL |
+| 9:24 AM | Director-only cash payment workflow |
+| 9:24 AM | Staff Payments pipeline layout |
+| 9:24 AM | Cash-to-Stripe deposit step |
+| 9:24 AM | Paid jobs locked from edits; 15-min clock-in/out windows |
+| 9:24 AM | Staff Jobs tab added |
+| 9:24 AM | Guard earnings split: cash vs Stripe |
+| 12:38 PM | **Wireframe UI redesign** — bottom task bar, flat full-screen layout |
+| 12:38 PM | Healthcare wireframe design system applied |
+| 12:38 PM | Cards only for clickable entities (guards, clients, jobs, certs) |
+| 12:38 PM | Staff left sidebar with sage themes |
+| 12:38 PM | Grey theme renamed to **Shade** |
+| 12:38 PM | Guard nav: My Jobs vs map for available listings |
+| 12:38 PM | Inactive guards blocked from working |
+| 12:38 PM | Payments UX redesigned with plain-language flow |
+| 12:38 PM | Route persistence in URL (refresh stays on page) |
+| 12:38 PM | Credential cards open detail view with document photo |
+| 12:38 PM | Guardr marketing home page restored; separate security login |
+| 12:38 PM | Staff Overview redesigned as operations command center |
+| 12:38 PM | Directors can add staff, change roles, create jobs, assign guards |
+| 12:38 PM | "Shift" terminology replaced with "jobs" sitewide |
 
 ---
 
@@ -180,9 +186,11 @@ _Times below come from git commit timestamps. They reflect when work was committ
 **Contributors:** Cursor  
 **Activity:** 12:04 AM – 12:10 AM · 6 commits (3 PR merges)
 
-- Credential photos locked after upload
-- Issue date removed from credential forms
-- Guards with valid guard card treated as Active for work
+| Time | Update |
+|------|--------|
+| 12:04 AM | Credential photos locked after upload |
+| 12:06 AM | Issue date removed from credential forms |
+| 12:10 AM | Guards with valid guard card treated as Active for work |
 
 **No commits June 12–19 (9-day pause)**
 
@@ -213,7 +221,9 @@ _Times below come from git commit timestamps. They reflect when work was committ
 **Contributors:** Cursor  
 **Activity:** 4:47 AM · 2 commits (1 PR merge)
 
-- Staff-provisioned accounts get default password with change prompt on first login
+| Time | Update |
+|------|--------|
+| 4:47 AM | Staff-provisioned accounts get default password with change prompt on first login |
 
 ---
 
@@ -222,62 +232,53 @@ _Times below come from git commit timestamps. They reflect when work was committ
 **Contributors:** Cursor  
 **Activity:** 1:26 AM – 11:31 PM · 163 commits (32 PR merges)
 
-### Early morning (1:26 – 6:40 AM)
-
-- Staff can edit guard profiles and manage credentials
-- First/middle/last name fields added
-- Account approval workflow; signup duplication fix; staff delete
-- **Guard ID verification**: front/back ID + identity selfie
-- Verified ID + Guard Card required before activation
-- Grandfather migration removed; guards start pending until staff activates
-
-### Morning (6:40 AM – 1:07 PM)
-
-- Production polish: role-distinct UX, premium styling
-- Push notifications aligned with SacramentoBuyNothing patterns
-- Message threads open separately
-- Staff approvals refactored into hub/queue/detail views
-- Marketplace legal terms, privacy policy, positioning copy
-- Full audit fixes + Uber-style design system
-- Push API Vercel bundling fixes
-- Uber-sharp design: flat edges, list rows, sage on black chrome
-- Messages: live sync and contrast fixes
-- Loading screen polish
-- Terms and Privacy access across Guardr
-- Staff team chat sync fixes
-
-### Afternoon (12:22 – 5:47 PM)
-
-- ID verification repositioned on profiles
-- Overview visual dashboard with Guardr sage chrome
-- Staff can request clearer ID/credential photos
-- ID reject/resubmit flow refined
-- Click-to-view modal for ID photos
-- Motorola walkie-talkie chirp for notifications
-- Trusted badge shown to clients
-- Staff accounts moved out of guards table into dedicated staff table
-- BSIS Guard Card moved to its own profile section
-- Motion transitions for page changes, modals, sheets
-- Unified account menu across roles
-- Categorized credential viewing
-
-### Evening (5:47 – 11:31 PM)
-
-- Government ID expiration date and credential-style card UI
-- Credential photo thumbnails on all cert cards
-- Light theme readability improvements
-- Profile approval vs account activation split
-- 48-hour credential grace period
-- Document photo proof required for all credentials
-- Image save fixes: compression, realtime race blocking
-- `fix_everything.sql` one-shot database catch-up script
-- Staff verify buttons on each 32-hour course cert
-- Optional client site briefing fields (expanded to **150+ fields**)
-- Support messages and reports split onto distinct views
-- Smoking area briefing section
-- Forms moved to bottom sheets
-- Slide-to-confirm for claim/start/end shift
-- Full site audit: TS errors, cert flows, UI polish
+| Time | Update |
+|------|--------|
+| 1:26 AM | Staff can edit guard profiles and manage credentials |
+| 1:26 AM | First/middle/last name fields added |
+| 1:26 AM | Account approval workflow; signup duplication fix; staff delete |
+| 1:26 AM | **Guard ID verification**: front/back ID + identity selfie |
+| 1:26 AM | Verified ID + Guard Card required before activation |
+| 1:26 AM | Grandfather migration removed; guards start pending until staff activates |
+| 6:40 AM | Production polish: role-distinct UX, premium styling |
+| 6:40 AM | Push notifications aligned with SacramentoBuyNothing patterns |
+| 6:40 AM | Message threads open separately |
+| 6:40 AM | Staff approvals refactored into hub/queue/detail views |
+| 6:40 AM | Marketplace legal terms, privacy policy, positioning copy |
+| 6:40 AM | Full audit fixes + Uber-style design system |
+| 6:40 AM | Push API Vercel bundling fixes |
+| 6:40 AM | Uber-sharp design: flat edges, list rows, sage on black chrome |
+| 6:40 AM | Messages: live sync and contrast fixes |
+| 6:40 AM | Loading screen polish |
+| 6:40 AM | Terms and Privacy access across Guardr |
+| 6:40 AM | Staff team chat sync fixes |
+| 12:22 PM | ID verification repositioned on profiles |
+| 12:22 PM | Overview visual dashboard with Guardr sage chrome |
+| 12:22 PM | Staff can request clearer ID/credential photos |
+| 12:22 PM | ID reject/resubmit flow refined |
+| 12:22 PM | Click-to-view modal for ID photos |
+| 12:22 PM | Motorola walkie-talkie chirp for notifications |
+| 12:22 PM | Trusted badge shown to clients |
+| 12:22 PM | Staff accounts moved out of guards table into dedicated staff table |
+| 12:22 PM | BSIS Guard Card moved to its own profile section |
+| 12:22 PM | Motion transitions for page changes, modals, sheets |
+| 12:22 PM | Unified account menu across roles |
+| 12:22 PM | Categorized credential viewing |
+| 5:47 PM | Government ID expiration date and credential-style card UI |
+| 5:47 PM | Credential photo thumbnails on all cert cards |
+| 5:47 PM | Light theme readability improvements |
+| 5:47 PM | Profile approval vs account activation split |
+| 5:47 PM | 48-hour credential grace period |
+| 5:47 PM | Document photo proof required for all credentials |
+| 5:47 PM | Image save fixes: compression, realtime race blocking |
+| 5:47 PM | `fix_everything.sql` one-shot database catch-up script |
+| 5:47 PM | Staff verify buttons on each 32-hour course cert |
+| 5:47 PM | Optional client site briefing fields (expanded to **150+ fields**) |
+| 5:47 PM | Support messages and reports split onto distinct views |
+| 5:47 PM | Smoking area briefing section |
+| 5:47 PM | Forms moved to bottom sheets |
+| 5:47 PM | Slide-to-confirm for claim/start/end shift |
+| 5:47 PM | Full site audit: TS errors, cert flows, UI polish |
 
 ---
 
@@ -286,55 +287,47 @@ _Times below come from git commit timestamps. They reflect when work was committ
 **Contributors:** Cursor, Markeith White  
 **Activity:** 12:24 AM – 11:35 PM · 227 commits (80 PR merges)
 
-### Overnight/early morning (12:24 – 8:27 AM)
-
-- Staff separated from guards table permanently
-- M. White promoted to Owner
-- Operations nav reorganized (Clients, Guards, Staff, chats)
-- Credential UI unified (status badges, collapsible sections, Add buttons)
-- Guard chat channel for all guards
-- Job chats simplified
-- Push subscribe crash fixes + comprehensive staff alerts
-- Client pay-in-cash request with staff approval
-- Owner-configurable payment modes (cash, Stripe, both)
-- Grace-period guards can claim shifts
-- Staff-then-client guard approval flow
-- In-app workflow guide added
-- Job location simplified to address + optional coordinates
-- **Uber design mirror overhaul** — Waves 1–3: full responsive mobile/tablet/desktop polish
-- Sidebar theme switcher (light/grey/dark)
-- Cash payment flows refined (Pay guard cash, bank collection)
-- On-duty timer from persisted clock-in timestamp
-- Route persistence and browser back navigation hardened
-- Configurable platform fee models beyond flat $5/hr
-
-### Markeith White
-
 | Time | Update |
 |------|--------|
-| **3:20 PM** | **Income summary on Staff Payments screen (PR #230)** |
-
-### Evening (5:48 – 11:35 PM)
-
-- Overtime billing for late guard clock-out
-- Guard and client approval required before overtime billing
-- 15-minute clock-out window removed
-- Detailed incident reports (full 5W1H capture)
-- Formal overtime dispute flow
-- Guard break tracking; staff shift notifications; client break config
-- Full support and dispute push notification coverage
-- Home page redesigned (mobile, tablet, desktop)
-- Messenger UI redesigned: split-pane, reactions, reply-to, read receipts, typing indicator
-- Tabbed inbox + scrollable conversation list
-- Enriched client sign-up intake form with staff approval detail view
-- Explicit trusted flag for guards/clients (Director/Owner only)
-- Interactive workflow guide with section hub and accordions
-- Fund handling restricted to Directors and Owners
-- Account/job/dispute actions restricted to Administrator+
+| 12:24 AM | Staff separated from guards table permanently |
+| 12:24 AM | M. White promoted to Owner |
+| 12:24 AM | Operations nav reorganized (Clients, Guards, Staff, chats) |
+| 12:24 AM | Credential UI unified (status badges, collapsible sections, Add buttons) |
+| 12:24 AM | Guard chat channel for all guards |
+| 12:24 AM | Job chats simplified |
+| 12:24 AM | Push subscribe crash fixes + comprehensive staff alerts |
+| 12:24 AM | Client pay-in-cash request with staff approval |
+| 12:24 AM | Owner-configurable payment modes (cash, Stripe, both) |
+| 12:24 AM | Grace-period guards can claim shifts |
+| 12:24 AM | Staff-then-client guard approval flow |
+| 12:24 AM | In-app workflow guide added |
+| 12:24 AM | Job location simplified to address + optional coordinates |
+| 12:24 AM | **Uber design mirror overhaul** — Waves 1–3: full responsive mobile/tablet/desktop polish |
+| 12:24 AM | Sidebar theme switcher (light/grey/dark) |
+| 12:24 AM | Cash payment flows refined (Pay guard cash, bank collection) |
+| 12:24 AM | On-duty timer from persisted clock-in timestamp |
+| 12:24 AM | Route persistence and browser back navigation hardened |
+| 12:24 AM | Configurable platform fee models beyond flat $5/hr |
+| 3:20 PM | **Income summary on Staff Payments screen (PR #230)** — Markeith White |
+| 5:48 PM | Overtime billing for late guard clock-out |
+| 5:48 PM | Guard and client approval required before overtime billing |
+| 5:48 PM | 15-minute clock-out window removed |
+| 5:48 PM | Detailed incident reports (full 5W1H capture) |
+| 5:48 PM | Formal overtime dispute flow |
+| 5:48 PM | Guard break tracking; staff shift notifications; client break config |
+| 5:48 PM | Full support and dispute push notification coverage |
+| 5:48 PM | Home page redesigned (mobile, tablet, desktop) |
+| 5:48 PM | Messenger UI redesigned: split-pane, reactions, reply-to, read receipts, typing indicator |
+| 5:48 PM | Tabbed inbox + scrollable conversation list |
+| 5:48 PM | Enriched client sign-up intake form with staff approval detail view |
+| 5:48 PM | Explicit trusted flag for guards/clients (Director/Owner only) |
+| 5:48 PM | Interactive workflow guide with section hub and accordions |
+| 5:48 PM | Fund handling restricted to Directors and Owners |
+| 5:48 PM | Account/job/dispute actions restricted to Administrator+ |
 
 ---
 
-## Wednesday, June 24, 2026 — Today
+## Wednesday, June 24, 2026 — Favourites, payments, polish
 
 **Contributors:** Cursor  
 **Activity:** 12:05 AM – 6:11 AM · 25 commits (5 PR merges)
@@ -357,32 +350,25 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ---
 
-## Wednesday, June 25, 2026 — IC marketplace alignment
+## Thursday, June 25, 2026 — IC marketplace alignment
 
 **Contributors:** Cursor  
-**PRs:** #295 Marketplace compliance · #297 Reduce control signals
+**Activity:** 5:35 AM – 8:19 AM · 6 commits · PRs #295, #297
 
-### Marketplace compliance (#295)
-
-| Area | Update |
+| Time | Update |
 |------|--------|
-| Legal | ICA, Client Agreement, Guard Code of Conduct — versioned acceptance at signup |
-| Insurance | COI upload workflow; guards need verified COI to apply to jobs |
-| Per-job agreements | Service agreement recorded when guard is assigned |
-| IC partial | Verified insured guards could skip staff on card jobs; guard minimum rate; auto payout scheduling |
-
-### Reduce employer-like control signals (#297)
-
-| Task | Change |
-|------|--------|
-| **3.7 Staff assignment** | Guards self-select — apply directly to client; staff placement dispute/safety only |
-| **3.8 Spot checks** | Removed platform-wide (no on-site supervision) |
-| **3.9 Payout** | Card/Stripe only; auto-release ~48h after completion; staff manual release on dispute hold only |
-| **3.10 Activation** | Reframed as **marketplace eligibility** — staff still verify credentials; no auto-verify |
-| **3.11 Grace period** | 48h self-serve for optional PTA/32-hr; automated lockout on expiry |
-| **Cash** | Disabled platform-wide |
-
-**Docs:** `docs/guardr-general-guide.md` updated with **IC marketplace model** section. Visible in-app under **General guide** and **Dev notes**.
+| 5:35 AM | **Marketplace compliance (#295)** — ICA, Client Agreement, Guard Code of Conduct; versioned acceptance at signup |
+| 5:35 AM | COI upload workflow; guards need verified COI to apply to jobs |
+| 5:35 AM | Per-job service agreements recorded when guard is assigned |
+| 5:50 AM | **Reduce control signals (#297)** — guards self-select jobs; staff placement dispute/safety only |
+| 5:50 AM | Spot checks removed platform-wide |
+| 5:50 AM | Card/Stripe only; auto-release ~48h; staff manual release on dispute hold only |
+| 5:50 AM | Activation reframed as **marketplace eligibility** — staff still verify credentials |
+| 5:50 AM | 48h self-serve grace for optional PTA/32-hr; automated lockout on expiry |
+| 5:50 AM | Cash disabled platform-wide |
+| 6:21 AM | `docs/guardr-general-guide.md` — **IC marketplace model** section; synced to General guide and Dev notes |
+| 7:36 AM | COI added to guard activation checklist and eligibility lead copy |
+| 8:15 AM | COI styled as credential row after Government ID (compact card + detail modal) |
 
 ---
 
@@ -402,22 +388,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Jun 22** | 163 | ID verification, approvals, production polish, site briefings, bottom sheets |
 | **Jun 23** | 227 | Responsive Uber overhaul, overtime/disputes, messenger redesign, workflow guide |
 | **Jun 24** | 25 | Favourites, direct job requests, notifications, guard filtering |
-| **Jun 25** | — | IC marketplace compliance, control-signal reduction, guide/dev notes update |
-
----
-
-## Major platform milestones
-
-1. **Jun 6** — Project started; Guardr brand, Supabase, staff roles, self-audit foundation
-2. **Jun 7** — Uber-inspired redesign; Stripe payments; PWA and cross-platform base
-3. **Jun 8** — guardr.co live on Vercel
-4. **Jun 9** — Sidebar navigation, BSIS compliance engine, payments pipeline, realtime sync
-5. **Jun 10** — Job applications, self-audit and spot-check workflows
-6. **Jun 20** — Owner role; messaging hub; director financial controls
-7. **Jun 22** — ID verification, profile approval flow, production-ready polish
-8. **Jun 23** — Full responsive overhaul; overtime/disputes; messenger v2; workflow guide
-9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
-10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, no cash/spot checks, auto Stripe payout, marketplace eligibility framing
+| **Jun 25** | 6 | IC marketplace compliance, control-signal reduction, COI checklist + credential-row UI |
 
 ---
 
