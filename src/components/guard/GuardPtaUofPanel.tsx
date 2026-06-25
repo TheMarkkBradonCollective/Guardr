@@ -16,6 +16,7 @@ import {
   PTA_UOF_SEPARATE_PART_COUNT,
   PTA_UOF_UPLOAD_GUIDANCE,
   computePtaUofProgress,
+  guardMeetsPtaUofTrainingVerified,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
@@ -105,7 +106,11 @@ export function GuardPtaUofPanel({
     : uploadPath;
 
   const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
-  const sectionStatus = getAggregateSectionStatus(ptaUofStatusSummary, progress.complete);
+  const sectionStatus = getAggregateSectionStatus(
+    ptaUofStatusSummary,
+    progress.complete,
+    guardMeetsPtaUofTrainingVerified(guard)
+  );
 
   const resetForm = () => {
     setAddingCatalogId(null);

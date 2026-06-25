@@ -495,6 +495,16 @@ export function guardMeetsPtaUofTraining(guard: SecurityGuard): boolean {
   );
 }
 
+/** Combined 8-hr cert verified, or both parts verified (PTA + UOF, or PTA + WMD). */
+export function guardMeetsPtaUofTrainingVerified(guard: SecurityGuard): boolean {
+  if (guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  if (!guardHasGuardrVerifiedCredential(guard, LEGACY_PTA_ID)) return false;
+  return (
+    guardHasGuardrVerifiedCredential(guard, LEGACY_UOF_ID) ||
+    guardHasGuardrVerifiedCredential(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
 export function guardMeets32HourBlock(guard: SecurityGuard): boolean {
   if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => guardHasCredentialOnFile(guard, id))) {
     return true;

@@ -11,23 +11,21 @@ import {
   guardIdVerificationResubmitPending,
 } from '../../lib/guardIdentityVerification';
 import {
-  formatThirtyTwoHourCourseProgressCounts,
-  getQualificationProgress,
   guardHasVerifiedIdForWork,
   guardMeets32HourBlock,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
-  PTA_UOF_UPLOAD_GUIDANCE,
   BSIS_PTA_UOF_COMBINED_ID,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
+import {
+  guardActivation32HourStepDetail,
+  guardActivationGuardCardStepDetail,
+  guardActivationIdStepDetail,
+  guardActivationPtaStepDetail,
+} from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
 import { Check, Plus } from 'lucide-react';
-import { GuardIdDetailModal } from '../profile/GuardIdDetailModal';
-import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
-import { GuardCardPanel } from '../profile/GuardCardPanel';
-import { GuardPtaUofPanel } from './GuardPtaUofPanel';
-import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
@@ -35,6 +33,11 @@ import type {
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
+import { GuardIdDetailModal } from '../profile/GuardIdDetailModal';
+import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
+import { GuardCardPanel } from '../profile/GuardCardPanel';
+import { GuardPtaUofPanel } from './GuardPtaUofPanel';
+import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
 
 type UploadKind = 'id' | 'coi' | 'guardCard' | 'pta' | 'thirtyTwoHour';
 
@@ -109,22 +112,21 @@ export function GuardActivationUploadChecklist({
   const [openUpload, setOpenUpload] = useState<UploadKind | null>(null);
   const checklist = getGuardActivationChecklist(guard);
   const approved = isGuardAccountApproved(guard);
-  const progress = getQualificationProgress(guard);
   const coi = guardInsuranceActivationDetail(guard);
 
   const closeUpload = () => setOpenUpload(null);
 
-  const idDone = approved || guardHasVerifiedIdForWork(guard);
+  const idDone = approved || guardHasVerifiedIdForWork(guard) || checklist.idSubmitted;
   const idCanUpload = !!onSubmitIdentityVerification && guardIdVerificationCanEdit(guard);
   const idAction = guardIdVerificationResubmitPending(guard)
     ? 'Resubmit government ID'
     : 'Add government ID';
 
-  const coiDone = coi.done;
+  const coiDone = coi.done || checklist.insuranceSubmitted;
   const coiCanUpload = !!onSaveInsurance && guardCoiCanGuardEdit(guard);
 
-  const guardCardDone = guardMeetsLevel1(guard);
-  const guardCardCanUpload = !!onAddCertification && !guardCardDone && !guardCardAwaitingReview(guard);
+  const guardCardDone = guardMeetsLevel1(guard) || checklist.guardCardVerified;
+  const guardCardCanUpload = !!onAddCertification && !guardMeetsLevel1(guard) && !guardCardAwaitingReview(guard);
 
   const ptaDone = guardMeetsPtaUofTraining(guard);
   const ptaCanUpload = !!onAddCertification && !ptaDone;
@@ -139,59 +141,35 @@ export function GuardActivationUploadChecklist({
           <StepRow
             done={idDone}
             label="1. Government ID — required to work"
-            detail={
-              idDone
-                ? approved
-                  ? 'Verified by staff'
-                  : 'Submitted — awaiting staff verification'
-                : checklist.idSubmitted
-                  ? 'Submitted — awaiting staff verification'
-                  : 'Upload front, back, and identity selfie'
-            }
-            actionLabel={!idDone && idCanUpload ? idAction : undefined}
-            onAction={!idDone && idCanUpload ? () => setOpenUpload('id') : undefined}
+            detail={guardActivationIdStepDetail(guard)}
+            actionLabel={!guardHasVerifiedIdForWork(guard) && idCanUpload ? idAction : undefined}
+            onAction={!guardHasVerifiedIdForWork(guard) && idCanUpload ? () => setOpenUpload('id') : undefined}
           />
           <StepRow
             done={coiDone}
             label="2. Certificate of Insurance (COI) — required for profile approval"
             detail={coi.detail}
-            actionLabel={!coiDone && coiCanUpload ? 'Add COI' : undefined}
-            onAction={!coiDone && coiCanUpload ? () => setOpenUpload('coi') : undefined}
+            actionLabel={!coi.done && coiCanUpload ? 'Add COI' : undefined}
+            onAction={!coi.done && coiCanUpload ? () => setOpenUpload('coi') : undefined}
           />
           <StepRow
             done={guardCardDone}
             label="3. BSIS Guard Card — required to work"
-            detail={
-              guardCardDone
-                ? 'On file — staff will verify at activation'
-                : guardCardAwaitingReview(guard)
-                  ? 'Submitted — awaiting staff verification'
-                  : 'Upload your guard card document photo'
-            }
+            detail={guardActivationGuardCardStepDetail(guard)}
             actionLabel={guardCardCanUpload ? 'Add guard card' : undefined}
             onAction={guardCardCanUpload ? () => setOpenUpload('guardCard') : undefined}
           />
           <StepRow
             done={ptaDone}
             label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
-            detail={
-              ptaDone ? 'PTA/UOF training on file' : `Upload your PTA/UOF certificate. ${PTA_UOF_UPLOAD_GUIDANCE}`
-            }
+            detail={guardActivationPtaStepDetail(guard)}
             actionLabel={ptaCanUpload ? 'Add PTA/UOF' : undefined}
             onAction={ptaCanUpload ? () => setOpenUpload('pta') : undefined}
           />
           <StepRow
             done={blockDone}
             label="5. 32-hour BSIS course block — required to work"
-            detail={
-              blockDone
-                ? progress.thirtyTwoHourRollup
-                  ? '32-hour completion certificate on file'
-                  : `All ${progress.total32HourCourses} courses on file`
-                : progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0
-                  ? `${formatThirtyTwoHourCourseProgressCounts(progress)} — keep uploading courses`
-                  : 'Upload all 9 course certificates or one 32-hour completion certificate'
-            }
+            detail={guardActivation32HourStepDetail(guard)}
             actionLabel={blockCanUpload ? 'Add 32-hour training' : undefined}
             onAction={blockCanUpload ? () => setOpenUpload('thirtyTwoHour') : undefined}
           />

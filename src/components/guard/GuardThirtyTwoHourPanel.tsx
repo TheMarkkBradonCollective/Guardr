@@ -11,6 +11,7 @@ import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadFiel
 import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
+  guardMeets32HourBlockVerified,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
@@ -108,7 +109,8 @@ export function GuardThirtyTwoHourPanel({
   );
   const sectionStatus = getAggregateSectionStatus(
     courseStatusSummary,
-    progress.thirtyTwoHourBlockComplete
+    progress.thirtyTwoHourBlockComplete,
+    guardMeets32HourBlockVerified(guard)
   );
 
   const resetForm = () => {

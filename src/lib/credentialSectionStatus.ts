@@ -8,6 +8,7 @@ import {
   getGovernmentIdUploadStatusSummary,
   getGuardIdVerificationStatus,
 } from './guardIdentityVerification';
+import { guardHasExpiredIdOnFile } from './guardQualification';
 import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
 
 export type CredentialSectionStatusTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
@@ -53,7 +54,7 @@ export function getGovernmentIdSectionStatus(
   const label = getGovernmentIdUploadStatusSummary(guard, { staffMode });
 
   if (checklist.idVerified) {
-    return { label, tone: 'success' };
+    return { label, tone: guardHasExpiredIdOnFile(guard) ? 'warning' : 'success' };
   }
   if (idStatus === 'rejected') {
     return { label, tone: 'danger' };
@@ -94,10 +95,14 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
 
 export function getAggregateSectionStatus(
   summary: string,
-  complete: boolean
+  complete: boolean,
+  verified = false
 ): CredentialSectionStatus {
+  if (complete && verified) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
   if (complete) {
-    return { label: 'On file', tone: 'success' };
+    return { label: 'On file — pending review', tone: 'warning' };
   }
   return { label: summary, tone: 'warning' };
 }

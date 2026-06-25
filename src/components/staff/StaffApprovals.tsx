@@ -38,9 +38,9 @@ import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
-import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppItemCard, AppItemCardStack, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
-import { ArrowLeft, Briefcase, Check, ChevronRight, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
+import { Briefcase, Check, ChevronRight, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
@@ -69,6 +69,11 @@ interface StaffApprovalsProps {
     staffNote?: string
   ) => void;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void;
+  onReviewGuardInsurance?: (
+    guardId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string
+  ) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -123,24 +128,65 @@ const QUEUE_META: Record<
   },
 };
 
-function ApprovalBackBar({
+function ApprovalListRow({
   title,
   subtitle,
+  meta,
+  onViewDetails,
+}: {
+  title: React.ReactNode;
+  subtitle?: string;
+  meta?: React.ReactNode;
+  onViewDetails: () => void;
+}) {
+  return (
+    <div className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
+      <div className="min-w-0 text-left w-full">
+        {typeof title === 'string' ? (
+          <p className="font-semibold text-sm truncate">{title}</p>
+        ) : (
+          title
+        )}
+        {subtitle && <p className="text-xs text-brand-text-muted mt-0.5 truncate">{subtitle}</p>}
+        {meta && <div className="mt-1.5">{meta}</div>}
+      </div>
+      <button type="button" onClick={onViewDetails} className="app-button-outline app-btn-sm gap-1.5 w-fit">
+        <Eye className="w-3.5 h-3.5" />
+        View details
+      </button>
+    </div>
+  );
+}
+
+function ApprovalDetailScreen({
+  title,
+  backLabel,
+  onBack,
+  children,
+}: {
+  title: string;
+  backLabel: string;
+  onBack: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="-mx-4 sm:-mx-5 app-full-page-detail animate-fade-in">
+      <AppSubScreenHeader title={title} onBack={onBack} backLabel={backLabel} />
+      <div className="px-4 sm:px-5 pb-8 space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function ApprovalQueueHeader({
+  title,
   onBack,
 }: {
   title: string;
-  subtitle?: string;
   onBack: () => void;
 }) {
   return (
-    <div className="flex items-start gap-2 mb-4 pb-3 border-b border-brand-border">
-      <button type="button" onClick={onBack} className="p-2 -ml-2 text-brand-text" aria-label="Back">
-        <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
-      </button>
-      <div className="min-w-0">
-        <h2 className="font-bold text-sm">{title}</h2>
-        {subtitle && <p className="text-xs text-brand-text-muted mt-0.5">{subtitle}</p>}
-      </div>
+    <div className="mb-4">
+      <AppSubScreenHeader title={title} onBack={onBack} backLabel="Approvals" />
     </div>
   );
 }
@@ -165,6 +211,7 @@ export function StaffApprovals({
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
   onRequestCertImageResubmit,
+  onReviewGuardInsurance,
   onUpdateGuardIdImages,
   onAddCertification,
   onDeleteCertification,
@@ -249,6 +296,30 @@ export function StaffApprovals({
     setActiveQueue(initialQueue);
     setActiveItemId(null);
   }, [initialQueue]);
+
+  useEffect(() => {
+    if (!activeItemId || !activeQueue) return;
+    const stillExists =
+      (activeQueue === 'job-offers' && pendingJobs.some((r) => r.id === activeItemId)) ||
+      (activeQueue === 'schedule-changes' && pendingScheduleChanges.some((r) => r.id === activeItemId)) ||
+      (activeQueue === 'applications' && jobsWithApplications.some((r) => r.id === activeItemId)) ||
+      (activeQueue === 'credentials' && pendingCerts.some(({ cert }) => cert.id === activeItemId)) ||
+      (activeQueue === 'accounts' &&
+        (pendingGuardAccounts.some((g) => g.id === activeItemId) ||
+          approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId) ||
+          pendingClientAccounts.some((c) => c.id === activeItemId)));
+    if (!stillExists) setActiveItemId(null);
+  }, [
+    activeItemId,
+    activeQueue,
+    pendingJobs,
+    pendingScheduleChanges,
+    jobsWithApplications,
+    pendingCerts,
+    pendingGuardAccounts,
+    approvedGuardsAwaitingActivation,
+    pendingClientAccounts,
+  ]);
 
   const selectQueue = (queue: ApprovalQueueId | null) => {
     setActiveQueue(queue);
@@ -458,27 +529,29 @@ export function StaffApprovals({
     if (activeQueue === 'job-offers') {
       if (activeItemId) {
         const req = pendingJobs.find((r) => r.id === activeItemId);
-        if (!req) {
-          setActiveItemId(null);
-          return null;
-        }
+        if (!req) return null;
         return (
-          <>
-            <ApprovalBackBar title={req.title} subtitle="Job offer review" onBack={() => setActiveItemId(null)} />
+          <ApprovalDetailScreen
+            title={req.title}
+            backLabel={meta.title}
+            onBack={() => setActiveItemId(null)}
+          >
             {renderJobOfferDetail(req)}
-          </>
+          </ApprovalDetailScreen>
         );
       }
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingJobs.map((req) => (
-              <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{req.title}</p>
-                <p className="text-xs text-brand-text-muted truncate">{req.clientName} · {req.location}</p>
-                <WfBadge tone="warning" className="mt-1.5 w-fit">Review & approve</WfBadge>
-              </AppItemCard>
+              <ApprovalListRow
+                key={req.id}
+                title={req.title}
+                subtitle={`${req.clientName} · ${req.location}`}
+                meta={<WfBadge tone="warning">Review & approve</WfBadge>}
+                onViewDetails={() => setActiveItemId(req.id)}
+              />
             ))}
           </AppItemCardStack>
         </>
@@ -488,29 +561,33 @@ export function StaffApprovals({
     if (activeQueue === 'schedule-changes') {
       if (activeItemId) {
         const req = pendingScheduleChanges.find((r) => r.id === activeItemId);
-        if (!req) {
-          setActiveItemId(null);
-          return null;
-        }
+        if (!req) return null;
         return (
-          <>
-            <ApprovalBackBar title={req.title} subtitle="Client schedule change" onBack={() => setActiveItemId(null)} />
+          <ApprovalDetailScreen
+            title={req.title}
+            backLabel={meta.title}
+            onBack={() => setActiveItemId(null)}
+          >
             {renderScheduleChangeDetail(req)}
-          </>
+          </ApprovalDetailScreen>
         );
       }
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingScheduleChanges.map((req) => (
-              <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{req.title}</p>
-                <p className="text-xs text-brand-text-muted truncate">{req.clientName} · {req.location}</p>
-                <WfBadge tone="warning" className="mt-1.5 w-fit">
-                  {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
-                </WfBadge>
-              </AppItemCard>
+              <ApprovalListRow
+                key={req.id}
+                title={req.title}
+                subtitle={`${req.clientName} · ${req.location}`}
+                meta={
+                  <WfBadge tone="warning" className="w-fit">
+                    {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
+                  </WfBadge>
+                }
+                onViewDetails={() => setActiveItemId(req.id)}
+              />
             ))}
           </AppItemCardStack>
         </>
@@ -520,16 +597,16 @@ export function StaffApprovals({
     if (activeQueue === 'applications') {
       if (activeItemId) {
         const req = jobsWithApplications.find((r) => r.id === activeItemId);
-        if (!req) {
-          setActiveItemId(null);
-          return null;
-        }
+        if (!req) return null;
         const ranked = rankApplicantGuards(req, guards);
         const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
         const awaitingClientGuard = isAwaitingClientGuardApproval(req);
         return (
-          <>
-            <ApprovalBackBar title={req.title} subtitle="Choose a guard for this job" onBack={() => setActiveItemId(null)} />
+          <ApprovalDetailScreen
+            title={req.title}
+            backLabel={meta.title}
+            onBack={() => setActiveItemId(null)}
+          >
             <div className="staff-detail-pane space-y-3">
               <p className="text-sm text-brand-text-muted">{req.clientName} · {req.location}</p>
               {awaitingClientGuard && pendingGuard && (
@@ -598,21 +675,22 @@ export function StaffApprovals({
                 })}
               </div>
             </div>
-          </>
+          </ApprovalDetailScreen>
         );
       }
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {jobsWithApplications.map((req) => (
-              <AppItemCard key={req.id} onClick={() => setActiveItemId(req.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{req.title}</p>
-                <p className="text-xs text-brand-text-muted truncate">
-                  {req.applicants.length} applicant{req.applicants.length === 1 ? '' : 's'} · {req.location}
-                  {isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''}
-                </p>
-              </AppItemCard>
+              <ApprovalListRow
+                key={req.id}
+                title={req.title}
+                subtitle={`${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}${
+                  isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''
+                }`}
+                onViewDetails={() => setActiveItemId(req.id)}
+              />
             ))}
           </AppItemCardStack>
         </>
@@ -622,14 +700,14 @@ export function StaffApprovals({
     if (activeQueue === 'credentials') {
       if (activeItemId) {
         const entry = pendingCerts.find(({ cert }) => cert.id === activeItemId);
-        if (!entry) {
-          setActiveItemId(null);
-          return null;
-        }
+        if (!entry) return null;
         const { guard, cert } = entry;
         return (
-          <>
-            <ApprovalBackBar title={`${guard.name} — ${certDisplayName(cert)}`} subtitle="Credential review" onBack={() => setActiveItemId(null)} />
+          <ApprovalDetailScreen
+            title={`${guard.name} — ${certDisplayName(cert)}`}
+            backLabel={meta.title}
+            onBack={() => setActiveItemId(null)}
+          >
             <div className="staff-detail-pane space-y-4">
               <CredentialCategoryBadge cert={cert} />
               <p className="text-sm text-brand-text-muted">
@@ -701,13 +779,13 @@ export function StaffApprovals({
                 </p>
               )}
             </div>
-          </>
+          </ApprovalDetailScreen>
         );
       }
       const pendingSections = groupPendingCertsByViewSection(pendingCerts, { hideEmpty: true });
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <div className="space-y-5">
             {pendingSections.map((section) => (
               <section key={section.id} className="credential-view-section space-y-2">
@@ -722,14 +800,17 @@ export function StaffApprovals({
                 </div>
                 <AppItemCardStack>
                   {section.entries.map(({ guard, cert }) => (
-                    <AppItemCard key={cert.id} onClick={() => setActiveItemId(cert.id)} className="flex-col !items-stretch gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-semibold text-sm truncate">{guard.name}</p>
-                        <CredentialCategoryBadge cert={cert} variant="category" className="shrink-0" />
-                      </div>
-                      <p className="text-sm font-medium truncate">{certDisplayName(cert)}</p>
-                      <p className="text-xs text-brand-text-muted truncate">{cert.issuer} · #{cert.number}</p>
-                    </AppItemCard>
+                    <ApprovalListRow
+                      key={cert.id}
+                      title={
+                        <div className="flex items-start justify-between gap-2 w-full">
+                          <p className="font-semibold text-sm truncate">{guard.name}</p>
+                          <CredentialCategoryBadge cert={cert} variant="category" className="shrink-0" />
+                        </div>
+                      }
+                      subtitle={`${certDisplayName(cert)} · ${cert.issuer} · #${cert.number}`}
+                      onViewDetails={() => setActiveItemId(cert.id)}
+                    />
                   ))}
                 </AppItemCardStack>
               </section>
@@ -756,14 +837,16 @@ export function StaffApprovals({
             : guardCanStaffApproveProfile(guard);
 
           return (
-            <>
-              <ApprovalBackBar
-                title={guard.name}
-                subtitle={isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
-                onBack={() => setActiveItemId(null)}
-              />
+            <ApprovalDetailScreen
+              title={guard.name}
+              backLabel={meta.title}
+              onBack={() => setActiveItemId(null)}
+            >
               <div className="staff-detail-pane space-y-4">
                 <p className="text-sm text-brand-text-muted">{guard.email}</p>
+                <p className="text-xs text-brand-text-muted">
+                  {isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
+                </p>
                 <StaffGuardActivationChecklistView guard={guard} />
                 {approvalBlockers.length > 0 && (
                   <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
@@ -802,6 +885,11 @@ export function StaffApprovals({
                   onUpdateCertification={
                     onUpdateCertification
                       ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
+                      : undefined
+                  }
+                  onReviewInsurance={
+                    canManageGuardAccounts && onReviewGuardInsurance
+                      ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
                       : undefined
                   }
                   staffIdReview={
@@ -882,7 +970,7 @@ export function StaffApprovals({
                   </div>
                 )}
               </div>
-            </>
+            </ApprovalDetailScreen>
           );
         }
 
@@ -907,12 +995,11 @@ export function StaffApprovals({
           };
 
           return (
-            <>
-              <ApprovalBackBar
-                title={client.companyName || client.name}
-                subtitle="Client account approval"
-                onBack={() => setActiveItemId(null)}
-              />
+            <ApprovalDetailScreen
+              title={client.companyName || client.name}
+              backLabel={meta.title}
+              onBack={() => setActiveItemId(null)}
+            >
               <div className="staff-detail-pane space-y-5">
                 <WfBadge tone="warning">Pending approval</WfBadge>
 
@@ -1114,53 +1201,70 @@ export function StaffApprovals({
                   </div>
                 )}
               </div>
-            </>
+            </ApprovalDetailScreen>
           );
         }
 
-        setActiveItemId(null);
         return null;
       }
 
       return (
         <>
-          <ApprovalBackBar title={meta.title} subtitle={undefined} onBack={() => selectQueue(null)} />
+          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <AppItemCardStack>
             {pendingGuardAccounts.map((guard) => (
-              <WfListCard
-                key={guard.id}
-                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                title={guard.name}
-                subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
-                meta={
-                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                    <GuardRosterStatusBadges guard={guard} />
-                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                  </div>
-                }
-                onClick={() => setActiveItemId(guard.id)}
-              />
+              <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
+                <WfListCard
+                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                  title={guard.name}
+                  subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
+                  meta={
+                    <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                      <GuardRosterStatusBadges guard={guard} />
+                      <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                    </div>
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setActiveItemId(guard.id)}
+                  className="app-button-outline app-btn-sm gap-1.5 w-fit"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  View details
+                </button>
+              </div>
             ))}
             {approvedGuardsAwaitingActivation.map((guard) => (
-              <WfListCard
-                key={guard.id}
-                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                title={guard.name}
-                subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
-                meta={
-                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                    <GuardRosterStatusBadges guard={guard} />
-                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                  </div>
-                }
-                onClick={() => setActiveItemId(guard.id)}
-              />
+              <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
+                <WfListCard
+                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                  title={guard.name}
+                  subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
+                  meta={
+                    <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                      <GuardRosterStatusBadges guard={guard} />
+                      <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                    </div>
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setActiveItemId(guard.id)}
+                  className="app-button-outline app-btn-sm gap-1.5 w-fit"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  View details
+                </button>
+              </div>
             ))}
             {pendingClientAccounts.map((client) => (
-              <AppItemCard key={client.id} onClick={() => setActiveItemId(client.id)} className="flex-col !items-stretch gap-1">
-                <p className="font-semibold text-sm truncate">{client.companyName || client.name}</p>
-                <p className="text-xs text-brand-text-muted">Client sign-up</p>
-              </AppItemCard>
+              <ApprovalListRow
+                key={client.id}
+                title={client.companyName || client.name}
+                subtitle="Client sign-up"
+                onViewDetails={() => setActiveItemId(client.id)}
+              />
             ))}
           </AppItemCardStack>
         </>
