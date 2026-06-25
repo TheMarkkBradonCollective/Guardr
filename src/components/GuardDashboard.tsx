@@ -65,7 +65,7 @@ import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
-import { getGuardUserStatus, isGuardAccountPreActive } from '../lib/accountStatus';
+import { getGuardUserStatus, isGuardAccountActive, isGuardAccountPreActive } from '../lib/accountStatus';
 import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { GuardMessagesPanel } from './guard/GuardMessagesPanel';
 import { GuardCredentialGraceBanner } from './guard/GuardCredentialGraceBanner';
@@ -174,6 +174,8 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
 export type GuardSupportMode = 'compose' | 'report';
 
+const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['profile', 'settings'];
+
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
   myJobs: 'Jobs',
@@ -265,15 +267,24 @@ export function GuardDashboard({
 
   const setTab = useCallback(
     (next: GuardTab) => {
-      if (!isControlled) setStandaloneTab(next);
-      onTabChange?.(next);
+      const resolved =
+        !isGuardAccountActive(guard) && !GUARD_ACTIVATION_ALLOWED_TABS.includes(next) ? 'map' : next;
+      if (!isControlled) setStandaloneTab(resolved);
+      onTabChange?.(resolved);
     },
-    [isControlled, onTabChange]
+    [guard, isControlled, onTabChange]
   );
 
   useEffect(() => {
     if (isControlled && controlledTab) setStandaloneTab(controlledTab);
   }, [controlledTab, isControlled]);
+
+  useEffect(() => {
+    if (isGuardAccountActive(guard)) return;
+    if (!GUARD_ACTIVATION_ALLOWED_TABS.includes(tab) && tab !== 'map') {
+      setTab('map');
+    }
+  }, [guard, tab, setTab]);
   const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
   const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
   const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
@@ -827,6 +838,7 @@ export function GuardDashboard({
   };
 
   const userStatus = getGuardUserStatus(guard);
+  const accountNeedsActivation = !isGuardAccountActive(guard);
   const accountPreActive = isGuardAccountPreActive(guard);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
@@ -1262,7 +1274,8 @@ export function GuardDashboard({
     </>
   );
 
-  const showPendingGate = accountPreActive && tab !== 'profile' && tab !== 'settings' && tab !== 'messages' && tab !== 'guide';
+  const showPendingGate =
+    accountNeedsActivation && !GUARD_ACTIVATION_ALLOWED_TABS.includes(tab);
   const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
@@ -1289,8 +1302,10 @@ export function GuardDashboard({
   const guardHeaderStatus =
     activeShiftJob?.status === 'in-progress'
       ? `On shift · ${activeShiftJob.siteName || activeShiftJob.location}`
-      : accountPreActive
-        ? 'Activation in review'
+      : accountNeedsActivation
+        ? userStatus === 'approved'
+          ? 'Awaiting account activation'
+          : 'Activation in review'
         : trustedGuard
           ? 'Trusted Guardr professional'
           : 'Available for vetted jobs';
@@ -1312,16 +1327,18 @@ export function GuardDashboard({
         onOpenSettings: () => setTab('settings'),
         onSignOut,
         active: activeTab === 'profile' || activeTab === 'settings',
-        extraLinks: [
-          {
-            label: 'General guide',
-            icon: BookOpen,
-            onClick: () => setTab('guide'),
-            active: tab === 'guide',
-          },
-        ],
+        extraLinks: accountNeedsActivation
+          ? []
+          : [
+              {
+                label: 'General guide',
+                icon: BookOpen,
+                onClick: () => setTab('guide'),
+                active: tab === 'guide',
+              },
+            ],
       }}
-      navItems={NAV_TABS}
+      navItems={accountNeedsActivation ? [] : NAV_TABS}
       activeNavId={tab}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}

@@ -188,6 +188,7 @@ import { personNameFromPayload, resolvePersonNameParts } from './lib/personName'
 import {
   getClientAccountStatus,
   getGuardUserStatus,
+  isGuardAccountActive,
   isGuardAccountApproved,
   isGuardAccountPending,
 } from './lib/accountStatus';
@@ -683,8 +684,19 @@ export default function App() {
   };
 
   const setGuardTab = (tab: GuardTab) => {
-    const normalizedTab: GuardTab =
+    let normalizedTab: GuardTab =
       tab === 'guardChat' || tab === 'support' ? 'messages' : tab;
+    if (currentUser?.role === 'guard') {
+      const guard = guards.find((g) => g.id === currentUser.id);
+      if (
+        guard &&
+        !isGuardAccountActive(guard) &&
+        normalizedTab !== 'profile' &&
+        normalizedTab !== 'settings'
+      ) {
+        normalizedTab = 'map';
+      }
+    }
     setGuardTabState(normalizedTab);
     const keepsMessages = normalizedTab === 'messages';
     const keepsMyJobs = normalizedTab === 'myJobs';

@@ -41,7 +41,8 @@ function guardMarketplaceEligibilityLead(guard: SecurityGuard, approved: boolean
   if (missing.length > 0) {
     message += ` Upload ${missing.join(', ')} and any remaining items so staff can confirm marketplace eligibility.`;
   } else {
-    message += ' Staff will confirm marketplace eligibility when all requirements are verified.';
+    message +=
+      ' Guardr staff will activate your account when marketplace eligibility is confirmed — you cannot browse jobs until then.';
   }
 
   return message;
@@ -65,7 +66,11 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
         )}
         <AppPageLead
           kicker="Marketplace eligibility"
-          title={approved ? 'Credentials verified' : 'Eligibility review'}
+          title={
+            approved
+              ? 'Awaiting account activation'
+              : 'Eligibility review'
+          }
         />
         <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
           {isGuard && guard
