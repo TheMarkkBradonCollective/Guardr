@@ -1,4 +1,5 @@
 import type { GuardInsurancePolicy, SecurityGuard } from '../types';
+import type { CourseUploadStatus } from './certStatus';
 
 export const INSURANCE_STATUS_LABELS: Record<GuardInsurancePolicy['status'], string> = {
   not_submitted: 'Not submitted',
@@ -33,6 +34,64 @@ export function guardInsuranceSubmitted(guard: Pick<SecurityGuard, 'insurancePol
   const policy = guard.insurancePolicy;
   if (!policy) return false;
   return policy.status !== 'not_submitted' && !!policy.documentUrl?.trim();
+}
+
+export function guardCoiOnFile(guard: Pick<SecurityGuard, 'insurancePolicy'>): boolean {
+  const policy = guard.insurancePolicy;
+  return Boolean(policy?.documentUrl?.trim() || policy?.carrier?.trim());
+}
+
+export function formatCoiSummaryLine(policy: GuardInsurancePolicy | undefined): string {
+  if (!policy?.carrier?.trim() && !policy?.policyNumber?.trim()) {
+    return 'Certificate of Insurance not on file';
+  }
+  const parts: string[] = [];
+  if (policy.carrier?.trim()) parts.push(policy.carrier.trim());
+  if (policy.policyNumber?.trim()) parts.push(`#${policy.policyNumber.trim()}`);
+  if (policy.expiryDate?.trim()) {
+    const expired = isInsuranceExpired(policy);
+    parts.push(expired ? `Expired ${policy.expiryDate}` : `Expires ${policy.expiryDate}`);
+  }
+  return parts.join(' · ');
+}
+
+export function getCoiUploadStatus(guard: Pick<SecurityGuard, 'insurancePolicy'>): CourseUploadStatus {
+  const policy = guard.insurancePolicy;
+  if (!policy) return 'missing';
+  if (!policy.documentUrl?.trim() && !policy.carrier?.trim()) return 'missing';
+  if (resolveInsuranceStatus(policy) === 'expired') return 'expired';
+  if (!policy.documentUrl?.trim()) return 'listed';
+  return 'on-file';
+}
+
+export function getCoiCredentialUploadLabel(guard: Pick<SecurityGuard, 'insurancePolicy'>): string | null {
+  const status = getCoiUploadStatus(guard);
+  if (status === 'on-file') return 'On file';
+  if (status === 'expired') return 'On file · expired';
+  if (status === 'listed') return 'Incomplete — upload COI document';
+  return 'Not on file';
+}
+
+export function getCoiCredentialVerificationLabel(guard: Pick<SecurityGuard, 'insurancePolicy'>): string {
+  const policy = guard.insurancePolicy;
+  if (!policy) return 'Not submitted';
+  return INSURANCE_STATUS_LABELS[resolveInsuranceStatus(policy)];
+}
+
+export function getCoiCredentialUploadBadgeClass(guard: Pick<SecurityGuard, 'insurancePolicy'>): string {
+  const status = getCoiUploadStatus(guard);
+  if (status === 'on-file') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+  if (status === 'expired') return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+  return 'border-brand-border bg-brand-surface-elevated text-brand-text-muted';
+}
+
+export function getCoiCredentialVerificationBadgeClass(guard: Pick<SecurityGuard, 'insurancePolicy'>): string {
+  const policy = guard.insurancePolicy;
+  const resolved = policy ? resolveInsuranceStatus(policy) : 'not_submitted';
+  if (resolved === 'verified') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+  if (resolved === 'pending') return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+  if (resolved === 'rejected' || resolved === 'expired') return 'border-red-500/30 bg-red-500/10 text-red-400';
+  return 'border-brand-border bg-brand-surface-elevated text-brand-text-muted';
 }
 
 /** Guard-facing activation checklist copy for COI. */

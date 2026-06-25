@@ -107,12 +107,17 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           }
         />
         <StepRow
+          done={coi.done}
+          label="2. Certificate of Insurance (COI) — required to work"
+          detail={coi.detail}
+        />
+        <StepRow
           done={guardMeetsLevel1(guard)}
-          label="2. BSIS Guard Card — required to work"
+          label="3. BSIS Guard Card — required to work"
           detail={
             guardMeetsLevel1(guard)
               ? approved
-                ? 'Valid guard card on file — staff can activate your account'
+                ? 'Valid guard card on file — staff can grant marketplace eligibility'
                 : 'Valid guard card on file — staff will verify at activation'
               : checklist.guardCardSubmitted
                 ? approved
@@ -120,11 +125,6 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
                   : 'On file — verified after profile approval'
                 : 'Upload in the Guard Card section of your profile'
           }
-        />
-        <StepRow
-          done={coi.done}
-          label="3. Certificate of Insurance (COI) — required to work"
-          detail={coi.detail}
         />
         <StepRow
           done={guardMeetsPtaUofTraining(guard)}

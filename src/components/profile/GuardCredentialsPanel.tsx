@@ -19,7 +19,7 @@ import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadFiel
 import { GuardPtaUofPanel } from '../guard/GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { GuardCardPanel } from './GuardCardPanel';
-import { GuardInsurancePanel } from '../credentials/GuardInsurancePanel';
+import { GuardCoiItemCard } from './GuardCoiItemCard';
 import { GuardIdItemCard } from './GuardIdItemCard';
 import {
   type GuardIdentityVerificationPayload,
@@ -383,16 +383,6 @@ export function GuardCredentialsPanel({
         </p>
       )}
 
-      {!guard.isStaff && (onSaveInsurance || onReviewInsurance || guard.insurancePolicy) && (
-        <GuardInsurancePanel
-          guard={guard}
-          editing={editing}
-          staffMode={staffMode}
-          onSave={onSaveInsurance}
-          onReview={onReviewInsurance}
-        />
-      )}
-
       {!guard.isStaff && onSubmitIdentityVerification && (
         <>
           <GuardIdItemCard
@@ -403,6 +393,15 @@ export function GuardCredentialsPanel({
             onSubmit={onSubmitIdentityVerification}
           />
           {staffIdReview && <div className="-mt-2">{staffIdReview}</div>}
+          {!guard.isStaff && (onSaveInsurance || onReviewInsurance || guard.insurancePolicy) && (
+            <GuardCoiItemCard
+              guard={guard}
+              editing={editing}
+              staffMode={staffMode}
+              onSave={onSaveInsurance}
+              onReview={onReviewInsurance}
+            />
+          )}
           <GuardCardPanel
             guard={guard}
             editing={editing}

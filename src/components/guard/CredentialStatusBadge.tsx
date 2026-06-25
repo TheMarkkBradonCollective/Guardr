@@ -13,6 +13,13 @@ import {
   getCredentialVerificationBadgeClass,
   getCredentialVerificationLabel,
 } from '../../lib/certStatus';
+import {
+  getCoiCredentialUploadBadgeClass,
+  getCoiCredentialUploadLabel,
+  getCoiCredentialVerificationBadgeClass,
+  getCoiCredentialVerificationLabel,
+  guardHasValidInsurance,
+} from '../../lib/guardInsurance';
 
 function Badge({ label, className }: { label: string; className: string }) {
   return (
@@ -87,6 +94,33 @@ export function IdCredentialStatusBadges({
         <Badge
           label={getIdCredentialVerificationLabel(guard)}
           className={getIdCredentialVerificationBadgeClass(guard)}
+        />
+      )}
+    </div>
+  );
+}
+
+export function CoiCredentialStatusBadges({
+  guard,
+  showUpload = true,
+  showVerification = true,
+}: {
+  guard: SecurityGuard;
+  showUpload?: boolean;
+  showVerification?: boolean;
+}) {
+  const uploadLabel = getCoiCredentialUploadLabel(guard);
+  const verified = guardHasValidInsurance(guard);
+
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-1.5">
+      {showUpload && uploadLabel && !verified && (
+        <Badge label={uploadLabel} className={getCoiCredentialUploadBadgeClass(guard)} />
+      )}
+      {showVerification && (
+        <Badge
+          label={getCoiCredentialVerificationLabel(guard)}
+          className={getCoiCredentialVerificationBadgeClass(guard)}
         />
       )}
     </div>

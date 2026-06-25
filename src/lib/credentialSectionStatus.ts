@@ -8,6 +8,7 @@ import {
   getGovernmentIdUploadStatusSummary,
   getGuardIdVerificationStatus,
 } from './guardIdentityVerification';
+import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
 
 export type CredentialSectionStatusTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
 
@@ -61,6 +62,34 @@ export function getGovernmentIdSectionStatus(
     return { label, tone: 'warning' };
   }
   return { label, tone: 'default' };
+}
+
+export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
+  const uploadStatus = getCoiUploadStatus(guard);
+  const policy = guard.insurancePolicy;
+  const resolved = policy ? resolveInsuranceStatus(policy) : 'not_submitted';
+
+  if (resolved === 'verified') {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (resolved === 'rejected') {
+    return { label: policy?.rejectionReason ?? 'Rejected — resubmit', tone: 'danger' };
+  }
+  if (uploadStatus === 'expired') {
+    return { label: 'On file · expired', tone: 'warning' };
+  }
+  if (resolved === 'pending' || guardInsuranceSubmitted(guard)) {
+    return { label: 'Submitted — pending review', tone: 'warning' };
+  }
+  if (uploadStatus === 'listed') {
+    return staffMode
+      ? { label: 'Listed — COI document required', tone: 'warning' }
+      : { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  }
+  if (uploadStatus === 'on-file') {
+    return { label: 'On file', tone: 'primary' };
+  }
+  return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
 }
 
 export function getAggregateSectionStatus(
