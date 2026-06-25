@@ -85,7 +85,12 @@ function StepRow({
         </p>
         {detail && <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{detail}</p>}
         {actionLabel && onAction && (
-          <button type="button" onClick={onAction} className="app-button-secondary !h-9 !text-xs !px-3 mt-2.5">
+          <button
+            type="button"
+            onClick={onAction}
+            className="app-button-primary !w-full !h-11 !text-sm gap-2 mt-3"
+          >
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
             {actionLabel}
           </button>
         )}
