@@ -9,6 +9,7 @@ import {
   guardMeets32HourBlockListed,
 } from '../../lib/guardQualification';
 import { isGuardAccountActive, isGuardAccountApproved } from '../../lib/accountStatus';
+import { guardHasValidInsurance, guardHasInsuranceSubmitted } from '../../lib/guardInsurance';
 import { WfBadge } from '../ui/wireframe';
 import { AlertTriangle, Check, Circle } from 'lucide-react';
 
@@ -46,15 +47,26 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
       <div className="app-checklist-steps">
         <StepRow
           done={approved || active}
-          label="1. Approve profile — government ID fully on file"
+          label="1. Approve profile — government ID + COI on file"
           detail={
             approved || active
               ? 'Profile approved'
-              : guardHasVerifiedIdForWork(guard)
-                ? 'ID verified — ready to approve'
-                : checklist.idSubmitted
-                  ? 'ID on file — review and approve below'
-                  : 'ID not fully on file'
+              : guardHasVerifiedIdForWork(guard) && guardHasValidInsurance(guard)
+                ? 'ID and COI verified — ready to approve'
+                : [
+                    !guardHasVerifiedIdForWork(guard)
+                      ? checklist.idSubmitted
+                        ? 'ID on file — review below'
+                        : 'ID not fully on file'
+                      : null,
+                    !guardHasValidInsurance(guard)
+                      ? guardHasInsuranceSubmitted(guard)
+                        ? 'COI on file — review below'
+                        : 'COI not on file — required for independent contractors'
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || 'Review ID and COI below'
           }
         />
         <StepRow

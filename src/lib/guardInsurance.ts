@@ -127,14 +127,54 @@ export function guardInsuranceActivationDetail(guard: Pick<SecurityGuard, 'insur
   return { done: false, detail: 'Upload in Credentials — Certificate of Insurance' };
 }
 
+export function guardHasInsuranceSubmitted(guard: Pick<SecurityGuard, 'insurancePolicy'>): boolean {
+  const policy = guard.insurancePolicy;
+  if (!policy) return false;
+  return Boolean(
+    policy.carrier?.trim() &&
+      policy.policyNumber?.trim() &&
+      policy.expiryDate &&
+      policy.documentUrl
+  );
+}
+
+export function buildInsuranceApprovalBlockers(
+  guard: Pick<SecurityGuard, 'insurancePolicy'>
+): string[] {
+  const policy = guard.insurancePolicy;
+  const blockers: string[] = [];
+
+  if (!guardHasInsuranceSubmitted(guard)) {
+    blockers.push(
+      'Certificate of Insurance not on file — general liability COI required for independent contractors'
+    );
+    return blockers;
+  }
+
+  const status = resolveInsuranceStatus(policy!);
+  if (status === 'rejected') {
+    blockers.push(
+      policy?.rejectionReason
+        ? `Insurance COI rejected — ${policy.rejectionReason}`
+        : 'Insurance COI rejected — guard must upload an updated certificate'
+    );
+  } else if (status === 'expired') {
+    blockers.push('Insurance COI has expired — guard must upload a current certificate');
+  } else if (status !== 'verified') {
+    blockers.push('Certificate of Insurance awaiting staff verification');
+  }
+
+  return blockers;
+}
+
 export function guardInsuranceBlockedMessage(guard: Pick<SecurityGuard, 'insurancePolicy'>): string | null {
   const policy = guard.insurancePolicy;
   if (!policy || policy.status === 'not_submitted') {
-    return 'Upload a current Certificate of Insurance (general liability) in Credentials before applying to jobs.';
+    return 'Upload a current Certificate of Insurance (general liability) before your profile can be approved or you can apply to jobs.';
   }
   const status = resolveInsuranceStatus(policy);
   if (status === 'pending') {
-    return 'Your insurance certificate is pending staff review. You can apply once it is verified.';
+    return 'Your insurance certificate is pending staff review. You can be approved once it is verified.';
   }
   if (status === 'rejected') {
     return policy.rejectionReason

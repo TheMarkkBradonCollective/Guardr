@@ -5,6 +5,7 @@ import {
   guardMeetsRateRequirement,
   shouldSkipStaffGuardReview,
 } from './guardMarketplace.ts';
+import { buildInsuranceApprovalBlockers } from './guardInsurance.ts';
 
 const baseGuard = {
   trusted: false,
@@ -26,18 +27,28 @@ const stripeJob = {
 } as SecurityRequest;
 
 describe('shouldSkipStaffGuardReview', () => {
-  it('allows verified insured active guards to self-select jobs', () => {
+  it('skips staff review for verified insured active guards on card jobs', () => {
     assert.equal(
       shouldSkipStaffGuardReview(baseGuard, stripeJob, { verifiedSelfServeEnabled: true }),
       true
     );
   });
 
-  it('still allows trusted guards regardless of insurance', () => {
+  it('requires staff review for cash jobs', () => {
     assert.equal(
-      shouldSkipStaffGuardReview({ ...baseGuard, trusted: true, insurancePolicy: undefined }, stripeJob),
-      true
+      shouldSkipStaffGuardReview(baseGuard, {
+        ...stripeJob,
+        clientCashPaymentRequested: true,
+      }),
+      false
     );
+  });
+});
+
+describe('buildInsuranceApprovalBlockers', () => {
+  it('blocks approval when COI is missing', () => {
+    const blockers = buildInsuranceApprovalBlockers({});
+    assert.ok(blockers.some((b) => b.includes('Certificate of Insurance')));
   });
 });
 

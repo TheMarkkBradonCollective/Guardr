@@ -108,7 +108,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={coi.done}
-          label="2. Certificate of Insurance (COI) — required to work"
+          label="2. Certificate of Insurance (COI) — required for profile approval"
           detail={coi.detail}
         />
         <StepRow

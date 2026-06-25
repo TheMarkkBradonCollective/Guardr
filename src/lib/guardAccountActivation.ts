@@ -19,6 +19,11 @@ import {
   guardIdVerificationSubmissionReady,
 } from './guardIdentityVerification';
 import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPending } from './accountStatus';
+import {
+  buildInsuranceApprovalBlockers,
+  guardHasInsuranceSubmitted,
+  guardHasValidInsurance,
+} from './guardInsurance';
 import { guardCredentialGracePatchForActivation } from './guardCredentialGrace';
 
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
@@ -28,13 +33,15 @@ export interface GuardActivationChecklist {
   idVerified: boolean;
   guardCardSubmitted: boolean;
   guardCardVerified: boolean;
+  insuranceSubmitted: boolean;
+  insuranceVerified: boolean;
   /** Guard-facing — all work requirements met (ID, guard card, PTA/UOF). */
   canActivate: boolean;
-  /** Staff can approve profile (verified ID only). */
+  /** Staff can approve profile (verified ID + verified COI). */
   canStaffApprove: boolean;
   /** Staff can activate account (verified ID + valid guard card). */
   canStaffActivate: boolean;
-  /** Hard blockers preventing profile approval (ID only). */
+  /** Hard blockers preventing profile approval (ID + COI). */
   staffApprovalBlockers: string[];
   /** Hard blockers preventing account activation (ID + guard card). */
   staffActivationBlockers: string[];
@@ -105,7 +112,7 @@ function buildGuardCardBlockers(guard: SecurityGuard, state = 'CA'): string[] {
 }
 
 function buildStaffApprovalBlockers(guard: SecurityGuard): string[] {
-  return buildIdBlockers(guard);
+  return [...buildIdBlockers(guard), ...buildInsuranceApprovalBlockers(guard)];
 }
 
 function buildStaffActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
@@ -119,6 +126,8 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
   const idVerified = guardIdIsVerified(guard);
   const guardCardSubmitted = guardHasGuardCardSubmitted(guard);
   const guardCardVerified = guardHasVerifiedGuardCard(guard, state);
+  const insuranceSubmitted = guardHasInsuranceSubmitted(guard);
+  const insuranceVerified = guardHasValidInsurance(guard);
   const staffApprovalBlockers = buildStaffApprovalBlockers(guard);
   const staffActivationBlockers = buildStaffActivationBlockers(guard, state);
   const missingGraceCredentials = getGuardMissingGraceCredentialLabels(guard, state);
@@ -133,6 +142,8 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
     idVerified,
     guardCardSubmitted,
     guardCardVerified,
+    insuranceSubmitted,
+    insuranceVerified,
     canActivate,
     canStaffApprove,
     canStaffActivate,
@@ -149,7 +160,7 @@ export function guardCanActivateAccount(guard: SecurityGuard, state = 'CA'): boo
   return getGuardActivationChecklist(guard, state).canActivate;
 }
 
-/** Pending → approved: verified government ID only. */
+/** Pending → approved: verified government ID and verified COI. */
 export function guardCanStaffApproveProfile(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountPending(guard)) return false;
@@ -205,11 +216,13 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
       ? `Approved — activate (${checklist.missingGraceCredentials.join(', ')} not listed)`
       : 'Approved — ready to activate';
   }
-  if (checklist.canStaffApprove) return 'ID verified — ready to approve';
+  if (checklist.canStaffApprove) return 'ID and COI verified — ready to approve';
   const parts: string[] = [];
   if (!checklist.idSubmitted) parts.push('ID missing');
   else if (!checklist.idVerified) parts.push('ID unverified');
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
+  if (!checklist.insuranceSubmitted) parts.push('COI missing');
+  else if (!checklist.insuranceVerified) parts.push('COI unverified');
   if (checklist.guardCardSubmitted && !guardMeetsLevel1(guard)) parts.push('Guard card invalid');
   return parts.join(' · ') || 'Awaiting requirements';
 }
