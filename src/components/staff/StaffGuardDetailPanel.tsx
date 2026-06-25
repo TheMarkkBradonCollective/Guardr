@@ -565,7 +565,7 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : 'Approve guard profile'
+                      : 'Approve guard profile — ID, COI, and guard card verified'
                   }
                 >
                   Approve profile
@@ -588,10 +588,9 @@ export function StaffGuardDetailPanel({
                   className="app-button-primary app-btn-sm disabled:opacity-50"
                   title={
                     guardCanStaffActivateAccount(guard)
-                      ? activationChecklist.missingGraceCredentials.length > 0
-                        ? `Optional credentials missing — ${activationChecklist.missingGraceCredentials.join(', ')}; 48h self-serve grace applies`
-                        : 'Grant marketplace eligibility'
-                      : activationChecklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
+                      ? 'Grant marketplace eligibility'
+                      : activationChecklist.staffActivationBlockers.join(' · ') ||
+                        'All required credentials must be verified'
                   }
                 >
                   Grant marketplace eligibility

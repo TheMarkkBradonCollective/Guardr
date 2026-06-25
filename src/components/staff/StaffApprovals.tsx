@@ -925,10 +925,8 @@ export function StaffApprovals({
                       disabled={!canTakeAction}
                       title={
                         canTakeAction
-                          ? checklist.missingGraceCredentials.length > 0
-                            ? `Optional credentials missing — ${checklist.missingGraceCredentials.join(', ')}; 48h self-serve grace applies`
-                            : 'Grant marketplace eligibility'
-                          : approvalBlockers.join(' · ') || 'Valid guard card required'
+                          ? 'Grant marketplace eligibility'
+                          : approvalBlockers.join(' · ') || 'All credentials must be verified before activation'
                       }
                       onClick={() => {
                         void (async () => {
@@ -954,7 +952,7 @@ export function StaffApprovals({
                       confirmedLabel="Approved"
                       tone="success"
                       disabled={!canTakeAction}
-                      disabledHint={approvalBlockers.join(' · ') || 'Verified government ID required'}
+                      disabledHint={approvalBlockers.join(' · ') || 'Government ID, COI, and guard card must be verified'}
                       onConfirm={() => {
                         void (async () => {
                           if (!canTakeAction) return;

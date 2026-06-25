@@ -1,17 +1,17 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
-import { getGuardActivationChecklist, guardHasVerifiedGuardCard } from '../../lib/guardAccountActivation';
-import { getGuardMissingGraceCredentialLabels } from '../../lib/guardMissingCredentials';
+import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import {
   guardHasVerifiedIdForWork,
+  guardMeets32HourBlock,
+  guardMeets32HourBlockVerified,
   guardMeetsLevel1,
-  guardMeetsPtaUofTrainingListed,
-  guardMeets32HourBlockListed,
+  guardMeetsPtaUofTraining,
+  guardMeetsPtaUofTrainingVerified,
 } from '../../lib/guardQualification';
 import { isGuardAccountActive, isGuardAccountApproved } from '../../lib/accountStatus';
 import { guardHasValidInsurance, guardHasInsuranceSubmitted } from '../../lib/guardInsurance';
-import { WfBadge } from '../ui/wireframe';
-import { AlertTriangle, Check, Circle } from 'lucide-react';
+import { Check, Circle } from 'lucide-react';
 
 interface StaffGuardActivationChecklistViewProps {
   guard: SecurityGuard;
@@ -33,76 +33,105 @@ function StepRow({ done, label, detail }: { done: boolean; label: string; detail
   );
 }
 
-/** Staff: approve on verified ID on file, activate on verified guard card on file. */
+function idStepDetail(guard: SecurityGuard, checklist: ReturnType<typeof getGuardActivationChecklist>): string {
+  if (guardHasVerifiedIdForWork(guard)) return 'Verified by staff';
+  if (checklist.idSubmitted) return 'On file — verify below';
+  return 'Not on file';
+}
+
+function coiStepDetail(guard: SecurityGuard, checklist: ReturnType<typeof getGuardActivationChecklist>): string {
+  if (guardHasValidInsurance(guard)) return 'Verified by staff';
+  if (guardHasInsuranceSubmitted(guard) || checklist.insuranceSubmitted) return 'On file — verify below';
+  return 'Not on file';
+}
+
+function guardCardStepDetail(guard: SecurityGuard, checklist: ReturnType<typeof getGuardActivationChecklist>): string {
+  if (checklist.guardCardVerified) return 'Verified by staff';
+  if (guardMeetsLevel1(guard) || checklist.guardCardSubmitted) return 'On file — verify below';
+  return 'Not on file';
+}
+
+function ptaStepDetail(guard: SecurityGuard): string {
+  if (guardMeetsPtaUofTrainingVerified(guard)) return 'Verified by staff';
+  if (guardMeetsPtaUofTraining(guard)) return 'On file — verify below';
+  return 'Not on file';
+}
+
+function block32StepDetail(guard: SecurityGuard): string {
+  if (guardMeets32HourBlockVerified(guard)) return 'Verified by staff';
+  if (guardMeets32HourBlock(guard)) return 'On file — verify below';
+  return 'Not on file';
+}
+
+/** Staff: approve after ID + COI + guard card verified; activate after training certs verified. */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
-  const missingGrace = getGuardMissingGraceCredentialLabels(guard);
   const approved = isGuardAccountApproved(guard);
   const active = isGuardAccountActive(guard);
-  const guardCardReady = guardMeetsLevel1(guard) && guardHasVerifiedGuardCard(guard);
+
+  const coreVerified =
+    guardHasVerifiedIdForWork(guard) && guardHasValidInsurance(guard) && checklist.guardCardVerified;
+  const trainingVerified =
+    guardMeetsPtaUofTrainingVerified(guard) && guardMeets32HourBlockVerified(guard);
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">Profile approval & activation (staff)</p>
+      <p className="text-sm font-semibold">Marketplace eligibility (staff)</p>
       <div className="app-checklist-steps">
         <StepRow
-          done={approved || active}
-          label="1. Approve profile — government ID + COI on file"
-          detail={
-            approved || active
-              ? 'Profile approved'
-              : guardHasVerifiedIdForWork(guard) && guardHasValidInsurance(guard)
-                ? 'ID and COI verified — ready to approve'
-                : [
-                    !guardHasVerifiedIdForWork(guard)
-                      ? checklist.idSubmitted
-                        ? 'ID on file — review below'
-                        : 'ID not fully on file'
-                      : null,
-                    !guardHasValidInsurance(guard)
-                      ? guardHasInsuranceSubmitted(guard)
-                        ? 'COI on file — review below'
-                        : 'COI not on file — required for independent contractors'
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ') || 'Review ID and COI below'
-          }
+          done={guardHasVerifiedIdForWork(guard)}
+          label="1. Government ID — verified by staff"
+          detail={idStepDetail(guard, checklist)}
         />
         <StepRow
-          done={active}
-          label="2. Activate account — BSIS Guard Card on file"
-          detail={
-            active
-              ? 'Account active'
-              : approved
-                ? guardCardReady
-                  ? missingGrace.length > 0
-                    ? 'Guard card verified — optional creds not listed (set grace at activation)'
-                    : 'Guard card verified — ready to fully activate'
-                  : checklist.guardCardSubmitted
-                    ? 'Guard card on file — staff verification required'
-                    : checklist.staffActivationBlockers.find((b) => b.includes('listed'))
-                      ? 'Guard card listed — document photo required'
-                      : 'Guard card not on file yet'
-                : 'Approve profile first'
-          }
+          done={guardHasValidInsurance(guard)}
+          label="2. Certificate of Insurance — verified by staff"
+          detail={coiStepDetail(guard, checklist)}
+        />
+        <StepRow
+          done={checklist.guardCardVerified}
+          label="3. BSIS Guard Card — verified by staff"
+          detail={guardCardStepDetail(guard, checklist)}
+        />
+        <StepRow
+          done={guardMeetsPtaUofTrainingVerified(guard)}
+          label="4. PTA/UOF training — verified by staff"
+          detail={ptaStepDetail(guard)}
+        />
+        <StepRow
+          done={guardMeets32HourBlockVerified(guard)}
+          label="5. 32-hour BSIS block — verified by staff"
+          detail={block32StepDetail(guard)}
         />
       </div>
 
-      {missingGrace.length > 0 && (approved || active) && (
-        <div className="mt-3 pt-3 border-t border-brand-border space-y-2">
-          <p className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-            Not listed — grace required at activation
+      {!active && (
+        <div className="pt-3 mt-3 border-t border-brand-border space-y-2 text-xs">
+          <p className={approved ? 'text-brand-text-muted' : 'text-brand-primary font-medium'}>
+            {approved
+              ? trainingVerified
+                ? 'All credentials verified — ready to grant marketplace eligibility'
+                : 'Verify PTA/UOF and 32-hour training before activation'
+              : coreVerified
+                ? 'ID, COI, and guard card verified — ready to approve profile'
+                : 'Verify government ID, COI, and guard card before profile approval'}
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {!guardMeetsPtaUofTrainingListed(guard) && <WfBadge tone="warning">PTA/UOF not listed</WfBadge>}
-            {!guardMeets32HourBlockListed(guard) && (
-              <WfBadge tone="warning">32-hour block not listed</WfBadge>
-            )}
-          </div>
+          {approved && !trainingVerified && checklist.staffActivationBlockers.length > 0 && (
+            <p className="text-amber-400 leading-relaxed">
+              {checklist.staffActivationBlockers
+                .filter((b) => !checklist.staffApprovalBlockers.includes(b))
+                .join(' · ')}
+            </p>
+          )}
+          {!approved && !coreVerified && checklist.staffApprovalBlockers.length > 0 && (
+            <p className="text-amber-400 leading-relaxed">{checklist.staffApprovalBlockers.join(' · ')}</p>
+          )}
         </div>
+      )}
+      {active && (
+        <p className="text-xs text-emerald-400 font-medium pt-3 mt-3 border-t border-brand-border">
+          Marketplace eligibility granted — account active
+        </p>
       )}
     </div>
   );
