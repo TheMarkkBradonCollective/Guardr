@@ -3,6 +3,10 @@ import { SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardActivationChecklist } from '../../lib/guardAccountActivation';
 import {
+  guardHasValidInsurance,
+  guardInsuranceActivationDetail,
+} from '../../lib/guardInsurance';
+import {
   formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
   guardHasVerifiedIdForWork,
@@ -57,6 +61,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
   const checklist = getGuardActivationChecklist(guard);
   const approved = isGuardAccountApproved(guard);
   const progress = getQualificationProgress(guard);
+  const coi = guardInsuranceActivationDetail(guard);
 
   if (compact) {
     return (
@@ -66,6 +71,9 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         </WfBadge>
         <WfBadge tone={checklist.guardCardVerified ? 'success' : checklist.guardCardSubmitted ? 'warning' : 'default'}>
           Guard card {checklist.guardCardVerified ? 'verified' : checklist.guardCardSubmitted ? 'pending' : 'needed'}
+        </WfBadge>
+        <WfBadge tone={guardHasValidInsurance(guard) ? 'success' : guard.insurancePolicy?.documentUrl ? 'warning' : 'default'}>
+          COI {guardHasValidInsurance(guard) ? 'verified' : guard.insurancePolicy?.documentUrl ? 'pending' : 'needed'}
         </WfBadge>
         <WfBadge tone={guardMeetsPtaUofTraining(guard) ? 'success' : 'default'}>
           PTA/UOF {guardMeetsPtaUofTraining(guard) ? 'on file' : 'needed'}
@@ -81,7 +89,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-base font-black tracking-tight">{approved ? 'Awaiting account activation' : 'Your application'}</p>
+      <p className="text-base font-black tracking-tight">{approved ? 'Awaiting marketplace eligibility' : 'Your application'}</p>
       <div className="app-checklist-steps">
         <StepRow
           done={approved || guardHasVerifiedIdForWork(guard)}
@@ -114,8 +122,13 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
           }
         />
         <StepRow
+          done={coi.done}
+          label="3. Certificate of Insurance (COI) — required to work"
+          detail={coi.detail}
+        />
+        <StepRow
           done={guardMeetsPtaUofTraining(guard)}
-          label="3. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
+          label="4. Power to Arrest & Appropriate Use of Force (8 hr) — required to work"
           detail={
             guardMeetsPtaUofTraining(guard)
               ? 'PTA/UOF training on file'
@@ -124,7 +137,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <StepRow
           done={guardMeets32HourBlock(guard)}
-          label="4. 32-hour BSIS course block — required to work"
+          label="5. 32-hour BSIS course block — required to work"
           detail={
             guardMeets32HourBlock(guard)
               ? progress.thirtyTwoHourRollup
@@ -137,7 +150,7 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
         />
         <OptionalNote
           label="Add extra credentials (optional)"
-          detail="Firearms permits, medical certs, FEMA, and more can be added anytime — not required for profile approval or activation."
+          detail="Firearms permits, medical certs, FEMA, and more can be added anytime — not required for marketplace eligibility."
         />
       </div>
       {!approved && checklist.canStaffApprove && (
@@ -147,8 +160,8 @@ export function GuardActivationChecklistView({ guard, compact = false }: GuardAc
       )}
       {approved && !guardMeetsLevel1(guard) && (
         <p className="text-xs text-brand-primary font-bold pt-3 border-t border-brand-border mt-3 tracking-tight">
-          Upload your guard card and required certs with document photos in Credentials so staff can activate your
-          account.
+          Upload your guard card, COI, and required certs with document photos in Credentials so staff can grant
+          marketplace eligibility.
         </p>
       )}
     </div>

@@ -1,6 +1,13 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
+import { guardHasValidInsurance } from '../../lib/guardInsurance';
+import {
+  guardHasVerifiedIdForWork,
+  guardMeets32HourBlock,
+  guardMeetsLevel1,
+  guardMeetsPtaUofTraining,
+} from '../../lib/guardQualification';
 import { Clock, Check, User } from 'lucide-react';
 import { GuardActivationChecklistView } from '../guard/GuardActivationChecklistView';
 import { AppPageLead, AppScreen } from '../ui/app/AppPrimitives';
@@ -9,6 +16,35 @@ interface AccountPendingScreenProps {
   role: 'guard' | 'client';
   guard?: SecurityGuard | null;
   onOpenProfile: () => void;
+}
+
+function guardMarketplaceEligibilityLead(guard: SecurityGuard, approved: boolean): string {
+  if (!approved) {
+    return 'Upload your government ID, BSIS guard card, Certificate of Insurance (COI), and other credentials. Staff verifies them for marketplace eligibility — not employment onboarding.';
+  }
+
+  const verified: string[] = [];
+  if (guardHasVerifiedIdForWork(guard)) verified.push('government ID');
+  if (guardMeetsLevel1(guard)) verified.push('guard card');
+  if (guardHasValidInsurance(guard)) verified.push('COI');
+
+  const missing: string[] = [];
+  if (!guardHasValidInsurance(guard)) missing.push('Certificate of Insurance (COI)');
+  if (!guardMeetsPtaUofTraining(guard)) missing.push('PTA/UOF training');
+  if (!guardMeets32HourBlock(guard)) missing.push('32-hour BSIS block');
+
+  let message =
+    verified.length > 0
+      ? `Your ${verified.join(', ')} ${verified.length === 1 ? 'is' : 'are'} verified.`
+      : 'Staff is reviewing your credentials.';
+
+  if (missing.length > 0) {
+    message += ` Upload ${missing.join(', ')} and any remaining items so staff can confirm marketplace eligibility.`;
+  } else {
+    message += ' Staff will confirm marketplace eligibility when all requirements are verified.';
+  }
+
+  return message;
 }
 
 export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPendingScreenProps) {
@@ -32,10 +68,8 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
           title={approved ? 'Credentials verified' : 'Eligibility review'}
         />
         <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
-          {isGuard
-            ? approved
-              ? 'Your government ID is verified. Complete remaining credentials so staff can confirm marketplace eligibility.'
-              : 'Upload your credentials. Staff verifies them for marketplace eligibility — not employment onboarding.'
+          {isGuard && guard
+            ? guardMarketplaceEligibilityLead(guard, approved)
             : 'Your account is pending staff approval.'}
         </p>
       </div>

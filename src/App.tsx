@@ -3620,7 +3620,7 @@ export default function App() {
       type: 'support_ticket_status',
       recipientUserId: guardId,
       title: 'Credentials verified',
-      body: 'Your government ID is verified. Complete remaining credentials for marketplace eligibility.',
+      body: 'Your profile credentials are under review. Upload your COI and complete remaining items for marketplace eligibility.',
     });
     await tryGrantMarketplaceEligibility(guardId, approvedGuard);
   };
