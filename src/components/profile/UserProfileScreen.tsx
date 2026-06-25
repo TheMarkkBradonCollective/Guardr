@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Client, Certification, PlatformRole, SecurityGuard, SessionUser } from '../../types';
+import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
@@ -49,6 +49,9 @@ interface UserProfileScreenProps {
   onSubmitIdentityVerification?: (
     payload: GuardIdentityVerificationPayload
   ) => Promise<IdentityVerificationSubmitResult>;
+  onSaveInsurance?: (
+    policy: Partial<GuardInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
 }
 
 export function UserProfileScreen({
@@ -63,6 +66,7 @@ export function UserProfileScreen({
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
+  onSaveInsurance,
 }: UserProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -287,6 +291,7 @@ export function UserProfileScreen({
           onAddExperience={onAddExperience}
           onAddEducation={onAddEducation}
           onSubmitIdentityVerification={onSubmitIdentityVerification}
+          onSaveInsurance={onSaveInsurance}
         />
         </section>
       )}

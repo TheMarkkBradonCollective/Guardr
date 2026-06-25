@@ -3,6 +3,7 @@ import {
   Certification,
   Experience,
   GuardEducation,
+  GuardInsurancePolicy,
   GUARD_SPECIALTY_OPTIONS,
   SecurityGuard,
 } from '../../types';
@@ -49,6 +50,10 @@ interface GuardResumeEditorProps {
   onSubmitIdentityVerification?: (
     payload: import('./GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onSaveInsurance?: (
+    policy: Partial<GuardInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
+  onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
   /** Allow guard card + credential uploads without full profile edit (e.g. pending activation). */
   credentialsEditing?: boolean;
   /** Staff editing a guard profile — enables credential modal edit with staff bypass. */
@@ -67,6 +72,8 @@ export function GuardResumeEditor({
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
+  onSaveInsurance,
+  onReviewInsurance,
   credentialsEditing,
   staffMode = false,
 }: GuardResumeEditorProps) {
@@ -273,6 +280,8 @@ export function GuardResumeEditor({
         onAttachCertificationImage={onAttachCertificationImage}
         onUpdateCertification={onUpdateCertification}
         onSubmitIdentityVerification={onSubmitIdentityVerification}
+        onSaveInsurance={onSaveInsurance}
+        onReviewInsurance={onReviewInsurance}
       />
 
       <AppFormSheet

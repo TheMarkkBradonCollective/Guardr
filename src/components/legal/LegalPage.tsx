@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from '../Logo';
-import { LEGAL_DOCUMENTS, type LegalPageId } from '../../lib/legalContent';
+import { LEGAL_DOCUMENTS, LEGAL_PAGE_SIBLINGS, type LegalPageId } from '../../lib/legalContent';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../../lib/siteConfig';
 
 interface LegalPageProps {
@@ -12,7 +12,9 @@ interface LegalPageProps {
 
 export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
   const doc = LEGAL_DOCUMENTS[page];
-  const sibling: LegalPageId = page === 'terms' ? 'privacy' : 'terms';
+  const siblings = (LEGAL_PAGE_SIBLINGS[page] ?? (page === 'terms' ? ['privacy'] : ['terms'])).filter(
+    (id) => id !== page
+  );
 
   return (
     <div className="page-shell min-h-screen">
@@ -69,16 +71,21 @@ export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
           ))}
         </div>
 
-        {onOpenLegal && (
+        {onOpenLegal && siblings.length > 0 && (
           <p className="mt-12 pt-8 border-t border-brand-border text-sm text-brand-text-muted">
             See also{' '}
-            <button
-              type="button"
-              onClick={() => onOpenLegal(sibling)}
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              {LEGAL_DOCUMENTS[sibling].title}
-            </button>
+            {siblings.map((sibling, index) => (
+              <React.Fragment key={sibling}>
+                {index > 0 && (index === siblings.length - 1 ? ', and ' : ', ')}
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal(sibling)}
+                  className="font-semibold text-brand-primary hover:underline"
+                >
+                  {LEGAL_DOCUMENTS[sibling].title}
+                </button>
+              </React.Fragment>
+            ))}
             .
           </p>
         )}

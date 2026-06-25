@@ -1,5 +1,6 @@
 import { Certification, SecurityGuard } from '../types';
 import { canonicalCatalogId, getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
+import { guardInsuranceBlockedMessage } from './guardInsurance';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
 
@@ -148,6 +149,8 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   ) {
     return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
+  const insuranceBlocked = guardInsuranceBlockedMessage(guard);
+  if (insuranceBlocked) return insuranceBlocked;
   return null;
 }
 

@@ -21,6 +21,7 @@ import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
 import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
 import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
+import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalContent';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import {
   getStoredPassword,
@@ -1090,8 +1091,27 @@ export function AuthPage({
                     ) : (
                       'Terms of Service and Privacy Policy'
                     )}
-                    . I understand {SITE_NAME} is a technology marketplace operated by {LEGAL_ENTITY_NAME},
-                    not a security services provider or employer of guards.
+                    . I understand {SITE_NAME} is a technology platform operated by {LEGAL_ENTITY_NAME},
+                    not a security services provider or employer of guards. I also accept the{' '}
+                    {requiredLegalDocumentsForRole(role)
+                      .filter((id) => id !== 'terms' && id !== 'privacy')
+                      .map((id, index, arr) => (
+                        <React.Fragment key={id}>
+                          {onOpenLegal ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenLegal(id)}
+                              className="font-semibold text-brand-primary hover:underline"
+                            >
+                              {legalDocumentLabel(id)}
+                            </button>
+                          ) : (
+                            legalDocumentLabel(id)
+                          )}
+                          {index < arr.length - 1 ? ' and ' : ''}
+                        </React.Fragment>
+                      ))}
+                    .
                   </span>
                 </label>
               )}
