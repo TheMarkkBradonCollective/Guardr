@@ -106,7 +106,7 @@ export function guardInsuranceActivationDetail(guard: Pick<SecurityGuard, 'insur
   if (!policy || policy.status === 'not_submitted' || !policy.documentUrl?.trim()) {
     return {
       done: false,
-      detail: 'Upload your general liability Certificate of Insurance (COI) in Credentials',
+      detail: 'Upload your general liability Certificate of Insurance (COI)',
     };
   }
   const status = resolveInsuranceStatus(policy);
@@ -118,13 +118,13 @@ export function guardInsuranceActivationDetail(guard: Pick<SecurityGuard, 'insur
       done: false,
       detail: policy.rejectionReason
         ? `Rejected — ${policy.rejectionReason}`
-        : 'Rejected — upload an updated COI in Credentials',
+        : 'Rejected — upload an updated COI',
     };
   }
   if (status === 'expired') {
-    return { done: false, detail: 'Expired — upload a current COI in Credentials' };
+    return { done: false, detail: 'Expired — upload a current COI' };
   }
-  return { done: false, detail: 'Upload in Credentials — Certificate of Insurance' };
+  return { done: false, detail: 'Upload your Certificate of Insurance' };
 }
 
 export function guardHasInsuranceSubmitted(guard: Pick<SecurityGuard, 'insurancePolicy'>): boolean {
@@ -165,6 +165,17 @@ export function buildInsuranceApprovalBlockers(
   }
 
   return blockers;
+}
+
+/** Guards may upload COI until staff verifies or while a submission is pending review. */
+export function guardCoiCanGuardEdit(guard: Pick<SecurityGuard, 'insurancePolicy'>): boolean {
+  if (guardHasValidInsurance(guard)) return false;
+  const policy = guard.insurancePolicy;
+  if (!policy || policy.status === 'not_submitted') return true;
+  const status = resolveInsuranceStatus(policy);
+  if (status === 'rejected' || status === 'expired') return true;
+  if (status === 'pending' && policy.documentUrl?.trim()) return false;
+  return !policy.documentUrl?.trim();
 }
 
 export function guardInsuranceBlockedMessage(guard: Pick<SecurityGuard, 'insurancePolicy'>): string | null {

@@ -691,9 +691,10 @@ export default function App() {
       if (
         guard &&
         !isGuardAccountActive(guard) &&
-        normalizedTab !== 'settings'
+        normalizedTab !== 'settings' &&
+        normalizedTab !== 'activation'
       ) {
-        normalizedTab = 'map';
+        normalizedTab = 'activation';
       }
     }
     setGuardTabState(normalizedTab);
@@ -2212,6 +2213,36 @@ export default function App() {
     verifiedGuards.find((g) => g.id === activeGuardId) ??
     verifiedGuards[0] ??
     ({} as SecurityGuard);
+
+  useEffect(() => {
+    if (loading || currentUser?.role !== 'guard') return;
+    const guard = findGuardProfileForUser(currentUser, verifiedGuards);
+    if (!guard?.id || isGuardAccountActive(guard)) return;
+    if (guardTab === 'settings' || guardTab === 'activation') return;
+    setGuardTabState('activation');
+    syncAppRoute(
+      buildAppRoute({
+        role: 'guard',
+        guardTab: 'activation',
+        jobChatRequestId: jobChatRequestId ?? undefined,
+        openJobChat: openJobChat || undefined,
+        supportTicketId: supportTicketId ?? undefined,
+        supportSection: supportSection,
+        supportMode: supportMode ?? undefined,
+      }),
+      true
+    );
+  }, [
+    loading,
+    currentUser,
+    verifiedGuards,
+    guardTab,
+    jobChatRequestId,
+    openJobChat,
+    supportTicketId,
+    supportSection,
+    supportMode,
+  ]);
 
   // ── Auth ───────────────────────────────────────────────────
   const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {

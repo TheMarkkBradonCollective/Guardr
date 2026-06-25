@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
@@ -44,6 +44,8 @@ interface GuardPtaUofPanelProps {
   onAttachCertificationImage?: (certId: string, imageUrl: string) => Promise<CertImageMutationResult>;
   onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   renderCertActions?: (cert: Certification) => React.ReactNode;
+  /** Activation gate — open upload sheet only (no credential preview list). */
+  activationFormOnly?: { open: boolean; onClose: () => void; catalogId?: string };
 }
 
 function certsForCatalogId(guard: SecurityGuard, catalogId: string): Certification[] {
@@ -74,6 +76,7 @@ export function GuardPtaUofPanel({
   onAttachCertificationImage,
   onUpdateCertification,
   renderCertActions,
+  activationFormOnly,
 }: GuardPtaUofPanelProps) {
   const progress = computePtaUofProgress(guard);
   const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
@@ -111,7 +114,19 @@ export function GuardPtaUofPanel({
     setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
+    activationFormOnly?.onClose();
   };
+
+  useEffect(() => {
+    if (!activationFormOnly?.open) return;
+    const catalogId = activationFormOnly.catalogId ?? ROLLUP_COMPLETION_CATALOG_ID;
+    setAddingCatalogId(catalogId);
+    setIssuer('');
+    setNumber('');
+    setExpiryDate('');
+    setImageUrl(undefined);
+    setFormError('');
+  }, [activationFormOnly?.open, activationFormOnly?.catalogId]);
 
   const startAdd = (catalogId: string) => {
     setAddingCatalogId(catalogId);
@@ -240,6 +255,68 @@ export function GuardPtaUofPanel({
     </div>
   );
 
+  const uploadSheet = (
+    <AppFormSheet
+      open={
+        (activationFormOnly?.open ?? false) ||
+        Boolean(addingCatalogId && (editing || staffMode))
+      }
+      onClose={resetForm}
+      title="Upload PTA/UOF credential"
+      subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+    >
+      {addingCatalogId && (
+        <form onSubmit={submitCert} className="space-y-3">
+          <input
+            className="uber-input w-full"
+            placeholder="Issuing organization (e.g. BSIS, training provider)"
+            value={issuer}
+            onChange={(e) => setIssuer(e.target.value)}
+            required
+          />
+          <input
+            className="uber-input w-full"
+            placeholder="Certificate number"
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
+            required
+          />
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            className="uber-input w-full"
+            aria-label="Expiry date"
+          />
+          <DocumentPhotoUploadField
+            imageUrl={imageUrl}
+            onImageUrlChange={(url) => {
+              setImageUrl(url);
+              setFormError('');
+            }}
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex gap-2">
+            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!imageUrl?.trim()}
+              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+            >
+              Upload credential
+            </button>
+          </div>
+        </form>
+      )}
+    </AppFormSheet>
+  );
+
+  if (activationFormOnly) {
+    return uploadSheet;
+  }
+
   return (
     <section className="app-form-section space-y-4 pb-5 border-b border-brand-border">
       <div>
@@ -322,58 +399,7 @@ export function GuardPtaUofPanel({
         </div>
       )}
 
-      <AppFormSheet
-        open={Boolean(addingCatalogId && (editing || staffMode))}
-        onClose={resetForm}
-        title="Upload PTA/UOF credential"
-        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
-      >
-        {addingCatalogId && (
-          <form onSubmit={submitCert} className="space-y-3">
-            <input
-              className="uber-input w-full"
-              placeholder="Issuing organization (e.g. BSIS, training provider)"
-              value={issuer}
-              onChange={(e) => setIssuer(e.target.value)}
-              required
-            />
-            <input
-              className="uber-input w-full"
-              placeholder="Certificate number"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              required
-            />
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="uber-input w-full"
-              aria-label="Expiry date"
-            />
-            <DocumentPhotoUploadField
-              imageUrl={imageUrl}
-              onImageUrlChange={(url) => {
-                setImageUrl(url);
-                setFormError('');
-              }}
-            />
-            {formError && <p className="text-xs text-red-500">{formError}</p>}
-            <div className="flex gap-2">
-              <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!imageUrl?.trim()}
-                className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
-              >
-                Upload credential
-              </button>
-            </div>
-          </form>
-        )}
-      </AppFormSheet>
+      {uploadSheet}
     </section>
   );
 }

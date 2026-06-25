@@ -2,8 +2,8 @@ import React from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardApplicationProgress } from '../../lib/guardApplicationProgress';
-import { User } from 'lucide-react';
-import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
+import { Clock, Check, User } from 'lucide-react';
+import { GuardActivationUploadChecklist } from '../guard/GuardActivationUploadChecklist';
 import {
   type GuardIdentityVerificationPayload,
   type IdentityVerificationSubmitResult,
@@ -66,12 +66,24 @@ export function AccountPendingScreen({
 
   return (
     <AppScreen className="flex flex-col min-h-full overflow-y-auto overscroll-contain">
-      <div className="px-5 pt-8 pb-6 border-b border-brand-border shrink-0">
-        <h1 className="text-2xl font-black tracking-tight text-brand-text text-left">{title}</h1>
-        <p className="text-sm text-brand-text-muted mt-2 text-left leading-relaxed">{subtitle}</p>
+      <div className="px-5 pt-8 pb-6 border-b border-brand-border shrink-0 text-center">
+        {isGuard && approved ? (
+          <span className="w-14 h-14 rounded-full bg-brand-primary flex items-center justify-center mx-auto mb-5 shadow-[0_4px_20px_color-mix(in_srgb,var(--brand-primary)_30%,transparent)]">
+            <Check className="w-7 h-7 text-white" strokeWidth={2.5} />
+          </span>
+        ) : (
+          <span className="w-14 h-14 rounded-full border-2 border-brand-border bg-brand-bg-sec flex items-center justify-center mx-auto mb-5">
+            <Clock className="w-7 h-7 text-brand-primary" />
+          </span>
+        )}
+        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-primary mb-2">
+          Marketplace eligibility
+        </p>
+        <h1 className="text-2xl font-black tracking-tight text-brand-text">{title}</h1>
+        <p className="text-sm text-brand-text-muted mt-2 leading-relaxed text-left font-medium">{subtitle}</p>
 
         {applicationProgress && (
-          <div className="mt-5">
+          <div className="mt-5 text-left">
             <div className="flex items-center justify-between gap-3 mb-2">
               <span className="text-xs font-semibold text-brand-text-muted">
                 {applicationProgress.requirementLabel}
@@ -99,9 +111,8 @@ export function AccountPendingScreen({
 
       {isGuard && guard && onSubmitIdentityVerification && (
         <div className="px-5 py-6">
-          <GuardCredentialsPanel
+          <GuardActivationUploadChecklist
             guard={guard}
-            editing
             onAddCertification={onAddCertification}
             onDeleteCertification={onDeleteCertification}
             onAttachCertificationImage={onAttachCertificationImage}

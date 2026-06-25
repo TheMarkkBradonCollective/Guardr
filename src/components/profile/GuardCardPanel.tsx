@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, getCertsByCategory } from '../../lib/certCatalog';
 import { getGuardCardSectionStatus } from '../../lib/credentialSectionStatus';
@@ -27,6 +27,8 @@ interface GuardCardPanelProps {
   onUpdateCertification?: (certId: string, payload: CertUpdatePayload) => Promise<CertUpdateResult>;
   staffMode?: boolean;
   renderCertActions?: (cert: Certification) => React.ReactNode;
+  /** Activation gate — open upload sheet only (no credential preview list). */
+  activationFormOnly?: { open: boolean; onClose: () => void };
 }
 
 export function GuardCardPanel({
@@ -38,6 +40,7 @@ export function GuardCardPanel({
   onUpdateCertification,
   staffMode = false,
   renderCertActions,
+  activationFormOnly,
 }: GuardCardPanelProps) {
   const items = useMemo(() => getGuardLicenses(guard), [guard]);
   const catalogOptions = useMemo(() => getCertsByCategory('guard-card'), []);
@@ -64,7 +67,12 @@ export function GuardCardPanel({
     setImageUrl(undefined);
     setFormError('');
     setShowForm(false);
+    activationFormOnly?.onClose();
   };
+
+  useEffect(() => {
+    if (activationFormOnly?.open) setShowForm(true);
+  }, [activationFormOnly?.open]);
 
   const submitGuardCard = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,7 +189,7 @@ export function GuardCardPanel({
 
   const uploadSheet = (
     <AppFormSheet
-      open={showForm && canUpload}
+      open={(activationFormOnly?.open ?? false) || (showForm && canUpload)}
       onClose={resetForm}
       title={items.length ? 'Add another guard card' : 'Add guard card'}
       subtitle="BSIS Guard Card"
@@ -189,6 +197,10 @@ export function GuardCardPanel({
       {uploadForm}
     </AppFormSheet>
   );
+
+  if (activationFormOnly) {
+    return uploadSheet;
+  }
 
   const cardRows = items.map((cert) => (
     <div key={cert.id} className="space-y-2">

@@ -171,13 +171,14 @@ interface GuardDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
 }
 
-export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
+export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
 export type GuardSupportMode = 'compose' | 'report';
 
 const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
+  activation: 'Complete application',
   myJobs: 'Jobs',
   earnings: 'Pay',
   messages: 'Messages',
@@ -268,7 +269,7 @@ export function GuardDashboard({
   const setTab = useCallback(
     (next: GuardTab) => {
       const resolved =
-        !isGuardAccountActive(guard) && !GUARD_ACTIVATION_ALLOWED_TABS.includes(next) ? 'map' : next;
+        !isGuardAccountActive(guard) && !GUARD_ACTIVATION_ALLOWED_TABS.includes(next) ? 'activation' : next;
       if (!isControlled) setStandaloneTab(resolved);
       onTabChange?.(resolved);
     },
@@ -281,8 +282,8 @@ export function GuardDashboard({
 
   useEffect(() => {
     if (isGuardAccountActive(guard)) return;
-    if (!GUARD_ACTIVATION_ALLOWED_TABS.includes(tab) && tab !== 'map') {
-      setTab('map');
+    if (!GUARD_ACTIVATION_ALLOWED_TABS.includes(tab) && tab !== 'activation') {
+      setTab('activation');
     }
   }, [guard, tab, setTab]);
   const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
@@ -1282,7 +1283,7 @@ export function GuardDashboard({
     <AccountPendingScreen
       role="guard"
       guard={guard}
-      onOpenProfile={() => setTab('map')}
+      onOpenProfile={() => setTab('settings')}
       onAddCertification={onAddCertification}
       onDeleteCertification={onDeleteCertification}
       onAttachCertificationImage={onAttachCertificationImage}

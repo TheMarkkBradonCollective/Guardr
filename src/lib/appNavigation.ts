@@ -49,6 +49,7 @@ export interface AppRoute {
 
 const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
   map: 'map',
+  activation: 'activation',
   'my-jobs': 'myJobs',
   jobs: 'myJobs',
   earnings: 'earnings',
@@ -65,6 +66,7 @@ const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
 
 const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   map: 'map',
+  activation: 'activation',
   myJobs: 'my-jobs',
   earnings: 'earnings',
   guardChat: 'messages',
