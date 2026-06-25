@@ -691,7 +691,6 @@ export default function App() {
       if (
         guard &&
         !isGuardAccountActive(guard) &&
-        normalizedTab !== 'profile' &&
         normalizedTab !== 'settings'
       ) {
         normalizedTab = 'map';

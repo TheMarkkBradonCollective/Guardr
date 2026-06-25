@@ -174,7 +174,7 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
 export type GuardSupportMode = 'compose' | 'report';
 
-const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['profile', 'settings'];
+const GUARD_ACTIVATION_ALLOWED_TABS: GuardTab[] = ['settings'];
 
 const GUARD_TAB_TITLES: Record<GuardTab, string> = {
   map: 'Map',
@@ -1279,7 +1279,17 @@ export function GuardDashboard({
   const shellFullBleed = !showPendingGate && tab === 'map';
   const shellVariant = shellFullBleed ? 'dark' : 'default';
   const visibleMainPanel = showPendingGate ? (
-    <AccountPendingScreen role="guard" guard={guard} onOpenProfile={() => setTab('profile')} />
+    <AccountPendingScreen
+      role="guard"
+      guard={guard}
+      onOpenProfile={() => setTab('map')}
+      onAddCertification={onAddCertification}
+      onDeleteCertification={onDeleteCertification}
+      onAttachCertificationImage={onAttachCertificationImage}
+      onUpdateCertification={onUpdateCertification}
+      onSubmitIdentityVerification={onSubmitIdentityVerification}
+      onSaveInsurance={onSaveInsurance}
+    />
   ) : (
     guardMainPanel
   );
@@ -1293,8 +1303,11 @@ export function GuardDashboard({
     );
   }
 
-  const guardScreenTitle =
-    tab === 'messages' && supportMode === 'compose'
+  const guardScreenTitle = showPendingGate
+    ? userStatus === 'approved'
+      ? 'Awaiting activation'
+      : 'Complete application'
+    : tab === 'messages' && supportMode === 'compose'
       ? 'Contact support'
       : tab === 'messages' && supportMode === 'report'
         ? 'File a report'
@@ -1326,6 +1339,7 @@ export function GuardDashboard({
         onOpenProfile: () => setTab('profile'),
         onOpenSettings: () => setTab('settings'),
         onSignOut,
+        hideProfile: accountNeedsActivation,
         active: activeTab === 'profile' || activeTab === 'settings',
         extraLinks: accountNeedsActivation
           ? []

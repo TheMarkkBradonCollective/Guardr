@@ -17,6 +17,8 @@ export interface AccountMenuProps {
   onOpenProfile: () => void;
   onOpenSettings: () => void;
   onSignOut: () => void;
+  /** Hide profile link (e.g. guard activation screen handles uploads inline). */
+  hideProfile?: boolean;
   /** Highlight avatar when profile or settings is the active screen */
   active?: boolean;
   extraLinks?: AccountMenuLink[];
@@ -57,6 +59,7 @@ export function AccountMenu({
   onOpenProfile,
   onOpenSettings,
   onSignOut,
+  hideProfile = false,
   active = false,
   extraLinks = [],
   footer,
@@ -118,15 +121,17 @@ export function AccountMenu({
       </div>
 
       <div className="p-2 border-b border-brand-border space-y-0.5">
-        <button
-          type="button"
-          role="menuitem"
-          onClick={handleProfile}
-          className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
-        >
-          <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
-          Profile
-        </button>
+        {!hideProfile && (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleProfile}
+            className="account-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-brand-text hover:bg-brand-bg-sec transition-colors"
+          >
+            <User className="w-4 h-4 shrink-0 text-brand-primary" strokeWidth={1.75} />
+            Profile
+          </button>
+        )}
         <button
           type="button"
           role="menuitem"
