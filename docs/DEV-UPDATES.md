@@ -1,7 +1,7 @@
 # Guardr Development Notes
 
 **Project start:** Saturday, June 6, 2026  
-**Last updated:** Wednesday, June 24, 2026  
+**Last updated:** Wednesday, June 25, 2026  
 **Total commits:** 673 across 11 active days (19 calendar days)
 
 ---
@@ -357,6 +357,35 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ---
 
+## Wednesday, June 25, 2026 — IC marketplace alignment
+
+**Contributors:** Cursor  
+**PRs:** #295 Marketplace compliance · #297 Reduce control signals
+
+### Marketplace compliance (#295)
+
+| Area | Update |
+|------|--------|
+| Legal | ICA, Client Agreement, Guard Code of Conduct — versioned acceptance at signup |
+| Insurance | COI upload workflow; guards need verified COI to apply to jobs |
+| Per-job agreements | Service agreement recorded when guard is assigned |
+| IC partial | Verified insured guards could skip staff on card jobs; guard minimum rate; auto payout scheduling |
+
+### Reduce employer-like control signals (#297)
+
+| Task | Change |
+|------|--------|
+| **3.7 Staff assignment** | Guards self-select — apply directly to client; staff placement dispute/safety only |
+| **3.8 Spot checks** | Removed platform-wide (no on-site supervision) |
+| **3.9 Payout** | Card/Stripe only; auto-release ~48h after completion; staff manual release on dispute hold only |
+| **3.10 Activation** | Reframed as **marketplace eligibility** — staff still verify credentials; no auto-verify |
+| **3.11 Grace period** | 48h self-serve for optional PTA/32-hr; automated lockout on expiry |
+| **Cash** | Disabled platform-wide |
+
+**Docs:** `docs/guardr-general-guide.md` updated with **IC marketplace model** section. Visible in-app under **General guide** and **Dev notes**.
+
+---
+
 ## Summary at a glance
 
 | Date | Commits | Main themes |
@@ -373,6 +402,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Jun 22** | 163 | ID verification, approvals, production polish, site briefings, bottom sheets |
 | **Jun 23** | 227 | Responsive Uber overhaul, overtime/disputes, messenger redesign, workflow guide |
 | **Jun 24** | 25 | Favourites, direct job requests, notifications, guard filtering |
+| **Jun 25** | — | IC marketplace compliance, control-signal reduction, guide/dev notes update |
 
 ---
 
@@ -387,6 +417,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 7. **Jun 22** — ID verification, profile approval flow, production-ready polish
 8. **Jun 23** — Full responsive overhaul; overtime/disputes; messenger v2; workflow guide
 9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
+10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, no cash/spot checks, auto Stripe payout, marketplace eligibility framing
 
 ---
 

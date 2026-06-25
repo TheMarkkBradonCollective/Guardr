@@ -1,14 +1,16 @@
 # Guardr — General Guide (Start to Finish)
 
-_Last updated: June 2026_
+_Last updated: June 25, 2026_
 
-Guardr connects **clients** who need security coverage with **licensed guards** through a marketplace operated by Guardr staff. This general guide explains the complete process, including which page to open, where the action appears, what button or slider to use, and what status changes after each step.
+Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
+
+This general guide explains the complete process, including which page to open, where the action appears, what button or slider to use, and what status changes after each step.
 
 Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
 - **Guards** complete onboarding, apply for work, clock in and out, submit audits/reports, and collect pay.
-- **Staff** approve accounts and jobs, manage assignments, monitor live operations, handle money, and resolve support or safety issues.
+- **Staff** verify credentials, approve job listings, monitor operations, handle disputes, and resolve support or safety issues.
 
 ### Where to open this guide in the app
 
@@ -24,7 +26,41 @@ Use it as the operating manual for the whole app:
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **General guide** |
 | **Guard** | **Map**, **My jobs**, **Pay**, **Messages**, plus account menu pages like **Profile** and **General guide** |
-| **Staff** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Staff**, **Messages**, **Payments**, **Incidents**, **Disputes**, **Analytics**, **General guide**, **Settings** |
+| **Staff** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Staff**, **Messages**, **Payments**, **Incidents**, **Disputes**, **Analytics**, **General guide**, **Dev notes**, **Settings** |
+
+---
+
+## IC marketplace model (June 2026)
+
+Guardr is positioned as a **California-aligned independent contractor technology marketplace**. The platform verifies that guards meet credential requirements; it does not dispatch, supervise, or employ guards.
+
+### What Guardr staff do
+
+| Staff role | Purpose |
+|------------|---------|
+| **Verify guard credentials** | Government ID, BSIS guard card, COI (insurance), and other certs — staff review uploads and mark verified or rejected. This is marketplace **eligibility**, not employment onboarding. |
+| **Approve job listings** | Client-submitted jobs go live after staff review (trusted clients may skip this queue). |
+| **Resolve disputes & safety** | Overtime disputes, incidents, support tickets, and exceptional guard placement when needed. |
+| **Monitor operations** | Live map, self-audit flags, messaging — without on-site supervision. |
+
+### What changed to reduce employer-like control
+
+| Area | Old behavior | Current behavior |
+|------|--------------|------------------|
+| **Job assignment** | Staff reviewed applicants and sent a guard to the client | Guards **self-select** — apply directly; client approves or declines |
+| **Staff placement** | Routine dispatch | **Dispute/safety only** — staff confirm before placing a guard |
+| **Spot checks** | Staff uploaded presence photos; clients confirmed | **Removed** — no platform on-site supervision |
+| **Payments** | Card and cash options; staff released most payouts manually | **Card/Stripe only**; auto-release to Stripe Connect ~48h after completion |
+| **Staff payout override** | Routine manual release | **Dispute hold only** — e.g. overtime under dispute |
+| **Account activation** | Staff "hire/activate" language | **Marketplace eligibility** — staff verify credentials; system grants active status when verified |
+| **Grace period (PTA/32-hr)** | Staff picked grace hours at activation | **48h self-serve** — auto-applied; automated lockout if credentials not uploaded |
+
+### What did not change
+
+- **Staff still verify every credential** — nothing auto-verifies on upload.
+- **Guards cannot work until staff-verified and marketplace-eligible** (active status).
+- **Clients still approve guards** before a job becomes **Accepted**.
+- **Self-audit photos** at shift start remain required (guard-submitted, not staff spot-checks).
 
 ---
 
@@ -45,16 +81,15 @@ Every job offer moves through these statuses:
 ### Standard marketplace sequence
 
 1. Client posts job.
-2. Staff approves listing.
-3. Client pays by card or requests cash approval.
-4. Guard applies.
-5. Staff sends the recommended guard to the client.
-6. Client approves the guard.
-7. Guard arrives, starts the shift, and submits self-audit.
-8. Client confirms photos and watches live coverage.
-9. Guard ends the shift.
-10. Staff releases payout or records cash settlement.
-11. Client rates the guard and reviews any reports.
+2. Staff approves listing (unless client is trusted).
+3. Client pays by card (Stripe).
+4. Guard applies — application goes **directly to the client**.
+5. Client approves or declines the guard.
+6. Guard arrives, starts the shift, and submits self-audit.
+7. Client confirms self-audit photos and watches live coverage.
+8. Guard ends the shift.
+9. Platform auto-releases Stripe payout after the completion delay (staff override only on dispute hold).
+10. Client rates the guard and reviews any reports.
 
 ### Direct request sequence
 
@@ -79,15 +114,11 @@ CLIENT                         STAFF                         GUARD
   |                              | Approve listing             |
   |<-----------------------------|                             |
   | Status: Open                 |                             |
-  | Pay Now / Pay in Cash        |                             |
+  | Pay Now (Stripe)             |                             |
   |----------------------------->|                             |
-  |                              | Cash approval if needed      |
-  |                              |                             |
   |                              |                             | Map: apply for job
-  |                              |<----------------------------|
-  |                              | Review applications          |
-  |                              | Send to client               |
-  |<-----------------------------|                             |
+  |                              |                             |---------------------------->|
+  |<-----------------------------------------------------------| Application to client
   | Approve guard / Decline      |                             |
   |----------------------------->|                             |
   | Status: Accepted             |---------------------------->|
@@ -100,7 +131,7 @@ CLIENT                         STAFF                         GUARD
   |<-----------------------------------------------------------|
   | Status: Completed            |                             |
   | Review/rate/report           |                             |
-  |                              | Release payout / cash close  |
+  |                              | Auto Stripe payout (~48h)    |
 ```
 
 #### Direct request chart
@@ -129,27 +160,18 @@ CLIENT                         GUARD                         STAFF
 ```
 CLIENT PAYMENT
   |
-  |-- Card enabled
-  |     -> Client Jobs page: Pay Now
-  |     -> Stripe checkout
-  |     -> Staff Payments: release guard payout after completion
-  |
-  |-- Cash enabled
-        -> Client Jobs page: Pay in Cash
-        -> Staff Payments: Approve cash payment after cash is received
-        -> Job can continue based on cash approval/payment state
-        -> Staff marks guard paid cash or closes cash payout
+  |-- Card (Stripe) — platform default
+        -> Client Jobs page: Pay Now
+        -> Stripe checkout
+        -> Job runs after payment clears
 
 GUARD PAYOUT
   |
-  |-- Stripe payout
-  |     -> Guard Pay page: Connect bank account
-  |     -> Staff Payments: release payout
-  |     -> Guard Pay page: Send to my bank when available
-  |
-  |-- Cash payout
-        -> Guard Pay page: Request cash pickup
-        -> Staff Payments: complete payout invoice / mark paid cash
+  |-- Stripe Connect (automatic)
+        -> Guard Pay page: Connect bank account
+        -> Platform auto-releases payout ~48h after shift completion
+        -> Guard Pay page: Send to my bank when available
+        -> Staff Payments: manual release ONLY when payout is on dispute hold
 ```
 
 #### Exception and escalation chart
@@ -280,37 +302,27 @@ Payment appears on the job card in **Jobs** after the listing is ready for payme
 
 1. Open **Jobs**.
 2. Expand or open the job card.
-3. Select the available payment action:
-   - **Pay Now** / **Pay for this job** for card payment.
-   - **Pay in Cash** to request cash payment.
-4. For card payment:
-   - Complete the Stripe checkout.
-   - Return to **Jobs** to confirm the payment state.
-5. For cash payment:
-   - Confirm the **Pay in cash?** dialog.
-   - Select **Request cash payment**.
-   - Wait for staff to approve once cash is received.
-   - The job may show **Cash payment pending approval** while staff review it.
+3. Select **Pay Now** / **Pay for this job** to complete Stripe checkout.
+4. Return to **Jobs** to confirm the payment state.
 
 Payment unlocks guard assignment for marketplace jobs when platform settings require payment before hiring.
 
-### 6. Approve or decline the recommended guard
+### 6. Approve or decline guard applications
 
-This step applies to marketplace jobs after guards apply and staff recommend one.
+This step applies to marketplace jobs after guards apply.
 
 1. Open **Jobs**.
 2. Open the **Open** job card.
-3. Look for the guard approval area, often labeled **Approve your guard** or a message like "Waiting for your approval on the guard Guardr recommended."
-4. Review the recommended guard.
+3. Look for the guard application area — e.g. **Guard application** or a message that a guard applied for your job.
+4. Review the applying guard.
 5. Choose one:
    - **Approve guard** assigns that guard and moves the job to **Accepted**.
-   - **Decline guard** removes that recommendation and keeps the job open for another applicant.
+   - **Decline guard** removes that application and keeps the job open for other applicants.
 
 What happened before you see this:
 
-- Guards applied from their **Map**.
-- Staff reviewed applicants.
-- Staff selected **Send to client** for the best fit.
+- A qualified guard applied from their **Map**.
+- The application was sent **directly to you** for approval (no staff picks the guard).
 
 ### 7. Watch accepted jobs and live coverage
 
@@ -328,7 +340,7 @@ The guard will:
 3. Slide **Slide to start shift**.
 4. Complete self-audit photos or skip self-audit with a staff-visible flag.
 
-### 8. Confirm self-audit and spot-check photos
+### 8. Confirm self-audit photos
 
 Self-audit photos document that the guard arrived prepared.
 
@@ -337,7 +349,6 @@ Self-audit photos document that the guard arrived prepared.
 3. Find the **Guard self-audit** / **Guard self-audit photos** section.
 4. Review the selfie, uniform, and shoes photos.
 5. Select **Confirm self-audit photos** when the photos are acceptable.
-6. If staff uploaded spot-check photos, review and confirm those too.
 
 If the guard skipped the audit:
 
@@ -370,10 +381,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 4. Choose one:
    - **Approve overtime $X** if the charge is valid.
    - **Dispute charge** if the overtime is incorrect.
-5. If approved, pay the overtime:
-   - **Pay $X by card** when card payment is available.
-   - **Pay in cash** to request cash approval.
-6. If cash is requested, wait for staff approval. The job may show **Cash overtime payment pending staff approval**.
+5. If approved, pay the overtime with **Pay $X by card** (Stripe).
 
 ### 11. Job completion, rating, and review
 
@@ -382,7 +390,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 3. Open **Jobs**.
 4. Review any reports, photos, overtime, and payment notices.
 5. Use the job detail rating action to rate the guard when available.
-6. Staff then release the guard payout or record cash settlement from **Payments**.
+6. Guard payout auto-releases to Stripe Connect after the platform delay unless a dispute holds it.
 
 ---
 
@@ -394,39 +402,40 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 |------|-------------|----------------|
 | **Map** | Bottom navigation | Find open jobs, claim direct requests, and run active shifts |
 | **My jobs** | Bottom navigation | Upcoming assignments, past work, overtime review |
-| **Pay** | Bottom navigation | Stripe setup, earnings, payouts, cash pickup |
+| **Pay** | Bottom navigation | Stripe setup, earnings, and bank payouts |
 | **Messages** | Bottom navigation | Job chats, support tickets, support reports |
 | **Profile** | Account menu | Personal profile, credentials, ID, resume, certifications |
 | **General guide** | Account menu | This guide |
 
-### 1. Sign up, upload credentials, and get activated
+### 1. Sign up, upload credentials, and become marketplace-eligible
 
 1. Create a **Guard** account during sign-up.
 2. Open **Profile** from the account menu.
 3. Complete your profile and required onboarding:
    - Government ID / identity verification.
    - BSIS guard card.
+   - Certificate of Insurance (COI) — general liability.
    - Power to Arrest / Appropriate Use of Force training.
    - Required certification uploads.
    - Resume, experience, education, and profile information.
 4. While your account is not active:
-   - You may see **Pending approval** or **Profile approved** gating screens.
+   - You may see **Eligibility review** or **Credentials verified** gating screens.
    - **Map**, **My jobs**, and **Pay** may be blocked.
    - **Profile**, **Messages**, and **General guide** remain available.
-5. Staff verify your profile from **Approvals → Profile approval** and credentials from **Approvals → Guard credentials**.
-6. Staff approve your profile and activate the account when requirements are met.
+5. **Guardr staff verify your credentials** — government ID, guard card, COI, and other uploads. Nothing auto-verifies.
+6. When staff have verified required credentials, you receive **marketplace eligibility** (active status) and can apply to jobs.
 
-Grace period:
+Grace period (optional training):
 
-- Staff may allow a temporary grace period for optional training.
-- If the grace period expires before requirements are complete, the account can return to inactive until credentials are finished.
+- If PTA/UOF or 32-hour block is not yet on file when you become eligible, a **48-hour grace window** applies automatically.
+- Upload missing credentials before the grace expires, or marketplace access may be restricted until they are on file.
 
 ### 2. Set up pay
 
 1. Open **Pay**.
-2. For card payouts, select **Connect bank account** and complete Stripe setup.
-3. For cash jobs, use **Pay** to track cash earnings and cash pickup status.
-4. After a cash job is ready, use **Request cash pickup** when available. This sends a pickup invoice/request to staff **Payments**.
+2. Select **Connect bank account** and complete Stripe Connect setup.
+3. After completed jobs, payouts auto-release to Stripe Connect after the platform delay (~48 hours).
+4. Use **Send to my bank** when earnings are available.
 
 ### 3. Find marketplace jobs
 
@@ -439,13 +448,12 @@ Grace period:
    - Requirements.
    - Instructions or operational briefing when available.
 4. If you qualify and want the job, use **Slide to apply for job**.
-5. Wait while staff review applications.
+5. Wait for the **client** to approve or decline your application.
 
 What happens after applying:
 
-- Staff see your application in **Approvals → Guard applications** and **Jobs**.
-- Staff may select **Send to client**.
-- The client then sees **Approve guard** or **Decline guard**.
+- Your application goes **directly to the client**.
+- The client sees **Approve guard** or **Decline guard** on **Jobs**.
 - If the client approves, the job becomes **Accepted**.
 
 ### 4. Claim direct requests
@@ -539,16 +547,12 @@ Late clock-out:
 2. Review earnings by job.
 3. For Stripe payouts:
    - Make sure your bank account is connected.
-   - Use **Send to my bank** when payout is available.
-4. For cash payouts:
-   - Use **Request cash pickup** when the job is ready to collect.
-   - Staff handle the cash payout from **Payments**.
+   - Use **Send to my bank** when payout is available (after auto-release delay).
 
 Payouts depend on:
 
 - Client payment status.
-- Staff payout release.
-- Whether the job was paid by card or cash.
+- Auto Stripe payout schedule (~48h after completion).
 - Whether overtime or disputes are still open.
 
 ### 11. Get help or message people
@@ -572,10 +576,10 @@ Payouts depend on:
 | **Jobs** | Left sidebar | Job listings, approvals, assignment, audit uploads, operational status |
 | **Approvals** | Left sidebar | Job offers, guard applications, credentials, profile/account approval |
 | **Clients** | Left sidebar | Client roster and client profile moderation |
-| **Guards** | Left sidebar | Guard roster, guard details, approval and activation controls |
+| **Guards** | Left sidebar | Guard roster, credential verification, marketplace eligibility |
 | **Staff** | Left sidebar | Staff/team management |
 | **Messages** | Left sidebar | Staff chat, job chats, support tickets |
-| **Payments** | Left sidebar, finance roles only | Cash approvals, card payouts, payout release, deposits, overtime payments |
+| **Payments** | Left sidebar, finance roles only | Stripe payouts, dispute holds, overtime payments |
 | **Incidents** | Left sidebar | Client incident and field report review |
 | **Disputes** | Left sidebar | Payment/overtime dispute handling |
 | **Analytics** | Left sidebar | Operational and financial metrics |
@@ -608,17 +612,17 @@ Client accounts can also be reviewed from:
 - **Clients** roster.
 - Client detail panel.
 
-### 3. Approve guard profiles, credentials, and activation
+### 3. Verify guard credentials and grant marketplace eligibility
 
-Guard approval can require both profile approval and activation.
+Guard onboarding is **credential verification for marketplace eligibility** — not employment hiring.
 
-1. Open **Approvals**.
-2. Use **Profile approval** for guard profile review.
-3. Review ID, profile details, guard card status, and onboarding readiness.
-4. Use **Slide to approve profile** when the profile is acceptable.
-5. Use **Guard credentials** to verify license/certification uploads.
-6. Approve or reject credential uploads as needed.
-7. Activate the guard account when requirements are complete.
+1. Open **Approvals** or **Guards**.
+2. Use **Profile approval** / guard detail for ID and profile review.
+3. Review government ID photos, profile details, guard card, and COI.
+4. Verify credential uploads in **Guard credentials** — approve or reject each document.
+5. When ID and guard card are staff-verified, grant **marketplace eligibility** (active status).
+
+Staff still verify every upload. The platform does not auto-verify credentials.
 
 Guard records can also be managed from:
 
@@ -652,11 +656,9 @@ Common actions:
 - Approve pending listings.
 - Edit title, address, state, schedule, or operational details.
 - Use **Use current location** when setting coordinates from the site.
-- Assign guards.
-- Review applicants.
+- Place a guard only for **dispute/safety** exceptions (confirmation required).
 - Upload missing self-audit photos.
-- Upload spot-check photos.
-- Monitor **No Self Audit** and **No Spot Check** flags.
+- Monitor **No Self Audit** flags.
 
 Recommended flow:
 
@@ -666,25 +668,24 @@ Recommended flow:
 4. Open the job actions.
 5. Complete the required operational action.
 
-### 6. Handle guard applications
+### 6. Guard applications (client approval)
 
 Marketplace application flow:
 
 1. A guard uses **Slide to apply for job** from guard **Map**.
-2. Staff open **Approvals → Guard applications** or the job in **Jobs**.
-3. Review all applicants.
-4. Pick the best fit.
-5. Select **Send to client**.
-6. The client sees **Approve guard** / **Decline guard** in **Jobs**.
-7. If the client approves, the job becomes **Accepted**.
-8. If staff or client decline an applicant, that guard is removed from consideration and the job stays **Open**.
+2. The application goes **directly to the client** on **Jobs**.
+3. The client selects **Approve guard** or **Decline guard**.
+4. If approved, the job becomes **Accepted**.
+5. Staff do **not** routinely pick guards from an applicant queue.
+
+**Exception — staff placement:** Directors may place a guard on a job only for dispute resolution or safety. The app requires confirmation that this is an exception.
 
 Direct request flow:
 
 1. Client chooses a guard from **Guards** and sends a direct request.
 2. Guard uses **Slide to claim job**.
-3. Staff monitor the job from **Jobs** and payment from **Payments** as configured.
-4. Direct requests do not need the same staff **Send to client** recommendation step because the client already chose the guard.
+3. Staff monitor the job from **Jobs** and payment from **Payments** as needed.
+4. Direct requests skip the client application step because the client already chose the guard.
 
 ### 7. Monitor active shifts
 
@@ -696,8 +697,7 @@ Direct request flow:
    - **Completed** after clock-out.
 4. Watch audit flags:
    - **No Self Audit** means the guard skipped the required self-audit.
-   - **No Spot Check** means spot-check evidence may still be missing.
-5. If needed, upload self-audit or spot-check photos from **Jobs**.
+5. If needed, upload self-audit photos from **Jobs**.
 6. Use **Messages** for job chat or support follow-up.
 
 ### 8. Review incidents and reports
@@ -725,27 +725,21 @@ Direct request flow:
 
 Open **Payments** for:
 
-- Cash payment requests.
-- Client cash received confirmation.
-- Stripe/card payout release.
-- Guard cash payout marking.
+- Monitoring Stripe payout status.
+- **Dispute-hold overrides** — manual payout release only when a job is on dispute hold.
 - Overtime payment and payout.
-- Platform fee collection.
-- Manual deposit tracking.
+- Refunds and platform fee collection.
 
 Common payment situations:
 
 | Situation | Where | Staff action |
 |-----------|-------|--------------|
-| Client requested cash for a job | **Payments** | **Approve cash payment** or **Decline request** |
-| Client cash was received | **Payments** | Mark the client paid cash and record required deposit/fee state |
-| Job completed and card funds are ready | **Payments** | Release guard payout |
-| Guard is paid cash | **Payments** | Mark guard paid cash |
-| Overtime cash request is pending | **Payments** | **Approve overtime cash** |
-| Overtime payout is ready | **Payments** | Release overtime payout or mark overtime guard paid cash |
-| Platform fee only is due | **Payments** | Mark platform fee paid or deposit manually |
+| Job completed, card paid | **Payments** | Usually **no action** — auto Stripe payout after ~48h |
+| Overtime under dispute (payout held) | **Payments** | Resolve dispute, then release payout if needed |
+| Overtime awaiting client payment | **Payments** | Monitor until client pays |
+| Refund needed | **Payments** | Process refund per policy |
 
-Card checkout may show **Pay guard $X with card** when the platform fee is already collected and the remaining card deposit funds the guard payout.
+Card checkout uses Stripe; cash payments are no longer supported on the platform.
 
 ### 11. Handle overtime and disputes
 
@@ -762,13 +756,13 @@ Overtime starts when late clock-out creates an extra amount.
 People:
 
 - Open **Clients** to review client accounts and approve client details.
-- Open **Guards** to review guard profiles, approve profiles, activate accounts, and inspect credentials.
+- Open **Guards** to verify credentials, grant marketplace eligibility, and inspect profiles.
 - Open **Staff** to manage internal staff records.
 
 Settings:
 
 1. Open **Settings** if your role has access.
-2. Configure cash/card payment modes.
+2. Payment mode is **card (Stripe) only**.
 3. Configure platform fees.
 4. Configure staff onboarding and role controls where available.
 
@@ -786,10 +780,8 @@ Client opens Home or Jobs
     → Client posts job with Slide to post job offer
     → Staff opens Approvals → Job offers
     → Staff approves listing (job becomes Open)
-    → Client opens Jobs and pays by card or requests cash
+    → Client opens Jobs and pays by card (Stripe)
     → Guard opens Map and slides to apply
-    → Staff opens Approvals → Guard applications
-    → Staff sends best applicant to client
     → Client opens Jobs and selects Approve guard
     → Job becomes Accepted
     → Guard opens Map and slides to arrive on site
@@ -800,7 +792,7 @@ Client opens Home or Jobs
     → Guard slides to end shift
     → Job becomes Completed
     → Client reviews reports, overtime, and rating
-    → Staff opens Payments to release payout or record cash settlement
+    → Platform auto-releases Stripe payout (~48h); staff override only on dispute hold
 ```
 
 ---
@@ -814,16 +806,16 @@ Client opens Home or Jobs
 | Post marketplace job | **Home → Post job offer** or **Jobs → + Post offer** | — | **Approvals → Job offers** |
 | Direct guard request | **Guards → guard profile → Send assignment request to [name]** | **Map → Slide to claim job** | **Jobs** |
 | Add location | Posting flow → **Use current location** | — | **Jobs → Use current location** when editing location |
-| Pay for job | **Jobs → Pay Now** or **Pay in Cash** | — | **Payments → Approve cash payment** or release/card controls |
-| Apply for job | — | **Map → Slide to apply for job** | **Approvals → Guard applications** |
-| Recommend guard | **Jobs → Approve guard** / **Decline guard** | — | **Send to client** / **Decline** |
+| Pay for job | **Jobs → Pay Now** | — | — |
+| Apply for job | — | **Map → Slide to apply for job** | — |
+| Approve guard | **Jobs → Approve guard** / **Decline guard** | — | Dispute/safety placement only |
 | Start shift | Watch from **Live coverage** / **Jobs** | **Map → Slide to arrive on site → Slide to start shift** | **Map** / **Jobs** |
 | Self-audit | **Jobs** or **Live coverage → Confirm self-audit photos** | Self-audit modal after start shift | **Jobs → Upload self-audit photos** if missing |
 | On-duty messages | **Messages** / job chat | **Message client** / **Messages** | **Messages** |
 | Incident/activity reports | **Home → Reports** to review | **Report incident** / **Activity report** | **Incidents** |
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
 | Overtime | **Jobs → Approve overtime $X** or **Dispute charge** | **My jobs → Approve overtime** | **Payments** / **Disputes** |
-| Payout | — | **Pay → Send to my bank** or **Request cash pickup** | **Payments → release payout / mark paid cash** |
+| Payout | — | **Pay → Send to my bank** | **Payments** — dispute-hold override only |
 | Support | **Messages → Contact support** or **File a report** | **Messages → Contact support** or **File a report** | **Messages** support inbox |
 
 ---
@@ -842,8 +834,9 @@ The credentials panel contains all license and certification uploads for a guard
 
 | Section | What it is |
 |---------|------------|
-| **Government ID** | State-issued photo ID — required before profile approval. Upload a photo of the front and back of the ID, plus state, number, and expiration date. |
-| **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo of the card. Staff verify the card before activation. |
+| **Government ID** | State-issued photo ID — required before marketplace eligibility. Upload front, back, live selfie, plus state, number, and expiration. **Staff verify** before the guard can work. |
+| **BSIS Guard Card** | California guard license — required to accept field jobs. Upload a document photo. **Staff verify** the card before eligibility is granted. |
+| **Certificate of Insurance (COI)** | General liability insurance — required to apply to jobs. Upload your COI. **Staff verify** before the guard can apply. |
 | **Power to Arrest & Appropriate Use of Force (PTA/UOF)** | 8-hour required training — required to accept field jobs. Upload your PTA and UOF completion certificates. Some jurisdictions package them together. |
 | **32-Hour BSIS Course Block** | Required training block — required to accept field jobs. Upload all 9 individual course certificates, or a single 32-hour completion certificate if you have one. |
 | **8-Hour BSIS Refresher** | Separate from the 32-hour block — upload when applicable for guard card renewals. Not required for initial activation. |
@@ -860,20 +853,21 @@ The credentials panel contains all license and certification uploads for a guard
 - Credentials show a status: **Pending review**, **Verified**, **Rejected**, or **Expired**.
 - If staff request a resubmit, the item shows a resubmit-requested notice. Open the item and use **Edit** to re-upload.
 
-**Guard activation requirements:**
+**Marketplace eligibility requirements:**
 
-All four items below must be on file before a guard account can be activated:
+Staff must **verify** (not auto-approve) these before a guard becomes active:
 
-1. **Government ID** — fully on file with photos and details, verified by staff.
-2. **BSIS Guard Card** — fully on file with a document photo, verified by staff.
-3. **PTA/UOF training** — completion certificate(s) on file.
-4. **32-hour BSIS course block** — all 9 individual certificates, or one 32-hour completion certificate.
+1. **Government ID** — fully on file with photos and details, staff-verified.
+2. **BSIS Guard Card** — document photo on file, staff-verified.
+3. **Certificate of Insurance** — current COI on file, staff-verified.
+4. **PTA/UOF training** — on file (or within 48h grace window).
+5. **32-hour BSIS course block** — on file (or within 48h grace window).
 
-Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time and are not required for activation.
+Optional credentials (firearms permits, medical certs, FEMA, and others) can be added at any time.
 
-**Staff: grace period**
+**Grace period (48 hours):**
 
-When activating a guard who has not yet uploaded PTA/UOF or the 32-hour block, staff can set a grace period. The guard can continue working while they gather the remaining documents. If the grace period expires before the credentials are uploaded, the account may return to inactive.
+If PTA/UOF or the 32-hour block is not on file when staff grant marketplace eligibility, a **48-hour grace window** applies automatically. The guard can work during grace. If grace expires before credentials are uploaded, marketplace access may be restricted until they are on file.
 
 ---
 
@@ -881,13 +875,13 @@ When activating a guard who has not yet uploaded PTA/UOF or the 32-hour block, s
 
 **Where:** Account menu → **Profile** → guard status card
 
-This panel shows the guard's current activation level and which of the four required credentials are on file.
+This panel shows marketplace eligibility status and which credentials are on file.
 
 | Status | Meaning |
 |--------|---------|
-| **Inactive** | Account is not yet activated — missing one or more required credentials or staff approval. |
-| **Pending** | Credentials submitted, profile approved, awaiting activation. |
-| **Active** | All four requirements are on file, staff-verified, and the account is activated for field jobs. |
+| **Inactive** | Not yet marketplace-eligible — missing credentials or staff verification. |
+| **Pending** | Credentials submitted — awaiting staff verification. |
+| **Active** | Staff-verified and marketplace-eligible — can apply to and work jobs. |
 
 The checklist shows each requirement as met, on file, or missing, plus whether each item has been verified by staff.
 
@@ -901,20 +895,17 @@ When you finish a job, your earnings appear here. Request a payout when jobs are
 
 | Section | What it shows |
 |---------|---------------|
-| **Ready to collect** | Total earnings from finished jobs not yet paid out. Use **Send to my bank** or **Request cash pickup** to request a payout. |
-| **Already paid** | Total received to date, broken down by bank transfer and cash. |
-| **Earnings by job** | A line-by-line breakdown of each job, its pay amount, and payout status. |
+| **Ready to collect** | Earnings from finished jobs not yet paid out. Use **Send to my bank** after the auto-release delay. |
+| **Already paid** | Total received to date via Stripe bank transfer. |
+| **Earnings by job** | Line-by-line breakdown of each job, pay amount, and payout status. |
 
 **Connecting a bank account:**
 
-Open **Pay** and use **Connect bank account** to link a Stripe account for bank transfers. You can still request cash pickup without a connected bank account.
+Open **Pay** and use **Connect bank account** to link Stripe Connect for bank transfers.
 
 **Requesting a payout:**
 
-- **Send to my bank** — submits an invoice to staff Payments for a bank transfer via Stripe.
-- **Request cash pickup** — submits an invoice to staff Payments for cash pickup.
-
-Staff fulfill open payout invoices from **Payments → Guard payout invoices**.
+- **Send to my bank** — transfers available earnings via Stripe after the platform auto-release delay (~48 hours after job completion).
 
 ---
 
@@ -927,16 +918,6 @@ Staff fulfill open payout invoices from **Payments → Guard payout invoices**.
 **For clients:** Self-audit photos appear in the job detail under **Guard self-audit photos**. Review the photos and tap **Confirm self-audit photos** when they are acceptable.
 
 **For staff:** If a guard skipped the audit, the job shows a **No Self Audit** flag. You can upload self-audit photos on behalf of the guard from **Jobs**.
-
----
-
-### Staff spot check
-
-**What it is:** A photo uploaded by staff to document physical presence — confirming the guard was on site. It is separate from the guard's self-audit.
-
-**For staff:** Open the job from **Jobs**, then use **Spot check photo** to upload a presence photo.
-
-**For clients:** Spot-check photos appear in the job detail under **Staff spot check**. Review and confirm each spot check.
 
 ---
 
@@ -971,10 +952,10 @@ Staff fulfill open payout invoices from **Payments → Guard payout invoices**.
 The Guards panel lists all field guard accounts. Staff can:
 
 - Search and filter the guard roster.
-- Open a guard profile to view credentials, activation status, jobs, and contact info.
+- Open a guard profile to view credentials, eligibility status, jobs, and contact info.
 - Add a new guard account (**Add guard** button).
 - Edit credentials and verify documents on behalf of the guard.
-- Approve profiles and activate accounts.
+- Verify credentials and grant marketplace eligibility.
 - Suspend or restore access.
 
 #### Clients panel
@@ -1009,9 +990,10 @@ The Approvals hub holds all pending review queues. Open a queue to view items an
 | Queue | What it holds |
 |-------|---------------|
 | **Job offers** | Submitted job listings waiting for staff approval before going live. |
-| **Guard applications** | Guard applications on open marketplace jobs — review and send the best fit to the client. |
-| **Guard credentials** | Credential uploads from guards — verify license photos and approve or reject. |
-| **Profile approval** | New guard and client accounts waiting for initial approval and, for guards, activation. |
+| **Guard credentials** | Credential and COI uploads — staff verify license photos and approve or reject. |
+| **Profile approval** | New guard and client accounts — staff verify ID and grant marketplace eligibility for guards. |
+
+_Note: Guard applications no longer queue for staff. Guards apply directly to clients._
 
 #### Payments panel
 
@@ -1021,16 +1003,13 @@ Every job follows the same payment path: the client pays, the job runs, then the
 
 | Stage | Description |
 |-------|-------------|
-| **Awaiting client payment** | Client has not paid yet — job is ready for payment but funds have not cleared. |
-| **Cash payment pending** | Client requested cash payment — waiting for cash to be received and staff to approve. |
-| **Awaiting guard payout** | Job is complete and payment cleared — guard can request payout from Pay. |
-| **Cash deposit pending** | Cash job completed — staff are depositing or recording the cash transaction. |
-| **Guard payout invoices** | Guards submitted payout requests from Pay — fulfill each line item, then mark the invoice completed. |
+| **Awaiting client payment** | Client has not paid yet — job ready for Stripe checkout. |
+| **Awaiting guard payout** | Job complete — auto Stripe release scheduled; guard collects from **Pay**. |
+| **Dispute hold** | Payout blocked by overtime dispute — staff resolve in **Disputes**, then release if needed. |
 
 **Settings → Payment methods:**
 
-- **Cash** — client requests pay-in-cash; staff approve when payment is received.
-- **Card (Stripe)** — automatic online checkout with no staff payment approval needed.
+- **Card (Stripe)** — only payment mode; clients pay online at checkout.
 
 **Settings → Platform fees:**
 
@@ -1052,7 +1031,7 @@ Overtime billing disputes and guard vs. client conflicts appear here when they n
 
 **Where:** Staff sidebar → **Reports** (some configurations label this elsewhere)
 
-Job audits, activity logs, and compliance records. Shows all jobs with self-audit photos, checkout audits, spot checks, and any flagged audit issues.
+Job audits, activity logs, and compliance records. Shows jobs with self-audit photos, checkout audits, and flagged audit issues.
 
 ---
 
