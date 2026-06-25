@@ -5,7 +5,32 @@ import {
   SITE_URL,
 } from './siteConfig';
 
-export type LegalPageId = 'terms' | 'privacy';
+export type LegalPageId =
+  | 'terms'
+  | 'privacy'
+  | 'ica'
+  | 'client-agreement'
+  | 'guard-conduct';
+
+/** Bump when document text changes materially — triggers re-acceptance. */
+export const CURRENT_LEGAL_VERSIONS: Record<LegalPageId, string> = {
+  terms: '2026-06-22',
+  privacy: '2026-06-22',
+  ica: '2026-06-25',
+  'client-agreement': '2026-06-25',
+  'guard-conduct': '2026-06-25',
+};
+
+export function requiredLegalDocumentsForRole(role: 'guard' | 'client' | 'staff'): LegalPageId[] {
+  const shared: LegalPageId[] = ['terms', 'privacy'];
+  if (role === 'guard') return [...shared, 'ica', 'guard-conduct'];
+  if (role === 'client') return [...shared, 'client-agreement'];
+  return shared;
+}
+
+export function legalDocumentLabel(documentId: LegalPageId): string {
+  return LEGAL_DOCUMENTS[documentId]?.title ?? documentId;
+}
 
 export interface LegalSection {
   title: string;
@@ -188,7 +213,135 @@ export const LEGAL_PRIVACY: LegalDocument = {
   ],
 };
 
+export const LEGAL_ICA: LegalDocument = {
+  id: 'ica',
+  title: 'Independent Contractor Agreement',
+  updated: 'June 25, 2026',
+  intro: `This Independent Contractor Agreement ("ICA") is between ${LEGAL_ENTITY_NAME} ("${SITE_NAME}") and you, an independent security professional using the Platform. This ICA supplements the Terms of Service and governs your relationship with ${SITE_NAME} only — not your relationship with Clients.`,
+  sections: [
+    {
+      title: '1. Independent contractor status',
+      paragraphs: [
+        `You agree you are an independent contractor, not an employee, agent, joint venturer, or partner of ${LEGAL_ENTITY_NAME}. You are free to accept or decline jobs offered through the Platform, set your availability, and maintain other clients outside the Platform, subject to lawful scheduling commitments you accept.`,
+        `Nothing in this ICA creates an employment relationship under California law, including the ABC test or any similar worker-classification standard. You are responsible for your own taxes, withholdings, benefits, business expenses, and insurance.`,
+      ],
+    },
+    {
+      title: '2. Your business responsibilities',
+      bullets: [
+        'Maintain all BSIS and other licenses, registrations, and training required for each assignment.',
+        'Maintain general liability insurance and any other coverage required by law or the assignment.',
+        'Supply your own equipment unless a Client agrees in writing to provide site-specific items.',
+        'Perform services in a professional manner consistent with applicable law and the Guard Code of Conduct.',
+        'Accurately represent your credentials and promptly update expired documents.',
+      ],
+      paragraphs: [],
+    },
+    {
+      title: '3. Platform services',
+      paragraphs: [
+        `${SITE_NAME} provides technology tools only: profiles, job discovery, messaging, scheduling aids, credential upload, and payment facilitation. ${SITE_NAME} does not supervise how you perform security work on site and is not your security services employer.`,
+      ],
+    },
+    {
+      title: '4. Payments',
+      paragraphs: [
+        `You authorize ${SITE_NAME} to collect payments from Clients as a limited payment facilitator and to remit your share after applicable platform fees, chargebacks, or lawful holds. Payout timing is shown in the product before you accept work.`,
+      ],
+    },
+    {
+      title: '5. Term and termination',
+      paragraphs: [
+        `Either party may end Platform access as described in the Terms. Sections on contractor status, indemnification, and dispute resolution survive termination.`,
+      ],
+    },
+  ],
+};
+
+export const LEGAL_CLIENT_AGREEMENT: LegalDocument = {
+  id: 'client-agreement',
+  title: 'Client Platform Agreement',
+  updated: 'June 25, 2026',
+  intro: `This Client Platform Agreement is between ${LEGAL_ENTITY_NAME} ("${SITE_NAME}") and you, a Client using the Platform to request security coverage from independent professionals.`,
+  sections: [
+    {
+      title: '1. Direct engagements with guards',
+      paragraphs: [
+        `When you approve a Guard for a job, you enter into a direct service arrangement with that Guard for that assignment. ${SITE_NAME} is not the provider of security services and does not employ the Guard.`,
+        `You are responsible for lawful site instructions, access, and payment for accepted work.`,
+      ],
+    },
+    {
+      title: '2. No staffing or outcome guarantee',
+      paragraphs: [
+        `${SITE_NAME} does not guarantee that any Guard will accept your job, arrive on time, or achieve a particular security outcome. Credential review on the Platform is administrative eligibility only, not a warranty of suitability.`,
+      ],
+    },
+    {
+      title: '3. Due diligence',
+      bullets: [
+        'Review Guard profiles, credentials, and ratings before approving an assignment.',
+        'Confirm armed, medical, or specialty requirements match your site needs.',
+        'Do not treat Guards as your employees or require unlawful off-platform arrangements that evade licensing law.',
+      ],
+      paragraphs: [],
+    },
+    {
+      title: '4. Insurance and liability',
+      paragraphs: [
+        `Guards represent they maintain insurance required for their work. ${SITE_NAME}'s liability is limited as stated in the Terms. You remain responsible for your own property, operations, and hiring decisions.`,
+      ],
+    },
+  ],
+};
+
+export const LEGAL_GUARD_CONDUCT: LegalDocument = {
+  id: 'guard-conduct',
+  title: 'Guard Code of Conduct',
+  updated: 'June 25, 2026',
+  intro: `This Code of Conduct applies to independent security professionals using ${SITE_NAME}. Violations may result in account suspension.`,
+  sections: [
+    {
+      title: '1. Professional standards',
+      bullets: [
+        'Arrive on time, in appropriate attire, and prepared for the posted assignment.',
+        'Follow lawful post orders and site instructions from the Client for the specific job.',
+        'Use force only as permitted by law and your training.',
+        'Do not work under the influence of alcohol or controlled substances.',
+        'Report incidents promptly through Platform tools and to appropriate authorities when required.',
+      ],
+      paragraphs: [],
+    },
+    {
+      title: '2. Honesty and compliance',
+      bullets: [
+        'Do not falsify credentials, hours, reports, or location check-ins.',
+        'Do not misrepresent affiliation with Guardr or the Client as an employment relationship.',
+        'Maintain confidentiality of sensitive site information except as required for safety or law.',
+      ],
+      paragraphs: [],
+    },
+    {
+      title: '3. Marketplace integrity',
+      paragraphs: [
+        'Do not circumvent the Platform for payments on jobs discovered through Guardr without written permission. Do not harass, discriminate against, or retaliate against Clients or other users.',
+      ],
+    },
+  ],
+};
+
 export const LEGAL_DOCUMENTS: Record<LegalPageId, LegalDocument> = {
   terms: LEGAL_TERMS,
   privacy: LEGAL_PRIVACY,
+  ica: LEGAL_ICA,
+  'client-agreement': LEGAL_CLIENT_AGREEMENT,
+  'guard-conduct': LEGAL_GUARD_CONDUCT,
+};
+
+export const LEGAL_PAGE_SIBLINGS: Partial<Record<LegalPageId, LegalPageId[]>> = {
+  terms: ['privacy', 'ica', 'client-agreement'],
+  privacy: ['terms'],
+  ica: ['terms', 'guard-conduct'],
+  'client-agreement': ['terms'],
+  'guard-conduct': ['ica', 'terms'],
 };

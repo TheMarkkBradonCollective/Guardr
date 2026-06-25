@@ -133,6 +133,11 @@ interface StaffDashboardProps {
     staffNote?: string
   ) => Promise<void>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => Promise<void>;
+  onReviewGuardInsurance?: (
+    guardId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string
+  ) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -274,6 +279,7 @@ export function StaffDashboard({
   onRejectGuardIdentityVerification,
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
+  onReviewGuardInsurance,
   onUpdateGuardIdImages,
   onApproveCert,
   onRejectCert,
@@ -534,6 +540,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
+            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
@@ -604,6 +611,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
+            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}

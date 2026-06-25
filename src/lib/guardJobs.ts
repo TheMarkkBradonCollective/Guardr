@@ -9,6 +9,8 @@ import { stateLicenseRequirementLabel } from './guardLicenses';
 import { resolveJobLicenseState } from './californiaCities';
 import { requirementLabel } from './certCatalog';
 import { guardGraceWaivesTrainingCredential } from './guardCredentialGrace';
+import { guardHasValidInsurance, guardInsuranceBlockedMessage } from './guardInsurance';
+import { guardMeetsRateRequirement } from './guardMarketplace';
 import {
   guardCanWorkFieldJobs,
   guardHasCredentialOnFile,
@@ -161,6 +163,25 @@ export function checkJobRequirements(
 
   const blockingChecks = checks.filter((c) => !c.recommended);
   let canAccept = blockingChecks.every((c) => c.met);
+
+  const guardPay = getGuardHourlyPay(job);
+  if (!guardMeetsRateRequirement(guard, guardPay)) {
+    const minimum = guard.hourlyRateRequirement ?? 0;
+    checks.push({
+      label: `Meets your minimum rate ($${minimum.toFixed(2)}/hr)`,
+      met: false,
+    });
+    canAccept = false;
+  }
+
+  if (!guardHasValidInsurance(guard)) {
+    const insuranceMessage = guardInsuranceBlockedMessage(guard);
+    checks.push({
+      label: insuranceMessage ?? 'Verified general liability insurance on file',
+      met: false,
+    });
+    canAccept = false;
+  }
 
   if (canAccept && allRequests) {
     const conflict = findGuardScheduleConflict(guard.id, job, allRequests);

@@ -26,6 +26,7 @@ import {
   TeamChatMessage,
   StaffMessage,
   GuardMessage,
+  GuardInsurancePolicy,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
@@ -136,7 +137,7 @@ import {
   isAwaitingClientGuardApproval,
   removeGuardFromApplicants,
   shouldSkipClientGuardApproval,
-  shouldSkipStaffGuardReviewForTrusted,
+  shouldSkipStaffGuardReview,
 } from './lib/guardAssignment';
 import { isGuardTrusted } from './lib/guardTrust';
 import {
@@ -267,7 +268,27 @@ import {
   type AuthViewRole,
 } from './lib/appNavigation';
 import type { LegalPageId } from './lib/legalContent';
+import { CURRENT_LEGAL_VERSIONS, requiredLegalDocumentsForRole } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
+import { LegalAcceptanceModal } from './components/legal/LegalAcceptanceModal';
+import {
+  indexLegalAcceptances,
+  legalAcceptanceFromRow,
+  legalAcceptanceToDbRow,
+  legalAcceptanceKey,
+  type LegalUserRole,
+} from './lib/legalAcceptance';
+import { buildJobServiceAgreement, parseJobServiceAgreement } from './lib/jobServiceAgreement';
+import {
+  insurancePolicyFromRow,
+  insurancePolicyToDbRow,
+  resolveInsuranceStatus,
+} from './lib/guardInsurance';
+import {
+  computeAutoPayoutScheduledAt,
+  isAutoPayoutDue,
+  shouldScheduleAutoStripePayout,
+} from './lib/autoPayout';
 import { showAppToast } from './components/ui/AppToast';
 import { showAppConfirm } from './components/ui/AppConfirm';
 
@@ -357,6 +378,7 @@ export default function App() {
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
+  const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -1335,6 +1357,32 @@ export default function App() {
         .select('*')
         .eq('id', 'default')
         .maybeSingle();
+      const { data: dbInsurance, error: insuranceErr } = await supabase
+        .from('guard_insurance_policies')
+        .select('*');
+      const { data: dbLegalAcceptances, error: legalAcceptancesErr } = await supabase
+        .from('user_legal_acceptances')
+        .select('*');
+
+      if (insuranceErr && insuranceErr.code !== '42P01') {
+        console.warn('Guard insurance load (run migration if missing):', insuranceErr);
+      }
+      if (legalAcceptancesErr && legalAcceptancesErr.code !== '42P01') {
+        console.warn('Legal acceptances load (run migration if missing):', legalAcceptancesErr);
+      }
+
+      const insuranceByGuardId = new Map(
+        (dbInsurance ?? []).map((row: Record<string, unknown>) => [
+          String(row.guard_id),
+          insurancePolicyFromRow(row),
+        ])
+      );
+
+      if (dbLegalAcceptances) {
+        setLegalAcceptanceKeys(
+          indexLegalAcceptances(dbLegalAcceptances.map((row: Record<string, unknown>) => legalAcceptanceFromRow(row)))
+        );
+      }
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
       if (supportTicketsErr || supportMessagesErr) {
@@ -1421,6 +1469,7 @@ export default function App() {
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
         trusted: g.trusted === true,
+        insurancePolicy: insuranceByGuardId.get(g.id),
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
@@ -1622,6 +1671,8 @@ export default function App() {
           breakPaid: r.break_paid !== false,
           shiftBreaks: Array.isArray(r.shift_breaks) ? r.shift_breaks : [],
           checkOutAudit: r.check_out_audit ?? undefined,
+          serviceAgreement: parseJobServiceAgreement(r.service_agreement),
+          autoPayoutScheduledAt: r.auto_payout_scheduled_at ?? undefined,
         })),
         (dbSlots ?? []).map(slotFromDbRow)
       );
@@ -2217,6 +2268,100 @@ export default function App() {
     }
   };
 
+  const recordLegalAcceptances = async (
+    role: LegalUserRole,
+    userId: string,
+    documentIds: LegalPageId[]
+  ) => {
+    const uniqueIds = [...new Set(documentIds)];
+    const rows = uniqueIds.map((documentId) =>
+      legalAcceptanceToDbRow({
+        userId,
+        userRole: role,
+        documentId,
+        documentVersion: CURRENT_LEGAL_VERSIONS[documentId],
+      })
+    );
+    if (isDbConnected && rows.length > 0) {
+      const { error } = await supabase.from('user_legal_acceptances').upsert(rows, {
+        onConflict: 'user_id,document_id,document_version',
+        ignoreDuplicates: true,
+      });
+      if (error) console.warn('Legal acceptance save:', error);
+    }
+    setLegalAcceptanceKeys((prev) => {
+      const next = new Set(prev);
+      for (const documentId of uniqueIds) {
+        next.add(legalAcceptanceKey(userId, documentId, CURRENT_LEGAL_VERSIONS[documentId]));
+      }
+      return next;
+    });
+  };
+
+  const handleSaveGuardInsurance = async (
+    policy: Partial<GuardInsurancePolicy> & { guardId: string }
+  ) => {
+    const existing = guards.find((g) => g.id === policy.guardId)?.insurancePolicy;
+    const nextPolicy: GuardInsurancePolicy = {
+      id: existing?.id ?? policy.id ?? `ins-${policy.guardId}`,
+      guardId: policy.guardId,
+      carrier: policy.carrier ?? '',
+      policyNumber: policy.policyNumber ?? '',
+      generalLiabilityLimit: policy.generalLiabilityLimit,
+      effectiveDate: policy.effectiveDate,
+      expiryDate: policy.expiryDate,
+      documentUrl: policy.documentUrl,
+      status: policy.status ?? 'pending',
+      rejectionReason: policy.rejectionReason,
+      submittedAt: policy.submittedAt ?? new Date().toISOString(),
+      reviewedAt: policy.reviewedAt,
+      reviewedBy: policy.reviewedBy,
+    };
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('guard_insurance_policies')
+        .upsert(insurancePolicyToDbRow(nextPolicy), { onConflict: 'guard_id' });
+      if (error) throw error;
+    }
+    setGuards((prev) =>
+      prev.map((g) => (g.id === policy.guardId ? { ...g, insurancePolicy: nextPolicy } : g))
+    );
+  };
+
+  const handleReviewGuardInsurance = async (
+    guardId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string
+  ) => {
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard?.insurancePolicy) return;
+    const reviewedAt = new Date().toISOString();
+    const nextPolicy: GuardInsurancePolicy = {
+      ...guard.insurancePolicy,
+      status: status === 'verified' ? 'verified' : 'rejected',
+      rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+      reviewedAt,
+      reviewedBy: currentUser?.id,
+    };
+    const resolved = { ...nextPolicy, status: resolveInsuranceStatus(nextPolicy) };
+    if (isDbConnected) {
+      await supabase
+        .from('guard_insurance_policies')
+        .update({
+          status: resolved.status,
+          rejection_reason: resolved.rejectionReason ?? null,
+          reviewed_at: reviewedAt,
+          reviewed_by: currentUser?.id ?? null,
+          updated_at: reviewedAt,
+        })
+        .eq('guard_id', guardId);
+    }
+    setGuards((prev) =>
+      prev.map((g) => (g.id === guardId ? { ...g, insurancePolicy: resolved } : g))
+    );
+    appToast(status === 'verified' ? 'Insurance verified.' : 'Insurance rejected.', 'success');
+  };
+
   /**
    * Sign up handler — routes to the correct table based on role:
    *   guard   → guards table
@@ -2296,6 +2441,7 @@ export default function App() {
       }
 
       setStoredPassword(client.email, { password, mustChangePassword: false, role: 'client' });
+      await recordLegalAcceptances('client', client.id, requiredLegalDocumentsForRole('client'));
       await loadFromSupabase();
       if (accountStatus !== 'active') {
         void reportPushEvent(
@@ -2393,6 +2539,7 @@ export default function App() {
         );
       }
       setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+      await recordLegalAcceptances('guard', guard.id, requiredLegalDocumentsForRole('guard'));
       await loadFromSupabase();
       if (userStatus === 'pending') {
         void reportPushEvent(
@@ -6108,6 +6255,19 @@ export default function App() {
       });
     }
     await ensureJobChatThread(acceptedJob);
+    const client = clients.find((c) => c.id === job.clientId);
+    if (client) {
+      const agreement = buildJobServiceAgreement(acceptedJob, client, guard);
+      setRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, serviceAgreement: agreement } : r))
+      );
+      if (isDbConnected) {
+        await supabase
+          .from('security_requests')
+          .update({ service_agreement: agreement })
+          .eq('id', requestId);
+      }
+    }
     return true;
   };
 
@@ -6210,7 +6370,9 @@ export default function App() {
       appToast(result.error, 'error');
       return;
     }
-    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, job);
+    const skipStaff = shouldSkipStaffGuardReview(activeGuard, job, {
+        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
+      });
     const { job: nextJob, slots: nextSlots, promoted } = await persistTeamJobUpdate(
       result.job,
       result.slots,
@@ -6249,7 +6411,9 @@ export default function App() {
       );
       return;
     }
-    const skipStaff = shouldSkipStaffGuardReviewForTrusted(activeGuard, jobPreview);
+    const skipStaff = shouldSkipStaffGuardReview(activeGuard, jobPreview, {
+        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
+      });
     const result = joinTeamWithCode(rawCode, activeGuardId, requests, skipStaff);
     if ('error' in result) {
       appToast(result.error, 'error');
@@ -6797,7 +6961,9 @@ export default function App() {
     }
 
     if (isMultiGuardJob(job)) {
-      if (shouldSkipStaffGuardReviewForTrusted(activeGuard, job)) {
+      if (shouldSkipStaffGuardReview(activeGuard, job, {
+        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
+      })) {
         const result = proposeIndependentGuardToClient(job, activeGuardId, true, requests);
         if ('error' in result) {
           appToast(result.error, 'error');
@@ -6842,7 +7008,9 @@ export default function App() {
       return;
     }
 
-    if (shouldSkipStaffGuardReviewForTrusted(activeGuard, job)) {
+    if (shouldSkipStaffGuardReview(activeGuard, job, {
+        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
+      })) {
       const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
       setRequests((prev) =>
         prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
@@ -7296,6 +7464,27 @@ export default function App() {
           await holdJobPayment(requestId);
         } catch (e) {
           console.error('Hold payment error:', e);
+        }
+      }
+      if (
+        req &&
+        platformSettings.autoStripePayoutEnabled &&
+        shouldScheduleAutoStripePayout({ ...req, status: 'completed' })
+      ) {
+        const scheduledAt = computeAutoPayoutScheduledAt(
+          new Date().toISOString(),
+          platformSettings
+        );
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, autoPayoutScheduledAt: scheduledAt } : r
+          )
+        );
+        if (isDbConnected) {
+          await supabase
+            .from('security_requests')
+            .update({ auto_payout_scheduled_at: scheduledAt })
+            .eq('id', requestId);
         }
       }
     }
@@ -7757,6 +7946,40 @@ export default function App() {
       appToast(e instanceof Error ? e.message : 'Payout failed', 'error');
     }
   };
+
+  const processDueAutoPayouts = useCallback(async () => {
+    if (!platformSettings.autoStripePayoutEnabled) return;
+    for (const req of requests) {
+      if (req.status !== 'completed' || !req.autoPayoutScheduledAt) continue;
+      if (!isAutoPayoutDue(req.autoPayoutScheduledAt)) continue;
+      if (req.paymentStatus === 'released') continue;
+      if (!shouldScheduleAutoStripePayout(req)) continue;
+      if (!req.guardPayoutAvailable) {
+        await handleMakeGuardPayoutAvailable(req.id);
+      }
+      if (req.paymentStatus !== 'released') {
+        await handleReleasePayout(req.id);
+      }
+      if (isDbConnected) {
+        await supabase
+          .from('security_requests')
+          .update({ auto_payout_scheduled_at: null })
+          .eq('id', req.id);
+      }
+      setRequests((prev) =>
+        prev.map((r) => (r.id === req.id ? { ...r, autoPayoutScheduledAt: undefined } : r))
+      );
+    }
+  }, [platformSettings.autoStripePayoutEnabled, requests]);
+
+  useEffect(() => {
+    if (!currentUser || !isDbConnected) return;
+    const timer = window.setInterval(() => {
+      void processDueAutoPayouts();
+    }, 60_000);
+    void processDueAutoPayouts();
+    return () => window.clearInterval(timer);
+  }, [currentUser, isDbConnected, processDueAutoPayouts]);
 
   const handleRefundPayment = async (requestId: string) => {
     const req = requests.find(r => r.id === requestId);
@@ -8479,6 +8702,27 @@ export default function App() {
   };
 
   // ── Render ─────────────────────────────────────────────────
+  const legalAcceptanceRole: LegalUserRole | null = currentUser
+    ? currentUser.role === 'client'
+      ? 'client'
+      : currentUser.role === 'guard'
+        ? 'guard'
+        : 'staff'
+    : null;
+
+  const marketplaceLegalGate =
+    currentUser && legalAcceptanceRole ? (
+      <LegalAcceptanceModal
+        role={legalAcceptanceRole}
+        userId={currentUser.id}
+        acceptedKeys={legalAcceptanceKeys}
+        onOpenLegal={openLegalPage}
+        onAccept={(documentIds) =>
+          recordLegalAcceptances(legalAcceptanceRole, currentUser.id, documentIds)
+        }
+      />
+    ) : null;
+
   const passwordChangeOverlay = currentUser ? (
     <ChangePasswordPrompt
       open={passwordChangePromptOpen}
@@ -8559,6 +8803,7 @@ export default function App() {
 
     return (
       <>
+        {marketplaceLegalGate}
         <GuardDashboard
           guard={activeGuard}
           tab={guardTab}
@@ -8578,6 +8823,7 @@ export default function App() {
           onSubmitIdentityVerification={(payload) =>
             handleSubmitGuardIdentityVerification(activeGuard.id, payload)
           }
+          onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onApplyAsTeamLead={handleApplyAsTeamLead}
@@ -8702,6 +8948,7 @@ export default function App() {
 
     return (
       <>
+        {marketplaceLegalGate}
         <ClientAppLayout
           currentUser={currentUser}
           onSignOut={handleSignOut}
@@ -8817,6 +9064,7 @@ export default function App() {
   if (isStaffRole(currentUser.role)) {
     return (
       <>
+        {marketplaceLegalGate}
         <StaffDashboard
           section={staffSection}
           onSectionChange={setStaffSection}
@@ -8862,6 +9110,7 @@ export default function App() {
           onRequestGuardIdResubmit={handleRequestGuardIdResubmit}
           onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
+          onReviewGuardInsurance={handleReviewGuardInsurance}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}

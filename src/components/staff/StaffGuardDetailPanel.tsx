@@ -90,6 +90,7 @@ interface StaffGuardDetailPanelProps {
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
+  onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => void | Promise<void>;
   onBack?: () => void;
   onOpenJob?: (jobId: string) => void;
   editing?: boolean;
@@ -124,6 +125,7 @@ export function StaffGuardDetailPanel({
   onRequestIdentityResubmit,
   onUpdateGuardIdImages,
   onRequestCertImageResubmit,
+  onReviewInsurance,
   onBack,
   onOpenJob,
   editing: controlledEditing,
@@ -725,6 +727,11 @@ export function StaffGuardDetailPanel({
                 onDeleteCertification={canManage ? onDeleteCertification : undefined}
                 onAttachCertificationImage={canManage ? onAttachCertificationImage : undefined}
                 onUpdateCertification={onUpdateCertification}
+                onReviewInsurance={
+                  onReviewInsurance
+                    ? (status, rejectionReason) => onReviewInsurance(status, rejectionReason)
+                    : undefined
+                }
                 staffIdReview={
                   canManage ? (
                     <StaffIdReviewSection

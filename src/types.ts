@@ -227,6 +227,41 @@ export interface GuardPayoutInvoice {
   resolvedAt?: string;
 }
 
+export interface GuardInsurancePolicy {
+  id: string;
+  guardId: string;
+  carrier: string;
+  policyNumber: string;
+  generalLiabilityLimit?: number;
+  effectiveDate?: string;
+  expiryDate?: string;
+  documentUrl?: string;
+  status: 'not_submitted' | 'pending' | 'verified' | 'rejected' | 'expired';
+  rejectionReason?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
+export interface JobServiceAgreement {
+  id: string;
+  jobId: string;
+  clientId: string;
+  guardId: string;
+  version: string;
+  generatedAt: string;
+  title: string;
+  hourlyRate: number;
+  guardPayPerHour: number;
+  durationHours: number;
+  location: string;
+  startDate: string;
+  endDate: string;
+  clientName: string;
+  guardName: string;
+  body: string;
+}
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -295,6 +330,8 @@ export interface SecurityGuard {
    * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */
   trusted?: boolean;
+  /** General liability COI — required for marketplace applications */
+  insurancePolicy?: GuardInsurancePolicy;
 }
 
 export interface StaffSpotCheck {
@@ -723,6 +760,10 @@ export interface SecurityRequest {
   /** Active (guard card) or full BSIS training preference — clients choose per job */
   minGuardQualification?: MinGuardQualification;
   applicants: string[];
+  /** Generated direct client–guard agreement when assignment is confirmed */
+  serviceAgreement?: JobServiceAgreement;
+  /** Automatic Stripe payout runs after this timestamp when enabled */
+  autoPayoutScheduledAt?: string;
   ratingGiven?: number;
   reviewText?: string;
   // Dynamic Self-Audit Tracker

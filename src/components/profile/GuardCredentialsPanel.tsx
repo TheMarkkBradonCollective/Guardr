@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Certification, SecurityGuard } from '../../types';
+import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import {
   BSIS_REFRESHER_CATALOG_ID,
   CERT_CATEGORY_LABELS,
@@ -19,6 +19,7 @@ import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadFiel
 import { GuardPtaUofPanel } from '../guard/GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from '../guard/GuardThirtyTwoHourPanel';
 import { GuardCardPanel } from './GuardCardPanel';
+import { GuardInsurancePanel } from '../credentials/GuardInsurancePanel';
 import { GuardIdItemCard } from './GuardIdItemCard';
 import {
   type GuardIdentityVerificationPayload,
@@ -100,6 +101,8 @@ interface GuardCredentialsPanelProps {
   /** Staff approve / resubmit actions shown under the primary credential stack. */
   staffIdReview?: React.ReactNode;
   renderCertActions?: (cert: Certification) => React.ReactNode;
+  onSaveInsurance?: (policy: Partial<GuardInsurancePolicy> & { guardId: string }) => Promise<void>;
+  onReviewInsurance?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
 }
 
 export function GuardCredentialsPanel({
@@ -113,6 +116,8 @@ export function GuardCredentialsPanel({
   staffMode = false,
   staffIdReview,
   renderCertActions,
+  onSaveInsurance,
+  onReviewInsurance,
 }: GuardCredentialsPanelProps) {
   const grouped = useMemo(() => groupGuardCertsByCategory(guard), [guard]);
   const [openSection, setOpenSection] = useState<CredentialOpenSection | null>(null);
@@ -376,6 +381,16 @@ export function GuardCredentialsPanel({
         <p className="text-sm text-amber-500 border border-amber-500/30 rounded-lg px-3 py-2 leading-relaxed">
           ID resubmit requested — tap Government ID, then Edit to update. {guard.idVerificationRejectionReason}
         </p>
+      )}
+
+      {!guard.isStaff && (onSaveInsurance || onReviewInsurance || guard.insurancePolicy) && (
+        <GuardInsurancePanel
+          guard={guard}
+          editing={editing}
+          staffMode={staffMode}
+          onSave={onSaveInsurance}
+          onReview={onReviewInsurance}
+        />
       )}
 
       {!guard.isStaff && onSubmitIdentityVerification && (

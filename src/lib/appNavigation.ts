@@ -199,6 +199,9 @@ export function parseAppRoute(url: string): AppRoute | null {
   if (pathname === '/legal/terms' || pathname === '/legal/privacy') {
     return null;
   }
+  if (pathname.startsWith('/legal/')) {
+    return null;
+  }
 
   if (pathname === '/' || pathname === '') {
     if (nested.authView) {
@@ -254,6 +257,9 @@ export function readLegalPageFromUrl(url: string): LegalPageId | null {
   const { pathname } = parsePath(url);
   if (pathname === '/legal/terms') return 'terms';
   if (pathname === '/legal/privacy') return 'privacy';
+  if (pathname === '/legal/ica') return 'ica';
+  if (pathname === '/legal/client-agreement') return 'client-agreement';
+  if (pathname === '/legal/guard-conduct') return 'guard-conduct';
   return null;
 }
 

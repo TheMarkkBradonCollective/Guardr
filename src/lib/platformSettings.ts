@@ -14,6 +14,12 @@ export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
   feeConfig: PlatformFeeConfig;
+  /** Automatically release Stripe payouts after shift completion delay */
+  autoStripePayoutEnabled?: boolean;
+  /** Hours after completion before auto Stripe payout (default 48) */
+  autoStripePayoutDelayHours?: number;
+  /** Verified insured guards skip staff applicant review on card jobs */
+  verifiedGuardSelfServe?: boolean;
   /** Homepage message from the Owner account — editable by Owner only. */
   ownerMessage?: string;
   ownerMessageUpdatedAt?: string;
@@ -35,6 +41,9 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   paymentCashEnabled: true,
   paymentStripeEnabled: true,
   feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
+  autoStripePayoutEnabled: true,
+  autoStripePayoutDelayHours: 48,
+  verifiedGuardSelfServe: true,
   crewTeamPayBumpPerHour: 1,
   teamLeadBonusPerGuardPerHour: 1,
   teamLeadBonusClientSharePercent: 100,
@@ -86,6 +95,9 @@ export function normalizePlatformSettings(
     paymentCashEnabled: cash,
     paymentStripeEnabled: stripe,
     feeConfig: normalizePlatformFeeConfig(input.feeConfig),
+    autoStripePayoutEnabled: input.autoStripePayoutEnabled ?? true,
+    autoStripePayoutDelayHours: input.autoStripePayoutDelayHours ?? 48,
+    verifiedGuardSelfServe: input.verifiedGuardSelfServe ?? true,
     crewTeamPayBumpPerHour: bumpRate,
     teamLeadBonusPerGuardPerHour: bumpRate,
     teamLeadBonusClientSharePercent: 100,
@@ -129,6 +141,9 @@ export function platformSettingsFromDbRow(row: {
   owner_message_updated_at?: string | null;
   director_message?: string | null;
   director_message_updated_at?: string | null;
+  auto_stripe_payout_enabled?: boolean | null;
+  auto_stripe_payout_delay_hours?: number | null;
+  verified_guard_self_serve?: boolean | null;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
@@ -142,6 +157,12 @@ export function platformSettingsFromDbRow(row: {
       ownerMessageUpdatedAt: row.owner_message_updated_at ?? undefined,
       directorMessage: row.director_message ?? undefined,
       directorMessageUpdatedAt: row.director_message_updated_at ?? undefined,
+      autoStripePayoutEnabled: row.auto_stripe_payout_enabled ?? true,
+      autoStripePayoutDelayHours:
+        row.auto_stripe_payout_delay_hours != null
+          ? Number(row.auto_stripe_payout_delay_hours)
+          : 48,
+      verifiedGuardSelfServe: row.verified_guard_self_serve ?? true,
       crewTeamPayBumpPerHour:
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
@@ -168,6 +189,9 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     owner_message_updated_at: settings.ownerMessageUpdatedAt ?? null,
     director_message: settings.directorMessage ?? null,
     director_message_updated_at: settings.directorMessageUpdatedAt ?? null,
+    auto_stripe_payout_enabled: settings.autoStripePayoutEnabled ?? true,
+    auto_stripe_payout_delay_hours: settings.autoStripePayoutDelayHours ?? 48,
+    verified_guard_self_serve: settings.verifiedGuardSelfServe ?? true,
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

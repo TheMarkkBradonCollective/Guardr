@@ -105,6 +105,9 @@ interface GuardDashboardProps {
   onSubmitIdentityVerification?: (
     payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('./profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  onSaveInsurance?: (
+    policy: Partial<import('../types').GuardInsurancePolicy> & { guardId: string }
+  ) => Promise<void>;
   onAcceptJob: (requestId: string) => void;
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
@@ -196,6 +199,7 @@ export function GuardDashboard({
   onAddExperience,
   onAddEducation,
   onSubmitIdentityVerification,
+  onSaveInsurance,
   onAcceptJob,
   onDeclineDirectJob,
   onApplyAsTeamLead,
@@ -1113,6 +1117,7 @@ export function GuardDashboard({
                 onAddExperience={onAddExperience}
                 onAddEducation={onAddEducation}
                 onSubmitIdentityVerification={onSubmitIdentityVerification}
+                onSaveInsurance={onSaveInsurance}
               />
             </div>
           )}

@@ -58,6 +58,11 @@ interface StaffGuardsPanelProps {
     staffNote?: string
   ) => void | Promise<void>;
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
+  onReviewGuardInsurance?: (
+    guardId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string
+  ) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -97,6 +102,7 @@ export function StaffGuardsPanel({
   onRejectIdentityVerification,
   onRequestIdentityResubmit,
   onRequestCertImageResubmit,
+  onReviewGuardInsurance,
   onUpdateGuardIdImages,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
@@ -180,6 +186,9 @@ export function StaffGuardsPanel({
         : undefined,
       onUpdateGuardIdImages: onUpdateGuardIdImages
         ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+        : undefined,
+      onReviewInsurance: onReviewGuardInsurance
+        ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
         : undefined,
       onOpenJob,
     };
