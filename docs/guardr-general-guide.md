@@ -1,6 +1,6 @@
 # Guardr — General Guide (Start to Finish)
 
-_Last updated: June 25, 2026_
+_Last updated: June 25, 2026 (activation screen & inline credential uploads)_
 
 Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
 
@@ -9,7 +9,7 @@ This general guide explains the complete process, including which page to open, 
 Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
-- **Guards** complete onboarding, apply for work, clock in and out, submit audits/reports, and collect pay.
+- **Guards** complete onboarding on the **activation screen** (inline credential uploads), apply for work after staff activate the account, clock in and out, submit audits/reports, and collect pay.
 - **Staff** verify credentials, approve job listings, monitor operations, handle disputes, and resolve support or safety issues.
 
 ### Where to open this guide in the app
@@ -17,7 +17,7 @@ Use it as the operating manual for the whole app:
 | Role | How to open it | Page title |
 |------|----------------|------------|
 | **Client** | Open the account menu in the header, then select **General guide** | **General guide** |
-| **Guard** | Open the account menu in the header, then select **General guide** | **General guide** |
+| **Guard** | Account menu → **General guide** (available after account is **active**) | **General guide** |
 | **Staff** | Use the left sidebar and select **General guide** | **General guide** |
 
 ### Main navigation by role
@@ -25,7 +25,8 @@ Use it as the operating manual for the whole app:
 | Role | Main pages |
 |------|------------|
 | **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu pages like **Profile** and **General guide** |
-| **Guard** | **Map**, **My jobs**, **Pay**, **Messages**, plus account menu pages like **Profile** and **General guide** |
+| **Guard (not yet active)** | **Activation screen** only — title, progress bar, and inline credential uploads; account menu → **Settings** (sign out). **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **General guide** are blocked. |
+| **Guard (active)** | **Map**, **Jobs**, **Pay**, **Messages**, **Crew** (if trusted), plus account menu → **Profile**, **Settings**, and **General guide** |
 | **Staff** | **Overview**, **Map**, **Jobs**, **Approvals**, **Clients**, **Guards**, **Staff**, **Messages**, **Payments**, **Incidents**, **Disputes**, **Analytics**, **General guide**, **Dev notes**, **Settings** |
 
 ---
@@ -52,13 +53,14 @@ Guardr is positioned as a **California-aligned independent contractor technology
 | **Spot checks** | Staff uploaded presence photos; clients confirmed | **Removed** — no platform on-site supervision |
 | **Payments** | Card and cash options; staff released most payouts manually | **Card/Stripe only**; auto-release to Stripe Connect ~48h after completion |
 | **Staff payout override** | Routine manual release | **Dispute hold only** — e.g. overtime under dispute |
-| **Account activation** | Staff "hire/activate" language | **Marketplace eligibility** — staff verify credentials; system grants active status when verified |
+| **Account activation** | Staff "hire/activate" language | **Marketplace eligibility** — staff verify credentials, approve profile, then **activate account**; guards cannot browse the app until **active** |
 | **Grace period (PTA/32-hr)** | Staff picked grace hours at activation | **48h self-serve** — auto-applied; automated lockout if credentials not uploaded |
 
 ### What did not change
 
 - **Staff still verify every credential** — nothing auto-verifies on upload.
-- **Guards cannot work until staff-verified and marketplace-eligible** (active status).
+- **Guards cannot browse the app until staff activates the account** (`active` status) — they stay on the activation screen with inline uploads.
+- **Guards cannot work field jobs until staff-verified and marketplace-eligible** (active status + required credentials).
 - **Clients still approve guards** before a job becomes **Accepted**.
 - **Self-audit photos** at shift start remain required (guard-submitted, not staff spot-checks).
 
@@ -73,9 +75,9 @@ Every job offer moves through these statuses:
 | **Draft** | Client started a job but has not submitted it yet | Client job-posting flow |
 | **Pending review** | Client submitted the job and staff must approve it | Client **Jobs** page; staff **Approvals → Job offers** and **Jobs** |
 | **Open** | Staff approved the listing; guards can apply, or payment/assignment can continue | Client **Jobs** page; guard **Map**; staff **Jobs** |
-| **Accepted** | A guard is assigned and confirmed | Client **Jobs** / **Live coverage**; guard **Map** / **My jobs**; staff **Jobs** / **Map** |
+| **Accepted** | A guard is assigned and confirmed | Client **Jobs** / **Live coverage**; guard **Map** / **Jobs**; staff **Jobs** / **Map** |
 | **In progress** | Guard arrived, started the shift, and completed or skipped self-audit | Client **Live coverage** / **Jobs**; guard **Map**; staff **Map** / **Jobs** |
-| **Completed** | Guard ended the shift | Client **Jobs**; guard **My jobs** / **Pay**; staff **Payments** |
+| **Completed** | Guard ended the shift | Client **Jobs**; guard **Jobs** / **Pay**; staff **Payments** |
 | **Closed** | Job is archived, cancelled, or no longer active | Staff **Jobs** and historical views |
 
 ### Standard marketplace sequence
@@ -174,6 +176,25 @@ GUARD PAYOUT
         -> Staff Payments: manual release ONLY when payout is on dispute hold
 ```
 
+#### Guard activation chart
+
+```
+GUARD (pending/approved)              STAFF
+  |                                     |
+  | Sign up                             |
+  | Activation screen opens             |
+  | Upload ID, COI, guard card, certs   |
+  | Progress bar updates                |
+  |------------------------------------>|
+  |                                     | Verify each credential upload
+  |                                     | Approve profile (ID verified)
+  | Awaiting account activation         |
+  |------------------------------------>|
+  |                                     | Activate account
+  | Full app unlocks (active)           |
+  | Map / Jobs / Pay / Messages         |
+```
+
 #### Exception and escalation chart
 
 ```
@@ -193,7 +214,7 @@ Issue or exception
   |     -> Client Home: Reports
   |
   |-- Late clock-out overtime
-  |     -> Guard My jobs: Approve overtime
+  |     -> Guard Jobs: Approve overtime
   |     -> Client Jobs: Approve overtime or Dispute charge
   |     -> Staff Payments or Disputes: settle and close
   |
@@ -400,34 +421,44 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
 
 | Page | Where it is | What it is for |
 |------|-------------|----------------|
-| **Map** | Bottom navigation | Find open jobs, claim direct requests, and run active shifts |
-| **My jobs** | Bottom navigation | Upcoming assignments, past work, overtime review |
-| **Pay** | Bottom navigation | Stripe setup, earnings, and bank payouts |
-| **Messages** | Bottom navigation | Job chats, support tickets, support reports |
-| **Profile** | Account menu | Personal profile, credentials, ID, resume, certifications |
-| **General guide** | Account menu | This guide |
+| **Activation screen** | Shown automatically after sign-in until account is **active** | Upload credentials, track application progress, wait for staff activation |
+| **Map** | Bottom navigation (active guards only) | Find open jobs, claim direct requests, and run active shifts |
+| **Jobs** | Bottom navigation (active guards only) | Upcoming assignments, past work, overtime review |
+| **Pay** | Bottom navigation (active guards only) | Stripe setup, earnings, and bank payouts |
+| **Messages** | Bottom navigation (active guards only) | Job chats, support tickets, support reports |
+| **Profile** | Account menu (active guards only) | Personal profile, resume, experience, and credentials |
+| **Settings** | Account menu | Theme, legal pages, sign out — available on activation screen too |
+| **General guide** | Account menu (active guards only) | This guide |
 
 ### 1. Sign up, upload credentials, and become marketplace-eligible
 
 1. Create a **Guard** account during sign-up.
-2. Open **Profile** from the account menu.
-3. Complete your profile and required onboarding:
-   - Government ID / identity verification.
+2. After sign-in you land on the **activation screen** (not the main app):
+   - **Complete your application** while staff review your credentials.
+   - **Awaiting account activation** after staff approve your profile but before they activate your account.
+3. At the top of the activation screen:
+   - A **title** and short **subtitle** explain your status.
+   - A **progress bar** shows % complete across the five required requirements.
+4. **Upload credentials directly on this screen** — you do not need to open **Profile**:
+   - Government ID (front, back, selfie, state, number, expiration).
+   - Certificate of Insurance (COI).
    - BSIS guard card.
-   - Certificate of Insurance (COI) — general liability.
-   - Power to Arrest / Appropriate Use of Force training.
-   - Required certification uploads.
-   - Resume, experience, education, and profile information.
-4. While your account is not active:
-   - You may see **Eligibility review** or **Credentials verified** gating screens.
-   - **Map**, **My jobs**, and **Pay** may be blocked.
-   - **Profile**, **Messages**, and **General guide** remain available.
-5. **Guardr staff verify your credentials** — government ID, guard card, COI, and other uploads. Nothing auto-verifies.
-6. When staff have verified required credentials, you receive **marketplace eligibility** (active status) and can apply to jobs.
+   - Power to Arrest / Appropriate Use of Force (PTA/UOF).
+   - 32-hour BSIS course block (or individual course certs).
+   - Optional extra credentials (firearms, medical, FEMA, etc.) can also be added here.
+5. While your account is **not active**:
+   - **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **General guide** are blocked.
+   - The bottom navigation is hidden.
+   - The account menu offers **Settings** and **Sign out** only (no **Profile** link).
+6. **Guardr staff verify your credentials** — government ID, guard card, COI, and other uploads. Nothing auto-verifies on upload.
+7. Staff workflow (two steps):
+   - **Approve profile** — after government ID is staff-verified (`pending` → `approved`).
+   - **Activate account** — after required credentials are staff-verified (`approved` → `active`).
+8. When staff **activate your account**, the full guard app opens — **Map**, **Jobs**, **Pay**, **Messages**, and **Profile**.
 
 Grace period (optional training):
 
-- If PTA/UOF or 32-hour block is not yet on file when you become eligible, a **48-hour grace window** applies automatically.
+- If PTA/UOF or the 32-hour block is not on file when staff activate your account, a **48-hour grace window** applies automatically.
 - Upload missing credentials before the grace expires, or marketplace access may be restricted until they are on file.
 
 ### 2. Set up pay
@@ -464,11 +495,11 @@ Direct requests are assignments a client sent to you specifically.
 2. Open the direct request job sheet.
 3. Review all details.
 4. Use **Slide to claim job**.
-5. Once confirmed, the assignment appears in **My jobs** and active shift controls appear when the shift window opens.
+5. Once confirmed, the assignment appears in **Jobs** and active shift controls appear when the shift window opens.
 
 ### 5. Review upcoming and past jobs
 
-1. Open **My jobs**.
+1. Open **Jobs**.
 2. Use upcoming jobs to confirm schedule and site details.
 3. Use past jobs to review completed work, overtime prompts, ratings, and history.
 4. Open job chat from the job when you need assignment-specific communication.
@@ -535,7 +566,7 @@ Late clock-out:
 
 ### 9. Review overtime
 
-1. Open **My jobs**.
+1. Open **Jobs**.
 2. Open the job with **Late clock-out overtime**.
 3. Review the overtime amount and details.
 4. Select **Approve overtime** if the overtime is correct.
@@ -616,13 +647,24 @@ Client accounts can also be reviewed from:
 
 Guard onboarding is **credential verification for marketplace eligibility** — not employment hiring.
 
-1. Open **Approvals** or **Guards**.
-2. Use **Profile approval** / guard detail for ID and profile review.
-3. Review government ID photos, profile details, guard card, and COI.
-4. Verify credential uploads in **Guard credentials** — approve or reject each document.
-5. When ID and guard card are staff-verified, grant **marketplace eligibility** (active status).
+**Guard account states:**
 
-Staff still verify every upload. The platform does not auto-verify credentials.
+| Status | Meaning | Guard sees |
+|--------|---------|------------|
+| **Pending** | New sign-up; credentials uploading or under review | Activation screen — **Complete your application** |
+| **Approved** | Government ID staff-verified; profile approved | Activation screen — **Awaiting account activation** |
+| **Active** | Staff activated account — marketplace-eligible | Full guard app (**Map**, **Jobs**, **Pay**, etc.) |
+
+**Staff steps:**
+
+1. Open **Approvals** or **Guards**.
+2. Use **Profile approval** for guards with government ID on file.
+3. Review government ID photos, guard card, COI, and other credential uploads in **Guard credentials**.
+4. Verify each document — approve or reject. Nothing auto-verifies.
+5. **Slide to approve profile** when government ID is staff-verified (`pending` → `approved`).
+6. **Activate account** when ID and valid guard card are staff-verified (`approved` → `active`). Optional PTA/32-hour may use the 48h grace window at activation.
+
+Staff still verify every upload. The platform does not auto-verify credentials or auto-activate accounts.
 
 Guard records can also be managed from:
 
@@ -745,7 +787,7 @@ Card checkout uses Stripe; cash payments are no longer supported on the platform
 
 Overtime starts when late clock-out creates an extra amount.
 
-1. Guard reviews overtime from **My jobs** and may select **Approve overtime**.
+1. Guard reviews overtime from **Jobs** and may select **Approve overtime**.
 2. Client reviews overtime from **Jobs** and chooses **Approve overtime $X** or **Dispute charge**.
 3. Staff monitor overtime payment and payout from **Payments**.
 4. If disputed, open **Disputes**.
@@ -801,8 +843,8 @@ Client opens Home or Jobs
 
 | Guide step | Client page/action | Guard page/action | Staff page/action |
 |---------------|--------------------|-------------------|-------------------|
-| Open this guide | Account menu → **General guide** | Account menu → **General guide** | Sidebar → **General guide** |
-| Account approval | **Home** pending banner; account menu → **Profile** | Account menu → **Profile** | **Approvals → Profile approval**; **Clients**; **Guards** |
+| Open this guide | Account menu → **General guide** | Account menu → **General guide** (after **active**) | Sidebar → **General guide** |
+| Account approval / activation | **Home** pending banner; account menu → **Profile** | **Activation screen** — upload credentials inline; blocked until **active** | **Approvals → Profile approval**; **Activate account**; **Guards** |
 | Post marketplace job | **Home → Post job offer** or **Jobs → + Post offer** | — | **Approvals → Job offers** |
 | Direct guard request | **Guards → guard profile → Send assignment request to [name]** | **Map → Slide to claim job** | **Jobs** |
 | Add location | Posting flow → **Use current location** | — | **Jobs → Use current location** when editing location |
@@ -814,7 +856,7 @@ Client opens Home or Jobs
 | On-duty messages | **Messages** / job chat | **Message client** / **Messages** | **Messages** |
 | Incident/activity reports | **Home → Reports** to review | **Report incident** / **Activity report** | **Incidents** |
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
-| Overtime | **Jobs → Approve overtime $X** or **Dispute charge** | **My jobs → Approve overtime** | **Payments** / **Disputes** |
+| Overtime | **Jobs → Approve overtime $X** or **Dispute charge** | **Jobs → Approve overtime** | **Payments** / **Disputes** |
 | Payout | — | **Pay → Send to my bank** | **Payments** — dispute-hold override only |
 | Support | **Messages → Contact support** or **File a report** | **Messages → Contact support** or **File a report** | **Messages** support inbox |
 
@@ -826,11 +868,31 @@ This section describes each key part of the app — what it contains, what it is
 
 ---
 
+### Guard activation screen
+
+**Where:** Shown automatically after guard sign-in until account status is **active**
+
+Guards who are **pending** or **approved** (but not yet **active**) cannot open the main app. They stay on this screen until staff activate the account.
+
+| Element | What it is |
+|---------|------------|
+| **Title** | **Complete your application** (pending) or **Awaiting account activation** (approved) |
+| **Subtitle** | Short explanation of what to do next or that staff are finishing activation |
+| **Progress bar** | % complete across five requirements: government ID, COI, guard card, PTA/UOF, 32-hour block |
+| **Credential uploads** | Same upload UI as **Profile → Credentials** — tap each row to add or update documents |
+
+**Account menu while pending/approved:** **Settings** and **Sign out** only — no **Profile** link.
+
+---
+
 ### Guard credentials
 
-**Where:** Account menu → **Profile** → **Credentials**
+**Where:**
 
-The credentials panel contains all license and certification uploads for a guard account. Staff can also open it from **Guards → guard detail** and upload documents on the guard's behalf.
+- **Before active:** Activation screen (inline uploads on the same page).
+- **After active:** Account menu → **Profile** → **Credentials**.
+
+Staff can also open credentials from **Guards → guard detail** and upload documents on the guard's behalf.
 
 | Section | What it is |
 |---------|------------|
@@ -873,9 +935,9 @@ If PTA/UOF or the 32-hour block is not on file when staff grant marketplace elig
 
 ### Guard status & qualification panel
 
-**Where:** Account menu → **Profile** → guard status card
+**Where:** Account menu → **Profile** → guard status card (active guards only)
 
-This panel shows marketplace eligibility status and which credentials are on file.
+This panel shows marketplace eligibility status and which credentials are on file. Guards who are not yet **active** use the **activation screen** progress bar and checklist instead.
 
 | Status | Meaning |
 |--------|---------|
@@ -991,7 +1053,7 @@ The Approvals hub holds all pending review queues. Open a queue to view items an
 |-------|---------------|
 | **Job offers** | Submitted job listings waiting for staff approval before going live. |
 | **Guard credentials** | Credential and COI uploads — staff verify license photos and approve or reject. |
-| **Profile approval** | New guard and client accounts — staff verify ID and grant marketplace eligibility for guards. |
+| **Profile approval** | New guard and client accounts — staff verify government ID and **approve guard profile** (`pending` → `approved`). Separate **Activate account** step grants `active` status. |
 
 _Note: Guard applications no longer queue for staff. Guards apply directly to clients._
 
