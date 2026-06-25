@@ -5,7 +5,7 @@ import {
   getGuardMissingGraceCredentialLabels,
 } from './guardMissingCredentials';
 
-/** Hours staff-granted work grace when optional credentials are missing at activation. */
+/** Hours of self-serve work grace when optional credentials are missing at marketplace eligibility. */
 export const CREDENTIAL_GRACE_PERIOD_HOURS = 48;
 
 export const CREDENTIAL_GRACE_PERIOD_MS = CREDENTIAL_GRACE_PERIOD_HOURS * 60 * 60 * 1000;
@@ -83,7 +83,7 @@ function graceLabelFor(kind: GraceTrainingCredential): string {
   return kind === 'pta-uof' ? GRACE_CREDENTIAL_PTA_UOF_LABEL : GRACE_CREDENTIAL_32_HOUR_LABEL;
 }
 
-/** During active grace, missing training covered by staff activation grace does not block work. */
+/** During active grace, missing training covered by self-serve eligibility grace does not block work. */
 export function guardGraceWaivesTrainingCredential(
   guard: SecurityGuard,
   kind: GraceTrainingCredential,

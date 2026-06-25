@@ -163,7 +163,7 @@ export function EditRequestForm({
           {paidReschedule && paidHours != null && (
             <p className="text-xs text-brand-text-muted mt-1">
               Move your shift to new times within the {formatDuration(paidHours)} already paid for. Longer shifts
-              and cash jobs require staff approval before guards are notified.
+              may require client confirmation before guards are notified.
             </p>
           )}
         </div>

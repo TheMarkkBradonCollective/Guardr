@@ -19,6 +19,9 @@ import {
   guardIdVerificationSubmissionReady,
 } from './guardIdentityVerification';
 import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPending } from './accountStatus';
+import { guardCredentialGracePatchForActivation } from './guardCredentialGrace';
+
+export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
 export interface GuardActivationChecklist {
   idSubmitted: boolean;
@@ -209,4 +212,25 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
   if (checklist.guardCardSubmitted && !guardMeetsLevel1(guard)) parts.push('Guard card invalid');
   return parts.join(' · ') || 'Awaiting requirements';
+}
+
+/**
+ * When credential verification is complete, grant marketplace eligibility (active status)
+ * with an automatic credential grace window — not a hiring/employment gate.
+ */
+export function buildMarketplaceEligibilityActivation(
+  guard: SecurityGuard,
+  state = 'CA'
+): SecurityGuard | null {
+  if (guard.isStaff) return null;
+  const status = getGuardUserStatus(guard);
+  if (status !== 'pending' && status !== 'approved') return null;
+  if (guardAccountActivationBlockers(guard, state).length > 0) return null;
+  const gracePatch = guardCredentialGracePatchForActivation(guard, state);
+  return {
+    ...guard,
+    userStatus: 'active',
+    verified: true,
+    ...gracePatch,
+  };
 }

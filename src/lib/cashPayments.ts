@@ -156,6 +156,12 @@ export function canMakeGuardPayoutAvailable(req: SecurityRequest): boolean {
   return true;
 }
 
+/** Staff manual payout release — only when automatic release is on dispute hold. */
+export function canStaffManuallyReleaseGuardPayout(req: SecurityRequest): boolean {
+  if (!canMakeGuardPayoutAvailable(req)) return false;
+  return req.overtimeStatus === 'disputed';
+}
+
 /** Reason why guard pay cannot be released yet (for UI hints). */
 export function guardPayoutBlockedReason(req: SecurityRequest): string | null {
   if (req.status !== 'completed') return 'Job must be complete before releasing guard pay.';

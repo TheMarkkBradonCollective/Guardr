@@ -1,69 +1,53 @@
 import { SecurityRequest, StaffSpotCheck } from '../types';
 
+/** Spot checks removed — platform does not supervise guards on site. */
 export const NO_SPOT_CHECK_LABEL = 'No Spot Check';
 
-const SPOT_CHECK_UPLOAD_STATUSES: SecurityRequest['status'][] = ['accepted', 'in-progress', 'completed'];
-
-/** Guard is on site or shift has ended — staff presence check applies */
-export function spotCheckApplies(req: SecurityRequest): boolean {
-  if (!req.assignedGuardId) return false;
-  if (req.status === 'in-progress') return true;
-  if (req.status === 'completed' && req.checkInAudit?.checkedAt) return true;
+export function spotCheckApplies(_req: SecurityRequest): boolean {
   return false;
 }
 
-export function hasSpotChecks(req: Pick<SecurityRequest, 'spotChecks'>): boolean {
-  return (req.spotChecks?.length ?? 0) > 0;
+export function hasSpotChecks(_req: Pick<SecurityRequest, 'spotChecks'>): boolean {
+  return false;
 }
 
-/** Staff may upload at most one spot-check photo per job. */
-export function canStaffAddSpotCheck(req: SecurityRequest): boolean {
-  if (hasSpotChecks(req)) return false;
-  if (!req.assignedGuardId) return false;
-  return SPOT_CHECK_UPLOAD_STATUSES.includes(req.status);
+export function canStaffAddSpotCheck(_req: SecurityRequest): boolean {
+  return false;
 }
 
-/** Optional for staff, but flagged until at least one spot-check photo is saved */
-export function isNoSpotCheckFlagged(req: SecurityRequest): boolean {
-  return spotCheckApplies(req) && !hasSpotChecks(req);
+export function isNoSpotCheckFlagged(_req: SecurityRequest): boolean {
+  return false;
 }
 
-/** @deprecated Use canStaffAddSpotCheck — kept for call sites that mean "may upload another". */
-export function canStaffUploadSpotCheck(req: SecurityRequest): boolean {
-  return canStaffAddSpotCheck(req);
+/** @deprecated Spot checks removed */
+export function canStaffUploadSpotCheck(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function shouldShowSpotCheckSection(req: SecurityRequest): boolean {
-  return canStaffAddSpotCheck(req) || hasSpotChecks(req) || isNoSpotCheckFlagged(req);
+export function shouldShowSpotCheckSection(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function sortedSpotChecks(req: Pick<SecurityRequest, 'spotChecks'>) {
-  return [...(req.spotChecks ?? [])].sort(
-    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-  );
+export function sortedSpotChecks(_req: Pick<SecurityRequest, 'spotChecks'>): StaffSpotCheck[] {
+  return [];
 }
 
-const CLIENT_REVIEW_STATUSES: SecurityRequest['status'][] = ['in-progress', 'completed'];
-
-export function isSpotCheckClientConfirmed(check: StaffSpotCheck): boolean {
-  return !!check.clientConfirmedAt;
+export function isSpotCheckClientConfirmed(_check: StaffSpotCheck): boolean {
+  return !!_check.clientConfirmedAt;
 }
 
-export function hasSpotChecksForClientReview(req: SecurityRequest): boolean {
-  if (!CLIENT_REVIEW_STATUSES.includes(req.status)) return false;
-  return spotCheckApplies(req) || hasSpotChecks(req);
+export function hasSpotChecksForClientReview(_req: SecurityRequest): boolean {
+  return false;
 }
 
-export function getUnconfirmedSpotChecks(req: SecurityRequest): StaffSpotCheck[] {
-  return sortedSpotChecks(req).filter((check) => !isSpotCheckClientConfirmed(check));
+export function getUnconfirmedSpotChecks(_req: SecurityRequest): StaffSpotCheck[] {
+  return [];
 }
 
-export function canClientConfirmSpotCheck(req: SecurityRequest, spotCheckId: string): boolean {
-  if (!CLIENT_REVIEW_STATUSES.includes(req.status)) return false;
-  const check = req.spotChecks?.find((c) => c.id === spotCheckId);
-  return !!check && !isSpotCheckClientConfirmed(check);
+export function canClientConfirmSpotCheck(_req: SecurityRequest, _spotCheckId: string): boolean {
+  return false;
 }
 
-export function hasUnconfirmedSpotChecks(req: SecurityRequest): boolean {
-  return getUnconfirmedSpotChecks(req).length > 0;
+export function hasUnconfirmedSpotChecks(_req: SecurityRequest): boolean {
+  return false;
 }

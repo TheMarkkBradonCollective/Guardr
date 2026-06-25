@@ -192,21 +192,10 @@ export function StaffSettingsPanel({
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
             Current mode: {platformPaymentModeLabel(platformSettings)}
           </p>
+          <p className="text-sm text-brand-text-muted leading-relaxed">
+            {platformPaymentModeDescription(platformSettings)}
+          </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <label
-              className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
-                canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'
-              }`}
-            >
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={cashEnabled}
-                onChange={() => void toggleCash()}
-                disabled={!canEditPaymentModes || savingModes}
-              />
-              <span className="text-sm font-semibold">Cash</span>
-            </label>
             <label
               className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
                 canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'

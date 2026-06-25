@@ -54,6 +54,7 @@ import {
   canDirectorMarkCashDepositManually,
   canDirectorMarkPlatformFeePaidCash,
   canMakeGuardPayoutAvailable,
+  canStaffManuallyReleaseGuardPayout,
   canStaffApproveClientCashPayment,
   getManualCashDepositDue,
   getPlatformFeeAmount,
@@ -90,6 +91,8 @@ import {
   getPendingGuardAccountReviews,
   guardAccountApprovalBlockers,
   guardAccountActivationBlockers,
+  buildMarketplaceEligibilityActivation,
+  MARKETPLACE_ELIGIBILITY_LABEL,
 } from './lib/guardAccountActivation';
 import {
   guardCredentialGracePatchForActivation,
@@ -2996,6 +2999,17 @@ export default function App() {
         }
       }
     }
+    const after = before
+      ? syncGuardCredentialGraceState({
+          ...before,
+          certifications: before.certifications.map((c) =>
+            c.id === certId ? { ...c, status: 'verified' as const } : c
+          ),
+        })
+      : null;
+    if (after) {
+      await tryGrantMarketplaceEligibility(guardId, after);
+    }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
@@ -3522,6 +3536,46 @@ export default function App() {
     });
   };
 
+  const tryGrantMarketplaceEligibility = async (guardId: string, prior?: SecurityGuard) => {
+    const base = prior ?? guards.find((g) => g.id === guardId);
+    if (!base) return;
+    const eligible = buildMarketplaceEligibilityActivation(base);
+    if (!eligible || eligible.userStatus === base.userStatus) return;
+
+    setGuards((prev) => prev.map((g) => (g.id === guardId ? eligible : g)));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const result = await updateGuardAccountRow(
+        supabase,
+        guardId,
+        {
+          user_status: 'active',
+          verified: true,
+          credential_grace_deadline: eligible.credentialGraceDeadline ?? null,
+          credential_grace_missing: eligible.credentialGraceMissing ?? null,
+          credential_grace_hours: eligible.credentialGraceHours ?? null,
+        },
+        'activate'
+      );
+      if (result.ok === false) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? base : g)));
+        throw new Error(result.error);
+      }
+    }
+    if (currentUser) {
+      const graceNote =
+        eligible.credentialGraceMissing && eligible.credentialGraceMissing.length > 0
+          ? ` Upload ${eligible.credentialGraceMissing.join(' and ')} within ${eligible.credentialGraceHours ?? 48} hours to keep marketplace access.`
+          : '';
+      void reportPushEvent(currentUser, {
+        type: 'support_ticket_status',
+        recipientUserId: guardId,
+        title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
+        body: `Your credentials are verified. You can browse and accept jobs on Guardr.${graceNote}`,
+      });
+    }
+  };
+
   const handleApproveGuardAccount = async (guardId: string) => {
     if (!currentUser || !canManageGuards(currentUser)) {
       appToast('You do not have permission to approve guard accounts.', 'error');
@@ -3565,28 +3619,22 @@ export default function App() {
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',
       recipientUserId: guardId,
-      title: 'Account approved',
-      body: 'Your guard profile is approved. Complete activation to start accepting jobs.',
+      title: 'Credentials verified',
+      body: 'Your government ID is verified. Complete remaining credentials for marketplace eligibility.',
     });
+    await tryGrantMarketplaceEligibility(guardId, approvedGuard);
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
     if (!currentUser || !canManageGuards(currentUser)) {
-      appToast('You do not have permission to activate guard accounts.', 'error');
+      appToast('You do not have permission to grant marketplace eligibility.', 'error');
       return;
     }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
     const blockers = guardAccountActivationBlockers(guard);
     if (blockers.length > 0) {
-      throw new Error(`Cannot activate account yet:\n• ${blockers.join('\n• ')}`);
-    }
-
-    const missingGrace = getGuardMissingGraceCredentialLabels(guard);
-    if (missingGrace.length > 0 && (!options?.graceHours || options.graceHours <= 0)) {
-      throw new Error(
-        `Cannot activate — ${missingGrace.join(', ')} not listed or on file. Set a grace period when activating.`
-      );
+      throw new Error(`Cannot grant marketplace eligibility yet:\n• ${blockers.join('\n• ')}`);
     }
 
     const gracePatch = guardCredentialGracePatchForActivation(guard, 'CA', options?.graceHours);
@@ -3618,14 +3666,15 @@ export default function App() {
       }
     }
     if (currentUser) {
-      const graceNote = options?.graceHours
-        ? ` A grace period of ${options.graceHours}h applies to any missing credentials.`
-        : '';
+      const graceNote =
+        gracePatch.credentialGraceMissing && gracePatch.credentialGraceMissing.length > 0
+          ? ` Upload ${gracePatch.credentialGraceMissing.join(' and ')} within ${gracePatch.credentialGraceHours ?? 48} hours to keep marketplace access.`
+          : '';
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: guardId,
-        title: 'Account activated',
-        body: `Your guard account is fully active. You can now browse and accept jobs on Guardr.${graceNote}`,
+        title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
+        body: `Your credentials are verified. You can now browse and accept jobs on Guardr.${graceNote}`,
       });
     }
   };
@@ -3897,6 +3946,13 @@ export default function App() {
         throw new Error('Could not approve government ID. Please try again.');
       }
     }
+    const verifiedGuard: SecurityGuard = {
+      ...guard,
+      idVerificationStatus: 'verified',
+      idVerificationReviewedAt: reviewedAt,
+      idVerificationRejectionReason: undefined,
+    };
+    await tryGrantMarketplaceEligibility(guardId, verifiedGuard);
   };
 
   const handleRejectGuardIdentityVerification = async (guardId: string, reason?: string) => {
@@ -4216,12 +4272,10 @@ export default function App() {
       location,
     });
 
-    // Trusted clients skip the approval queue unless they're using cash.
+    // Trusted clients skip the approval queue.
     const clientIsTrusted = clientRecord?.trusted === true;
-    const requestingCash = newRequest.clientPaymentMethod === 'cash';
-    const initialStatus: SecurityRequest['status'] =
-      clientIsTrusted && !requestingCash ? 'open' : 'pending-review';
-    const openedAt = clientIsTrusted && !requestingCash ? new Date().toISOString() : undefined;
+    const initialStatus: SecurityRequest['status'] = clientIsTrusted ? 'open' : 'pending-review';
+    const openedAt = clientIsTrusted ? new Date().toISOString() : undefined;
 
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
@@ -4527,7 +4581,7 @@ export default function App() {
 
   const handleStaffAssignGuard = async (requestId: string, guardId: string) => {
     if (!currentUser || !canManageCompanyOperations(currentUser)) {
-      appToast('Only directors can select guards for jobs.', 'error');
+      appToast('Only directors can place guards on jobs.', 'error');
       return;
     }
     const job = requests.find((r) => r.id === requestId);
@@ -4543,11 +4597,19 @@ export default function App() {
     }
     const userStatus = getGuardUserStatus(guard);
     if (userStatus === 'pending') {
-      appToast(`${guard.name} cannot pick up this job — account is pending approval.`, 'error');
+      appToast(`${guard.name} cannot pick up this job — marketplace eligibility pending.`, 'error');
       return;
     }
     if (userStatus === 'suspended' || userStatus === 'blocked') {
       appToast(`${guard.name} cannot pick up this job — account is ${userStatus}.`, 'error');
+      return;
+    }
+    if (!(await showAppConfirm({
+      title: 'Dispute or safety placement?',
+      message:
+        'Guards normally self-select jobs. Staff placement is only for dispute resolution or safety exceptions. Continue?',
+      confirmLabel: 'Place guard',
+    }))) {
       return;
     }
 
@@ -5290,25 +5352,37 @@ export default function App() {
     appToast('Platform settings saved.', 'success');
   };
 
-  const handleMakeGuardPayoutAvailable = async (requestId: string) => {
-    if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can release guard pay.', 'error');
-      return;
+  const handleMakeGuardPayoutAvailable = async (
+    requestId: string,
+    options?: { autoRelease?: boolean }
+  ) => {
+    if (!options?.autoRelease) {
+      if (!currentUser || !canRecordCashPayments(currentUser)) {
+        appToast('Only Directors and Owners can override payout holds.', 'error');
+        return;
+      }
     }
     const req = requests.find((r) => r.id === requestId);
     if (!req || !canMakeGuardPayoutAvailable(req)) {
       appToast('This job is not ready to release guard pay.', 'error');
       return;
     }
+    if (!options?.autoRelease && !canStaffManuallyReleaseGuardPayout(req)) {
+      appToast(
+        'Guard pay auto-releases to Stripe Connect after the completion delay. Manual release is only for dispute holds.',
+        'error'
+      );
+      return;
+    }
     const amount = guardPayoutAmount(req);
-    const cashClient = isCashClientPayment(req);
-    if (!(await showAppConfirm({
-      title: cashClient ? 'Release guard pay?' : 'Make funds available to guard?',
-      message: cashClient
-        ? `Release $${amount.toFixed(2)} for "${req.title}"? The guard can then request a bank transfer or cash pickup from their Pay screen.`
-        : `Make $${amount.toFixed(2)} available for "${req.title}"? The guard will choose bank transfer or cash pickup from Pay.`,
-      confirmLabel: 'Release pay',
-    }))) {
+    if (
+      !options?.autoRelease &&
+      !(await showAppConfirm({
+        title: 'Release payout after dispute?',
+        message: `Release $${amount.toFixed(2)} for "${req.title}" after resolving the dispute hold?`,
+        confirmLabel: 'Release pay',
+      }))
+    ) {
       return;
     }
 
@@ -6715,16 +6789,16 @@ export default function App() {
           guardId,
           guardName: guard.name,
           title: 'Independent guard request',
-          body: `Guardr approved ${guard.name} for "${job.title}". Confirm to add them to your roster.`,
+          body: `${guard.name} applied for "${job.title}". Confirm to add them to your roster.`,
         });
         void reportPushEvent(currentUser, {
           type: 'assignment',
           recipientUserId: guardId,
           requestId,
-          body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
+          body: `Your application for "${job.title}" is awaiting client confirmation.`,
         });
       }
-      appToast(`${guard.name} sent to ${job.clientName} for independent approval.`, 'success');
+      appToast(`${guard.name} sent to ${job.clientName} for approval.`, 'success');
       return;
     }
 
@@ -6762,10 +6836,10 @@ export default function App() {
         .eq('id', requestId);
     }
     if (currentUser) {
-      const clientTitle = options?.initiatedByGuard ? 'Guard application' : 'Approve your guard';
+      const clientTitle = options?.initiatedByGuard ? 'Guard application' : 'Guard placement';
       const clientBody = options?.initiatedByGuard
         ? `${guard.name} applied for "${job.title}". Confirm to hire them.`
-        : `Guardr approved ${guard.name} for "${job.title}". Confirm to hire them.`;
+        : `${guard.name} was placed on "${job.title}" for your review (dispute/safety). Confirm to hire them.`;
       void reportPushEvent(currentUser, {
         type: 'assignment',
         recipientUserId: job.clientId,
@@ -6779,7 +6853,9 @@ export default function App() {
         type: 'assignment',
         recipientUserId: guardId,
         requestId,
-        body: `Guardr approved you for "${job.title}" — awaiting client confirmation.`,
+        body: options?.initiatedByGuard
+          ? `Your application for "${job.title}" is awaiting client confirmation.`
+          : `You were placed on "${job.title}" — awaiting client confirmation.`,
       });
     }
     appToast(`${guard.name} sent to ${job.clientName} for approval.`, 'success');
@@ -6912,7 +6988,7 @@ export default function App() {
     await denyGuardApplication(requestId, job.pendingGuardId, { deniedBy: 'client' });
   };
 
-  // ── Guard applies to open job offer (staff approves best fit) ──
+  // ── Guard applies to open job (self-selection → client approval) ──
   const handleApplyToJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
       appToast('Staff accounts cannot apply to field jobs. Sign in with a guard account to work jobs.', 'error');
@@ -6934,7 +7010,7 @@ export default function App() {
       return;
     }
     if (guardHasApplied(job, activeGuardId)) {
-      appToast('You already applied for this job. Staff will review your application.', 'error');
+      appToast('You already applied for this job. Awaiting client confirmation.', 'error');
       return;
     }
     if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id), requests)) {
@@ -6961,86 +7037,36 @@ export default function App() {
     }
 
     if (isMultiGuardJob(job)) {
-      if (shouldSkipStaffGuardReview(activeGuard, job, {
-        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
-      })) {
-        const result = proposeIndependentGuardToClient(job, activeGuardId, true, requests);
-        if ('error' in result) {
-          appToast(result.error, 'error');
-          return;
-        }
-        await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
-        if (currentUser) {
-          void reportPushEvent(currentUser, {
-            type: 'assignment',
-            recipientUserId: job.clientId,
-            requestId,
-            guardId: activeGuardId,
-            guardName: activeGuard.name,
-            title: 'Independent guard request',
-            body: `${activeGuard.name} applied independently for "${job.title}".`,
-          });
-        }
-        appToast('Independent application sent to client for approval.', 'success');
+      const result = proposeIndependentGuardToClient(job, activeGuardId, true, requests);
+      if ('error' in result) {
+        appToast(result.error, 'error');
         return;
       }
-      const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
-      setRequests((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
-      );
-      if (isDbConnected) {
-        await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
-      }
+      await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
       if (currentUser) {
         void reportPushEvent(currentUser, {
-          type: 'guard_application',
+          type: 'assignment',
+          recipientUserId: job.clientId,
           requestId,
           guardId: activeGuardId,
           guardName: activeGuard.name,
-          location: job.location,
-          body: `${activeGuard.name} applied independently for "${job.title}"`,
+          title: 'Guard application',
+          body: `${activeGuard.name} applied for "${job.title}".`,
         });
       }
-      appToast(
-        'Independent application submitted. Guardr staff may send you to the client separately from coordinated crews.',
-        'success'
-      );
-      return;
-    }
-
-    if (shouldSkipStaffGuardReview(activeGuard, job, {
-        verifiedSelfServeEnabled: platformSettings.verifiedGuardSelfServe !== false,
-      })) {
-      const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
-      setRequests((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
-      );
-      if (isDbConnected) {
-        await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
-      }
-      await proposeGuardForClientApproval(requestId, activeGuardId, { initiatedByGuard: true });
       appToast('Application sent to client for approval.', 'success');
       return;
     }
 
-    const nextApplicants = [...job.applicants, activeGuardId];
+    const nextApplicants = [...new Set([...job.applicants, activeGuardId])];
     setRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, applicants: nextApplicants } : r))
     );
     if (isDbConnected) {
       await supabase.from('security_requests').update({ applicants: nextApplicants }).eq('id', requestId);
     }
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'guard_application',
-        requestId,
-        guardId: activeGuardId,
-        guardName: activeGuard.name,
-        location: job.location,
-        body: `${activeGuard.name} applied for "${job.title}"`,
-      });
-    }
-    appToast('Application submitted. Guardr staff will review applicants and send the best fit for client approval.', 'success');
+    await proposeGuardForClientApproval(requestId, activeGuardId, { initiatedByGuard: true });
+    appToast('Application sent to client for approval.', 'success');
   };
 
   const handleGuardDeclineDirectJob = async (requestId: string) => {
@@ -7955,7 +7981,7 @@ export default function App() {
       if (req.paymentStatus === 'released') continue;
       if (!shouldScheduleAutoStripePayout(req)) continue;
       if (!req.guardPayoutAvailable) {
-        await handleMakeGuardPayoutAvailable(req.id);
+        await handleMakeGuardPayoutAvailable(req.id, { autoRelease: true });
       }
       if (req.paymentStatus !== 'released') {
         await handleReleasePayout(req.id);

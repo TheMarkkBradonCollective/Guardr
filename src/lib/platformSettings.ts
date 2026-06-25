@@ -38,7 +38,7 @@ export interface PlatformSettings {
 }
 
 export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
-  paymentCashEnabled: true,
+  paymentCashEnabled: false,
   paymentStripeEnabled: true,
   feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
   autoStripePayoutEnabled: true,
@@ -52,8 +52,9 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
 
 const STORAGE_KEY = 'guardr_platform_settings';
 
-export function platformAllowsCash(settings: PlatformSettings): boolean {
-  return settings.paymentCashEnabled;
+/** Cash payments are disabled — marketplace is card/Stripe only. */
+export function platformAllowsCash(_settings: PlatformSettings): boolean {
+  return false;
 }
 
 export function platformAllowsStripe(settings: PlatformSettings): boolean {
@@ -61,38 +62,29 @@ export function platformAllowsStripe(settings: PlatformSettings): boolean {
 }
 
 export function platformPaymentModeLabel(settings: PlatformSettings): string {
-  if (settings.paymentCashEnabled && settings.paymentStripeEnabled) return 'Card and cash';
-  if (settings.paymentCashEnabled) return 'Cash only';
   if (settings.paymentStripeEnabled) return 'Card only';
   return 'Not configured';
 }
 
 export function platformPaymentModeDescription(settings: PlatformSettings): string {
-  if (settings.paymentCashEnabled && settings.paymentStripeEnabled) {
-    return 'Clients can pay by card (automatic) or request cash (staff approves).';
-  }
-  if (settings.paymentCashEnabled) {
-    return 'Clients request cash payment; staff must approve each payment.';
-  }
   if (settings.paymentStripeEnabled) {
     return 'Clients pay online by card through Stripe checkout.';
   }
-  return 'Enable at least one payment method in Settings.';
+  return 'Enable card payments in Settings.';
 }
 
 /** At least one payment method must stay enabled. */
 export function normalizePlatformSettings(
   input: Partial<PlatformSettings>
 ): PlatformSettings | null {
-  const cash = input.paymentCashEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentCashEnabled;
   const stripe = input.paymentStripeEnabled ?? DEFAULT_PLATFORM_SETTINGS.paymentStripeEnabled;
-  if (!cash && !stripe) return null;
+  if (!stripe) return null;
   const bumpRate = Math.max(
     0,
     input.crewTeamPayBumpPerHour ?? input.teamLeadBonusPerGuardPerHour ?? 1
   );
   return {
-    paymentCashEnabled: cash,
+    paymentCashEnabled: false,
     paymentStripeEnabled: stripe,
     feeConfig: normalizePlatformFeeConfig(input.feeConfig),
     autoStripePayoutEnabled: input.autoStripePayoutEnabled ?? true,
@@ -148,7 +140,7 @@ export function platformSettingsFromDbRow(row: {
 }): PlatformSettings {
   return (
     normalizePlatformSettings({
-      paymentCashEnabled: row.payment_cash_enabled ?? true,
+      paymentCashEnabled: false,
       paymentStripeEnabled: row.payment_stripe_enabled ?? true,
       feeConfig: normalizePlatformFeeConfig(
         row.fee_config as Partial<PlatformFeeConfig> | null | undefined

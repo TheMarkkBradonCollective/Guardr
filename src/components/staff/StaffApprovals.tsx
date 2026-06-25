@@ -20,7 +20,6 @@ import {
   guardCanStaffApproveProfile,
   guardActivationSummaryLabel,
 } from '../../lib/guardAccountActivation';
-import { promptStaffGuardActivationGrace } from '../../lib/guardMissingCredentials';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
@@ -839,28 +838,24 @@ export function StaffApprovals({
                       title={
                         canTakeAction
                           ? checklist.missingGraceCredentials.length > 0
-                            ? `Not listed: ${checklist.missingGraceCredentials.join(', ')} — set grace period at activation`
-                            : 'Verify guard card and activate account'
+                            ? `Optional credentials missing — ${checklist.missingGraceCredentials.join(', ')}; 48h self-serve grace applies`
+                            : 'Grant marketplace eligibility'
                           : approvalBlockers.join(' · ') || 'Valid guard card required'
                       }
                       onClick={() => {
                         void (async () => {
                           if (!canTakeAction) return;
-                          const graceChoice = await promptStaffGuardActivationGrace(guard);
-                          if (!graceChoice.proceed) return;
                           try {
-                            await onActivateGuardAccount(guard.id, {
-                              graceHours: graceChoice.graceHours,
-                            });
+                            await onActivateGuardAccount(guard.id);
                             setActiveItemId(null);
                           } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
+                            showAppToast(err instanceof Error ? err.message : 'Could not grant marketplace eligibility.', { tone: 'error' });
                           }
                         })();
                       }}
                       className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
                     >
-                      <Check className="w-3.5 h-3.5" /> Activate account
+                      <Check className="w-3.5 h-3.5" /> Grant eligibility
                     </button>
                   )}
                 </div>

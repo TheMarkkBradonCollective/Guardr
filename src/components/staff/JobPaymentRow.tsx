@@ -8,6 +8,7 @@ import {
   canDirectorPayGuardCash,
   canDirectorPayOvertimeGuardCash,
   canMakeGuardPayoutAvailable,
+  canStaffManuallyReleaseGuardPayout,
   canMakeOvertimeGuardPayoutAvailable,
   canStaffApproveClientCashPayment,
   canStaffApproveOvertimeCashPayment,
@@ -143,7 +144,7 @@ export function JobPaymentRow({
     isDirector && canDirectorMarkPlatformFeePaidCash(req) && onMarkPlatformFeePaidCash;
   const canReleaseFunds =
     isDirector &&
-    canMakeGuardPayoutAvailable(req) &&
+    canStaffManuallyReleaseGuardPayout(req) &&
     onMakeGuardPayoutAvailable &&
     !readOnly;
   const canCashGuard =

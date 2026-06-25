@@ -26,20 +26,17 @@ const stripeJob = {
 } as SecurityRequest;
 
 describe('shouldSkipStaffGuardReview', () => {
-  it('skips staff review for verified insured active guards on card jobs', () => {
+  it('allows verified insured active guards to self-select jobs', () => {
     assert.equal(
       shouldSkipStaffGuardReview(baseGuard, stripeJob, { verifiedSelfServeEnabled: true }),
       true
     );
   });
 
-  it('requires staff review for cash jobs', () => {
+  it('still allows trusted guards regardless of insurance', () => {
     assert.equal(
-      shouldSkipStaffGuardReview(baseGuard, {
-        ...stripeJob,
-        clientCashPaymentRequested: true,
-      }),
-      false
+      shouldSkipStaffGuardReview({ ...baseGuard, trusted: true, insurancePolicy: undefined }, stripeJob),
+      true
     );
   });
 });

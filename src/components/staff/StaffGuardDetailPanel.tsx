@@ -44,7 +44,6 @@ import {
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
-import { promptStaffGuardActivationGrace } from '../../lib/guardMissingCredentials';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 
@@ -578,14 +577,10 @@ export function StaffGuardDetailPanel({
                   onClick={() => {
                     void (async () => {
                       if (!guardCanStaffActivateAccount(guard)) return;
-                      const graceChoice = await promptStaffGuardActivationGrace(guard);
-                      if (!graceChoice.proceed) return;
                       try {
-                        await onActivateGuardAccount(guard.id, {
-                          graceHours: graceChoice.graceHours,
-                        });
+                        await onActivateGuardAccount(guard.id);
                       } catch (err) {
-                        showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
+                        showAppToast(err instanceof Error ? err.message : 'Could not grant marketplace eligibility.', { tone: 'error' });
                       }
                     })();
                   }}
@@ -594,12 +589,12 @@ export function StaffGuardDetailPanel({
                   title={
                     guardCanStaffActivateAccount(guard)
                       ? activationChecklist.missingGraceCredentials.length > 0
-                        ? `Not listed: ${activationChecklist.missingGraceCredentials.join(', ')} — set grace at activation`
-                        : 'Verify guard card and activate account'
+                        ? `Optional credentials missing — ${activationChecklist.missingGraceCredentials.join(', ')}; 48h self-serve grace applies`
+                        : 'Grant marketplace eligibility'
                       : activationChecklist.staffActivationBlockers.join(' · ') || 'Valid guard card required'
                   }
                 >
-                  Activate account
+                  Grant marketplace eligibility
                 </button>
               )}
               {canSuspend && (guardAccountStatus === 'pending' || guardAccountStatus === 'approved') && onDeleteGuard && (

@@ -28,14 +28,14 @@ export function AccountPendingScreen({ role, guard, onOpenProfile }: AccountPend
           </span>
         )}
         <AppPageLead
-          kicker="Application status"
-          title={approved ? 'Profile approved' : 'Pending approval'}
+          kicker="Marketplace eligibility"
+          title={approved ? 'Credentials verified' : 'Eligibility review'}
         />
         <p className="text-sm text-brand-text-muted leading-relaxed mt-4 text-left font-medium">
           {isGuard
             ? approved
-              ? 'Profile approved — upload your credentials in your profile so staff can activate your account.'
-              : 'Upload your credentials in your profile. Staff reviews and activates your account.'
+              ? 'Your government ID is verified. Complete remaining credentials so staff can confirm marketplace eligibility.'
+              : 'Upload your credentials. Staff verifies them for marketplace eligibility — not employment onboarding.'
             : 'Your account is pending staff approval.'}
         </p>
       </div>

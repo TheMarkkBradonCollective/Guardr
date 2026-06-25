@@ -1,19 +1,17 @@
 import type { SecurityGuard, SecurityRequest } from '../types';
 import { isGuardAccountActive } from './accountStatus';
-import { jobRequiresCashStaffConfirmation } from './guardAssignment';
 import { guardHasValidInsurance } from './guardInsurance';
 import { isGuardProfileApproved, isGuardTrusted } from './guardTrust';
 
 /**
- * Verified active guards with valid insurance may apply directly to clients on card jobs,
- * bypassing staff applicant review. Cash jobs always require staff confirmation.
+ * Guards self-select jobs and apply directly to clients.
+ * Staff review is reserved for disputes and safety exceptions only.
  */
 export function shouldSkipStaffGuardReview(
   guard: SecurityGuard,
-  req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>,
+  _req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>,
   options?: { verifiedSelfServeEnabled?: boolean }
 ): boolean {
-  if (jobRequiresCashStaffConfirmation(req)) return false;
   if (isGuardTrusted(guard)) return true;
   if (options?.verifiedSelfServeEnabled === false) return false;
   if (!isGuardAccountActive(guard)) return false;
@@ -24,9 +22,8 @@ export function shouldSkipStaffGuardReview(
 /** @deprecated Use shouldSkipStaffGuardReview */
 export function shouldSkipStaffGuardReviewForTrusted(
   guard: Pick<SecurityGuard, 'trusted'>,
-  req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>
+  _req: Pick<SecurityRequest, 'clientPaymentMethod' | 'clientCashPaymentRequested'>
 ): boolean {
-  if (jobRequiresCashStaffConfirmation(req)) return false;
   return isGuardTrusted(guard);
 }
 
