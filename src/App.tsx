@@ -71,6 +71,7 @@ import {
   shouldPromptPasswordChange,
   STAFF_PROVISIONED_DEFAULT_PASSWORD,
 } from './lib/accountPasswords';
+import { AccountPendingScreen } from './components/account/AccountPendingScreen';
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard, type StaffSectionSelection } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
@@ -179,6 +180,7 @@ import {
 } from './lib/guardTeamDb';
 import { guardWorkBlockedMessage } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
+import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, isThemeMode, loadTheme, saveTheme } from './lib/platform/theme';
@@ -2005,6 +2007,7 @@ export default function App() {
   loadRef.current = loadFromSupabase;
   useSupabaseRealtimeSync(() => {
     if (shouldSkipRealtimeSync()) return;
+    if (isInactiveGuardSession(currentUserRef.current, guardsRef.current)) return;
     void loadRef.current();
   }, isDbConnected);
 
@@ -2203,13 +2206,7 @@ export default function App() {
     if (!isDbConnected) return;
     const onVisible = () => {
       if (document.visibilityState !== 'visible' || shouldSkipRealtimeSync()) return;
-      const user = currentUserRef.current;
-      if (user?.role === 'guard') {
-        const guard = findGuardProfileForUser(user, guardsRef.current);
-        if (guard && !isGuardAccountActive(guard)) {
-          beginLocalMutation(12_000);
-        }
-      }
+      if (isInactiveGuardSession(currentUserRef.current, guardsRef.current)) return;
       void loadRef.current();
     };
     document.addEventListener('visibilitychange', onVisible);
@@ -2704,7 +2701,7 @@ export default function App() {
       })
     );
     if (isDbConnected) {
-      beginLocalMutation(submittedByRole === 'guard' ? 12_000 : 3500);
+      beginLocalMutation(submittedByRole === 'guard' ? 30 * 60 * 1000 : 3500);
       try {
         const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
@@ -8884,6 +8881,46 @@ export default function App() {
         </div>
       );
     }
+    const inactiveGuard = isInactiveGuardSession(currentUser, verifiedGuards);
+
+    if (inactiveGuard && resolvedGuardTab !== 'settings') {
+      return (
+        <>
+          {marketplaceLegalGate}
+          {passwordChangeOverlay}
+          <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+            <header className="flex justify-end px-5 pt-4 shrink-0">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-sm font-semibold text-brand-text-muted hover:text-brand-text"
+              >
+                Sign out
+              </button>
+            </header>
+            <AccountPendingScreen
+              role="guard"
+              guard={activeGuard}
+              onOpenProfile={() => setGuardTab('settings')}
+              onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
+              onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
+              onAttachCertificationImage={(certId, imageUrl) =>
+                handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
+              }
+              onUpdateCertification={(certId, payload) =>
+                handleUpdateCertification(activeGuard.id, certId, payload, 'guard')
+              }
+              onSubmitIdentityVerification={(payload) =>
+                handleSubmitGuardIdentityVerification(activeGuard.id, payload)
+              }
+              onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
+            />
+          </div>
+          <InstallPrompt />
+        </>
+      );
+    }
+
     const guardJobs = getGuardVisibleJobs(activeGuard, requests, platformSettings);
     const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
 
