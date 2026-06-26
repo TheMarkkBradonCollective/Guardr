@@ -1,19 +1,30 @@
 import guideMarkdown from '../../docs/guardr-general-guide.md?raw';
 
-export type GuideAudience = 'staff' | 'guard' | 'client' | 'all';
+export type GuideAudience =
+  | 'staff'
+  | 'guard'
+  | 'client'
+  | 'moderator'
+  | 'administrator'
+  | 'director'
+  | 'founder'
+  | 'all';
 
 export const GUIDE_TITLE = 'Guardr — General Guide';
 
+const ROLE_HEADINGS: Record<Exclude<GuideAudience, 'staff' | 'all'>, string> = {
+  client: '## Client guide',
+  guard: '## Guard guide',
+  moderator: '## Moderator guide',
+  administrator: '## Administrator guide',
+  director: '## Director guide',
+  founder: '## Founder guide',
+};
+
 export function getGuideMarkdown(audience: GuideAudience = 'all'): string {
-  if (audience === 'all') return guideMarkdown;
+  if (audience === 'all' || audience === 'staff') return guideMarkdown;
 
-  const heading =
-    audience === 'client'
-      ? '## Client guide'
-      : audience === 'guard'
-        ? '## Guard guide'
-        : '## Staff guide';
-
+  const heading = ROLE_HEADINGS[audience];
   const start = guideMarkdown.indexOf(heading);
   if (start < 0) return guideMarkdown;
 
@@ -26,6 +37,13 @@ export function getGuideMarkdown(audience: GuideAudience = 'all'): string {
     preambleEnd >= 0
       ? guideMarkdown.slice(0, guideMarkdown.indexOf('---', preambleEnd + 4) + 4)
       : `# ${GUIDE_TITLE}\n\n`;
+
+  const wholeAppStart = guideMarkdown.indexOf('## Whole app — start to finish');
+  const wholeAppEnd = guideMarkdown.indexOf('---', wholeAppStart + 1);
+  const wholeApp =
+    wholeAppStart >= 0 && wholeAppEnd > wholeAppStart
+      ? `${guideMarkdown.slice(wholeAppStart, wholeAppEnd + 4)}\n\n`
+      : '';
 
   const lifecycleStart = guideMarkdown.indexOf('## Job status lifecycle');
   const lifecycleEnd = guideMarkdown.indexOf('---', lifecycleStart + 1);
@@ -44,5 +62,5 @@ export function getGuideMarkdown(audience: GuideAudience = 'all'): string {
         ? guideMarkdown.slice(quickStart >= 0 ? quickStart : helpStart)
         : '';
 
-  return `${preamble}${lifecycle}${heading}${sectionBody}\n\n${tail}`.trim() + '\n';
+  return `${preamble}${wholeApp}${lifecycle}${heading}${sectionBody}\n\n${tail}`.trim() + '\n';
 }

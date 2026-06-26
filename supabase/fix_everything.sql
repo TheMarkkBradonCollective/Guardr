@@ -1186,7 +1186,7 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── OPTIONAL: Owner and Director staff accounts ───────────────────────────────
+-- ── OPTIONAL: Founder and Director staff accounts ───────────────────────────────
 INSERT INTO staff (
   id, name, email, badge_number, avatar, phone, bio,
   staff_role, user_status

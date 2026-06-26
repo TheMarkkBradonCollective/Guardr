@@ -2,7 +2,8 @@
 -- Guardr — COMPLETE SCHEMA SETUP (run once in Supabase SQL Editor)
 -- Idempotent: safe to re-run. Does NOT delete your data.
 -- Adds all tables, columns, constraints, RLS policies, and realtime.
--- Last updated: Jun 2026 — includes legal acceptances, COI, crew teams, schedule changes.
+-- Last updated: Jun 25, 2026 — Founder role, approved user_status, listed_weapon_gear,
+--   two-step guard activation (pending → approved → active), COI, crew teams, schedule changes.
 -- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
 
@@ -1181,7 +1182,7 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── OPTIONAL: Owner and Director staff accounts ───────────────────────────────
+-- ── OPTIONAL: Founder and Director staff accounts ───────────────────────────────
 INSERT INTO staff (
   id, name, email, badge_number, avatar, phone, bio,
   staff_role, user_status

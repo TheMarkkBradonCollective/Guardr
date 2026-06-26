@@ -788,7 +788,7 @@ export function StaffDashboard({
           />
         );
       case 'guide':
-        return <AppGuidePage audience="staff" />;
+        return <AppGuidePage audience="staff" staffRole={currentUser.role} />;
       case 'dev-updates':
         return showFinance ? (
           <DevNotesPage />

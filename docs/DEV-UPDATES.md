@@ -27,11 +27,12 @@ _Times below come from git commit timestamps. They reflect when work was committ
 3. **Jun 8** — guardr.co live on Vercel
 4. **Jun 9** — Sidebar navigation, BSIS compliance engine, payments pipeline, realtime sync
 5. **Jun 10** — Job applications, self-audit and spot-check workflows
-6. **Jun 20** — Owner role; messaging hub; director financial controls
+6. **Jun 20** — Founder role (was Owner); messaging hub; director financial controls
 7. **Jun 22** — ID verification, profile approval flow, production-ready polish
 8. **Jun 23** — Full responsive overhaul; overtime/disputes; messenger v2; workflow guide
 9. **Jun 24** — Guard favourites, direct job requests, advanced client guard filtering
-10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, no cash/spot checks, auto Stripe payout, marketplace eligibility framing, COI credential-row UI
+10. **Jun 25** — IC marketplace alignment: legal/COI stack, guard self-selection, auto Stripe payout, marketplace eligibility framing
+11. **Jun 25 (PM)** — Ops hierarchy: two-step guard activation, Founder role, per-role guides, auth scroll fix, live SQL sync
 
 ---
 
@@ -372,6 +373,22 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 ---
 
+## Thursday, June 25, 2026 (PM) — Ops hierarchy & live-readiness pass
+
+**Contributors:** Cursor · PR #312
+
+| Update | Detail |
+|--------|--------|
+| **Two-step guard activation** | `pending` → Moderator+ approves application → `approved` → guard uploads creds → Administrator+ verifies → Moderator+ manually activates → `active`. No auto-activation on verify. |
+| **Role hierarchy** | Moderator: approve/activate. Administrator+: verify credentials. Director: finances + team. Founder (was Owner): platform governance. |
+| **Founder rename** | Owner → Founder across UI, permissions, API session auth, SQL + migration `20260625120000_rename_owner_to_founder.sql` |
+| **Auth scroll fix** | Login/signup form column scrolls on desktop side-by-side layout |
+| **General guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |
+| **Complete SQL** | `complete_schema_setup.sql` / `fix_everything.sql` synced for live deploy |
+| **Tests** | 105 passing; production build verified |
+
+---
+
 ## Summary at a glance
 
 | Date | Commits | Main themes |
@@ -383,13 +400,13 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Jun 10** | 33 | Job applications, self-audit/spot-checks, map routing |
 | **Jun 11** | 6 | Credential photo locks, guard card = Active |
 | **Jun 12–19** | 0 | _No commits — 9-day break_ |
-| **Jun 20** | 24 | Cash payments, Owner role, messaging hub |
+| **Jun 20** | 24 | Cash payments, Founder role, messaging hub |
 | **Jun 21** | 2 | Staff default password flow |
 | **Jun 22** | 163 | ID verification, approvals, production polish, site briefings, bottom sheets |
 | **Jun 23** | 227 | Responsive Uber overhaul, overtime/disputes, messenger redesign, workflow guide |
 | **Jun 24** | 25 | Favourites, direct job requests, notifications, guard filtering |
-| **Jun 25** | 6 | IC marketplace compliance, control-signal reduction, COI checklist + credential-row UI |
+| **Jun 25** | 6+ | IC marketplace compliance, control-signal reduction, COI checklist, ops hierarchy, Founder role, per-role guides |
 
 ---
 
-_Visible in the staff console under **Dev notes** (Director and Owner only)._
+_Visible in the staff console under **Dev notes** (Director and Founder only)._
