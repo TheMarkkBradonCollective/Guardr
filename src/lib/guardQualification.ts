@@ -41,7 +41,7 @@ import {
   guardHasActiveCredentialGrace,
 } from './guardCredentialGrace';
 import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
-import { getGuardActivationChecklist, isGuardAccountActive } from './guardAccountActivation';
+import { getGuardActivationChecklist, guardMeetsAllActivationCredentialsOnFile, isGuardAccountActive } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
   guardIdMatchesWorkLicenseState,
@@ -85,15 +85,7 @@ export function guardHasExpiredIdOnFile(guard: SecurityGuard): boolean {
 }
 
 export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): boolean {
-  const licenseState = normalizeWorkLicenseState(state);
-  return (
-    guardHasVerifiedIdForWork(guard) &&
-    guardIdMatchesWorkLicenseState(guard, licenseState) &&
-    guardHasValidInsurance(guard) &&
-    guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', licenseState) &&
-    guardMeetsPtaUofTrainingVerified(guard) &&
-    guardMeets32HourBlockVerified(guard)
-  );
+  return guardMeetsAllActivationCredentialsOnFile(guard, state);
 }
 
 export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): string | null {
@@ -102,17 +94,18 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
     return 'Staff accounts cannot work field jobs.';
   }
   if (isGuardAccountPreActive(guard)) {
-    const checklist = getGuardActivationChecklist(guard);
-    if (!checklist.idSubmitted || !checklist.guardCardSubmitted) {
-      return 'Submit your government ID and BSIS Guard Card in your profile (ID verification and Guard Card sections). Staff will verify both before approving your profile.';
+    const checklist = getGuardActivationChecklist(guard, licenseState);
+    if (!checklist.canActivate) {
+      const blocker = checklist.staffApprovalBlockers[0];
+      if (blocker) {
+        return `Upload all five activation credentials before staff can approve your profile — ${blocker}`;
+      }
+      return 'Upload government ID, COI, guard card, PTA/UOF, and 32-hour training before staff can approve your profile.';
     }
     if (isGuardAccountApproved(guard)) {
-      return 'Your profile is approved — Guardr staff will activate your account so you can work jobs.';
+      return 'Your profile is approved — Guardr staff will grant marketplace eligibility so you can work jobs.';
     }
-    if (!checklist.canActivate) {
-      return 'Your ID and Guard Card are under staff review. You will be notified when your profile is approved.';
-    }
-    return 'Your documents meet work requirements — awaiting final profile approval by Guardr staff.';
+    return 'All five credentials are on file — awaiting profile approval by Guardr staff.';
   }
   const userStatus = getGuardUserStatus(guard);
   if (userStatus === 'suspended') {
@@ -121,32 +114,16 @@ export function guardWorkBlockedMessage(guard: SecurityGuard, state = 'CA'): str
   if (userStatus === 'blocked') {
     return 'Your account is blocked. Contact Guardr support.';
   }
-  if (!guardHasVerifiedIdForWork(guard)) {
-    const idStatus = getGuardIdVerificationStatus(guard);
-    if (idStatus === 'rejected') {
-      return 'Your government ID needs to be resubmitted — tap Government ID in Credentials to update.';
+  if (!isGuardAccountActive(guard, licenseState)) {
+    const checklist = getGuardActivationChecklist(guard, licenseState);
+    if (checklist.staffApprovalBlockers.length > 0) {
+      return checklist.staffApprovalBlockers[0];
     }
-    if (idStatus === 'pending' || (guardHasIdOnFile(guard) && idStatus !== 'verified')) {
-      return 'Your government ID must be verified by Guardr staff before you can work jobs.';
-    }
-    if (guardHasExpiredIdOnFile(guard)) {
-      return 'Your government ID has expired — update it in Credentials before working jobs.';
-    }
-    return 'Submit and verify your government ID in Credentials before working jobs.';
+    return 'Complete all five activation credentials in your profile before working jobs.';
   }
   if (!guardIdMatchesWorkLicenseState(guard, licenseState)) {
     const stateName = licenseState === 'CA' ? 'California' : licenseState;
     return `Your government ID must be issued by ${stateName} to work Guardr jobs in that state.`;
-  }
-  if (!guardMeetsLevel1(guard, licenseState)) {
-    const stateName = licenseState === 'CA' ? 'California' : licenseState;
-    return `Upload a valid BSIS Guard Card for ${stateName} to accept and work jobs.`;
-  }
-  if (
-    !guardMeetsPtaUofTraining(guard) &&
-    !guardGraceWaivesTrainingCredential(guard, 'pta-uof', licenseState)
-  ) {
-    return `Upload 8-hour Power to Arrest & Appropriate Use of Force training before working jobs. ${PTA_UOF_UPLOAD_GUIDANCE}`;
   }
   const insuranceBlocked = guardInsuranceBlockedMessage(guard);
   if (insuranceBlocked) return insuranceBlocked;

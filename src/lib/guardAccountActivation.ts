@@ -9,17 +9,18 @@ import {
   guardHasCredentialListed,
   guardHasCredentialOnFile,
   guardHasIdOnFile,
-  guardHasVerifiedIdForWork,
   guardMeets32HourBlock,
-  guardMeets32HourBlockVerified,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
-  guardMeetsPtaUofTrainingVerified,
 } from './guardQualification';
 import {
   getGuardIdVerificationStatus,
+  guardIdMatchesWorkLicenseState,
+  guardIdVerificationPhotosComplete,
   guardIdVerificationSubmissionReady,
+  isIdExpired,
 } from './guardIdentityVerification';
+import { guardHasInsuranceSubmitted } from './guardInsurance';
 import {
   getGuardUserStatus,
   isGuardAccountApproved,
@@ -27,18 +28,22 @@ import {
   isGuardUserStatusActive,
 } from './accountStatus';
 import {
-  buildInsuranceApprovalBlockers,
+  buildInsuranceSubmissionBlockers,
   guardHasInsuranceSubmitted,
   guardHasValidInsurance,
 } from './guardInsurance';
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
-/** Active for marketplace work — user_status active and all five credentials verified. */
+/** Active for marketplace work — user_status active and all five credentials on file. */
 export function isGuardAccountActive(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return true;
   if (!isGuardUserStatusActive(guard)) return false;
   if (!Array.isArray(guard.certifications)) return false;
-  return getGuardActivationChecklist(guard, state).canStaffActivate;
+  return guardMeetsAllActivationCredentialsOnFile(guard, state);
+}
+
+export function guardMeetsAllActivationCredentialsOnFile(guard: SecurityGuard, state = 'CA'): boolean {
+  return getGuardActivationChecklist(guard, state).staffApprovalBlockers.length === 0;
 }
 
 export interface GuardActivationChecklist {
@@ -48,15 +53,15 @@ export interface GuardActivationChecklist {
   guardCardVerified: boolean;
   insuranceSubmitted: boolean;
   insuranceVerified: boolean;
-  /** Guard-facing — all five activation credentials verified. */
+  /** Guard-facing — all five activation credentials on file. */
   canActivate: boolean;
-  /** Staff can approve profile (verified ID + verified COI + verified guard card). */
+  /** Staff can approve profile when all five credentials are on file. */
   canStaffApprove: boolean;
-  /** Staff can activate account (core credentials + verified PTA/UOF + verified 32-hour block). */
+  /** Staff can grant marketplace eligibility when all five credentials remain on file. */
   canStaffActivate: boolean;
-  /** Hard blockers preventing profile approval (ID + COI + guard card). */
+  /** Hard blockers preventing profile approval (all five credentials on file). */
   staffApprovalBlockers: string[];
-  /** Hard blockers preventing account activation (all required credentials verified). */
+  /** Hard blockers preventing marketplace eligibility (all five credentials on file). */
   staffActivationBlockers: string[];
   missingWorkCredentials: string[];
   missingGraceCredentials: string[];
@@ -86,7 +91,7 @@ export function guardIdIsVerified(guard: SecurityGuard): boolean {
   return getGuardIdVerificationStatus(guard) === 'verified';
 }
 
-function buildIdBlockers(guard: SecurityGuard): string[] {
+function buildIdSubmissionBlockers(guard: SecurityGuard): string[] {
   const idStatus = getGuardIdVerificationStatus(guard);
   const blockers: string[] = [];
 
@@ -98,64 +103,52 @@ function buildIdBlockers(guard: SecurityGuard): string[] {
     blockers.push('Government ID not fully on file — state, number, expiration, and all photos required');
   } else if (guardHasExpiredIdOnFile(guard)) {
     blockers.push('Government ID has expired — guard must upload a valid ID');
-  } else if (!guardHasVerifiedIdForWork(guard)) {
-    blockers.push('Government ID awaiting staff verification');
   }
 
   return blockers;
 }
 
-function buildGuardCardBlockers(guard: SecurityGuard, state = 'CA'): string[] {
+function buildGuardCardSubmissionBlockers(guard: SecurityGuard, state = 'CA'): string[] {
   const jobState = state || 'CA';
   const blockers: string[] = [];
 
   if (!guardHasCredentialOnFile(guard, 'bsis-guard-card', jobState)) {
     if (guardHasCredentialListed(guard, 'bsis-guard-card', jobState)) {
-      blockers.push('BSIS Guard Card listed — document photo required to activate');
+      blockers.push('BSIS Guard Card listed — document photo required for profile approval');
     } else {
-      blockers.push('BSIS Guard Card not on file — required to activate');
+      blockers.push('BSIS Guard Card not on file — required for profile approval');
     }
-  } else if (!guardHasVerifiedGuardCard(guard, jobState)) {
-    blockers.push('BSIS Guard Card awaiting staff verification');
   }
 
   return blockers;
 }
 
-function buildPtaUofActivationBlockers(guard: SecurityGuard): string[] {
+function buildPtaUofSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsPtaUofTraining(guard)) {
-    return ['Power to Arrest & Appropriate Use of Force (PTA/UOF) not on file — required before activation'];
-  }
-  if (!guardMeetsPtaUofTrainingVerified(guard)) {
-    return ['PTA/UOF training awaiting staff verification'];
+    return ['Power to Arrest & Appropriate Use of Force (PTA/UOF) not on file — required for profile approval'];
   }
   return [];
 }
 
-function build32HourActivationBlockers(guard: SecurityGuard): string[] {
+function build32HourSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeets32HourBlock(guard)) {
-    return ['32-hour BSIS course block not complete — required before activation'];
-  }
-  if (!guardMeets32HourBlockVerified(guard)) {
-    return ['32-hour BSIS courses awaiting staff verification'];
+    return ['32-hour BSIS course block not complete — required for profile approval'];
   }
   return [];
 }
 
 function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[] {
   return [
-    ...buildIdBlockers(guard),
-    ...buildInsuranceApprovalBlockers(guard),
-    ...buildGuardCardBlockers(guard, state),
+    ...buildIdSubmissionBlockers(guard),
+    ...buildInsuranceSubmissionBlockers(guard),
+    ...buildGuardCardSubmissionBlockers(guard, state),
+    ...buildPtaUofSubmissionBlockers(guard),
+    ...build32HourSubmissionBlockers(guard),
   ];
 }
 
 function buildStaffActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  return [
-    ...buildStaffApprovalBlockers(guard, state),
-    ...buildPtaUofActivationBlockers(guard),
-    ...build32HourActivationBlockers(guard),
-  ];
+  return buildStaffApprovalBlockers(guard, state);
 }
 
 export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'): GuardActivationChecklist {
@@ -174,7 +167,7 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
 
   const canStaffApprove = staffApprovalBlockers.length === 0;
   const canStaffActivate = staffActivationBlockers.length === 0;
-  const canActivate = canStaffActivate;
+  const canActivate = canStaffApprove;
 
   return {
     idSubmitted,
@@ -199,14 +192,14 @@ export function guardCanActivateAccount(guard: SecurityGuard, state = 'CA'): boo
   return getGuardActivationChecklist(guard, state).canActivate;
 }
 
-/** Pending → approved: verified government ID, verified COI, and verified guard card. */
+/** Pending → approved: all five activation credentials on file. */
 export function guardCanStaffApproveProfile(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountPending(guard)) return false;
   return getGuardActivationChecklist(guard, state).canStaffApprove;
 }
 
-/** Approved → active: all core credentials verified plus verified PTA/UOF and 32-hour block. */
+/** Approved → active: all five activation credentials on file. */
 export function guardCanStaffActivateAccount(guard: SecurityGuard, state = 'CA'): boolean {
   if (guard.isStaff) return false;
   if (!isGuardAccountApproved(guard)) return false;
@@ -247,24 +240,19 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   const checklist = getGuardActivationChecklist(guard);
   if (isGuardAccountApproved(guard)) {
     if (!checklist.canStaffActivate) {
-      const trainingBlockers = checklist.staffActivationBlockers.filter(
-        (b) => !checklist.staffApprovalBlockers.includes(b)
-      );
-      if (trainingBlockers.length > 0) return `Approved — ${trainingBlockers[0]}`;
-      return 'Approved — awaiting training credentials';
+      return `Approved — ${checklist.staffActivationBlockers[0] ?? 'upload missing credentials'}`;
     }
-    return 'Approved — ready to activate';
+    return 'Approved — ready to grant marketplace eligibility';
   }
-  if (checklist.canStaffApprove) return 'ID, COI, and guard card verified — ready to approve';
+  if (checklist.canStaffApprove) return 'All five credentials on file — ready to approve';
   const parts: string[] = [];
   if (!checklist.idSubmitted) parts.push('ID missing');
-  else if (!checklist.idVerified) parts.push('ID unverified');
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
   if (!checklist.insuranceSubmitted) parts.push('COI missing');
-  else if (!checklist.insuranceVerified) parts.push('COI unverified');
-  if (!checklist.guardCardSubmitted) parts.push('Guard card missing');
-  else if (!checklist.guardCardVerified) parts.push('Guard card unverified');
-  else if (!guardMeetsLevel1(guard)) parts.push('Guard card invalid');
+  if (!checklist.guardCardSubmitted && !guardMeetsLevel1(guard)) parts.push('Guard card missing');
+  else if (!guardMeetsLevel1(guard)) parts.push('Guard card incomplete');
+  if (!guardMeetsPtaUofTraining(guard)) parts.push('PTA/UOF missing');
+  if (!guardMeets32HourBlock(guard)) parts.push('32-hour block missing');
   return parts.join(' · ') || 'Awaiting requirements';
 }
 

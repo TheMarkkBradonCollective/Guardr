@@ -138,7 +138,7 @@ export function guardHasInsuranceSubmitted(guard: Pick<SecurityGuard, 'insurance
   );
 }
 
-export function buildInsuranceApprovalBlockers(
+export function buildInsuranceSubmissionBlockers(
   guard: Pick<SecurityGuard, 'insurancePolicy'>
 ): string[] {
   const policy = guard.insurancePolicy;
@@ -160,11 +160,16 @@ export function buildInsuranceApprovalBlockers(
     );
   } else if (status === 'expired') {
     blockers.push('Insurance COI has expired — guard must upload a current certificate');
-  } else if (status !== 'verified') {
-    blockers.push('Certificate of Insurance awaiting staff verification');
   }
 
   return blockers;
+}
+
+/** @deprecated Use buildInsuranceSubmissionBlockers — verification is for client trust, not approval. */
+export function buildInsuranceApprovalBlockers(
+  guard: Pick<SecurityGuard, 'insurancePolicy'>
+): string[] {
+  return buildInsuranceSubmissionBlockers(guard);
 }
 
 /** Guards may upload COI until staff verifies or while a submission is pending review. */
@@ -185,7 +190,7 @@ export function guardInsuranceBlockedMessage(guard: Pick<SecurityGuard, 'insuran
   }
   const status = resolveInsuranceStatus(policy);
   if (status === 'pending') {
-    return 'Your insurance certificate is pending staff review. You can be approved once it is verified.';
+    return 'Your insurance certificate is on file — staff verification is shown to clients for trust.';
   }
   if (status === 'rejected') {
     return policy.rejectionReason

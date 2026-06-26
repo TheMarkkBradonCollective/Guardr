@@ -565,7 +565,7 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : 'Approve guard profile — ID, COI, and guard card verified'
+                      : 'Approve guard profile — all five credentials on file'
                   }
                 >
                   Approve profile
@@ -590,7 +590,7 @@ export function StaffGuardDetailPanel({
                     guardCanStaffActivateAccount(guard)
                       ? 'Grant marketplace eligibility'
                       : activationChecklist.staffActivationBlockers.join(' · ') ||
-                        'All required credentials must be verified'
+                        'All five credentials must be on file'
                   }
                 >
                   Grant marketplace eligibility

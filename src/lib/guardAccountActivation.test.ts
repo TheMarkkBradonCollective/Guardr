@@ -20,17 +20,17 @@ function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   } as SecurityGuard;
 }
 
-function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
+function fullyOnFileGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   return baseGuard({
     userStatus: 'active',
-    verified: true,
-    idVerificationStatus: 'verified',
+    verified: false,
+    idVerificationStatus: 'pending',
     idState: 'CA',
     idNumber: 'ID123',
     idExpiryDate: '2099-12-31',
-    idFrontImageUrl: 'front',
-    idBackImageUrl: 'back',
-    idSelfieImageUrl: 'selfie',
+    idFrontUrl: 'front',
+    idBackUrl: 'back',
+    idSelfieUrl: 'selfie',
     insurancePolicy: {
       id: 'ins-1',
       guardId: 'g1',
@@ -38,7 +38,7 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
       policyNumber: 'POL-1',
       expiryDate: '2099-12-31',
       documentUrl: 'doc',
-      status: 'verified',
+      status: 'pending',
     },
     certifications: [
       {
@@ -49,7 +49,7 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         number: 'GC-1',
         state: 'CA',
         expiryDate: '2099-12-31',
-        status: 'verified',
+        status: 'pending',
         imageUrl: 'card',
         category: 'guard-card',
       },
@@ -58,7 +58,7 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         catalogId: 'bsis-pta-uof-8hr',
         name: 'PTA/UOF',
         issuer: 'BSIS',
-        status: 'verified',
+        status: 'pending',
         imageUrl: 'pta',
         category: 'training',
       },
@@ -67,7 +67,7 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
         catalogId: 'bsis-32-hour-completed',
         name: '32-hour block',
         issuer: 'BSIS',
-        status: 'verified',
+        status: 'pending',
         imageUrl: '32hr',
         category: 'training',
       },
@@ -77,9 +77,9 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
 }
 
 describe('guard account activation gates', () => {
-  it('blocks profile approval until ID, COI, and guard card are verified', () => {
+  it('blocks profile approval until all five credentials are on file', () => {
     const guard = baseGuard({
-      idVerificationStatus: 'verified',
+      idVerificationStatus: 'pending',
       idState: 'CA',
       idNumber: 'ID123',
       idExpiryDate: '2099-12-31',
@@ -93,16 +93,37 @@ describe('guard account activation gates', () => {
         policyNumber: 'POL-1',
         expiryDate: '2099-12-31',
         documentUrl: 'doc',
-        status: 'verified',
+        status: 'pending',
       },
+      certifications: [
+        {
+          id: 'c1',
+          catalogId: 'bsis-guard-card',
+          name: 'BSIS Guard Card',
+          issuer: 'BSIS',
+          number: 'GC-1',
+          state: 'CA',
+          expiryDate: '2099-12-31',
+          status: 'pending',
+          imageUrl: 'card',
+          category: 'guard-card',
+        },
+      ],
     });
 
     assert.equal(guardCanStaffApproveProfile(guard), false);
     const blockers = getGuardActivationChecklist(guard).staffApprovalBlockers;
-    assert.ok(blockers.some((b) => b.includes('Guard Card')));
+    assert.ok(blockers.some((b) => b.includes('PTA/UOF')));
+    assert.ok(blockers.some((b) => b.includes('32-hour')));
   });
 
-  it('blocks activation until PTA/UOF and 32-hour block are verified', () => {
+  it('allows profile approval when all five are on file without staff verification', () => {
+    const guard = fullyOnFileGuard({ userStatus: 'pending' });
+    assert.equal(guardCanStaffApproveProfile(guard), true);
+    assert.equal(getGuardActivationChecklist(guard).canStaffApprove, true);
+  });
+
+  it('blocks marketplace eligibility until all five credentials are on file', () => {
     const guard = baseGuard({
       userStatus: 'approved',
       idVerificationStatus: 'verified',
@@ -182,10 +203,10 @@ describe('guard account activation gates', () => {
     assert.equal(getGuardActivationChecklist(guard).canActivate, false);
   });
 
-  it('treats guards as active only when user_status is active and all five are verified', () => {
-    const guard = fullyVerifiedGuard();
+  it('treats guards as active when user_status is active and all five are on file', () => {
+    const guard = fullyOnFileGuard();
     assert.equal(isGuardAccountActive(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canActivate, true);
-    assert.equal(guardCanStaffActivateAccount(guard), false);
+    assert.equal(guardCanStaffActivateAccount({ ...guard, userStatus: 'approved' }), true);
   });
 });
