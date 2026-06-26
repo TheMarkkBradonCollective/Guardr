@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
@@ -121,17 +121,6 @@ export function GuardPtaUofPanel({
     setFormError('');
     activationFormOnly?.onClose();
   };
-
-  useEffect(() => {
-    if (!activationFormOnly?.open) return;
-    const catalogId = activationFormOnly.catalogId ?? ROLLUP_COMPLETION_CATALOG_ID;
-    setAddingCatalogId(catalogId);
-    setIssuer('');
-    setNumber('');
-    setExpiryDate('');
-    setImageUrl(undefined);
-    setFormError('');
-  }, [activationFormOnly?.open, activationFormOnly?.catalogId]);
 
   const startAdd = (catalogId: string) => {
     setAddingCatalogId(catalogId);
@@ -260,6 +249,63 @@ export function GuardPtaUofPanel({
     </div>
   );
 
+  const certUploadForm = addingCatalogId ? (
+    <form onSubmit={submitCert} className="space-y-3">
+      <input
+        className="uber-input w-full"
+        placeholder="Issuing organization (e.g. BSIS, training provider)"
+        value={issuer}
+        onChange={(e) => setIssuer(e.target.value)}
+        required
+      />
+      <input
+        className="uber-input w-full"
+        placeholder="Certificate number"
+        value={number}
+        onChange={(e) => setNumber(e.target.value)}
+        required
+      />
+      <input
+        type="date"
+        value={expiryDate}
+        onChange={(e) => setExpiryDate(e.target.value)}
+        className="uber-input w-full"
+        aria-label="Expiry date"
+      />
+      <DocumentPhotoUploadField
+        imageUrl={imageUrl}
+        onImageUrlChange={(url) => {
+          setImageUrl(url);
+          setFormError('');
+        }}
+      />
+      {formError && <p className="text-xs text-red-500">{formError}</p>}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setAddingCatalogId(null);
+            setIssuer('');
+            setNumber('');
+            setExpiryDate('');
+            setImageUrl(undefined);
+            setFormError('');
+          }}
+          className="flex-1 app-button-outline !h-11 !text-sm"
+        >
+          Back
+        </button>
+        <button
+          type="submit"
+          disabled={!imageUrl?.trim()}
+          className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+        >
+          Upload credential
+        </button>
+      </div>
+    </form>
+  ) : null;
+
   const uploadSheet = (
     <AppFormSheet
       open={
@@ -270,56 +316,63 @@ export function GuardPtaUofPanel({
       title="Upload PTA/UOF credential"
       subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
     >
-      {addingCatalogId && (
-        <form onSubmit={submitCert} className="space-y-3">
-          <input
-            className="uber-input w-full"
-            placeholder="Issuing organization (e.g. BSIS, training provider)"
-            value={issuer}
-            onChange={(e) => setIssuer(e.target.value)}
-            required
-          />
-          <input
-            className="uber-input w-full"
-            placeholder="Certificate number"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            className="uber-input w-full"
-            aria-label="Expiry date"
-          />
-          <DocumentPhotoUploadField
-            imageUrl={imageUrl}
-            onImageUrlChange={(url) => {
-              setImageUrl(url);
-              setFormError('');
-            }}
-          />
-          {formError && <p className="text-xs text-red-500">{formError}</p>}
-          <div className="flex gap-2">
-            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Upload credential
-            </button>
-          </div>
-        </form>
-      )}
+      {certUploadForm}
     </AppFormSheet>
   );
 
   if (activationFormOnly) {
-    return uploadSheet;
+    return (
+      <AppFormSheet
+        open={activationFormOnly.open}
+        onClose={resetForm}
+        title="Upload PTA/UOF credential"
+        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+      >
+        {addingCatalogId ? (
+          certUploadForm
+        ) : (
+          <div className="space-y-4">
+            <CredentialPathToggle
+              value={effectivePath}
+              onChange={(path) => {
+                if (!hasAnyCerts) setUploadPath(path);
+              }}
+              combinedLabel="Combined certificate"
+              individualLabel="Individual parts"
+            />
+            {effectivePath === 'combined' ? (
+              <button
+                type="button"
+                onClick={() => startAdd(BSIS_PTA_UOF_COMBINED_ID)}
+                className="app-button-primary !w-full !h-11 !text-sm"
+              >
+                Upload combined 8-hour certificate
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-brand-text-muted">
+                  Upload both parts separately ({PTA_UOF_SEPARATE_PART_COUNT} required).
+                </p>
+                {renderPartRow({
+                  catalogId: LEGACY_PTA_ID,
+                  label: ptaEntry?.name ?? 'Power to Arrest',
+                  subtitle: ptaEntry?.description,
+                  uploaded: ptaCerts,
+                })}
+                {renderPartRow({
+                  catalogId: LEGACY_UOF_ID,
+                  label: uofEntry?.name ?? 'Appropriate Use of Force',
+                  subtitle: 'Or upload Weapons of Mass Destruction Awareness as the second part.',
+                  uploaded: secondPartCerts,
+                  alternateCatalogId: BSIS_WMD_AWARENESS_ID,
+                  alternateLabel: 'Upload WMD Awareness instead',
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </AppFormSheet>
+    );
   }
 
   return (

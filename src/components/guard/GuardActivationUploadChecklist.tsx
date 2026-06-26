@@ -15,8 +15,6 @@ import {
   guardMeets32HourBlock,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
-  BSIS_PTA_UOF_COMBINED_ID,
-  THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
 import {
   guardActivation32HourStepDetail,
@@ -237,7 +235,7 @@ export function GuardActivationUploadChecklist({
           onDeleteCertification={onDeleteCertification}
           onAttachCertificationImage={onAttachCertificationImage}
           onUpdateCertification={onUpdateCertification}
-          activationFormOnly={{ open: true, onClose: closeUpload, catalogId: BSIS_PTA_UOF_COMBINED_ID }}
+          activationFormOnly={{ open: true, onClose: closeUpload }}
         />
       )}
 
@@ -249,11 +247,7 @@ export function GuardActivationUploadChecklist({
           onDeleteCertification={onDeleteCertification}
           onAttachCertificationImage={onAttachCertificationImage}
           onUpdateCertification={onUpdateCertification}
-          activationFormOnly={{
-            open: true,
-            onClose: closeUpload,
-            catalogId: THIRTY_TWO_HOUR_ROLLUP_IDS[0] ?? 'bsis-32-hour-completed',
-          }}
+          activationFormOnly={{ open: true, onClose: closeUpload }}
         />
       )}
     </>

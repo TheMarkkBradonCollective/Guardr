@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import {
@@ -123,17 +123,6 @@ export function GuardThirtyTwoHourPanel({
     activationFormOnly?.onClose();
   };
 
-  useEffect(() => {
-    if (!activationFormOnly?.open) return;
-    const catalogId = activationFormOnly.catalogId ?? ROLLUP_COMPLETION_CATALOG_ID;
-    setAddingCatalogId(catalogId);
-    setIssuer('');
-    setNumber('');
-    setExpiryDate('');
-    setImageUrl(undefined);
-    setFormError('');
-  }, [activationFormOnly?.open, activationFormOnly?.catalogId]);
-
   const startAdd = (catalogId: string) => {
     setAddingCatalogId(catalogId);
     setIssuer('');
@@ -249,6 +238,63 @@ export function GuardThirtyTwoHourPanel({
 
   const rollupEntry = getCertCatalogEntry(ROLLUP_COMPLETION_CATALOG_ID);
 
+  const certUploadForm = addingCatalogId ? (
+    <form onSubmit={submitCert} className="space-y-3">
+      <input
+        className="uber-input w-full"
+        placeholder="Issuing organization (e.g. BSIS, training provider)"
+        value={issuer}
+        onChange={(e) => setIssuer(e.target.value)}
+        required
+      />
+      <input
+        className="uber-input w-full"
+        placeholder="Certificate number"
+        value={number}
+        onChange={(e) => setNumber(e.target.value)}
+        required
+      />
+      <input
+        type="date"
+        value={expiryDate}
+        onChange={(e) => setExpiryDate(e.target.value)}
+        className="uber-input w-full"
+        aria-label="Expiry date"
+      />
+      <DocumentPhotoUploadField
+        imageUrl={imageUrl}
+        onImageUrlChange={(url) => {
+          setImageUrl(url);
+          setFormError('');
+        }}
+      />
+      {formError && <p className="text-xs text-red-500">{formError}</p>}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setAddingCatalogId(null);
+            setIssuer('');
+            setNumber('');
+            setExpiryDate('');
+            setImageUrl(undefined);
+            setFormError('');
+          }}
+          className="flex-1 app-button-outline !h-11 !text-sm"
+        >
+          Back
+        </button>
+        <button
+          type="submit"
+          disabled={!imageUrl?.trim()}
+          className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+  ) : null;
+
   const uploadSheet = (
     <AppFormSheet
       open={
@@ -259,56 +305,57 @@ export function GuardThirtyTwoHourPanel({
       title="Add course certificate"
       subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
     >
-      {addingCatalogId && (
-        <form onSubmit={submitCert} className="space-y-3">
-          <input
-            className="uber-input w-full"
-            placeholder="Issuing organization (e.g. BSIS, training provider)"
-            value={issuer}
-            onChange={(e) => setIssuer(e.target.value)}
-            required
-          />
-          <input
-            className="uber-input w-full"
-            placeholder="Certificate number"
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            className="uber-input w-full"
-            aria-label="Expiry date"
-          />
-          <DocumentPhotoUploadField
-            imageUrl={imageUrl}
-            onImageUrlChange={(url) => {
-              setImageUrl(url);
-              setFormError('');
-            }}
-          />
-          {formError && <p className="text-xs text-red-500">{formError}</p>}
-          <div className="flex gap-2">
-            <button type="button" onClick={resetForm} className="flex-1 app-button-outline !h-11 !text-sm">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!imageUrl?.trim()}
-              className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
-            >
-              Add
-            </button>
-          </div>
-        </form>
-      )}
+      {certUploadForm}
     </AppFormSheet>
   );
 
   if (activationFormOnly) {
-    return uploadSheet;
+    return (
+      <AppFormSheet
+        open={activationFormOnly.open}
+        onClose={resetForm}
+        title="Add 32-hour training"
+        subtitle={addingCatalogId ? getCertCatalogEntry(addingCatalogId)?.name : undefined}
+      >
+        {addingCatalogId ? (
+          certUploadForm
+        ) : (
+          <div className="space-y-4">
+            <CredentialPathToggle
+              value={effectivePath}
+              onChange={(path) => {
+                if (!hasAnyCerts) setUploadPath(path);
+              }}
+              combinedLabel="Combined certificate"
+              individualLabel="Individual parts"
+            />
+            {effectivePath === 'combined' ? (
+              <button
+                type="button"
+                onClick={() => startAdd(ROLLUP_COMPLETION_CATALOG_ID)}
+                className="app-button-primary !w-full !h-11 !text-sm"
+              >
+                Upload 32-hour completion certificate
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-brand-text-muted">
+                  Upload all {THIRTY_TWO_HOUR_COURSE_IDS.length} individual course certificates.
+                </p>
+                {courses.map((course) =>
+                  renderCourseRow({
+                    catalogId: course.id,
+                    label: course.name,
+                    subtitle: course.description,
+                    uploaded: certsForCatalogId(guard, course.id),
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </AppFormSheet>
+    );
   }
 
   return (
