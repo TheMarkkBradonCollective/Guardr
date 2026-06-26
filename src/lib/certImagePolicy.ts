@@ -24,12 +24,12 @@ export const CERT_IMAGE_POLICY_HINT =
   'Upload a photo or scan of the credential document. Once uploaded, the photo cannot be changed or removed.';
 
 export const LICENSE_CREDENTIAL_VERIFY_HINT =
-  'Guard cards and weapons permits are verified by Guardr staff so clients can trust they are legitimate.';
+  'Guardr staff can verify any credential on file so clients can trust it is legitimate.';
 
 export const CERT_DOCUMENT_PHOTO_LABEL = 'Document photo — required';
 
 export const LICENSE_CREDENTIAL_DOCUMENT_PHOTO_LABEL =
-  'Document photo — required for staff verification';
+  'Document photo — required before staff can verify for clients';
 
 /** Credential has a document photo on file (proof of credential). */
 export function certHasDocumentProof(cert: Pick<Certification, 'imageUrl'>): boolean {
@@ -104,11 +104,10 @@ export function certPhotoIsLockedForEditor(
   return certImageIsLocked(cert);
 }
 
-/** Only guard cards and weapons permits can be staff-verified. */
+/** Any credential with a document photo can be staff-verified for client-facing trust. */
 export function staffCanVerifyCertification(
   cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
 ): boolean {
-  if (!credentialExpectsStaffVerification(cert)) return false;
   if (cert.status !== 'pending') return false;
   return certHasDocumentProof(cert);
 }
@@ -116,12 +115,9 @@ export function staffCanVerifyCertification(
 export function staffVerifyCertificationBlocker(
   cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
 ): string | null {
-  if (!credentialExpectsStaffVerification(cert)) {
-    return 'Training certificates only need to be on file — no staff verification required';
-  }
   if (cert.status !== 'pending') return null;
   if (!certHasDocumentProof(cert)) {
-    return 'Document photo required — guard card or weapons permit must be on file before staff can verify';
+    return 'Document photo required — credential must be on file before staff can verify for clients';
   }
   return null;
 }

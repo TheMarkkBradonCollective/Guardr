@@ -399,7 +399,7 @@ export function requirementLabel(catalogIdOrLegacy: string): string {
   return entry?.name ?? catalogIdOrLegacy;
 }
 
-/** Guard cards and BSIS weapons permits require staff verification; training certs do not. */
+/** Guard cards and BSIS weapons permits require staff verification for job matching; all credentials may be verified for clients. */
 export function credentialExpectsStaffVerification(
   certOrCatalogId: { catalogId?: string; name: string } | string
 ): boolean {
