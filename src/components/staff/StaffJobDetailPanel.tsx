@@ -4,7 +4,7 @@ import { JobStatusBadge } from '../jobs/JobStatusBadge';
 import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
-import { isGuardAccountActive } from '../../lib/accountStatus';
+import { isGuardAccountActive } from '../../lib/guardAccountActivation';
 import {
   canStaffEditJobTitleAndLocation,
   isJobScheduleLocked,

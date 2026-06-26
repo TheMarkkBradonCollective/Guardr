@@ -15,21 +15,31 @@ import {
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
   guardMeetsPtaUofTrainingVerified,
-  guardMeetsWorkRequirements,
 } from './guardQualification';
 import {
   getGuardIdVerificationStatus,
   guardIdVerificationSubmissionReady,
 } from './guardIdentityVerification';
-import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPending } from './accountStatus';
+import {
+  getGuardUserStatus,
+  isGuardAccountApproved,
+  isGuardAccountPending,
+  isGuardUserStatusActive,
+} from './accountStatus';
 import {
   buildInsuranceApprovalBlockers,
   guardHasInsuranceSubmitted,
   guardHasValidInsurance,
 } from './guardInsurance';
-import { guardCredentialGracePatchForActivation } from './guardCredentialGrace';
-
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
+
+/** Active for marketplace work — user_status active and all five credentials verified. */
+export function isGuardAccountActive(guard: SecurityGuard, state = 'CA'): boolean {
+  if (guard.isStaff) return true;
+  if (!isGuardUserStatusActive(guard)) return false;
+  if (!Array.isArray(guard.certifications)) return false;
+  return getGuardActivationChecklist(guard, state).canStaffActivate;
+}
 
 export interface GuardActivationChecklist {
   idSubmitted: boolean;
@@ -38,7 +48,7 @@ export interface GuardActivationChecklist {
   guardCardVerified: boolean;
   insuranceSubmitted: boolean;
   insuranceVerified: boolean;
-  /** Guard-facing — all work requirements met (ID, guard card, PTA/UOF). */
+  /** Guard-facing — all five activation credentials verified. */
   canActivate: boolean;
   /** Staff can approve profile (verified ID + verified COI + verified guard card). */
   canStaffApprove: boolean;
@@ -61,7 +71,7 @@ function isGuardCardCert(cert: Certification): boolean {
 }
 
 export function getGuardCardCertifications(guard: SecurityGuard): Certification[] {
-  return guard.certifications.filter(isGuardCardCert);
+  return (guard.certifications ?? []).filter(isGuardCardCert);
 }
 
 export function guardHasGuardCardSubmitted(guard: SecurityGuard): boolean {
@@ -164,7 +174,7 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
 
   const canStaffApprove = staffApprovalBlockers.length === 0;
   const canStaffActivate = staffActivationBlockers.length === 0;
-  const canActivate = guardMeetsWorkRequirements(guard, state);
+  const canActivate = canStaffActivate;
 
   return {
     idSubmitted,
@@ -270,11 +280,12 @@ export function buildMarketplaceEligibilityActivation(
   const status = getGuardUserStatus(guard);
   if (status !== 'pending' && status !== 'approved') return null;
   if (guardAccountActivationBlockers(guard, state).length > 0) return null;
-  const gracePatch = guardCredentialGracePatchForActivation(guard, state);
   return {
     ...guard,
     userStatus: 'active',
     verified: true,
-    ...gracePatch,
+    credentialGraceDeadline: undefined,
+    credentialGraceMissing: undefined,
+    credentialGraceHours: undefined,
   };
 }

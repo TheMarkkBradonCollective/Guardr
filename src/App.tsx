@@ -96,7 +96,6 @@ import {
   MARKETPLACE_ELIGIBILITY_LABEL,
 } from './lib/guardAccountActivation';
 import {
-  guardCredentialGracePatchForActivation,
   processGuardCredentialGraceBatch,
   syncGuardCredentialGraceState,
 } from './lib/guardCredentialGrace';
@@ -190,10 +189,10 @@ import { personNameFromPayload, resolvePersonNameParts } from './lib/personName'
 import {
   getClientAccountStatus,
   getGuardUserStatus,
-  isGuardAccountActive,
   isGuardAccountApproved,
   isGuardAccountPending,
 } from './lib/accountStatus';
+import { isGuardAccountActive } from './lib/guardAccountActivation';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { SupportComposePage } from './components/support/SupportComposePage';
@@ -3630,9 +3629,9 @@ export default function App() {
         {
           user_status: 'active',
           verified: true,
-          credential_grace_deadline: eligible.credentialGraceDeadline ?? null,
-          credential_grace_missing: eligible.credentialGraceMissing ?? null,
-          credential_grace_hours: eligible.credentialGraceHours ?? null,
+          credential_grace_deadline: null,
+          credential_grace_missing: null,
+          credential_grace_hours: null,
         },
         'activate'
       );
@@ -3642,15 +3641,11 @@ export default function App() {
       }
     }
     if (currentUser) {
-      const graceNote =
-        eligible.credentialGraceMissing && eligible.credentialGraceMissing.length > 0
-          ? ` Upload ${eligible.credentialGraceMissing.join(' and ')} within ${eligible.credentialGraceHours ?? 48} hours to keep marketplace access.`
-          : '';
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: guardId,
         title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
-        body: `Your credentials are verified. You can browse and accept jobs on Guardr.${graceNote}`,
+        body: 'Your credentials are verified. You can browse and accept jobs on Guardr.',
       });
     }
   };
@@ -3716,12 +3711,13 @@ export default function App() {
       throw new Error(`Cannot grant marketplace eligibility yet:\n• ${blockers.join('\n• ')}`);
     }
 
-    const gracePatch = guardCredentialGracePatchForActivation(guard, 'CA', options?.graceHours);
     const activeGuard: SecurityGuard = {
       ...guard,
       userStatus: 'active',
       verified: true,
-      ...gracePatch,
+      credentialGraceDeadline: undefined,
+      credentialGraceMissing: undefined,
+      credentialGraceHours: undefined,
     };
 
     setGuards((prev) => prev.map((g) => (g.id === guardId ? activeGuard : g)));
@@ -3733,9 +3729,9 @@ export default function App() {
         {
           user_status: 'active',
           verified: true,
-          credential_grace_deadline: gracePatch.credentialGraceDeadline ?? null,
-          credential_grace_missing: gracePatch.credentialGraceMissing ?? null,
-          credential_grace_hours: gracePatch.credentialGraceHours ?? null,
+          credential_grace_deadline: null,
+          credential_grace_missing: null,
+          credential_grace_hours: null,
         },
         'activate'
       );
@@ -3745,15 +3741,11 @@ export default function App() {
       }
     }
     if (currentUser) {
-      const graceNote =
-        gracePatch.credentialGraceMissing && gracePatch.credentialGraceMissing.length > 0
-          ? ` Upload ${gracePatch.credentialGraceMissing.join(' and ')} within ${gracePatch.credentialGraceHours ?? 48} hours to keep marketplace access.`
-          : '';
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: guardId,
         title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
-        body: `Your credentials are verified. You can now browse and accept jobs on Guardr.${graceNote}`,
+        body: 'Your credentials are verified. You can now browse and accept jobs on Guardr.',
       });
     }
   };

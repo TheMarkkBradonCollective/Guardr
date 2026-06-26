@@ -1,7 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
-import { isGuardAccountActive } from './accountStatus';
+import { isGuardAccountActive } from './guardAccountActivation';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
 

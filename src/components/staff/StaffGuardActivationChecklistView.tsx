@@ -9,7 +9,8 @@ import {
   guardMeetsPtaUofTraining,
   guardMeetsPtaUofTrainingVerified,
 } from '../../lib/guardQualification';
-import { isGuardAccountActive, isGuardAccountApproved } from '../../lib/accountStatus';
+import { isGuardAccountApproved } from '../../lib/accountStatus';
+import { isGuardAccountActive } from '../../lib/guardAccountActivation';
 import { guardHasValidInsurance, guardHasInsuranceSubmitted } from '../../lib/guardInsurance';
 import { Check, Circle } from 'lucide-react';
 

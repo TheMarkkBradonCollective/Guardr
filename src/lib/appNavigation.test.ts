@@ -1,10 +1,70 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import type { SecurityGuard } from '../types';
 import { normalizeGuardTabForAccount } from './appNavigation';
 
+function fullyActiveGuard(): SecurityGuard {
+  return {
+    id: 'g1',
+    name: 'Test Guard',
+    email: 'guard@test.com',
+    userStatus: 'active',
+    verified: true,
+    isStaff: false,
+    idVerificationStatus: 'verified',
+    idState: 'CA',
+    idNumber: 'ID123',
+    idExpiryDate: '2099-12-31',
+    idFrontImageUrl: 'front',
+    idBackImageUrl: 'back',
+    idSelfieImageUrl: 'selfie',
+    insurancePolicy: {
+      id: 'ins-1',
+      guardId: 'g1',
+      carrier: 'Carrier',
+      policyNumber: 'POL-1',
+      expiryDate: '2099-12-31',
+      documentUrl: 'doc',
+      status: 'verified',
+    },
+    certifications: [
+      {
+        id: 'c1',
+        catalogId: 'bsis-guard-card',
+        name: 'BSIS Guard Card',
+        issuer: 'BSIS',
+        number: 'GC-1',
+        state: 'CA',
+        expiryDate: '2099-12-31',
+        status: 'verified',
+        imageUrl: 'card',
+        category: 'guard-card',
+      },
+      {
+        id: 'c2',
+        catalogId: 'bsis-pta-uof-8hr',
+        name: 'PTA/UOF',
+        issuer: 'BSIS',
+        status: 'verified',
+        imageUrl: 'pta',
+        category: 'training',
+      },
+      {
+        id: 'c3',
+        catalogId: 'bsis-32-hour-completed',
+        name: '32-hour block',
+        issuer: 'BSIS',
+        status: 'verified',
+        imageUrl: '32hr',
+        category: 'training',
+      },
+    ],
+  } as SecurityGuard;
+}
+
 describe('normalizeGuardTabForAccount', () => {
-  it('allows active guards to use any tab', () => {
-    const guard = { userStatus: 'active' as const, isStaff: false };
+  it('allows fully active guards to use any tab', () => {
+    const guard = fullyActiveGuard();
     assert.equal(normalizeGuardTabForAccount('map', guard), 'map');
     assert.equal(normalizeGuardTabForAccount('earnings', guard), 'earnings');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
@@ -29,8 +89,14 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
   });
 
-  it('normalizes legacy chat tabs before gating', () => {
+  it('routes user_status active guards missing credentials to activation', () => {
     const guard = { userStatus: 'active' as const, isStaff: false };
+    assert.equal(normalizeGuardTabForAccount('map', guard), 'activation');
+    assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
+  });
+
+  it('normalizes legacy chat tabs before gating', () => {
+    const guard = fullyActiveGuard();
     assert.equal(normalizeGuardTabForAccount('guardChat', guard), 'messages');
     assert.equal(normalizeGuardTabForAccount('support', guard), 'messages');
   });

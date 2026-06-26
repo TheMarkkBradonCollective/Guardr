@@ -1,6 +1,6 @@
 import type { SessionUser } from '../types';
 import type { SecurityGuard } from '../types';
-import { isGuardAccountActive } from './accountStatus';
+import { isGuardAccountActive } from './guardAccountActivation';
 import { findGuardProfileForUser } from './guardDirectory';
 
 /** True when the signed-in user is a guard who has not been activated for marketplace work. */

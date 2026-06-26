@@ -64,7 +64,8 @@ export function isGuardAccountApproved(guard: Pick<SecurityGuard, 'userStatus' |
   return !guard.isStaff && getGuardUserStatus(guard) === 'approved';
 }
 
-export function isGuardAccountActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+/** Database user_status only — does not verify credentials. */
+export function isGuardUserStatusActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
   return guard.isStaff || getGuardUserStatus(guard) === 'active';
 }
 

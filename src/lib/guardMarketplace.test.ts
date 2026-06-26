@@ -8,9 +8,17 @@ import {
 import { buildInsuranceApprovalBlockers } from './guardInsurance.ts';
 
 const baseGuard = {
+  id: 'g1',
   trusted: false,
   verified: true,
   userStatus: 'active',
+  idVerificationStatus: 'verified',
+  idState: 'CA',
+  idNumber: 'ID123',
+  idExpiryDate: '2099-12-31',
+  idFrontImageUrl: 'front',
+  idBackImageUrl: 'back',
+  idSelfieImageUrl: 'selfie',
   insurancePolicy: {
     id: 'ins-1',
     guardId: 'g1',
@@ -18,7 +26,40 @@ const baseGuard = {
     policyNumber: 'POL-1',
     expiryDate: '2099-12-31',
     status: 'verified',
+    documentUrl: 'doc',
   },
+  certifications: [
+    {
+      id: 'c1',
+      catalogId: 'bsis-guard-card',
+      name: 'BSIS Guard Card',
+      issuer: 'BSIS',
+      number: 'GC-1',
+      state: 'CA',
+      expiryDate: '2099-12-31',
+      status: 'verified',
+      imageUrl: 'card',
+      category: 'guard-card',
+    },
+    {
+      id: 'c2',
+      catalogId: 'bsis-pta-uof-8hr',
+      name: 'PTA/UOF',
+      issuer: 'BSIS',
+      status: 'verified',
+      imageUrl: 'pta',
+      category: 'training',
+    },
+    {
+      id: 'c3',
+      catalogId: 'bsis-32-hour-completed',
+      name: '32-hour block',
+      issuer: 'BSIS',
+      status: 'verified',
+      imageUrl: '32hr',
+      category: 'training',
+    },
+  ],
 } as SecurityGuard;
 
 const stripeJob = {

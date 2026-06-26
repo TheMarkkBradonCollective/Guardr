@@ -34,20 +34,21 @@ export const QUALIFICATION_LEVEL_LABELS = GUARD_PATHWAY_STATUS_LABELS;
 /** @deprecated Use GUARD_PATHWAY_STATUS_DESCRIPTIONS */
 export const QUALIFICATION_LEVEL_DESCRIPTIONS = GUARD_PATHWAY_STATUS_DESCRIPTIONS;
 
-import { getGuardUserStatus, isGuardAccountActive, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
+import { getGuardUserStatus, isGuardAccountApproved, isGuardAccountPreActive } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
   guardGraceWaivesTrainingCredential,
   guardHasActiveCredentialGrace,
 } from './guardCredentialGrace';
 import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
-import { getGuardActivationChecklist } from './guardAccountActivation';
+import { getGuardActivationChecklist, isGuardAccountActive } from './guardAccountActivation';
 import {
   getGuardIdVerificationStatus,
   guardIdMatchesWorkLicenseState,
   guardIdVerificationPhotosComplete,
   isIdExpired,
 } from './guardIdentityVerification';
+import { guardHasValidInsurance } from './guardInsurance';
 
 function normalizeWorkLicenseState(jobCityOrState?: string): string {
   return resolveGuardCardLicenseState(jobCityOrState);
@@ -62,16 +63,12 @@ export function getGuardDisplayStatus(guard: SecurityGuard, state = 'CA'): Guard
   return guardCanWorkFieldJobs(guard, licenseState) ? 'active' : 'inactive';
 }
 
-/** Active account + verified ID, valid guard card, and PTA/UOF (or active staff grace). */
+/** Active account with all five activation credentials verified (ID, COI, guard card, PTA/UOF, 32-hour). */
 export function guardCanWorkFieldJobs(guard: SecurityGuard, state = 'CA'): boolean {
   const licenseState = normalizeWorkLicenseState(state);
   if (guard.isStaff) return false;
-  if (!isGuardAccountActive(guard)) return false;
-  if (!guardHasVerifiedIdForWork(guard)) return false;
-  if (!guardIdMatchesWorkLicenseState(guard, licenseState)) return false;
-  if (!guardMeetsLevel1(guard, licenseState)) return false;
-  if (guardMeetsPtaUofTraining(guard)) return true;
-  return guardHasActiveCredentialGrace(guard);
+  if (!isGuardAccountActive(guard, licenseState)) return false;
+  return guardIdMatchesWorkLicenseState(guard, licenseState);
 }
 
 export function guardHasIdOnFile(guard: SecurityGuard): boolean {
@@ -92,8 +89,10 @@ export function guardMeetsWorkRequirements(guard: SecurityGuard, state = 'CA'): 
   return (
     guardHasVerifiedIdForWork(guard) &&
     guardIdMatchesWorkLicenseState(guard, licenseState) &&
-    guardMeetsLevel1(guard, licenseState) &&
-    guardMeetsPtaUofTraining(guard)
+    guardHasValidInsurance(guard) &&
+    guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', licenseState) &&
+    guardMeetsPtaUofTrainingVerified(guard) &&
+    guardMeets32HourBlockVerified(guard)
   );
 }
 

@@ -1,5 +1,5 @@
 import { GuardSpecialty, JobType, SecurityGuard, SecurityRequest, SessionUser } from '../types';
-import { isGuardAccountActive } from './accountStatus';
+import { isGuardAccountActive } from './guardAccountActivation';
 import { guardCanWorkFieldJobs } from './guardQualification';
 import { JOB_TYPE_LABELS } from './guardJobs';
 
