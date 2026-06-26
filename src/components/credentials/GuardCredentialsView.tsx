@@ -10,6 +10,8 @@ interface GuardCredentialsViewProps {
   guardName?: string;
   hideEmpty?: boolean;
   excludeRejected?: boolean;
+  /** Client profile — only Guardr-verified credentials. */
+  verifiedOnly?: boolean;
   showCategoryOnCards?: boolean;
   compact?: boolean;
   editing?: boolean;
@@ -30,6 +32,7 @@ export function GuardCredentialsView({
   guardName,
   hideEmpty = true,
   excludeRejected = true,
+  verifiedOnly = false,
   showCategoryOnCards = false,
   compact = false,
   editing = false,
@@ -38,7 +41,10 @@ export function GuardCredentialsView({
   renderCertActions,
   className = '',
 }: GuardCredentialsViewProps) {
-  const sections = getGuardCredentialViewSections(guard, { hideEmpty, excludeRejected });
+  const sections = getGuardCredentialViewSections(guard, { hideEmpty, excludeRejected }).map((section) => ({
+    ...section,
+    certs: verifiedOnly ? section.certs.filter((cert) => cert.status === 'verified') : section.certs,
+  })).filter((section) => !hideEmpty || section.certs.length > 0);
   const displayName = guardName ?? guard.name;
 
   if (sections.length === 0) {

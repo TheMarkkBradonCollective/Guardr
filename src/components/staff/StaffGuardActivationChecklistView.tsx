@@ -74,7 +74,7 @@ function thirtyTwoHourStepDetail(guard: SecurityGuard): string {
   return 'Not on file';
 }
 
-/** Staff: all five on file for approval; guard card must be verified. Any credential can be verified for clients. */
+/** Staff: all five must be Guardr-verified for approval and active. */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
   const approved = isGuardAccountApproved(guard);
@@ -125,16 +125,16 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
                 ? 'Ready to grant marketplace eligibility'
                 : 'Guard must re-upload missing credentials before marketplace eligibility'
               : readyForApproval
-                ? 'All five credentials on file and guard card verified — ready to approve profile'
-                : 'All five credentials must be on file and the guard card verified before profile approval'}
+                ? 'All five credentials verified — ready to approve profile'
+                : 'All five credentials must be Guardr-verified before profile approval'}
           </p>
           {!readyForApproval && checklist.staffApprovalBlockers.length > 0 && (
             <p className="text-amber-400 leading-relaxed">{checklist.staffApprovalBlockers.join(' · ')}</p>
           )}
           {readyForApproval && !approved && (
             <p className="text-brand-text-muted leading-relaxed">
-              Verify credentials so clients can see Guardr confirmed they are legitimate. Guard card
-              verification is required for profile approval; other activation credentials only need to be on file.
+              Verify every activation credential so clients can trust the profile. Optional credentials
+              only appear to clients after staff verification.
             </p>
           )}
         </div>

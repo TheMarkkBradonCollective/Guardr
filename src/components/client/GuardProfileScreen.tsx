@@ -18,6 +18,7 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { GuardCredentialsView } from '../credentials/GuardCredentialsView';
+import { GuardWeaponGearClientSection } from '../profile/GuardWeaponGearPanel';
 import { formatShiftRange } from '../../lib/dates';
 import { WfBadge, WfMetricTile, WfSectionHeader } from '../ui/wireframe';
 import {
@@ -167,7 +168,9 @@ export function GuardProfileScreen({
             </div>
           </div>
 
-          <CertBadgeRow guard={guard} />
+          <CertBadgeRow guard={guard} clientMode />
+
+          <GuardWeaponGearClientSection guard={guard} />
 
           {aboutText && (
             <section>
@@ -207,7 +210,7 @@ export function GuardProfileScreen({
 
           <section>
             <WfSectionHeader title="Credentials" className="mb-3" />
-            <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected />
+            <GuardCredentialsView guard={guard} guardName={guard.name} hideEmpty excludeRejected verifiedOnly />
           </section>
 
           {guard.experience.length > 0 && (

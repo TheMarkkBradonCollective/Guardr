@@ -97,6 +97,7 @@ export function UserProfileScreen({
     yearsExperience: guard?.yearsExperience,
     availabilityNotes: guard?.availabilityNotes ?? '',
     hourlyRateRequirement: guard?.hourlyRateRequirement,
+    listedWeaponGear: guard?.listedWeaponGear ?? [],
   });
 
   useEffect(() => {

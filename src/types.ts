@@ -263,6 +263,8 @@ export interface JobServiceAgreement {
   body: string;
 }
 
+export type GuardWeaponGearId = 'oc-spray' | 'baton' | 'handcuffs' | 'taser' | 'firearm';
+
 export interface SecurityGuard {
   id: string;
   name: string;
@@ -289,6 +291,8 @@ export interface SecurityGuard {
   yearsExperience?: number;
   availabilityNotes?: string;
   isArmed: boolean;
+  /** Gear/weapons the guard lists on their profile when BSIS requirements are met. */
+  listedWeaponGear?: GuardWeaponGearId[];
   backgroundChecked: boolean;
   verified: boolean;
   rating: number;

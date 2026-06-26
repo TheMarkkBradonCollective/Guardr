@@ -45,6 +45,7 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS service_areas JSONB DEFAULT '[]'::js
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS specialties JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS years_experience INTEGER;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS availability_notes TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_weapon_gear JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';

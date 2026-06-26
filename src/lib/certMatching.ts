@@ -116,13 +116,18 @@ export interface SupplementalCredentialBadge {
   verified: boolean;
 }
 
-/** Optional credentials beyond the Inactive→Active pathway — permits, medical, extra training, custom uploads. */
-export function getSupplementalCredentialsOnFile(guard: SecurityGuard): SupplementalCredentialBadge[] {
+/** Optional credentials beyond the Inactive→Active pathway — verified only for client display. */
+export function getSupplementalCredentialsOnFile(
+  guard: SecurityGuard,
+  options?: { verifiedOnly?: boolean }
+): SupplementalCredentialBadge[] {
+  const { verifiedOnly = false } = options ?? {};
   const seenCatalog = new Set<string>();
   const badges: SupplementalCredentialBadge[] = [];
 
   for (const cert of guard.certifications) {
     if (cert.status === 'rejected') continue;
+    if (verifiedOnly && cert.status !== 'verified') continue;
     const catalogId = resolveCertCatalogId(cert);
     if (isRequiredPathwayCredential(catalogId)) continue;
 

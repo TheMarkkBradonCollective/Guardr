@@ -205,6 +205,40 @@ export const CERT_CATALOG: CertCatalogEntry[] = [
     description: 'When employer authorizes taser carry.',
   },
 
+  // ── BSIS weapons training (required for profile gear listing) ──
+  {
+    id: 'bsis-chemical-agent-training',
+    name: 'BSIS Tear Gas / Chemical Agent Training Certificate',
+    shortLabel: 'OC Training',
+    category: 'bsis-training',
+    description: 'Penal Code 22835 — required to carry OC spray on duty.',
+  },
+  {
+    id: 'bsis-baton-training',
+    name: 'BSIS Baton Training Certificate',
+    shortLabel: 'Baton Training',
+    category: 'bsis-training',
+  },
+  {
+    id: 'bsis-taser-training',
+    name: 'ECD / TASER Training Certificate',
+    shortLabel: 'TASER Training',
+    category: 'bsis-training',
+    description: 'Approved instructor or manufacturer training — required for TASER carry.',
+  },
+  {
+    id: 'bsis-firearms-training',
+    name: 'BSIS Firearms Training Certificate',
+    shortLabel: 'Firearms Training',
+    category: 'bsis-training',
+  },
+  {
+    id: 'bsis-firearms-qualification',
+    name: 'BSIS Firearms Qualification (Range Test)',
+    shortLabel: 'Firearms Qual',
+    category: 'bsis-training',
+  },
+
   // ── Medical ──
   { id: 'cpr', name: 'CPR Certification', shortLabel: 'CPR', category: 'medical' },
   { id: 'aed', name: 'AED Certification', shortLabel: 'AED', category: 'medical' },

@@ -5,6 +5,7 @@ import {
   GuardEducation,
   GuardInsurancePolicy,
   GUARD_SPECIALTY_OPTIONS,
+  GuardWeaponGearId,
   SecurityGuard,
 } from '../../types';
 import { joinTagInput, parseTagInput } from '../../lib/guardResume';
@@ -14,6 +15,7 @@ import {
 } from '../../lib/californiaCities';
 import { Briefcase, GraduationCap, Plus, BookOpen } from 'lucide-react';
 import { GuardCredentialsPanel } from './GuardCredentialsPanel';
+import { GuardWeaponGearPanel } from './GuardWeaponGearPanel';
 import { GuardQualificationPanel } from '../guard/GuardQualificationPanel';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 
@@ -28,6 +30,7 @@ export interface GuardResumeSavePayload {
   yearsExperience?: number;
   availabilityNotes: string;
   hourlyRateRequirement?: number;
+  listedWeaponGear?: GuardWeaponGearId[];
 }
 
 interface GuardResumeEditorProps {
@@ -284,8 +287,14 @@ export function GuardResumeEditor({
         onReviewInsurance={onReviewInsurance}
       />
 
+      <GuardWeaponGearPanel
+        guard={guard}
+        editing={editing}
+        selected={payload.listedWeaponGear ?? guard.listedWeaponGear ?? []}
+        onChange={(listedWeaponGear) => onChange({ listedWeaponGear })}
+      />
+
       <AppFormSheet
-        open={showAddExp}
         onClose={() => setShowAddExp(false)}
         title="Add work experience"
       >

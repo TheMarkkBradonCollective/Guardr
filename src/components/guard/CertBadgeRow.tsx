@@ -1,6 +1,7 @@
 import React from 'react';
 import { SecurityGuard } from '../../types';
 import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
+import { guardHasValidInsurance } from '../../lib/guardInsurance';
 import {
   formatThirtyTwoHourCourseProgressCounts,
   getQualificationProgress,
@@ -14,10 +15,12 @@ interface CertBadgeRowProps {
   guard: SecurityGuard;
   showCaBaseline?: boolean;
   jobState?: string;
+  /** Client profile — only Guardr-verified supplemental credentials. */
+  clientMode?: boolean;
 }
 
-export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: CertBadgeRowProps) {
-  const supplemental = getSupplementalCredentialsOnFile(guard);
+export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', clientMode = false }: CertBadgeRowProps) {
+  const supplemental = getSupplementalCredentialsOnFile(guard, { verifiedOnly: clientMode });
   const licensedStates = getVerifiedLicensedStates(guard);
   const progress = getQualificationProgress(guard, jobState);
 
@@ -28,6 +31,12 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       onFile: progress.governmentId,
       expired: progress.governmentIdExpired,
       verified: progress.governmentIdVerified,
+    },
+    {
+      id: 'coi',
+      label: 'Certificate of Insurance',
+      onFile: Boolean(guard.insurancePolicy?.documentUrl),
+      verified: guardHasValidInsurance(guard),
     },
     {
       id: 'bsis-guard-card',
@@ -47,7 +56,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       onFile: progress.thirtyTwoHourBlockComplete,
       verified: progress.thirtyTwoHourBlockVerified,
     },
-  ];
+  ].filter((row) => !clientMode || row.verified);
 
   if (progress.level === 'none' && licensedStates.length === 0 && supplemental.length === 0 && !showCaBaseline) {
     return null;

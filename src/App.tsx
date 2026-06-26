@@ -27,6 +27,7 @@ import {
   StaffMessage,
   GuardMessage,
   GuardInsurancePolicy,
+  GuardWeaponGearId,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
@@ -1469,7 +1470,11 @@ export default function App() {
         specialties: parseJsonStringArray(g.specialties),
         yearsExperience: g.years_experience ?? undefined,
         availabilityNotes: g.availability_notes || undefined,
-        isArmed: g.is_armed, backgroundChecked: g.background_checked, verified: g.verified,
+        isArmed: g.is_armed,
+        listedWeaponGear: parseJsonStringArray(g.listed_weapon_gear).filter((value): value is GuardWeaponGearId =>
+          ['oc-spray', 'baton', 'handcuffs', 'taser', 'firearm'].includes(value)
+        ),
+        backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
         hourlyRateRequirement: g.hourly_rate_requirement,
         isStaff: false,
@@ -3179,6 +3184,8 @@ export default function App() {
               yearsExperience: payload.yearsExperience ?? g.yearsExperience,
               availabilityNotes: payload.availabilityNotes ?? g.availabilityNotes,
               hourlyRateRequirement: payload.hourlyRateRequirement ?? g.hourlyRateRequirement,
+              listedWeaponGear: payload.listedWeaponGear ?? g.listedWeaponGear,
+              isArmed: payload.listedWeaponGear?.includes('firearm') ?? g.isArmed,
               avatar: payload.avatar !== undefined ? payload.avatar : g.avatar,
               badgeNumber: payload.badgeNumber ?? g.badgeNumber,
             }
@@ -3211,6 +3218,8 @@ export default function App() {
           years_experience: payload.yearsExperience ?? null,
           availability_notes: payload.availabilityNotes ?? '',
           hourly_rate_requirement: payload.hourlyRateRequirement ?? null,
+          listed_weapon_gear: payload.listedWeaponGear ?? [],
+          is_armed: payload.listedWeaponGear?.includes('firearm') ?? previous.isArmed,
         });
       }
 
