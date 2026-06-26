@@ -8,10 +8,8 @@ import {
   guardHasExpiredIdOnFile,
   guardHasVerifiedIdForWork,
   guardMeets32HourBlock,
-  guardMeets32HourBlockVerified,
   guardMeetsLevel1,
   guardMeetsPtaUofTraining,
-  guardMeetsPtaUofTrainingVerified,
   PTA_UOF_UPLOAD_GUIDANCE,
 } from './guardQualification';
 import { certImageIsLocked } from './certImagePolicy';
@@ -54,11 +52,8 @@ export function guardActivationGuardCardStepDetail(guard: SecurityGuard): string
 }
 
 export function guardActivationPtaStepDetail(guard: SecurityGuard): string {
-  if (guardMeetsPtaUofTrainingVerified(guard)) {
-    return 'PTA/UOF training verified by staff';
-  }
   if (guardMeetsPtaUofTraining(guard)) {
-    return 'On file — awaiting staff verification';
+    return 'PTA/UOF training on file';
   }
   return `Upload your PTA/UOF certificate. ${PTA_UOF_UPLOAD_GUIDANCE}`;
 }
@@ -66,15 +61,10 @@ export function guardActivationPtaStepDetail(guard: SecurityGuard): string {
 export function guardActivation32HourStepDetail(guard: SecurityGuard): string {
   const progress = getQualificationProgress(guard);
 
-  if (guardMeets32HourBlockVerified(guard)) {
-    return progress.thirtyTwoHourRollup
-      ? '32-hour completion certificate verified by staff'
-      : `All ${progress.total32HourCourses} courses verified by staff`;
-  }
   if (guardMeets32HourBlock(guard)) {
     return progress.thirtyTwoHourRollup
-      ? '32-hour completion certificate on file — awaiting staff verification'
-      : `All ${progress.total32HourCourses} courses on file — awaiting staff verification`;
+      ? '32-hour completion certificate on file'
+      : `All ${progress.total32HourCourses} courses on file`;
   }
   if (progress.thirtyTwoHourRollup || progress.uploaded32HourCount > 0) {
     return `${formatThirtyTwoHourCourseProgressCounts(progress)} — keep uploading courses`;

@@ -10,12 +10,16 @@ import {
   guardHasCredentialOnFile,
   isRequiredPathwayCredential,
 } from './guardQualification';
+import { credentialExpectsStaffVerification } from './certCatalog';
 
 export function guardHasVerifiedCert(
   guard: SecurityGuard,
   catalogId: string,
   jobState?: string
 ): boolean {
+  if (credentialExpectsStaffVerification(catalogId)) {
+    return guardHasStaffVerifiedCert(guard, catalogId, jobState);
+  }
   return guardHasCredentialOnFile(guard, catalogId, jobState);
 }
 

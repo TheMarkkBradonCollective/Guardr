@@ -49,7 +49,7 @@ function fullyOnFileGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard
         number: 'GC-1',
         state: 'CA',
         expiryDate: '2099-12-31',
-        status: 'pending',
+        status: 'verified',
         imageUrl: 'card',
         category: 'guard-card',
       },
@@ -117,10 +117,23 @@ describe('guard account activation gates', () => {
     assert.ok(blockers.some((b) => b.includes('32-hour')));
   });
 
-  it('allows profile approval when all five are on file without staff verification', () => {
+  it('allows profile approval when all five are on file and guard card is verified', () => {
     const guard = fullyOnFileGuard({ userStatus: 'pending' });
     assert.equal(guardCanStaffApproveProfile(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canStaffApprove, true);
+  });
+
+  it('blocks profile approval when guard card is on file but not verified', () => {
+    const guard = fullyOnFileGuard({
+      userStatus: 'pending',
+      certifications: fullyOnFileGuard().certifications.map((cert) =>
+        cert.catalogId === 'bsis-guard-card' ? { ...cert, status: 'pending' } : cert
+      ),
+    });
+    assert.equal(guardCanStaffApproveProfile(guard), false);
+    assert.ok(
+      getGuardActivationChecklist(guard).staffApprovalBlockers.some((b) => b.includes('Guard Card'))
+    );
   });
 
   it('blocks marketplace eligibility until all five credentials are on file', () => {
@@ -203,7 +216,7 @@ describe('guard account activation gates', () => {
     assert.equal(getGuardActivationChecklist(guard).canActivate, false);
   });
 
-  it('treats guards as active when user_status is active and all five are on file', () => {
+  it('treats guards as active when user_status is active, all five are on file, and guard card is verified', () => {
     const guard = fullyOnFileGuard();
     assert.equal(isGuardAccountActive(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canActivate, true);

@@ -399,6 +399,17 @@ export function requirementLabel(catalogIdOrLegacy: string): string {
   return entry?.name ?? catalogIdOrLegacy;
 }
 
+/** Guard cards and BSIS weapons permits require staff verification; training certs do not. */
+export function credentialExpectsStaffVerification(
+  certOrCatalogId: { catalogId?: string; name: string } | string
+): boolean {
+  const catalogId =
+    typeof certOrCatalogId === 'string' ? certOrCatalogId : resolveCertCatalogId(certOrCatalogId);
+  if (!catalogId) return false;
+  if (catalogId === 'bsis-guard-card') return true;
+  return getCertCatalogEntry(catalogId)?.category === 'bsis-permit';
+}
+
 /** Profile badge candidates — verified optional certs worth showing */
 export const PROFILE_BADGE_CATEGORIES: CertCategory[] = [
   'medical',

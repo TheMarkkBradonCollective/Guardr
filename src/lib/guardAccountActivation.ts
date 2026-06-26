@@ -55,7 +55,7 @@ export interface GuardActivationChecklist {
   insuranceVerified: boolean;
   /** Guard-facing — all five activation credentials on file. */
   canActivate: boolean;
-  /** Staff can approve profile when all five credentials are on file. */
+  /** Staff can approve profile when all five are on file and the guard card is verified. */
   canStaffApprove: boolean;
   /** Staff can grant marketplace eligibility when all five credentials remain on file. */
   canStaffActivate: boolean;
@@ -123,6 +123,15 @@ function buildGuardCardSubmissionBlockers(guard: SecurityGuard, state = 'CA'): s
   return blockers;
 }
 
+function buildGuardCardVerificationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
+  const submissionBlockers = buildGuardCardSubmissionBlockers(guard, state);
+  if (submissionBlockers.length > 0) return submissionBlockers;
+  if (!guardHasVerifiedGuardCard(guard, state)) {
+    return ['BSIS Guard Card awaiting staff verification'];
+  }
+  return [];
+}
+
 function buildPtaUofSubmissionBlockers(guard: SecurityGuard): string[] {
   if (!guardMeetsPtaUofTraining(guard)) {
     return ['Power to Arrest & Appropriate Use of Force (PTA/UOF) not on file — required for profile approval'];
@@ -141,7 +150,7 @@ function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[
   return [
     ...buildIdSubmissionBlockers(guard),
     ...buildInsuranceSubmissionBlockers(guard),
-    ...buildGuardCardSubmissionBlockers(guard, state),
+    ...buildGuardCardVerificationBlockers(guard, state),
     ...buildPtaUofSubmissionBlockers(guard),
     ...build32HourSubmissionBlockers(guard),
   ];
@@ -244,7 +253,7 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
     }
     return 'Approved — ready to grant marketplace eligibility';
   }
-  if (checklist.canStaffApprove) return 'All five credentials on file — ready to approve';
+  if (checklist.canStaffApprove) return 'All five credentials on file and guard card verified — ready to approve';
   const parts: string[] = [];
   if (!checklist.idSubmitted) parts.push('ID missing');
   else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');

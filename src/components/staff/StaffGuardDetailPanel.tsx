@@ -565,7 +565,7 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : 'Approve guard profile — all five credentials on file'
+                      : 'Approve guard profile — all five on file and guard card verified'
                   }
                 >
                   Approve profile

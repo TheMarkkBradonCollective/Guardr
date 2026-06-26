@@ -1,5 +1,5 @@
 import { Certification } from '../types';
-import { resolveCertCatalogId } from './certCatalog';
+import { credentialExpectsStaffVerification, resolveCertCatalogId } from './certCatalog';
 
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
@@ -21,9 +21,15 @@ export function certDatabaseErrorMessage(error: { code?: string; message?: strin
 }
 
 export const CERT_IMAGE_POLICY_HINT =
-  'Upload a photo or scan of the credential document — required for staff verification. Once uploaded, the photo cannot be changed or removed.';
+  'Upload a photo or scan of the credential document. Once uploaded, the photo cannot be changed or removed.';
 
-export const CERT_DOCUMENT_PHOTO_LABEL = 'Document photo — required for staff verification';
+export const LICENSE_CREDENTIAL_VERIFY_HINT =
+  'Guard cards and weapons permits are verified by Guardr staff so clients can trust they are legitimate.';
+
+export const CERT_DOCUMENT_PHOTO_LABEL = 'Document photo — required';
+
+export const LICENSE_CREDENTIAL_DOCUMENT_PHOTO_LABEL =
+  'Document photo — required for staff verification';
 
 /** Credential has a document photo on file (proof of credential). */
 export function certHasDocumentProof(cert: Pick<Certification, 'imageUrl'>): boolean {
@@ -98,26 +104,26 @@ export function certPhotoIsLockedForEditor(
   return certImageIsLocked(cert);
 }
 
-function isGuardCardCertification(cert: Pick<Certification, 'name' | 'catalogId'>): boolean {
-  const catalogId = resolveCertCatalogId(cert);
-  return catalogId === 'bsis-guard-card' || /guard card|bsis guard/i.test(cert.name);
-}
-
-/** Guard card must have a document photo before staff can verify — listed-only is not enough. */
+/** Only guard cards and weapons permits can be staff-verified. */
 export function staffCanVerifyCertification(
   cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
 ): boolean {
+  if (!credentialExpectsStaffVerification(cert)) return false;
   if (cert.status !== 'pending') return false;
-  if (isGuardCardCertification(cert) && !certHasDocumentProof(cert)) return false;
-  return true;
+  return certHasDocumentProof(cert);
 }
 
 export function staffVerifyCertificationBlocker(
   cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
 ): string | null {
+  if (!credentialExpectsStaffVerification(cert)) {
+    return 'Training certificates only need to be on file — no staff verification required';
+  }
   if (cert.status !== 'pending') return null;
-  if (isGuardCardCertification(cert) && !certHasDocumentProof(cert)) {
-    return 'Document photo required — guard card must be on file before staff can verify';
+  if (!certHasDocumentProof(cert)) {
+    return 'Document photo required — guard card or weapons permit must be on file before staff can verify';
   }
   return null;
 }
+
+export { credentialExpectsStaffVerification };

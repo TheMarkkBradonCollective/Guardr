@@ -36,7 +36,7 @@ function fullyActiveGuard(): SecurityGuard {
         number: 'GC-1',
         state: 'CA',
         expiryDate: '2099-12-31',
-        status: 'pending',
+        status: 'verified',
         imageUrl: 'card',
         category: 'guard-card',
       },
