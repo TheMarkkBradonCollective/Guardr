@@ -141,6 +141,56 @@ describe('authorizePushEvent', () => {
     });
     assert.notEqual(err, null);
   });
+
+  it('allows staff to send account_update notifications', async () => {
+    const err = await authorizePushEvent(db, staffSession, {
+      type: 'account_update',
+      recipientUserId: 'guard-1',
+    });
+    assert.equal(err, null);
+  });
+
+  it('blocks clients from sending account_update notifications', async () => {
+    const err = await authorizePushEvent(db, clientSession, {
+      type: 'account_update',
+      recipientUserId: 'guard-1',
+    });
+    assert.notEqual(err, null);
+  });
+
+  it('allows staff to send payout_ready notifications', async () => {
+    const err = await authorizePushEvent(db, staffSession, {
+      type: 'payout_ready',
+      guardId: 'guard-1',
+    });
+    assert.equal(err, null);
+  });
+
+  it('allows job participants to send job_status_update notifications', async () => {
+    const participantDb = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { client_id: 'client-1', assigned_guard_id: 'guard-1' },
+            }),
+          }),
+        }),
+      }),
+    } as never;
+
+    const clientErr = await authorizePushEvent(participantDb, clientSession, {
+      type: 'job_status_update',
+      requestId: 'req-1',
+    });
+    assert.equal(clientErr, null);
+
+    const guardErr = await authorizePushEvent(participantDb, guardSession, {
+      type: 'job_status_update',
+      requestId: 'req-1',
+    });
+    assert.equal(guardErr, null);
+  });
 });
 
 describe('isStaffSession', () => {

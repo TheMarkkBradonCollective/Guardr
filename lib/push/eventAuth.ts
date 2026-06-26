@@ -188,6 +188,21 @@ export async function authorizePushEvent(
     case 'support_ticket_status':
       return isStaffSession(session) ? null : 'Only staff can send support status updates';
 
+    case 'account_update':
+      return isStaffSession(session) ? null : 'Only staff can send account update notifications';
+
+    case 'payout_ready':
+      return isStaffSession(session) ? null : 'Only staff can send payout ready notifications';
+
+    case 'job_status_update':
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'client' || session.platformRole === 'guard') {
+        if (event.requestId && (await isJobParticipant(db, event.requestId, session.userId))) {
+          return null;
+        }
+      }
+      return 'Not authorized to send job status updates for this context';
+
     case 'dispute_update':
       if (isStaffSession(session)) return null;
       if (event.ticketId && (await isSupportTicketParticipant(db, event.ticketId, session.userId))) {

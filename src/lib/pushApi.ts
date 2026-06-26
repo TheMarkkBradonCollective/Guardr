@@ -135,6 +135,9 @@ export type PushEventType =
   | 'job_relisted'
   | 'job_schedule_changed'
   | 'team_chat_message'
+  | 'account_update'
+  | 'job_status_update'
+  | 'payout_ready'
   | 'test';
 
 export async function reportPushEvent(

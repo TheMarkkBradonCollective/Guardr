@@ -249,6 +249,13 @@ import {
 } from './lib/push';
 import { reportPushEvent } from './lib/pushApi';
 import {
+  notifyAccountUpdate,
+  notifyGuardAppliedToJob,
+  notifyJobStatusUpdate,
+  notifyPayoutReady,
+  notifyStaffAttention,
+} from './lib/operationalPush';
+import {
   notifyDisputeResolution,
   notifySupportTicketCreated,
   notifySupportTicketStatus,
@@ -2455,6 +2462,16 @@ export default function App() {
       prev.map((g) => (g.id === guardId ? { ...g, insurancePolicy: resolved } : g))
     );
     appToast(status === 'verified' ? 'Insurance verified.' : 'Insurance rejected.', 'success');
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        status === 'verified' ? 'Insurance verified' : 'Insurance needs resubmit',
+        status === 'verified'
+          ? 'Your Certificate of Insurance was verified by Guardr staff.'
+          : rejectionReason ?? 'Your Certificate of Insurance needs a clearer upload.'
+      );
+    }
   };
 
   /**
@@ -3102,6 +3119,14 @@ export default function App() {
         }
       }
     }
+    if (currentUser && cert) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Credential verified',
+        `Your ${cert.name} was verified by Guardr staff.`
+      );
+    }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
@@ -3140,6 +3165,14 @@ export default function App() {
         );
         throw new Error(result.error);
       }
+    }
+    if (currentUser && cert) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Credential needs resubmit',
+        `Your ${cert.name} needs a clearer upload. Open your activation credentials to fix it.`
+      );
     }
   };
 
@@ -3331,6 +3364,15 @@ export default function App() {
     if (isDbConnected) {
       const table = target.isStaff ? 'staff' : 'guards';
       await supabase.from(table).update({ user_status: status }).eq('id', guardId);
+    }
+    if (currentUser && !target.isStaff) {
+      const statusCopy =
+        status === 'suspended'
+          ? 'Your guard account was suspended. Contact Guardr support if you have questions.'
+          : status === 'blocked'
+            ? 'Your guard account was blocked. Contact Guardr support if you have questions.'
+            : 'Your guard account status was updated by staff.';
+      notifyAccountUpdate(currentUser, guardId, 'Account status updated', statusCopy);
     }
   };
 
@@ -3676,12 +3718,12 @@ export default function App() {
         throw new Error(result.error);
       }
     }
-    void reportPushEvent(currentUser, {
-      type: 'support_ticket_status',
-      recipientUserId: guardId,
-      title: 'Application approved',
-      body: 'Your guard application is approved. Open Guardr to upload your activation credentials.',
-    });
+    notifyAccountUpdate(
+      currentUser,
+      guardId,
+      'Application approved',
+      'Your guard application is approved. Open Guardr to upload your activation credentials.'
+    );
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
@@ -3726,12 +3768,12 @@ export default function App() {
       }
     }
     if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'support_ticket_status',
-        recipientUserId: guardId,
-        title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
-        body: 'Your credentials are verified. You can now browse and accept jobs on Guardr.',
-      });
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
+        'Your credentials are verified. You can now browse and accept jobs on Guardr.'
+      );
     }
   };
 
@@ -4002,6 +4044,14 @@ export default function App() {
         throw new Error('Could not approve government ID. Please try again.');
       }
     }
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Government ID verified',
+        'Your government ID was verified. Continue uploading your remaining activation credentials.'
+      );
+    }
   };
 
   const handleRejectGuardIdentityVerification = async (guardId: string, reason?: string) => {
@@ -4034,6 +4084,14 @@ export default function App() {
           id_verification_rejection_reason: rejectionReason,
         })
         .eq('id', guardId);
+    }
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'ID verification rejected',
+        rejectionReason
+      );
     }
   };
 
@@ -4697,6 +4755,14 @@ export default function App() {
       }
       await supabase.from('security_requests').update(updates).eq('id', requestId);
     }
+    if (status === 'completed' && req && currentUser) {
+      notifyJobStatusUpdate(
+        currentUser,
+        req,
+        'Shift completed',
+        `"${req.title}" was marked completed.`
+      );
+    }
     if (status === 'completed' && req?.paymentStatus === 'paid' && !isCashClientPayment(req)) {
       try {
         await holdJobPayment(requestId);
@@ -4901,6 +4967,14 @@ export default function App() {
         })
         .eq('id', requestId);
     }
+    if (currentUser && req) {
+      notifyAccountUpdate(
+        currentUser,
+        req.clientId,
+        'Cash payment declined',
+        `Your cash payment request for "${req.title}" was declined. You can pay by card instead.`
+      );
+    }
     appToast('Cash payment request declined.', 'success');
   };
 
@@ -4973,6 +5047,14 @@ export default function App() {
         });
       }
     }
+    if (currentUser && req.assignedGuardId) {
+      notifyAccountUpdate(
+        currentUser,
+        req.assignedGuardId,
+        'Overtime payment received',
+        `Client overtime payment for "${req.title}" was recorded. Guard pay will be released when eligible.`
+      );
+    }
   };
 
   const handleGuardApproveOvertime = async (requestId: string) => {
@@ -5005,6 +5087,14 @@ export default function App() {
         location: req.location,
         body: `Guard approved ${req.overtimeHours ?? 0}h overtime on "${req.title}" — client approval required.`,
       });
+      if (req.clientId) {
+        notifyAccountUpdate(
+          currentUser,
+          req.clientId,
+          'Overtime approval needed',
+          `Guard approved ${req.overtimeHours ?? 0}h overtime on "${req.title}" — approve in your jobs list.`
+        );
+      }
     }
     appToast('Overtime submitted for client approval.', 'success');
   };
@@ -5253,6 +5343,13 @@ export default function App() {
         .eq('id', requestId);
     }
     appToast('Overtime cash payment requested — staff will confirm once received.', 'success');
+    if (currentUser) {
+      notifyStaffAttention(
+        currentUser,
+        `Client requested $${overtimeAmount.toFixed(2)} cash payment for overtime on "${req.title}".`,
+        { requestId }
+      );
+    }
   };
 
   const handleApproveOvertimeCashPayment = async (requestId: string) => {
@@ -5350,6 +5447,9 @@ export default function App() {
         .eq('id', requestId);
     }
     appToast(`$${amount.toFixed(2)} overtime pay is available for the guard.`, 'success');
+    if (currentUser && req.assignedGuardId) {
+      notifyPayoutReady(currentUser, req.assignedGuardId, requestId, amount, req.title);
+    }
   };
 
   const handleMarkOvertimeGuardPaidCash = async (requestId: string) => {
@@ -5381,6 +5481,14 @@ export default function App() {
         .eq('id', requestId);
     }
     appToast(`Overtime cash payout of $${amount.toFixed(2)} recorded.`, 'success');
+    if (currentUser && req.assignedGuardId) {
+      notifyAccountUpdate(
+        currentUser,
+        req.assignedGuardId,
+        'Overtime payout recorded',
+        `$${amount.toFixed(2)} overtime cash payout recorded for "${req.title}".`
+      );
+    }
   };
 
   const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
@@ -5453,6 +5561,9 @@ export default function App() {
         .eq('id', requestId);
     }
     appToast(`$${amount.toFixed(2)} is now available for the guard to collect.`, 'success');
+    if (currentUser && req.assignedGuardId) {
+      notifyPayoutReady(currentUser, req.assignedGuardId, requestId, amount, req.title);
+    }
   };
 
   const handleMarkGuardPaidCash = async (requestId: string) => {
@@ -5536,6 +5647,14 @@ export default function App() {
     }
     await syncOpenPayoutInvoices(nextRequests);
     appToast(`Recorded $${amount} cash payout to guard.`, 'success');
+    if (currentUser && req.assignedGuardId) {
+      notifyAccountUpdate(
+        currentUser,
+        req.assignedGuardId,
+        'Cash payout recorded',
+        `$${amount} cash payout recorded for "${req.title}".`
+      );
+    }
   };
 
   const handleMarkPlatformFeePaidCash = async (requestId: string) => {
@@ -5699,6 +5818,14 @@ export default function App() {
         await supabase.from('security_requests').update({ rating_given: rating, review_text: reviewText }).eq('id', requestId);
         await supabase.from('guards').update({ rating: avg }).eq('id', req.assignedGuardId);
       }
+      if (currentUser) {
+        notifyAccountUpdate(
+          currentUser,
+          req.assignedGuardId,
+          'New client review',
+          `You received a ${rating}-star review on "${req.title}".`
+        );
+      }
     }
   };
 
@@ -5762,6 +5889,14 @@ export default function App() {
     }
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
+    if (currentUser && existing) {
+      notifyJobStatusUpdate(
+        currentUser,
+        existing,
+        'Job cancelled',
+        `"${existing.title}" was cancelled.`
+      );
+    }
   };
 
   const dispatchScheduleChangeNotifications = (
@@ -6831,20 +6966,26 @@ export default function App() {
         notifyClientFullTeam: false,
       });
       if (currentUser) {
-        void reportPushEvent(currentUser, {
-          type: 'assignment',
-          recipientUserId: job.clientId,
-          requestId,
-          guardId,
-          guardName: guard.name,
-          title: 'Independent guard request',
-          body: `${guard.name} applied for "${job.title}". Confirm to add them to your roster.`,
-        });
+        if (options?.initiatedByGuard) {
+          notifyGuardAppliedToJob(currentUser, job, guard);
+        } else {
+          void reportPushEvent(currentUser, {
+            type: 'assignment',
+            recipientUserId: job.clientId,
+            requestId,
+            guardId,
+            guardName: guard.name,
+            title: 'Independent guard request',
+            body: `${guard.name} was placed on "${job.title}". Confirm to add them to your roster.`,
+          });
+        }
         void reportPushEvent(currentUser, {
           type: 'assignment',
           recipientUserId: guardId,
           requestId,
-          body: `Your application for "${job.title}" is awaiting client confirmation.`,
+          body: options?.initiatedByGuard
+            ? `Your application for "${job.title}" is awaiting client confirmation.`
+            : `You were placed on "${job.title}" — awaiting client confirmation.`,
         });
       }
       appToast(`${guard.name} sent to ${job.clientName} for approval.`, 'success');
@@ -6889,15 +7030,19 @@ export default function App() {
       const clientBody = options?.initiatedByGuard
         ? `${guard.name} applied for "${job.title}". Confirm to hire them.`
         : `${guard.name} was placed on "${job.title}" for your review (dispute/safety). Confirm to hire them.`;
-      void reportPushEvent(currentUser, {
-        type: 'assignment',
-        recipientUserId: job.clientId,
-        requestId,
-        guardId,
-        guardName: guard.name,
-        title: clientTitle,
-        body: clientBody,
-      });
+      if (options?.initiatedByGuard) {
+        notifyGuardAppliedToJob(currentUser, job, guard);
+      } else {
+        void reportPushEvent(currentUser, {
+          type: 'assignment',
+          recipientUserId: job.clientId,
+          requestId,
+          guardId,
+          guardName: guard.name,
+          title: clientTitle,
+          body: clientBody,
+        });
+      }
       void reportPushEvent(currentUser, {
         type: 'assignment',
         recipientUserId: guardId,
@@ -7093,14 +7238,12 @@ export default function App() {
       }
       await persistTeamJobUpdate(result.job, result.slots, { notifyClientFullTeam: false });
       if (currentUser) {
+        notifyGuardAppliedToJob(currentUser, job, activeGuard);
         void reportPushEvent(currentUser, {
           type: 'assignment',
-          recipientUserId: job.clientId,
+          recipientUserId: activeGuardId,
           requestId,
-          guardId: activeGuardId,
-          guardName: activeGuard.name,
-          title: 'Guard application',
-          body: `${activeGuard.name} applied for "${job.title}".`,
+          body: `Your application for "${job.title}" is awaiting client confirmation.`,
         });
       }
       appToast('Application sent to client for approval.', 'success');
@@ -7580,6 +7723,19 @@ export default function App() {
       }
     }
 
+    if (payload.midShiftAudit && currentUser && req) {
+      const guard = guards.find((g) => g.id === req.assignedGuardId) ?? activeGuard;
+      void reportPushEvent(currentUser, {
+        type: 'guard_checkin',
+        guardId: guard?.id ?? req.assignedGuardId,
+        guardName: guard?.name ?? currentUser.name,
+        requestId,
+        siteId: req.siteName || undefined,
+        location: req.location,
+        body: `${guard?.name ?? 'Guard'} completed a mid-shift check-in${req.location ? ` at ${req.location}` : ''}`,
+      });
+    }
+
     if (payload.status === 'completed' && payload.checkOutAudit && currentUser) {
       const req = requests.find((r) => r.id === requestId);
       const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
@@ -7591,6 +7747,15 @@ export default function App() {
         siteId: req?.siteName || undefined,
         location: req?.location,
       });
+      if (req) {
+        notifyJobStatusUpdate(
+          currentUser,
+          req,
+          'Shift completed',
+          `${guard?.name ?? 'Your guard'} completed "${req.title}".`,
+          { guardId: req.assignedGuardId }
+        );
+      }
     }
 
     if (payload.shiftBreaks && currentUser && req) {
@@ -7655,12 +7820,12 @@ export default function App() {
         body: `Late clock-out on "${req?.title}" — ${detectedOvertime.overtimeHours}h overtime awaiting client approval.`,
       });
       if (req?.clientId) {
-        void reportPushEvent(currentUser, {
-          type: 'support_ticket_status',
-          recipientUserId: req.clientId,
-          title: 'Overtime approval needed',
-          body: `Guard stayed ${detectedOvertime.overtimeHours}h past schedule on "${req.title}" — approve overtime in your jobs list.`,
-        });
+        notifyAccountUpdate(
+          currentUser,
+          req.clientId,
+          'Overtime approval needed',
+          `Guard stayed ${detectedOvertime.overtimeHours}h past schedule on "${req.title}" — approve overtime in your jobs list.`
+        );
       }
     }
 
@@ -7738,6 +7903,14 @@ export default function App() {
         appToast('Could not save audit photos. Please try again.', 'error');
       }
     }
+    if (currentUser && existing.clientId && selfAuditPhotosComplete(checkInAudit)) {
+      notifyAccountUpdate(
+        currentUser,
+        existing.clientId,
+        'Self-audit ready to confirm',
+        `Staff uploaded self-audit photos for "${existing.title}". Please review and confirm in your jobs list.`
+      );
+    }
   };
 
   const handleStaffUploadSpotCheck = async (requestId: string, imageUrl: string) => {
@@ -7812,6 +7985,15 @@ export default function App() {
     setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
     if (isDbConnected) {
       await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
+    }
+    if (currentUser && existing.assignedGuardId) {
+      void reportPushEvent(currentUser, {
+        type: 'guard_checkin',
+        guardId: existing.assignedGuardId,
+        requestId,
+        location: existing.location,
+        body: `Client confirmed your self-audit photos for "${existing.title}".`,
+      });
     }
   };
 
@@ -7910,6 +8092,15 @@ export default function App() {
       return next;
     });
     if (updated) await persistGuardPayoutInvoiceToDb(updated);
+    if (currentUser && updated) {
+      const methodLabel = updated.method === 'cash' ? 'cash pickup' : 'bank transfer';
+      notifyAccountUpdate(
+        currentUser,
+        updated.guardId,
+        'Payout processed',
+        `Your $${updated.total.toFixed(2)} ${methodLabel} payout for ${updated.lines.length} job(s) has been processed.`
+      );
+    }
   };
 
   const submitGuardPayoutInvoice = async (
@@ -8017,6 +8208,14 @@ export default function App() {
       }
       await syncOpenPayoutInvoices(nextRequests);
       appToast(`Payout released: $${(result.amountCents / 100).toFixed(2)} sent to guard.`, 'success');
+      if (currentUser && req.assignedGuardId) {
+        notifyAccountUpdate(
+          currentUser,
+          req.assignedGuardId,
+          'Payout sent',
+          `$${(result.amountCents / 100).toFixed(2)} was sent to your bank for "${req.title}".`
+        );
+      }
     } catch (e: unknown) {
       appToast(e instanceof Error ? e.message : 'Payout failed', 'error');
     }
@@ -8069,6 +8268,23 @@ export default function App() {
         p.jobId === requestId ? { ...p, status: 'refunded' } : p
       ));
       appToast('Payment refunded successfully.', 'success');
+      if (currentUser && req) {
+        notifyAccountUpdate(
+          currentUser,
+          req.clientId,
+          'Payment refunded',
+          `Your payment for "${req.title}" was refunded.`
+        );
+        if (req.assignedGuardId) {
+          notifyAccountUpdate(
+            currentUser,
+            req.assignedGuardId,
+            'Job payment refunded',
+            `The client payment for "${req.title}" was refunded.`
+          );
+        }
+        notifyStaffAttention(currentUser, `Refund processed for "${req.title}".`, { requestId });
+      }
     } catch (e: unknown) {
       appToast(e instanceof Error ? e.message : 'Refund failed', 'error');
     }
@@ -8187,6 +8403,34 @@ export default function App() {
           .eq('id', guardId);
       }
     }
+    if (currentUser) {
+      const guard = guards.find((g) => g.id === guardId);
+      if (autoSuspend) {
+        notifyAccountUpdate(
+          currentUser,
+          guardId,
+          'Account suspended',
+          'Your account was automatically suspended after 3 compliance violations. Contact Guardr support.'
+        );
+        notifyStaffAttention(
+          currentUser,
+          `${guard?.name ?? 'Guard'} auto-suspended after 3 compliance violations.`,
+          { title: 'Auto-suspension' }
+        );
+      } else {
+        notifyAccountUpdate(
+          currentUser,
+          guardId,
+          'Compliance warning',
+          reason ? `Compliance issue recorded: ${reason}` : 'A compliance warning was recorded on your account.'
+        );
+        notifyStaffAttention(
+          currentUser,
+          `${guard?.name ?? 'Guard'} compliance warning: ${reason || 'Failed audit'}`,
+          { title: 'Compliance alert' }
+        );
+      }
+    }
   };
 
   const handleResetAuditFailures = async (guardId: string) => {
@@ -8198,6 +8442,14 @@ export default function App() {
         .eq('id', guardId);
     }
     appToast('✓ Compliance record cleared. Account reinstated.', 'success');
+    if (currentUser) {
+      notifyAccountUpdate(
+        currentUser,
+        guardId,
+        'Account reinstated',
+        'Your compliance record was cleared and your account is active again.'
+      );
+    }
   };
 
   const persistJobChatThreadToDb = async (thread: JobChatThread) => {
