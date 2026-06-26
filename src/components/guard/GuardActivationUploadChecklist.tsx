@@ -36,8 +36,10 @@ import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardCardPanel } from '../profile/GuardCardPanel';
 import { GuardPtaUofPanel } from './GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
+import { GuardOptionalCredentialAddSheet } from './GuardOptionalCredentialAddSheet';
+import { getSupplementalCredentialsOnFile } from '../../lib/certMatching';
 
-type UploadKind = 'id' | 'coi' | 'guardCard' | 'pta' | 'thirtyTwoHour';
+type UploadKind = 'id' | 'coi' | 'guardCard' | 'pta' | 'thirtyTwoHour' | 'optional';
 
 interface GuardActivationUploadChecklistProps {
   guard: SecurityGuard;
@@ -137,6 +139,13 @@ export function GuardActivationUploadChecklist({
   const blockDone = guardMeets32HourBlock(guard);
   const blockCanUpload = !!onAddCertification && !blockDone;
 
+  const optionalOnFile = getSupplementalCredentialsOnFile(guard);
+  const optionalCanUpload = !!onAddCertification;
+  const optionalDetail =
+    optionalOnFile.length > 0
+      ? `${optionalOnFile.length} on file — add more anytime. Not required for activation.`
+      : 'Firearms, medical, FEMA, and more. Not required for activation.';
+
   return (
     <>
       <div className="app-checklist-panel">
@@ -177,14 +186,30 @@ export function GuardActivationUploadChecklist({
             onAction={blockCanUpload ? () => setOpenUpload('thirtyTwoHour') : undefined}
           />
           <div className="flex items-start gap-3 pt-3">
-            <span className="w-5 h-5 rounded-full bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center shrink-0 mt-0.5">
-              <Plus className="w-3 h-3 text-brand-primary" strokeWidth={2.5} />
+            <span className="shrink-0 mt-0.5">
+              {optionalOnFile.length > 0 ? (
+                <span className="w-5 h-5 rounded-full bg-brand-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </span>
+              ) : (
+                <span className="w-5 h-5 rounded-full bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center">
+                  <Plus className="w-3 h-3 text-brand-primary" strokeWidth={2.5} />
+                </span>
+              )}
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold tracking-tight text-brand-text">Optional credentials</p>
-              <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
-                Firearms, medical, FEMA, and more can be added after activation from your profile.
-              </p>
+              <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">{optionalDetail}</p>
+              {optionalCanUpload && (
+                <button
+                  type="button"
+                  onClick={() => setOpenUpload('optional')}
+                  className="app-button-primary !w-full !h-11 !text-sm gap-2 mt-3"
+                >
+                  <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+                  {optionalOnFile.length > 0 ? 'Add another credential' : 'Add optional credential'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -248,6 +273,15 @@ export function GuardActivationUploadChecklist({
           onAttachCertificationImage={onAttachCertificationImage}
           onUpdateCertification={onUpdateCertification}
           activationFormOnly={{ open: true, onClose: closeUpload }}
+        />
+      )}
+
+      {openUpload === 'optional' && (
+        <GuardOptionalCredentialAddSheet
+          guard={guard}
+          open
+          onClose={closeUpload}
+          onAddCertification={onAddCertification}
         />
       )}
     </>

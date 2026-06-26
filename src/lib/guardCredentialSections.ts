@@ -49,6 +49,25 @@ export const ALWAYS_VISIBLE_CREDENTIAL_SECTIONS: CredentialViewSectionId[] = [
   'bsis-32-hour',
 ];
 
+/** Optional credentials guards may add during activation or from profile. */
+export const OPTIONAL_CREDENTIAL_SECTION_IDS: CredentialViewSectionId[] = [
+  'bsis-refresher',
+  'bsis-other-training',
+  'bsis-permit',
+  'medical',
+  'fema',
+  'security-advanced',
+  'industry',
+];
+
+export function getOptionalCredentialSections(): CredentialViewSection[] {
+  return OPTIONAL_CREDENTIAL_SECTION_IDS.map((id) => ({
+    id,
+    ...SECTION_META[id],
+    certs: [],
+  }));
+}
+
 const SECTION_META: Record<
   CredentialViewSectionId,
   Pick<CredentialViewSection, 'title' | 'subtitle' | 'category'>
