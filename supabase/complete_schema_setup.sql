@@ -1,7 +1,8 @@
 -- =============================================================================
--- Guardr — complete schema setup (run in Supabase SQL Editor)
+-- Guardr — COMPLETE SCHEMA SETUP (run once in Supabase SQL Editor)
 -- Idempotent: safe to re-run. Does NOT delete your data.
--- Adds all missing tables, columns, constraints, RLS policies, and realtime.
+-- Adds all tables, columns, constraints, RLS policies, and realtime.
+-- Last updated: Jun 2026 — includes legal acceptances, COI, crew teams, schedule changes.
 -- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
 
@@ -238,7 +239,7 @@ CREATE TABLE IF NOT EXISTS certifications (
   number TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('verified', 'pending', 'rejected')),
   issue_date DATE NOT NULL,
-  expiry_date DATE NOT NULL,
+  expiry_date DATE,
   state TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -248,6 +249,12 @@ ALTER TABLE certifications ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 ALTER TABLE certifications ADD COLUMN IF NOT EXISTS submitted_by_role TEXT;
+
+-- Cert expiry is optional — app no longer collects cert expiry (COI and government ID keep their own).
+ALTER TABLE certifications ALTER COLUMN expiry_date DROP NOT NULL;
+
+COMMENT ON COLUMN certifications.expiry_date IS
+  'Legacy optional field — app no longer collects cert expiry; COI and government ID keep their own expiry columns';
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_certifications_unique_normalized_number
 ON certifications (
@@ -378,9 +385,34 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_hours N
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_minutes INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_breaks JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS team_lead_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS team_code TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS crew_name TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS crew_description TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS service_agreement JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS auto_payout_scheduled_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_start_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_end_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_duration_hours NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_estimated_payout NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_status TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_requested_by TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_extra_amount NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_actual_hours NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_amount NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_status TEXT;
 
 COMMENT ON COLUMN security_requests.break_minutes IS 'Total unpaid break minutes the client allows during the shift';
 COMMENT ON COLUMN security_requests.shift_breaks IS 'Guard break sessions: [{ id, startedAt, endedAt? }]';
+COMMENT ON COLUMN security_requests.service_agreement IS 'Generated client-guard per-job service agreement at assignment';
+COMMENT ON COLUMN security_requests.auto_payout_scheduled_at IS 'When automatic Stripe payout should run after shift completion';
+COMMENT ON COLUMN security_requests.schedule_change_status IS 'none | pending_staff | pending_client | awaiting_payment | pending_staff_billing';
+COMMENT ON COLUMN security_requests.schedule_change_requested_by IS 'client | staff — who proposed the pending schedule change';
+COMMENT ON COLUMN security_requests.early_clock_out_actual_hours IS 'Actual hours worked when guard clocked out early';
+COMMENT ON COLUMN security_requests.early_clock_out_refund_amount IS 'Amount owed back to client for unused scheduled time';
+COMMENT ON COLUMN security_requests.early_clock_out_refund_status IS 'pending | returned_stripe | returned_cash | waived';
 
 COMMENT ON COLUMN security_requests.scheduled_duration_hours IS 'Original scheduled shift length before late clock-out adjustment';
 COMMENT ON COLUMN security_requests.scheduled_estimated_payout IS 'Original client bill before late clock-out adjustment';
@@ -432,6 +464,7 @@ UPDATE security_requests SET overtime_client_cash_payment_requested = FALSE WHER
 UPDATE security_requests SET overtime_guard_payout_available = FALSE WHERE overtime_guard_payout_available IS NULL;
 UPDATE security_requests SET break_minutes = 0 WHERE break_minutes IS NULL;
 UPDATE security_requests SET shift_breaks = '[]'::jsonb WHERE shift_breaks IS NULL;
+UPDATE security_requests SET schedule_change_status = 'none' WHERE schedule_change_status IS NULL;
 UPDATE security_requests
 SET
   guard_payout_available = TRUE,
@@ -844,6 +877,177 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL
 
 INSERT INTO platform_settings (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS verified_guard_self_serve BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_per_guard_per_hour NUMERIC(10, 2) NOT NULL DEFAULT 1.00;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_client_share_percent INTEGER NOT NULL DEFAULT 50;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_platform_share_percent INTEGER NOT NULL DEFAULT 50;
+
+COMMENT ON COLUMN platform_settings.verified_guard_self_serve IS
+  'When true, verified insured guards skip staff applicant review on card jobs';
+
+UPDATE security_requests
+SET opened_at = COALESCE(opened_at, created_at)
+WHERE status = 'open' AND opened_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_security_requests_team_code_unique
+  ON security_requests (UPPER(team_code))
+  WHERE team_code IS NOT NULL AND status = 'open';
+
+-- ── MULTI-GUARD CREW SLOTS ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS job_guard_slots (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES security_requests(id) ON DELETE CASCADE,
+  slot_index INTEGER NOT NULL CHECK (slot_index >= 1),
+  guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'open',
+  invited_by_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  invited_at TIMESTAMPTZ,
+  invite_expires_at TIMESTAMPTZ,
+  staff_approved_at TIMESTAMPTZ,
+  client_approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (job_id, slot_index)
+);
+
+ALTER TABLE job_guard_slots DROP CONSTRAINT IF EXISTS job_guard_slots_status_check;
+ALTER TABLE job_guard_slots ADD CONSTRAINT job_guard_slots_status_check CHECK (
+  status IN (
+    'open',
+    'invited',
+    'pending_staff',
+    'crew_confirmed',
+    'pending_client',
+    'approved',
+    'declined',
+    'expired',
+    'withdrawn'
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_job_id ON job_guard_slots(job_id);
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_guard_id ON job_guard_slots(guard_id);
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_status ON job_guard_slots(status);
+
+-- ── CREW TEAM CHAT ────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS team_chat_threads (
+  id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL UNIQUE REFERENCES security_requests(id) ON DELETE CASCADE,
+  team_lead_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  archived_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS team_chat_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES team_chat_threads(id) ON DELETE CASCADE,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_chat_threads_request_id ON team_chat_threads(request_id);
+CREATE INDEX IF NOT EXISTS idx_team_chat_threads_status ON team_chat_threads(status);
+CREATE INDEX IF NOT EXISTS idx_team_chat_messages_thread_id ON team_chat_messages(thread_id);
+
+-- ── MARKETPLACE LEGAL ACCEPTANCES ─────────────────────────────────────────────
+DO $$
+BEGIN
+  IF to_regclass('public.user_legal_acceptances') IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'user_legal_acceptances'
+        AND column_name = 'user_id'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE user_legal_acceptances
+        ALTER COLUMN user_id TYPE TEXT USING user_id::text;
+    END IF;
+  END IF;
+
+  IF to_regclass('public.guard_insurance_policies') IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'guard_insurance_policies'
+        AND column_name = 'guard_id'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE guard_insurance_policies
+        ALTER COLUMN guard_id TYPE TEXT USING guard_id::text;
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'guard_insurance_policies'
+        AND column_name = 'reviewed_by'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE guard_insurance_policies
+        ALTER COLUMN reviewed_by TYPE TEXT USING reviewed_by::text;
+    END IF;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS user_legal_acceptances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  user_role TEXT NOT NULL CHECK (user_role IN ('guard', 'client', 'staff')),
+  document_id TEXT NOT NULL,
+  document_version TEXT NOT NULL,
+  accepted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, document_id, document_version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_legal_acceptances_user_id
+  ON user_legal_acceptances (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_legal_acceptances_user_role
+  ON user_legal_acceptances (user_role);
+
+COMMENT ON TABLE user_legal_acceptances IS
+  'Versioned legal document acceptances — marketplace agreements accepted once per user';
+
+-- ── GUARD COI / GENERAL LIABILITY INSURANCE ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS guard_insurance_policies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  carrier TEXT NOT NULL DEFAULT '',
+  policy_number TEXT NOT NULL DEFAULT '',
+  general_liability_limit NUMERIC,
+  effective_date DATE,
+  expiry_date DATE,
+  document_url TEXT,
+  status TEXT NOT NULL DEFAULT 'not_submitted'
+    CHECK (status IN ('not_submitted', 'pending', 'verified', 'rejected', 'expired')),
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_insurance_policies_guard_id
+  ON guard_insurance_policies (guard_id);
+
+COMMENT ON TABLE guard_insurance_policies IS
+  'Guard general liability COI — required for marketplace profile approval and jobs';
+
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_arrived BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_left_site BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_open_to_guards BOOLEAN NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
+COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
+COMMENT ON COLUMN notification_preferences.job_open_to_guards IS 'Guard broadcast when a paid job is opened on the marketplace map';
+
 CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(request_id);
 CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);
 CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);
@@ -898,6 +1102,11 @@ ALTER TABLE message_reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_read_receipts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_guard_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_chat_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE
@@ -909,7 +1118,8 @@ BEGIN
     'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
-    'platform_settings'
+    'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
+    'user_legal_acceptances', 'guard_insurance_policies'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NULL THEN
@@ -952,7 +1162,8 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'message_reactions'
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'message_reactions',
+    'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
@@ -1084,7 +1295,13 @@ WHERE table_schema = 'public'
     'overtime_guard_payout_method',
     'break_minutes', 'shift_breaks',
     'check_in_audit', 'spot_checks', 'mid_shift_audits', 'check_out_audit',
-    'pending_guard_id', 'staff_approved_guard_at'
+    'pending_guard_id', 'staff_approved_guard_at',
+    'team_lead_id', 'opened_at', 'team_code', 'crew_name', 'crew_description',
+    'service_agreement', 'auto_payout_scheduled_at',
+    'pending_start_date', 'pending_end_date', 'pending_duration_hours', 'pending_estimated_payout',
+    'schedule_change_status', 'schedule_change_requested_at', 'schedule_change_requested_by',
+    'schedule_change_extra_amount',
+    'early_clock_out_actual_hours', 'early_clock_out_refund_amount', 'early_clock_out_refund_status'
   )
 ORDER BY column_name;
 
@@ -1118,7 +1335,22 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'platform_settings'
-  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'fee_config')
+  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'fee_config',
+    'auto_stripe_payout_enabled', 'auto_stripe_payout_delay_hours', 'verified_guard_self_serve',
+    'team_lead_bonus_per_guard_per_hour', 'team_lead_bonus_client_share_percent',
+    'team_lead_bonus_platform_share_percent')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_insurance_policies'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'user_legal_acceptances'
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
@@ -1129,7 +1361,8 @@ WHERE table_schema = 'public'
     'job_submitted', 'guard_application', 'guard_pending_approval',
     'client_pending_approval', 'credential_pending', 'payment_attention',
     'support_ticket', 'support_ticket_status', 'dispute_update',
-    'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification'
+    'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification',
+    'guard_arrived', 'guard_left_site', 'job_open_to_guards'
   )
 ORDER BY column_name;
 
