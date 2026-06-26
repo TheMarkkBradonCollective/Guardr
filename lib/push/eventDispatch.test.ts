@@ -201,4 +201,47 @@ describe('buildEventDispatchPayloads', () => {
     assert.equal(staff.length, 1);
     assert.equal(staff[0].role, 'dispatch');
   });
+
+  it('targets account_update to the recipient user', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'account_update',
+      recipientUserId: 'guard-4',
+      title: 'Credential verified',
+      body: 'Your guard card was verified.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-4');
+  });
+
+  it('notifies dispatch, client, and guard on job_status_update', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'job_status_update',
+      requestId: 'job-5',
+      clientId: 'client-2',
+      guardId: 'guard-3',
+      title: 'Job cancelled',
+      body: 'The shift was cancelled.',
+    });
+
+    assert.equal(payloads.length, 3);
+    assert.deepEqual(
+      payloads.map((p) => p.userId ?? p.role),
+      ['dispatch', 'client-2', 'guard-3']
+    );
+  });
+
+  it('targets payout_ready to the guard recipient', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'payout_ready',
+      recipientUserId: 'guard-8',
+      guardId: 'guard-8',
+      requestId: 'job-12',
+      title: 'Payout ready',
+      body: '$120.00 is ready to collect.',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].userId, 'guard-8');
+  });
 });

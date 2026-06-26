@@ -263,6 +263,16 @@ export function saveNotificationPreferencesToStorage(prefs: NotificationPreferen
 export function preferenceKeyForType(
   type: PushNotificationType
 ): keyof Omit<NotificationPreferences, 'userId' | 'updatedAt'> | null {
+  const alias: Partial<Record<PushNotificationType, keyof Omit<NotificationPreferences, 'userId' | 'updatedAt'>>> = {
+    account_update: 'supportTicketStatus',
+    job_status_update: 'assignment',
+    payout_ready: 'assignment',
+    job_schedule_changed: 'assignment',
+    client_cash_payment_requested: 'paymentAttention',
+    guard_cash_payout_requested: 'paymentAttention',
+    stripe_payment_complete: 'paymentAttention',
+  };
+  if (alias[type]) return alias[type]!;
   const match = NOTIFICATION_TYPE_OPTIONS.find((o) => o.type === type);
   return match?.key ?? null;
 }

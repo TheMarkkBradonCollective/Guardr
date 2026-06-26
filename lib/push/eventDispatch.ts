@@ -159,6 +159,18 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Crew chat',
     body: event.body || 'New message in crew chat',
   }),
+  account_update: (event) => ({
+    title: event.title ?? 'Account update',
+    body: event.body || 'Your Guardr account was updated',
+  }),
+  job_status_update: (event) => ({
+    title: event.title ?? 'Job update',
+    body: event.body || 'A job you are involved with was updated',
+  }),
+  payout_ready: (event) => ({
+    title: event.title ?? 'Payout ready',
+    body: event.body || 'Earnings are ready to collect in Pay',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -248,6 +260,28 @@ export async function buildEventDispatchPayloads(
 
   if (event.type === 'support_ticket_status' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'account_update' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'payout_ready') {
+    if (event.recipientUserId) {
+      return [{ ...payload, userId: event.recipientUserId }];
+    }
+    if (event.guardId) {
+      return [{ ...payload, userId: event.guardId }];
+    }
+    return [];
+  }
+
+  if (event.type === 'job_status_update') {
+    const payloads: PushSendPayload[] = [{ ...payload, role: 'dispatch' }];
+    if (event.clientId) payloads.push({ ...payload, userId: event.clientId });
+    if (event.guardId) payloads.push({ ...payload, userId: event.guardId });
+    else if (event.recipientUserId) payloads.push({ ...payload, userId: event.recipientUserId });
+    return payloads;
   }
 
   if (
