@@ -332,14 +332,14 @@ export function GuardPtaUofPanel({
           certUploadForm
         ) : (
           <div className="space-y-4">
-            {!hasAnyCerts && (
-              <CredentialPathToggle
-                value={uploadPath}
-                onChange={setUploadPath}
-                combinedLabel="Combined certificate"
-                individualLabel="Individual parts"
-              />
-            )}
+            <CredentialPathToggle
+              value={effectivePath}
+              onChange={(path) => {
+                if (!hasAnyCerts) setUploadPath(path);
+              }}
+              combinedLabel="Combined certificate"
+              individualLabel="Individual parts"
+            />
             {effectivePath === 'combined' ? (
               <button
                 type="button"
