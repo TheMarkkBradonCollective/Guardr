@@ -1501,7 +1501,7 @@ export default function App() {
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
           status: (['verified', 'pending', 'rejected'].includes(c.status) ? c.status : 'pending') as Certification['status'],
-          issueDate: c.issue_date, expiryDate: c.expiry_date,
+          issueDate: c.issue_date, expiryDate: c.expiry_date ?? undefined,
           state: c.state ?? undefined,
           catalogId: c.catalog_id?.trim() || undefined,
           category: c.category ?? undefined,
@@ -2710,7 +2710,6 @@ export default function App() {
       number: newCert.number!.trim(),
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
-      expiryDate: newCert.expiryDate || new Date().toISOString().split('T')[0],
       state: newCert.state?.toUpperCase(),
       catalogId: newCert.catalogId,
       category: newCert.category,
@@ -2732,7 +2731,7 @@ export default function App() {
         const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
           issuer: certWithId.issuer, number: certWithId.number, status: certWithId.status,
-          issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate,
+          issue_date: certWithId.issueDate, expiry_date: certWithId.expiryDate ?? null,
           state: certWithId.state ?? null,
           catalog_id: certWithId.catalogId ?? null,
           category: certWithId.category ?? null,
@@ -2894,12 +2893,11 @@ export default function App() {
 
     const issuer = payload.issuer?.trim() || '';
     const number = payload.number?.trim() || '';
-    const expiryDate = payload.expiryDate?.trim() || '';
     const state = payload.state?.trim().toUpperCase() || undefined;
     const imageUrl = payload.imageUrl?.trim() || undefined;
 
-    if (!issuer || !number || !expiryDate) {
-      return { ok: false, error: 'Enter issuer, number, and expiry date.' };
+    if (!issuer || !number) {
+      return { ok: false, error: 'Enter issuer and number.' };
     }
 
     const nextImageUrl = imageUrl ?? cert.imageUrl;
@@ -2927,7 +2925,6 @@ export default function App() {
     const dataChanged =
       issuer !== cert.issuer.trim() ||
       number !== cert.number.trim() ||
-      expiryDate !== cert.expiryDate.trim() ||
       (state ?? '') !== (cert.state ?? '').trim().toUpperCase() ||
       (imageUrl ?? '') !== (cert.imageUrl ?? '').trim();
 
@@ -2957,7 +2954,6 @@ export default function App() {
                       ...c,
                       issuer,
                       number,
-                      expiryDate,
                       state,
                       imageUrl: nextImageUrl,
                       status: nextStatus,
@@ -2980,7 +2976,7 @@ export default function App() {
         const updateResult = await updateCertificationRow(supabase, certId, {
             issuer,
             number,
-            expiry_date: expiryDate,
+            expiry_date: cert.expiryDate ?? null,
             state: state ?? null,
             image_url: nextImageUrl ?? null,
             status: nextStatus,

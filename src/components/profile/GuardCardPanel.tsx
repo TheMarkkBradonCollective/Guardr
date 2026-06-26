@@ -55,7 +55,6 @@ export function GuardCardPanel({
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [state, setState] = useState('CA');
-  const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
 
@@ -63,7 +62,6 @@ export function GuardCardPanel({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
     setShowForm(false);
@@ -94,7 +92,6 @@ export function GuardCardPanel({
       issuer: issuer.trim(),
       number: number.trim(),
       state: state.toUpperCase(),
-      expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       imageUrl,
     });
@@ -160,13 +157,6 @@ export function GuardCardPanel({
         value={number}
         onChange={(e) => setNumber(e.target.value)}
         required
-      />
-      <input
-        type="date"
-        value={expiryDate}
-        onChange={(e) => setExpiryDate(e.target.value)}
-        className="uber-input w-full"
-        aria-label="Expiry date"
       />
       <DocumentPhotoUploadField
         imageUrl={imageUrl}

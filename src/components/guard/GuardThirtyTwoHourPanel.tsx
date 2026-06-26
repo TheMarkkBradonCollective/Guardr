@@ -80,7 +80,6 @@ export function GuardThirtyTwoHourPanel({
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
   const [uploadPath, setUploadPath] = useState<CredentialUploadPath>(() =>
@@ -105,7 +104,6 @@ export function GuardThirtyTwoHourPanel({
     setAddingCatalogId(null);
     setIssuer('');
     setNumber('');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
     activationFormOnly?.onClose();
@@ -115,7 +113,6 @@ export function GuardThirtyTwoHourPanel({
     setAddingCatalogId(catalogId);
     setIssuer('');
     setNumber('');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
   };
@@ -139,7 +136,6 @@ export function GuardThirtyTwoHourPanel({
       name: entry.name,
       issuer: issuer.trim(),
       number: number.trim(),
-      expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       imageUrl,
     });
@@ -242,13 +238,6 @@ export function GuardThirtyTwoHourPanel({
         onChange={(e) => setNumber(e.target.value)}
         required
       />
-      <input
-        type="date"
-        value={expiryDate}
-        onChange={(e) => setExpiryDate(e.target.value)}
-        className="uber-input w-full"
-        aria-label="Expiry date"
-      />
       <DocumentPhotoUploadField
         imageUrl={imageUrl}
         onImageUrlChange={(url) => {
@@ -264,7 +253,6 @@ export function GuardThirtyTwoHourPanel({
             setAddingCatalogId(null);
             setIssuer('');
             setNumber('');
-            setExpiryDate('');
             setImageUrl(undefined);
             setFormError('');
           }}

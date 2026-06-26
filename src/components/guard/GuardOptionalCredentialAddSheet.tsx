@@ -54,7 +54,6 @@ export function GuardOptionalCredentialAddSheet({
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [state, setState] = useState('CA');
-  const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
   const [formError, setFormError] = useState('');
@@ -72,7 +71,6 @@ export function GuardOptionalCredentialAddSheet({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
     onClose();
@@ -86,7 +84,6 @@ export function GuardOptionalCredentialAddSheet({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
   };
@@ -98,7 +95,6 @@ export function GuardOptionalCredentialAddSheet({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
   };
@@ -126,7 +122,6 @@ export function GuardOptionalCredentialAddSheet({
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
-      expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       imageUrl,
     });
@@ -224,13 +219,6 @@ export function GuardOptionalCredentialAddSheet({
             value={number}
             onChange={(e) => setNumber(e.target.value)}
             required
-          />
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-            className="uber-input w-full"
-            aria-label="Expiry date"
           />
           <DocumentPhotoUploadField
             imageUrl={imageUrl}

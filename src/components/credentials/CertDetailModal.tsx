@@ -4,7 +4,6 @@ import { Certification } from '../../types';
 import { certDisplayName, getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
 import { certCategoryLabel, certViewSectionLabel } from '../../lib/guardCredentialSections';
 import { certPhotoIsLockedForEditor } from '../../lib/certImagePolicy';
-import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName, US_STATES } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
@@ -15,7 +14,6 @@ export interface CertUpdatePayload {
   issuer: string;
   number: string;
   state?: string;
-  expiryDate: string;
   imageUrl?: string;
 }
 
@@ -29,13 +27,6 @@ interface CertDetailModalProps {
   staffMode?: boolean;
   initialEditMode?: boolean;
   onSubmit?: (payload: CertUpdatePayload) => Promise<CertUpdateResult>;
-}
-
-function formatDisplayDate(iso?: string): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function certHasDetailsOnFile(cert: Certification): boolean {
@@ -62,7 +53,6 @@ export function CertDetailModal({
   const [issuer, setIssuer] = useState(cert.issuer ?? '');
   const [number, setNumber] = useState(cert.number ?? '');
   const [state, setState] = useState(cert.state ?? 'CA');
-  const [expiryDate, setExpiryDate] = useState(cert.expiryDate ?? '');
   const [imageUrl, setImageUrl] = useState(cert.imageUrl ?? '');
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -74,7 +64,6 @@ export function CertDetailModal({
     setIssuer(cert.issuer ?? '');
     setNumber(cert.number ?? '');
     setState(cert.state ?? 'CA');
-    setExpiryDate(cert.expiryDate ?? '');
     setImageUrl(cert.imageUrl ?? '');
     setSubmitError('');
     if (!initialEditMode) {
@@ -85,7 +74,6 @@ export function CertDetailModal({
     cert.issuer,
     cert.number,
     cert.state,
-    cert.expiryDate,
     cert.imageUrl,
     cert.status,
     cert.rejectionReason,
@@ -98,31 +86,21 @@ export function CertDetailModal({
     issuer: issuer.trim() || cert.issuer,
     number: number.trim() || cert.number,
     state: requiresState ? state.trim().toUpperCase() || cert.state : cert.state,
-    expiryDate: expiryDate.trim() || cert.expiryDate,
     imageUrl: imageUrl.trim() || cert.imageUrl,
   };
 
   const draftIssuer = issuer.trim();
   const draftNumber = number.trim();
   const draftState = state.trim().toUpperCase();
-  const draftExpiry = expiryDate.trim();
   const draftImage = imageUrl.trim();
   const draftComplete = Boolean(
-    draftIssuer &&
-      draftNumber &&
-      draftExpiry &&
-      draftImage &&
-      (!requiresState || draftState)
+    draftIssuer && draftNumber && draftImage && (!requiresState || draftState)
   );
 
   const handleSave = async () => {
     if (!onSubmit) return;
     if (!draftIssuer || !draftNumber) {
       setSubmitError('Enter the issuing organization and credential number.');
-      return;
-    }
-    if (!draftExpiry) {
-      setSubmitError('Enter the expiration date.');
       return;
     }
     if (requiresState && !draftState) {
@@ -141,7 +119,6 @@ export function CertDetailModal({
         issuer: draftIssuer,
         number: draftNumber,
         state: requiresState ? draftState : undefined,
-        expiryDate: draftExpiry,
         imageUrl: draftImage || undefined,
       });
       if (result.ok === false) {
@@ -163,7 +140,6 @@ export function CertDetailModal({
     setIssuer(cert.issuer ?? '');
     setNumber(cert.number ?? '');
     setState(cert.state ?? 'CA');
-    setExpiryDate(cert.expiryDate ?? '');
     setImageUrl(cert.imageUrl ?? '');
     setSubmitError('');
     if (initialEditMode && !certHasDetailsOnFile(cert)) {
@@ -263,15 +239,6 @@ export function CertDetailModal({
                 required
                 aria-label="Credential number"
               />
-              <label className="uber-label">Expiration date</label>
-              <input
-                type="date"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                className="uber-input w-full"
-                required
-                aria-label="Expiration date"
-              />
             </div>
 
             <div className="space-y-2">
@@ -343,13 +310,6 @@ export function CertDetailModal({
                   <dd className="font-medium mt-0.5">{formatStateName(displayCert.state)}</dd>
                 </div>
               )}
-              <div>
-                <dt className="text-xs text-brand-text-muted">Expiry date</dt>
-                <dd className={`font-medium mt-0.5 ${isCertExpired(displayCert) ? 'text-amber-500' : ''}`}>
-                  {displayCert.expiryDate ? formatDisplayDate(displayCert.expiryDate) : '—'}
-                  {isCertExpired(displayCert) ? ' (expired)' : ''}
-                </dd>
-              </div>
             </dl>
 
           </>

@@ -4,7 +4,6 @@ import { Certification } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { guardCanAttachCertImage, guardCanDeleteCertification, guardCertificationCanEdit } from '../../lib/certImagePolicy';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { isCertExpired } from '../../lib/certStatus';
 import { formatStateName } from '../../lib/states';
 import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { CertDetailModal, type CertUpdatePayload, type CertUpdateResult } from './CertDetailModal';
@@ -78,11 +77,6 @@ export function CertItemCard({
               {cert.state ? `${formatStateName(cert.state)} · ` : ''}
               {cert.issuer} · #{cert.number}
             </p>
-            {cert.expiryDate && (
-              <p className={`text-xs mt-0.5 ${isCertExpired(cert) ? 'text-amber-600' : 'text-brand-text-muted'}`}>
-                {isCertExpired(cert) ? `Expired ${cert.expiryDate}` : `Expires ${cert.expiryDate}`}
-              </p>
-            )}
             {cert.status === 'rejected' && cert.rejectionReason && (
               <p className="text-xs text-amber-500 mt-1.5 leading-snug">{cert.rejectionReason}</p>
             )}

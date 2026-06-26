@@ -11,8 +11,6 @@ import {
 import {
   computePtaUofProgress,
   guardHasExpiredIdOnFile,
-  guardHasExpired32HourBlock,
-  guardHasExpiredPtaUofTraining,
   guardMeets32HourBlock,
   guardMeets32HourBlockVerified,
   guardMeetsPtaUofTrainingVerified,
@@ -35,15 +33,12 @@ export function getGuardCardSectionStatus(
   guard: SecurityGuard,
   staffMode = false
 ): CredentialSectionStatus {
-  const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
   const checklist = getGuardActivationChecklist(guard);
 
   if (checklist.guardCardVerified) {
     return { label: 'Verified — on file', tone: 'success' };
   }
-  if (uploadStatus === 'expired') {
-    return { label: 'On file · expired', tone: 'warning' };
-  }
+  const uploadStatus = getCourseUploadStatus(guard, 'bsis-guard-card');
   if (checklist.guardCardSubmitted) {
     return { label: 'Submitted — pending review', tone: 'warning' };
   }
@@ -128,9 +123,6 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
   if (guardMeetsPtaUofTrainingVerified(guard)) {
     return { label: 'Verified — on file', tone: 'success' };
   }
-  if (guardHasExpiredPtaUofTraining(guard)) {
-    return { label: 'On file · expired', tone: 'warning' };
-  }
   const progress = computePtaUofProgress(guard);
   const summary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
   if (progress.complete) {
@@ -145,9 +137,6 @@ export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false):
 export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
   if (guardMeets32HourBlockVerified(guard)) {
     return { label: 'Verified — on file', tone: 'success' };
-  }
-  if (guardHasExpired32HourBlock(guard)) {
-    return { label: 'On file · expired', tone: 'warning' };
   }
   const summary = formatCredentialSlotStatusSummary(countThirtyTwoHourCourseSlotStatuses(guard));
   if (guardMeets32HourBlock(guard)) {

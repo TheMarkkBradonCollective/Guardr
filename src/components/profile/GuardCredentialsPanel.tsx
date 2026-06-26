@@ -125,7 +125,6 @@ export function GuardCredentialsPanel({
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
   const [state, setState] = useState('CA');
-  const [expiryDate, setExpiryDate] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
   const [formError, setFormError] = useState('');
@@ -136,7 +135,6 @@ export function GuardCredentialsPanel({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setFormError('');
     setOpenSection(null);
@@ -165,7 +163,6 @@ export function GuardCredentialsPanel({
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
-      expiryDate: expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       imageUrl,
     });
@@ -331,13 +328,6 @@ export function GuardCredentialsPanel({
           onChange={(e) => setNumber(e.target.value)}
           required
         />
-        <input
-          type="date"
-          value={expiryDate}
-          onChange={(e) => setExpiryDate(e.target.value)}
-          className="uber-input w-full"
-          aria-label="Expiry date"
-        />
         <DocumentPhotoUploadField
           imageUrl={imageUrl}
           onImageUrlChange={(url) => {
@@ -363,7 +353,6 @@ export function GuardCredentialsPanel({
     setIssuer('');
     setNumber('');
     setState('CA');
-    setExpiryDate('');
     setImageUrl(undefined);
     setCustomCertName('');
     setFormError('');

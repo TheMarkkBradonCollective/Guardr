@@ -33,21 +33,18 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA' }: 
       id: 'bsis-guard-card',
       label: 'Guard Card',
       onFile: progress.guardCard,
-      expired: progress.guardCardExpired,
       verified: progress.guardCardVerified,
     },
     {
       id: 'bsis-pta-uof',
       label: 'PTA & UOF (8 hr)',
       onFile: progress.ptaUofTraining,
-      expired: progress.ptaUofExpired,
       verified: progress.ptaUofCombinedVerified,
     },
     {
       id: 'bsis-32-hour',
       label: '32-Hr BSIS',
       onFile: progress.thirtyTwoHourBlockComplete,
-      expired: progress.thirtyTwoHourExpired,
       verified: progress.thirtyTwoHourBlockVerified,
     },
   ];

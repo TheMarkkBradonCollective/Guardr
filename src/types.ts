@@ -51,7 +51,8 @@ export interface Certification {
   number: string;
   status: 'verified' | 'pending' | 'rejected';
   issueDate: string;
-  expiryDate: string;
+  /** @deprecated Certs no longer track expiration — kept for legacy DB rows */
+  expiryDate?: string;
   /** US state code — required for BSIS guard cards */
   state?: string;
   /** Links to certCatalog entry */

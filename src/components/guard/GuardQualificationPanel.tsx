@@ -49,11 +49,9 @@ export function GuardQualificationPanel({ guard, state = 'CA' }: GuardQualificat
             : undefined,
     },
     {
-      label: 'BSIS Guard Card (valid)',
+      label: 'BSIS Guard Card',
       met: progress.guardCard,
-      expired: progress.guardCardExpired,
       verified: progress.guardCardVerified,
-      detail: progress.guardCardExpired ? 'Guard card on file but expired — upload a valid card' : undefined,
     },
     {
       label: '8-Hour Power to Arrest & Appropriate Use of Force',
