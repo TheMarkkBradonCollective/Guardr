@@ -20,10 +20,10 @@ export interface PlatformSettings {
   autoStripePayoutDelayHours?: number;
   /** Verified insured guards skip staff applicant review on card jobs */
   verifiedGuardSelfServe?: boolean;
-  /** Homepage message from the Owner account — editable by Owner only. */
+  /** Homepage message from the Founder account — editable by Founder only. */
   ownerMessage?: string;
   ownerMessageUpdatedAt?: string;
-  /** Homepage message from the Director account — editable by Director and Owner. */
+  /** Homepage message from the Director account — editable by Director and Founder. */
   directorMessage?: string;
   directorMessageUpdatedAt?: string;
   /** Extra pay per hour for guards rostered on a coordinated crew for that specific job. */

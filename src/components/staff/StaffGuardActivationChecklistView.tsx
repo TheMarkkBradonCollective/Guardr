@@ -74,16 +74,17 @@ function thirtyTwoHourStepDetail(guard: SecurityGuard): string {
   return 'Not on file';
 }
 
-/** Staff: all five must be Guardr-verified for approval and active. */
+/** Staff: approve application first, then verify all five before manual activation. */
 export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivationChecklistViewProps) {
   const checklist = getGuardActivationChecklist(guard);
   const approved = isGuardAccountApproved(guard);
   const active = isGuardAccountActive(guard);
-  const readyForApproval = checklist.canStaffApprove;
+  const readyForApplicationApproval = checklist.canStaffApprove;
+  const readyForActivation = checklist.canStaffActivate;
 
   return (
     <div className="app-checklist-panel">
-      <p className="text-sm font-semibold">Marketplace eligibility (staff)</p>
+      <p className="text-sm font-semibold">Guard activation (staff)</p>
       <div className="app-checklist-steps">
         <LicenseStepRow
           onFile={checklist.idSubmitted}
@@ -119,23 +120,28 @@ export function StaffGuardActivationChecklistView({ guard }: StaffGuardActivatio
 
       {!active && (
         <div className="pt-3 mt-3 border-t border-brand-border space-y-2 text-xs">
-          <p className={approved ? 'text-brand-text-muted' : 'text-brand-primary font-medium'}>
-            {approved
-              ? readyForApproval
-                ? 'Ready to grant marketplace eligibility'
-                : 'Guard must re-upload missing credentials before marketplace eligibility'
-              : readyForApproval
-                ? 'All five credentials verified — ready to approve profile'
-                : 'All five credentials must be Guardr-verified before profile approval'}
-          </p>
-          {!readyForApproval && checklist.staffApprovalBlockers.length > 0 && (
-            <p className="text-amber-400 leading-relaxed">{checklist.staffApprovalBlockers.join(' · ')}</p>
-          )}
-          {readyForApproval && !approved && (
-            <p className="text-brand-text-muted leading-relaxed">
-              Verify every activation credential so clients can trust the profile. Optional credentials
-              only appear to clients after staff verification.
-            </p>
+          {!approved ? (
+            <>
+              <p className={readyForApplicationApproval ? 'text-brand-primary font-medium' : 'text-amber-400'}>
+                {readyForApplicationApproval
+                  ? 'Application ready — approve to unlock credential upload for the guard'
+                  : 'Application cannot be approved yet'}
+              </p>
+              {!readyForApplicationApproval && checklist.staffApprovalBlockers.length > 0 && (
+                <p className="text-amber-400 leading-relaxed">{checklist.staffApprovalBlockers.join(' · ')}</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className={readyForActivation ? 'text-brand-primary font-medium' : 'text-brand-text-muted'}>
+                {readyForActivation
+                  ? 'All five credentials verified — ready for staff to grant marketplace eligibility'
+                  : 'Guard must upload credentials; Administrators verify each before activation'}
+              </p>
+              {!readyForActivation && checklist.staffActivationBlockers.length > 0 && (
+                <p className="text-amber-400 leading-relaxed">{checklist.staffActivationBlockers.join(' · ')}</p>
+              )}
+            </>
           )}
         </div>
       )}

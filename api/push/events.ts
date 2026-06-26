@@ -944,6 +944,7 @@ function resolvePlatformRole(input) {
   if (input.legacyRole === "client") return "client";
   if (input.isStaff && input.staffRole) {
     switch (input.staffRole) {
+      case "Founder":
       case "Owner":
         return "owner";
       case "Director":

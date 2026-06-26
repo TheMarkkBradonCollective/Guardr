@@ -49,7 +49,7 @@ export function GuardCardPanel({
     if (items.length > 0) return 'on-file' as const;
     return getCourseUploadStatus(guard, catalogOptions[0]?.id ?? 'bsis-guard-card');
   }, [guard, catalogOptions, items.length]);
-  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
 
   const [showForm, setShowForm] = useState(false);
   const [issuer, setIssuer] = useState('');

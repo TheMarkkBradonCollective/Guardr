@@ -81,47 +81,28 @@ function fullyVerifiedGuard(overrides: Partial<SecurityGuard> = {}): SecurityGua
 }
 
 describe('guard account activation gates', () => {
-  it('blocks profile approval until all five credentials are verified', () => {
-    const guard = fullyVerifiedGuard({
-      userStatus: 'pending',
-      idVerificationStatus: 'pending',
-      insurancePolicy: {
-        id: 'ins-1',
-        guardId: 'g1',
-        carrier: 'Carrier',
-        policyNumber: 'POL-1',
-        expiryDate: '2099-12-31',
-        documentUrl: 'doc',
-        status: 'pending',
-      },
-      certifications: fullyVerifiedGuard().certifications.map((cert) =>
-        cert.catalogId === 'bsis-pta-uof-8hr' ? { ...cert, status: 'pending' } : cert
-      ),
-    });
-
-    assert.equal(guardCanStaffApproveProfile(guard), false);
-    const blockers = getGuardActivationChecklist(guard).staffApprovalBlockers;
-    assert.ok(blockers.some((b) => /government id/i.test(b)));
-    assert.ok(blockers.some((b) => /insurance/i.test(b)));
-    assert.ok(blockers.some((b) => /pta\/uof/i.test(b)));
-  });
-
-  it('allows profile approval when all five are Guardr-verified', () => {
-    const guard = fullyVerifiedGuard({ userStatus: 'pending' });
+  it('allows application approval for pending guards without credentials on file', () => {
+    const guard = baseGuard({ userStatus: 'pending' });
     assert.equal(guardCanStaffApproveProfile(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canStaffApprove, true);
+    assert.equal(getGuardActivationChecklist(guard).staffApprovalBlockers.length, 0);
   });
 
-  it('blocks profile approval when guard card is on file but not verified', () => {
-    const guard = fullyVerifiedGuard({
-      userStatus: 'pending',
-      certifications: fullyVerifiedGuard().certifications.map((cert) =>
-        cert.catalogId === 'bsis-guard-card' ? { ...cert, status: 'pending' } : cert
-      ),
-    });
+  it('blocks application approval when guard is not pending', () => {
+    const guard = fullyVerifiedGuard({ userStatus: 'approved' });
     assert.equal(guardCanStaffApproveProfile(guard), false);
     assert.ok(
-      getGuardActivationChecklist(guard).staffApprovalBlockers.some((b) => b.includes('Guard Card'))
+      getGuardActivationChecklist(guard).staffApprovalBlockers.some((b) =>
+        /not pending/i.test(b)
+      )
+    );
+  });
+
+  it('blocks application approval when guard account is blocked', () => {
+    const guard = baseGuard({ userStatus: 'blocked' });
+    assert.equal(guardCanStaffApproveProfile(guard), false);
+    assert.ok(
+      getGuardActivationChecklist(guard).staffApprovalBlockers.some((b) => /blocked/i.test(b))
     );
   });
 

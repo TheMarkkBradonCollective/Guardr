@@ -51,6 +51,7 @@ interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
   canManage: boolean;
+  canVerifyCredentials?: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onResetAuditFailures?: (id: string) => void;
@@ -101,6 +102,7 @@ export function StaffGuardDetailPanel({
   guard,
   requests,
   canManage,
+  canVerifyCredentials = false,
   canSuspend,
   onUpdateUserStatus,
   onResetAuditFailures,
@@ -372,7 +374,7 @@ export function StaffGuardDetailPanel({
   };
 
   const renderStaffCertActions = (cert: Certification) =>
-    canManage && cert.status === 'pending' ? (
+    canVerifyCredentials && cert.status === 'pending' ? (
       <div className="flex flex-col items-stretch gap-1.5 w-full">
         <div className="app-action-row--equal w-full">
           {cert.imageUrl && onRequestCertImageResubmit && (
@@ -565,10 +567,10 @@ export function StaffGuardDetailPanel({
                   title={
                     activationChecklist.staffApprovalBlockers.length > 0
                       ? activationChecklist.staffApprovalBlockers.join(' · ')
-                      : 'Approve guard profile — all five on file and guard card verified'
+                      : 'Approve guard application — unlocks credential upload'
                   }
                 >
-                  Approve profile
+                  Approve application
                 </button>
               )}
               {guardAccountStatus === 'approved' && onActivateGuardAccount && (

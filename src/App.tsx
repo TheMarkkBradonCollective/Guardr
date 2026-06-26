@@ -29,7 +29,7 @@ import {
   GuardInsurancePolicy,
   GuardWeaponGearId,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -2424,6 +2424,10 @@ export default function App() {
     status: 'verified' | 'rejected',
     rejectionReason?: string
   ) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard?.insurancePolicy) return;
     const reviewedAt = new Date().toISOString();
@@ -3033,6 +3037,10 @@ export default function App() {
   };
 
   const handleApproveCert = async (guardId: string, certId: string) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
     const before = guards.find((g) => g.id === guardId);
     const cert = before?.certifications.find((c) => c.id === certId);
     if (!cert) throw new Error('Credential not found.');
@@ -3094,20 +3102,13 @@ export default function App() {
         }
       }
     }
-    const after = before
-      ? syncGuardCredentialGraceState({
-          ...before,
-          certifications: before.certifications.map((c) =>
-            c.id === certId ? { ...c, status: 'verified' as const } : c
-          ),
-        })
-      : null;
-    if (after) {
-      await tryGrantMarketplaceEligibility(guardId, after);
-    }
   };
 
   const handleRejectCert = async (guardId: string, certId: string) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
     const before = guards.find((g) => g.id === guardId);
     const cert = before?.certifications.find((c) => c.id === certId);
     if (!cert) throw new Error('Credential not found.');
@@ -3635,45 +3636,9 @@ export default function App() {
     });
   };
 
-  const tryGrantMarketplaceEligibility = async (guardId: string, prior?: SecurityGuard) => {
-    const base = prior ?? guards.find((g) => g.id === guardId);
-    if (!base) return;
-    const eligible = buildMarketplaceEligibilityActivation(base);
-    if (!eligible || eligible.userStatus === base.userStatus) return;
-
-    setGuards((prev) => prev.map((g) => (g.id === guardId ? eligible : g)));
-    if (isDbConnected) {
-      beginLocalMutation();
-      const result = await updateGuardAccountRow(
-        supabase,
-        guardId,
-        {
-          user_status: 'active',
-          verified: true,
-          credential_grace_deadline: null,
-          credential_grace_missing: null,
-          credential_grace_hours: null,
-        },
-        'activate'
-      );
-      if (result.ok === false) {
-        setGuards((prev) => prev.map((g) => (g.id === guardId ? base : g)));
-        throw new Error(result.error);
-      }
-    }
-    if (currentUser) {
-      void reportPushEvent(currentUser, {
-        type: 'support_ticket_status',
-        recipientUserId: guardId,
-        title: `${MARKETPLACE_ELIGIBILITY_LABEL} granted`,
-        body: 'Your credentials are verified. You can browse and accept jobs on Guardr.',
-      });
-    }
-  };
-
   const handleApproveGuardAccount = async (guardId: string) => {
-    if (!currentUser || !canManageGuards(currentUser)) {
-      appToast('You do not have permission to approve guard accounts.', 'error');
+    if (!currentUser || !canApproveGuards(currentUser)) {
+      appToast('You do not have permission to approve guard applications.', 'error');
       return;
     }
     const guard = guards.find((g) => g.id === guardId);
@@ -3714,14 +3679,13 @@ export default function App() {
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',
       recipientUserId: guardId,
-      title: 'Credentials verified',
-      body: 'Your profile credentials are under review. Upload your COI and complete remaining items for marketplace eligibility.',
+      title: 'Application approved',
+      body: 'Your guard application is approved. Open Guardr to upload your activation credentials.',
     });
-    await tryGrantMarketplaceEligibility(guardId, approvedGuard);
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
-    if (!currentUser || !canManageGuards(currentUser)) {
+    if (!currentUser || !canApproveGuards(currentUser)) {
       appToast('You do not have permission to grant marketplace eligibility.', 'error');
       return;
     }
@@ -3773,7 +3737,7 @@ export default function App() {
 
   const handleSetGuardTrusted = async (guardId: string, trusted: boolean) => {
     if (!currentUser || !canSetTrustedStatus(currentUser)) {
-      appToast('Only Directors and Owners can set a guard as trusted.', 'error');
+      appToast('Only Directors and Founders can set a guard as trusted.', 'error');
       return;
     }
     const guard = guards.find((g) => g.id === guardId);
@@ -3852,7 +3816,7 @@ export default function App() {
 
   const handleSetClientTrusted = async (clientId: string, trusted: boolean) => {
     if (!currentUser || !canSetTrustedStatus(currentUser)) {
-      appToast('Only Directors and Owners can set a client as trusted.', 'error');
+      appToast('Only Directors and Founders can set a client as trusted.', 'error');
       return;
     }
     const client = clients.find((c) => c.id === clientId);
@@ -3998,8 +3962,8 @@ export default function App() {
   };
 
   const handleApproveGuardIdentityVerification = async (guardId: string) => {
-    if (!currentUser || !canManageGuards(currentUser)) {
-      appToast('You do not have permission to approve guard identity verification.', 'error');
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify government ID.', 'error');
       return;
     }
     const guard = guards.find((g) => g.id === guardId);
@@ -4038,13 +4002,6 @@ export default function App() {
         throw new Error('Could not approve government ID. Please try again.');
       }
     }
-    const verifiedGuard: SecurityGuard = {
-      ...guard,
-      idVerificationStatus: 'verified',
-      idVerificationReviewedAt: reviewedAt,
-      idVerificationRejectionReason: undefined,
-    };
-    await tryGrantMarketplaceEligibility(guardId, verifiedGuard);
   };
 
   const handleRejectGuardIdentityVerification = async (guardId: string, reason?: string) => {
@@ -4949,7 +4906,7 @@ export default function App() {
 
   const handleMarkClientPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can record cash client payments.', 'error');
+      appToast('Only Directors and Founders can record cash client payments.', 'error');
       return;
     }
     if (!platformAllowsCash(platformSettings)) {
@@ -5328,7 +5285,7 @@ export default function App() {
 
   const handleMarkOvertimePaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can record overtime cash payments.', 'error');
+      appToast('Only Directors and Founders can record overtime cash payments.', 'error');
       return;
     }
     if (!platformAllowsCash(platformSettings)) {
@@ -5360,7 +5317,7 @@ export default function App() {
 
   const handleMakeOvertimeGuardPayoutAvailable = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can release overtime guard pay.', 'error');
+      appToast('Only Directors and Founders can release overtime guard pay.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -5397,7 +5354,7 @@ export default function App() {
 
   const handleMarkOvertimeGuardPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can record cash guard payouts.', 'error');
+      appToast('Only Directors and Founders can record cash guard payouts.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -5428,7 +5385,7 @@ export default function App() {
 
   const handleUpdatePlatformSettings = async (next: PlatformSettings) => {
     if (!currentUser || !canManagePlatformSettings(currentUser)) {
-      appToast('Only the Owner can change platform settings.', 'error');
+      appToast('Only the Founder can change platform settings.', 'error');
       return;
     }
     const normalized = normalizePlatformSettings(next);
@@ -5450,7 +5407,7 @@ export default function App() {
   ) => {
     if (!options?.autoRelease) {
       if (!currentUser || !canRecordCashPayments(currentUser)) {
-        appToast('Only Directors and Owners can override payout holds.', 'error');
+        appToast('Only Directors and Founders can override payout holds.', 'error');
         return;
       }
     }
@@ -5500,7 +5457,7 @@ export default function App() {
 
   const handleMarkGuardPaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can record cash guard payouts.', 'error');
+      appToast('Only Directors and Founders can record cash guard payouts.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -5583,7 +5540,7 @@ export default function App() {
 
   const handleMarkPlatformFeePaidCash = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can manually deposit platform fees.', 'error');
+      appToast('Only Directors and Founders can manually deposit platform fees.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);
@@ -5658,7 +5615,7 @@ export default function App() {
 
   const handleMarkCashDepositManually = async (requestId: string) => {
     if (!currentUser || !canRecordCashPayments(currentUser)) {
-      appToast('Only Directors and Owners can manually record cash deposits.', 'error');
+      appToast('Only Directors and Founders can manually record cash deposits.', 'error');
       return;
     }
     const req = requests.find((r) => r.id === requestId);

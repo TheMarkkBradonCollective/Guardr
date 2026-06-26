@@ -75,7 +75,7 @@ export function GuardThirtyTwoHourPanel({
 }: GuardThirtyTwoHourPanelProps) {
   const progress = getQualificationProgress(guard);
   const courses = getThirtyTwoHourCourseCatalogEntries();
-  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
 
   const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
   const [issuer, setIssuer] = useState('');

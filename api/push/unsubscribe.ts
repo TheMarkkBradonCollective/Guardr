@@ -21,12 +21,13 @@ const STAFF_PLATFORM_ROLES = new Set([
 
 function resolvePlatformRole(input: {
   isStaff?: boolean;
-  staffRole?: 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+  staffRole?: 'Founder' | 'Owner' | 'Director' | 'Administrator' | 'Moderator';
   legacyRole?: string;
 }): PlatformRole {
   if (input.legacyRole === 'client') return 'client';
   if (input.isStaff && input.staffRole) {
     switch (input.staffRole) {
+      case 'Founder':
       case 'Owner':
         return 'owner';
       case 'Director':

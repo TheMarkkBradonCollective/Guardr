@@ -1,10 +1,17 @@
-/** Guards upload in profile edit; staff can upload on behalf of a guard in view mode too. */
+import { isGuardAccountApproved } from './accountStatus';
+import type { SecurityGuard } from '../types';
+
+/** Guards upload credentials after staff approves their application; staff can always upload on behalf. */
 export function canUploadGuardCredentials(
   editing: boolean,
   staffMode: boolean,
-  onAddCertification?: unknown
+  onAddCertification?: unknown,
+  guard?: Pick<SecurityGuard, 'userStatus' | 'isStaff'>
 ): boolean {
-  return Boolean((editing || staffMode) && onAddCertification);
+  if (!Boolean((editing || staffMode) && onAddCertification)) return false;
+  if (staffMode) return true;
+  if (guard?.isStaff) return true;
+  return isGuardAccountApproved(guard ?? {});
 }
 
 export function staffCredentialUploadLabel(staffMode: boolean, itemLabel: string): string {

@@ -75,7 +75,7 @@ export function GuardPtaUofPanel({
   activationFormOnly,
 }: GuardPtaUofPanelProps) {
   const progress = computePtaUofProgress(guard);
-  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
   const combinedEntry = getCertCatalogEntry(BSIS_PTA_UOF_COMBINED_ID);
   const ptaEntry = getCertCatalogEntry(LEGACY_PTA_ID);
   const uofEntry = getCertCatalogEntry(LEGACY_UOF_ID);
