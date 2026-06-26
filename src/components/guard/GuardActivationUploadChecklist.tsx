@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { Check, Plus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Certification, GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { getGuardActivationChecklist, getGuardCardCertifications } from '../../lib/guardAccountActivation';
@@ -23,7 +24,7 @@ import {
   guardActivationPtaStepDetail,
 } from '../../lib/guardActivationStepCopy';
 import { certImageIsLocked } from '../../lib/certImagePolicy';
-import { Check, Plus } from 'lucide-react';
+import { beginActivationUploadSession, endActivationUploadSession } from '../../lib/dbMutationGuard';
 import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
@@ -120,6 +121,12 @@ export function GuardActivationUploadChecklist({
   const coi = guardInsuranceActivationDetail(guard);
 
   const closeUpload = () => setOpenUpload(null);
+
+  useEffect(() => {
+    if (!openUpload) return;
+    beginActivationUploadSession();
+    return () => endActivationUploadSession();
+  }, [openUpload]);
 
   const idDone = approved || guardHasVerifiedIdForWork(guard) || checklist.idSubmitted;
   const idCanUpload = !!onSubmitIdentityVerification && guardIdVerificationCanEdit(guard);
