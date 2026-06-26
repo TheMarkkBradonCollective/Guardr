@@ -245,6 +245,7 @@ interface StaffDashboardProps {
   onClearStaffApprovalQueue?: () => void;
   onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
+  legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
 }
 
 export function StaffDashboard({
@@ -358,6 +359,7 @@ export function StaffDashboard({
   onClearStaffApprovalQueue,
   onUpdateStaffApprovalQueue,
   onOpenLegal,
+  legalAcceptances = [],
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -799,6 +801,9 @@ export function StaffDashboard({
             onUpdatePlatformSettings={onUpdatePlatformSettings}
             showStaffOnboard={canManageStaff}
             onAddStaffProfile={onAddStaffProfile}
+            guards={guards}
+            clients={clients}
+            legalAcceptances={legalAcceptances}
           />
         ) : null;
       case 'profile':

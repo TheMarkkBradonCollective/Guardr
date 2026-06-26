@@ -283,6 +283,9 @@ import {
   legalAcceptanceFromRow,
   legalAcceptanceToDbRow,
   legalAcceptanceKey,
+  resolveLegalAcceptanceUserId,
+  resolveLegalAcceptanceUserIds,
+  type LegalAcceptanceRecord,
   type LegalUserRole,
 } from './lib/legalAcceptance';
 import { buildJobServiceAgreement, parseJobServiceAgreement } from './lib/jobServiceAgreement';
@@ -386,6 +389,7 @@ export default function App() {
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
+  const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -1401,9 +1405,11 @@ export default function App() {
       );
 
       if (dbLegalAcceptances) {
-        setLegalAcceptanceKeys(
-          indexLegalAcceptances(dbLegalAcceptances.map((row: Record<string, unknown>) => legalAcceptanceFromRow(row)))
+        const records = dbLegalAcceptances.map((row: Record<string, unknown>) =>
+          legalAcceptanceFromRow(row)
         );
+        setLegalAcceptanceRecords(records);
+        setLegalAcceptanceKeys(indexLegalAcceptances(records));
       }
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
@@ -2353,6 +2359,26 @@ export default function App() {
       const next = new Set(prev);
       for (const documentId of uniqueIds) {
         next.add(legalAcceptanceKey(userId, documentId, CURRENT_LEGAL_VERSIONS[documentId]));
+      }
+      return next;
+    });
+    setLegalAcceptanceRecords((prev) => {
+      const acceptedAt = new Date().toISOString();
+      const next = [...prev];
+      for (const documentId of uniqueIds) {
+        const existingIndex = next.findIndex(
+          (record) => record.userId === userId && record.documentId === documentId
+        );
+        const record: LegalAcceptanceRecord = {
+          id: existingIndex >= 0 ? next[existingIndex].id : `legal-${userId}-${documentId}`,
+          userId,
+          userRole: role,
+          documentId,
+          documentVersion: CURRENT_LEGAL_VERSIONS[documentId],
+          acceptedAt,
+        };
+        if (existingIndex >= 0) next[existingIndex] = record;
+        else next.push(record);
       }
       return next;
     });
@@ -8792,16 +8818,22 @@ export default function App() {
         ? 'guard'
         : 'staff'
     : null;
+  const legalAcceptanceProfileId = currentUser
+    ? resolveLegalAcceptanceUserId(currentUser, verifiedGuards, clients)
+    : '';
+  const legalAcceptanceUserIds = currentUser
+    ? resolveLegalAcceptanceUserIds(currentUser, verifiedGuards, clients)
+    : [];
 
   const marketplaceLegalGate =
     currentUser && legalAcceptanceRole ? (
       <LegalAcceptanceModal
         role={legalAcceptanceRole}
-        userId={currentUser.id}
+        userIds={legalAcceptanceUserIds}
         acceptedKeys={legalAcceptanceKeys}
         onOpenLegal={openLegalPage}
         onAccept={(documentIds) =>
-          recordLegalAcceptances(legalAcceptanceRole, currentUser.id, documentIds)
+          recordLegalAcceptances(legalAcceptanceRole, legalAcceptanceProfileId, documentIds)
         }
       />
     ) : null;
@@ -8888,7 +8920,7 @@ export default function App() {
         <>
           {marketplaceLegalGate}
           {passwordChangeOverlay}
-          <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+          <div className="page-shell h-[100dvh] flex flex-col overflow-hidden bg-brand-bg">
             <header className="flex justify-end px-5 pt-4 shrink-0">
               <button
                 type="button"
@@ -8898,7 +8930,8 @@ export default function App() {
                 Sign out
               </button>
             </header>
-            <AccountPendingScreen
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+              <AccountPendingScreen
               role="guard"
               guard={activeGuard}
               onOpenProfile={() => setGuardTab('settings')}
@@ -8914,7 +8947,8 @@ export default function App() {
                 handleSubmitGuardIdentityVerification(activeGuard.id, payload)
               }
               onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
-            />
+              />
+            </div>
           </div>
           <InstallPrompt />
         </>
@@ -9301,6 +9335,7 @@ export default function App() {
           onSendJobChat={handleSendJobChatMessage}
           onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
+          legalAcceptances={legalAcceptanceRecords}
         />
         {passwordChangeOverlay}
         <InstallPrompt />

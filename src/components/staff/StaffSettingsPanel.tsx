@@ -22,6 +22,9 @@ import { StaffRolesReference } from './RolePermissionsGuide';
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { showAppToast } from '../ui/AppToast';
+import { StaffLegalCompliancePanel } from './StaffLegalCompliancePanel';
+import type { LegalAcceptanceRecord } from '../../lib/legalAcceptance';
+import type { Client, SecurityGuard } from '../../types';
 
 interface StaffSettingsPanelProps {
   currentUser: SessionUser;
@@ -34,6 +37,9 @@ interface StaffSettingsPanelProps {
     badgeNumber: string,
     staffRole: StaffRole
   ) => Promise<string>;
+  guards: SecurityGuard[];
+  clients: Client[];
+  legalAcceptances: LegalAcceptanceRecord[];
 }
 
 function FeePreviewTable({ config }: { config: PlatformFeeConfig }) {
@@ -71,6 +77,9 @@ export function StaffSettingsPanel({
   onUpdatePlatformSettings,
   showStaffOnboard,
   onAddStaffProfile,
+  guards,
+  clients,
+  legalAcceptances,
 }: StaffSettingsPanelProps) {
   const assignableRoles = getAssignableStaffRoles(currentUser.role);
   const canEditPaymentModes = canManagePlatformSettings(currentUser);
@@ -185,8 +194,18 @@ export function StaffSettingsPanel({
     }));
   };
 
+  const canViewLegalCompliance = hasExecutivePaymentControls(currentUser);
+
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
+      {canViewLegalCompliance && (
+        <StaffLegalCompliancePanel
+          guards={guards}
+          clients={clients}
+          legalAcceptances={legalAcceptances}
+        />
+      )}
+
       <AppFormSection title="Payment methods">
         <div className="pb-6 space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">

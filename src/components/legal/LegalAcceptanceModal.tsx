@@ -15,7 +15,7 @@ import { LegalFooterLinks } from './LegalFooterLinks';
 
 interface LegalAcceptanceModalProps {
   role: LegalUserRole;
-  userId: string;
+  userIds: string[];
   acceptedKeys: Set<string>;
   onOpenLegal: (page: LegalPageId) => void;
   onAccept: (documentIds: LegalPageId[]) => Promise<void>;
@@ -23,19 +23,19 @@ interface LegalAcceptanceModalProps {
 
 export function LegalAcceptanceModal({
   role,
-  userId,
+  userIds,
   acceptedKeys,
   onOpenLegal,
   onAccept,
 }: LegalAcceptanceModalProps) {
   const missing = useMemo(
-    () => missingLegalDocuments(role, userId, acceptedKeys),
-    [role, userId, acceptedKeys]
+    () => missingLegalDocuments(role, userIds, acceptedKeys),
+    [role, userIds, acceptedKeys]
   );
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  if (hasAcceptedAllRequiredLegal(role, userId, acceptedKeys)) {
+  if (hasAcceptedAllRequiredLegal(role, userIds, acceptedKeys)) {
     return null;
   }
 
