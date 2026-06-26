@@ -1,17 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
-import {
-  countThirtyTwoHourCourseSlotStatuses,
-  formatCredentialSlotStatusSummary,
-} from '../../lib/certStatus';
-import { getAggregateSectionStatus } from '../../lib/credentialSectionStatus';
+import { getThirtyTwoHourSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
   getQualificationProgress,
   getThirtyTwoHourCourseCatalogEntries,
-  guardMeets32HourBlockVerified,
   THIRTY_TWO_HOUR_COURSE_IDS,
   THIRTY_TWO_HOUR_ROLLUP_IDS,
 } from '../../lib/guardQualification';
@@ -104,14 +99,7 @@ export function GuardThirtyTwoHourPanel({
     : uploadPath;
 
   const progressPct = progress.thirtyTwoHourProgressPercent;
-  const courseStatusSummary = formatCredentialSlotStatusSummary(
-    countThirtyTwoHourCourseSlotStatuses(guard)
-  );
-  const sectionStatus = getAggregateSectionStatus(
-    courseStatusSummary,
-    progress.thirtyTwoHourBlockComplete,
-    guardMeets32HourBlockVerified(guard)
-  );
+  const sectionStatus = getThirtyTwoHourSectionStatus(guard, staffMode);
 
   const resetForm = () => {
     setAddingCatalogId(null);

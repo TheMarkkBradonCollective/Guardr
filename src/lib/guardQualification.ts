@@ -336,9 +336,9 @@ function isCertNotExpired(cert: Certification): boolean {
   return !isCertExpired(cert);
 }
 
-/** Only the BSIS guard card must be unexpired to count toward qualification. */
+/** Required pathway credentials must be unexpired to count toward qualification. */
 function expiryBlocksQualification(catalogId: string): boolean {
-  return catalogId === 'bsis-guard-card';
+  return isRequiredPathwayCredential(catalogId);
 }
 
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
@@ -386,7 +386,7 @@ export function guardHasCredentialUploaded(
 
 /**
  * Uploaded and not rejected — counts toward qualification.
- * Training and permits may be expired; only the guard card must be current.
+ * Required pathway credentials must be unexpired; optional supplemental creds may be expired.
  */
 export function guardHasCredentialOnFile(
   guard: SecurityGuard,
@@ -420,6 +420,29 @@ export function guardHasExpiredGuardCard(guard: SecurityGuard, jobState = 'CA'):
     guardHasCredentialUploaded(guard, 'bsis-guard-card', licenseState) &&
     !guardHasCredentialOnFile(guard, 'bsis-guard-card', licenseState)
   );
+}
+
+function catalogCertsExpiredOnFile(guard: SecurityGuard, catalogId: string): boolean {
+  const certs = matchingCredentials(guard, catalogId).filter((cert) => certHasDocumentProof(cert));
+  return certs.length > 0 && certs.every(isCertExpired);
+}
+
+/** PTA/UOF uploaded with document proof but expired — does not satisfy training requirement. */
+export function guardHasExpiredPtaUofTraining(guard: SecurityGuard): boolean {
+  if (guardMeetsPtaUofTraining(guard)) return false;
+  if (catalogCertsExpiredOnFile(guard, BSIS_PTA_UOF_COMBINED_ID)) return true;
+  if (!catalogCertsExpiredOnFile(guard, LEGACY_PTA_ID)) return false;
+  return (
+    catalogCertsExpiredOnFile(guard, LEGACY_UOF_ID) ||
+    catalogCertsExpiredOnFile(guard, BSIS_WMD_AWARENESS_ID)
+  );
+}
+
+/** 32-hour block has uploaded certs that are all expired — does not satisfy block requirement. */
+export function guardHasExpired32HourBlock(guard: SecurityGuard): boolean {
+  if (guardMeets32HourBlock(guard)) return false;
+  if (THIRTY_TWO_HOUR_ROLLUP_IDS.some((id) => catalogCertsExpiredOnFile(guard, id))) return true;
+  return THIRTY_TWO_HOUR_COURSE_IDS.some((id) => catalogCertsExpiredOnFile(guard, id));
 }
 
 /** Combined 8-hr cert listed, or both parts listed (separate PTA + UOF, or PTA + WMD). */
@@ -581,6 +604,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     guardCardExpired: guardHasExpiredGuardCard(guard, licenseState),
     guardCardVerified: guardHasGuardrVerifiedCredential(guard, 'bsis-guard-card', licenseState),
     ptaUofTraining: guardMeetsPtaUofTraining(guard),
+    ptaUofExpired: guardHasExpiredPtaUofTraining(guard),
     ptaUofCombined,
     ptaUofCombinedVerified: guardHasGuardrVerifiedCredential(guard, BSIS_PTA_UOF_COMBINED_ID),
     legacyPta,
@@ -588,6 +612,7 @@ export function getQualificationProgress(guard: SecurityGuard, state = 'CA') {
     legacyWmd,
     thirtyTwoHourRollup,
     thirtyTwoHourBlockComplete,
+    thirtyTwoHourExpired: guardHasExpired32HourBlock(guard),
     thirtyTwoHourBlockVerified: guardMeets32HourBlockVerified(guard),
     uploaded32HourCount,
     listed32HourCount,

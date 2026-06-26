@@ -17,6 +17,13 @@ interface GuardCoiDetailModalProps {
   onReview?: (status: 'verified' | 'rejected', rejectionReason?: string) => Promise<void>;
 }
 
+function formatDisplayDate(iso?: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export function GuardCoiDetailModal({
   guard,
   onClose,
@@ -39,6 +46,7 @@ export function GuardCoiDetailModal({
   const [documentUrl, setDocumentUrl] = useState(policy?.documentUrl ?? '');
   const [rejectionReason, setRejectionReason] = useState('');
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (editing) return;
@@ -51,20 +59,22 @@ export function GuardCoiDetailModal({
     setExpiryDate(policy?.expiryDate ?? '');
     setDocumentUrl(policy?.documentUrl ?? '');
     setRejectionReason('');
+    setSubmitError('');
     if (!initialEditMode) setEditing(false);
   }, [guard.id, policy, initialEditMode, editing]);
 
   const handleSave = async () => {
     if (!onSave) return;
     if (!carrier.trim() || !policyNumber.trim() || !expiryDate) {
-      showAppToast('Carrier, policy number, and expiry date are required.', 'error');
+      setSubmitError('Carrier, policy number, and expiry date are required.');
       return;
     }
     if (!documentUrl) {
-      showAppToast('Upload your Certificate of Insurance document.', 'error');
+      setSubmitError('Upload your Certificate of Insurance document.');
       return;
     }
     setSaving(true);
+    setSubmitError('');
     try {
       await onSave({
         guardId: guard.id,
@@ -82,171 +92,218 @@ export function GuardCoiDetailModal({
       setEditing(false);
       onClose();
     } catch {
-      showAppToast('Could not save insurance certificate.', 'error');
+      setSubmitError('Could not save insurance certificate.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setCarrier(policy?.carrier ?? '');
+    setPolicyNumber(policy?.policyNumber ?? '');
+    setGeneralLiabilityLimit(
+      policy?.generalLiabilityLimit != null ? String(policy.generalLiabilityLimit) : ''
+    );
+    setEffectiveDate(policy?.effectiveDate ?? '');
+    setExpiryDate(policy?.expiryDate ?? '');
+    setDocumentUrl(policy?.documentUrl ?? '');
+    setSubmitError('');
+    setEditing(false);
   };
 
   const docIsImage = documentUrl && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(documentUrl);
 
   return (
     <AppOverlaySheet open onClose={onClose} ariaLabel="Certificate of Insurance" panelClassName="rounded-t-2xl">
-      <div className="space-y-4 px-1">
-        <h2 className="text-lg font-bold tracking-tight pr-8">Certificate of Insurance (COI)</h2>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2 min-w-0">
-            <ShieldCheck className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-            <p className="text-sm text-brand-text-muted leading-relaxed">
-              General liability insurance required for marketplace jobs. Staff verifies your COI for
-              platform eligibility only.
-            </p>
+      <div className="flex flex-col max-h-[85dvh]">
+        <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck className="w-4 h-4 text-brand-primary shrink-0" />
+              <span className="text-[10px] font-medium uppercase tracking-wide text-brand-text-muted">
+                Insurance
+              </span>
+            </div>
+            <h2 id="coi-detail-title" className="font-bold text-lg leading-snug">
+              {editing ? 'Edit Certificate of Insurance' : 'Certificate of Insurance (COI)'}
+            </h2>
           </div>
-          <CoiCredentialStatusBadges guard={guard} />
+          <div className="flex items-center gap-1 shrink-0">
+            {canEdit && onSave && !editing && (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="app-button-outline !w-auto !h-9 !px-3 !text-xs gap-1.5"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-lg text-brand-text-muted hover:text-brand-text hover:bg-brand-border/20"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {policy?.rejectionReason && status === 'rejected' && (
-          <p className="text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 rounded-lg">
-            {policy.rejectionReason}
-          </p>
-        )}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 pb-8 space-y-5">
+          <div className="flex flex-wrap gap-2">
+            <CoiCredentialStatusBadges guard={guard} />
+          </div>
 
-        {editing ? (
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-xs font-medium text-brand-text-muted">
-                Insurance carrier
+          {policy?.rejectionReason && status === 'rejected' && (
+            <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
+              {policy.rejectionReason}
+            </p>
+          )}
+
+          {editing ? (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label className="uber-label">Insurance carrier</label>
                 <input
-                  className="app-input mt-1 w-full"
+                  className="uber-input w-full"
                   value={carrier}
                   onChange={(e) => setCarrier(e.target.value)}
                   placeholder="Carrier name"
+                  required
                 />
-              </label>
-              <label className="block text-xs font-medium text-brand-text-muted">
-                Policy number
+                <label className="uber-label">Policy number</label>
                 <input
-                  className="app-input mt-1 w-full"
+                  className="uber-input w-full"
                   value={policyNumber}
                   onChange={(e) => setPolicyNumber(e.target.value)}
                   placeholder="Policy #"
+                  required
                 />
-              </label>
-              <label className="block text-xs font-medium text-brand-text-muted">
-                GL limit (USD)
+                <label className="uber-label">General liability limit (USD)</label>
                 <input
-                  className="app-input mt-1 w-full"
+                  className="uber-input w-full"
                   type="number"
                   min={0}
                   value={generalLiabilityLimit}
                   onChange={(e) => setGeneralLiabilityLimit(e.target.value)}
                   placeholder="1000000"
                 />
-              </label>
-              <label className="block text-xs font-medium text-brand-text-muted">
-                Effective date
+                <label className="uber-label">Effective date</label>
                 <input
-                  className="app-input mt-1 w-full"
                   type="date"
                   value={effectiveDate}
                   onChange={(e) => setEffectiveDate(e.target.value)}
+                  className="uber-input w-full"
                 />
-              </label>
-              <label className="block text-xs font-medium text-brand-text-muted sm:col-span-2">
-                Expiry date
+                <label className="uber-label">Expiry date</label>
                 <input
-                  className="app-input mt-1 w-full"
                   type="date"
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
+                  className="uber-input w-full"
+                  required
                 />
-              </label>
-            </div>
-            <DocumentPhotoUploadField
-              label="Certificate of Insurance (COI)"
-              imageUrl={documentUrl || undefined}
-              onImageUrlChange={setDocumentUrl}
-              previewAlt="COI document preview"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="app-button-primary flex-1"
-                disabled={saving}
-                onClick={handleSave}
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Submit for review'}
-              </button>
-              <button type="button" className="app-button-outline" onClick={() => setEditing(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="text-sm space-y-1">
-              {policy?.carrier && <p>Carrier: {policy.carrier}</p>}
-              {policy?.policyNumber && <p>Policy: {policy.policyNumber}</p>}
-              {policy?.expiryDate && <p>Expires: {policy.expiryDate}</p>}
-              {!policy?.carrier && <p className="text-brand-text-muted">No insurance certificate on file.</p>}
-            </div>
-            {documentUrl && (
-              <div className="rounded-xl border border-brand-border overflow-hidden">
-                {docIsImage ? (
-                  <img src={documentUrl} alt="Certificate of Insurance" className="w-full max-h-64 object-contain bg-black/5" />
-                ) : (
-                  <a
-                    href={documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-brand-primary"
-                  >
-                    <FileText className="w-4 h-4 shrink-0" />
-                    View COI document
-                  </a>
-                )}
               </div>
-            )}
-            {canEdit && onSave && (
+              <DocumentPhotoUploadField
+                label="Certificate of Insurance (COI)"
+                imageUrl={documentUrl || undefined}
+                onImageUrlChange={setDocumentUrl}
+                previewAlt="COI document preview"
+              />
+              {submitError && <p className="text-xs text-red-400">{submitError}</p>}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="app-button-primary !w-auto !h-10 !px-4"
+                  disabled={saving}
+                  onClick={handleSave}
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit for review'}
+                </button>
+                <button type="button" className="app-button-outline !w-auto !h-10 !px-4" onClick={handleCancelEdit}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Carrier</dt>
+                  <dd className="font-medium mt-0.5">{policy?.carrier?.trim() || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Policy number</dt>
+                  <dd className="font-medium mt-0.5">{policy?.policyNumber?.trim() || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">GL limit</dt>
+                  <dd className="font-medium mt-0.5">
+                    {policy?.generalLiabilityLimit != null
+                      ? `$${policy.generalLiabilityLimit.toLocaleString()}`
+                      : '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Effective</dt>
+                  <dd className="font-medium mt-0.5">{formatDisplayDate(policy?.effectiveDate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Expires</dt>
+                  <dd className="font-medium mt-0.5">{formatDisplayDate(policy?.expiryDate)}</dd>
+                </div>
+              </dl>
+              {documentUrl && (
+                <div className="rounded-xl border border-brand-border overflow-hidden">
+                  {docIsImage ? (
+                    <img
+                      src={documentUrl}
+                      alt="Certificate of Insurance"
+                      className="w-full max-h-64 object-contain bg-black/5"
+                    />
+                  ) : (
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-3 text-sm text-brand-primary"
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      View COI document
+                    </a>
+                  )}
+                </div>
+              )}
+              {!policy?.carrier && !policy?.documentUrl && (
+                <p className="text-sm text-brand-text-muted">No insurance certificate on file.</p>
+              )}
+            </>
+          )}
+
+          {staffMode && onReview && policy && status === 'pending' && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
+              <button type="button" className="app-button-primary" onClick={() => onReview('verified')}>
+                Verify insurance
+              </button>
+              <input
+                className="uber-input flex-1 min-w-[12rem]"
+                placeholder="Rejection reason (if rejecting)"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
               <button
                 type="button"
-                className="app-button-outline gap-2"
-                onClick={() => setEditing(true)}
+                className="app-button-secondary"
+                onClick={() =>
+                  onReview('rejected', rejectionReason.trim() || 'Document incomplete or expired')
+                }
               >
-                <Pencil className="w-4 h-4" />
-                {policy?.documentUrl ? 'Update COI' : 'Upload COI'}
+                Reject
               </button>
-            )}
-          </>
-        )}
-
-        {staffMode && onReview && policy && status === 'pending' && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
-            <button type="button" className="app-button-primary" onClick={() => onReview('verified')}>
-              Verify insurance
-            </button>
-            <input
-              className="app-input flex-1 min-w-[12rem]"
-              placeholder="Rejection reason (if rejecting)"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-            <button
-              type="button"
-              className="app-button-secondary"
-              onClick={() =>
-                onReview('rejected', rejectionReason.trim() || 'Document incomplete or expired')
-              }
-            >
-              Reject
-            </button>
-          </div>
-        )}
-
-        <button type="button" onClick={onClose} className="app-button-outline w-full gap-2">
-          <X className="w-4 h-4" />
-          Close
-        </button>
+            </div>
+          )}
+        </div>
       </div>
     </AppOverlaySheet>
   );

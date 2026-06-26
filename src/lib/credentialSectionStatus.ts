@@ -8,8 +8,21 @@ import {
   getGovernmentIdUploadStatusSummary,
   getGuardIdVerificationStatus,
 } from './guardIdentityVerification';
-import { guardHasExpiredIdOnFile } from './guardQualification';
+import {
+  computePtaUofProgress,
+  guardHasExpiredIdOnFile,
+  guardHasExpired32HourBlock,
+  guardHasExpiredPtaUofTraining,
+  guardMeets32HourBlock,
+  guardMeets32HourBlockVerified,
+  guardMeetsPtaUofTrainingVerified,
+} from './guardQualification';
 import { getCoiUploadStatus, guardInsuranceSubmitted, resolveInsuranceStatus } from './guardInsurance';
+import {
+  countPtaUofSlotStatuses,
+  countThirtyTwoHourCourseSlotStatuses,
+  formatCredentialSlotStatusSummary,
+} from './certStatus';
 
 export type CredentialSectionStatusTone = 'default' | 'primary' | 'success' | 'warning' | 'danger';
 
@@ -96,8 +109,12 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
 export function getAggregateSectionStatus(
   summary: string,
   complete: boolean,
-  verified = false
+  verified = false,
+  options?: { expired?: boolean }
 ): CredentialSectionStatus {
+  if (options?.expired) {
+    return { label: 'On file · expired', tone: 'warning' };
+  }
   if (complete && verified) {
     return { label: 'Verified — on file', tone: 'success' };
   }
@@ -105,4 +122,39 @@ export function getAggregateSectionStatus(
     return { label: 'On file — pending review', tone: 'warning' };
   }
   return { label: summary, tone: 'warning' };
+}
+
+export function getPtaUofSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
+  if (guardMeetsPtaUofTrainingVerified(guard)) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (guardHasExpiredPtaUofTraining(guard)) {
+    return { label: 'On file · expired', tone: 'warning' };
+  }
+  const progress = computePtaUofProgress(guard);
+  const summary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
+  if (progress.complete) {
+    return { label: 'On file — pending review', tone: 'warning' };
+  }
+  if (summary === 'On file') {
+    return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  }
+  return { label: summary, tone: staffMode ? 'warning' : 'default' };
+}
+
+export function getThirtyTwoHourSectionStatus(guard: SecurityGuard, staffMode = false): CredentialSectionStatus {
+  if (guardMeets32HourBlockVerified(guard)) {
+    return { label: 'Verified — on file', tone: 'success' };
+  }
+  if (guardHasExpired32HourBlock(guard)) {
+    return { label: 'On file · expired', tone: 'warning' };
+  }
+  const summary = formatCredentialSlotStatusSummary(countThirtyTwoHourCourseSlotStatuses(guard));
+  if (guardMeets32HourBlock(guard)) {
+    return { label: 'On file — pending review', tone: 'warning' };
+  }
+  if (summary === 'On file') {
+    return { label: CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL, tone: 'default' };
+  }
+  return { label: summary, tone: staffMode ? 'warning' : 'default' };
 }

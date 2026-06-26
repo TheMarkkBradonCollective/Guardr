@@ -5,7 +5,9 @@ import { resolveCertCatalogId } from './certCatalog';
 import { getGuardMissingGraceCredentialLabels, getGuardMissingWorkCredentialLabels } from './guardMissingCredentials';
 import {
   guardHasExpiredGuardCard,
+  guardHasExpired32HourBlock,
   guardHasExpiredIdOnFile,
+  guardHasExpiredPtaUofTraining,
   guardHasGuardrVerifiedCredential,
   guardHasCredentialListed,
   guardHasCredentialOnFile,
@@ -116,6 +118,9 @@ function buildGuardCardBlockers(guard: SecurityGuard, state = 'CA'): string[] {
 }
 
 function buildPtaUofActivationBlockers(guard: SecurityGuard): string[] {
+  if (guardHasExpiredPtaUofTraining(guard)) {
+    return ['PTA/UOF training has expired — guard must upload current certificates'];
+  }
   if (!guardMeetsPtaUofTraining(guard)) {
     return ['Power to Arrest & Appropriate Use of Force (PTA/UOF) not on file — required before activation'];
   }
@@ -126,6 +131,9 @@ function buildPtaUofActivationBlockers(guard: SecurityGuard): string[] {
 }
 
 function build32HourActivationBlockers(guard: SecurityGuard): string[] {
+  if (guardHasExpired32HourBlock(guard)) {
+    return ['32-hour BSIS courses have expired — guard must upload current certificates'];
+  }
   if (!guardMeets32HourBlock(guard)) {
     return ['32-hour BSIS course block not complete — required before activation'];
   }
