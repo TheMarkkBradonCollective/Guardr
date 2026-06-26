@@ -33,7 +33,7 @@ import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { GuardIdDetailModal } from '../profile/GuardIdDetailModal';
-import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
+import { GuardCoiUploadSheet } from '../profile/GuardCoiUploadSheet';
 import { GuardCardPanel } from '../profile/GuardCardPanel';
 import { GuardPtaUofPanel } from './GuardPtaUofPanel';
 import { GuardThirtyTwoHourPanel } from './GuardThirtyTwoHourPanel';
@@ -238,12 +238,11 @@ export function GuardActivationUploadChecklist({
       )}
 
       {openUpload === 'coi' && onSaveInsurance && (
-        <GuardCoiDetailModal
+        <GuardCoiUploadSheet
           guard={guard}
-          canEdit={guardCoiCanGuardEdit(guard)}
-          initialEditMode
-          onSave={onSaveInsurance}
+          open
           onClose={closeUpload}
+          onSave={onSaveInsurance}
         />
       )}
 

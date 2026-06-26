@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "node --import tsx --test lib/push/*.test.ts src/lib/jobScheduleChange.test.ts src/lib/jobEditRules.test.ts src/lib/californiaCities.test.ts src/lib/guardJobsBrowse.test.ts src/lib/guardJobs.test.ts src/lib/guardMarketplace.test.ts src/lib/guardAccountActivation.test.ts src/lib/appNavigation.test.ts src/lib/dbMutationGuard.test.ts",
+    "test": "node --import tsx --test lib/push/*.test.ts src/lib/jobScheduleChange.test.ts src/lib/jobEditRules.test.ts src/lib/californiaCities.test.ts src/lib/guardJobsBrowse.test.ts src/lib/guardJobs.test.ts src/lib/guardMarketplace.test.ts src/lib/guardAccountActivation.test.ts src/lib/appNavigation.test.ts src/lib/dbMutationGuard.test.ts src/lib/guardQualificationExpiry.test.ts",
     "generate:logos": "node scripts/generate-logo-assets.mjs",
     "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
     "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs"

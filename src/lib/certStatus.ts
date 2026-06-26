@@ -130,6 +130,7 @@ export interface CredentialSlotStatusCounts {
   missing: number;
   listed: number;
   onFile: number;
+  expired: number;
 }
 
 export function summarizeCredentialSlotStatuses(
@@ -138,11 +139,12 @@ export function summarizeCredentialSlotStatuses(
   return {
     missing: statuses.filter((status) => status === 'missing').length,
     listed: statuses.filter((status) => status === 'listed').length,
-    onFile: statuses.filter((status) => status === 'on-file' || status === 'expired').length,
+    onFile: statuses.filter((status) => status === 'on-file').length,
+    expired: statuses.filter((status) => status === 'expired').length,
   };
 }
 
-/** e.g. "5 missing · 1 listed · 3 on file" */
+/** e.g. "2 missing · 1 expired · 3 on file" */
 export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCounts): string {
   const segments: string[] = [];
   if (counts.missing > 0) {
@@ -150,6 +152,9 @@ export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCo
   }
   if (counts.listed > 0) {
     segments.push(`${counts.listed} listed`);
+  }
+  if (counts.expired > 0) {
+    segments.push(`${counts.expired} expired`);
   }
   if (counts.onFile > 0) {
     segments.push(`${counts.onFile} on file`);

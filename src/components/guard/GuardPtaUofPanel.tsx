@@ -1,11 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Certification, SecurityGuard } from '../../types';
 import { getCertCatalogEntry, resolveCertCatalogId } from '../../lib/certCatalog';
-import {
-  countPtaUofSlotStatuses,
-  formatCredentialSlotStatusSummary,
-} from '../../lib/certStatus';
-import { getAggregateSectionStatus } from '../../lib/credentialSectionStatus';
+import { getPtaUofSectionStatus } from '../../lib/credentialSectionStatus';
 import { CertItemCard } from '../credentials/CertItemCard';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import {
@@ -16,7 +12,6 @@ import {
   PTA_UOF_SEPARATE_PART_COUNT,
   PTA_UOF_UPLOAD_GUIDANCE,
   computePtaUofProgress,
-  guardMeetsPtaUofTrainingVerified,
 } from '../../lib/guardQualification';
 import { BookOpen } from 'lucide-react';
 import { CredentialPathToggle, type CredentialUploadPath } from '../credentials/CredentialPathToggle';
@@ -105,12 +100,8 @@ export function GuardPtaUofPanel({
     ? (combinedCerts.length > 0 ? 'combined' : 'individual')
     : uploadPath;
 
-  const ptaUofStatusSummary = formatCredentialSlotStatusSummary(countPtaUofSlotStatuses(guard));
-  const sectionStatus = getAggregateSectionStatus(
-    ptaUofStatusSummary,
-    progress.complete,
-    guardMeetsPtaUofTrainingVerified(guard)
-  );
+
+  const sectionStatus = getPtaUofSectionStatus(guard, staffMode);
 
   const resetForm = () => {
     setAddingCatalogId(null);

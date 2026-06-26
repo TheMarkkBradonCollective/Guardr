@@ -14,6 +14,7 @@ import {
 } from '../credentials/CredentialStatusLabels';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { GuardCoiDetailModal } from './GuardCoiDetailModal';
+import { GuardCoiUploadSheet } from './GuardCoiUploadSheet';
 
 interface GuardCoiItemCardProps {
   guard: SecurityGuard;
@@ -31,6 +32,7 @@ export function GuardCoiItemCard({
   onReview,
 }: GuardCoiItemCardProps) {
   const [showDetail, setShowDetail] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
   const hasOnFile = guardCoiOnFile(guard);
   const uploadStatus = getCoiUploadStatus(guard);
   const sectionStatus = getCoiSectionStatus(guard, staffMode);
@@ -78,10 +80,20 @@ export function GuardCoiItemCard({
         guard={guard}
         canEdit={canEdit || staffMode}
         staffMode={staffMode}
-        initialEditMode={canEdit && !hasOnFile}
         onSave={onSave}
         onReview={onReview}
         onClose={() => setShowDetail(false)}
+      />
+    ) : null;
+
+  const uploadSheet =
+    showUpload && onSave ? (
+      <GuardCoiUploadSheet
+        guard={guard}
+        open={showUpload}
+        onClose={() => setShowUpload(false)}
+        onSave={onSave}
+        title={hasOnFile ? 'Update Certificate of Insurance' : 'Add Certificate of Insurance'}
       />
     ) : null;
 
@@ -106,7 +118,7 @@ export function GuardCoiItemCard({
               staffMode={staffMode}
               uploadStatus={uploadStatus}
               canUpload={canEdit}
-              onAdd={() => setShowDetail(true)}
+              onAdd={() => (hasOnFile ? setShowDetail(true) : setShowUpload(true))}
             />
           ) : undefined
         }
@@ -121,6 +133,7 @@ export function GuardCoiItemCard({
       )}
 
       {detailModal}
+      {uploadSheet}
     </section>
   );
 }
