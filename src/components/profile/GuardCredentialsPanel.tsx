@@ -4,6 +4,7 @@ import {
   BSIS_REFRESHER_CATALOG_ID,
   CERT_CATEGORY_LABELS,
   CertCategory,
+  credentialRequiresExpiry,
   getCertCatalogEntry,
   getCertsByCategory,
 } from '../../lib/certCatalog';
@@ -55,7 +56,7 @@ const CREDENTIAL_SECTIONS: {
   {
     category: 'bsis-permit',
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Required only when applicable — firearm (armed jobs), baton, pepper spray.',
+    subtitle: 'Separate from training certificates — firearm, baton, and pepper spray permits expire and require staff verification.',
     icon: Shield,
   },
   {
@@ -124,6 +125,7 @@ export function GuardCredentialsPanel({
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [state, setState] = useState('CA');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
@@ -134,6 +136,7 @@ export function GuardCredentialsPanel({
     setCustomCertName('');
     setIssuer('');
     setNumber('');
+    setExpiryDate('');
     setState('CA');
     setImageUrl(undefined);
     setFormError('');
@@ -149,6 +152,10 @@ export function GuardCredentialsPanel({
     if (entry.requiresState && !state) return;
     const isOther = selectedCatalogId === 'other-credential';
     if (isOther && !customCertName.trim()) return;
+    if (credentialRequiresExpiry(entry.id) && !expiryDate.trim()) {
+      setFormError('Enter the permit expiration date.');
+      return;
+    }
 
     const proof = validateCertSubmission(imageUrl);
     if (proof.ok === false) {
@@ -163,6 +170,7 @@ export function GuardCredentialsPanel({
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
+      expiryDate: credentialRequiresExpiry(entry.id) ? expiryDate.trim() : undefined,
       status: 'pending',
       imageUrl,
     });
@@ -278,6 +286,10 @@ export function GuardCredentialsPanel({
           ? getCertsByCategory(openSection as CertCategory)
           : [];
 
+    const showPermitExpiry =
+      openSection === 'bsis-permit' ||
+      (selectedCatalogId ? credentialRequiresExpiry(selectedCatalogId) : false);
+
     return (
       <form onSubmit={submitCert} className="space-y-3">
         {showCatalogSelect && catalogOptions.length > 0 && (
@@ -328,6 +340,19 @@ export function GuardCredentialsPanel({
           onChange={(e) => setNumber(e.target.value)}
           required
         />
+        {showPermitExpiry && (
+          <>
+            <label className="uber-label">Expiration date</label>
+            <input
+              type="date"
+              className="uber-input w-full"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              required
+              aria-label="Permit expiration date"
+            />
+          </>
+        )}
         <DocumentPhotoUploadField
           imageUrl={imageUrl}
           onImageUrlChange={(url) => {
@@ -352,6 +377,7 @@ export function GuardCredentialsPanel({
     if (catalogId) setSelectedCatalogId(catalogId);
     setIssuer('');
     setNumber('');
+    setExpiryDate('');
     setState('CA');
     setImageUrl(undefined);
     setCustomCertName('');

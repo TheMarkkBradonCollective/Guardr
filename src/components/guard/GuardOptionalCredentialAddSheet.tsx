@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Certification, CertCategory, SecurityGuard } from '../../types';
 import {
   BSIS_REFRESHER_CATALOG_ID,
+  credentialRequiresExpiry,
   getCertCatalogEntry,
   getCertsByCategory,
 } from '../../lib/certCatalog';
@@ -53,6 +54,7 @@ export function GuardOptionalCredentialAddSheet({
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [issuer, setIssuer] = useState('');
   const [number, setNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [state, setState] = useState('CA');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
@@ -70,6 +72,7 @@ export function GuardOptionalCredentialAddSheet({
     setCustomCertName('');
     setIssuer('');
     setNumber('');
+    setExpiryDate('');
     setState('CA');
     setImageUrl(undefined);
     setFormError('');
@@ -83,6 +86,7 @@ export function GuardOptionalCredentialAddSheet({
     setCustomCertName('');
     setIssuer('');
     setNumber('');
+    setExpiryDate('');
     setState('CA');
     setImageUrl(undefined);
     setFormError('');
@@ -94,6 +98,7 @@ export function GuardOptionalCredentialAddSheet({
     setCustomCertName('');
     setIssuer('');
     setNumber('');
+    setExpiryDate('');
     setState('CA');
     setImageUrl(undefined);
     setFormError('');
@@ -108,6 +113,10 @@ export function GuardOptionalCredentialAddSheet({
     if (entry.requiresState && !state) return;
     const isOther = selectedCatalogId === 'other-credential';
     if (isOther && !customCertName.trim()) return;
+    if (credentialRequiresExpiry(entry.id) && !expiryDate.trim()) {
+      setFormError('Enter the permit expiration date.');
+      return;
+    }
 
     const proof = validateCertSubmission(imageUrl);
     if (proof.ok === false) {
@@ -122,6 +131,7 @@ export function GuardOptionalCredentialAddSheet({
       issuer: issuer.trim(),
       number: number.trim(),
       state: entry.requiresState ? state.toUpperCase() : undefined,
+      expiryDate: credentialRequiresExpiry(entry.id) ? expiryDate.trim() : undefined,
       status: 'pending',
       imageUrl,
     });
@@ -137,6 +147,10 @@ export function GuardOptionalCredentialAddSheet({
     (selectedSection !== null &&
       selectedSection !== 'bsis-refresher' &&
       catalogOptions.length > 1);
+
+  const showPermitExpiry =
+    selectedSection === 'bsis-permit' ||
+    (selectedCatalogId ? credentialRequiresExpiry(selectedCatalogId) : false);
 
   return (
     <AppFormSheet
@@ -220,6 +234,19 @@ export function GuardOptionalCredentialAddSheet({
             onChange={(e) => setNumber(e.target.value)}
             required
           />
+          {showPermitExpiry && (
+            <>
+              <label className="uber-label">Expiration date</label>
+              <input
+                type="date"
+                className="uber-input w-full"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                required
+                aria-label="Permit expiration date"
+              />
+            </>
+          )}
           <DocumentPhotoUploadField
             imageUrl={imageUrl}
             onImageUrlChange={(url) => {

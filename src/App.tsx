@@ -109,6 +109,7 @@ import { validateCertDeletion, validateCertImageAttachment, guardCertificationCa
 import { insertCertificationRow, updateCertificationRow } from './lib/certDatabaseWrite';
 import type { CertUpdatePayload } from './components/credentials/CertDetailModal';
 import type { CertImageMutationResult } from './lib/certImagePolicy';
+import { credentialRequiresExpiry, resolveCertCatalogId } from './lib/certCatalog';
 import {
   buildCertImageResubmitReason,
   buildIdResubmitReason,
@@ -2709,6 +2710,7 @@ export default function App() {
       number: newCert.number!.trim(),
       status: 'pending',
       issueDate: newCert.issueDate || new Date().toISOString().split('T')[0],
+      expiryDate: newCert.expiryDate,
       state: newCert.state?.toUpperCase(),
       catalogId: newCert.catalogId,
       category: newCert.category,
@@ -2893,11 +2895,19 @@ export default function App() {
     const issuer = payload.issuer?.trim() || '';
     const number = payload.number?.trim() || '';
     const state = payload.state?.trim().toUpperCase() || undefined;
+    const expiryDate = payload.expiryDate?.trim() || undefined;
     const imageUrl = payload.imageUrl?.trim() || undefined;
 
     if (!issuer || !number) {
       return { ok: false, error: 'Enter issuer and number.' };
     }
+
+    const catalogId = resolveCertCatalogId(cert);
+    const permitRequiresExpiry = credentialRequiresExpiry(catalogId ?? cert);
+    if (permitRequiresExpiry && !expiryDate) {
+      return { ok: false, error: 'Enter the permit expiration date.' };
+    }
+    const nextExpiryDate = permitRequiresExpiry ? expiryDate : cert.expiryDate;
 
     const nextImageUrl = imageUrl ?? cert.imageUrl;
     const proof = validateCertSubmission(nextImageUrl);
@@ -2925,6 +2935,7 @@ export default function App() {
       issuer !== cert.issuer.trim() ||
       number !== cert.number.trim() ||
       (state ?? '') !== (cert.state ?? '').trim().toUpperCase() ||
+      (nextExpiryDate ?? '') !== (cert.expiryDate ?? '').trim() ||
       (imageUrl ?? '') !== (cert.imageUrl ?? '').trim();
 
     if (!dataChanged) return { ok: true };
@@ -2954,6 +2965,7 @@ export default function App() {
                       issuer,
                       number,
                       state,
+                      expiryDate: nextExpiryDate,
                       imageUrl: nextImageUrl,
                       status: nextStatus,
                       rejectionReason:
@@ -2975,7 +2987,7 @@ export default function App() {
         const updateResult = await updateCertificationRow(supabase, certId, {
             issuer,
             number,
-            expiry_date: cert.expiryDate ?? null,
+            expiry_date: nextExpiryDate ?? null,
             state: state ?? null,
             image_url: nextImageUrl ?? null,
             status: nextStatus,

@@ -99,7 +99,7 @@ const SECTION_META: Record<
   },
   'bsis-permit': {
     title: 'BSIS Permits (Weapons)',
-    subtitle: 'Firearm, baton, pepper spray — when applicable.',
+    subtitle: 'Licenses separate from training certificates — firearm, baton, and OC spray permits expire.',
     category: 'bsis-permit',
   },
   medical: {

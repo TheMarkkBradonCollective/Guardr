@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { resolveCertCatalogId } from './certCatalog';
+import { credentialRequiresExpiry, resolveCertCatalogId } from './certCatalog';
 import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import { certHasDocumentProof } from './certImagePolicy';
 import {
@@ -21,10 +21,16 @@ export { isCertExpired };
 export const CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL = 'Not listed or on file';
 export const CREDENTIAL_NOT_LISTED_OR_ON_FILE_COUNT_LABEL = 'not listed or on file';
 
+function permitExpiryIsMissing(cert: Certification): boolean {
+  const catalogId = resolveCertCatalogId(cert);
+  return Boolean(catalogId && credentialRequiresExpiry(catalogId) && !cert.expiryDate?.trim());
+}
+
 export function getCredentialUploadLabel(cert: Certification, options?: { staffMode?: boolean }): string {
   if (!certHasDocumentProof(cert)) {
     return options?.staffMode ? 'Listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
   }
+  if (permitExpiryIsMissing(cert)) return 'On file · Expiry required';
   return isCertExpired(cert) ? 'On file · Expired' : 'On file';
 }
 
@@ -32,9 +38,10 @@ export function getCredentialUploadBadgeClass(cert: Certification): string {
   if (!certHasDocumentProof(cert)) {
     return 'text-brand-text-muted border-brand-border bg-brand-border/20';
   }
-  return isCertExpired(cert)
-    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
-    : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+  if (permitExpiryIsMissing(cert) || isCertExpired(cert)) {
+    return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
+  }
+  return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
 }
 
 export function getCredentialVerificationLabel(cert: Certification): string {
@@ -94,9 +101,12 @@ export function getCourseUploadStatus(
   const certs = matchingListedCerts(guard, catalogId, jobState).filter((cert) =>
     certHasDocumentProof(cert)
   );
-  const allExpired = certs.length > 0 && certs.every(isCertExpired);
+  const allInvalid = certs.length > 0 && certs.every((cert) => {
+    if (credentialRequiresExpiry(catalogId) && !cert.expiryDate?.trim()) return true;
+    return isCertExpired(cert);
+  });
 
-  if (allExpired) return 'expired';
+  if (allInvalid) return 'expired';
   return 'on-file';
 }
 

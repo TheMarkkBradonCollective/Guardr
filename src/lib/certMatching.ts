@@ -1,9 +1,12 @@
 import { Certification, SecurityGuard } from '../types';
 import {
   CA_REQUIRED_LISTING_IDS,
+  credentialRequiresExpiry,
   getCertCatalogEntry,
   resolveCertCatalogId,
 } from './certCatalog';
+import { certHasDocumentProof } from './certImagePolicy';
+import { isCertExpired } from './guardQualification';
 import { guardCanWorkInState } from './guardLicenses';
 import { resolveGuardCardLicenseState, licenseStatesMatch } from './californiaCities';
 import {
@@ -39,11 +42,20 @@ export function guardHasStaffVerifiedCert(
   }
   return guard.certifications.some((c) => {
     if (c.status !== 'verified') return false;
+    if (!certHasDocumentProof(c)) return false;
     const id = resolveCertCatalogId(c);
-    if (id === catalogId) return true;
-    const entry = getCertCatalogEntry(catalogId);
-    if (!entry) return false;
-    return c.name.toLowerCase().includes(entry.name.toLowerCase().slice(0, 12));
+    const matches =
+      id === catalogId ||
+      (() => {
+        const entry = getCertCatalogEntry(catalogId);
+        if (!entry) return false;
+        return c.name.toLowerCase().includes(entry.name.toLowerCase().slice(0, 12));
+      })();
+    if (!matches) return false;
+    if (credentialRequiresExpiry(catalogId)) {
+      if (!c.expiryDate?.trim() || isCertExpired(c)) return false;
+    }
+    return true;
   });
 }
 

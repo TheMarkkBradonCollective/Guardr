@@ -1,5 +1,10 @@
 import { Certification, SecurityGuard } from '../types';
-import { canonicalCatalogId, getCertCatalogEntry, resolveCertCatalogId } from './certCatalog';
+import {
+  canonicalCatalogId,
+  credentialRequiresExpiry,
+  getCertCatalogEntry,
+  resolveCertCatalogId,
+} from './certCatalog';
 import { guardInsuranceBlockedMessage } from './guardInsurance';
 
 export type GuardQualificationLevel = 'none' | 'pending' | 'active';
@@ -312,9 +317,15 @@ function isCertNotExpired(cert: Certification): boolean {
   return !isCertExpired(cert);
 }
 
-/** Required pathway credentials must be unexpired to count toward qualification. */
-function expiryBlocksQualification(_catalogId: string): boolean {
-  return false;
+/** Permits must have a future expiry date to count toward qualification. */
+function expiryBlocksQualification(catalogId: string): boolean {
+  return credentialRequiresExpiry(catalogId);
+}
+
+function credentialExpiryIsValid(cert: Certification, catalogId: string): boolean {
+  if (!expiryBlocksQualification(catalogId)) return true;
+  if (!cert.expiryDate?.trim()) return false;
+  return isCertNotExpired(cert);
 }
 
 function certMatchesCatalogId(cert: Certification, catalogId: string): boolean {
@@ -371,7 +382,7 @@ export function guardHasCredentialOnFile(
 ): boolean {
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
     if (!certHasDocumentProof(cert)) return false;
-    if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
+    if (!credentialExpiryIsValid(cert, catalogId)) return false;
     return true;
   });
 }
@@ -384,7 +395,7 @@ export function guardHasGuardrVerifiedCredential(
   return matchingCredentials(guard, catalogId, jobState).some((cert) => {
     if (cert.status !== 'verified') return false;
     if (!certHasDocumentProof(cert)) return false;
-    if (expiryBlocksQualification(catalogId) && !isCertNotExpired(cert)) return false;
+    if (!credentialExpiryIsValid(cert, catalogId)) return false;
     return true;
   });
 }

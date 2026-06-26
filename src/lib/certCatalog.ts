@@ -410,6 +410,16 @@ export function credentialExpectsStaffVerification(
   return getCertCatalogEntry(catalogId)?.category === 'bsis-permit';
 }
 
+/** BSIS weapons permits expire; training certificates and one-time course completions do not. */
+export function credentialRequiresExpiry(
+  certOrCatalogId: { catalogId?: string; name: string } | string
+): boolean {
+  const catalogId =
+    typeof certOrCatalogId === 'string' ? certOrCatalogId : resolveCertCatalogId(certOrCatalogId);
+  if (!catalogId) return false;
+  return getCertCatalogEntry(catalogId)?.category === 'bsis-permit';
+}
+
 /** Profile badge candidates — verified optional certs worth showing */
 export const PROFILE_BADGE_CATEGORIES: CertCategory[] = [
   'medical',
