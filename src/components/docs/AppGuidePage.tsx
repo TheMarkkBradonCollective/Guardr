@@ -55,7 +55,7 @@ const SECTION_META: Record<string, SectionMeta> = {
   },
   'moderator-guide': {
     icon: Users,
-    description: 'Approve applications, activate accounts, monitor jobs — no credential verification.',
+    description: 'Approve applications, monitor jobs — no credential verification or activation.',
     audience: 'moderator',
   },
   'administrator-guide': {

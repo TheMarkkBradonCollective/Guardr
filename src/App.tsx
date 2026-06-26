@@ -29,7 +29,7 @@ import {
   GuardInsurancePolicy,
   GuardWeaponGearId,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
 import {
   canClientConfirmSelfAudit,
@@ -3740,8 +3740,8 @@ export default function App() {
   };
 
   const handleActivateGuardAccount = async (guardId: string, options?: ActivateGuardAccountOptions) => {
-    if (!currentUser || !canApproveGuards(currentUser)) {
-      appToast('You do not have permission to grant marketplace eligibility.', 'error');
+    if (!currentUser || !canActivateGuardAccounts(currentUser)) {
+      appToast('Only Administrators and above can activate guard accounts.', 'error');
       return;
     }
     const guard = guards.find((g) => g.id === guardId);

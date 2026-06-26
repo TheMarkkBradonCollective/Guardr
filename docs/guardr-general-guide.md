@@ -43,12 +43,12 @@ Guardr is positioned as a **California-aligned independent contractor technology
 
 | Staff role | Primary responsibilities |
 |------------|-------------------------|
-| **Moderator** | Approve guard and client **applications**, **activate** approved guard accounts (manual), monitor activity, upload self-audit/spot-check photos, review reports |
+| **Moderator** | Approve guard and client **applications**, monitor activity, upload self-audit/spot-check photos, review reports |
 | **Administrator** | Everything Moderators do, plus **verify credentials** (government ID, guard card, COI, training certs), review job requests, handle disputes, suspend users |
 | **Director** | Full platform operations — financial controls, cash handling, job creation, guard assignment (dispute/safety only), manage Administrators and Moderators |
 | **Founder** | Platform governance overseer — everything Directors do, plus manage Directors and all staff tiers, platform settings, homepage messages |
 
-**Credential verification is Administrator and above only.** Moderators approve applications and activate accounts but do not verify documents.
+**Credential verification and account activation are Administrator and above only.** Moderators approve applications but do not verify documents or activate accounts.
 
 ### What changed to reduce employer-like control
 
@@ -59,7 +59,7 @@ Guardr is positioned as a **California-aligned independent contractor technology
 | **Spot checks** | Staff uploaded presence photos; clients confirmed | **Removed** — no platform on-site supervision |
 | **Payments** | Card and cash options; staff released most payouts manually | **Card/Stripe only**; auto-release to Stripe Connect ~48h after completion |
 | **Staff payout override** | Routine manual release | **Dispute hold only** — e.g. overtime under dispute |
-| **Account activation** | Staff "hire/activate" language | **Two-step manual flow** — (1) Moderator+ **approves application** → guard uploads creds; (2) Administrator+ **verifies** each cred; (3) Moderator+ **manually activates** — no auto-activation on verify |
+| **Account activation** | Staff "hire/activate" language | **Two-step manual flow** — (1) Moderator+ **approves application** → guard uploads creds; (2) Administrator+ **verifies** each cred; (3) Administrator+ **manually activates** — no auto-activation on verify |
 | **Grace period (PTA/32-hr)** | Staff picked grace hours at activation | **48h self-serve** — auto-applied; automated lockout if credentials not uploaded |
 
 ### What did not change
@@ -89,7 +89,7 @@ This section walks through Guardr from first sign-up to final payout — the sam
 ```
 1. Moderator+ approves application     →  guard can upload credentials
 2. Administrator+ verifies each cred   →  ID, COI, guard card, PTA/UOF, 32-hr
-3. Moderator+ manually activates       →  guard gets Map / Jobs / Pay
+3. Administrator+ manually activates       →  guard gets Map / Jobs / Pay
 ```
 
 Guards stay on the **activation screen** until step 3. The progress bar tracks all five required credentials after approval.
@@ -153,7 +153,7 @@ Staff monitor from **Map** and **Jobs**. Incidents appear in **Incidents**.
 | New guard waiting (no creds yet) | **Moderator+** — approve guard application |
 | Guard approved, creds uploading | **Guard** — upload on activation screen |
 | Creds uploaded, pending review | **Administrator+** — verify in **Approvals → Credentials** |
-| All five creds verified | **Moderator+** — activate account |
+| All five creds verified | **Administrator+** — activate account |
 | Job posted, not live | **Administrator+** — approve job offer |
 | Job open, not paid | **Client** — Pay Now |
 | Guard applied | **Client** — approve or decline guard |
@@ -552,7 +552,7 @@ Overtime can appear when a guard clocks out late and the app calculates an extra
      - 32-hour BSIS course block (or individual course certs).
      - Optional extra credentials (firearms, medical, FEMA, etc.).
 4. **Administrators verify each credential** — nothing auto-verifies on upload.
-5. When all five required credentials are verified, a **Moderator+ manually activates** your account (`approved` → `active`).
+5. When all five required credentials are verified, an **Administrator+ manually activates** your account (`approved` → `active`).
 6. After activation, the full guard app opens — **Map**, **Jobs**, **Pay**, **Messages**, and **Profile**.
 
 Grace period (optional training):
@@ -697,7 +697,7 @@ Payouts depend on:
 
 ## Moderator guide
 
-Moderators are the front line for account intake and field monitoring. You **approve applications** and **activate** guard accounts — you do **not** verify credential documents.
+Moderators are the front line for account intake and field monitoring. You **approve applications** — you do **not** verify credential documents or activate accounts.
 
 ### What you can do
 
@@ -722,7 +722,7 @@ Moderators are the front line for account intake and field monitoring. You **app
 
 1. Open **Overview** — check approval queue counts.
 2. **Approvals → Profile approval** — approve pending clients and guard **applications** (intake only; creds come after approval).
-3. **Approvals → Profile approval** — activate guards whose five credentials are already verified (checklist shows ready).
+3. **Approvals → Profile approval** — view guards awaiting activation (Administrator+ activates when credentials are verified).
 4. **Map** / **Jobs** — monitor active shifts and **No Self Audit** flags.
 5. **Messages** — respond to support tickets.
 
@@ -758,7 +758,7 @@ Administrators handle credential verification and day-to-day operations. You inh
 2. Review each pending upload — government ID, COI, guard card, training certs.
 3. **Verify** or **Reject** each document. Nothing auto-verifies.
 4. Optional credentials (firearms, medical, FEMA) only appear to clients after you verify them.
-5. When all five activation credentials are verified, notify Moderator+ to **activate** the account (you do not auto-activate).
+5. When all five activation credentials are verified, **activate** the account (Administrator+ only — you do not auto-activate).
 
 ### Job offer review
 
@@ -819,7 +819,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 
 ### Governance principles
 
-- **Moderators** approve and activate — they do not verify documents.
+- **Moderators** approve applications — they do not verify documents or activate accounts.
 - **Administrators** verify credentials and review jobs — they do not manage Directors.
 - **Directors** run operations and finances — they do not manage other Directors.
 - **Founders** oversee the platform — cannot moderate other Founders.
@@ -830,7 +830,7 @@ The Founder is the platform governance overseer. You inherit everything Director
 |------|-----------|---------------|----------|---------|
 | **Overview** | ✓ | ✓ | ✓ | ✓ |
 | **Map** / **Jobs** | ✓ | ✓ | ✓ | ✓ |
-| **Approvals** | Approve/activate | + Verify creds | ✓ | ✓ |
+| **Approvals** | Approve applications | + Verify & activate | ✓ | ✓ |
 | **Guards** / **Clients** | ✓ | + Suspend | + Trusted | ✓ |
 | **Messages** / **Incidents** | ✓ | ✓ | ✓ | ✓ |
 | **Disputes** | — | ✓ | ✓ | ✓ |
@@ -871,7 +871,7 @@ Client opens Home or Jobs
 | Guide step | Client page/action | Guard page/action | Staff page/action |
 |---------------|--------------------|-------------------|-------------------|
 | Open this guide | Account menu → **General guide** | Account menu → **General guide** (after **active**) | Sidebar → **General guide** |
-| Account approval / activation | **Home** pending banner; account menu → **Profile** | **Activation screen** — wait for approval, then upload creds; blocked until **active** | **Moderator+** approve application & activate; **Administrator+** verify creds |
+| Account approval / activation | **Home** pending banner; account menu → **Profile** | **Activation screen** — wait for approval, then upload creds; blocked until **active** | **Moderator+** approve application; **Administrator+** verify creds & activate |
 | Post marketplace job | **Home → Post job offer** or **Jobs → + Post offer** | — | **Approvals → Job offers** |
 | Direct guard request | **Guards → guard profile → Send assignment request to [name]** | **Map → Slide to claim job** | **Jobs** |
 | Add location | Posting flow → **Use current location** | — | **Jobs → Use current location** when editing location |
