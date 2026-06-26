@@ -86,8 +86,12 @@ export function normalizeGuardTabForAccount(
   guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null | undefined
 ): GuardTab {
   const resolved: GuardTab =
-    tab === 'guardChat' || tab === 'support' ? 'messages' : tab ?? 'map';
-  if (!guard || isGuardAccountActive(guard)) return resolved;
+    tab === 'guardChat' || tab === 'support' ? 'messages' : tab ?? 'activation';
+  if (!guard) {
+    if (resolved === 'settings') return 'settings';
+    return 'activation';
+  }
+  if (isGuardAccountActive(guard)) return resolved;
   if (resolved === 'settings') return 'settings';
   return 'activation';
 }
@@ -445,12 +449,18 @@ export function syncAppRoute(route: AppRoute, replace = false): void {
   window.history.pushState(state, '', nextPath);
 }
 
-export function defaultRouteForRole(role: AppRoute['role']): AppRoute {
+export function defaultRouteForRole(
+  role: AppRoute['role'],
+  guard?: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null
+): AppRoute {
   switch (role) {
     case 'staff':
       return { role: 'staff', staffSection: 'overview' };
     case 'guard':
-      return { role: 'guard', guardTab: 'map' };
+      return {
+        role: 'guard',
+        guardTab: guard && !isGuardAccountActive(guard) ? 'activation' : 'map',
+      };
     case 'client':
       return { role: 'client', clientView: 'home' };
   }

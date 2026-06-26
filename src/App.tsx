@@ -447,7 +447,7 @@ export default function App() {
     () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
   const [guardTab, setGuardTabState] = useState<GuardTab>(
-    () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'map'
+    () => (initialRoute?.role === 'guard' ? initialRoute.guardTab : undefined) ?? 'activation'
   );
   const [staffSection, setStaffSectionState] = useState<StaffSection>(() => {
     if (initialRoute?.role !== 'staff') return 'overview';
@@ -1057,7 +1057,7 @@ export default function App() {
           applyAppRoute(route);
           syncAppRoute(route, true);
         } else {
-          const fallback = defaultRouteForRole(role);
+          const fallback = defaultRouteForUser(currentUser);
           applyAppRoute(fallback);
           syncAppRoute(fallback, true);
         }
@@ -1073,6 +1073,15 @@ export default function App() {
   const currentUserRef = useRef(currentUser);
   currentUserRef.current = currentUser;
   const loggedInUserIdRef = useRef<string | null>(currentUser?.id ?? null);
+
+  const defaultRouteForUser = (user: SessionUser): AppRoute => {
+    const role = appRoleForUser(user);
+    if (!role) return { role: 'client', clientView: 'home' };
+    if (role === 'guard') {
+      return defaultRouteForRole(role, findGuardProfileForUser(user, guardsRef.current));
+    }
+    return defaultRouteForRole(role);
+  };
 
   const navigateFromLocation = (
     url: string,
@@ -1119,7 +1128,7 @@ export default function App() {
       }
       const role = appRoleForUser(user);
       if (role) {
-        const fallback = defaultRouteForRole(role);
+        const fallback = defaultRouteForUser(user);
         applyAppRouteRef.current(fallback);
         if (options.source !== 'popstate') {
           syncAppRoute(fallback, true);
@@ -1135,7 +1144,7 @@ export default function App() {
       }
       const role = appRoleForUser(user);
       if (!role) return;
-      const fallback = defaultRouteForRole(role);
+      const fallback = defaultRouteForUser(user);
       applyAppRouteRef.current(fallback);
       if (options.source !== 'popstate') {
         syncAppRoute(fallback, true);
@@ -1147,7 +1156,7 @@ export default function App() {
       if (options.source === 'popstate') {
         const role = appRoleForUser(user);
         if (role) {
-          const fallback = defaultRouteForRole(role);
+          const fallback = defaultRouteForUser(user);
           applyAppRouteRef.current(fallback);
           window.history.replaceState({ appRoute: fallback }, '', buildAppPath(fallback));
         }
@@ -1233,7 +1242,7 @@ export default function App() {
       });
 
     if (route && isAuthOnlyRoute(route)) {
-      const fallback = defaultRouteForRole(role);
+      const fallback = defaultRouteForUser(currentUser);
       applyAppRouteRef.current(fallback);
       syncAppRoute(fallback, true);
       return;
@@ -1247,7 +1256,7 @@ export default function App() {
     }
 
     if (!route) {
-      const fallback = defaultRouteForRole(role);
+      const fallback = defaultRouteForUser(currentUser);
       applyAppRouteRef.current(fallback);
       syncAppRoute(fallback, true);
     }
@@ -2193,9 +2202,15 @@ export default function App() {
   useEffect(() => {
     if (!isDbConnected) return;
     const onVisible = () => {
-      if (document.visibilityState === 'visible' && !shouldSkipRealtimeSync()) {
-        void loadRef.current();
+      if (document.visibilityState !== 'visible' || shouldSkipRealtimeSync()) return;
+      const user = currentUserRef.current;
+      if (user?.role === 'guard') {
+        const guard = findGuardProfileForUser(user, guardsRef.current);
+        if (guard && !isGuardAccountActive(guard)) {
+          beginLocalMutation(12_000);
+        }
       }
+      void loadRef.current();
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
@@ -2210,14 +2225,19 @@ export default function App() {
     sessionGuard ??
     (activeGuardId ? verifiedGuards.find((g) => g.id === activeGuardId) : undefined) ??
     ({} as SecurityGuard);
+  const resolvedGuardTab: GuardTab =
+    sessionGuard && !isGuardAccountActive(sessionGuard)
+      ? normalizeGuardTabForAccount(guardTab, sessionGuard)
+      : guardTab;
 
   useEffect(() => {
     if (loading || currentUser?.role !== 'guard') return;
     const guard = findGuardProfileForUser(currentUser, verifiedGuards);
     if (!guard?.id || isGuardAccountActive(guard)) return;
     const normalizedTab = normalizeGuardTabForAccount(guardTab, guard);
-    if (normalizedTab === guardTab) return;
-    setGuardTabState(normalizedTab);
+    if (normalizedTab !== guardTab) {
+      setGuardTabState(normalizedTab);
+    }
     syncAppRoute(
       buildAppRoute({
         role: 'guard',
@@ -2684,7 +2704,7 @@ export default function App() {
       })
     );
     if (isDbConnected) {
-      beginLocalMutation();
+      beginLocalMutation(submittedByRole === 'guard' ? 12_000 : 3500);
       try {
         const insertResult = await insertCertificationRow(supabase, {
           id: certWithId.id, guard_id: guardId, name: certWithId.name,
@@ -8872,7 +8892,7 @@ export default function App() {
         {marketplaceLegalGate}
         <GuardDashboard
           guard={activeGuard}
-          tab={guardTab}
+          tab={resolvedGuardTab}
           onTabChange={setGuardTab}
           requests={guardJobs}
           payments={guardPayouts}
