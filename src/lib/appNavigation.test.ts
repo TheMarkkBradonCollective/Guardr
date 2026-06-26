@@ -34,4 +34,10 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('guardChat', guard), 'messages');
     assert.equal(normalizeGuardTabForAccount('support', guard), 'messages');
   });
+
+  it('defaults unknown guard profiles to activation until profile loads', () => {
+    assert.equal(normalizeGuardTabForAccount('map', undefined), 'activation');
+    assert.equal(normalizeGuardTabForAccount(undefined, undefined), 'activation');
+    assert.equal(normalizeGuardTabForAccount('settings', undefined), 'settings');
+  });
 });
