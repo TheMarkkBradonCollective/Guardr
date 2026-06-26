@@ -28,6 +28,7 @@ import {
   canManageCompanyOperations,
   canManageGuards,
   canApproveGuards,
+  canActivateGuardAccounts,
   canVerifyCredentials,
   canManageStaffAccounts,
   canReviewJobRequests,
@@ -439,6 +440,7 @@ export function StaffDashboard({
   const showSettings = canAccessStaffSettings(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
   const canApproveGuardAccounts = canApproveGuards(currentUser);
+  const canActivateApprovedGuards = canActivateGuardAccounts(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
@@ -541,7 +543,8 @@ export function StaffDashboard({
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             onApproveClient={canManageClientAccounts ? onApproveClient : undefined}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canApproveGuardAccounts ? onActivateGuardAccount : undefined}
+            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
+            canActivateGuardAccounts={canActivateApprovedGuards}
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
             onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
@@ -611,7 +614,7 @@ export function StaffDashboard({
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canApproveGuardAccounts ? onActivateGuardAccount : undefined}
+            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}

@@ -379,8 +379,8 @@ _Times below come from git commit timestamps. They reflect when work was committ
 
 | Update | Detail |
 |--------|--------|
-| **Two-step guard activation** | `pending` → Moderator+ approves application → `approved` → guard uploads creds → Administrator+ verifies → Moderator+ manually activates → `active`. No auto-activation on verify. |
-| **Role hierarchy** | Moderator: approve/activate. Administrator+: verify credentials. Director: finances + team. Founder (was Owner): platform governance. |
+| **Two-step guard activation** | `pending` → Moderator+ approves application → `approved` → guard uploads creds → Administrator+ verifies → Administrator+ manually activates → `active`. No auto-activation on verify. |
+| **Role hierarchy** | Moderator: approve applications. Administrator+: verify credentials & activate. Director: finances + team. Founder (was Owner): platform governance. |
 | **Founder rename** | Owner → Founder across UI, permissions, API session auth, SQL + migration `20260625120000_rename_owner_to_founder.sql` |
 | **Auth scroll fix** | Login/signup form column scrolls on desktop side-by-side layout |
 | **General guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |

@@ -296,9 +296,14 @@ export function canSuspendUsers(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.suspend_users');
 }
 
-/** Moderator+ — approve guard applications and grant marketplace eligibility */
+/** Moderator+ — approve guard applications (unlock credential upload) */
 export function canApproveGuards(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.approve_guards');
+}
+
+/** Administrator+ — manually activate approved guard accounts for marketplace work */
+export function canActivateGuardAccounts(user: Pick<SessionUser, 'role'>): boolean {
+  return canVerifyCredentials(user);
 }
 
 /** Moderator+ — approve client accounts */
@@ -306,7 +311,7 @@ export function canApproveClients(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'moderator.approve_clients');
 }
 
-/** Moderator+ — approve applications, activate accounts, manage guard roster */
+/** Moderator+ — approve applications and manage guard roster */
 export function canManageGuards(user: Pick<SessionUser, 'role'>): boolean {
   return canApproveGuards(user) || hasPermission(user, 'admin.manage_users');
 }

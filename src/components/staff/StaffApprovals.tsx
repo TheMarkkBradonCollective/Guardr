@@ -88,6 +88,7 @@ interface StaffApprovalsProps {
   ) => Promise<CertUpdateResult>;
   onViewGuard?: (guardId: string) => void;
   canApproveGuardAccounts?: boolean;
+  canActivateGuardAccounts?: boolean;
   canVerifyGuardCredentials?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
@@ -221,6 +222,7 @@ export function StaffApprovals({
   onUpdateCertification,
   onViewGuard,
   canApproveGuardAccounts = false,
+  canActivateGuardAccounts = false,
   canVerifyGuardCredentials = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
@@ -927,7 +929,7 @@ export function StaffApprovals({
                       Full profile
                     </button>
                   )}
-                  {isApprovedGuard && canApproveGuardAccounts && onActivateGuardAccount && (
+                  {isApprovedGuard && canActivateGuardAccounts && onActivateGuardAccount && (
                     <button
                       type="button"
                       disabled={!canTakeAction}
