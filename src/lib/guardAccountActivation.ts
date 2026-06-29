@@ -46,7 +46,7 @@ export function isGuardAccountActive(guard: SecurityGuard, state = 'CA'): boolea
 }
 
 export function guardMeetsAllActivationCredentialsOnFile(guard: SecurityGuard, state = 'CA'): boolean {
-  return getGuardActivationChecklist(guard, state).staffApprovalBlockers.length === 0;
+  return buildCredentialActivationBlockers(guard, state).length === 0;
 }
 
 export interface GuardActivationChecklist {
@@ -58,13 +58,13 @@ export interface GuardActivationChecklist {
   insuranceVerified: boolean;
   /** Guard-facing — all five activation credentials verified. */
   canActivate: boolean;
-  /** Staff can approve profile when all five are Guardr-verified. */
+  /** Staff can approve the application (pending → approved). */
   canStaffApprove: boolean;
-  /** Staff can grant marketplace eligibility when all five credentials remain verified. */
+  /** Staff can grant marketplace eligibility when approved and all five credentials are verified. */
   canStaffActivate: boolean;
-  /** Hard blockers preventing profile approval (all five credentials verified). */
+  /** Blockers for approving the guard application. */
   staffApprovalBlockers: string[];
-  /** Hard blockers preventing marketplace eligibility (all five credentials verified). */
+  /** Blockers for granting marketplace eligibility (manual activation). */
   staffActivationBlockers: string[];
   missingWorkCredentials: string[];
   missingGraceCredentials: string[];
@@ -185,7 +185,7 @@ function build32HourVerificationBlockers(guard: SecurityGuard): string[] {
   return [];
 }
 
-function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[] {
+function buildCredentialActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
   return [
     ...buildIdVerificationBlockers(guard),
     ...buildInsuranceVerificationBlockers(guard),
@@ -195,8 +195,25 @@ function buildStaffApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[
   ];
 }
 
+/** Staff may approve the guard application (pending → approved) after intake review. */
+function buildApplicationApprovalBlockers(guard: SecurityGuard): string[] {
+  const blockers: string[] = [];
+  if (!guard.isStaff && getGuardUserStatus(guard) === 'blocked') {
+    blockers.push('Guard application rejected — account blocked');
+  }
+  if (!isGuardAccountPending(guard)) {
+    blockers.push('Guard application is not pending staff approval');
+  }
+  return blockers;
+}
+
 function buildStaffActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  return buildStaffApprovalBlockers(guard, state);
+  const blockers: string[] = [];
+  if (!isGuardAccountApproved(guard) && !isGuardUserStatusActive(guard)) {
+    blockers.push('Approve the guard application before granting marketplace eligibility');
+  }
+  blockers.push(...buildCredentialActivationBlockers(guard, state));
+  return blockers;
 }
 
 export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'): GuardActivationChecklist {
@@ -208,14 +225,16 @@ export function getGuardActivationChecklist(guard: SecurityGuard, state = 'CA'):
   const guardCardVerified = guardHasVerifiedGuardCard(guard, state);
   const insuranceSubmitted = guardHasInsuranceSubmitted(guard);
   const insuranceVerified = guardHasValidInsurance(guard);
-  const staffApprovalBlockers = buildStaffApprovalBlockers(guard, state);
+  const staffApprovalBlockers = buildApplicationApprovalBlockers(guard);
   const staffActivationBlockers = buildStaffActivationBlockers(guard, state);
   const missingGraceCredentials = getGuardMissingGraceCredentialLabels(guard, state);
   const missingWorkCredentials = getGuardMissingWorkCredentialLabels(guard, state);
 
   const canStaffApprove = staffApprovalBlockers.length === 0;
   const canStaffActivate = staffActivationBlockers.length === 0;
-  const canActivate = canStaffApprove;
+  const credsReadyForActivation = buildCredentialActivationBlockers(guard, state).length === 0;
+  const canActivate =
+    credsReadyForActivation && (isGuardAccountApproved(guard) || isGuardUserStatusActive(guard));
 
   return {
     idSubmitted,
@@ -240,11 +259,12 @@ export function guardCanActivateAccount(guard: SecurityGuard, state = 'CA'): boo
   return getGuardActivationChecklist(guard, state).canActivate;
 }
 
-/** Pending → approved: all five activation credentials on file. */
+/** Pending → approved: staff reviews the application; credentials upload unlocks after approval. */
 export function guardCanStaffApproveProfile(guard: SecurityGuard, state = 'CA'): boolean {
+  void state;
   if (guard.isStaff) return false;
   if (!isGuardAccountPending(guard)) return false;
-  return getGuardActivationChecklist(guard, state).canStaffApprove;
+  return getGuardActivationChecklist(guard).canStaffApprove;
 }
 
 /** Approved → active: all five activation credentials on file. */
@@ -255,7 +275,8 @@ export function guardCanStaffActivateAccount(guard: SecurityGuard, state = 'CA')
 }
 
 export function guardAccountApprovalBlockers(guard: SecurityGuard, state = 'CA'): string[] {
-  return getGuardActivationChecklist(guard, state).staffApprovalBlockers;
+  void state;
+  return buildApplicationApprovalBlockers(guard);
 }
 
 export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA'): string[] {
@@ -269,18 +290,18 @@ export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): Se
   });
 }
 
-/** Pending sign-ups with ID submitted — guard may upload all credentials upfront. */
+/** Pending self-submitted guard applications awaiting staff approval. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
-    return getGuardActivationChecklist(g).idSubmitted;
+    return true;
   });
 }
 
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
-    if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
-    return !getGuardActivationChecklist(g).idSubmitted;
+    if (g.isStaff || !isGuardAccountApproved(g) || !isSelfSubmittedGuardAccount(g)) return false;
+    return buildCredentialActivationBlockers(g).length > 0;
   });
 }
 
@@ -288,33 +309,27 @@ export function guardActivationSummaryLabel(guard: SecurityGuard): string {
   const checklist = getGuardActivationChecklist(guard);
   if (isGuardAccountApproved(guard)) {
     if (!checklist.canStaffActivate) {
-      return `Approved — ${checklist.staffActivationBlockers[0] ?? 'upload missing credentials'}`;
+      return `Approved — ${checklist.staffActivationBlockers[0] ?? 'upload and verify credentials'}`;
     }
-    return 'Approved — ready to grant marketplace eligibility';
+    return 'Approved — ready for staff to grant marketplace eligibility';
   }
-  if (checklist.canStaffApprove) return 'All five credentials verified — ready to approve';
+  if (checklist.canStaffApprove) return 'Application ready for staff approval';
   const parts: string[] = [];
-  if (!checklist.idSubmitted) parts.push('ID missing');
-  else if (guardHasExpiredIdOnFile(guard)) parts.push('ID expired');
-  if (!checklist.insuranceSubmitted) parts.push('COI missing');
-  if (!checklist.guardCardSubmitted && !guardMeetsLevel1(guard)) parts.push('Guard card missing');
-  else if (!guardMeetsLevel1(guard)) parts.push('Guard card incomplete');
-  if (!guardMeetsPtaUofTraining(guard)) parts.push('PTA/UOF missing');
-  if (!guardMeets32HourBlock(guard)) parts.push('32-hour block missing');
+  if (getGuardUserStatus(guard) === 'blocked') parts.push('Application blocked');
+  else parts.push('Awaiting staff application review');
   return parts.join(' · ') || 'Awaiting requirements';
 }
 
 /**
- * When credential verification is complete, grant marketplace eligibility (active status)
- * with an automatic credential grace window — not a hiring/employment gate.
+ * Manual activation only — never auto-promote from credential uploads.
+ * Returns the active guard patch when staff explicitly grants marketplace eligibility.
  */
 export function buildMarketplaceEligibilityActivation(
   guard: SecurityGuard,
   state = 'CA'
 ): SecurityGuard | null {
   if (guard.isStaff) return null;
-  const status = getGuardUserStatus(guard);
-  if (status !== 'pending' && status !== 'approved') return null;
+  if (!isGuardAccountApproved(guard)) return null;
   if (guardAccountActivationBlockers(guard, state).length > 0) return null;
   return {
     ...guard,

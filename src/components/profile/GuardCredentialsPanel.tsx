@@ -248,7 +248,7 @@ export function GuardCredentialsPanel({
     []
   );
   const showSection = (count: number) => editing || staffMode || count > 0;
-  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification);
+  const canUpload = canUploadGuardCredentials(editing, staffMode, onAddCertification, guard);
   const idStatus = getGuardIdVerificationStatus(guard);
   const canEditId = !guard.isStaff && guardIdVerificationCanEdit(guard);
 

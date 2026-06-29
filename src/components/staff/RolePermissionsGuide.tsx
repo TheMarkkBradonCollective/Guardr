@@ -8,10 +8,11 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     role: 'moderator',
     icon: Shield,
     permissions: [
-      'Review guard credentials & reports',
-      'Monitor live jobs & platform activity',
+      'Approve guard & client applications',
+      'Activate approved guard accounts (manual)',
+      'Review reports & monitor platform activity',
       'Upload self-audit & spot-check photos',
-      'No account approvals, job reviews, or disputes',
+      'No credential verification, job reviews, or disputes',
     ],
   },
   {
@@ -19,7 +20,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Briefcase,
     permissions: [
       'Everything Moderators can do',
-      'Approve guard & client accounts',
+      'Verify credentials & government ID (Administrator+)',
       'Review job requests & handle disputes',
       'Suspend users & issue warnings',
       'Manage users, analytics & platform settings',
@@ -42,9 +43,9 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Crown,
     permissions: [
       'Everything Directors can do',
+      'Platform governance overseer — manages all staff tiers',
       'Manage Directors, Administrators & Moderators',
-      'Ultimate platform governance authority',
-      'Cannot moderate other Owners',
+      'Cannot moderate other Founders',
     ],
   },
 ];

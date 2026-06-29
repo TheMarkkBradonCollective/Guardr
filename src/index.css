@@ -8515,6 +8515,9 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
   @media (min-width: 1024px) {
     .page-shell.flex.flex-col[class*="auth-experience"] {
       flex-direction: row;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
     }
     
     .auth-hero {
@@ -8523,6 +8526,11 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
       flex-shrink: 0;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
+    }
+
+    .auth-form-column {
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
     }
     
     .auth-hero-curve {

@@ -87,6 +87,8 @@ interface StaffApprovalsProps {
     payload: CertUpdatePayload
   ) => Promise<CertUpdateResult>;
   onViewGuard?: (guardId: string) => void;
+  canApproveGuardAccounts?: boolean;
+  canVerifyGuardCredentials?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
   canReviewJobRequests?: boolean;
@@ -218,6 +220,8 @@ export function StaffApprovals({
   onAttachCertificationImage,
   onUpdateCertification,
   onViewGuard,
+  canApproveGuardAccounts = false,
+  canVerifyGuardCredentials = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
   canReviewJobRequests = false,
@@ -241,7 +245,7 @@ export function StaffApprovals({
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
-    canManageGuardAccounts && cert.status === 'pending' ? (
+    canVerifyGuardCredentials && cert.status === 'pending' ? (
       <div className="flex flex-col items-end gap-1.5">
         <div className="app-action-row--equal justify-end">
           {cert.imageUrl && onRequestCertImageResubmit && (
@@ -352,11 +356,11 @@ export function StaffApprovals({
 
   const availableQueues = (Object.keys(QUEUE_META) as ApprovalQueueId[]).filter((id) => {
     if (queueCounts[id] === 0) return false;
-    if (id === 'credentials') return true;
+    if (id === 'credentials') return canVerifyGuardCredentials;
     if (id === 'job-offers' || id === 'schedule-changes' || id === 'applications') {
       return canReviewJobRequests;
     }
-    if (id === 'accounts') return canManageGuardAccounts || canManageClientAccounts;
+    if (id === 'accounts') return canApproveGuardAccounts || canManageClientAccounts;
     return false;
   });
 
@@ -731,7 +735,7 @@ export function StaffApprovals({
                     Full profile
                   </button>
                 )}
-                {cert.imageUrl && onRequestCertImageResubmit && (
+                {canVerifyGuardCredentials && cert.imageUrl && onRequestCertImageResubmit && (
                   <button
                     type="button"
                     onClick={() => {
@@ -747,6 +751,8 @@ export function StaffApprovals({
                     Request clearer photo
                   </button>
                 )}
+                {canVerifyGuardCredentials && (
+                  <>
                 <button
                   type="button"
                   onClick={() => onRejectCert(guard.id, cert.id)}
@@ -772,6 +778,8 @@ export function StaffApprovals({
                 >
                   <Check className="w-3.5 h-3.5" /> Verify
                 </button>
+                  </>
+                )}
               </div>
               {staffVerifyCertificationBlocker(cert) && (
                 <p className="text-xs text-amber-500 leading-relaxed">
@@ -888,15 +896,15 @@ export function StaffApprovals({
                       : undefined
                   }
                   onReviewInsurance={
-                    canManageGuardAccounts && onReviewGuardInsurance
+                    canVerifyGuardCredentials && onReviewGuardInsurance
                       ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
                       : undefined
                   }
                   staffIdReview={
-                    canManageGuardAccounts ? (
+                    canVerifyGuardCredentials ? (
                       <StaffIdReviewSection
                         guard={guard}
-                        canManage={canManageGuardAccounts}
+                        canManage={canVerifyGuardCredentials}
                         onApprove={onApproveIdentityVerification}
                         onReject={
                           onRejectIdentityVerification
@@ -919,7 +927,7 @@ export function StaffApprovals({
                       Full profile
                     </button>
                   )}
-                  {isApprovedGuard && canManageGuardAccounts && onActivateGuardAccount && (
+                  {isApprovedGuard && canApproveGuardAccounts && onActivateGuardAccount && (
                     <button
                       type="button"
                       disabled={!canTakeAction}
@@ -945,14 +953,14 @@ export function StaffApprovals({
                     </button>
                   )}
                 </div>
-                {!isApprovedGuard && canManageGuardAccounts && onApproveGuardAccount && (
+                {!isApprovedGuard && canApproveGuardAccounts && onApproveGuardAccount && (
                   <div className="pt-2">
                     <SlideToConfirm
-                      label="Slide to approve profile"
+                      label="Slide to approve application"
                       confirmedLabel="Approved"
                       tone="success"
                       disabled={!canTakeAction}
-                      disabledHint={approvalBlockers.join(' · ') || 'Government ID, COI, and guard card must be verified'}
+                      disabledHint={approvalBlockers.join(' · ') || 'Application must be pending and not blocked'}
                       onConfirm={() => {
                         void (async () => {
                           if (!canTakeAction) return;

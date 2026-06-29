@@ -98,7 +98,7 @@ export function StaffTeamPanel({
           </p>
           <p className="app-empty-state-body">
             {roster.length === 0
-              ? 'Directors and Owners can add staff accounts above.'
+              ? 'Directors and Founders can add staff accounts above.'
               : 'Try adjusting your search.'}
           </p>
         </div>

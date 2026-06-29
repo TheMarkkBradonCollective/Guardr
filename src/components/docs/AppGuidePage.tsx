@@ -1,11 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Activity,
   ArrowRight,
+  Award,
   BookOpen,
   Building2,
   ChevronDown,
   ChevronRight,
+  Crown,
   LayoutGrid,
   LifeBuoy,
   Shield,
@@ -14,16 +16,29 @@ import {
 import { MarkdownDoc } from './MarkdownDoc';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import type { PlatformRole } from '../../types';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
+
+type GuideAudienceTag =
+  | 'guard'
+  | 'client'
+  | 'moderator'
+  | 'administrator'
+  | 'director'
+  | 'founder';
 
 interface SectionMeta {
   icon: React.ElementType;
   description: string;
-  audience?: 'guard' | 'client' | 'staff';
+  audience?: GuideAudienceTag;
 }
 
 const SECTION_META: Record<string, SectionMeta> = {
+  'whole-app-start-to-finish-your-perspective': {
+    icon: ArrowRight,
+    description: 'The complete Guardr journey from sign-up to payout — who does what and when.',
+  },
   'job-status-lifecycle': {
     icon: Activity,
     description: 'All job statuses, what each one means, and how jobs move through the platform.',
@@ -35,13 +50,28 @@ const SECTION_META: Record<string, SectionMeta> = {
   },
   'guard-guide': {
     icon: Shield,
-    description: 'Credentials, onboarding, shifts, reports, overtime, and pay.',
+    description: 'Application approval, credentials, shifts, reports, overtime, and pay.',
     audience: 'guard',
   },
-  'staff-guide': {
+  'moderator-guide': {
     icon: Users,
-    description: 'Approvals, operations, payments, disputes, and team management.',
-    audience: 'staff',
+    description: 'Approve applications, activate accounts, monitor jobs — no credential verification.',
+    audience: 'moderator',
+  },
+  'administrator-guide': {
+    icon: BookOpen,
+    description: 'Verify credentials, review job offers, handle disputes, and manage users.',
+    audience: 'administrator',
+  },
+  'director-guide': {
+    icon: Award,
+    description: 'Financial controls, team management, trusted status, and full operations.',
+    audience: 'director',
+  },
+  'founder-guide': {
+    icon: Crown,
+    description: 'Platform governance, payment modes, Director management, and oversight.',
+    audience: 'founder',
   },
   'sections-features-reference': {
     icon: BookOpen,
@@ -53,7 +83,7 @@ const SECTION_META: Record<string, SectionMeta> = {
   },
   'quick-reference-by-role': {
     icon: LayoutGrid,
-    description: 'Every key action organised by client, guard, and staff.',
+    description: 'Every key action organised by client, guard, and staff role.',
   },
   'need-help': {
     icon: LifeBuoy,
@@ -72,7 +102,42 @@ function getSectionMeta(section: GuideSection): SectionMeta {
 
 // ── Audience filter type ──────────────────────────────────────────────────────
 
-type AudienceFilter = 'all' | 'guard' | 'client' | 'staff';
+type AudienceFilter = 'all' | GuideAudienceTag;
+
+const CLIENT_GUARD_TABS: { id: AudienceFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'guard', label: 'Guards' },
+  { id: 'client', label: 'Clients' },
+];
+
+const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'moderator', label: 'Moderator' },
+  { id: 'administrator', label: 'Administrator' },
+  { id: 'director', label: 'Director' },
+  { id: 'founder', label: 'Founder' },
+  { id: 'client', label: 'Clients' },
+  { id: 'guard', label: 'Guards' },
+];
+
+function platformRoleToGuideAudience(role?: PlatformRole): GuideAudienceTag | undefined {
+  switch (role) {
+    case 'moderator':
+      return 'moderator';
+    case 'administrator':
+      return 'administrator';
+    case 'director':
+      return 'director';
+    case 'owner':
+      return 'founder';
+    case 'guard':
+      return 'guard';
+    case 'client':
+      return 'client';
+    default:
+      return undefined;
+  }
+}
 
 // ── Subsection accordion item ─────────────────────────────────────────────────
 
@@ -177,23 +242,21 @@ function SectionCard({
 
 // ── Hub (index) view ──────────────────────────────────────────────────────────
 
-const AUDIENCE_TABS: { id: AudienceFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'guard', label: 'Guards' },
-  { id: 'client', label: 'Clients' },
-  { id: 'staff', label: 'Staff' },
-];
-
 function GuideHub({
   sections,
+  tabs,
   initialAudience = 'all',
+  highlightAudience,
   onSelect,
 }: {
   sections: GuideSection[];
+  tabs: { id: AudienceFilter; label: string }[];
   initialAudience?: AudienceFilter;
+  highlightAudience?: GuideAudienceTag;
   onSelect: (section: GuideSection) => void;
 }) {
-  const [audience, setAudience] = useState<AudienceFilter>(initialAudience);
+  const defaultTab = highlightAudience ?? initialAudience;
+  const [audience, setAudience] = useState<AudienceFilter>(defaultTab);
 
   const visible = sections.filter((s) => {
     if (audience === 'all') return true;
@@ -206,13 +269,13 @@ function GuideHub({
       <AppScreenTitle>Guide</AppScreenTitle>
 
       <div className="px-4 pb-3 border-b border-brand-border">
-        <div className="segmented-control segmented-control-full">
-          {AUDIENCE_TABS.map((tab) => (
+        <div className="segmented-control segmented-control-full flex flex-wrap gap-1">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setAudience(tab.id)}
-              className={`segmented-control-btn flex-1 text-center ${audience === tab.id ? 'segmented-control-btn-active' : ''}`}
+              className={`segmented-control-btn flex-1 text-center min-w-[4.5rem] text-xs ${audience === tab.id ? 'segmented-control-btn-active' : ''}`}
             >
               {tab.label}
             </button>
@@ -232,13 +295,24 @@ function GuideHub({
 // ── Root component ────────────────────────────────────────────────────────────
 
 export interface AppGuidePageProps {
-  audience?: AudienceFilter;
+  audience?: 'staff' | 'guard' | 'client' | 'all';
+  staffRole?: PlatformRole;
 }
 
 const ALL_SECTIONS = parseGuide();
 
-export function AppGuidePage({ audience: initialAudience }: AppGuidePageProps) {
+export function AppGuidePage({ audience: initialAudience, staffRole }: AppGuidePageProps) {
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
+
+  const tabs = useMemo(
+    () => (initialAudience === 'staff' ? STAFF_TABS : CLIENT_GUARD_TABS),
+    [initialAudience]
+  );
+
+  const highlightAudience = useMemo(
+    () => (initialAudience === 'staff' ? platformRoleToGuideAudience(staffRole) : undefined),
+    [initialAudience, staffRole]
+  );
 
   const handleSelect = useCallback((section: GuideSection) => {
     setActiveSection(section);
@@ -255,7 +329,13 @@ export function AppGuidePage({ audience: initialAudience }: AppGuidePageProps) {
   return (
     <GuideHub
       sections={ALL_SECTIONS}
-      initialAudience={initialAudience && initialAudience !== 'all' ? initialAudience : 'all'}
+      tabs={tabs}
+      initialAudience={
+        initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
+          ? initialAudience
+          : 'all'
+      }
+      highlightAudience={highlightAudience}
       onSelect={handleSelect}
     />
   );

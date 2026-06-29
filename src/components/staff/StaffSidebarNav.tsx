@@ -7,7 +7,7 @@ export interface StaffNavItem {
   label: string;
   icon: typeof LayoutDashboard;
   badge?: number;
-  /** Visible only to Director and Owner (payments / fund handling) */
+  /** Visible only to Director and Founder (payments / fund handling) */
   financeOnly?: boolean;
   /** Visible to Administrator and above (platform settings) */
   settingsOnly?: boolean;

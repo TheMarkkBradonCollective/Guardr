@@ -67,6 +67,7 @@ interface StaffGuardsPanelProps {
     guardId: string,
     payload: import('../profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
   ) => Promise<import('../profile/GuardIdentityVerificationPanel').IdentityVerificationSubmitResult>;
+  canVerifyCredentials?: boolean;
   selectedId?: string | null;
   onSelectedIdChange?: (id: string | null) => void;
   staffEdit?: boolean;
@@ -104,6 +105,7 @@ export function StaffGuardsPanel({
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
   onUpdateGuardIdImages,
+  canVerifyCredentials = false,
   selectedId: controlledSelectedId,
   onSelectedIdChange,
   staffEdit,
@@ -148,6 +150,7 @@ export function StaffGuardsPanel({
       guard,
       requests,
       canManage,
+      canVerifyCredentials,
       canSuspend,
       onUpdateUserStatus,
       onResetAuditFailures,

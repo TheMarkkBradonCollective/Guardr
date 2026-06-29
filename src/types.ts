@@ -32,7 +32,7 @@ export interface ShiftReport {
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 
 /** @deprecated Use PlatformRole — kept for DB staff_role column mapping */
-export type StaffRole = 'Owner' | 'Director' | 'Administrator' | 'Moderator';
+export type StaffRole = 'Founder' | 'Director' | 'Administrator' | 'Moderator';
 
 export type CertCategory =
   | 'guard-card'
@@ -174,7 +174,7 @@ export interface Client {
   specialRequirements?: string;
 
   /**
-   * Explicitly trusted by a Director or Owner.
+   * Explicitly trusted by a Director or Founder.
    * Trusted clients skip Guardr job posting review for non-cash jobs.
    */
   trusted?: boolean;
@@ -330,7 +330,7 @@ export interface SecurityGuard {
   /** Staff-granted grace window length in hours (set at activation) */
   credentialGraceHours?: number;
   /**
-   * Explicitly trusted by a Director or Owner.
+   * Explicitly trusted by a Director or Founder.
    * Trusted guards skip Guardr applicant review on Stripe jobs and may coordinate crews.
    * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */

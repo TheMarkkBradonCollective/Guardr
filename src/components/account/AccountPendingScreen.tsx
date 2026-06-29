@@ -28,15 +28,13 @@ interface AccountPendingScreenProps {
 }
 
 function guardActivationSubtitle(approved: boolean, percent: number): string {
-  if (approved) {
-    return percent >= 100
-      ? 'All requirements are in — Guardr staff will activate your account when ready.'
-      : 'Your profile is approved — upload any remaining credentials below.';
+  if (!approved) {
+    return 'Your application is with Guardr staff. Once approved, you can upload credentials for marketplace eligibility.';
   }
   if (percent >= 100) {
-    return 'Requirements submitted — staff is reviewing your credentials for marketplace eligibility.';
+    return 'All requirements are in — Guardr staff will manually activate your account when ready.';
   }
-  return 'Upload each item below. Staff verifies them for marketplace eligibility — not employment onboarding.';
+  return 'Application approved — upload and complete each credential below for staff verification.';
 }
 
 export function AccountPendingScreen({
@@ -56,8 +54,8 @@ export function AccountPendingScreen({
 
   const title = isGuard
     ? approved
-      ? 'Awaiting account activation'
-      : 'Complete your application'
+      ? 'Upload activation credentials'
+      : 'Application under review'
     : 'Account pending approval';
 
   const subtitle = isGuard && applicationProgress
@@ -109,7 +107,7 @@ export function AccountPendingScreen({
         )}
       </div>
 
-      {isGuard && guard && onSubmitIdentityVerification && (
+      {isGuard && guard && approved && onSubmitIdentityVerification && (
         <div className="px-5 py-6">
           <GuardActivationUploadChecklist
             guard={guard}
@@ -120,6 +118,16 @@ export function AccountPendingScreen({
             onSubmitIdentityVerification={onSubmitIdentityVerification}
             onSaveInsurance={onSaveInsurance}
           />
+        </div>
+      )}
+
+      {isGuard && guard && !approved && (
+        <div className="px-5 py-6 text-sm text-brand-text-muted leading-relaxed">
+          <p>
+            Guardr staff reviews new guard applications before credential uploads open. You will be
+            notified when your application is approved — then return here to upload government ID, COI,
+            guard card, PTA/UOF, and 32-hour training.
+          </p>
         </div>
       )}
 

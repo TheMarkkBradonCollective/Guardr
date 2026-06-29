@@ -103,7 +103,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   owner: {
     roleLabel: ROLE_LABELS.owner,
-    workspaceKicker: 'Owner workspace',
+    workspaceKicker: 'Founder workspace',
     focusLine: 'Platform governance — full visibility, staff management, and company health.',
     layout: 'executive',
     metricLabels: 'all',

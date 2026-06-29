@@ -290,7 +290,7 @@ export function HomePage({
                 {ownerMessage?.trim() && (
                   <blockquote className="rounded-xl border border-brand-border bg-brand-surface-elevated/80 p-4 text-left">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
-                      Markeith White · Owner
+                      Markeith White · Founder
                     </p>
                     <p className="text-sm leading-relaxed text-brand-text whitespace-pre-wrap">{ownerMessage}</p>
                   </blockquote>

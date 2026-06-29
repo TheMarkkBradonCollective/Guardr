@@ -232,7 +232,7 @@ export function StaffSettingsPanel({
           </div>
           {!canEditPaymentModes && (
             <p className="text-xs text-brand-text-muted">
-              Only the Owner can change payment methods.
+              Only the Founder can change payment methods.
             </p>
           )}
         </div>
@@ -418,7 +418,7 @@ export function StaffSettingsPanel({
             </div>
           ) : (
             <p className="text-xs text-brand-text-muted">
-              Only Directors and Owners can edit platform fees.
+              Only Directors and Founders can edit platform fees.
             </p>
           )}
         </div>
@@ -453,7 +453,7 @@ export function StaffSettingsPanel({
               {savingCrewPayBump ? 'Saving…' : 'Save crew pay bump'}
             </button>
           ) : (
-            <p className="text-xs text-brand-text-muted">Only Directors and Owners can edit crew pay settings.</p>
+            <p className="text-xs text-brand-text-muted">Only Directors and Founders can edit crew pay settings.</p>
           )}
         </div>
       </AppFormSection>
@@ -461,7 +461,7 @@ export function StaffSettingsPanel({
       <AppFormSection title="Homepage messages">
         <div className="pb-6 space-y-4">
           <label className="block space-y-1.5">
-            <span className="uber-label">Owner message (Markeith White)</span>
+            <span className="uber-label">Founder message (Markeith White)</span>
             <textarea
               value={platformSettings.ownerMessage ?? ''}
               disabled={currentUser.role !== 'owner'}
@@ -475,7 +475,7 @@ export function StaffSettingsPanel({
               }
               rows={4}
               className="uber-input w-full resize-y"
-              placeholder="Message shown on the public homepage from the Owner account."
+              placeholder="Message shown on the public homepage from the Founder account."
             />
           </label>
           <label className="block space-y-1.5">
@@ -525,7 +525,7 @@ export function StaffSettingsPanel({
           <div className="pb-6">
             <p className="text-sm text-brand-text-muted mb-4">
               You can also manage staff from the Staff section in the sidebar — add accounts and change roles there.
-              Owners manage staff below their tier; Directors manage Moderators and Administrators.
+              Founders manage staff below their tier; Directors manage Moderators and Administrators.
             </p>
             <StaffAddStaffForm
               assignableRoles={assignableRoles}

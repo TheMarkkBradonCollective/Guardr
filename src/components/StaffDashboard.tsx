@@ -27,6 +27,8 @@ import {
   canManageClients,
   canManageCompanyOperations,
   canManageGuards,
+  canApproveGuards,
+  canVerifyCredentials,
   canManageStaffAccounts,
   canReviewJobRequests,
   canSuspendUsers,
@@ -436,6 +438,8 @@ export function StaffDashboard({
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
+  const canApproveGuardAccounts = canApproveGuards(currentUser);
+  const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
   const canManageGuardAccounts = canManageGuards(currentUser);
   const canManageClientAccounts = canManageClients(currentUser);
   const canTrust = canSetTrustedStatus(currentUser);
@@ -536,18 +540,20 @@ export function StaffDashboard({
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : async () => {}}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             onApproveClient={canManageClientAccounts ? onApproveClient : undefined}
-            onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
-            onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
-            onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
-            onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
-            onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
-            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
+            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canApproveGuardAccounts ? onActivateGuardAccount : undefined}
+            onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
+            onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
+            onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
+            onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
+            onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
             onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
+            canApproveGuardAccounts={canApproveGuardAccounts}
+            canVerifyGuardCredentials={canVerifyGuardCredentials}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}
             canReviewJobRequests={canReviewJobs}
@@ -604,17 +610,18 @@ export function StaffDashboard({
             onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
             onAddExperience={canManageGuardAccounts ? onAddExperience : undefined}
             onAddEducation={canManageGuardAccounts ? onAddEducation : undefined}
-            onApproveGuardAccount={canManageGuardAccounts ? onApproveGuardAccount : undefined}
-            onActivateGuardAccount={canManageGuardAccounts ? onActivateGuardAccount : undefined}
+            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+            onActivateGuardAccount={canApproveGuardAccounts ? onActivateGuardAccount : undefined}
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
-            onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
-            onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
-            onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
-            onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
-            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
+            onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
+            onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
+            onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
+            onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
+            onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
+            canVerifyCredentials={canVerifyGuardCredentials}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}
             staffEdit={controlledStaffGuardEdit}
@@ -713,7 +720,7 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Settings</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Platform settings are limited to Director and Owner roles. Ask your Director to update fees,
+              Platform settings are limited to Director and Founder roles. Ask your Director to update fees,
               payment gates, or system-wide controls.
             </p>
           </div>
@@ -750,7 +757,7 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Payments</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Financial controls are limited to Director and Owner roles. If money is owed on
+              Financial controls are limited to Director and Founder roles. If money is owed on
               jobs, ask your Director to review the Payments section.
             </p>
           </div>
@@ -781,7 +788,7 @@ export function StaffDashboard({
           />
         );
       case 'guide':
-        return <AppGuidePage audience="staff" />;
+        return <AppGuidePage audience="staff" staffRole={currentUser.role} />;
       case 'dev-updates':
         return showFinance ? (
           <DevNotesPage />
@@ -789,7 +796,7 @@ export function StaffDashboard({
           <div className="app-screen animate-fade-in max-w-lg">
             <h2 className="app-screen-title">Dev notes</h2>
             <p className="text-sm text-brand-text-muted leading-relaxed mt-2">
-              Dev notes are available to Director and Owner accounts.
+              Dev notes are available to Director and Founder accounts.
             </p>
           </div>
         );

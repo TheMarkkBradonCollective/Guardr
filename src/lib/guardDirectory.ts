@@ -22,7 +22,7 @@ export interface GuardDirectoryFilters {
   specialties: GuardSpecialty[];
   /** Only show verified/approved guards */
   verifiedOnly: boolean;
-  /** Only show trusted (Director/Owner-flagged) guards */
+  /** Only show trusted (Director/Founder-flagged) guards */
   trustedOnly: boolean;
   /** Only guards the client has worked with before */
   previouslyWorkedWith: boolean;
