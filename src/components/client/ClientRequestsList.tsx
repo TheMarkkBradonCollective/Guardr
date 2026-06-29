@@ -55,6 +55,17 @@ interface ClientRequestsListProps {
   onOpenJobChat?: (requestId: string) => void;
   onSelectedJobIdChange?: (jobId: string | null) => void;
   initialSelectedId?: string | null;
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    requestId: string,
+    guardId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
 }
 
 function JobRow({
@@ -121,6 +132,9 @@ export function ClientRequestsList({
   onOpenJobChat,
   onSelectedJobIdChange,
   initialSelectedId = null,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: ClientRequestsListProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [activeTab, setActiveTab] = useState<JobTab>('open');
@@ -198,6 +212,9 @@ export function ClientRequestsList({
           onApproveFullTeam={onApproveFullTeam}
           onDenyFullTeam={onDenyFullTeam}
           onOpenJobChat={onOpenJobChat}
+          feeConfig={feeConfig}
+          onSubmitPriceOffer={onSubmitPriceOffer}
+          onAcceptPriceOffer={onAcceptPriceOffer}
         />
       </div>
     );

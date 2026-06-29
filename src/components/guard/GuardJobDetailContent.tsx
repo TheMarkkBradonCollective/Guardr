@@ -12,6 +12,9 @@ import { GuardTeamPanel } from './GuardTeamPanel';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
 import { JobListingProfile } from '../jobs/JobListingProfile';
+import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
+import type { PlatformFeeConfig } from '../../lib/payments';
+import { getAgreedPriceOffer, getGuardNegotiation, isOpenContractPricing } from '../../lib/agreementPricing';
 import { WfBadge } from '../ui/wireframe';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { Check, X } from 'lucide-react';
@@ -33,6 +36,13 @@ interface GuardJobDetailContentProps {
   onDeclineInvite?: () => void | Promise<void>;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   onClose?: () => void;
+  feeConfig?: PlatformFeeConfig;
+  onSubmitPriceOffer?: (input: {
+    hourlyRate: number;
+    agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+    message?: string;
+  }) => void | Promise<void>;
+  onAcceptPriceOffer?: (offerId: string) => void | Promise<void>;
 }
 
 export function GuardJobDetailContent({
@@ -49,12 +59,18 @@ export function GuardJobDetailContent({
   onDeclineInvite,
   scheduleRequests,
   onClose,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardJobDetailContentProps) {
   const distance = getJobDistance(job);
   const { checks, canAccept } = checkJobRequirements(guard, job);
   const hasApplied = guardHasApplied(job, guard.id);
   const isUpcoming = job.status === 'accepted';
   const isDirectRequest = job.requestType === 'direct';
+  const isOpenContract = isOpenContractPricing(job.pricingMode);
+  const agreedOffer = getAgreedPriceOffer(getGuardNegotiation(job.priceNegotiations, guard.id));
+  const canApplyWithNegotiation = !isOpenContract || !!agreedOffer;
 
   return (
     <div className="space-y-4">
@@ -205,7 +221,18 @@ export function GuardJobDetailContent({
         }
       />
 
-      {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && (
+      {isOpenContract && feeConfig && job.status === 'open' && (
+        <PriceNegotiationPanel
+          job={job}
+          guardId={guard.id}
+          viewerRole="guard"
+          feeConfig={feeConfig}
+          onSubmitPriceOffer={onSubmitPriceOffer}
+          onAcceptPriceOffer={onAcceptPriceOffer}
+        />
+      )}
+
+      {!isDirectRequest && onAccept && job.status === 'open' && !hasApplied && canAccept && !isMultiGuardJob(job) && canApplyWithNegotiation && (
         <SlideToConfirm
           label="Slide to apply for job"
           confirmedLabel="Applied"

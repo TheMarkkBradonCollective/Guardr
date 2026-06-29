@@ -4,7 +4,6 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
-  PAY_RATE_PRESETS,
   defaultDirectGuardJobTitle,
   resolveJobTitle,
   serviceDefaultTitle,
@@ -12,7 +11,8 @@ import {
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
+import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
+import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
 import { getGuardDisplayHeadline } from '../../lib/guardResume';
 import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -30,6 +30,7 @@ import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '.
 import { JobOperationalDetails } from '../../types';
 import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
+import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -65,6 +66,9 @@ export function DirectGuardRequestFlow({
   const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, 8));
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
+  const [pricingMode, setPricingMode] = useState<PricingMode>('standard');
+  const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
+  const [openingMessage, setOpeningMessage] = useState('');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
   const [latitude, setLatitude] = useState<number | undefined>();
@@ -77,10 +81,17 @@ export function DirectGuardRequestFlow({
 
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
-  const platformFeePerHour = resolvePlatformFeePerHour(effectiveRate, feeConfig);
-  const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
+  const billing = computeJobBilling(
+    effectiveRate,
+    durationHours,
+    1,
+    feeConfig,
+    pricingMode === 'open_contract' ? agreementFeeConfig : undefined
+  );
+  const platformFeePerHour = billing.platformFeePerHour;
+  const guardPay = billing.guardPay;
   const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour);
-  const estimatedTotal = Math.round(durationHours * effectiveRate * 100) / 100;
+  const estimatedTotal = billing.estimatedPayout;
   const effectiveBreakMinutes = customBreakMinutes
     ? Math.max(0, parseInt(customBreakMinutes, 10) || 0)
     : breakMinutes;
@@ -145,6 +156,16 @@ export function DirectGuardRequestFlow({
       hourlyRate: effectiveRate,
       guardPay,
       platformFeePerHour,
+      pricingMode,
+      agreementFeeConfig: pricingMode === 'open_contract' ? agreementFeeConfig : undefined,
+      openingPriceOffer:
+        pricingMode === 'open_contract'
+          ? {
+              hourlyRate: effectiveRate,
+              agreementFeeConfig,
+              message: openingMessage.trim() || undefined,
+            }
+          : undefined,
       estimatedPayout: estimatedTotal,
       description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
@@ -348,28 +369,21 @@ export function DirectGuardRequestFlow({
         )}
 
         {step === 4 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Pay rate</h2>
-            <div className="segmented-control segmented-control-full">
-              {PAY_RATE_PRESETS.map((rate) => (
-                <button
-                  key={rate}
-                  type="button"
-                  onClick={() => { setHourlyRate(rate); setCustomRate(''); }}
-                  className={`segmented-control-btn flex-1 py-3 ${
-                    hourlyRate === rate && !customRate ? 'segmented-control-btn-active' : ''
-                  }`}
-                >
-                  ${rate}/hr
-                </button>
-              ))}
-            </div>
-            <div>
-              <label className="uber-label block mb-1">Custom</label>
-              <input type="number" min={20} placeholder="Custom $/hr" value={customRate} onChange={(e) => setCustomRate(e.target.value)} className="uber-input w-full" />
-            </div>
-            <p className="text-xs text-brand-text-muted">Guard receives ${guardPay}/hr · Platform fee ${platformFeePerHour}/hr</p>
-          </div>
+          <OpenContractRateStep
+            feeConfig={feeConfig}
+            durationHours={durationHours}
+            guardsNeeded={1}
+            pricingMode={pricingMode}
+            onPricingModeChange={setPricingMode}
+            hourlyRate={hourlyRate}
+            onHourlyRateChange={setHourlyRate}
+            customRate={customRate}
+            onCustomRateChange={setCustomRate}
+            agreementFeeConfig={agreementFeeConfig}
+            onAgreementFeeConfigChange={setAgreementFeeConfig}
+            openingMessage={openingMessage}
+            onOpeningMessageChange={setOpeningMessage}
+          />
         )}
 
         {step === 5 && (
