@@ -87,7 +87,7 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
   if (uploadStatus === 'expired') {
     return { label: 'On file · expired', tone: 'warning' };
   }
-  if (resolved === 'pending' || guardInsuranceSubmitted(guard)) {
+  if (resolved === 'pending' && guardInsuranceSubmitted(guard)) {
     return { label: 'Submitted — pending review', tone: 'warning' };
   }
   if (uploadStatus === 'listed') {

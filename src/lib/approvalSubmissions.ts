@@ -1,6 +1,11 @@
 import { Certification, Client, SecurityGuard } from '../types';
 import { getClientAccountStatus } from './accountStatus';
 import { certHasDocumentProof } from './certImagePolicy';
+import {
+  getGuardIdVerificationStatus,
+  guardIdVerificationSubmissionReady,
+} from './guardIdentityVerification';
+import { isUserSubmittedPendingInsurance } from './guardInsurance';
 
 export type SubmissionSource = 'guard' | 'staff' | 'client';
 
@@ -29,4 +34,22 @@ export function isGuardSubmittedIdentityVerification(guard: SecurityGuard): bool
   if (guard.idSubmittedBy === 'staff') return false;
   if (guard.idSubmittedBy === 'guard') return true;
   return isSelfSubmittedGuardAccount(guard);
+}
+
+/** Guard submitted at least one activation item that is awaiting staff review. */
+export function guardHasSubmittedItemsForStaffReview(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return false;
+
+  const idStatus = getGuardIdVerificationStatus(guard);
+  if (
+    idStatus === 'pending' &&
+    guardIdVerificationSubmissionReady(guard) &&
+    isGuardSubmittedIdentityVerification(guard)
+  ) {
+    return true;
+  }
+
+  if (isUserSubmittedPendingInsurance(guard)) return true;
+
+  return guard.certifications.some((cert) => isUserSubmittedPendingCert(cert, guard));
 }

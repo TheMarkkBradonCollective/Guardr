@@ -38,24 +38,6 @@ function normalizeGuardUserStatus(raw: unknown): GuardUserStatus | null {
   return null;
 }
 
-/** Staff guard list — account lifecycle label (not work-pathway Active). */
-export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
-  const status = getGuardUserStatus(guard);
-  if (isGuardAccountApproved(guard)) return GUARD_USER_STATUS_LABELS.approved;
-  return GUARD_USER_STATUS_LABELS[status];
-}
-
-export function getGuardRosterAccountBadgeTone(
-  guard: SecurityGuard
-): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
-  const status = getGuardUserStatus(guard);
-  if (isGuardAccountApproved(guard)) return 'primary';
-  if (status === 'active') return 'success';
-  if (status === 'pending') return 'warning';
-  if (status === 'suspended' || status === 'blocked') return 'danger';
-  return 'default';
-}
-
 export function isGuardAccountPending(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
   return !guard.isStaff && getGuardUserStatus(guard) === 'pending';
 }

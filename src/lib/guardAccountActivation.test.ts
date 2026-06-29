@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
   getGuardActivationChecklist,
+  getApprovedGuardsAwaitingActivation,
+  getPendingGuardAccountReviews,
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
   isGuardAccountActive,
 } from './guardAccountActivation.ts';
+import { guardHasSubmittedItemsForStaffReview } from './approvalSubmissions.ts';
 
 function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   return {
@@ -137,5 +140,43 @@ describe('guard account activation gates', () => {
     assert.equal(isGuardAccountActive(guard), true);
     assert.equal(getGuardActivationChecklist(guard).canActivate, true);
     assert.equal(guardCanStaffActivateAccount({ ...guard, userStatus: 'approved' }), true);
+  });
+
+  it('excludes pending guards from account approvals until something is submitted', () => {
+    const guard = baseGuard({
+      idVerificationStatus: 'not_submitted',
+      certifications: [],
+    });
+    assert.equal(guardHasSubmittedItemsForStaffReview(guard), false);
+    assert.equal(getPendingGuardAccountReviews([guard]).length, 0);
+  });
+
+  it('includes pending guards in account approvals after credential submission', () => {
+    const guard = fullyVerifiedGuard({
+      userStatus: 'pending',
+      idVerificationStatus: 'pending',
+      insurancePolicy: {
+        id: 'ins-1',
+        guardId: 'g1',
+        carrier: 'Carrier',
+        policyNumber: 'POL-1',
+        expiryDate: '2099-12-31',
+        documentUrl: 'doc',
+        status: 'pending',
+      },
+      certifications: fullyVerifiedGuard().certifications.map((cert) =>
+        cert.catalogId === 'bsis-guard-card' ? { ...cert, status: 'pending' } : cert
+      ),
+    });
+    assert.equal(guardHasSubmittedItemsForStaffReview(guard), true);
+    assert.equal(getPendingGuardAccountReviews([guard]).length, 1);
+  });
+
+  it('excludes approved guards from activation queue until credentials are submitted or verified', () => {
+    const guard = baseGuard({ userStatus: 'approved', certifications: [] });
+    assert.equal(getApprovedGuardsAwaitingActivation([guard]).length, 0);
+
+    const ready = fullyVerifiedGuard({ userStatus: 'approved' });
+    assert.equal(getApprovedGuardsAwaitingActivation([ready]).length, 1);
   });
 });
