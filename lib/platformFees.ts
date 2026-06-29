@@ -1,11 +1,13 @@
 /** Platform fee model: client pays hourlyRate, guard receives guardPay, platform keeps the difference. */
 
-export type PlatformFeeModel = 'flat' | 'tiered' | 'percent';
+export type PlatformFeeModel = 'flat' | 'percent';
 
-export interface PlatformFeeTier {
-  /** Inclusive minimum client hourly rate for this tier. */
-  minHourlyRate: number;
-  feePerHour: number;
+/** Per-agreement fee override — flat $/hr or percent of client charge for one job/deal. */
+export interface AgreementPlatformFeeConfig {
+  model: PlatformFeeModel;
+  flatFeePerHour?: number;
+  /** 0–1, e.g. 0.15 = 15% of client hourly rate */
+  percentRate?: number;
 }
 
 export interface PlatformFeeConfig {
@@ -14,12 +16,12 @@ export interface PlatformFeeConfig {
   flatFeePerHour: number;
   /** Used when model is `percent` (0–1, e.g. 0.15 = 15%). */
   percentRate: number;
-  /** Floor per hour when model is `percent`. */
-  minFeePerHour: number;
-  /** Ceiling per hour when model is `percent`. */
-  maxFeePerHour: number;
-  /** Sorted descending by minHourlyRate when model is `tiered`. */
-  tiers: PlatformFeeTier[];
+  /** @deprecated Legacy tiered config — migrated to flat on read. */
+  minFeePerHour?: number;
+  /** @deprecated Legacy tiered config — migrated to flat on read. */
+  maxFeePerHour?: number;
+  /** @deprecated Legacy tiered bands — migrated to flat on read. */
+  tiers?: Array<{ minHourlyRate: number; feePerHour: number }>;
 }
 
 /** Backward-compatible default — flat $5/hr everywhere. */
@@ -27,91 +29,112 @@ export const DEFAULT_PLATFORM_FEE_CONFIG: PlatformFeeConfig = {
   model: 'flat',
   flatFeePerHour: 5,
   percentRate: 0.15,
-  minFeePerHour: 4,
-  maxFeePerHour: 12,
-  tiers: [
-    { minHourlyRate: 75, feePerHour: 10 },
-    { minHourlyRate: 50, feePerHour: 8 },
-    { minHourlyRate: 30, feePerHour: 6 },
-    { minHourlyRate: 0, feePerHour: 5 },
-  ],
-};
-
-/** Suggested upgrade preset for owners moving off flat $5/hr. */
-export const TIERED_PLATFORM_FEE_PRESET: PlatformFeeConfig = {
-  ...DEFAULT_PLATFORM_FEE_CONFIG,
-  model: 'tiered',
 };
 
 export const LEGACY_PLATFORM_FEE_PER_HOUR = DEFAULT_PLATFORM_FEE_CONFIG.flatFeePerHour;
 
-function clampFee(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function migrateLegacyModel(input?: Partial<PlatformFeeConfig> | null): PlatformFeeModel {
+  const model = input?.model;
+  if (model === 'flat' || model === 'percent') return model;
+  if (model === 'tiered') {
+    const tiers = input?.tiers;
+    if (tiers && tiers.length > 0) {
+      const sorted = [...tiers].sort((a, b) => a.minHourlyRate - b.minHourlyRate);
+      return sorted[0]?.feePerHour != null ? 'flat' : 'flat';
+    }
+    return 'flat';
+  }
+  return DEFAULT_PLATFORM_FEE_CONFIG.model;
+}
+
+function legacyFlatFromTiered(input?: Partial<PlatformFeeConfig> | null): number {
+  if (input?.flatFeePerHour != null && input.flatFeePerHour > 0) {
+    return input.flatFeePerHour;
+  }
+  const tiers = input?.tiers;
+  if (tiers && tiers.length > 0) {
+    const sorted = [...tiers].sort((a, b) => a.minHourlyRate - b.minHourlyRate);
+    return sorted[0]?.feePerHour ?? DEFAULT_PLATFORM_FEE_CONFIG.flatFeePerHour;
+  }
+  return DEFAULT_PLATFORM_FEE_CONFIG.flatFeePerHour;
 }
 
 export function normalizePlatformFeeConfig(
   input?: Partial<PlatformFeeConfig> | null
 ): PlatformFeeConfig {
   const base = DEFAULT_PLATFORM_FEE_CONFIG;
-  const model = input?.model ?? base.model;
-  const flatFeePerHour = Math.max(0, input?.flatFeePerHour ?? base.flatFeePerHour);
-  const percentRate = clampFee(input?.percentRate ?? base.percentRate, 0, 0.5);
-  const minFeePerHour = Math.max(0, input?.minFeePerHour ?? base.minFeePerHour);
-  const maxFeePerHour = Math.max(minFeePerHour, input?.maxFeePerHour ?? base.maxFeePerHour);
-
-  const tiers =
-    input?.tiers && input.tiers.length > 0
-      ? [...input.tiers]
-          .map((tier) => ({
-            minHourlyRate: Math.max(0, tier.minHourlyRate),
-            feePerHour: Math.max(0, tier.feePerHour),
-          }))
-          .sort((a, b) => b.minHourlyRate - a.minHourlyRate)
-      : [...base.tiers];
+  const model = migrateLegacyModel(input);
+  const flatFeePerHour = Math.max(
+    0,
+    model === 'flat' && input?.model === 'tiered'
+      ? legacyFlatFromTiered(input)
+      : (input?.flatFeePerHour ?? base.flatFeePerHour)
+  );
+  const percentRate = Math.min(0.5, Math.max(0, input?.percentRate ?? base.percentRate));
 
   return {
     model,
     flatFeePerHour,
     percentRate,
-    minFeePerHour,
-    maxFeePerHour,
-    tiers,
   };
+}
+
+export function normalizeAgreementFeeConfig(
+  input?: Partial<AgreementPlatformFeeConfig> | null
+): AgreementPlatformFeeConfig | undefined {
+  if (!input?.model) return undefined;
+  if (input.model === 'flat') {
+    const flatFeePerHour = Math.max(0, input.flatFeePerHour ?? 0);
+    return { model: 'flat', flatFeePerHour };
+  }
+  const percentRate = Math.min(0.5, Math.max(0, input.percentRate ?? 0));
+  return { model: 'percent', percentRate };
 }
 
 export function resolvePlatformFeePerHour(
   hourlyRate: number,
-  config: PlatformFeeConfig = DEFAULT_PLATFORM_FEE_CONFIG
+  config: PlatformFeeConfig = DEFAULT_PLATFORM_FEE_CONFIG,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
 ): number {
   const rate = Math.max(0, hourlyRate);
-  const normalized = normalizePlatformFeeConfig(config);
-
-  switch (normalized.model) {
-    case 'flat':
-      return normalized.flatFeePerHour;
-    case 'percent': {
-      const raw = rate * normalized.percentRate;
-      return roundMoney(clampFee(raw, normalized.minFeePerHour, normalized.maxFeePerHour));
-    }
-    case 'tiered': {
-      const tier = normalized.tiers.find((t) => rate >= t.minHourlyRate);
-      return tier?.feePerHour ?? normalized.tiers[normalized.tiers.length - 1]?.feePerHour ?? LEGACY_PLATFORM_FEE_PER_HOUR;
-    }
-    default:
-      return LEGACY_PLATFORM_FEE_PER_HOUR;
+  const agreement = normalizeAgreementFeeConfig(agreementFeeConfig);
+  if (agreement) {
+    return resolveAgreementPlatformFeePerHour(rate, agreement);
   }
+
+  const normalized = normalizePlatformFeeConfig(config);
+  if (normalized.model === 'flat') {
+    return normalized.flatFeePerHour;
+  }
+  return roundMoney(rate * normalized.percentRate);
+}
+
+export function resolveAgreementPlatformFeePerHour(
+  hourlyRate: number,
+  agreement: AgreementPlatformFeeConfig
+): number {
+  const rate = Math.max(0, hourlyRate);
+  const normalized = normalizeAgreementFeeConfig(agreement);
+  if (!normalized) return 0;
+  if (normalized.model === 'flat') {
+    return normalized.flatFeePerHour ?? 0;
+  }
+  return roundMoney(rate * (normalized.percentRate ?? 0));
 }
 
 export function computeGuardPay(
   hourlyRate: number,
   feePerHour?: number,
-  config?: PlatformFeeConfig
+  config?: PlatformFeeConfig,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
 ): number {
-  const fee = feePerHour ?? resolvePlatformFeePerHour(hourlyRate, config);
+  const fee =
+    feePerHour ??
+    resolvePlatformFeePerHour(hourlyRate, config, agreementFeeConfig);
   return Math.max(0, hourlyRate - fee);
 }
 
@@ -126,9 +149,10 @@ export function computeGuardEarnings(
   durationHours: number,
   hourlyRate: number,
   feePerHour?: number,
-  config?: PlatformFeeConfig
+  config?: PlatformFeeConfig,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
 ): number {
-  const guardPay = computeGuardPay(hourlyRate, feePerHour, config);
+  const guardPay = computeGuardPay(hourlyRate, feePerHour, config, agreementFeeConfig);
   return roundMoney(durationHours * guardPay);
 }
 
@@ -136,20 +160,49 @@ export function computeGuardPayoutCents(
   hourlyRate: number,
   durationHours: number,
   feePerHour?: number,
-  config?: PlatformFeeConfig
+  config?: PlatformFeeConfig,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
 ): number {
-  const guardPay = computeGuardPay(hourlyRate, feePerHour, config);
+  const guardPay = computeGuardPay(hourlyRate, feePerHour, config, agreementFeeConfig);
   return Math.round(durationHours * guardPay * 100);
+}
+
+export function computeJobBilling(
+  hourlyRate: number,
+  durationHours: number,
+  guardsNeeded: number,
+  globalConfig: PlatformFeeConfig = DEFAULT_PLATFORM_FEE_CONFIG,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
+): {
+  hourlyRate: number;
+  platformFeePerHour: number;
+  guardPay: number;
+  estimatedPayout: number;
+  agreementFeeConfig?: AgreementPlatformFeeConfig;
+} {
+  const platformFeePerHour = resolvePlatformFeePerHour(
+    hourlyRate,
+    globalConfig,
+    agreementFeeConfig
+  );
+  const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
+  const estimatedPayout =
+    Math.round(durationHours * hourlyRate * Math.max(1, guardsNeeded) * 100) / 100;
+  return {
+    hourlyRate,
+    platformFeePerHour,
+    guardPay,
+    estimatedPayout,
+    agreementFeeConfig: normalizeAgreementFeeConfig(agreementFeeConfig),
+  };
 }
 
 export function platformFeeModelLabel(model: PlatformFeeModel): string {
   switch (model) {
     case 'flat':
-      return 'Flat rate';
-    case 'tiered':
-      return 'Tiered by client rate';
+      return 'Flat rate per hour';
     case 'percent':
-      return 'Percentage with min/max';
+      return 'Percentage of client charge';
     default:
       return model;
   }
@@ -157,13 +210,22 @@ export function platformFeeModelLabel(model: PlatformFeeModel): string {
 
 export function describePlatformFeeAtRate(
   hourlyRate: number,
-  config: PlatformFeeConfig = DEFAULT_PLATFORM_FEE_CONFIG
+  config: PlatformFeeConfig = DEFAULT_PLATFORM_FEE_CONFIG,
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null
 ): string {
-  const fee = resolvePlatformFeePerHour(hourlyRate, config);
-  const guardPay = computeGuardPay(hourlyRate, fee, config);
+  const fee = resolvePlatformFeePerHour(hourlyRate, config, agreementFeeConfig);
+  const guardPay = computeGuardPay(hourlyRate, fee, config, agreementFeeConfig);
   return `$${fee}/hr platform · guard receives $${guardPay}/hr`;
 }
 
 export function feePreviewRates(): number[] {
   return [25, 35, 50, 75];
 }
+
+/** @deprecated Tiered fees removed — use flat or percent only. */
+export const TIERED_PLATFORM_FEE_PRESET: PlatformFeeConfig = {
+  ...DEFAULT_PLATFORM_FEE_CONFIG,
+};
+
+/** @deprecated Use PlatformFeeTier removal — kept for import compatibility. */
+export type PlatformFeeTier = { minHourlyRate: number; feePerHour: number };

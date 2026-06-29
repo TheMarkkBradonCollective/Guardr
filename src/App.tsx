@@ -123,7 +123,16 @@ import {
 } from './lib/guardIdentityVerification';
 import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
-import { computeGuardPay, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
+import { computeGuardPay, computeJobBilling, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
+import {
+  acceptGuardPriceOffer,
+  appendGuardPriceOffer,
+  applyAgreedOfferToJobBilling,
+  createPriceOffer,
+  getAgreedPriceOffer,
+  getGuardNegotiation,
+  isOpenContractPricing,
+} from './lib/agreementPricing';
 import { getGuardPayoutHistory, getGuardVisibleJobs, toGuardJobView } from './lib/guardJobView';
 import { getGuardCashPayoutEligibleJobs, getGuardStripePayoutEligibleJobs } from './lib/guardPayoutInvoice';
 import {
@@ -1638,6 +1647,10 @@ export default function App() {
           earlyClockOutRefundStatus: r.early_clock_out_refund_status ?? undefined,
           guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
           platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
+          pricingMode: r.pricing_mode === 'open_contract' ? 'open_contract' : 'standard',
+          agreementFeeConfig: r.agreement_fee_config ?? undefined,
+          openingPriceOffer: r.opening_price_offer ?? undefined,
+          priceNegotiations: Array.isArray(r.price_negotiations) ? r.price_negotiations : [],
           estimatedPayout: r.estimated_payout,
           status: normalizeJobStatus(r.status),
           assignedGuardId: r.assigned_guard_id,
@@ -4348,10 +4361,19 @@ export default function App() {
     const address = newRequest.address || newRequest.location || 'To Be Confirmed';
     const durationHours = newRequest.durationHours ?? computeDurationHours(startDate, endDate);
     const hourlyRate = newRequest.hourlyRate || 35;
-    const platformFeePerHour =
-      newRequest.platformFeePerHour ?? resolvePlatformFeePerHour(hourlyRate, platformSettings.feeConfig);
-    const guardPay = newRequest.guardPay ?? computeGuardPay(hourlyRate, platformFeePerHour);
-    const estimatedPayout = newRequest.estimatedPayout ?? Math.round(durationHours * hourlyRate * 100) / 100;
+    const pricingMode = newRequest.pricingMode ?? 'standard';
+    const agreementFeeConfig =
+      pricingMode === 'open_contract' ? newRequest.agreementFeeConfig : undefined;
+    const billing = computeJobBilling(
+      hourlyRate,
+      durationHours,
+      newRequest.guardsNeeded || 1,
+      platformSettings.feeConfig,
+      agreementFeeConfig
+    );
+    const platformFeePerHour = newRequest.platformFeePerHour ?? billing.platformFeePerHour;
+    const guardPay = newRequest.guardPay ?? billing.guardPay;
+    const estimatedPayout = newRequest.estimatedPayout ?? billing.estimatedPayout;
     const location = siteName ? `${siteName} — ${address}` : address;
     const jobState = formatCityLabel(newRequest.state) || resolveJobCity(newRequest.state);
 
@@ -4396,6 +4418,10 @@ export default function App() {
       operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
+      pricingMode,
+      agreementFeeConfig,
+      openingPriceOffer: newRequest.openingPriceOffer,
+      priceNegotiations: [],
       estimatedPayout,
       status: initialStatus,
       openedAt,
@@ -4479,6 +4505,10 @@ export default function App() {
           start_date: freshJob.startDate, end_date: freshJob.endDate,
           duration_hours: freshJob.durationHours, hourly_rate: freshJob.hourlyRate,
           guard_pay: freshJob.guardPay, platform_fee_per_hour: freshJob.platformFeePerHour,
+          pricing_mode: freshJob.pricingMode ?? 'standard',
+          agreement_fee_config: freshJob.agreementFeeConfig ?? null,
+          opening_price_offer: freshJob.openingPriceOffer ?? null,
+          price_negotiations: freshJob.priceNegotiations ?? [],
           estimated_payout: freshJob.estimatedPayout, status: freshJob.status,
           opened_at: freshJob.openedAt ?? null,
           payment_status: 'unpaid',
@@ -7080,6 +7110,143 @@ export default function App() {
     await denyGuardApplication(requestId, job.pendingGuardId, { deniedBy: 'client' });
   };
 
+  const persistJobPricingPatch = async (
+    requestId: string,
+    patch: Partial<
+      Pick<
+        SecurityRequest,
+        | 'priceNegotiations'
+        | 'hourlyRate'
+        | 'guardPay'
+        | 'platformFeePerHour'
+        | 'agreementFeeConfig'
+        | 'estimatedPayout'
+        | 'applicants'
+      >
+    >
+  ) => {
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, ...patch } : r))
+    );
+    if (!isDbConnected) return;
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.priceNegotiations !== undefined) {
+      dbPatch.price_negotiations = patch.priceNegotiations;
+    }
+    if (patch.hourlyRate !== undefined) dbPatch.hourly_rate = patch.hourlyRate;
+    if (patch.guardPay !== undefined) dbPatch.guard_pay = patch.guardPay;
+    if (patch.platformFeePerHour !== undefined) {
+      dbPatch.platform_fee_per_hour = patch.platformFeePerHour;
+    }
+    if (patch.agreementFeeConfig !== undefined) {
+      dbPatch.agreement_fee_config = patch.agreementFeeConfig ?? null;
+    }
+    if (patch.estimatedPayout !== undefined) dbPatch.estimated_payout = patch.estimatedPayout;
+    if (patch.applicants !== undefined) dbPatch.applicants = patch.applicants;
+    if (Object.keys(dbPatch).length > 0) {
+      await supabase.from('security_requests').update(dbPatch).eq('id', requestId);
+    }
+  };
+
+  const handleSubmitPriceOffer = async (
+    requestId: string,
+    guardId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: SecurityRequest['agreementFeeConfig'];
+      message?: string;
+    },
+    offeredBy: 'client' | 'guard'
+  ) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || !isOpenContractPricing(job.pricingMode)) {
+      appToast('Price negotiation is only available on open-contract jobs.', 'error');
+      return;
+    }
+    const offer = createPriceOffer({
+      offeredBy,
+      offeredByUserId: offeredBy === 'client' ? job.clientId : guardId,
+      hourlyRate: input.hourlyRate,
+      agreementFeeConfig: input.agreementFeeConfig,
+      message: input.message,
+    });
+    const priceNegotiations = appendGuardPriceOffer(job.priceNegotiations, guardId, offer);
+    const applicants =
+      offeredBy === 'guard' && !job.applicants.includes(guardId)
+        ? [...new Set([...job.applicants, guardId])]
+        : job.applicants;
+    await persistJobPricingPatch(requestId, { priceNegotiations, applicants });
+    if (currentUser) {
+      const recipientUserId = offeredBy === 'client' ? guardId : job.clientId;
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId,
+        requestId,
+        guardId,
+        title: 'Price offer',
+        body: `New price offer on "${job.title}": $${input.hourlyRate}/hr client rate.`,
+      });
+    }
+    appToast('Price offer sent.', 'success');
+  };
+
+  const handleAcceptPriceOffer = async (
+    requestId: string,
+    guardId: string,
+    offerId: string
+  ) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job || !isOpenContractPricing(job.pricingMode)) {
+      appToast('Price negotiation is only available on open-contract jobs.', 'error');
+      return;
+    }
+    const { negotiations, offer } = acceptGuardPriceOffer(
+      job.priceNegotiations,
+      guardId,
+      offerId
+    );
+    if (!offer) {
+      appToast('That offer is no longer available.', 'error');
+      return;
+    }
+    const billing = applyAgreedOfferToJobBilling({
+      offer,
+      durationHours: job.durationHours,
+      guardsNeeded: job.guardsNeeded ?? 1,
+      globalFeeConfig: platformSettings.feeConfig,
+    });
+    const applicants = job.applicants.includes(guardId)
+      ? job.applicants
+      : [...new Set([...job.applicants, guardId])];
+    await persistJobPricingPatch(requestId, {
+      priceNegotiations: negotiations,
+      hourlyRate: billing.hourlyRate,
+      guardPay: billing.guardPay,
+      platformFeePerHour: billing.platformFeePerHour,
+      agreementFeeConfig: billing.agreementFeeConfig,
+      estimatedPayout: billing.estimatedPayout,
+      applicants,
+    });
+    if (offer.offeredBy === 'guard' && currentUser?.id === job.clientId) {
+      await proposeGuardForClientApproval(requestId, guardId, { initiatedByGuard: true });
+      appToast('Price agreed — confirm this guard to hire.', 'success');
+      return;
+    }
+    if (offer.offeredBy === 'client' && currentUser?.id === guardId) {
+      if (job.requestType === 'direct' && job.targetGuardId === guardId) {
+        const assigned = await assignGuardToJob(requestId, guardId);
+        if (assigned) {
+          appToast('Price agreed — job confirmed on your schedule.', 'success');
+        }
+        return;
+      }
+      await proposeGuardForClientApproval(requestId, guardId, { initiatedByGuard: true });
+      appToast('Price agreed — awaiting client confirmation.', 'success');
+      return;
+    }
+    appToast('Price agreed.', 'success');
+  };
+
   // ── Guard applies to open job (self-selection → client approval) ──
   const handleApplyToJob = async (requestId: string) => {
     if (activeGuard.isStaff) {
@@ -7105,6 +7272,18 @@ export default function App() {
       appToast('You already applied for this job. Awaiting client confirmation.', 'error');
       return;
     }
+    if (isOpenContractPricing(job.pricingMode)) {
+      const agreed = getAgreedPriceOffer(
+        getGuardNegotiation(job.priceNegotiations, activeGuardId)
+      );
+      if (!agreed) {
+        appToast(
+          'This is an open contract job — submit or accept a price offer before applying.',
+          'info'
+        );
+        return;
+      }
+    }
     if (!guardCanApplyToJob(activeGuard, toGuardJobView(job, activeGuard.id), requests)) {
       const scheduleBlocked = guardScheduleConflictError(activeGuardId, job, requests);
       if (scheduleBlocked) {
@@ -7121,6 +7300,15 @@ export default function App() {
 
     // Direct requests: guard confirms → assign immediately (client already chose them)
     if (job.requestType === 'direct' && job.targetGuardId === activeGuardId) {
+      if (isOpenContractPricing(job.pricingMode)) {
+        const agreed = getAgreedPriceOffer(
+          getGuardNegotiation(job.priceNegotiations, activeGuardId)
+        );
+        if (!agreed) {
+          appToast('Accept the client offer or send a counter-offer before confirming.', 'info');
+          return;
+        }
+      }
       const assigned = await assignGuardToJob(requestId, activeGuardId);
       if (assigned) {
         appToast('Job confirmed — check your schedule.', 'success');
@@ -8999,6 +9187,13 @@ export default function App() {
           onJoinTeamWithCode={handleJoinTeamWithCode}
           onAcceptTeamInvite={handleAcceptTeamInvite}
           onDeclineTeamInvite={handleDeclineTeamInvite}
+          feeConfig={platformSettings.feeConfig}
+          onSubmitPriceOffer={(requestId, input) =>
+            void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
+          }
+          onAcceptPriceOffer={(requestId, offerId) =>
+            void handleAcceptPriceOffer(requestId, activeGuardId, offerId)
+          }
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
           onUpdateJobAudit={handleUpdateJobAudit}
           onGuardArrived={(requestId) => {
@@ -9188,6 +9383,12 @@ export default function App() {
               onDenyTeamSlot={handleClientDenyTeamSlot}
               onApproveFullTeam={handleClientApproveFullTeam}
               onDenyFullTeam={handleClientDenyFullTeam}
+              onSubmitPriceOffer={(requestId, guardId, input) =>
+                void handleSubmitPriceOffer(requestId, guardId, input, 'client')
+              }
+              onAcceptPriceOffer={(requestId, guardId, offerId) =>
+                void handleAcceptPriceOffer(requestId, guardId, offerId)
+              }
               crewSettings={platformSettings}
               favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
               onToggleFavoriteGuard={handleToggleFavoriteGuard}

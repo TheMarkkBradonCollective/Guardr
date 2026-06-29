@@ -11,7 +11,6 @@ import {
   PlatformSettings,
   platformPaymentModeDescription,
   platformPaymentModeLabel,
-  TIERED_PLATFORM_FEE_PRESET,
 } from '../../lib/platformSettings';
 import {
   canManagePlatformSettings,
@@ -187,13 +186,6 @@ export function StaffSettingsPanel({
     setFeeDraft((prev) => ({ ...prev, model }));
   };
 
-  const updateTier = (index: number, field: 'minHourlyRate' | 'feePerHour', value: number) => {
-    setFeeDraft((prev) => ({
-      ...prev,
-      tiers: prev.tiers.map((tier, i) => (i === index ? { ...tier, [field]: value } : tier)),
-    }));
-  };
-
   const canViewLegalCompliance = hasExecutivePaymentControls(currentUser);
 
   return (
@@ -240,10 +232,14 @@ export function StaffSettingsPanel({
 
       <AppFormSection title="Platform fees">
         <div className="pb-6 space-y-4">
+          <p className="text-sm text-brand-text-muted">
+            Platform fees are based on the client charge — either a flat dollar amount per hour or a
+            percentage of the hourly rate. Open-contract jobs can override these defaults per agreement.
+          </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label className="uber-label block mb-1">Fee model</label>
+              <label className="uber-label block mb-1">Fee type</label>
               <select
                 className="uber-input w-full"
                 value={feeDraft.model}
@@ -251,8 +247,7 @@ export function StaffSettingsPanel({
                 disabled={!canEditFees}
               >
                 <option value="flat">Flat rate ($/hr)</option>
-                <option value="tiered">Tiered by client hourly rate</option>
-                <option value="percent">Percentage with min/max cap</option>
+                <option value="percent">Percentage of client charge</option>
               </select>
               <p className="text-xs text-brand-text-muted mt-1">
                 {platformFeeModelLabel(feeDraft.model)}
@@ -280,114 +275,26 @@ export function StaffSettingsPanel({
             )}
 
             {feeDraft.model === 'percent' && (
-              <>
-                <div>
-                  <label className="uber-label block mb-1">Platform take (%)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={50}
-                    step={0.5}
-                    value={Math.round(feeDraft.percentRate * 1000) / 10}
-                    onChange={(e) =>
-                      setFeeDraft((prev) => ({
-                        ...prev,
-                        percentRate: Math.min(0.5, Math.max(0, (parseFloat(e.target.value) || 0) / 100)),
-                      }))
-                    }
-                    readOnly={!canEditFees}
-                    className="uber-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="uber-label block mb-1">Min fee / hr ($)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={feeDraft.minFeePerHour}
-                    onChange={(e) =>
-                      setFeeDraft((prev) => ({
-                        ...prev,
-                        minFeePerHour: Math.max(0, parseFloat(e.target.value) || 0),
-                      }))
-                    }
-                    readOnly={!canEditFees}
-                    className="uber-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="uber-label block mb-1">Max fee / hr ($)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={feeDraft.maxFeePerHour}
-                    onChange={(e) =>
-                      setFeeDraft((prev) => ({
-                        ...prev,
-                        maxFeePerHour: Math.max(prev.minFeePerHour, parseFloat(e.target.value) || 0),
-                      }))
-                    }
-                    readOnly={!canEditFees}
-                    className="uber-input w-full"
-                  />
-                </div>
-              </>
+              <div>
+                <label className="uber-label block mb-1">Platform take (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  step={0.5}
+                  value={Math.round(feeDraft.percentRate * 1000) / 10}
+                  onChange={(e) =>
+                    setFeeDraft((prev) => ({
+                      ...prev,
+                      percentRate: Math.min(0.5, Math.max(0, (parseFloat(e.target.value) || 0) / 100)),
+                    }))
+                  }
+                  readOnly={!canEditFees}
+                  className="uber-input w-full"
+                />
+              </div>
             )}
           </div>
-
-          {feeDraft.model === 'tiered' && (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-                  Rate tiers (highest matching band wins)
-                </p>
-                {canEditFees && (
-                  <button
-                    type="button"
-                    className="text-xs text-brand-primary font-semibold"
-                    onClick={() => setFeeDraft({ ...TIERED_PLATFORM_FEE_PRESET })}
-                  >
-                    Reset to recommended tiers
-                  </button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {feeDraft.tiers.map((tier, index) => (
-                  <div key={`tier-${index}`} className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="uber-label block mb-1">From client rate ($/hr)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={tier.minHourlyRate}
-                          onChange={(e) =>
-                            updateTier(index, 'minHourlyRate', Math.max(0, parseInt(e.target.value, 10) || 0))
-                          }
-                          readOnly={!canEditFees}
-                          className="uber-input w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="uber-label block mb-1">Platform fee ($/hr)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          step={0.5}
-                          value={tier.feePerHour}
-                          onChange={(e) =>
-                            updateTier(index, 'feePerHour', Math.max(0, parseFloat(e.target.value) || 0))
-                          }
-                          readOnly={!canEditFees}
-                          className="uber-input w-full"
-                        />
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-2">

@@ -37,6 +37,16 @@ interface GuardBottomSheetProps {
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   scheduledJobs?: GuardJobView[];
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    jobId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (jobId: string, offerId: string) => void | Promise<void>;
 }
 
 function useViewportHeight(): number {
@@ -75,6 +85,9 @@ export function GuardBottomSheet({
   onDeclineTeamInvite,
   scheduleRequests,
   scheduledJobs,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardBottomSheetProps) {
   const { formFactor } = useDevice();
   const isSidePanel = formFactor === 'tablet' || formFactor === 'desktop';
@@ -122,6 +135,9 @@ export function GuardBottomSheet({
       onDeclineTeamInvite={onDeclineTeamInvite}
       scheduleRequests={scheduleRequests}
       scheduledJobs={scheduledJobs}
+      feeConfig={feeConfig}
+      onSubmitPriceOffer={onSubmitPriceOffer}
+      onAcceptPriceOffer={onAcceptPriceOffer}
     />
   );
 

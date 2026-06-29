@@ -66,6 +66,16 @@ interface GuardMyJobsPanelProps {
   ) => void | Promise<void>;
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    jobId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (jobId: string, offerId: string) => void | Promise<void>;
 }
 
 function JobRow({
@@ -135,6 +145,9 @@ export function GuardMyJobsPanel({
   onUpdateCrewProfile,
   onAcceptInvite,
   onDeclineInvite,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardMyJobsPanelProps) {
   const [internalTab, setInternalTab] = useState<GuardJobsBrowseTab>('available');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
@@ -185,6 +198,17 @@ export function GuardMyJobsPanel({
       : undefined,
     onAcceptInvite: onAcceptInvite ? () => void onAcceptInvite(job.id) : undefined,
     onDeclineInvite: onDeclineInvite ? () => void onDeclineInvite(job.id) : undefined,
+    feeConfig,
+    onSubmitPriceOffer: onSubmitPriceOffer
+      ? (input: {
+          hourlyRate: number;
+          agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+          message?: string;
+        }) => void onSubmitPriceOffer(job.id, input)
+      : undefined,
+    onAcceptPriceOffer: onAcceptPriceOffer
+      ? (offerId: string) => void onAcceptPriceOffer(job.id, offerId)
+      : undefined,
   });
 
   if (selectedJob) {

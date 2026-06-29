@@ -33,6 +33,13 @@ interface GuardJobCardProps {
   onSelect?: () => void;
   onClose?: () => void;
   compact?: boolean;
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (input: {
+    hourlyRate: number;
+    agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+    message?: string;
+  }) => void | Promise<void>;
+  onAcceptPriceOffer?: (offerId: string) => void | Promise<void>;
 }
 
 export function GuardJobCard({
@@ -51,6 +58,9 @@ export function GuardJobCard({
   onSelect,
   onClose,
   compact = false,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardJobCardProps) {
   const hourlyPay = getGuardHourlyPay(job);
   const estimated = getEstimatedGuardEarnings(job);
@@ -105,6 +115,9 @@ export function GuardJobCard({
       onDeclineInvite={onDeclineInvite}
       scheduleRequests={scheduleRequests}
       onClose={onClose}
+      feeConfig={feeConfig}
+      onSubmitPriceOffer={onSubmitPriceOffer}
+      onAcceptPriceOffer={onAcceptPriceOffer}
     />
   );
 }

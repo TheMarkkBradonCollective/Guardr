@@ -27,6 +27,16 @@ interface GuardJobsPanelContentProps {
   onAcceptTeamInvite?: (jobId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (jobId: string) => void | Promise<void>;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    jobId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (jobId: string, offerId: string) => void | Promise<void>;
 }
 
 function CategoryFilters({
@@ -77,6 +87,9 @@ export function GuardJobsPanelContent({
   onAcceptTeamInvite,
   onDeclineTeamInvite,
   scheduleRequests,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardJobsPanelContentProps) {
   if (selectedJob) {
     return (
@@ -132,6 +145,17 @@ export function GuardJobsPanelContent({
             : undefined
         }
         scheduleRequests={scheduleRequests}
+        feeConfig={feeConfig}
+        onSubmitPriceOffer={
+          onSubmitPriceOffer
+            ? (input) => void onSubmitPriceOffer(selectedJob.id, input)
+            : undefined
+        }
+        onAcceptPriceOffer={
+          onAcceptPriceOffer
+            ? (offerId) => void onAcceptPriceOffer(selectedJob.id, offerId)
+            : undefined
+        }
       />
     );
   }

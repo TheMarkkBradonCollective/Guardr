@@ -1,3 +1,12 @@
+export type {
+  AgreementPlatformFeeConfig,
+  GuardPriceNegotiation,
+  OpeningPriceOffer,
+  PriceNegotiationOffer,
+  PricingMode,
+} from '../lib/agreementPricing';
+export type { PlatformFeeModel } from '../lib/platformFees';
+
 export type JobType = 'event' | 'patrol' | 'armed-escort' | 'bodyguard' | 'asset-protection' | 'long-term' | 'other';
 
 export type JobStatus =
@@ -671,6 +680,14 @@ export interface SecurityRequest {
   hourlyRate: number;
   guardPay?: number;
   platformFeePerHour?: number;
+  /** standard = preset/platform default rates; open_contract = negotiated client–guard pricing */
+  pricingMode?: PricingMode;
+  /** Per-deal platform fee override (flat $/hr or % of charge) when agreed */
+  agreementFeeConfig?: AgreementPlatformFeeConfig;
+  /** Client opening offer for open-contract jobs before a guard responds */
+  openingPriceOffer?: OpeningPriceOffer;
+  /** Per-guard price negotiation thread for open-contract jobs */
+  priceNegotiations?: GuardPriceNegotiation[];
   estimatedPayout: number;
   /** Original client bill before late clock-out billing adjustment */
   scheduledEstimatedPayout?: number;

@@ -25,6 +25,13 @@ export interface GuardJobDetailViewProps {
   onOpenMessages?: (jobId: string) => void;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onClose?: () => void;
+  feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (input: {
+    hourlyRate: number;
+    agreementFeeConfig?: import('../../types').AgreementPlatformFeeConfig;
+    message?: string;
+  }) => void | Promise<void>;
+  onAcceptPriceOffer?: (offerId: string) => void | Promise<void>;
 }
 
 /** One job detail surface — Jobs list and map card share this. */
@@ -45,6 +52,9 @@ export function GuardJobDetailView({
   onOpenMessages,
   onApproveOvertime,
   onClose,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: GuardJobDetailViewProps) {
   if (job.status === 'open') {
     return (
@@ -63,6 +73,9 @@ export function GuardJobDetailView({
           onAcceptInvite={onAcceptInvite}
           onDeclineInvite={onDeclineInvite}
           onClose={onClose}
+          feeConfig={feeConfig}
+          onSubmitPriceOffer={onSubmitPriceOffer}
+          onAcceptPriceOffer={onAcceptPriceOffer}
         />
       </div>
     );

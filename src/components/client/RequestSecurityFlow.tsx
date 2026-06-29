@@ -8,14 +8,14 @@ import {
   CLIENT_SERVICE_OPTIONS,
   ClientServiceId,
   GUARD_COUNT_PRESETS,
-  PAY_RATE_PRESETS,
   resolveJobTitle,
   serviceDefaultTitle,
   serviceToJobType,
 } from '../../lib/clientRequestFlow';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, computePlatformFee, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
+import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
+import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
 import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { JobCertRequirementsPicker } from './JobCertRequirementsPicker';
@@ -31,6 +31,7 @@ import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '.
 import { JobOperationalDetails } from '../../types';
 import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
+import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
 
@@ -80,6 +81,9 @@ export function RequestSecurityFlow({
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
+  const [pricingMode, setPricingMode] = useState<PricingMode>('standard');
+  const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
+  const [openingMessage, setOpeningMessage] = useState('');
   const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(
     preset === 'recurring' ? 'construction' : 'standing-guard'
   ));
@@ -106,10 +110,17 @@ export function RequestSecurityFlow({
   const effectiveGuards = customGuards ? Math.max(1, parseInt(customGuards, 10) || 1) : guardsNeeded;
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
-  const platformFeePerHour = resolvePlatformFeePerHour(effectiveRate, feeConfig);
-  const guardPay = computeGuardPay(effectiveRate, platformFeePerHour);
-  const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour) * effectiveGuards;
-  const estimatedTotal = Math.round(durationHours * effectiveRate * effectiveGuards * 100) / 100;
+  const billing = computeJobBilling(
+    effectiveRate,
+    durationHours,
+    selectedFavoriteGuardId ? 1 : effectiveGuards,
+    feeConfig,
+    pricingMode === 'open_contract' ? agreementFeeConfig : undefined
+  );
+  const platformFeePerHour = billing.platformFeePerHour;
+  const guardPay = billing.guardPay;
+  const platformFeeTotal = computePlatformFee(durationHours, platformFeePerHour) * (selectedFavoriteGuardId ? 1 : effectiveGuards);
+  const estimatedTotal = billing.estimatedPayout;
   const effectiveBreakMinutes = customBreakMinutes
     ? Math.max(0, parseInt(customBreakMinutes, 10) || 0)
     : breakMinutes;
@@ -130,7 +141,10 @@ export function RequestSecurityFlow({
       case 2: return address.trim().length > 3 && isCaliforniaCity(jobState);
       case 3: return !validateShiftSchedule(startDate, endDate) && durationHours > 0;
       case 4: return effectiveGuards >= 1;
-      case 5: return effectiveRate >= 20;
+      case 5:
+        return pricingMode === 'open_contract'
+          ? effectiveRate >= 20
+          : effectiveRate >= 20;
       case 6: return true;
       case 7:
         return true;
@@ -172,6 +186,16 @@ export function RequestSecurityFlow({
       hourlyRate: effectiveRate,
       guardPay,
       platformFeePerHour,
+      pricingMode,
+      agreementFeeConfig: pricingMode === 'open_contract' ? agreementFeeConfig : undefined,
+      openingPriceOffer:
+        pricingMode === 'open_contract'
+          ? {
+              hourlyRate: effectiveRate,
+              agreementFeeConfig,
+              message: openingMessage.trim() || undefined,
+            }
+          : undefined,
       estimatedPayout: estimatedTotal,
       description: listing.description.trim(),
       uniformRequirements: listing.uniformRequirements.trim(),
@@ -489,39 +513,21 @@ export function RequestSecurityFlow({
         )}
 
         {step === 5 && (
-          <div className="space-y-5">
-            <div>
-              <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">Pay rate</h2>
-            </div>
-            <div className="segmented-control segmented-control-full">
-              {PAY_RATE_PRESETS.map((rate) => (
-                <button
-                  key={rate}
-                  type="button"
-                  onClick={() => { setHourlyRate(rate); setCustomRate(''); }}
-                  className={`segmented-control-btn flex-1 py-3 ${
-                    hourlyRate === rate && !customRate ? 'segmented-control-btn-active' : ''
-                  }`}
-                >
-                  ${rate}/hr
-                </button>
-              ))}
-            </div>
-            <div>
-              <label className="uber-label block mb-1.5">Custom</label>
-              <input
-                type="number"
-                min={20}
-                placeholder="$/hr"
-                value={customRate}
-                onChange={(e) => setCustomRate(e.target.value)}
-                className="uber-input rounded-xl"
-              />
-            </div>
-            <p className="text-xs text-brand-text-muted">
-              Guard receives ${guardPay}/hr · Platform fee ${platformFeePerHour}/hr per guard
-            </p>
-          </div>
+          <OpenContractRateStep
+            feeConfig={feeConfig}
+            durationHours={durationHours}
+            guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
+            pricingMode={pricingMode}
+            onPricingModeChange={setPricingMode}
+            hourlyRate={hourlyRate}
+            onHourlyRateChange={setHourlyRate}
+            customRate={customRate}
+            onCustomRateChange={setCustomRate}
+            agreementFeeConfig={agreementFeeConfig}
+            onAgreementFeeConfigChange={setAgreementFeeConfig}
+            openingMessage={openingMessage}
+            onOpeningMessageChange={setOpeningMessage}
+          />
         )}
 
         {step === 6 && (

@@ -46,6 +46,11 @@ export interface GuardJobView {
   endDate: string;
   durationHours: number;
   guardPay: number;
+  /** Client hourly charge — shown for open-contract negotiation */
+  hourlyRate?: number;
+  pricingMode?: SecurityRequest['pricingMode'];
+  openingPriceOffer?: SecurityRequest['openingPriceOffer'];
+  priceNegotiations?: SecurityRequest['priceNegotiations'];
   status: SecurityRequest['status'];
   assignedGuardId: string | null;
   pendingGuardId?: string | null;
@@ -215,6 +220,10 @@ export function toGuardJobView(
     endDate: req.endDate,
     durationHours: req.durationHours,
     guardPay,
+    hourlyRate: req.hourlyRate,
+    pricingMode: req.pricingMode,
+    openingPriceOffer: req.openingPriceOffer,
+    priceNegotiations: req.priceNegotiations,
     status: req.status,
     assignedGuardId: req.assignedGuardId,
     pendingGuardId: req.pendingGuardId,

@@ -75,6 +75,16 @@ interface ClientDashboardProps {
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
+  onSubmitPriceOffer?: (
+    requestId: string,
+    guardId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
   crewSettings?: PlatformSettings;
   /** @deprecated Use crewSettings */
   teamLeadSettings?: PlatformSettings;
@@ -136,6 +146,8 @@ export function ClientDashboard({
   onDenyTeamSlot,
   onApproveFullTeam,
   onDenyFullTeam,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
   crewSettings,
   teamLeadSettings,
   favoriteGuardIds = [],
@@ -316,6 +328,9 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        feeConfig={feeConfig}
+        onSubmitPriceOffer={onSubmitPriceOffer}
+        onAcceptPriceOffer={onAcceptPriceOffer}
         onAddReview={onAddReview}
         onCancelRequest={onCancelRequest}
         onEditRequest={onEditRequest}
@@ -475,6 +490,9 @@ export function ClientDashboard({
         onDenyTeamSlot={onDenyTeamSlot}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
+        feeConfig={feeConfig}
+        onSubmitPriceOffer={onSubmitPriceOffer}
+        onAcceptPriceOffer={onAcceptPriceOffer}
         crewSettings={crewSettings ?? teamLeadSettings}
         onRequestNew={() => {
           setFlowPreset('default');

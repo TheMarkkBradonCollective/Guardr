@@ -4,11 +4,13 @@ import {
   type PlatformFeeConfig,
 } from '../../lib/platformFees';
 
-export type { PlatformFeeConfig, PlatformFeeModel, PlatformFeeTier } from '../../lib/platformFees';
-export {
-  DEFAULT_PLATFORM_FEE_CONFIG,
-  TIERED_PLATFORM_FEE_PRESET,
+export type {
+  AgreementPlatformFeeConfig,
+  PlatformFeeConfig,
+  PlatformFeeModel,
+  PlatformFeeTier,
 } from '../../lib/platformFees';
+export { DEFAULT_PLATFORM_FEE_CONFIG, TIERED_PLATFORM_FEE_PRESET } from '../../lib/platformFees';
 
 export interface PlatformSettings {
   paymentCashEnabled: boolean;

@@ -6,6 +6,9 @@ import {
   SessionUser,
 } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
+import type { PlatformFeeConfig } from '../../lib/payments';
+import { isOpenContractPricing } from '../../lib/agreementPricing';
+import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
 import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession } from '../../lib/stripeApi';
 import {
   canClientApproveOvertime,
@@ -95,6 +98,17 @@ export interface ClientJobActionsPanelProps {
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   onOpenJobChat?: (requestId: string) => void;
   onEditRequest?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
+  feeConfig?: PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    requestId: string,
+    guardId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: SecurityRequest['agreementFeeConfig'];
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
 }
 
 export function ClientJobActionsPanel({
@@ -127,6 +141,9 @@ export function ClientJobActionsPanel({
   onApproveFullTeam,
   onDenyFullTeam,
   onOpenJobChat,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
 }: ClientJobActionsPanelProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
   const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
@@ -311,6 +328,32 @@ export function ClientJobActionsPanel({
 
         {req.status === 'open' && (
           <div className="border-t border-brand-border pt-3 space-y-3 w-full">
+            {isOpenContractPricing(req.pricingMode) &&
+              feeConfig &&
+              (pendingGuard ? [pendingGuard.id] : req.applicants).map((guardId) => {
+                const guard = guards.find((g) => g.id === guardId);
+                if (!guard) return null;
+                return (
+                  <PriceNegotiationPanel
+                    key={`negotiation-${guardId}`}
+                    job={req}
+                    guardId={guardId}
+                    guardName={guard.name}
+                    viewerRole="client"
+                    feeConfig={feeConfig}
+                    onSubmitPriceOffer={
+                      onSubmitPriceOffer
+                        ? (input) => void onSubmitPriceOffer(req.id, guardId, input)
+                        : undefined
+                    }
+                    onAcceptPriceOffer={
+                      onAcceptPriceOffer
+                        ? (offerId) => void onAcceptPriceOffer(req.id, guardId, offerId)
+                        : undefined
+                    }
+                  />
+                );
+              })}
             {awaitingClientGuard && pendingGuard && onApprovePendingGuard && onDenyPendingGuard && !isMultiGuardJob(req) && (
               <div className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-3 space-y-3">
                 <div className="flex items-start gap-3">

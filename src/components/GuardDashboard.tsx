@@ -121,6 +121,16 @@ interface GuardDashboardProps {
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
+  feeConfig?: import('../lib/payments').PlatformFeeConfig;
+  onSubmitPriceOffer?: (
+    requestId: string,
+    input: {
+      hourlyRate: number;
+      agreementFeeConfig?: import('../types').AgreementPlatformFeeConfig;
+      message?: string;
+    }
+  ) => void | Promise<void>;
+  onAcceptPriceOffer?: (requestId: string, offerId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
   onUpdateJobAudit: (requestId: string, auditPayload: any) => void;
   onGuardArrived?: (requestId: string) => void;
@@ -213,6 +223,9 @@ export function GuardDashboard({
   onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
+  feeConfig,
+  onSubmitPriceOffer,
+  onAcceptPriceOffer,
   coworkerGuards = [],
   onUpdateJobAudit,
   onGuardArrived,
@@ -985,6 +998,17 @@ export function GuardDashboard({
               onOpenMessages={openMessagesForJob}
               onApproveOvertime={onApproveOvertime}
               onClose={() => handleGuardSelectedJobChange(null)}
+              feeConfig={feeConfig}
+              onSubmitPriceOffer={
+                onSubmitPriceOffer
+                  ? (input) => void onSubmitPriceOffer(selectedJob.id, input)
+                  : undefined
+              }
+              onAcceptPriceOffer={
+                onAcceptPriceOffer
+                  ? (offerId) => void onAcceptPriceOffer(selectedJob.id, offerId)
+                  : undefined
+              }
             />
           }
         />
@@ -1039,6 +1063,9 @@ export function GuardDashboard({
                 onUpdateCrewProfile={onUpdateCrewProfile}
                 onAcceptInvite={onAcceptTeamInvite}
                 onDeclineInvite={onDeclineTeamInvite}
+                feeConfig={feeConfig}
+                onSubmitPriceOffer={onSubmitPriceOffer}
+                onAcceptPriceOffer={onAcceptPriceOffer}
               />
             </div>
           )}
