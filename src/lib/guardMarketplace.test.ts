@@ -5,7 +5,7 @@ import {
   guardMeetsRateRequirement,
   shouldSkipStaffGuardReview,
 } from './guardMarketplace.ts';
-import { buildInsuranceApprovalBlockers } from './guardInsurance.ts';
+import { buildInsuranceApprovalBlockers, isUserSubmittedPendingInsurance } from './guardInsurance.ts';
 
 const baseGuard = {
   id: 'g1',
@@ -94,6 +94,24 @@ describe('buildInsuranceApprovalBlockers', () => {
   it('blocks approval when COI is missing', () => {
     const blockers = buildInsuranceApprovalBlockers({});
     assert.ok(blockers.some((b) => b.includes('Certificate of Insurance')));
+  });
+});
+
+describe('pending COI approvals', () => {
+  it('includes guard-submitted pending COI in the review queue', () => {
+    const guard = {
+      ...baseGuard,
+      userStatus: 'approved',
+      insurancePolicy: {
+        ...baseGuard.insurancePolicy!,
+        status: 'pending' as const,
+      },
+    };
+    assert.equal(isUserSubmittedPendingInsurance(guard), true);
+  });
+
+  it('excludes verified COI from the review queue', () => {
+    assert.equal(isUserSubmittedPendingInsurance(baseGuard), false);
   });
 });
 

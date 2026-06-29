@@ -34,6 +34,7 @@ import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { certDisplayName } from '../../lib/certCatalog';
 import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
+import { formatCoiSummaryLine, getPendingInsuranceReviews } from '../../lib/guardInsurance';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
@@ -230,6 +231,7 @@ export function StaffApprovals({
   const pendingJobs = getPendingJobApprovals(requests);
   const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests);
   const pendingCerts = getPendingCertifications(guards);
+  const pendingInsuranceReviews = getPendingInsuranceReviews(guards);
   const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards);
   const pendingClientAccounts = getPendingClientAccounts(clients);
@@ -241,7 +243,7 @@ export function StaffApprovals({
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
-    canManageGuardAccounts && cert.status === 'pending' ? (
+    canVerifyGuardCredentials && cert.status === 'pending' ? (
       <div className="flex flex-col items-end gap-1.5">
         <div className="app-action-row--equal justify-end">
           {cert.imageUrl && onRequestCertImageResubmit && (
@@ -303,7 +305,9 @@ export function StaffApprovals({
       (activeQueue === 'job-offers' && pendingJobs.some((r) => r.id === activeItemId)) ||
       (activeQueue === 'schedule-changes' && pendingScheduleChanges.some((r) => r.id === activeItemId)) ||
       (activeQueue === 'applications' && jobsWithApplications.some((r) => r.id === activeItemId)) ||
-      (activeQueue === 'credentials' && pendingCerts.some(({ cert }) => cert.id === activeItemId)) ||
+      (activeQueue === 'credentials' &&
+        (pendingCerts.some(({ cert }) => cert.id === activeItemId) ||
+          pendingInsuranceReviews.some((g) => `coi-${g.id}` === activeItemId))) ||
       (activeQueue === 'accounts' &&
         (pendingGuardAccounts.some((g) => g.id === activeItemId) ||
           approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId) ||
@@ -316,6 +320,7 @@ export function StaffApprovals({
     pendingScheduleChanges,
     jobsWithApplications,
     pendingCerts,
+    pendingInsuranceReviews,
     pendingGuardAccounts,
     approvedGuardsAwaitingActivation,
     pendingClientAccounts,
@@ -333,7 +338,7 @@ export function StaffApprovals({
       'job-offers': pendingJobs.length,
       'schedule-changes': pendingScheduleChanges.length,
       applications: jobsWithApplications.length,
-      credentials: pendingCerts.length,
+      credentials: pendingCerts.length + pendingInsuranceReviews.length,
       accounts:
         pendingGuardAccounts.length +
         approvedGuardsAwaitingActivation.length +
@@ -344,6 +349,7 @@ export function StaffApprovals({
       pendingScheduleChanges.length,
       jobsWithApplications.length,
       pendingCerts.length,
+      pendingInsuranceReviews.length,
       pendingGuardAccounts.length,
       approvedGuardsAwaitingActivation.length,
       pendingClientAccounts.length,
@@ -698,6 +704,78 @@ export function StaffApprovals({
     }
 
     if (activeQueue === 'credentials') {
+      if (activeItemId?.startsWith('coi-')) {
+        const guardId = activeItemId.slice(4);
+        const guard =
+          pendingInsuranceReviews.find((g) => g.id === guardId) ??
+          guards.find((g) => g.id === guardId) ??
+          null;
+        if (!guard?.insurancePolicy) return null;
+        const policy = guard.insurancePolicy;
+        return (
+          <ApprovalDetailScreen
+            title={`${guard.name} — Certificate of Insurance`}
+            backLabel={meta.title}
+            onBack={() => setActiveItemId(null)}
+          >
+            <div className="staff-detail-pane space-y-4">
+              <p className="text-sm text-brand-text-muted">{formatCoiSummaryLine(policy)}</p>
+              {policy.documentUrl && (
+                <a
+                  href={policy.documentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-brand-primary underline"
+                >
+                  View COI document
+                </a>
+              )}
+              <div className="app-action-row--equal">
+                {canVerifyGuardCredentials && onReviewGuardInsurance && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void (async () => {
+                          try {
+                            await onReviewGuardInsurance(guard.id, 'rejected', 'Document needs correction');
+                            setActiveItemId(null);
+                          } catch (err) {
+                            showAppToast(err instanceof Error ? err.message : 'Could not reject COI.', {
+                              tone: 'error',
+                            });
+                          }
+                        })();
+                      }}
+                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                    >
+                      <X className="w-3.5 h-3.5" /> Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void (async () => {
+                          try {
+                            await onReviewGuardInsurance(guard.id, 'verified');
+                            setActiveItemId(null);
+                          } catch (err) {
+                            showAppToast(err instanceof Error ? err.message : 'Could not verify COI.', {
+                              tone: 'error',
+                            });
+                          }
+                        })();
+                      }}
+                      className="app-button-primary app-btn-sm"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Verify
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </ApprovalDetailScreen>
+        );
+      }
       if (activeItemId) {
         const entry = pendingCerts.find(({ cert }) => cert.id === activeItemId);
         if (!entry) return null;
@@ -787,6 +865,30 @@ export function StaffApprovals({
         <>
           <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <div className="space-y-5">
+            {pendingInsuranceReviews.length > 0 && (
+              <section className="credential-view-section space-y-2">
+                <div className="credential-view-section-header">
+                  <div>
+                    <h3 className="text-sm font-semibold">Certificate of Insurance (COI)</h3>
+                    <p className="text-xs text-brand-text-muted mt-1">
+                      General liability insurance — required for profile approval and marketplace work.
+                    </p>
+                  </div>
+                  <span className="credential-view-section-count">{pendingInsuranceReviews.length}</span>
+                </div>
+                <AppItemCardStack>
+                  {pendingInsuranceReviews.map((guard) => (
+                    <ApprovalListRow
+                      key={guard.id}
+                      title={guard.name}
+                      subtitle={formatCoiSummaryLine(guard.insurancePolicy)}
+                      meta={<WfBadge tone="warning">Pending review</WfBadge>}
+                      onViewDetails={() => setActiveItemId(`coi-${guard.id}`)}
+                    />
+                  ))}
+                </AppItemCardStack>
+              </section>
+            )}
             {pendingSections.map((section) => (
               <section key={section.id} className="credential-view-section space-y-2">
                 <div className="credential-view-section-header">
@@ -888,7 +990,7 @@ export function StaffApprovals({
                       : undefined
                   }
                   onReviewInsurance={
-                    canManageGuardAccounts && onReviewGuardInsurance
+                    canVerifyGuardCredentials && onReviewGuardInsurance
                       ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
                       : undefined
                   }

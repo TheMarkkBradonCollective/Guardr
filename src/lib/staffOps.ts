@@ -14,6 +14,7 @@ import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLoca
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
+import { getPendingInsuranceReviews } from './guardInsurance';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
@@ -232,8 +233,9 @@ export function computePlatformStats(
     (n, g) => n + g.certifications.filter((c) => isUserSubmittedPendingCert(c, g)).length,
     0
   );
+  const pendingInsuranceReviews = getPendingInsuranceReviews(guards).length;
   const pendingJobApprovals = pendingJobReviews;
-  const pendingCertApprovals = pendingCerts;
+  const pendingCertApprovals = pendingCerts + pendingInsuranceReviews;
   const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
   const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
@@ -901,6 +903,10 @@ export function getPendingCertifications(guards: SecurityGuard[]) {
     });
   });
   return list;
+}
+
+export function countPendingCredentialApprovals(guards: SecurityGuard[]): number {
+  return getPendingCertifications(guards).length + getPendingInsuranceReviews(guards).length;
 }
 
 export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[] {

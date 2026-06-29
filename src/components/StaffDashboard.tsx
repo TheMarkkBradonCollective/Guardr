@@ -542,7 +542,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
-            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
+            onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
@@ -613,7 +613,7 @@ export function StaffDashboard({
             onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
-            onReviewGuardInsurance={canManageGuardAccounts ? onReviewGuardInsurance : undefined}
+            onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             selectedId={selectedGuardId}
             onSelectedIdChange={setSelectedGuardId}

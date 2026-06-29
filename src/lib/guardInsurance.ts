@@ -1,5 +1,6 @@
 import type { GuardInsurancePolicy, SecurityGuard } from '../types';
 import type { CourseUploadStatus } from './certStatus';
+import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 
 export const INSURANCE_STATUS_LABELS: Record<GuardInsurancePolicy['status'], string> = {
   not_submitted: 'Not submitted',
@@ -136,6 +137,19 @@ export function guardHasInsuranceSubmitted(guard: Pick<SecurityGuard, 'insurance
       policy.expiryDate &&
       policy.documentUrl
   );
+}
+
+/** Pending COI uploaded by the guard awaiting staff verification. */
+export function isUserSubmittedPendingInsurance(guard: SecurityGuard): boolean {
+  if (guard.isStaff) return false;
+  const policy = guard.insurancePolicy;
+  if (!policy?.documentUrl?.trim()) return false;
+  if (resolveInsuranceStatus(policy) !== 'pending') return false;
+  return isSelfSubmittedGuardAccount(guard);
+}
+
+export function getPendingInsuranceReviews(guards: SecurityGuard[]): SecurityGuard[] {
+  return guards.filter(isUserSubmittedPendingInsurance);
 }
 
 export function buildInsuranceSubmissionBlockers(
