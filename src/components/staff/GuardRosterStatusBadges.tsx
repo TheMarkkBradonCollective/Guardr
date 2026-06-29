@@ -3,9 +3,8 @@ import { SecurityGuard } from '../../types';
 import {
   getGuardRosterAccountBadgeTone,
   getGuardRosterAccountLabel,
-  getGuardUserStatus,
-  GuardUserStatus,
-} from '../../lib/accountStatus';
+} from '../../lib/guardAccountActivation';
+import { getGuardUserStatus, GuardUserStatus } from '../../lib/accountStatus';
 import {
   GUARD_APPROVED_BADGE_LABEL,
   GUARD_TRUSTED_BADGE_LABEL,

@@ -1,5 +1,5 @@
 import { Certification, SecurityGuard } from '../types';
-import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
+import { isSelfSubmittedGuardAccount, guardHasSubmittedItemsForStaffReview } from './approvalSubmissions';
 import { certHasDocumentProof } from './certImagePolicy';
 import { resolveCertCatalogId } from './certCatalog';
 import { getGuardMissingGraceCredentialLabels, getGuardMissingWorkCredentialLabels } from './guardMissingCredentials';
@@ -33,6 +33,7 @@ import {
   isGuardAccountApproved,
   isGuardAccountPending,
   isGuardUserStatusActive,
+  GUARD_USER_STATUS_LABELS,
 } from './accountStatus';
 
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
@@ -265,16 +266,59 @@ export function guardAccountActivationBlockers(guard: SecurityGuard, state = 'CA
 export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountApproved(g) || !isSelfSubmittedGuardAccount(g)) return false;
-    return true;
+    const checklist = getGuardActivationChecklist(g);
+    return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffActivate;
   });
 }
 
-/** Pending sign-ups with ID submitted — guard may upload all credentials upfront. */
+/** Pending sign-ups with credentials submitted for staff review, or ready to approve. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
-    return getGuardActivationChecklist(g).idSubmitted;
+    const checklist = getGuardActivationChecklist(g);
+    return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffApprove;
   });
+}
+
+export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boolean {
+  if (guard.isStaff || !isSelfSubmittedGuardAccount(guard)) return false;
+  const checklist = getGuardActivationChecklist(guard);
+  if (isGuardAccountPending(guard)) {
+    return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove;
+  }
+  if (isGuardAccountApproved(guard)) {
+    return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffActivate;
+  }
+  return false;
+}
+
+/** Staff guard roster — only show "Pending approval" after the guard submits for review. */
+export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
+  const status = getGuardUserStatus(guard);
+  if (isGuardAccountApproved(guard)) return GUARD_USER_STATUS_LABELS.approved;
+  if (status === 'pending') {
+    const checklist = getGuardActivationChecklist(guard);
+    if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) {
+      return GUARD_USER_STATUS_LABELS.pending;
+    }
+    return 'Application in progress';
+  }
+  return GUARD_USER_STATUS_LABELS[status];
+}
+
+export function getGuardRosterAccountBadgeTone(
+  guard: SecurityGuard
+): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+  const status = getGuardUserStatus(guard);
+  if (isGuardAccountApproved(guard)) return 'primary';
+  if (status === 'active') return 'success';
+  if (status === 'pending') {
+    const checklist = getGuardActivationChecklist(guard);
+    if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) return 'warning';
+    return 'default';
+  }
+  if (status === 'suspended' || status === 'blocked') return 'danger';
+  return 'default';
 }
 
 export function getPendingGuardsMissingActivationRequirements(guards: SecurityGuard[]): SecurityGuard[] {
