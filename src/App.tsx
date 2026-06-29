@@ -309,6 +309,7 @@ import { buildJobServiceAgreement, parseJobServiceAgreement } from './lib/jobSer
 import {
   insurancePolicyFromRow,
   insurancePolicyToDbRow,
+  isUserSubmittedPendingInsurance,
   resolveInsuranceStatus,
 } from './lib/guardInsurance';
 import {
@@ -2437,6 +2438,15 @@ export default function App() {
     setGuards((prev) =>
       prev.map((g) => (g.id === policy.guardId ? { ...g, insurancePolicy: nextPolicy } : g))
     );
+    const guard = guards.find((g) => g.id === policy.guardId);
+    if (currentUser && guard && isUserSubmittedPendingInsurance({ ...guard, insurancePolicy: nextPolicy })) {
+      void reportPushEvent(currentUser, {
+        type: 'credential_pending',
+        guardId: policy.guardId,
+        guardName: guard.name,
+        body: `${guard.name} uploaded Certificate of Insurance for review`,
+      });
+    }
   };
 
   const handleReviewGuardInsurance = async (
