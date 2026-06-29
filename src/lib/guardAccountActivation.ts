@@ -292,12 +292,11 @@ export function getApprovedGuardsAwaitingActivation(guards: SecurityGuard[]): Se
   });
 }
 
-/** Pending sign-ups with credentials submitted for staff review, or ready to approve. */
+/** Pending sign-ups with credentials submitted for staff review. */
 export function getPendingGuardAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
   return guards.filter((g) => {
     if (g.isStaff || !isGuardAccountPending(g) || !isSelfSubmittedGuardAccount(g)) return false;
-    const checklist = getGuardActivationChecklist(g);
-    return guardHasSubmittedItemsForStaffReview(g) || checklist.canStaffApprove;
+    return guardHasSubmittedItemsForStaffReview(g);
   });
 }
 
@@ -305,7 +304,7 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
   if (guard.isStaff || !isSelfSubmittedGuardAccount(guard)) return false;
   const checklist = getGuardActivationChecklist(guard);
   if (isGuardAccountPending(guard)) {
-    return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove;
+    return guardHasSubmittedItemsForStaffReview(guard);
   }
   if (isGuardAccountApproved(guard)) {
     return guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffActivate;
@@ -319,7 +318,7 @@ export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
   if (isGuardAccountApproved(guard)) return GUARD_USER_STATUS_LABELS.approved;
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
-    if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) {
+    if (guardHasSubmittedItemsForStaffReview(guard)) {
       return GUARD_USER_STATUS_LABELS.pending;
     }
     return 'Application in progress';
@@ -335,7 +334,7 @@ export function getGuardRosterAccountBadgeTone(
   if (status === 'active') return 'success';
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
-    if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) return 'warning';
+    if (guardHasSubmittedItemsForStaffReview(guard)) return 'warning';
     return 'default';
   }
   if (status === 'suspended' || status === 'blocked') return 'danger';
