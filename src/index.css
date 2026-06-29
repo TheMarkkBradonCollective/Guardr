@@ -8515,6 +8515,9 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
   @media (min-width: 1024px) {
     .page-shell.flex.flex-col[class*="auth-experience"] {
       flex-direction: row;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
     }
     
     .auth-hero {
@@ -8523,6 +8526,13 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
       flex-shrink: 0;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
+    }
+    
+    .page-shell[class*="auth-experience"] .auth-form-scroll {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      max-height: 100dvh;
     }
     
     .auth-hero-curve {
@@ -11096,6 +11106,23 @@ html, body, #root {
   position: relative;
   overflow: hidden;
   background: var(--brand-bg);
+}
+
+.page-shell[class*="auth-experience"] {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.auth-form-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ─── GUARD JOB DETAIL CARD: FULL-WIDTH ─────────────────────────────────── */

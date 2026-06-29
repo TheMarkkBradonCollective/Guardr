@@ -515,7 +515,7 @@ export function AuthPage({
 
   return (
     <div
-      className={`page-shell min-h-screen flex flex-col auth-experience-${role}`}
+      className={`page-shell h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden auth-experience-${role}`}
       id="guardr-auth-root"
     >
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
@@ -544,7 +544,7 @@ export function AuthPage({
         </div>
       </div>
 
-      <div className="flex flex-1 items-start justify-center px-5 py-6 sm:py-10">
+      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
         <div className="w-full max-w-md animate-fade-in">
           <div className="mb-7">
             <p className="experience-badge">
