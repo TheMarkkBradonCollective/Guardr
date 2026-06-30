@@ -1413,6 +1413,7 @@ export function StaffApprovals({
       {viewCoi && (
         <GuardCoiDetailModal
           guard={viewCoi}
+          guardName={viewCoi.name}
           staffMode
           onClose={() => setViewCoi(null)}
         />
