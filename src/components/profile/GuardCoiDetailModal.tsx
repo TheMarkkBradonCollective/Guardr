@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Loader2, Pencil, ShieldCheck, X } from 'lucide-react';
+import { FileText, Loader2, Pencil, X } from 'lucide-react';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
+import { CERT_CATEGORY_LABELS } from '../../lib/certCatalog';
+import { coiViewSectionLabel } from '../../lib/guardCredentialSections';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
+import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
@@ -10,6 +13,7 @@ import { showAppToast } from '../ui/AppToast';
 interface GuardCoiDetailModalProps {
   guard: SecurityGuard;
   onClose: () => void;
+  guardName?: string;
   canEdit?: boolean;
   staffMode?: boolean;
   initialEditMode?: boolean;
@@ -27,6 +31,7 @@ function formatDisplayDate(iso?: string): string {
 export function GuardCoiDetailModal({
   guard,
   onClose,
+  guardName,
   canEdit = false,
   staffMode = false,
   initialEditMode = false,
@@ -112,20 +117,27 @@ export function GuardCoiDetailModal({
   };
 
   const docIsImage = documentUrl && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(documentUrl);
+  const sectionLabel = coiViewSectionLabel();
+  const categoryLabel = CERT_CATEGORY_LABELS.industry;
 
   return (
-    <AppOverlaySheet open onClose={onClose} ariaLabel="Certificate of Insurance" panelClassName="rounded-t-2xl">
+    <AppOverlaySheet open onClose={onClose} ariaLabel={sectionLabel} panelClassName="rounded-t-2xl">
       <div className="flex flex-col max-h-[85dvh]">
         <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="w-4 h-4 text-brand-primary shrink-0" />
-              <span className="text-[10px] font-medium uppercase tracking-wide text-brand-text-muted">
-                Insurance
-              </span>
+            {(guardName || guard.name) && (
+              <p className="text-xs text-brand-text-muted mb-1">{guardName || guard.name}</p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <CoiCredentialBadge />
+              {sectionLabel !== categoryLabel && (
+                <span className="text-[10px] font-medium uppercase tracking-wide text-brand-text-muted">
+                  {categoryLabel}
+                </span>
+              )}
             </div>
             <h2 id="coi-detail-title" className="font-bold text-lg leading-snug">
-              {editing ? 'Edit Certificate of Insurance' : 'Certificate of Insurance (COI)'}
+              {editing ? `Edit ${sectionLabel}` : sectionLabel}
             </h2>
           </div>
           <div className="flex items-center gap-1 shrink-0">
