@@ -8528,13 +8528,8 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
       border-bottom-right-radius: 0;
     }
 
-    .auth-form-column {
-      min-height: 0;
-      -webkit-overflow-scrolling: touch;
-    }
-    
     .page-shell[class*="auth-experience"] .auth-form-scroll {
-      flex: 1;
+      flex: 1 1 0%;
       min-width: 0;
       min-height: 0;
       max-height: 100dvh;
@@ -11119,14 +11114,27 @@ html, body, #root {
   overflow: hidden;
 }
 
+html.auth-page-open,
+html.auth-page-open body,
+html.auth-page-open #root {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+  overscroll-behavior: none;
+}
+
 .auth-form-scroll {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.auth-form-scroll-inner {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 

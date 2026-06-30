@@ -618,17 +618,10 @@ export function StaffDashboard({
             onSetGuardTrusted={canTrust ? onSetGuardTrusted : undefined}
             onDeleteGuard={canManageGuardAccounts ? onDeleteGuardAccount : undefined}
             onSubmitIdentityVerification={canManageGuardAccounts ? onSubmitGuardIdentityVerification : undefined}
-<<<<<<< HEAD
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
             onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
             onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
             onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
-=======
-            onApproveIdentityVerification={canManageGuardAccounts ? onApproveGuardIdentityVerification : undefined}
-            onRejectIdentityVerification={canManageGuardAccounts ? onRejectGuardIdentityVerification : undefined}
-            onRequestIdentityResubmit={canManageGuardAccounts ? onRequestGuardIdResubmit : undefined}
-            onRequestCertImageResubmit={canManageGuardAccounts ? onRequestCertImageResubmit : undefined}
->>>>>>> b95c42c (Route pending COI submissions into staff credentials approvals)
             onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             canVerifyCredentials={canVerifyGuardCredentials}
