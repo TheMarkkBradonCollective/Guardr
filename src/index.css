@@ -10666,10 +10666,15 @@ textarea:focus:not(:focus-visible) {
 
 /* ─── MOBILE: CORRECT SAFE AREA + NO OVERSCROLL ─────────────────────────── */
 
-.role-app-shell,
-.page-shell {
+.role-app-shell {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+}
+
+.landing-page.page-shell {
+  overscroll-behavior: auto;
+  min-height: 100%;
+  height: auto;
 }
 
 /* ─── PRINT: CLEAN ─────────────────────────────────────────────────────── */
@@ -11114,9 +11119,10 @@ html, body, #root {
   overflow: hidden;
 }
 
-html.auth-page-open,
-html.auth-page-open body,
-html.auth-page-open #root {
+/* Lock document scroll only while auth is mounted — releases automatically on unmount */
+html:has(#guardr-auth-root),
+html:has(#guardr-auth-root) body,
+html:has(#guardr-auth-root) #root {
   overflow: hidden;
   height: 100dvh;
   max-height: 100dvh;

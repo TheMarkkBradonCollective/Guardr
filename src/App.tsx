@@ -435,6 +435,12 @@ export default function App() {
   }, [themeMode]);
 
   useEffect(() => {
+    if (!isAuthView) {
+      document.documentElement.classList.remove('auth-page-open');
+    }
+  }, [isAuthView]);
+
+  useEffect(() => {
     if (!currentUser) return;
     const local = loadTheme(currentUser.id);
     setThemeMode(local);
@@ -1049,6 +1055,7 @@ export default function App() {
 
   const closeAuthView = () => {
     setIsAuthView(false);
+    document.documentElement.classList.remove('auth-page-open');
     if (typeof window !== 'undefined') {
       window.history.replaceState({ home: true }, '', '/');
     }

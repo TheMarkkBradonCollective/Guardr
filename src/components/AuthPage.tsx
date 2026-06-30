@@ -220,13 +220,6 @@ export function AuthPage({
     setErrorMsg('');
   }, [initialRole, initialMode]);
 
-  useEffect(() => {
-    document.documentElement.classList.add('auth-page-open');
-    return () => {
-      document.documentElement.classList.remove('auth-page-open');
-    };
-  }, []);
-
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
