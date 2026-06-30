@@ -6,6 +6,7 @@ import {
   formatCoiSummaryLine,
   getCoiUploadStatus,
   guardCoiOnFile,
+  resolveInsuranceStatus,
 } from '../../lib/guardInsurance';
 import {
   CredentialRowAction,
@@ -56,7 +57,11 @@ export function GuardCoiItemCard({
           />
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-brand-text-muted leading-snug">{formatCoiSummaryLine(policy)}</p>
+          <p className="font-semibold text-sm leading-snug break-words">Certificate of Insurance (COI)</p>
+          <p className="text-xs text-brand-text-muted mt-1 break-words">{formatCoiSummaryLine(policy)}</p>
+          {policy?.rejectionReason && resolveInsuranceStatus(policy) === 'rejected' && (
+            <p className="text-xs text-amber-500 mt-1.5 leading-snug">{policy.rejectionReason}</p>
+          )}
           <p className="text-[10px] text-brand-primary mt-1">Tap to view details</p>
         </div>
       </button>

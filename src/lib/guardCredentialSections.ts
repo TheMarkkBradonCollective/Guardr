@@ -11,6 +11,7 @@ import { isPtaUofCatalogId, isThirtyTwoHourCatalogId } from './guardQualificatio
 
 export type CredentialViewSectionId =
   | 'guard-card'
+  | 'coi'
   | 'bsis-pta-uof'
   | 'bsis-32-hour'
   | 'bsis-refresher'
@@ -31,6 +32,7 @@ export interface CredentialViewSection {
 
 const SECTION_ORDER: CredentialViewSectionId[] = [
   'guard-card',
+  'coi',
   'bsis-pta-uof',
   'bsis-32-hour',
   'bsis-refresher',
@@ -76,6 +78,11 @@ const SECTION_META: Record<
     title: CERT_CATEGORY_LABELS['guard-card'],
     subtitle: 'California BSIS guard registration — required to work field jobs.',
     category: 'guard-card',
+  },
+  coi: {
+    title: 'Certificate of Insurance (COI)',
+    subtitle: 'General liability insurance — required for profile approval and marketplace work.',
+    category: 'industry',
   },
   'bsis-pta-uof': {
     title: 'Power to Arrest & Appropriate Use of Force',
@@ -162,6 +169,10 @@ export function certViewSectionLabel(cert: Certification): string {
   return SECTION_META[resolveViewSectionId(cert)].title;
 }
 
+export function coiViewSectionLabel(): string {
+  return SECTION_META.coi.title;
+}
+
 export function certCategoryLabel(cert: Certification): string {
   return CERT_CATEGORY_LABELS[resolveCertCategory(cert)];
 }
@@ -185,6 +196,7 @@ export function getGuardCredentialViewSections(
 
   const certsBySection: Record<CredentialViewSectionId, Certification[]> = {
     'guard-card': guardCards,
+    coi: [],
     'bsis-pta-uof': ptaUof,
     'bsis-32-hour': thirtyTwoHour,
     'bsis-refresher': refresher,
@@ -215,6 +227,7 @@ export function groupPendingCertsByViewSection(
 ): Array<CredentialViewSection & { entries: Array<{ guard: SecurityGuard; cert: Certification }> }> {
   const buckets: Record<CredentialViewSectionId, Array<{ guard: SecurityGuard; cert: Certification }>> = {
     'guard-card': [],
+    coi: [],
     'bsis-pta-uof': [],
     'bsis-32-hour': [],
     'bsis-refresher': [],
@@ -238,6 +251,48 @@ export function groupPendingCertsByViewSection(
   })).filter((section) => !options?.hideEmpty || section.entries.length > 0);
 }
 
+export type PendingCredentialApprovalEntry =
+  | { kind: 'cert'; guard: SecurityGuard; cert: Certification }
+  | { kind: 'coi'; guard: SecurityGuard };
+
+/** Group pending staff credential approvals (certs + COI) by view section. */
+export function groupPendingCredentialApprovals(
+  certItems: Array<{ guard: SecurityGuard; cert: Certification }>,
+  coiGuards: SecurityGuard[],
+  options?: { hideEmpty?: boolean }
+): Array<CredentialViewSection & { entries: PendingCredentialApprovalEntry[] }> {
+  const certSections = groupPendingCertsByViewSection(certItems, { hideEmpty: false });
+  const coiEntries: PendingCredentialApprovalEntry[] = coiGuards.map((guard) => ({
+    kind: 'coi',
+    guard,
+  }));
+
+  return SECTION_ORDER.map((id) => {
+    const certSection = certSections.find((section) => section.id === id);
+    const entries: PendingCredentialApprovalEntry[] =
+      id === 'coi' ? coiEntries : (certSection?.entries.map((entry) => ({ kind: 'cert' as const, ...entry })) ?? []);
+
+    return {
+      id,
+      ...SECTION_META[id],
+      certs: entries.filter((entry): entry is { kind: 'cert'; guard: SecurityGuard; cert: Certification } => entry.kind === 'cert').map((entry) => entry.cert),
+      entries,
+    };
+  }).filter((section) => !options?.hideEmpty || section.entries.length > 0);
+}
+
+export function coiApprovalItemId(guardId: string): string {
+  return `coi-${guardId}`;
+}
+
+export function isCoiApprovalItemId(itemId: string): boolean {
+  return itemId.startsWith('coi-');
+}
+
+export function guardIdFromCoiApprovalItemId(itemId: string): string {
+  return itemId.slice(4);
+}
+
 /** Group a flat cert list by view section (e.g. staff approval queue). */
 export function groupCertsByViewSection(
   certs: Certification[],
@@ -245,6 +300,7 @@ export function groupCertsByViewSection(
 ): CredentialViewSection[] {
   const buckets: Record<CredentialViewSectionId, Certification[]> = {
     'guard-card': [],
+    coi: [],
     'bsis-pta-uof': [],
     'bsis-32-hour': [],
     'bsis-refresher': [],

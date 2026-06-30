@@ -24,16 +24,25 @@ import { isGuardAccountApproved } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
+import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
+import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDetailModal';
 import { certDisplayName } from '../../lib/certCatalog';
-import { certViewSectionLabel, groupPendingCertsByViewSection } from '../../lib/guardCredentialSections';
+import {
+  certViewSectionLabel,
+  coiApprovalItemId,
+  coiViewSectionLabel,
+  groupPendingCredentialApprovals,
+  guardIdFromCoiApprovalItemId,
+  isCoiApprovalItemId,
+} from '../../lib/guardCredentialSections';
 import { formatCoiSummaryLine, getPendingInsuranceReviews } from '../../lib/guardInsurance';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
@@ -246,6 +255,7 @@ export function StaffApprovals({
   const [activeQueue, setActiveQueue] = useState<ApprovalQueueId | null>(initialQueue);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
+  const [viewCoi, setViewCoi] = useState<SecurityGuard | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
@@ -313,7 +323,8 @@ export function StaffApprovals({
       (activeQueue === 'applications' && jobsWithApplications.some((r) => r.id === activeItemId)) ||
       (activeQueue === 'credentials' &&
         (pendingCerts.some(({ cert }) => cert.id === activeItemId) ||
-          pendingInsuranceReviews.some((g) => `coi-${g.id}` === activeItemId))) ||
+          (isCoiApprovalItemId(activeItemId) &&
+            pendingInsuranceReviews.some((g) => coiApprovalItemId(g.id) === activeItemId)))) ||
       (activeQueue === 'accounts' &&
         (pendingGuardAccounts.some((g) => g.id === activeItemId) ||
           approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId) ||
@@ -710,8 +721,8 @@ export function StaffApprovals({
     }
 
     if (activeQueue === 'credentials') {
-      if (activeItemId?.startsWith('coi-')) {
-        const guardId = activeItemId.slice(4);
+      if (activeItemId && isCoiApprovalItemId(activeItemId)) {
+        const guardId = guardIdFromCoiApprovalItemId(activeItemId);
         const guard =
           pendingInsuranceReviews.find((g) => g.id === guardId) ??
           guards.find((g) => g.id === guardId) ??
@@ -720,23 +731,34 @@ export function StaffApprovals({
         const policy = guard.insurancePolicy;
         return (
           <ApprovalDetailScreen
-            title={`${guard.name} — Certificate of Insurance`}
+            title={`${guard.name} — ${coiViewSectionLabel()}`}
             backLabel={meta.title}
             onBack={() => setActiveItemId(null)}
           >
             <div className="staff-detail-pane space-y-4">
-              <p className="text-sm text-brand-text-muted">{formatCoiSummaryLine(policy)}</p>
-              {policy.documentUrl && (
-                <a
-                  href={policy.documentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-brand-primary underline"
-                >
-                  View COI document
-                </a>
-              )}
+              <CoiCredentialBadge />
+              <p className="text-sm text-brand-text-muted">
+                {coiViewSectionLabel()} · {formatCoiSummaryLine(policy)}
+              </p>
               <div className="app-action-row--equal">
+                {policy.documentUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setViewCoi(guard)}
+                    className="app-button-outline app-btn-sm gap-1"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> View document
+                  </button>
+                )}
+                {onViewGuard && (
+                  <button
+                    type="button"
+                    onClick={() => onViewGuard(guard.id)}
+                    className="app-button-outline app-btn-sm"
+                  >
+                    Full profile
+                  </button>
+                )}
                 {canVerifyGuardCredentials && onReviewGuardInsurance && (
                   <>
                     <button
@@ -870,35 +892,13 @@ export function StaffApprovals({
           </ApprovalDetailScreen>
         );
       }
-      const pendingSections = groupPendingCertsByViewSection(pendingCerts, { hideEmpty: true });
+      const pendingSections = groupPendingCredentialApprovals(pendingCerts, pendingInsuranceReviews, {
+        hideEmpty: true,
+      });
       return (
         <>
           <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <div className="space-y-5">
-            {pendingInsuranceReviews.length > 0 && (
-              <section className="credential-view-section space-y-2">
-                <div className="credential-view-section-header">
-                  <div>
-                    <h3 className="text-sm font-semibold">Certificate of Insurance (COI)</h3>
-                    <p className="text-xs text-brand-text-muted mt-1">
-                      General liability insurance — required for profile approval and marketplace work.
-                    </p>
-                  </div>
-                  <span className="credential-view-section-count">{pendingInsuranceReviews.length}</span>
-                </div>
-                <AppItemCardStack>
-                  {pendingInsuranceReviews.map((guard) => (
-                    <ApprovalListRow
-                      key={guard.id}
-                      title={guard.name}
-                      subtitle={formatCoiSummaryLine(guard.insurancePolicy)}
-                      meta={<WfBadge tone="warning">Pending review</WfBadge>}
-                      onViewDetails={() => setActiveItemId(`coi-${guard.id}`)}
-                    />
-                  ))}
-                </AppItemCardStack>
-              </section>
-            )}
             {pendingSections.map((section) => (
               <section key={section.id} className="credential-view-section space-y-2">
                 <div className="credential-view-section-header">
@@ -911,19 +911,33 @@ export function StaffApprovals({
                   <span className="credential-view-section-count">{section.entries.length}</span>
                 </div>
                 <AppItemCardStack>
-                  {section.entries.map(({ guard, cert }) => (
-                    <ApprovalListRow
-                      key={cert.id}
-                      title={
-                        <div className="flex items-start justify-between gap-2 w-full">
-                          <p className="font-semibold text-sm truncate">{guard.name}</p>
-                          <CredentialCategoryBadge cert={cert} variant="category" className="shrink-0" />
-                        </div>
-                      }
-                      subtitle={`${certDisplayName(cert)} · ${cert.issuer} · #${cert.number}`}
-                      onViewDetails={() => setActiveItemId(cert.id)}
-                    />
-                  ))}
+                  {section.entries.map((entry) =>
+                    entry.kind === 'coi' ? (
+                      <ApprovalListRow
+                        key={entry.guard.id}
+                        title={
+                          <div className="flex items-start justify-between gap-2 w-full">
+                            <p className="font-semibold text-sm truncate">{entry.guard.name}</p>
+                            <CoiCredentialBadge variant="category" className="shrink-0" />
+                          </div>
+                        }
+                        subtitle={formatCoiSummaryLine(entry.guard.insurancePolicy)}
+                        onViewDetails={() => setActiveItemId(coiApprovalItemId(entry.guard.id))}
+                      />
+                    ) : (
+                      <ApprovalListRow
+                        key={entry.cert.id}
+                        title={
+                          <div className="flex items-start justify-between gap-2 w-full">
+                            <p className="font-semibold text-sm truncate">{entry.guard.name}</p>
+                            <CredentialCategoryBadge cert={entry.cert} variant="category" className="shrink-0" />
+                          </div>
+                        }
+                        subtitle={`${certDisplayName(entry.cert)} · ${entry.cert.issuer} · #${entry.cert.number}`}
+                        onViewDetails={() => setActiveItemId(entry.cert.id)}
+                      />
+                    )
+                  )}
                 </AppItemCardStack>
               </section>
             ))}
@@ -1393,6 +1407,14 @@ export function StaffApprovals({
           cert={viewCert.cert}
           guardName={viewCert.guard.name}
           onClose={() => setViewCert(null)}
+        />
+      )}
+
+      {viewCoi && (
+        <GuardCoiDetailModal
+          guard={viewCoi}
+          staffMode
+          onClose={() => setViewCoi(null)}
         />
       )}
 
