@@ -899,6 +899,30 @@ export function StaffApprovals({
         <>
           <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
           <div className="space-y-5">
+            {pendingInsuranceReviews.length > 0 && (
+              <section className="credential-view-section space-y-2">
+                <div className="credential-view-section-header">
+                  <div>
+                    <h3 className="text-sm font-semibold">Certificate of Insurance (COI)</h3>
+                    <p className="text-xs text-brand-text-muted mt-1">
+                      General liability insurance — required for profile approval and marketplace work.
+                    </p>
+                  </div>
+                  <span className="credential-view-section-count">{pendingInsuranceReviews.length}</span>
+                </div>
+                <AppItemCardStack>
+                  {pendingInsuranceReviews.map((guard) => (
+                    <ApprovalListRow
+                      key={guard.id}
+                      title={guard.name}
+                      subtitle={formatCoiSummaryLine(guard.insurancePolicy)}
+                      meta={<WfBadge tone="warning">Pending review</WfBadge>}
+                      onViewDetails={() => setActiveItemId(`coi-${guard.id}`)}
+                    />
+                  ))}
+                </AppItemCardStack>
+              </section>
+            )}
             {pendingSections.map((section) => (
               <section key={section.id} className="credential-view-section space-y-2">
                 <div className="credential-view-section-header">
