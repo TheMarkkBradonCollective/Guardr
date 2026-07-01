@@ -13,13 +13,19 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
 import { getStandingCrewDisplayName } from '../../lib/guardTeams';
+import type { GuardJobView } from '../../lib/guardJobView';
+import { formatShiftRange } from '../../lib/dates';
+import { TeamCodeShareBlock } from './TeamCodeShareBlock';
+import { TeamCodeJoinPanel } from './TeamCodeJoinPanel';
 
 interface GuardStandingCrewPanelProps {
   guard: SecurityGuard;
   members: GuardStandingCrewMember[];
   guards: SecurityGuard[];
   trusted: boolean;
+  coordinatingJobs?: GuardJobView[];
   variant?: 'default' | 'embedded';
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onUpdateStandingCrewProfile?: (patch: {
     crewName: string;
     crewDescription: string;
@@ -60,7 +66,9 @@ export function GuardStandingCrewPanel({
   members,
   guards,
   trusted,
+  coordinatingJobs = [],
   variant = 'default',
+  onJoinTeamWithCode,
   onUpdateStandingCrewProfile,
   onInvite,
   onRemove,
@@ -87,6 +95,23 @@ export function GuardStandingCrewPanel({
   const candidates = useMemo(
     () => listActiveGuardsForStandingCrewInvite(guards, guard.id, members, search),
     [guards, guard.id, members, search]
+  );
+
+  const openCrewCodes = useMemo(
+    () =>
+      coordinatingJobs.filter(
+        (job) => job.status === 'open' && job.teamLeadId === guard.id && job.teamCode
+      ),
+    [coordinatingJobs, guard.id]
+  );
+
+  const isStandingTeamMember = useMemo(
+    () =>
+      members.some(
+        (m) =>
+          m.memberGuardId === guard.id && (m.status === 'active' || m.status === 'pending')
+      ),
+    [members, guard.id]
   );
 
   const handleInvite = async (memberId: string) => {
@@ -172,6 +197,26 @@ export function GuardStandingCrewPanel({
                 editable
                 onSave={onUpdateStandingCrewProfile}
               />
+            </section>
+          )}
+
+          {openCrewCodes.length > 0 && (
+            <section>
+              {sectionTitle('Crew codes')}
+              <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
+                Share a code with guards joining your coordinated crew on an open job.
+              </p>
+              <ul className="space-y-2">
+                {openCrewCodes.map((job) => (
+                  <li key={job.id}>
+                    <TeamCodeShareBlock
+                      code={job.teamCode!}
+                      title={job.title}
+                      subtitle={`${formatShiftRange(job.startDate, job.endDate)} · ${job.siteName || job.location}`}
+                    />
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
@@ -276,6 +321,16 @@ export function GuardStandingCrewPanel({
             </section>
           )}
         </>
+      )}
+
+      {!trusted && isStandingTeamMember && onJoinTeamWithCode && (
+        <section>
+          {sectionTitle('Join a job crew')}
+          <p className="text-xs text-brand-text-muted mb-2 leading-relaxed">
+            Enter a crew code from your coordinator to join their roster on a specific job.
+          </p>
+          <TeamCodeJoinPanel onJoin={onJoinTeamWithCode} compact />
+        </section>
       )}
     </div>
   );

@@ -10,13 +10,12 @@ import {
   isMultiGuardJob,
   teamRosterSummary,
 } from '../../lib/guardTeams';
-import { formatTeamCodeDisplay } from '../../lib/teamCode';
 import { TeamGuardInvitePicker } from './TeamGuardInvitePicker';
 import { CrewDetailsEditor } from './CrewDetailsEditor';
+import { TeamCodeShareBlock } from './TeamCodeShareBlock';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { showAppToast } from '../ui/AppToast';
 import { WfBadge } from '../ui/wireframe';
-import { Copy, MessageCircle, UserMinus, Users } from 'lucide-react';
+import { MessageCircle, UserMinus, Users } from 'lucide-react';
 
 interface GuardTeamPanelProps {
   job: GuardJobView;
@@ -67,17 +66,6 @@ export function GuardTeamPanel({
       .filter((row) => row.guard);
   }, [coworkerGuards, slots]);
 
-  const copyTeamCode = async () => {
-    const code = formatTeamCodeDisplay(job.teamCode);
-    if (code === '—') return;
-    try {
-      await navigator.clipboard.writeText(code);
-      showAppToast('Team code copied.', { tone: 'success' });
-    } catch {
-      showAppToast(code, { tone: 'info' });
-    }
-  };
-
   const handleRemove = async (memberId: string, memberName: string) => {
     if (!onRemoveGuard) return;
     if (!(await confirmRemoveTeamMember(memberName, crewDisplayName))) return;
@@ -125,8 +113,8 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards coordinate crews from the Crew tab. To join an existing crew, enter the crew
-          code in Settings or accept a coordinator invite.
+          Trusted guards coordinate crews from the Crew tab. To join an existing crew, use the Crew
+          tab or accept a coordinator invite.
         </p>
       )}
 
@@ -156,27 +144,10 @@ export function GuardTeamPanel({
       )}
 
       {isLead && job.teamCode && job.status === 'open' && (
-        <div className="rounded-lg border border-brand-primary/25 bg-brand-primary/10 px-3 py-2.5 space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
-            Crew team code
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-base font-bold tracking-widest text-brand-primary">
-              {formatTeamCodeDisplay(job.teamCode)}
-            </code>
-            <button
-              type="button"
-              onClick={() => void copyTeamCode()}
-              className="app-button-outline app-btn-sm inline-flex items-center gap-1 shrink-0"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              Copy
-            </button>
-          </div>
-          <p className="text-xs text-brand-text-muted">
-            Share this code so guards can join your coordinated crew from Settings.
-          </p>
-        </div>
+        <TeamCodeShareBlock
+          code={job.teamCode}
+          subtitle="Share with your standing team or other guards joining this job."
+        />
       )}
 
       {onTeam && job.status !== 'closed' && (

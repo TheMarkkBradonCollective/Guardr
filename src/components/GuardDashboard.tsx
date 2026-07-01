@@ -1117,6 +1117,7 @@ export function GuardDashboard({
                   onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
                   onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
                   onDetailOpenChange={setCrewJobDetailOpen}
+                  onJoinTeamWithCode={onJoinTeamWithCode}
                 />
             </div>
           )}

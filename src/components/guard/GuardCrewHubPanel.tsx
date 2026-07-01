@@ -16,6 +16,7 @@ import {
 } from '../ui/app/AppPrimitives';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
+import { formatTeamCodeDisplay } from '../../lib/teamCode';
 
 export type CrewHubTab = 'team' | 'active';
 
@@ -43,6 +44,7 @@ interface GuardCrewHubPanelProps {
   onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onDetailOpenChange?: (open: boolean) => void;
+  onJoinTeamWithCode?: (code: string) => void | Promise<void>;
 }
 
 function crewJobLabel(job: GuardJobView, guard: SecurityGuard, coworkerGuards: SecurityGuard[]): string {
@@ -80,6 +82,12 @@ function CrewJobListRow({
         </p>
         <p className="text-xs font-semibold text-brand-primary mt-1.5">
           {slotCount}/{needed} guards confirmed
+          {job.teamCode && job.status === 'open' && (
+            <span className="text-brand-text-muted font-normal">
+              {' '}
+              · Code {formatTeamCodeDisplay(job.teamCode)}
+            </span>
+          )}
         </p>
       </div>
     </AppItemCard>
@@ -167,6 +175,7 @@ export function GuardCrewHubPanel({
   onAcceptStandingCrewInvite,
   onDeclineStandingCrewInvite,
   onDetailOpenChange,
+  onJoinTeamWithCode,
 }: GuardCrewHubPanelProps) {
   const pendingInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
@@ -246,8 +255,10 @@ export function GuardCrewHubPanel({
             members={standingCrewMembers}
             guards={coworkerGuards}
             trusted={trusted}
+            coordinatingJobs={coordinatingJobs}
             variant="embedded"
             onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
+            onJoinTeamWithCode={onJoinTeamWithCode}
             onInvite={onInviteStandingCrew}
             onRemove={onRemoveStandingCrew}
             onAcceptInvite={onAcceptStandingCrewInvite}
