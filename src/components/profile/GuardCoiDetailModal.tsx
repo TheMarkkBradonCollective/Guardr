@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Loader2, Pencil, X } from 'lucide-react';
+import { Loader2, Pencil, X } from 'lucide-react';
 import type { GuardInsurancePolicy, SecurityGuard } from '../../types';
 import { CERT_CATEGORY_LABELS } from '../../lib/certCatalog';
 import { coiViewSectionLabel } from '../../lib/guardCredentialSections';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
 import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
-import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadField';
+import { CertPhotoRow } from '../credentials/CertPhotoRow';
 import { CoiCredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { AppOverlaySheet } from '../ui/motion/AppMotion';
 import { showAppToast } from '../ui/AppToast';
@@ -116,12 +116,13 @@ export function GuardCoiDetailModal({
     setEditing(false);
   };
 
-  const docIsImage = documentUrl && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(documentUrl);
   const sectionLabel = coiViewSectionLabel();
   const categoryLabel = CERT_CATEGORY_LABELS.industry;
+  const title = policy?.carrier?.trim() || sectionLabel;
+  const displayDocumentUrl = documentUrl.trim() || policy?.documentUrl?.trim() || '';
 
   return (
-    <AppOverlaySheet open onClose={onClose} ariaLabel={sectionLabel} panelClassName="rounded-t-2xl">
+    <AppOverlaySheet open onClose={onClose} ariaLabel={title} panelClassName="rounded-t-2xl">
       <div className="flex flex-col max-h-[85dvh]">
         <div className="shrink-0 flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-brand-border">
           <div className="min-w-0">
@@ -137,7 +138,7 @@ export function GuardCoiDetailModal({
               )}
             </div>
             <h2 id="coi-detail-title" className="font-bold text-lg leading-snug">
-              {editing ? `Edit ${sectionLabel}` : sectionLabel}
+              {editing ? `Edit ${title}` : title}
             </h2>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -217,79 +218,90 @@ export function GuardCoiDetailModal({
                   required
                 />
               </div>
-              <DocumentPhotoUploadField
-                label="Certificate of Insurance (COI)"
-                imageUrl={documentUrl || undefined}
-                onImageUrlChange={setDocumentUrl}
-                previewAlt="COI document preview"
-              />
-              {submitError && <p className="text-xs text-red-400">{submitError}</p>}
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
+                <p className="uber-label">Document photo (required)</p>
+                <CertPhotoRow
+                  label="Certificate of Insurance"
+                  currentUrl={documentUrl || undefined}
+                  locked={false}
+                  onSelect={setDocumentUrl}
+                />
+              </div>
+              {submitError && <p className="text-xs text-red-500">{submitError}</p>}
+              <div className="flex flex-wrap gap-2 pt-1">
                 <button
                   type="button"
-                  className="app-button-primary !w-auto !h-10 !px-4"
+                  className="app-button-primary !w-auto !h-10 !px-5 !text-sm gap-2 disabled:opacity-50"
                   disabled={saving}
                   onClick={handleSave}
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit for review'}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {saving ? 'Saving…' : staffMode ? 'Save credential' : 'Submit for review'}
                 </button>
-                <button type="button" className="app-button-outline !w-auto !h-10 !px-4" onClick={handleCancelEdit}>
+                <button
+                  type="button"
+                  className="app-button-outline !w-auto !h-10 !px-4 !text-sm"
+                  disabled={saving}
+                  onClick={handleCancelEdit}
+                >
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
             <>
+              {displayDocumentUrl ? (
+                <img
+                  src={displayDocumentUrl}
+                  alt={`${title} document`}
+                  className="w-full max-h-[min(52vh,28rem)] object-contain rounded-xl border border-brand-border bg-brand-bg-sec"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-12 rounded-xl border border-dashed border-brand-border bg-brand-bg-sec text-brand-text-muted">
+                  <p className="text-sm">No photo uploaded for this credential</p>
+                </div>
+              )}
+
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
                 <div>
-                  <dt className="text-xs text-brand-text-muted">Carrier</dt>
+                  <dt className="text-xs text-brand-text-muted">Category</dt>
+                  <dd className="font-medium mt-0.5">{sectionLabel}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Credential group</dt>
+                  <dd className="font-medium mt-0.5">{categoryLabel}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-brand-text-muted">Issuing organization</dt>
                   <dd className="font-medium mt-0.5">{policy?.carrier?.trim() || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-brand-text-muted">Policy number</dt>
-                  <dd className="font-medium mt-0.5">{policy?.policyNumber?.trim() || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">GL limit</dt>
-                  <dd className="font-medium mt-0.5">
-                    {policy?.generalLiabilityLimit != null
-                      ? `$${policy.generalLiabilityLimit.toLocaleString()}`
-                      : '—'}
+                  <dt className="text-xs text-brand-text-muted">License / cert number</dt>
+                  <dd className="font-medium mt-0.5 font-mono text-[0.8125rem]">
+                    {policy?.policyNumber?.trim() || '—'}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Effective</dt>
-                  <dd className="font-medium mt-0.5">{formatDisplayDate(policy?.effectiveDate)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-brand-text-muted">Expires</dt>
-                  <dd className="font-medium mt-0.5">{formatDisplayDate(policy?.expiryDate)}</dd>
-                </div>
+                {policy?.generalLiabilityLimit != null && (
+                  <div>
+                    <dt className="text-xs text-brand-text-muted">General liability limit</dt>
+                    <dd className="font-medium mt-0.5">
+                      ${policy.generalLiabilityLimit.toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+                {policy?.effectiveDate && (
+                  <div>
+                    <dt className="text-xs text-brand-text-muted">Effective date</dt>
+                    <dd className="font-medium mt-0.5">{formatDisplayDate(policy.effectiveDate)}</dd>
+                  </div>
+                )}
+                {policy?.expiryDate && (
+                  <div>
+                    <dt className="text-xs text-brand-text-muted">Expiration date</dt>
+                    <dd className="font-medium mt-0.5">{formatDisplayDate(policy.expiryDate)}</dd>
+                  </div>
+                )}
               </dl>
-              {documentUrl && (
-                <div className="rounded-xl border border-brand-border overflow-hidden">
-                  {docIsImage ? (
-                    <img
-                      src={documentUrl}
-                      alt="Certificate of Insurance"
-                      className="w-full max-h-64 object-contain bg-black/5"
-                    />
-                  ) : (
-                    <a
-                      href={documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-3 text-sm text-brand-primary"
-                    >
-                      <FileText className="w-4 h-4 shrink-0" />
-                      View COI document
-                    </a>
-                  )}
-                </div>
-              )}
-              {!policy?.carrier && !policy?.documentUrl && (
-                <p className="text-sm text-brand-text-muted">No insurance certificate on file.</p>
-              )}
             </>
           )}
 

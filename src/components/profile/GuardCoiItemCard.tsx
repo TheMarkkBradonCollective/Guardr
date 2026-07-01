@@ -40,6 +40,10 @@ export function GuardCoiItemCard({
   const canEdit = editing && !staffMode && !!onSave;
   const policy = guard.insurancePolicy;
   const docUrl = policy?.documentUrl?.trim();
+  const title = policy?.carrier?.trim() || 'Certificate of Insurance (COI)';
+  const subtitle = policy?.policyNumber?.trim()
+    ? `#${policy.policyNumber.trim()}`
+    : formatCoiSummaryLine(policy);
 
   const cardBody = hasOnFile ? (
     <div className="app-cert-item">
@@ -56,8 +60,8 @@ export function GuardCoiItemCard({
           />
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm leading-snug break-words">Certificate of Insurance (COI)</p>
-          <p className="text-xs text-brand-text-muted mt-1 break-words">{formatCoiSummaryLine(policy)}</p>
+          <p className="font-semibold text-sm leading-snug break-words">{title}</p>
+          <p className="text-xs text-brand-text-muted mt-1 break-words">{subtitle}</p>
           {policy?.rejectionReason && resolveInsuranceStatus(policy) === 'rejected' && (
             <p className="text-xs text-amber-500 mt-1.5 leading-snug">{policy.rejectionReason}</p>
           )}
@@ -82,6 +86,7 @@ export function GuardCoiItemCard({
     showDetail && (onSave || onReview || staffMode || hasOnFile) ? (
       <GuardCoiDetailModal
         guard={guard}
+        guardName={guard.name}
         canEdit={canEdit || staffMode}
         staffMode={staffMode}
         onSave={onSave}
