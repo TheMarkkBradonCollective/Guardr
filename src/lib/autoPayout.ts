@@ -1,4 +1,5 @@
-import type { PlatformSettings, SecurityRequest } from '../types';
+import type { PlatformSettings } from './platformSettings';
+import type { SecurityRequest } from '../types';
 import { isCashClientPayment } from './cashPayments';
 
 export function shouldScheduleAutoStripePayout(
@@ -22,7 +23,7 @@ export function shouldScheduleAutoStripePayout(
 
 export function computeAutoPayoutScheduledAt(
   completedAt: string,
-  settings: Pick<PlatformSettings, 'autoStripePayoutDelayHours'>
+  settings: Pick<PlatformSettings, 'autoStripePayoutDelayHours'> | PlatformSettings
 ): string {
   const delayHours = settings.autoStripePayoutDelayHours ?? 48;
   const scheduled = new Date(completedAt);

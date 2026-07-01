@@ -72,5 +72,5 @@ export function parseJobServiceAgreement(value: unknown): JobServiceAgreement | 
   if (!value || typeof value !== 'object') return undefined;
   const row = value as Record<string, unknown>;
   if (!row.jobId || !row.guardId || !row.body) return undefined;
-  return row as JobServiceAgreement;
+  return row as unknown as JobServiceAgreement;
 }

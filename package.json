@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp",
+    "predev": "npm run generate:logos && npm run generate:walkie-chirp",
     "dev": "tsx server.ts",
     "build": "vite build && node scripts/bundle-push-handlers.mjs && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",

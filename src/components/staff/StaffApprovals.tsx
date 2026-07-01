@@ -1015,7 +1015,10 @@ export function StaffApprovals({
                   }
                   onReviewInsurance={
                     canVerifyGuardCredentials && onReviewGuardInsurance
-                      ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
+                      ? (status, rejectionReason) =>
+                          Promise.resolve(
+                            onReviewGuardInsurance(guard.id, status, rejectionReason)
+                          )
                       : undefined
                   }
                   staffIdReview={

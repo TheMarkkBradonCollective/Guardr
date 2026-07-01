@@ -101,7 +101,7 @@ describe('pending COI approvals', () => {
   it('includes guard-submitted pending COI in the review queue', () => {
     const guard = {
       ...baseGuard,
-      userStatus: 'approved',
+      userStatus: 'approved' as const,
       insurancePolicy: {
         ...baseGuard.insurancePolicy!,
         status: 'pending' as const,

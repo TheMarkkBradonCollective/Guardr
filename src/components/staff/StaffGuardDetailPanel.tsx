@@ -725,7 +725,8 @@ export function StaffGuardDetailPanel({
                 onUpdateCertification={onUpdateCertification}
                 onReviewInsurance={
                   onReviewInsurance
-                    ? (status, rejectionReason) => onReviewInsurance(status, rejectionReason)
+                    ? (status, rejectionReason) =>
+                        Promise.resolve(onReviewInsurance(status, rejectionReason))
                     : undefined
                 }
                 staffIdReview={

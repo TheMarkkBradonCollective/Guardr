@@ -7,7 +7,7 @@ import {
   getAgreedPriceOffer,
   getGuardNegotiation,
 } from '../../lib/agreementPricing';
-import type { AgreementPlatformFeeConfig, GuardPriceNegotiation, OpeningPriceOffer } from '../../types';
+import type { GuardPriceNegotiation, OpeningPriceOffer } from '../../types';
 import { AgreementFeeFields } from './AgreementFeeFields';
 import { Check, MessageSquare } from 'lucide-react';
 

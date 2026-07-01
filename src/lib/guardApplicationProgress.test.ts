@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import { getGuardApplicationProgress } from './guardApplicationProgress';
 
@@ -9,7 +10,7 @@ function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
     email: 'guard@test.com',
     phone: '',
     badgeNumber: '',
-    hourlyRate: 25,
+    hourlyRateRequirement: 25,
     certifications: [],
     experience: [],
     education: [],
@@ -20,27 +21,25 @@ function baseGuard(overrides: Partial<SecurityGuard> = {}): SecurityGuard {
   } as SecurityGuard;
 }
 
-describe('getGuardApplicationProgress', () => {
-  it('returns 0% when nothing is on file', () => {
-    const progress = getGuardApplicationProgress(baseGuard());
-    expect(progress.percent).toBe(0);
-    expect(progress.completedRequirements).toBe(0);
-    expect(progress.totalRequirements).toBe(5);
-  });
+test('getGuardApplicationProgress returns 0% when nothing is on file', () => {
+  const progress = getGuardApplicationProgress(baseGuard());
+  assert.equal(progress.percent, 0);
+  assert.equal(progress.completedRequirements, 0);
+  assert.equal(progress.totalRequirements, 5);
+});
 
-  it('awards partial credit for submitted ID without verification', () => {
-    const progress = getGuardApplicationProgress(
-      baseGuard({
-        idVerificationStatus: 'pending',
-        idFrontUrl: 'https://example.com/front.jpg',
-        idBackUrl: 'https://example.com/back.jpg',
-        idSelfieUrl: 'https://example.com/selfie.jpg',
-        idNumber: 'A1234567',
-        idState: 'CA',
-        idExpirationDate: '2030-01-01',
-      })
-    );
-    expect(progress.percent).toBeGreaterThan(0);
-    expect(progress.percent).toBeLessThanOrEqual(20);
-  });
+test('getGuardApplicationProgress awards partial credit for submitted ID without verification', () => {
+  const progress = getGuardApplicationProgress(
+    baseGuard({
+      idVerificationStatus: 'pending',
+      idFrontUrl: 'https://example.com/front.jpg',
+      idBackUrl: 'https://example.com/back.jpg',
+      idSelfieUrl: 'https://example.com/selfie.jpg',
+      idNumber: 'A1234567',
+      idState: 'CA',
+      idExpiryDate: '2030-01-01',
+    })
+  );
+  assert.ok(progress.percent > 0);
+  assert.ok(progress.percent <= 20);
 });

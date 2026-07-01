@@ -7,12 +7,12 @@ import {
   isCoiApprovalItemId,
 } from './guardCredentialSections.ts';
 
-const guard: SecurityGuard = {
+const guard = {
   id: 'g-coi',
   name: 'Test Guard',
   email: 'guard@test.com',
   phone: '',
-  hourlyRate: 30,
+  hourlyRateRequirement: 30,
   certifications: [],
   insurancePolicy: {
     id: 'ins-1',
@@ -20,10 +20,10 @@ const guard: SecurityGuard = {
     carrier: 'Acme Insurance',
     policyNumber: 'POL-99',
     expiryDate: '2099-12-31',
-    status: 'pending',
+    status: 'pending' as const,
     documentUrl: 'doc',
   },
-};
+} as SecurityGuard;
 
 const cert: Certification = {
   id: 'cert-1',
@@ -33,6 +33,7 @@ const cert: Certification = {
   issuer: 'Red Cross',
   number: '123',
   status: 'pending',
+  issueDate: '2024-01-01',
 };
 
 describe('groupPendingCredentialApprovals', () => {

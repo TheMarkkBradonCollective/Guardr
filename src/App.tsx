@@ -7892,7 +7892,7 @@ export default function App() {
       if (
         req &&
         platformSettings.autoStripePayoutEnabled &&
-        shouldScheduleAutoStripePayout({ ...req, status: 'completed' })
+        shouldScheduleAutoStripePayout(req)
       ) {
         const scheduledAt = computeAutoPayoutScheduledAt(
           new Date().toISOString(),
@@ -8428,6 +8428,7 @@ export default function App() {
 
   const processDueAutoPayouts = useCallback(async () => {
     if (!platformSettings.autoStripePayoutEnabled) return;
+    if (!currentUser || !isStaffRole(currentUser.role)) return;
     for (const req of requests) {
       if (req.status !== 'completed' || !req.autoPayoutScheduledAt) continue;
       if (!isAutoPayoutDue(req.autoPayoutScheduledAt)) continue;
@@ -8436,9 +8437,7 @@ export default function App() {
       if (!req.guardPayoutAvailable) {
         await handleMakeGuardPayoutAvailable(req.id, { autoRelease: true });
       }
-      if (req.paymentStatus !== 'released') {
-        await handleReleasePayout(req.id);
-      }
+      await handleReleasePayout(req.id);
       if (isDbConnected) {
         await supabase
           .from('security_requests')
@@ -8449,10 +8448,10 @@ export default function App() {
         prev.map((r) => (r.id === req.id ? { ...r, autoPayoutScheduledAt: undefined } : r))
       );
     }
-  }, [platformSettings.autoStripePayoutEnabled, requests]);
+  }, [platformSettings.autoStripePayoutEnabled, requests, currentUser]);
 
   useEffect(() => {
-    if (!currentUser || !isDbConnected) return;
+    if (!currentUser || !isDbConnected || !isStaffRole(currentUser.role)) return;
     const timer = window.setInterval(() => {
       void processDueAutoPayouts();
     }, 60_000);

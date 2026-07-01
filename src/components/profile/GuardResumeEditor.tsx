@@ -295,6 +295,7 @@ export function GuardResumeEditor({
       />
 
       <AppFormSheet
+        open={showAddExp}
         onClose={() => setShowAddExp(false)}
         title="Add work experience"
       >

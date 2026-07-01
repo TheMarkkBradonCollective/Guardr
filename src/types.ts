@@ -1,11 +1,19 @@
-export type {
-  AgreementPlatformFeeConfig,
+import type { AgreementPlatformFeeConfig, PlatformFeeModel } from '../lib/platformFees';
+import type {
   GuardPriceNegotiation,
   OpeningPriceOffer,
   PriceNegotiationOffer,
   PricingMode,
 } from '../lib/agreementPricing';
-export type { PlatformFeeModel } from '../lib/platformFees';
+
+export type {
+  AgreementPlatformFeeConfig,
+  PlatformFeeModel,
+  GuardPriceNegotiation,
+  OpeningPriceOffer,
+  PriceNegotiationOffer,
+  PricingMode,
+};
 
 export type JobType = 'event' | 'patrol' | 'armed-escort' | 'bodyguard' | 'asset-protection' | 'long-term' | 'other';
 

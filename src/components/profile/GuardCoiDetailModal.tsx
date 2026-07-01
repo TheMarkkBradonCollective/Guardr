@@ -93,7 +93,7 @@ export function GuardCoiDetailModal({
         submittedAt: new Date().toISOString(),
         rejectionReason: undefined,
       });
-      showAppToast('Insurance certificate submitted for review.', 'success');
+      showAppToast('Insurance certificate submitted for review.', { tone: 'success' });
       setEditing(false);
       onClose();
     } catch {

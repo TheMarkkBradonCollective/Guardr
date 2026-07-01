@@ -1,6 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
 import type { SecurityGuard } from '../types';
+import { isGuardUserStatusActive } from './accountStatus';
 import { isGuardAccountActive } from './guardAccountActivation';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
@@ -80,10 +81,20 @@ const GUARD_TAB_TO_SLUG: Record<GuardTab, string> = {
   crew: 'crew',
 };
 
+/** Guards need active status plus loaded credentials before non-activation tabs unlock. */
+function isGuardNavUnlocked(
+  guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> & Partial<SecurityGuard>
+): boolean {
+  if (guard.isStaff) return true;
+  if (!isGuardUserStatusActive(guard)) return false;
+  if (!Array.isArray(guard.certifications)) return false;
+  return isGuardAccountActive(guard as SecurityGuard);
+}
+
 /** Inactive guards may only use settings; all other tabs route to activation. */
 export function normalizeGuardTabForAccount(
   tab: GuardTab | undefined,
-  guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null | undefined
+  guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> & Partial<SecurityGuard> | null | undefined
 ): GuardTab {
   const resolved: GuardTab =
     tab === 'guardChat' || tab === 'support' ? 'messages' : tab ?? 'activation';
@@ -91,7 +102,7 @@ export function normalizeGuardTabForAccount(
     if (resolved === 'settings') return 'settings';
     return 'activation';
   }
-  if (isGuardAccountActive(guard)) return resolved;
+  if (isGuardNavUnlocked(guard)) return resolved;
   if (resolved === 'settings') return 'settings';
   return 'activation';
 }
@@ -451,7 +462,7 @@ export function syncAppRoute(route: AppRoute, replace = false): void {
 
 export function defaultRouteForRole(
   role: AppRoute['role'],
-  guard?: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null
+  guard?: (Pick<SecurityGuard, 'userStatus' | 'isStaff'> & Partial<SecurityGuard>) | null
 ): AppRoute {
   switch (role) {
     case 'staff':
@@ -459,7 +470,7 @@ export function defaultRouteForRole(
     case 'guard':
       return {
         role: 'guard',
-        guardTab: guard && !isGuardAccountActive(guard) ? 'activation' : 'map',
+        guardTab: guard && !isGuardNavUnlocked(guard) ? 'activation' : 'map',
       };
     case 'client':
       return { role: 'client', clientView: 'home' };

@@ -223,12 +223,15 @@ export function GuardJobDetailContent({
 
       {isOpenContract && feeConfig && job.status === 'open' && (
         <PriceNegotiationPanel
-          job={job}
+          job={{
+            ...job,
+            hourlyRate: job.hourlyRate ?? job.guardPay,
+          }}
           guardId={guard.id}
           viewerRole="guard"
           feeConfig={feeConfig}
-          onSubmitPriceOffer={onSubmitPriceOffer}
-          onAcceptPriceOffer={onAcceptPriceOffer}
+          onSubmitOffer={onSubmitPriceOffer}
+          onAcceptOffer={onAcceptPriceOffer}
         />
       )}
 

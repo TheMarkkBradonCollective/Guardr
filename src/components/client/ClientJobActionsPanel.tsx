@@ -341,12 +341,12 @@ export function ClientJobActionsPanel({
                     guardName={guard.name}
                     viewerRole="client"
                     feeConfig={feeConfig}
-                    onSubmitPriceOffer={
+                    onSubmitOffer={
                       onSubmitPriceOffer
                         ? (input) => void onSubmitPriceOffer(req.id, guardId, input)
                         : undefined
                     }
-                    onAcceptPriceOffer={
+                    onAcceptOffer={
                       onAcceptPriceOffer
                         ? (offerId) => void onAcceptPriceOffer(req.id, guardId, offerId)
                         : undefined

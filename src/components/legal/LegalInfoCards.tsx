@@ -8,9 +8,8 @@ interface LegalInfoCardsProps {
   className?: string;
 }
 
-const CARD_COPY: Record<
-  LegalPageId,
-  { icon: typeof FileText; title: string; description: string }
+const CARD_COPY: Partial<
+  Record<LegalPageId, { icon: typeof FileText; title: string; description: string }>
 > = {
   privacy: {
     icon: Shield,
@@ -28,7 +27,9 @@ export function LegalInfoCards({ onOpenLegal, className = '' }: LegalInfoCardsPr
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${className}`}>
       {(['privacy', 'terms'] as const).map((id) => {
-        const { icon: Icon, title, description } = CARD_COPY[id];
+        const card = CARD_COPY[id];
+        if (!card) return null;
+        const { icon: Icon, title, description } = card;
         return (
           <button
             key={id}

@@ -721,6 +721,211 @@ export function registerStripeRoutes(app: Express) {
     return res.json({ payments: data ?? [] });
   });
 
+  // ── Checkout: overtime charge after guard/client approval ─────
+  app.post('/api/stripe/checkout/overtime-charge', async (req: Request, res: Response) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe is not configured' });
+    }
+
+    const { jobId, clientEmail, jobTitle, amountCents } = req.body as {
+      jobId?: string;
+      clientEmail?: string;
+      jobTitle?: string;
+      amountCents?: number;
+    };
+
+    if (!jobId || !clientEmail || !amountCents || amountCents < 50) {
+      return res.status(400).json({ error: 'jobId, clientEmail, and amountCents (≥50) are required' });
+    }
+
+    try {
+      const db = getSupabaseAdmin();
+      if (db) {
+        const { data: settings } = await db
+          .from('platform_settings')
+          .select('payment_stripe_enabled')
+          .eq('id', 'default')
+          .maybeSingle();
+
+        if (settings && settings.payment_stripe_enabled === false) {
+          return res.status(400).json({ error: 'Online card payments are not enabled on this platform' });
+        }
+
+        const { data: job } = await db
+          .from('security_requests')
+          .select(
+            'status, overtime_status, overtime_amount, overtime_guard_approved_at, overtime_client_approved_at'
+          )
+          .eq('id', jobId)
+          .maybeSingle();
+
+        if (!job) {
+          return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (job.status !== 'completed' && job.status !== 'closed') {
+          return res.status(400).json({ error: 'Overtime can only be paid after the shift is complete' });
+        }
+
+        if (job.overtime_status !== 'awaiting_payment') {
+          return res.status(400).json({ error: 'Overtime must be approved by guard and client before payment' });
+        }
+
+        if (!job.overtime_guard_approved_at || !job.overtime_client_approved_at) {
+          return res.status(400).json({ error: 'Guard and client must approve overtime before payment' });
+        }
+
+        const expectedCents = Math.round(Number(job.overtime_amount ?? 0) * 100);
+        if (expectedCents > 0 && amountCents !== expectedCents) {
+          return res.status(400).json({ error: 'Amount does not match the overtime balance due' });
+        }
+      }
+
+      const base = getSiteUrl();
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: clientEmail,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: 'usd',
+              unit_amount: amountCents,
+              product_data: {
+                name: jobTitle ? `Late clock-out — ${jobTitle}` : `Late clock-out — ${jobId}`,
+                description: 'Additional charge for guard clock-out past scheduled shift end.',
+              },
+            },
+          },
+        ],
+        payment_intent_data: {
+          metadata: { job_id: jobId, checkout_type: 'overtime' },
+        },
+        metadata: { job_id: jobId, checkout_type: 'overtime' },
+        success_url: `${base}/client/requests?overtime=success&job_id=${jobId}`,
+        cancel_url: `${base}/client/requests?overtime=cancelled&job_id=${jobId}`,
+      });
+
+      if (db) {
+        await db.from('payments').insert({
+          id: `pay-overtime-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          job_id: jobId,
+          amount: amountCents / 100,
+          stripe_session_id: session.id,
+          status: 'pending',
+          payment_method: 'stripe',
+        });
+      }
+
+      return res.json({ sessionId: session.id, url: session.url });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create overtime checkout session';
+      console.error('Overtime checkout error:', message);
+      return res.status(500).json({ error: message });
+    }
+  });
+
+  // ── Checkout: schedule extension charge ─────────────────────
+  app.post('/api/stripe/checkout/schedule-change-charge', async (req: Request, res: Response) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe is not configured' });
+    }
+
+    const { jobId, clientEmail, jobTitle, amountCents } = req.body as {
+      jobId?: string;
+      clientEmail?: string;
+      jobTitle?: string;
+      amountCents?: number;
+    };
+
+    if (!jobId || !clientEmail || !amountCents || amountCents < 50) {
+      return res.status(400).json({ error: 'jobId, clientEmail, and amountCents (≥50) are required' });
+    }
+
+    try {
+      const db = getSupabaseAdmin();
+      if (db) {
+        const { data: settings } = await db
+          .from('platform_settings')
+          .select('payment_stripe_enabled')
+          .eq('id', 'default')
+          .maybeSingle();
+
+        if (settings && settings.payment_stripe_enabled === false) {
+          return res.status(400).json({ error: 'Online card payments are not enabled on this platform' });
+        }
+
+        const { data: job } = await db
+          .from('security_requests')
+          .select(
+            'status, schedule_change_status, schedule_change_extra_amount, pending_start_date, pending_end_date'
+          )
+          .eq('id', jobId)
+          .maybeSingle();
+
+        if (!job) {
+          return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (job.schedule_change_status !== 'awaiting_payment') {
+          return res.status(400).json({ error: 'Schedule extension must be approved before payment' });
+        }
+
+        if (!job.pending_start_date || !job.pending_end_date) {
+          return res.status(400).json({ error: 'Pending schedule change is incomplete' });
+        }
+
+        const expectedCents = Math.round(Number(job.schedule_change_extra_amount ?? 0) * 100);
+        if (expectedCents > 0 && amountCents !== expectedCents) {
+          return res.status(400).json({ error: 'Amount does not match the schedule extension due' });
+        }
+      }
+
+      const base = getSiteUrl();
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: clientEmail,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: 'usd',
+              unit_amount: amountCents,
+              product_data: {
+                name: jobTitle ? `Schedule extension — ${jobTitle}` : `Schedule extension — ${jobId}`,
+                description: 'Additional charge for extending a paid shift.',
+              },
+            },
+          },
+        ],
+        payment_intent_data: {
+          metadata: { job_id: jobId, checkout_type: 'schedule_change' },
+        },
+        metadata: { job_id: jobId, checkout_type: 'schedule_change' },
+        success_url: `${base}/client/requests?schedule_change=success&job_id=${jobId}`,
+        cancel_url: `${base}/client/requests?schedule_change=cancelled&job_id=${jobId}`,
+      });
+
+      if (db) {
+        await db.from('payments').insert({
+          id: `pay-schedule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          job_id: jobId,
+          amount: amountCents / 100,
+          stripe_session_id: session.id,
+          status: 'pending',
+          payment_method: 'stripe',
+        });
+      }
+
+      return res.json({ sessionId: session.id, url: session.url });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create schedule change checkout session';
+      console.error('Schedule change checkout error:', message);
+      return res.status(500).json({ error: message });
+    }
+  });
+
   app.get('/api/stripe/health', (_req: Request, res: Response) => {
     res.json({
       configured: !!stripe,

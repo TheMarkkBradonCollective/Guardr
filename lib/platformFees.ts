@@ -2,6 +2,9 @@
 
 export type PlatformFeeModel = 'flat' | 'percent';
 
+/** @deprecated Legacy tiered model — migrated to flat on read. */
+export type LegacyPlatformFeeModel = PlatformFeeModel | 'tiered';
+
 /** Per-agreement fee override — flat $/hr or percent of client charge for one job/deal. */
 export interface AgreementPlatformFeeConfig {
   model: PlatformFeeModel;
@@ -24,6 +27,10 @@ export interface PlatformFeeConfig {
   tiers?: Array<{ minHourlyRate: number; feePerHour: number }>;
 }
 
+export type PlatformFeeConfigInput = Partial<Omit<PlatformFeeConfig, 'model'>> & {
+  model?: LegacyPlatformFeeModel;
+};
+
 /** Backward-compatible default — flat $5/hr everywhere. */
 export const DEFAULT_PLATFORM_FEE_CONFIG: PlatformFeeConfig = {
   model: 'flat',
@@ -37,7 +44,7 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function migrateLegacyModel(input?: Partial<PlatformFeeConfig> | null): PlatformFeeModel {
+function migrateLegacyModel(input?: PlatformFeeConfigInput | null): PlatformFeeModel {
   const model = input?.model;
   if (model === 'flat' || model === 'percent') return model;
   if (model === 'tiered') {
@@ -51,7 +58,7 @@ function migrateLegacyModel(input?: Partial<PlatformFeeConfig> | null): Platform
   return DEFAULT_PLATFORM_FEE_CONFIG.model;
 }
 
-function legacyFlatFromTiered(input?: Partial<PlatformFeeConfig> | null): number {
+function legacyFlatFromTiered(input?: PlatformFeeConfigInput | null): number {
   if (input?.flatFeePerHour != null && input.flatFeePerHour > 0) {
     return input.flatFeePerHour;
   }
@@ -64,7 +71,7 @@ function legacyFlatFromTiered(input?: Partial<PlatformFeeConfig> | null): number
 }
 
 export function normalizePlatformFeeConfig(
-  input?: Partial<PlatformFeeConfig> | null
+  input?: PlatformFeeConfigInput | null
 ): PlatformFeeConfig {
   const base = DEFAULT_PLATFORM_FEE_CONFIG;
   const model = migrateLegacyModel(input);
