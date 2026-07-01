@@ -134,6 +134,10 @@ CREATE TABLE IF NOT EXISTS staff (
   migrated_from_guards_at TIMESTAMPTZ
 );
 
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_staff_role_check;
+ALTER TABLE staff ADD CONSTRAINT staff_staff_role_check
+  CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator'));
+
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "staff_select" ON staff;
 DROP POLICY IF EXISTS "staff_insert" ON staff;
