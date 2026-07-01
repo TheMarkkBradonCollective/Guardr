@@ -1581,6 +1581,8 @@ export default function App() {
         credentialGraceHours:
           typeof g.credential_grace_hours === 'number' ? g.credential_grace_hours : undefined,
         trusted: g.trusted === true,
+        standingCrewName: g.standing_crew_name?.trim() || undefined,
+        standingCrewDescription: g.standing_crew_description?.trim() || undefined,
         insurancePolicy: insuranceByGuardId.get(g.id),
         certifications: (dbCerts ?? []).filter((c: any) => c.guard_id === g.id).map((c: any) => ({
           id: c.id, name: c.name, issuer: c.issuer, number: c.number,
@@ -6881,6 +6883,50 @@ export default function App() {
     appToast('Crew details saved.', 'success');
   };
 
+  const handleUpdateStandingCrewProfile = async (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => {
+    if (!isGuardTrusted(activeGuard)) {
+      appToast('Only trusted guards can edit their standing team profile.', 'error');
+      return;
+    }
+    const standingCrewName = patch.crewName.trim();
+    const standingCrewDescription = patch.crewDescription.trim();
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === activeGuardId
+          ? { ...g, standingCrewName, standingCrewDescription }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          standing_crew_name: standingCrewName,
+          standing_crew_description: standingCrewDescription,
+        })
+        .eq('id', activeGuardId);
+      if (error) {
+        setGuards((prev) =>
+          prev.map((g) =>
+            g.id === activeGuardId
+              ? {
+                  ...g,
+                  standingCrewName: activeGuard.standingCrewName,
+                  standingCrewDescription: activeGuard.standingCrewDescription,
+                }
+              : g
+          )
+        );
+        appToast('Could not save team profile.', 'error');
+        return;
+      }
+    }
+    appToast('Team profile saved. Clients can see this in the Teams directory.', 'success');
+  };
+
   const handleAcceptTeamInvite = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
@@ -9587,6 +9633,7 @@ export default function App() {
           onInviteTeamGuard={handleInviteTeamGuard}
           onRemoveTeamGuard={handleRemoveTeamGuard}
           onUpdateCrewProfile={handleUpdateCrewProfile}
+          onUpdateStandingCrewProfile={handleUpdateStandingCrewProfile}
           onJoinTeamWithCode={handleJoinTeamWithCode}
           onAcceptTeamInvite={handleAcceptTeamInvite}
           onDeclineTeamInvite={handleDeclineTeamInvite}
@@ -9760,6 +9807,7 @@ export default function App() {
               requests={myRequests}
               platformRequests={requests}
               guards={hireableGuards}
+              standingCrewMembers={standingCrewMembers}
               clientEmail={currentUser.email}
               avatarUrl={currentUser.avatar}
               activeView={clientView === 'support' ? 'messages' : clientView}

@@ -352,6 +352,10 @@ export interface SecurityGuard {
    * Cash jobs always require Guardr review; cash payments must be confirmed by staff.
    */
   trusted?: boolean;
+  /** Public team name clients see in the Teams directory (trusted guards). */
+  standingCrewName?: string;
+  /** Public team description clients can read in the Teams directory. */
+  standingCrewDescription?: string;
   /** General liability COI — required for marketplace applications */
   insurancePolicy?: GuardInsurancePolicy;
 }

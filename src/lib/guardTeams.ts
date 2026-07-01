@@ -1,9 +1,11 @@
 import type {
+  GuardStandingCrewMember,
   JobGuardSlot,
   JobGuardSlotStatus,
   SecurityGuard,
   SecurityRequest,
 } from '../types';
+import { isGuardTrusted } from './guardTrust';
 
 export const MIN_INVITE_TTL_MS = 60 * 60 * 1000;
 
@@ -323,36 +325,56 @@ export function getOpenCrewLeadOpportunities<T extends CrewJobSummary>(jobs: T[]
 }
 
 export type ClientCrewListing = {
-  jobId: string;
+  listingId: string;
+  kind: 'job' | 'standing';
   crewName: string;
   crewDescription?: string;
   coordinatorId: string;
   coordinatorName: string;
   memberCount: number;
-  guardsNeeded: number;
-  jobTitle: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  armedRequired: boolean;
+  /** Present for job-based listings */
+  jobId?: string;
+  guardsNeeded?: number;
+  jobTitle?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  armedRequired?: boolean;
 };
+
+export function getStandingCrewDisplayName(
+  guard: Pick<SecurityGuard, 'name' | 'standingCrewName'>
+): string {
+  const custom = guard.standingCrewName?.trim();
+  if (custom) return custom;
+  return `${guard.name}'s crew`;
+}
 
 export function getCrewDisplayName(
   job: Pick<SecurityRequest, 'crewName' | 'title'>,
-  coordinatorName?: string
+  coordinatorName?: string,
+  standingCrewName?: string | null
 ): string {
   const custom = job.crewName?.trim();
   if (custom) return custom;
+  const standing = standingCrewName?.trim();
+  if (standing) return standing;
   if (coordinatorName) return `${coordinatorName}'s crew`;
   return job.title;
 }
 
+type BrowsableGuard = Pick<
+  SecurityGuard,
+  'id' | 'name' | 'trusted' | 'standingCrewName' | 'standingCrewDescription' | 'userStatus' | 'verified'
+>;
+
 export function getBrowsableClientCrews(
   jobs: SecurityRequest[],
-  guards: Pick<SecurityGuard, 'id' | 'name'>[]
+  guards: BrowsableGuard[],
+  standingCrewMembers: GuardStandingCrewMember[] = []
 ): ClientCrewListing[] {
   const byId = new Map(guards.map((g) => [g.id, g]));
-  return jobs
+  const jobListings: ClientCrewListing[] = jobs
     .filter((j) => j.status === 'open' && isMultiGuardJob(j) && !!j.teamLeadId)
     .map((job) => {
       const coordinator = byId.get(job.teamLeadId!);
@@ -360,9 +382,14 @@ export function getBrowsableClientCrews(
         (s) => s.guardId && s.status !== 'open' && s.status !== 'declined' && s.status !== 'expired'
       ).length;
       return {
+        listingId: job.id,
+        kind: 'job' as const,
         jobId: job.id,
-        crewName: getCrewDisplayName(job, coordinator?.name),
-        crewDescription: job.crewDescription?.trim() || undefined,
+        crewName: getCrewDisplayName(job, coordinator?.name, coordinator?.standingCrewName),
+        crewDescription:
+          job.crewDescription?.trim() ||
+          coordinator?.standingCrewDescription?.trim() ||
+          undefined,
         coordinatorId: job.teamLeadId!,
         coordinatorName: coordinator?.name ?? 'Crew coordinator',
         memberCount,
@@ -373,8 +400,35 @@ export function getBrowsableClientCrews(
         endDate: job.endDate,
         armedRequired: job.armedRequired,
       };
-    })
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+    });
+
+  const coordinatorsWithOpenJobs = new Set(jobListings.map((l) => l.coordinatorId));
+
+  const standingListings: ClientCrewListing[] = guards
+    .filter((g) => isGuardTrusted(g) && !coordinatorsWithOpenJobs.has(g.id))
+    .map((guard) => {
+      const activeMembers = standingCrewMembers.filter(
+        (m) => m.leadGuardId === guard.id && m.status === 'active'
+      ).length;
+      return {
+        listingId: `standing:${guard.id}`,
+        kind: 'standing' as const,
+        crewName: getStandingCrewDisplayName(guard),
+        crewDescription: guard.standingCrewDescription?.trim() || undefined,
+        coordinatorId: guard.id,
+        coordinatorName: guard.name,
+        memberCount: 1 + activeMembers,
+      };
+    });
+
+  return [...jobListings, ...standingListings].sort((a, b) => {
+    if (a.kind === 'job' && b.kind === 'job') {
+      return new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime();
+    }
+    if (a.kind === 'job') return -1;
+    if (b.kind === 'job') return 1;
+    return a.crewName.localeCompare(b.crewName);
+  });
 }
 
 export type StaffCrewPhase =
@@ -448,7 +502,7 @@ export function resolveStaffCrewPhase(job: SecurityRequest): StaffCrewPhase {
 
 export function buildStaffCrewListing(
   job: SecurityRequest,
-  guards: Pick<SecurityGuard, 'id' | 'name'>[]
+  guards: Pick<SecurityGuard, 'id' | 'name' | 'standingCrewName' | 'standingCrewDescription'>[]
 ): StaffCrewListing {
   const byId = new Map(guards.map((g) => [g.id, g]));
   const coordinator = job.teamLeadId ? byId.get(job.teamLeadId) : undefined;
@@ -460,8 +514,9 @@ export function buildStaffCrewListing(
 
   return {
     jobId: job.id,
-    crewName: getCrewDisplayName(job, coordinator?.name),
-    crewDescription: job.crewDescription?.trim() || undefined,
+    crewName: getCrewDisplayName(job, coordinator?.name, coordinator?.standingCrewName),
+    crewDescription:
+      job.crewDescription?.trim() || coordinator?.standingCrewDescription?.trim() || undefined,
     coordinatorId: job.teamLeadId ?? null,
     coordinatorName: coordinator?.name ?? 'No coordinator yet',
     clientName: job.clientName,

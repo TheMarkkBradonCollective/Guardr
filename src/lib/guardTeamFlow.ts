@@ -65,11 +65,15 @@ export function applyAsTeamLead(
     };
   });
   const nextApplicants = [...new Set([...job.applicants, lead.id])];
+  const standingName = lead.standingCrewName?.trim();
+  const standingDescription = lead.standingCrewDescription?.trim();
   return {
     job: {
       ...job,
       teamLeadId: lead.id,
       teamCode: job.teamCode ?? generateUniqueTeamCode(allJobs),
+      crewName: job.crewName?.trim() || standingName || undefined,
+      crewDescription: job.crewDescription?.trim() || standingDescription || undefined,
       guardSlots: nextSlots,
       applicants: nextApplicants,
     },

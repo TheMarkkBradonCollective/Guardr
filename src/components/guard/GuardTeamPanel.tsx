@@ -57,7 +57,7 @@ export function GuardTeamPanel({
   const canLead = trusted && multi && !job.teamLeadId && job.status === 'open' && !hasScheduleConflict;
   const canInvite = isLead && summary.open > 0 && job.status === 'open';
   const canManageRoster = isLead && job.status === 'open';
-  const crewDisplayName = getCrewDisplayName(job, guard.name);
+  const crewDisplayName = getCrewDisplayName(job, guard.name, guard.standingCrewName);
 
   const rosterGuards = useMemo(() => {
     const byId = new Map(coworkerGuards.map((g) => [g.id, g]));

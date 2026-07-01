@@ -59,7 +59,7 @@ import {
   ShiftPhase,
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
-import { getCoordinatingCrewJobs, getOpenCrewLeadOpportunities } from '../lib/guardTeams';
+import { getCoordinatingCrewJobs } from '../lib/guardTeams';
 import { getPendingStandingCrewIncoming } from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
@@ -120,6 +120,10 @@ interface GuardDashboardProps {
     requestId: string,
     patch: { crewName: string; crewDescription: string }
   ) => void | Promise<void>;
+  onUpdateStandingCrewProfile?: (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => void | Promise<void>;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
@@ -228,6 +232,7 @@ export function GuardDashboard({
   onInviteTeamGuard,
   onRemoveTeamGuard,
   onUpdateCrewProfile,
+  onUpdateStandingCrewProfile,
   onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
@@ -494,11 +499,6 @@ export function GuardDashboard({
     () => getCoordinatingCrewJobs(guard.id, requests),
     [requests, guard.id]
   );
-
-  const crewLeadOpportunityJobs = useMemo(() => {
-    if (!trustedGuard) return [];
-    return getOpenCrewLeadOpportunities(requests).filter((job) => guardCanViewJob(guard, job));
-  }, [requests, guard, trustedGuard]);
 
   useEffect(() => {
     if (tab === 'crew' && !showCrewTab) {
@@ -1094,15 +1094,14 @@ export function GuardDashboard({
               <GuardCrewHubPanel
                   guard={guard}
                   coordinatingJobs={coordinatingCrewJobs}
-                  leadOpportunityJobs={crewLeadOpportunityJobs}
                   coworkerGuards={coworkerGuards}
                   standingCrewMembers={standingCrewMembers}
                   trusted={trustedGuard}
                   scheduleRequests={requests}
-                  onApplyAsLead={onApplyAsTeamLead}
                   onInviteGuard={onInviteTeamGuard}
                   onRemoveGuard={onRemoveTeamGuard}
                   onUpdateCrewProfile={onUpdateCrewProfile}
+                  onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
                   onAcceptInvite={onAcceptTeamInvite}
                   onDeclineInvite={onDeclineTeamInvite}
                   onInviteStandingCrew={onInviteStandingCrew}

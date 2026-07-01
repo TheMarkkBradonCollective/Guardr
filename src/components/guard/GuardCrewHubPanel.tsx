@@ -14,26 +14,28 @@ import {
   AppSegmentedControl,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
-import { MapPin, MessageCircle, Sparkles, Users } from 'lucide-react';
+import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
 
-export type CrewHubTab = 'team' | 'active' | 'start';
+export type CrewHubTab = 'team' | 'active';
 
 interface GuardCrewHubPanelProps {
   guard: SecurityGuard;
   coordinatingJobs: GuardJobView[];
-  leadOpportunityJobs: GuardJobView[];
   coworkerGuards: SecurityGuard[];
   standingCrewMembers?: GuardStandingCrewMember[];
   trusted?: boolean;
   scheduleRequests?: ScheduleJob[];
-  onApplyAsLead?: (jobId: string) => void | Promise<void>;
   onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (
     jobId: string,
     patch: { crewName: string; crewDescription: string }
   ) => void | Promise<void>;
+  onUpdateStandingCrewProfile?: (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => void | Promise<void>;
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
   onInviteStandingCrew?: (guardId: string) => void | Promise<void>;
@@ -43,9 +45,9 @@ interface GuardCrewHubPanelProps {
 }
 
 function crewJobLabel(job: GuardJobView, guard: SecurityGuard, coworkerGuards: SecurityGuard[]): string {
-  const leadName = coworkerGuards.find((g) => g.id === job.teamLeadId)?.name;
+  const lead = coworkerGuards.find((g) => g.id === job.teamLeadId);
   if (job.teamLeadId === guard.id || job.crewName?.trim()) {
-    return getCrewDisplayName(job, leadName);
+    return getCrewDisplayName(job, lead?.name, lead?.standingCrewName);
   }
   return job.title;
 }
@@ -89,7 +91,6 @@ function CrewJobDetail({
   coworkerGuards,
   scheduleRequests,
   onBack,
-  onApplyAsLead,
   onInviteGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
@@ -101,7 +102,6 @@ function CrewJobDetail({
   coworkerGuards: SecurityGuard[];
   scheduleRequests?: ScheduleJob[];
   onBack: () => void;
-  onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
   onRemoveGuard?: (guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (patch: {
@@ -128,7 +128,6 @@ function CrewJobDetail({
           job={job}
           guard={guard}
           coworkerGuards={coworkerGuards}
-          onApplyAsLead={onApplyAsLead}
           onInviteGuard={onInviteGuard}
           onRemoveGuard={onRemoveGuard}
           onUpdateCrewProfile={onUpdateCrewProfile}
@@ -152,15 +151,14 @@ function tabLabel(base: string, count: number): string {
 export function GuardCrewHubPanel({
   guard,
   coordinatingJobs,
-  leadOpportunityJobs,
   coworkerGuards,
   standingCrewMembers = [],
   trusted = false,
   scheduleRequests = [],
-  onApplyAsLead,
   onInviteGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
+  onUpdateStandingCrewProfile,
   onAcceptInvite,
   onDeclineInvite,
   onInviteStandingCrew,
@@ -173,36 +171,22 @@ export function GuardCrewHubPanel({
     [standingCrewMembers, guard.id]
   );
 
-  const tabOptions = useMemo(() => {
-    const opts: { id: CrewHubTab; label: string }[] = [
-      { id: 'team', label: tabLabel('My team', pendingInvites.length) },
-      { id: 'active', label: tabLabel('Active', coordinatingJobs.length) },
-    ];
-    if (trusted) {
-      opts.push({ id: 'start', label: tabLabel('Start', leadOpportunityJobs.length) });
-    }
-    return opts;
-  }, [pendingInvites.length, coordinatingJobs.length, leadOpportunityJobs.length, trusted]);
+  const tabOptions = useMemo(
+    () => [
+      { id: 'team' as const, label: tabLabel('My team', pendingInvites.length) },
+      { id: 'active' as const, label: tabLabel('Active', coordinatingJobs.length) },
+    ],
+    [pendingInvites.length, coordinatingJobs.length]
+  );
 
   const [activeTab, setActiveTab] = useState<CrewHubTab>(() =>
     pendingInvites.length > 0 ? 'team' : coordinatingJobs.length > 0 ? 'active' : 'team'
   );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!tabOptions.some((t) => t.id === activeTab)) {
-      setActiveTab(tabOptions[0]?.id ?? 'team');
-    }
-  }, [activeTab, tabOptions]);
-
-  const allJobs = useMemo(
-    () => [...coordinatingJobs, ...leadOpportunityJobs],
-    [coordinatingJobs, leadOpportunityJobs]
-  );
-  const selectedJob = allJobs.find((j) => j.id === selectedJobId) ?? null;
+  const selectedJob = coordinatingJobs.find((j) => j.id === selectedJobId) ?? null;
 
   if (selectedJob) {
-    const isLeadOpp = leadOpportunityJobs.some((j) => j.id === selectedJob.id);
     return (
       <CrewJobDetail
         job={selectedJob}
@@ -210,9 +194,6 @@ export function GuardCrewHubPanel({
         coworkerGuards={coworkerGuards}
         scheduleRequests={scheduleRequests}
         onBack={() => setSelectedJobId(null)}
-        onApplyAsLead={
-          onApplyAsLead && isLeadOpp ? () => void onApplyAsLead(selectedJob.id) : undefined
-        }
         onInviteGuard={
           onInviteGuard ? (guardId) => void onInviteGuard(selectedJob.id, guardId) : undefined
         }
@@ -252,6 +233,7 @@ export function GuardCrewHubPanel({
             guards={coworkerGuards}
             trusted={trusted}
             variant="embedded"
+            onUpdateStandingCrewProfile={onUpdateStandingCrewProfile}
             onInvite={onInviteStandingCrew}
             onRemove={onRemoveStandingCrew}
             onAcceptInvite={onAcceptStandingCrewInvite}
@@ -263,41 +245,15 @@ export function GuardCrewHubPanel({
       {activeTab === 'active' && (
         <div className="app-section-body pt-4 pb-8 space-y-3">
           <p className="text-xs text-brand-text-muted leading-relaxed px-0.5">
-            Jobs where you are coordinating a multi-guard crew. Tap a job to manage members and crew
-            details.
+            Jobs where you are coordinating a multi-guard crew. Tap a job to manage members.
           </p>
           {coordinatingJobs.length === 0 ? (
             <AppEmptyState icon={<Users className="w-5 h-5" />} title="No active crews">
-              Apply as team lead on a multi-guard job to start building your crew.
+              Apply as team lead on a multi-guard job from the map to coordinate your standing team.
             </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {coordinatingJobs.map((job) => (
-                <CrewJobListRow
-                  key={job.id}
-                  job={job}
-                  guard={guard}
-                  coworkerGuards={coworkerGuards}
-                  onSelect={() => setSelectedJobId(job.id)}
-                />
-              ))}
-            </AppItemCardStack>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'start' && trusted && (
-        <div className="app-section-body pt-4 pb-8 space-y-3">
-          <p className="text-xs text-brand-text-muted leading-relaxed px-0.5">
-            Open multi-guard jobs without a coordinator. Apply as lead and invite your standing team.
-          </p>
-          {leadOpportunityJobs.length === 0 ? (
-            <AppEmptyState icon={<Sparkles className="w-5 h-5" />} title="No opportunities right now">
-              Check the map for new multi-guard jobs you can lead.
-            </AppEmptyState>
-          ) : (
-            <AppItemCardStack>
-              {leadOpportunityJobs.map((job) => (
                 <CrewJobListRow
                   key={job.id}
                   job={job}

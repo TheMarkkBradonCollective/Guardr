@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
+import { Client, GuardStandingCrewMember, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -46,6 +46,7 @@ interface ClientDashboardProps {
   requests: SecurityRequest[];
   platformRequests?: SecurityRequest[];
   guards: SecurityGuard[];
+  standingCrewMembers?: GuardStandingCrewMember[];
   clientEmail: string;
   accountStatus?: Client['accountStatus'];
   approved?: boolean;
@@ -118,6 +119,7 @@ export function ClientDashboard({
   requests,
   platformRequests = [],
   guards,
+  standingCrewMembers = [],
   clientEmail,
   accountStatus,
   approved,
@@ -404,6 +406,7 @@ export function ClientDashboard({
         onToggleFavorite={onToggleFavoriteGuard}
         clientId={clientId}
         requests={requests}
+        standingCrewMembers={standingCrewMembers}
         onRequestGuard={startDirectGuardRequest}
       />
     );

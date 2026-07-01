@@ -75,6 +75,8 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_missing JSONB;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_submitted_by TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_name TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_description TEXT DEFAULT '';
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
 ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check

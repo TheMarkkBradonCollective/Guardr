@@ -11,6 +11,8 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppEmptyState } from '../ui/app/AppPrimitives';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { Clock, UserMinus, UserPlus, Users } from 'lucide-react';
+import { CrewDetailsEditor } from './CrewDetailsEditor';
+import { getStandingCrewDisplayName } from '../../lib/guardTeams';
 
 interface GuardStandingCrewPanelProps {
   guard: SecurityGuard;
@@ -18,6 +20,10 @@ interface GuardStandingCrewPanelProps {
   guards: SecurityGuard[];
   trusted: boolean;
   variant?: 'default' | 'embedded';
+  onUpdateStandingCrewProfile?: (patch: {
+    crewName: string;
+    crewDescription: string;
+  }) => void | Promise<void>;
   onInvite?: (memberGuardId: string) => void | Promise<void>;
   onRemove?: (memberGuardId: string) => void | Promise<void>;
   onAcceptInvite?: (inviteId: string) => void | Promise<void>;
@@ -34,6 +40,7 @@ export function GuardStandingCrewPanel({
   guards,
   trusted,
   variant = 'default',
+  onUpdateStandingCrewProfile,
   onInvite,
   onRemove,
   onAcceptInvite,
@@ -127,6 +134,26 @@ export function GuardStandingCrewPanel({
 
       {trusted && (
         <>
+          {onUpdateStandingCrewProfile && (
+            <section>
+              {sectionTitle('Team profile')}
+              {!embedded && (
+                <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
+                  Clients see this in the Teams directory. Your standing roster below is reused on
+                  coordinated jobs.
+                </p>
+              )}
+              <CrewDetailsEditor
+                jobTitle={getStandingCrewDisplayName(guard)}
+                coordinatorName={guard.name}
+                crewName={guard.standingCrewName}
+                crewDescription={guard.standingCrewDescription}
+                editable
+                onSave={onUpdateStandingCrewProfile}
+              />
+            </section>
+          )}
+
           <section>
             {sectionTitle('Standing roster')}
             {!embedded && (

@@ -1,5 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { SecurityGuard, SecurityRequest, GUARD_SPECIALTY_OPTIONS, GuardSpecialty } from '../../types';
+import {
+  SecurityGuard,
+  SecurityRequest,
+  GUARD_SPECIALTY_OPTIONS,
+  GuardSpecialty,
+  type GuardStandingCrewMember,
+} from '../../types';
 import {
   applyGuardFilters,
   countActiveFilters,
@@ -9,7 +15,8 @@ import {
   GuardDirectoryFilters,
   GuardSortKey,
 } from '../../lib/guardDirectory';
-import { getBrowsableClientCrews, type ClientCrewListing } from '../../lib/guardTeams';
+import { getBrowsableClientCrews } from '../../lib/guardTeams';
+import { getActiveStandingCrewMembers } from '../../lib/guardStandingCrew';
 import { formatShiftRange } from '../../lib/dates';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
@@ -44,6 +51,7 @@ interface GuardDirectoryScreenProps {
   onToggleFavorite?: (guardId: string) => void | Promise<void>;
   clientId?: string;
   requests?: SecurityRequest[];
+  standingCrewMembers?: GuardStandingCrewMember[];
   /** Called when the client taps "Hire" directly from the directory */
   onRequestGuard?: (guard: SecurityGuard) => void;
 }
@@ -80,10 +88,11 @@ export function GuardDirectoryScreen({
   onToggleFavorite,
   clientId,
   requests = [],
+  standingCrewMembers = [],
   onRequestGuard,
 }: GuardDirectoryScreenProps) {
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('guards');
-  const [selectedTeamJobId, setSelectedTeamJobId] = useState<string | null>(null);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [filters, setFilters] = useState<GuardDirectoryFilters>(DEFAULT_GUARD_FILTERS);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -115,8 +124,8 @@ export function GuardDirectoryScreen({
   const hasPreviouslyWorked = previouslyWorkedIds.size > 0;
 
   const clientCrews = useMemo(
-    () => getBrowsableClientCrews(requests, guards),
-    [requests, guards]
+    () => getBrowsableClientCrews(requests, guards, standingCrewMembers),
+    [requests, guards, standingCrewMembers]
   );
 
   const filteredTeams = useMemo(() => {
@@ -127,17 +136,24 @@ export function GuardDirectoryScreen({
         crew.crewName.toLowerCase().includes(q) ||
         (crew.crewDescription ?? '').toLowerCase().includes(q) ||
         crew.coordinatorName.toLowerCase().includes(q) ||
-        crew.jobTitle.toLowerCase().includes(q) ||
-        crew.location.toLowerCase().includes(q)
+        (crew.jobTitle ?? '').toLowerCase().includes(q) ||
+        (crew.location ?? '').toLowerCase().includes(q)
     );
   }, [clientCrews, filters.query]);
 
-  const selectedTeam = selectedTeamJobId
-    ? clientCrews.find((c) => c.jobId === selectedTeamJobId) ?? null
+  const selectedTeam = selectedListingId
+    ? clientCrews.find((c) => c.listingId === selectedListingId) ?? null
     : null;
-  const selectedTeamJob = selectedTeamJobId
-    ? requests.find((r) => r.id === selectedTeamJobId) ?? null
-    : null;
+  const selectedTeamJob =
+    selectedTeam?.kind === 'job' && selectedTeam.jobId
+      ? requests.find((r) => r.id === selectedTeam.jobId) ?? null
+      : null;
+  const selectedStandingRoster = useMemo(() => {
+    if (!selectedTeam || selectedTeam.kind !== 'standing') return [];
+    return getActiveStandingCrewMembers(standingCrewMembers, selectedTeam.coordinatorId)
+      .map((row) => guards.find((g) => g.id === row.memberGuardId))
+      .filter(Boolean) as SecurityGuard[];
+  }, [selectedTeam, standingCrewMembers, guards]);
 
   function updateFilter<K extends keyof GuardDirectoryFilters>(key: K, value: GuardDirectoryFilters[K]) {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -163,38 +179,53 @@ export function GuardDirectoryScreen({
 
   const currentSort = SORT_OPTIONS.find((s) => s.id === filters.sortBy) ?? SORT_OPTIONS[0];
 
-  if (selectedTeam && selectedTeamJob) {
+  if (selectedTeam && (selectedTeamJob || selectedTeam.kind === 'standing')) {
     const coordinator = guards.find((g) => g.id === selectedTeam.coordinatorId);
-    const rosterIds = (selectedTeamJob.guardSlots ?? [])
-      .map((s) => s.guardId)
-      .filter(Boolean) as string[];
-    const rosterGuards = rosterIds
-      .map((id) => guards.find((g) => g.id === id))
-      .filter(Boolean) as SecurityGuard[];
+    const rosterIds =
+      selectedTeamJob?.guardSlots?.map((s) => s.guardId).filter(Boolean) as string[] | undefined;
+    const rosterGuards =
+      selectedTeam.kind === 'standing'
+        ? selectedStandingRoster
+        : (rosterIds ?? [])
+            .map((id) => guards.find((g) => g.id === id))
+            .filter(Boolean) as SecurityGuard[];
 
     return (
       <AppScreen className="app-full-page-detail">
-        <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedTeamJobId(null)} />
+        <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedListingId(null)} />
         <div className="px-5 pb-8 space-y-4">
           {selectedTeam.crewDescription && (
             <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
               {selectedTeam.crewDescription}
             </p>
           )}
-          <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-2 text-sm">
-            <p className="font-semibold text-brand-text">{selectedTeam.jobTitle}</p>
-            <p className="text-brand-text-muted">{formatShiftRange(selectedTeamJob.startDate, selectedTeamJob.endDate)}</p>
-            <p className="text-brand-text-muted">{selectedTeam.location}</p>
-            <p className="text-brand-text-muted">
-              {selectedTeam.memberCount}/{selectedTeam.guardsNeeded} guards on roster
-              {selectedTeam.armedRequired ? ' · Armed' : ''}
-            </p>
-          </div>
+          {selectedTeamJob && (
+            <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-2 text-sm">
+              <p className="font-semibold text-brand-text">{selectedTeam.jobTitle}</p>
+              <p className="text-brand-text-muted">
+                {formatShiftRange(selectedTeamJob.startDate, selectedTeamJob.endDate)}
+              </p>
+              <p className="text-brand-text-muted">{selectedTeam.location}</p>
+              <p className="text-brand-text-muted">
+                {selectedTeam.memberCount}/{selectedTeam.guardsNeeded} guards on roster
+                {selectedTeam.armedRequired ? ' · Armed' : ''}
+              </p>
+            </div>
+          )}
+          {selectedTeam.kind === 'standing' && (
+            <div className="rounded-xl border border-brand-border bg-brand-surface/40 px-3 py-3 space-y-1 text-sm">
+              <p className="font-semibold text-brand-text">Standing team</p>
+              <p className="text-brand-text-muted">
+                {selectedTeam.memberCount} member{selectedTeam.memberCount !== 1 ? 's' : ''} including
+                coordinator
+              </p>
+            </div>
+          )}
           {coordinator && (
             <button
               type="button"
               onClick={() => {
-                setSelectedTeamJobId(null);
+                setSelectedListingId(null);
                 onSelectGuard(coordinator);
               }}
               className="w-full text-left"
@@ -221,7 +252,7 @@ export function GuardDirectoryScreen({
                       key={member.id}
                       type="button"
                       onClick={() => {
-                        setSelectedTeamJobId(null);
+                        setSelectedListingId(null);
                         onSelectGuard(member);
                       }}
                       className="w-full text-left"
@@ -554,36 +585,45 @@ export function GuardDirectoryScreen({
         <AppSection title="Coordinated crews">
           {filteredTeams.length === 0 ? (
             <p className="app-empty-state text-sm">
-              No open coordinated crews right now. Check back as trusted guards form teams on multi-guard jobs.
+              No trusted teams listed yet. Trusted guards maintain a standing crew profile clients can browse here.
             </p>
           ) : (
             <AppItemCardStack>
               {filteredTeams.map((crew) => (
                 <WfListCard
-                  key={crew.jobId}
+                  key={crew.listingId}
                   avatar={
                     <div className="w-14 h-14 rounded-xl bg-brand-primary/10 flex items-center justify-center">
                       <Users className="w-6 h-6 text-brand-primary" />
                     </div>
                   }
                   title={crew.crewName}
-                  subtitle={`${crew.coordinatorName} · ${crew.location}`}
+                  subtitle={
+                    crew.kind === 'job' && crew.location
+                      ? `${crew.coordinatorName} · ${crew.location}`
+                      : `${crew.coordinatorName} · Standing team`
+                  }
                   meta={
                     <div className="text-sm text-brand-text-muted space-y-1">
-                      <p>{crew.jobTitle}</p>
-                      <p>{formatShiftRange(crew.startDate, crew.endDate)}</p>
+                      {crew.jobTitle && <p>{crew.jobTitle}</p>}
+                      {crew.startDate && crew.endDate && (
+                        <p>{formatShiftRange(crew.startDate, crew.endDate)}</p>
+                      )}
                       {crew.crewDescription && (
                         <p className="line-clamp-2">{crew.crewDescription}</p>
                       )}
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
                         <WfBadge tone="primary">
-                          {crew.memberCount}/{crew.guardsNeeded} on roster
+                          {crew.kind === 'job' && crew.guardsNeeded
+                            ? `${crew.memberCount}/${crew.guardsNeeded} on roster`
+                            : `${crew.memberCount} member${crew.memberCount !== 1 ? 's' : ''}`}
                         </WfBadge>
                         {crew.armedRequired && <WfBadge tone="warning">Armed</WfBadge>}
+                        {crew.kind === 'standing' && <WfBadge tone="success">Trusted team</WfBadge>}
                       </div>
                     </div>
                   }
-                  onClick={() => setSelectedTeamJobId(crew.jobId)}
+                  onClick={() => setSelectedListingId(crew.listingId)}
                 />
               ))}
             </AppItemCardStack>
