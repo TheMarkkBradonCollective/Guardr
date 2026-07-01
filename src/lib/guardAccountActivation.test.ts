@@ -142,13 +142,14 @@ describe('guard account activation gates', () => {
     assert.equal(guardCanStaffActivateAccount({ ...guard, userStatus: 'approved' }), true);
   });
 
-  it('excludes pending guards from account approvals until something is submitted', () => {
+  it('includes pending guards in account approvals when application is ready for staff approval', () => {
     const guard = baseGuard({
       idVerificationStatus: 'not_submitted',
       certifications: [],
     });
     assert.equal(guardHasSubmittedItemsForStaffReview(guard), false);
-    assert.equal(getPendingGuardAccountReviews([guard]).length, 0);
+    assert.equal(getGuardActivationChecklist(guard).canStaffApprove, true);
+    assert.equal(getPendingGuardAccountReviews([guard]).length, 1);
   });
 
   it('includes pending guards in account approvals after credential submission', () => {
