@@ -371,14 +371,14 @@ export function buildOverviewMetricCells(
       accent: false,
     },
     {
-      label: 'Open incidents',
-      value: String(stats.activeIncidents),
+      label: 'Active guards',
+      value: String(stats.activeGuards),
       sub:
-        stats.activeIncidents === 0
-          ? 'No open incident reports from job checkout'
-          : `${stats.activeIncidents} checkout report${stats.activeIncidents === 1 ? '' : 's'} need follow-up`,
-      accent: stats.activeIncidents > 0,
-      navigateTo: 'incidents',
+        stats.activeGuards === 0
+          ? 'No guards on accepted or in-progress assignments'
+          : `${stats.activeGuards} guard${stats.activeGuards === 1 ? '' : 's'} assigned to active jobs`,
+      accent: stats.activeGuards > 0,
+      navigateTo: 'guards',
     },
   ];
 }
