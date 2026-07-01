@@ -3,6 +3,7 @@ import { Logo } from './Logo';
 import { ThemeToggle } from './ui/ThemeToggle';
 import {
   ArrowRight,
+  BookOpen,
   Building2,
   Shield,
   MapPin,
@@ -28,6 +29,7 @@ interface HomePageProps {
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onOpenLegal: (page: LegalPageId) => void;
+  onOpenGuide?: () => void;
   ownerMessage?: string;
   directorMessage?: string;
 }
@@ -186,6 +188,7 @@ export function HomePage({
   themeMode,
   onChangeTheme,
   onOpenLegal,
+  onOpenGuide,
   ownerMessage,
   directorMessage,
 }: HomePageProps) {
@@ -209,8 +212,26 @@ export function HomePage({
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="landing-header-theme" />
+            {isMobile && onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                className="landing-header-link p-2"
+                aria-label="Open guide"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            )}
             {!isMobile && (
               <>
+                <button
+                  type="button"
+                  onClick={onOpenGuide}
+                  className="landing-header-link inline-flex items-center gap-1.5"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Guide
+                </button>
                 <button
                   type="button"
                   onClick={() => onNavigateToAuth('client', 'sign-in')}
@@ -533,6 +554,16 @@ export function HomePage({
           </div>
           {!isMobile && <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />}
           <div className="flex flex-col items-center sm:items-end gap-3">
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                className="text-sm font-semibold text-brand-primary hover:underline inline-flex items-center gap-1.5"
+              >
+                <BookOpen className="w-4 h-4" />
+                General guide
+              </button>
+            )}
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
             <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right">
               © {new Date().getFullYear()} {LEGAL_ENTITY_NAME} — independent contractor marketplace.

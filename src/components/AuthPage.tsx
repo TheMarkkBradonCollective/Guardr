@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  BookOpen,
   Building2,
   Phone,
   Globe,
@@ -136,6 +137,7 @@ interface AuthPageProps {
   clientsList: Client[];
   onBackToHome: () => void;
   onOpenLegal?: (page: LegalPageId) => void;
+  onOpenGuide?: () => void;
   onAuthModeChange?: (mode: 'sign-in' | 'sign-up') => void;
   onAuthRoleChange?: (role: 'guard' | 'client') => void;
   initialRole?: 'guard' | 'client';
@@ -168,6 +170,7 @@ export function AuthPage({
   clientsList,
   onBackToHome,
   onOpenLegal,
+  onOpenGuide,
   onAuthModeChange,
   onAuthRoleChange,
   initialRole = 'client',
@@ -533,7 +536,18 @@ export function AuthPage({
             <Logo size={26} className="text-white" />
             <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
           </div>
-          <div className="w-14" />
+          <div className="w-14 flex justify-end">
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                className="inline-flex items-center gap-1 text-white/75 hover:text-white transition-colors text-xs font-semibold"
+                aria-label="Open general guide"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </header>
         {/* Ambient glow in auth hero */}
         <div className="absolute inset-0 pointer-events-none opacity-40">

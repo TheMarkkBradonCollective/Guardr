@@ -72,6 +72,7 @@ import { AccountPendingScreen } from './components/account/AccountPendingScreen'
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard, type StaffSectionSelection } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
+import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
@@ -300,9 +301,12 @@ import {
   readAppRouteFromWindow,
   readLegalPageFromUrl,
   readLegalPageFromWindow,
+  readGuideFromUrl,
+  readGuideFromWindow,
   resolveAppRouteForUser,
   stripEphemeralQueryParams,
   syncAppRoute,
+  syncGuidePage,
   syncLegalPage,
   type AppRole,
   type AppRoute,
@@ -423,6 +427,7 @@ export default function App() {
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
+  const [publicGuideOpen, setPublicGuideOpen] = useState(() => readGuideFromWindow());
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
@@ -1089,8 +1094,21 @@ export default function App() {
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
     setLegalPageState(page);
+    setPublicGuideOpen(false);
     setIsAuthView(false);
     syncLegalPage(page);
+  };
+
+  const openPublicGuide = () => {
+    setPublicGuideOpen(true);
+    setLegalPageState(null);
+    setIsAuthView(false);
+    syncGuidePage(true);
+  };
+
+  const closePublicGuide = () => {
+    setPublicGuideOpen(false);
+    syncGuidePage(false, true);
   };
 
   const closeLegalPage = () => {
@@ -1151,10 +1169,24 @@ export default function App() {
 
     if (legal) {
       setLegalPageState(legal);
+      setPublicGuideOpen(false);
       setIsAuthView(false);
       return;
     }
     setLegalPageState(null);
+
+    const guide =
+      options.source === 'popstate'
+        ? ((options.event?.state?.publicGuide as boolean | undefined) ??
+          readGuideFromUrl(url))
+        : readGuideFromUrl(url);
+
+    if (guide) {
+      setPublicGuideOpen(true);
+      setIsAuthView(false);
+      return;
+    }
+    setPublicGuideOpen(false);
 
     const user = currentUserRef.current;
     const strippedUrl = stripEphemeralQueryParams(url);
@@ -9341,6 +9373,16 @@ export default function App() {
   }
 
   if (!currentUser) {
+    if (publicGuideOpen) {
+      return (
+        <>
+          <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+            <AppGuidePage audience="all" onBack={closePublicGuide} />
+          </div>
+          <InstallPrompt />
+        </>
+      );
+    }
     if (isAuthView) {
       return (
         <>
@@ -9351,6 +9393,7 @@ export default function App() {
             clientsList={clients}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
+            onOpenGuide={openPublicGuide}
             onAuthModeChange={setAuthViewMode}
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
@@ -9372,6 +9415,7 @@ export default function App() {
             openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
           onOpenLegal={openLegalPage}
+          onOpenGuide={openPublicGuide}
         />
         <InstallPrompt />
       </>

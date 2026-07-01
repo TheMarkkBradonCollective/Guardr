@@ -55,7 +55,7 @@ const SECTION_META: Record<string, SectionMeta> = {
   },
   'moderator-guide': {
     icon: Users,
-    description: 'Approve applications, monitor jobs — no credential verification or activation.',
+    description: 'Approve applications, monitor jobs, and review reports.',
     audience: 'moderator',
   },
   'administrator-guide': {
@@ -248,12 +248,14 @@ function GuideHub({
   initialAudience = 'all',
   highlightAudience,
   onSelect,
+  onBack,
 }: {
   sections: GuideSection[];
   tabs: { id: AudienceFilter; label: string }[];
   initialAudience?: AudienceFilter;
   highlightAudience?: GuideAudienceTag;
   onSelect: (section: GuideSection) => void;
+  onBack?: () => void;
 }) {
   const defaultTab = highlightAudience ?? initialAudience;
   const [audience, setAudience] = useState<AudienceFilter>(defaultTab);
@@ -266,7 +268,11 @@ function GuideHub({
 
   return (
     <AppScreen className="h-full overflow-y-auto overscroll-contain">
-      <AppScreenTitle>Guide</AppScreenTitle>
+      {onBack ? (
+        <AppSubScreenHeader title="Guide" onBack={onBack} />
+      ) : (
+        <AppScreenTitle>Guide</AppScreenTitle>
+      )}
 
       <div className="px-4 pb-3 border-b border-brand-border">
         <div className="segmented-control segmented-control-full flex flex-wrap gap-1">
@@ -297,11 +303,12 @@ function GuideHub({
 export interface AppGuidePageProps {
   audience?: 'staff' | 'guard' | 'client' | 'all';
   staffRole?: PlatformRole;
+  onBack?: () => void;
 }
 
 const ALL_SECTIONS = parseGuide();
 
-export function AppGuidePage({ audience: initialAudience, staffRole }: AppGuidePageProps) {
+export function AppGuidePage({ audience: initialAudience, staffRole, onBack }: AppGuidePageProps) {
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
 
   const tabs = useMemo(
@@ -337,6 +344,7 @@ export function AppGuidePage({ audience: initialAudience, staffRole }: AppGuideP
       }
       highlightAudience={highlightAudience}
       onSelect={handleSelect}
+      onBack={onBack}
     />
   );
 }

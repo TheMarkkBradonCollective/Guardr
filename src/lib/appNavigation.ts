@@ -284,6 +284,35 @@ export function readLegalPageFromWindow(): LegalPageId | null {
   return readLegalPageFromUrl(window.location.pathname);
 }
 
+export function readGuideFromUrl(url: string): boolean {
+  const { pathname } = parsePath(url);
+  return pathname === '/guide';
+}
+
+export function readGuideFromWindow(): boolean {
+  return readGuideFromUrl(window.location.pathname);
+}
+
+export function syncGuidePage(open: boolean, replace = false): void {
+  const nextPath = open ? '/guide' : '/';
+  const current = window.location.pathname.replace(/\/$/, '') || '/';
+  const state = { publicGuide: open };
+  const pathMatches = current === nextPath;
+  const hasGuideState =
+    open
+      ? (window.history.state as { publicGuide?: boolean } | null)?.publicGuide === true
+      : (window.history.state as { publicGuide?: boolean } | null)?.publicGuide == null;
+
+  if (pathMatches && hasGuideState) return;
+
+  if (replace || pathMatches) {
+    window.history.replaceState(state, '', nextPath);
+    return;
+  }
+
+  window.history.pushState(state, '', nextPath);
+}
+
 export function readLegalPageFromUrl(url: string): LegalPageId | null {
   const { pathname } = parsePath(url);
   if (pathname === '/legal/terms') return 'terms';
