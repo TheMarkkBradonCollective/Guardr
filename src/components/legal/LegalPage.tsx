@@ -8,9 +8,10 @@ interface LegalPageProps {
   page: LegalPageId;
   onBack: () => void;
   onOpenLegal?: (page: LegalPageId) => void;
+  headerRight?: React.ReactNode;
 }
 
-export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
+export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageProps) {
   const doc = LEGAL_DOCUMENTS[page];
   const siblings = (LEGAL_PAGE_SIBLINGS[page] ?? (page === 'terms' ? ['privacy'] : ['terms'])).filter(
     (id) => id !== page
@@ -28,9 +29,12 @@ export function LegalPage({ page, onBack, onOpenLegal }: LegalPageProps) {
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="flex items-center gap-2">
-            <Logo size={24} className="text-brand-primary" />
-            <span className="font-semibold text-brand-primary">{SITE_NAME}</span>
+          <div className="flex items-center gap-3">
+            {headerRight}
+            <div className="flex items-center gap-2">
+              <Logo size={24} className="text-brand-primary" />
+              <span className="font-semibold text-brand-primary">{SITE_NAME}</span>
+            </div>
           </div>
         </div>
       </header>

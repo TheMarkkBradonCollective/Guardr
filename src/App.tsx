@@ -9437,7 +9437,12 @@ export default function App() {
   if (legalPage) {
     return (
       <>
-        <LegalPage page={legalPage} onBack={closeLegalPage} onOpenLegal={openLegalPage} />
+        <LegalPage
+          page={legalPage}
+          onBack={closeLegalPage}
+          onOpenLegal={openLegalPage}
+          headerRight={currentUser ? notificationBellMenu : undefined}
+        />
         <InstallPrompt />
       </>
     );
@@ -9485,14 +9490,19 @@ export default function App() {
   if (currentUser.role === 'guard') {
     if (!activeGuard?.id) {
       return (
-        <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
-          <p className="text-brand-text font-semibold">We could not load your guard profile.</p>
-          <p className="text-brand-text-muted text-sm max-w-sm">
-            Your sign-in may be out of date after a database change. Sign out and sign in again with your guard email.
-          </p>
-          <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
-            Sign out
-          </button>
+        <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+          <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
+            {notificationBellMenu}
+            <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
+              Sign out
+            </button>
+          </header>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
+            <p className="text-brand-text font-semibold">We could not load your guard profile.</p>
+            <p className="text-brand-text-muted text-sm max-w-sm">
+              Your sign-in may be out of date after a database change. Sign out and sign in again with your guard email.
+            </p>
+          </div>
         </div>
       );
     }
@@ -9504,7 +9514,8 @@ export default function App() {
           {marketplaceLegalGate}
           {passwordChangeOverlay}
           <div className="page-shell h-[100dvh] flex flex-col overflow-hidden bg-brand-bg">
-            <header className="flex justify-end px-5 pt-4 shrink-0">
+            <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
+              {notificationBellMenu}
               <button
                 type="button"
                 onClick={handleSignOut}
@@ -9948,14 +9959,19 @@ export default function App() {
   }
 
   return (
-    <div className="page-shell min-h-screen flex flex-col items-center justify-center p-8 text-center gap-4">
-      <p className="text-brand-text font-semibold">This account role is not supported.</p>
-      <p className="text-brand-text-muted text-sm max-w-sm">
-        Sign out and sign in again with a Guardr client, guard, or staff account.
-      </p>
-      <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
-        Sign out
-      </button>
+    <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+      <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
+        {notificationBellMenu}
+        <button type="button" onClick={handleSignOut} className="app-button-primary app-btn-inline">
+          Sign out
+        </button>
+      </header>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
+        <p className="text-brand-text font-semibold">This account role is not supported.</p>
+        <p className="text-brand-text-muted text-sm max-w-sm">
+          Sign out and sign in again with a Guardr client, guard, or staff account.
+        </p>
+      </div>
     </div>
   );
 }

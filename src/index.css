@@ -11949,3 +11949,7 @@ html.theme-dark .staff-sidebar {
 html.theme-dark .notification-inbox-item--unread {
   background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
 }
+
+.app-screen-header--compact {
+  min-height: 3rem;
+}

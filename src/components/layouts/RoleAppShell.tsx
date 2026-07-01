@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavBar, BottomNavItem } from './BottomNavBar';
 import { MoreMenuSheet } from './MoreMenuSheet';
-import type { AccountMenuProps } from './AccountMenu';
+import { AccountMenu, type AccountMenuProps } from './AccountMenu';
 
 interface RoleAppShellProps {
   title: string;
@@ -62,7 +62,7 @@ export function RoleAppShell({
         experience ? ` role-experience-${experience}` : ''
       }`}
     >
-      {!hideHeader && (
+      {!hideHeader ? (
         <AppScreenHeader
           title={title}
           subtitle={subtitle}
@@ -73,6 +73,11 @@ export function RoleAppShell({
             experience ? ` role-header-${experience}` : ''
           }`}
         />
+      ) : (
+        <header className="app-screen-header app-screen-header--compact shrink-0 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-end gap-2 border-b border-brand-border bg-brand-bg/95 backdrop-blur-xl z-[1200]">
+          {headerRight}
+          <AccountMenu {...accountMenu} />
+        </header>
       )}
 
       <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
