@@ -439,7 +439,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'jobs-missing-coords',
       title: 'Jobs missing map coordinates',
-      description: 'Add latitude and longitude so guards see the correct map pin',
+      description: 'Moderator or above must add latitude and longitude before the job can go live',
       count: jobsMissingCoords.length,
       section: 'jobs',
       tone: 'urgent',

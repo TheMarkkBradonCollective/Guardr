@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
-import { canStaffEditJobTitleAndLocation, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
+import { canStaffEditJobTitleAndLocation, canStaffEditJobMapCoordinates, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
@@ -418,8 +418,12 @@ export function StaffApprovals({
   );
 
   const renderJobOfferDetail = (req: SecurityRequest) => {
-    const showEdit =
+    const coordsMissing = isJobLocationCoordsMissing(req);
+    const showEditListing =
       canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
+    const showEditCoords =
+      onEditJobListing && staffRole && canStaffEditJobMapCoordinates(req, staffRole) && coordsMissing;
+    const showEdit = showEditListing || showEditCoords;
 
     return (
       <div className="staff-detail-pane space-y-3">
@@ -454,7 +458,7 @@ export function StaffApprovals({
                   onClick={() => setEditingJobId(req.id)}
                   className="app-button-outline app-btn-sm"
                 >
-                  <Pencil className="w-3.5 h-3.5" /> Edit job listing
+                  <Pencil className="w-3.5 h-3.5" /> {showEditCoords && !showEditListing ? 'Add map coordinates' : 'Edit job listing'}
                 </button>
               )}
               <button
@@ -465,11 +469,18 @@ export function StaffApprovals({
                 <X className="w-3.5 h-3.5" /> Decline
               </button>
             </div>
+            {coordsMissing && (
+              <p className="text-xs text-amber-300/90 leading-relaxed">
+                Map coordinates are required before this job can go live. Moderator or above must add them, then an administrator can approve.
+              </p>
+            )}
             <div className="pt-2">
               <SlideToConfirm
                 label="Slide to approve job"
                 confirmedLabel="Approved"
                 tone="success"
+                disabled={coordsMissing}
+                disabledHint="Add map coordinates before approving"
                 onConfirm={() => onApproveRequest(req.id)}
               />
             </div>

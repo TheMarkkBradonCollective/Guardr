@@ -60,6 +60,13 @@ export function canStaffEditJobTitleAndLocation(req: SecurityRequest, role: Plat
   return false;
 }
 
+/** Moderator+ may add map coordinates on jobs awaiting staff review or already open. */
+export function canStaffEditJobMapCoordinates(req: SecurityRequest, role: PlatformRole): boolean {
+  if (role === 'client' || role === 'guard') return false;
+  if (req.status === 'closed' || req.status === 'completed') return false;
+  return req.status === 'pending-review' || req.status === 'open';
+}
+
 export function canEditJobSchedule(req: SecurityRequest): boolean {
   return !isJobPaid(req) && LISTING_EDIT_STATUSES.includes(req.status);
 }

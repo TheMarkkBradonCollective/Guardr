@@ -138,8 +138,6 @@ export function filterOverviewMetrics(
   return cells.filter((cell) => allowed.has(cell.label));
 }
 
-const JOB_COORDS_ACTION_IDS = new Set(['jobs-missing-coords']);
-
 function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boolean {
   if (!queue) return true;
   switch (queue) {
@@ -165,7 +163,6 @@ export function filterOverviewActionItems(
     if (item.section === 'payments' && !config.showPaymentsInQueue) return false;
     if (item.section === 'disputes' && !canHandleDisputes({ role })) return false;
     if (item.section === 'approvals' && !canActOnApprovalQueue(role, item.approvalQueue)) return false;
-    if (JOB_COORDS_ACTION_IDS.has(item.id) && role === 'moderator') return false;
     return true;
   });
 }

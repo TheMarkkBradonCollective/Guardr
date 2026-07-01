@@ -1,18 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { MapPin } from 'lucide-react';
-import { parseGeoCoords } from '../../lib/geo';
+import { parseGeoCoords, type GeoCoords } from '../../lib/geo';
+
+export interface JobLocationCoordsFieldsHandle {
+  /** Applies valid typed latitude/longitude to the parent form. */
+  commitPending: () => GeoCoords | null;
+}
 
 interface JobLocationCoordsFieldsProps {
   latitude?: number;
   longitude?: number;
   onCoordsChange: (coords: { lat: number; lng: number } | null) => void;
+  /** Staff must add coords before the job can publish. */
+  requiredBeforePublish?: boolean;
 }
 
-export function JobLocationCoordsFields({
-  latitude,
-  longitude,
-  onCoordsChange,
-}: JobLocationCoordsFieldsProps) {
+export const JobLocationCoordsFields = forwardRef<
+  JobLocationCoordsFieldsHandle,
+  JobLocationCoordsFieldsProps
+>(function JobLocationCoordsFields(
+  { latitude, longitude, onCoordsChange, requiredBeforePublish = false },
+  ref
+) {
   const [latInput, setLatInput] = useState(latitude != null ? String(latitude) : '');
   const [lngInput, setLngInput] = useState(longitude != null ? String(longitude) : '');
   const [error, setError] = useState<string | null>(null);
@@ -22,14 +31,27 @@ export function JobLocationCoordsFields({
     setLngInput(longitude != null ? String(longitude) : '');
   }, [latitude, longitude]);
 
-  const applyCoords = () => {
+  const commitPending = (): GeoCoords | null => {
     const coords = parseGeoCoords(latInput, lngInput);
-    if (!coords) {
-      setError('Enter valid latitude (-90 to 90) and longitude (-180 to 180).');
-      return;
+    if (coords) {
+      setError(null);
+      onCoordsChange(coords);
+      return coords;
     }
+    if (latInput.trim() || lngInput.trim()) {
+      setError('Enter valid latitude (-90 to 90) and longitude (-180 to 180).');
+    }
+    return null;
+  };
+
+  useImperativeHandle(ref, () => ({ commitPending }), [latInput, lngInput, onCoordsChange]);
+
+  const tryApplyFromInputs = (): boolean => {
+    const coords = parseGeoCoords(latInput, lngInput);
+    if (!coords) return false;
     setError(null);
     onCoordsChange(coords);
+    return true;
   };
 
   const clearCoords = () => {
@@ -46,10 +68,12 @@ export function JobLocationCoordsFields({
       <div>
         <p className="text-xs font-medium text-brand-text-muted flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-brand-primary" />
-          Map coordinates (optional)
+          Map coordinates {requiredBeforePublish ? '(required)' : '(recommended)'}
         </p>
         <p className="text-[11px] text-brand-text-muted mt-1 leading-snug">
-          Coordinates are set automatically when you use current location, or enter them manually below.
+          {requiredBeforePublish
+            ? 'Enter latitude and longitude manually, use current location, or paste from a map pin.'
+            : 'Enter latitude and longitude manually, use current location, or leave blank for staff to add before the job goes live.'}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -63,6 +87,15 @@ export function JobLocationCoordsFields({
             onChange={(e) => {
               setLatInput(e.target.value);
               setError(null);
+            }}
+            onBlur={() => {
+              tryApplyFromInputs();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                tryApplyFromInputs();
+              }
             }}
             className="uber-input w-full font-mono text-sm"
           />
@@ -78,12 +111,21 @@ export function JobLocationCoordsFields({
               setLngInput(e.target.value);
               setError(null);
             }}
+            onBlur={() => {
+              tryApplyFromInputs();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                tryApplyFromInputs();
+              }
+            }}
             className="uber-input w-full font-mono text-sm"
           />
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={applyCoords} className="app-button-outline app-btn-sm">
+        <button type="button" onClick={tryApplyFromInputs} className="app-button-outline app-btn-sm">
           Apply coordinates
         </button>
         {hasCoords && (
@@ -104,4 +146,4 @@ export function JobLocationCoordsFields({
       )}
     </div>
   );
-}
+});

@@ -22,6 +22,7 @@ import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
+import { useJobLocationCoords } from '../jobs/useJobLocationCoords';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -71,8 +72,14 @@ export function DirectGuardRequestFlow({
   const [openingMessage, setOpeningMessage] = useState('');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
-  const [latitude, setLatitude] = useState<number | undefined>();
-  const [longitude, setLongitude] = useState<number | undefined>();
+  const {
+    latitude,
+    longitude,
+    coordsFieldsRef,
+    onCoordsChange,
+    applyLocatedCoords,
+    resolveCoordsForSubmit,
+  } = useJobLocationCoords();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
   const [breakPaid, setBreakPaid] = useState(true);
@@ -126,6 +133,7 @@ export function DirectGuardRequestFlow({
 
   const goNext = () => {
     if (!canNext() || step >= 8) return;
+    if (step === 2) resolveCoordsForSubmit();
     setStep((s) => (s + 1) as FlowStep);
   };
 
@@ -140,6 +148,7 @@ export function DirectGuardRequestFlow({
       showAppToast(scheduleError, { tone: 'error' });
       return;
     }
+    const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({
       requestType: 'direct',
       targetGuardId: guard.id,
@@ -175,8 +184,8 @@ export function DirectGuardRequestFlow({
       contactPhone: listing.contactPhone.trim() || undefined,
       parkingInstructions: listing.parkingInstructions.trim() || undefined,
       accessInstructions: listing.accessInstructions.trim() || undefined,
-      latitude,
-      longitude,
+      latitude: submitLatitude,
+      longitude: submitLongitude,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
@@ -274,8 +283,7 @@ export function DirectGuardRequestFlow({
             </div>
             <UseCurrentLocationButton
               onLocated={({ coords, addressLine, stateCode }) => {
-                setLatitude(coords.lat);
-                setLongitude(coords.lng);
+                applyLocatedCoords(coords);
                 if (addressLine) setAddress(addressLine);
                 setJobState(cityFromGeocode(addressLine, stateCode));
               }}
@@ -293,17 +301,10 @@ export function DirectGuardRequestFlow({
               <input type="text" placeholder="Site name" value={siteName} onChange={(e) => setSiteName(e.target.value)} className="uber-input w-full" />
             </div>
             <JobLocationCoordsFields
+              ref={coordsFieldsRef}
               latitude={latitude}
               longitude={longitude}
-              onCoordsChange={(coords) => {
-                if (coords) {
-                  setLatitude(coords.lat);
-                  setLongitude(coords.lng);
-                } else {
-                  setLatitude(undefined);
-                  setLongitude(undefined);
-                }
-              }}
+              onCoordsChange={onCoordsChange}
             />
           </div>
         )}

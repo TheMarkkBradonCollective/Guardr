@@ -23,6 +23,7 @@ import { MinGuardQualification } from '../../types';
 import { JobBillingSummary } from '../jobs/JobBillingSummary';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
+import { useJobLocationCoords } from '../jobs/useJobLocationCoords';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobListingPreview } from '../jobs/JobListingPreview';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -92,8 +93,14 @@ export function RequestSecurityFlow({
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
-  const [latitude, setLatitude] = useState<number | undefined>();
-  const [longitude, setLongitude] = useState<number | undefined>();
+  const {
+    latitude,
+    longitude,
+    coordsFieldsRef,
+    onCoordsChange,
+    applyLocatedCoords,
+    resolveCoordsForSubmit,
+  } = useJobLocationCoords();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
   const [breakPaid, setBreakPaid] = useState(true);
@@ -156,6 +163,7 @@ export function RequestSecurityFlow({
 
   const goNext = () => {
     if (!canNext()) return;
+    if (step === 2) resolveCoordsForSubmit();
     if (step < 9) setStep((s) => (s + 1) as FlowStep);
   };
 
@@ -170,6 +178,7 @@ export function RequestSecurityFlow({
       showAppToast(scheduleError, { tone: 'error' });
       return;
     }
+    const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({
       requestType: selectedFavoriteGuardId ? 'direct' : 'marketplace',
       targetGuardId: selectedFavoriteGuardId ?? undefined,
@@ -205,8 +214,8 @@ export function RequestSecurityFlow({
       contactPhone: listing.contactPhone.trim() || undefined,
       parkingInstructions: listing.parkingInstructions.trim() || undefined,
       accessInstructions: listing.accessInstructions.trim() || undefined,
-      latitude,
-      longitude,
+      latitude: submitLatitude,
+      longitude: submitLongitude,
       requiredCertifications: ['bsis-guard-card', ...requiredCerts.filter((id) => id !== 'bsis-guard-card')],
       armedRequired: requiredCerts.includes('bsis-exposed-firearm'),
       minGuardQualification,
@@ -301,8 +310,7 @@ export function RequestSecurityFlow({
             </div>
             <UseCurrentLocationButton
               onLocated={({ coords, addressLine, stateCode }) => {
-                setLatitude(coords.lat);
-                setLongitude(coords.lng);
+                applyLocatedCoords(coords);
                 if (addressLine) setAddress(addressLine);
                 setJobState(cityFromGeocode(addressLine, stateCode));
               }}
@@ -331,17 +339,10 @@ export function RequestSecurityFlow({
               />
             </div>
             <JobLocationCoordsFields
+              ref={coordsFieldsRef}
               latitude={latitude}
               longitude={longitude}
-              onCoordsChange={(coords) => {
-                if (coords) {
-                  setLatitude(coords.lat);
-                  setLongitude(coords.lng);
-                } else {
-                  setLatitude(undefined);
-                  setLongitude(undefined);
-                }
-              }}
+              onCoordsChange={onCoordsChange}
             />
           </div>
         )}
