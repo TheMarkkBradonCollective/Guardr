@@ -38,7 +38,7 @@ export function getCredentialUploadBadgeClass(cert: Certification): string {
   if (!certHasDocumentProof(cert)) {
     return 'text-brand-text-muted border-brand-border bg-brand-border/20';
   }
-  if (permitExpiryIsMissing(cert) || isCertExpired(cert)) {
+  if (permitExpiryIsMissing(cert)) {
     return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
   }
   return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
@@ -130,7 +130,7 @@ export function getCourseUploadStatusBadgeClass(status: CourseUploadStatus): str
     case 'listed':
       return 'text-brand-text-muted border-brand-border bg-brand-border/20';
     case 'expired':
-      return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
+      return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
     default:
       return 'text-brand-text-muted border-brand-border';
   }

@@ -42,8 +42,7 @@ export function credentialListStatusLabel(
 }
 
 function listStatusTone(status: CredentialListStatus, staffMode: boolean): WfBadgeTone {
-  if (status === 'on-file') return 'success';
-  if (status === 'expired') return 'warning';
+  if (status === 'on-file' || status === 'expired') return 'primary';
   if (status === 'listed') return staffMode ? 'warning' : 'default';
   return 'default';
 }

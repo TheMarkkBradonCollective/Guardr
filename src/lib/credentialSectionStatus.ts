@@ -10,7 +10,6 @@ import {
 } from './guardIdentityVerification';
 import {
   computePtaUofProgress,
-  guardHasExpiredIdOnFile,
   guardMeets32HourBlock,
   guardMeets32HourBlockVerified,
   guardMeetsPtaUofTrainingVerified,
@@ -62,7 +61,7 @@ export function getGovernmentIdSectionStatus(
   const label = getGovernmentIdUploadStatusSummary(guard, { staffMode });
 
   if (checklist.idVerified) {
-    return { label, tone: guardHasExpiredIdOnFile(guard) ? 'warning' : 'success' };
+    return { label, tone: 'success' };
   }
   if (idStatus === 'rejected') {
     return { label, tone: 'danger' };
@@ -85,7 +84,7 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
     return { label: policy?.rejectionReason ?? 'Rejected — resubmit', tone: 'danger' };
   }
   if (uploadStatus === 'expired') {
-    return { label: 'On file', tone: 'warning' };
+    return { label: 'On file', tone: 'primary' };
   }
   if (resolved === 'pending' && guardInsuranceSubmitted(guard)) {
     return { label: 'Submitted — pending review', tone: 'warning' };
@@ -108,7 +107,7 @@ export function getAggregateSectionStatus(
   options?: { expired?: boolean }
 ): CredentialSectionStatus {
   if (options?.expired) {
-    return { label: 'On file', tone: 'warning' };
+    return { label: 'On file', tone: 'primary' };
   }
   if (complete && verified) {
     return { label: 'Verified — on file', tone: 'success' };

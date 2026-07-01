@@ -77,8 +77,9 @@ export function getCoiCredentialVerificationLabel(guard: Pick<SecurityGuard, 'in
 
 export function getCoiCredentialUploadBadgeClass(guard: Pick<SecurityGuard, 'insurancePolicy'>): string {
   const status = getCoiUploadStatus(guard);
-  if (status === 'on-file') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
-  if (status === 'expired') return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+  if (status === 'on-file' || status === 'expired') {
+    return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+  }
   return 'border-brand-border bg-brand-surface-elevated text-brand-text-muted';
 }
 

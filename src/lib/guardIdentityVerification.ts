@@ -114,7 +114,7 @@ export function getGovernmentIdUploadStatusSummary(
   if (status === 'listed') {
     return options?.staffMode ? 'Incomplete — finish upload' : 'Not on file';
   }
-  if (status === 'expired') return 'On file · expired';
+  if (status === 'expired') return 'On file';
   const verification = getGuardIdVerificationStatus(guard);
   if (verification === 'verified') return 'Verified — on file';
   if (verification === 'pending') return 'Submitted — pending staff review';
@@ -200,13 +200,11 @@ export function getPendingIdentityVerifications(guards: SecurityGuard[]): Securi
 /** Credential-style upload label for government ID (matches cert rows). */
 export function getIdCredentialUploadLabel(guard: SecurityGuard): string | null {
   if (!guardIdVerificationPhotosComplete(guard)) return null;
-  return isIdExpired(guard) ? 'On file · Expired' : 'On file';
+  return 'On file';
 }
 
 export function getIdCredentialUploadBadgeClass(guard: SecurityGuard): string {
-  return isIdExpired(guard)
-    ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
-    : 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
+  return 'text-brand-primary border-brand-primary/30 bg-brand-primary/10';
 }
 
 /** Credential-style verification label — Guardr verified / Unverified / Rejected. */
