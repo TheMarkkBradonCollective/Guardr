@@ -1,7 +1,6 @@
 import { SecurityGuard, SecurityRequest } from '../types';
 import { formatDuration } from './dates';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
-import { hasUnconfirmedSpotChecks, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import {
   incidentSummaryLine,
   listIncidentReportsForRequest,
@@ -71,9 +70,9 @@ export function computeSiteStatus(requests: SecurityRequest[]): SiteStatusLevel 
   const live = requests.filter((r) => r.status === 'in-progress');
   if (live.some((r) => requestHasOpenIncident(r))) return 'incident';
   if (live.some((r) => isNoSelfAuditFlagged(r))) return 'attention';
-  if (live.some((r) => selfAuditPhotosComplete(r.checkInAudit) && !r.checkInAudit?.clientConfirmedAt)) return 'attention';
-  if (live.some((r) => hasUnconfirmedSpotChecks(r))) return 'attention';
-  if (live.some((r) => !r.checkInAudit?.readyForDuty && !r.checkInAudit?.selfAuditSkipped)) return 'attention';
+  if (live.some((r) => selfAuditPhotosComplete(r.checkInAudit) && !r.checkInAudit?.clientConfirmedAt)) {
+    return 'attention';
+  }
   return 'secured';
 }
 
@@ -150,17 +149,6 @@ export function buildActivityFeed(
         requestId: req.id,
         sortKey: new Date(req.checkInAudit.clientConfirmedAt).getTime() + 2,
       });
-    }
-    for (const check of sortedSpotChecks(req)) {
-      if (isSpotCheckClientConfirmed(check)) {
-        items.push({
-          id: `${req.id}-spot-check-confirmed-${check.id}`,
-          timestamp: check.clientConfirmedAt!,
-          label: 'Client confirmed staff spot check',
-          requestId: req.id,
-          sortKey: new Date(check.clientConfirmedAt!).getTime() + 3,
-        });
-      }
     }
     for (const incident of listIncidentReportsForRequest(req)) {
       items.push({

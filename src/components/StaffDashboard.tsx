@@ -34,12 +34,9 @@ import {
   canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
-  canUploadJobSelfAuditPhotos,
-  canUploadJobSpotCheck,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
 } from '../lib/permissions';
-import type { StaffSelfAuditPhotoPayload } from './staff/StaffSelfAuditPhotoUpload';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
 import type { AddCertificationResult } from '../lib/certUniqueness';
 import type { CertImageMutationResult } from '../lib/certImagePolicy';
@@ -192,8 +189,6 @@ interface StaffDashboardProps {
   onAddClientProfile: (input: StaffAddClientInput) => Promise<string>;
   onStaffCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onStaffAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
-  onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
-  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
@@ -320,8 +315,6 @@ export function StaffDashboard({
   onAddClientProfile,
   onStaffCreateJob,
   onStaffAssignGuard,
-  onUploadSelfAuditPhotos,
-  onUploadSpotCheck,
   onEditJobListing,
   themeMode,
   onChangeTheme,
@@ -450,8 +443,6 @@ export function StaffDashboard({
   const canReviewJobs = canReviewJobRequests(currentUser);
   const canResolveDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
-  const canUploadSelfAuditPhotos = canUploadJobSelfAuditPhotos(currentUser);
-  const canUploadSpotCheck = canUploadJobSpotCheck(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
@@ -514,15 +505,11 @@ export function StaffDashboard({
             requests={requests}
             guards={guards}
             canManageJobs={canManageJobs}
-            canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
-            canUploadSpotCheck={canUploadSpotCheck}
             canEditJobListing={canEditJobListing}
             staffRole={currentUser.role}
             onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
             onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
-            onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
-            onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
@@ -577,15 +564,11 @@ export function StaffDashboard({
             guards={guards}
             clients={clients}
             canManageJobs={canManageJobs}
-            canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
-            canUploadSpotCheck={canUploadSpotCheck}
             canEditJobListing={canEditJobListing}
             onApproveRequest={canReviewJobs ? onApproveRequest : undefined}
             onDenyRequest={canReviewJobs ? onDenyRequest : undefined}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
-            onUploadSelfAuditPhotos={canUploadSelfAuditPhotos ? onUploadSelfAuditPhotos : undefined}
-            onUploadSpotCheck={canUploadSpotCheck ? onUploadSpotCheck : undefined}
             onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}

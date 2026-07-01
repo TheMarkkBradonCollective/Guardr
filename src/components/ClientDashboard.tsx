@@ -63,7 +63,6 @@ interface ClientDashboardProps {
   onUpdateStatus: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
-  onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
@@ -136,7 +135,6 @@ export function ClientDashboard({
   onUpdateStatus,
   onAddReview,
   onConfirmSelfAudit,
-  onConfirmSpotCheck,
   onRequestCashPayment,
   onApproveOvertime,
   onDisputeOvertime,
@@ -319,7 +317,6 @@ export function ClientDashboard({
         initialLiveJobId={jobChatRequestId}
         onLiveJobIdChange={onJobChatRequestIdChange}
         onConfirmSelfAudit={onConfirmSelfAudit}
-        onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestCashPayment={onRequestCashPayment}
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}
@@ -483,7 +480,6 @@ export function ClientDashboard({
         onUpdateStatus={onUpdateStatus}
         onAddReview={onAddReview}
         onConfirmSelfAudit={onConfirmSelfAudit}
-        onConfirmSpotCheck={onConfirmSpotCheck}
         onRequestCashPayment={onRequestCashPayment}
         onApproveOvertime={onApproveOvertime}
         onDisputeOvertime={onDisputeOvertime}

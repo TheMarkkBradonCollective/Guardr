@@ -8,7 +8,6 @@ import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StaffCreateJobForm } from './StaffCreateJobForm';
 import type { StaffCreateJobInput } from './StaffCreateJobForm';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
-import type { StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
 import { Briefcase, Search } from 'lucide-react';
 
 type JobsFilter = 'all' | 'open' | 'active' | 'complete';
@@ -22,10 +21,6 @@ interface StaffJobsPanelProps {
   onDenyRequest: (id: string) => void;
   onCreateJob?: (input: StaffCreateJobInput) => Promise<string | void>;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
-  onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
-  canUploadSelfAuditPhotos?: boolean;
-  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
-  canUploadSpotCheck?: boolean;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   canEditJobListing?: boolean;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -59,10 +54,6 @@ export function StaffJobsPanel({
   onDenyRequest,
   onCreateJob,
   onAssignGuard,
-  onUploadSelfAuditPhotos,
-  canUploadSelfAuditPhotos = false,
-  onUploadSpotCheck,
-  canUploadSpotCheck = false,
   onEditJobListing,
   canEditJobListing = false,
   onApproveGuardApplication,
@@ -116,14 +107,10 @@ export function StaffJobsPanel({
         req={req}
         guards={guards}
         canManageJobs={canManageJobs}
-        canUploadSelfAuditPhotos={canUploadSelfAuditPhotos}
         canEditJobListing={canEditJobListing}
         onApproveRequest={onApproveRequest}
         onDenyRequest={onDenyRequest}
         onAssignGuard={onAssignGuard}
-        onUploadSelfAuditPhotos={onUploadSelfAuditPhotos}
-        onUploadSpotCheck={onUploadSpotCheck}
-        canUploadSpotCheck={canUploadSpotCheck}
         onEditJobListing={onEditJobListing}
         onApproveGuardApplication={onApproveGuardApplication}
         onDenyGuardApplication={onDenyGuardApplication}

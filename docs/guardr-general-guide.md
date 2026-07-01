@@ -1,24 +1,23 @@
-# Guardr — General Guide (Start to Finish)
-
-_Last updated: June 25, 2026 (ops hierarchy, two-step guard activation, Founder role)_
+# Guardr — General Guide
 
 Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
 
-This general guide explains the complete process, including which page to open, where the action appears, what button or slider to use, and what status changes after each step.
+This guide explains how Guardr works: which page to open, where actions appear, what button or slider to use, and what status changes after each step.
 
 Use it as the operating manual for the whole app:
 
 - **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
-- **Guards** wait for application approval, upload credentials on the **activation screen**, become **active** after staff verify and manually activate, then apply for work, clock in and out, submit audits/reports, and collect pay.
+- **Guards** wait for application approval, upload credentials on the **activation screen**, become **active** after staff verify and manually activate, then apply for work, clock in and out, complete self-audits, submit reports, and collect pay.
 - **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below.
 
-### Where to open this guide in the app
+### Where to open this guide
 
-| Role | How to open it | Page title |
-|------|----------------|------------|
-| **Client** | Open the account menu in the header, then select **General guide** | **Guide** |
+| Audience | How to open it | Page title |
+|----------|----------------|------------|
+| **Public** | **guardr.app/guide** or **Guide** on the homepage | **Guide** |
+| **Client** | Account menu → **General guide** | **Guide** |
 | **Guard** | Account menu → **General guide** (available after account is **active**) | **Guide** |
-| **Staff** | Left sidebar → **General guide** — filter by **Moderator**, **Administrator**, **Director**, or **Founder** | **Guide** |
+| **Staff** | Left sidebar → **General guide** — filter by role | **Guide** |
 
 ### Main navigation by role
 
@@ -35,40 +34,29 @@ Use it as the operating manual for the whole app:
 
 ---
 
-## IC marketplace model (June 2026)
+## IC marketplace model
 
-Guardr is positioned as a **California-aligned independent contractor technology marketplace**. The platform verifies that guards meet credential requirements; it does not dispatch, supervise, or employ guards.
+Guardr is a **California-aligned independent contractor technology marketplace**. The platform verifies that guards meet credential requirements; it does not dispatch, supervise, or employ guards on site.
 
 ### What Guardr staff do (by role)
 
 | Staff role | Primary responsibilities |
 |------------|-------------------------|
-| **Moderator** | Approve guard and client **applications**, monitor activity, upload self-audit/spot-check photos, review reports |
+| **Moderator** | Approve guard and client **applications**, monitor activity, review reports |
 | **Administrator** | Everything Moderators do, plus **verify credentials** (government ID, guard card, COI, training certs), review job requests, handle disputes, suspend users |
 | **Director** | Full platform operations — financial controls, cash handling, job creation, guard assignment (dispute/safety only), manage Administrators and Moderators |
 | **Founder** | Platform governance overseer — everything Directors do, plus manage Directors and all staff tiers, platform settings, homepage messages |
 
 **Credential verification and account activation are Administrator and above only.** Moderators approve applications but do not verify documents or activate accounts.
 
-### What changed to reduce employer-like control
+### How jobs and coverage work
 
-| Area | Old behavior | Current behavior |
-|------|--------------|------------------|
-| **Job assignment** | Staff reviewed applicants and sent a guard to the client | Guards **self-select** — apply directly; client approves or declines |
-| **Staff placement** | Routine dispatch | **Dispute/safety only** — staff confirm before placing a guard |
-| **Spot checks** | Staff uploaded presence photos; clients confirmed | **Removed** — no platform on-site supervision |
-| **Payments** | Card and cash options; staff released most payouts manually | **Card/Stripe only**; auto-release to Stripe Connect ~48h after completion |
-| **Staff payout override** | Routine manual release | **Dispute hold only** — e.g. overtime under dispute |
-| **Account activation** | Staff "hire/activate" language | **Two-step manual flow** — (1) Moderator+ **approves application** → guard uploads creds; (2) Administrator+ **verifies** each cred; (3) Administrator+ **manually activates** — no auto-activation on verify |
-| **Grace period (PTA/32-hr)** | Staff picked grace hours at activation | **48h self-serve** — auto-applied; automated lockout if credentials not uploaded |
-
-### What did not change
-
-- **Guards cannot upload credentials until staff approves the application** (`pending` → `approved`).
-- **Guards cannot browse the app until staff manually activates the account** (`active` status).
-- **Nothing auto-verifies or auto-activates** on credential upload or ID verify.
-- **Clients still approve guards** before a job becomes **Accepted**.
-- **Self-audit photos** at shift start remain required (guard-submitted, not staff spot-checks).
+- Guards **self-select** — they apply directly; clients approve or decline.
+- Staff placement is for **dispute or safety situations only**.
+- **Self-audit photos** at shift start are **guard-submitted** (selfie, uniform, shoes) — clients review and confirm.
+- Guards upload credentials only after staff **approves the application**; guards browse the app only after staff **manually activates** the account.
+- Clients **approve guards** before a job becomes **Accepted**.
+- Card/Stripe is the primary payment path; payouts auto-release to Stripe Connect after completion unless a dispute holds them.
 
 ---
 
@@ -311,7 +299,7 @@ Issue or exception
   |
   |-- Guard skips self-audit
   |     -> Job flagged No Self Audit
-  |     -> Staff Jobs: follow up or upload self-audit photos
+  |     -> Guard should upload photos when able
   |     -> Client Jobs/Live coverage: confirm photos when available
   |
   |-- Incident or activity report
@@ -465,11 +453,11 @@ The guard will:
 1. Open **Map**.
 2. Slide **Slide to arrive on site**.
 3. Slide **Slide to start shift**.
-4. Complete self-audit photos or skip self-audit with a staff-visible flag.
+4. Complete self-audit photos at clock-in, or skip with a **No Self Audit** flag until photos are added.
 
 ### 8. Confirm self-audit photos
 
-Self-audit photos document that the guard arrived prepared.
+Self-audit photos document that the guard arrived prepared. Guards take these photos themselves at shift start.
 
 1. Open **Jobs** or **Live coverage**.
 2. Open the active job.
@@ -479,8 +467,7 @@ Self-audit photos document that the guard arrived prepared.
 
 If the guard skipped the audit:
 
-- The job may show **No Self Audit**.
-- Staff can follow up or upload photos later from **Jobs**.
+- The job may show **No Self Audit** until the guard uploads the required photos.
 
 ### 9. Use messages, job chat, support, and reports
 
@@ -622,8 +609,7 @@ Clock-in opens around the scheduled start window.
 If you cannot complete the self-audit:
 
 - Use **Skip self audit · clock in** only when necessary.
-- The job is flagged **No Self Audit** for staff follow-up.
-- Staff may upload self-audit photos later if you send them offline.
+- The job is flagged **No Self Audit** until you upload the three required photos yourself.
 
 ### 7. Work the shift
 
@@ -707,7 +693,6 @@ Moderators are the front line for account intake and field monitoring. You **app
 | Approve guard applications (`pending` → `approved`) | **Approvals → Profile approval** — slide to approve application |
 | Activate guard accounts (`approved` → `active`) | **Approvals** or **Guards** — only after Administrator+ verified all five creds |
 | Monitor live jobs and map | **Map**, **Jobs**, **Overview** |
-| Upload self-audit photos on behalf of guards | **Jobs** |
 | Review field reports | **Incidents** (view) |
 | Message clients, guards, staff | **Messages** |
 
@@ -723,7 +708,7 @@ Moderators are the front line for account intake and field monitoring. You **app
 1. Open **Overview** — check approval queue counts.
 2. **Approvals → Profile approval** — approve pending clients and guard **applications** (intake only; creds come after approval).
 3. **Approvals → Profile approval** — view guards awaiting activation (Administrator+ activates when credentials are verified).
-4. **Map** / **Jobs** — monitor active shifts and **No Self Audit** flags.
+4. **Map** / **Jobs** — monitor active shifts and **No Self Audit** flags on jobs where guards skipped photos.
 5. **Messages** — respond to support tickets.
 
 ### Guard activation (your two steps)
@@ -870,7 +855,7 @@ Client opens Home or Jobs
 
 | Guide step | Client page/action | Guard page/action | Staff page/action |
 |---------------|--------------------|-------------------|-------------------|
-| Open this guide | Account menu → **General guide** | Account menu → **General guide** (after **active**) | Sidebar → **General guide** |
+| Open this guide | Homepage **Guide** or account menu → **General guide** | Account menu → **General guide** (after **active**) | Sidebar → **General guide** |
 | Account approval / activation | **Home** pending banner; account menu → **Profile** | **Activation screen** — wait for approval, then upload creds; blocked until **active** | **Moderator+** approve application; **Administrator+** verify creds & activate |
 | Post marketplace job | **Home → Post job offer** or **Jobs → + Post offer** | — | **Approvals → Job offers** |
 | Direct guard request | **Guards → guard profile → Send assignment request to [name]** | **Map → Slide to claim job** | **Jobs** |
@@ -879,7 +864,7 @@ Client opens Home or Jobs
 | Apply for job | — | **Map → Slide to apply for job** | — |
 | Approve guard | **Jobs → Approve guard** / **Decline guard** | — | Dispute/safety placement only |
 | Start shift | Watch from **Live coverage** / **Jobs** | **Map → Slide to arrive on site → Slide to start shift** | **Map** / **Jobs** |
-| Self-audit | **Jobs** or **Live coverage → Confirm self-audit photos** | Self-audit modal after start shift | **Jobs → Upload self-audit photos** if missing |
+| Self-audit | **Jobs** or **Live coverage → Confirm self-audit photos** | Self-audit modal after start shift | **Jobs** — view **No Self Audit** flags |
 | On-duty messages | **Messages** / job chat | **Message client** / **Messages** | **Messages** |
 | Incident/activity reports | **Home → Reports** to review | **Report incident** / **Activity report** | **Incidents** |
 | End shift | Watch completion from **Jobs** | **Map → Slide to end shift** | **Jobs** |
@@ -1002,11 +987,11 @@ Open **Pay** and use **Connect bank account** to link Stripe Connect for bank tr
 
 **What it is:** A mandatory photo check performed by the guard at the start of each shift — selfie, uniform, and shoes. It confirms the guard arrived prepared and in the correct appearance.
 
-**For guards:** When you start a shift, the self-audit modal opens automatically. Take and submit all three photos to start the shift. If you need to skip, use **Skip self audit · clock in** — the job is then flagged for staff follow-up.
+**For guards:** When you start a shift, the self-audit modal opens automatically. Take and submit all three photos to start the shift. If you need to skip temporarily, use **Skip self audit · clock in** — the job is flagged **No Self Audit** until you upload the photos yourself.
 
 **For clients:** Self-audit photos appear in the job detail under **Guard self-audit photos**. Review the photos and tap **Confirm self-audit photos** when they are acceptable.
 
-**For staff:** If a guard skipped the audit, the job shows a **No Self Audit** flag. You can upload self-audit photos on behalf of the guard from **Jobs**.
+**For staff:** If a guard skipped the audit, the job shows a **No Self Audit** flag on **Jobs** and **Map** for monitoring. Guards upload their own photos — staff do not add them on the guard's behalf.
 
 ---
 
@@ -1082,7 +1067,7 @@ The Approvals hub holds all pending review queues. Open a queue to view items an
 | **Guard credentials** | Credential and COI uploads — staff verify license photos and approve or reject. |
 | **Profile approval** | New guard and client accounts — Moderator+ **approve guard application** (`pending` → `approved`). Separate **Activate account** step (`approved` → `active`) after Administrator+ verifies all five creds. |
 
-_Note: Guard applications no longer queue for staff. Guards apply directly to clients._
+_Note: Guards apply directly to clients for marketplace jobs._
 
 #### Payments panel
 

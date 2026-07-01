@@ -11,13 +11,10 @@ import { Camera } from 'lucide-react';
 
 interface JobSelfAuditPhotosSectionProps {
   request: Pick<SecurityRequest, 'checkInAudit'>;
-  /** Hide staff upload attribution (guard-facing views) */
-  hideStaffAttribution?: boolean;
 }
 
 export function JobSelfAuditPhotosSection({
   request,
-  hideStaffAttribution = false,
 }: JobSelfAuditPhotosSectionProps) {
   const audit = request.checkInAudit;
   if (!shouldShowJobSelfAuditPhotos(request)) return null;
@@ -39,12 +36,6 @@ export function JobSelfAuditPhotosSection({
           )}
           {flagged && !hasPhotos && (
             <p className="text-xs text-amber-400/90 mt-1">No photos yet — self-audit was skipped at clock-in.</p>
-          )}
-          {!hideStaffAttribution && audit?.staffUploadedBy && (
-            <p className="text-xs text-brand-text-muted mt-1">
-              Photos uploaded by staff ({audit.staffUploadedBy})
-              {audit.staffUploadedAt ? ` · ${new Date(audit.staffUploadedAt).toLocaleString()}` : ''}
-            </p>
           )}
           {audit?.clientConfirmedAt && (
             <p className="text-xs text-emerald-400/90 mt-1">

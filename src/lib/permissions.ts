@@ -345,16 +345,6 @@ export function canManageCompanyOperations(user: Pick<SessionUser, 'role'>): boo
   return hasPermission(user, 'director.manage_company_operations');
 }
 
-/** Staff may upload self-audit photos when a guard sent them outside the app */
-export function canUploadJobSelfAuditPhotos(user: Pick<SessionUser, 'role'>): boolean {
-  return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
-}
-
-/** Staff may upload spot-check photos to confirm guard presence on site */
-export function canUploadJobSpotCheck(user: Pick<SessionUser, 'role'>): boolean {
-  return hasDirectorStaffOverride(user) || hasPermission(user, 'moderator.review_reports');
-}
-
 /** Director and Founder may edit job listings (any non-closed job) */
 export function canEditJobListingDetails(user: Pick<SessionUser, 'role'>): boolean {
   return hasDirectorStaffOverride(user) || user.role === 'administrator';
@@ -370,9 +360,7 @@ export function canStaffManageJobs(user: Pick<SessionUser, 'role'>): boolean {
   return (
     hasDirectorStaffOverride(user) ||
     canManageCompanyOperations(user) ||
-    canEditJobListingDetails(user) ||
-    canUploadJobSelfAuditPhotos(user) ||
-    canUploadJobSpotCheck(user)
+    canEditJobListingDetails(user)
   );
 }
 

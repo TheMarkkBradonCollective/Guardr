@@ -31,14 +31,8 @@ import {
   GuardStandingCrewMember,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
-import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
-import {
-  canClientConfirmSelfAudit,
-  canStaffUploadSelfAuditPhotos,
-  selfAuditPhotosComplete,
-} from './lib/selfAuditPhotos';
-import { canClientConfirmSpotCheck, canStaffAddSpotCheck, hasSpotChecks } from './lib/spotChecks';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
+import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
   incidentChatSummary,
@@ -78,6 +72,7 @@ import { AccountPendingScreen } from './components/account/AccountPendingScreen'
 import { GuardDashboard } from './components/GuardDashboard';
 import { StaffDashboard, type StaffSectionSelection } from './components/StaffDashboard';
 import { HomePage } from './components/HomePage';
+import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
@@ -306,9 +301,12 @@ import {
   readAppRouteFromWindow,
   readLegalPageFromUrl,
   readLegalPageFromWindow,
+  readGuideFromUrl,
+  readGuideFromWindow,
   resolveAppRouteForUser,
   stripEphemeralQueryParams,
   syncAppRoute,
+  syncGuidePage,
   syncLegalPage,
   type AppRole,
   type AppRoute,
@@ -429,6 +427,7 @@ export default function App() {
     () => readAppRouteFromWindow()?.authView ?? 'sign-in'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
+  const [publicGuideOpen, setPublicGuideOpen] = useState(() => readGuideFromWindow());
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
@@ -1095,8 +1094,21 @@ export default function App() {
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
     setLegalPageState(page);
+    setPublicGuideOpen(false);
     setIsAuthView(false);
     syncLegalPage(page);
+  };
+
+  const openPublicGuide = () => {
+    setPublicGuideOpen(true);
+    setLegalPageState(null);
+    setIsAuthView(false);
+    syncGuidePage(true);
+  };
+
+  const closePublicGuide = () => {
+    setPublicGuideOpen(false);
+    syncGuidePage(false, true);
   };
 
   const closeLegalPage = () => {
@@ -1157,10 +1169,24 @@ export default function App() {
 
     if (legal) {
       setLegalPageState(legal);
+      setPublicGuideOpen(false);
       setIsAuthView(false);
       return;
     }
     setLegalPageState(null);
+
+    const guide =
+      options.source === 'popstate'
+        ? ((options.event?.state?.publicGuide as boolean | undefined) ??
+          readGuideFromUrl(url))
+        : readGuideFromUrl(url);
+
+    if (guide) {
+      setPublicGuideOpen(true);
+      setIsAuthView(false);
+      return;
+    }
+    setPublicGuideOpen(false);
 
     const user = currentUserRef.current;
     const strippedUrl = stripEphemeralQueryParams(url);
@@ -8252,123 +8278,6 @@ export default function App() {
     }
   };
 
-  const handleStaffUploadSelfAuditPhotos = async (requestId: string, photos: StaffSelfAuditPhotoPayload) => {
-    if (!currentUser || !canUploadJobSelfAuditPhotos(currentUser)) {
-      appToast('Only staff can upload audit photos on behalf of guards.', 'error');
-      return;
-    }
-    const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canStaffUploadSelfAuditPhotos(existing, currentUser.role)) {
-      appToast(
-        existing?.status === 'completed'
-          ? currentUser.role === 'director' || currentUser.role === 'owner'
-            ? 'Completed jobs only accept audit photos when photos are missing or flagged No Self Audit.'
-            : 'Completed jobs only accept staff audit photos when flagged No Self Audit.'
-          : existing?.assignedGuardId
-            ? 'Audit photos cannot be added for this job right now.'
-            : 'Assign a guard before uploading audit photos.'
-      , 'error');
-      return;
-    }
-    if (Object.keys(photos).length === 0) return;
-
-    const baseAudit = existing.checkInAudit ?? {
-      checkedAt: new Date().toISOString(),
-      uniform: {
-        uniformPresent: true,
-        blackShoes: true,
-        dutyBelt: true,
-        nameBadge: true,
-        professionalAppearance: true,
-      },
-      equipment: {
-        radio: true,
-        flashlight: true,
-        requiredEquipment: true,
-      },
-      selfieUpload: '',
-      gpsVerified: false,
-      selfAuditSkipped: true,
-      readyForDuty: false,
-    };
-
-    const checkInAudit = {
-      ...baseAudit,
-      ...(photos.self ? { selfieUpload: photos.self } : {}),
-      ...(photos.uniform ? { uniformPhoto: photos.uniform } : {}),
-      ...(photos.shoes ? { shoesPhoto: photos.shoes } : {}),
-      staffUploadedAt: new Date().toISOString(),
-      staffUploadedBy: currentUser.name,
-    };
-
-    if (selfAuditPhotosComplete(checkInAudit)) {
-      checkInAudit.selfAuditSkipped = false;
-      checkInAudit.readyForDuty = true;
-    }
-
-    const previousRequest = existing ? (JSON.parse(JSON.stringify(existing)) as SecurityRequest) : null;
-
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, checkInAudit } : r)));
-    if (isDbConnected) {
-      beginLocalMutation();
-      const { error } = await supabase.from('security_requests').update({ check_in_audit: checkInAudit }).eq('id', requestId);
-      if (error) {
-        console.error('Staff self-audit upload error:', error);
-        if (previousRequest) {
-          setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
-        }
-        appToast('Could not save audit photos. Please try again.', 'error');
-      }
-    }
-    if (currentUser && existing.clientId && selfAuditPhotosComplete(checkInAudit)) {
-      notifyAccountUpdate(
-        currentUser,
-        existing.clientId,
-        'Self-audit ready to confirm',
-        `Staff uploaded self-audit photos for "${existing.title}". Please review and confirm in your jobs list.`
-      );
-    }
-  };
-
-  const handleStaffUploadSpotCheck = async (requestId: string, imageUrl: string) => {
-    if (!currentUser || !canUploadJobSpotCheck(currentUser)) {
-      appToast('Only staff can upload spot checks.', 'error');
-      return;
-    }
-    const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canStaffAddSpotCheck(existing)) {
-      appToast(
-        hasSpotChecks(existing ?? { spotChecks: [] })
-          ? 'This job already has a spot check. Only one spot check is allowed per job.'
-          : existing?.assignedGuardId
-            ? 'Spot checks can only be added while a guard is assigned to an active or completed job.'
-            : 'Assign a guard before uploading a spot check.'
-      , 'error');
-      return;
-    }
-    if (!imageUrl) return;
-
-    const spotCheck = {
-      id: crypto.randomUUID(),
-      imageUrl,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: currentUser.name,
-    };
-    const spotChecks = [...(existing.spotChecks ?? []), spotCheck];
-    const previousRequest = JSON.parse(JSON.stringify(existing)) as SecurityRequest;
-
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
-    if (isDbConnected) {
-      beginLocalMutation();
-      const { error } = await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
-      if (error) {
-        console.error('Staff spot check upload error:', error);
-        setRequests((prev) => prev.map((r) => (r.id === requestId ? previousRequest : r)));
-        appToast('Could not save spot check photo. Please try again.', 'error');
-      }
-    }
-  };
-
   const handleClientConfirmSelfAudit = async (requestId: string) => {
     if (!currentUser || currentUser.role !== 'client') return;
     const existing = requests.find((r) => r.id === requestId);
@@ -8411,42 +8320,6 @@ export default function App() {
         location: existing.location,
         body: `Client confirmed your self-audit photos for "${existing.title}".`,
       });
-    }
-  };
-
-  const handleClientConfirmSpotCheck = async (requestId: string, spotCheckId: string) => {
-    if (!currentUser || currentUser.role !== 'client') return;
-    const existing = requests.find((r) => r.id === requestId);
-    if (!existing) {
-      appToast('Job not found.', 'error');
-      return;
-    }
-    const ownsJob =
-      existing.clientId === currentUser.id ||
-      existing.clientName === currentUser.clientName ||
-      existing.clientName === currentUser.name;
-    if (!ownsJob) {
-      appToast('You can only confirm spot checks on your own jobs.', 'error');
-      return;
-    }
-    if (!canClientConfirmSpotCheck(existing, spotCheckId)) {
-      appToast('This spot check cannot be confirmed right now.', 'error');
-      return;
-    }
-
-    const spotChecks = (existing.spotChecks ?? []).map((check) =>
-      check.id === spotCheckId
-        ? {
-            ...check,
-            clientConfirmedAt: new Date().toISOString(),
-            clientConfirmedBy: currentUser.name,
-          }
-        : check
-    );
-
-    setRequests((prev) => prev.map((r) => (r.id === requestId ? { ...r, spotChecks } : r)));
-    if (isDbConnected) {
-      await supabase.from('security_requests').update({ spot_checks: spotChecks }).eq('id', requestId);
     }
   };
 
@@ -9500,6 +9373,16 @@ export default function App() {
   }
 
   if (!currentUser) {
+    if (publicGuideOpen) {
+      return (
+        <>
+          <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
+            <AppGuidePage audience="all" onBack={closePublicGuide} />
+          </div>
+          <InstallPrompt />
+        </>
+      );
+    }
     if (isAuthView) {
       return (
         <>
@@ -9510,6 +9393,7 @@ export default function App() {
             clientsList={clients}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
+            onOpenGuide={openPublicGuide}
             onAuthModeChange={setAuthViewMode}
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
@@ -9531,6 +9415,7 @@ export default function App() {
             openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
           onOpenLegal={openLegalPage}
+          onOpenGuide={openPublicGuide}
         />
         <InstallPrompt />
       </>
@@ -9827,7 +9712,6 @@ export default function App() {
               onCancelRequest={handleCancelRequest}
               onAddReview={handleAddReview}
               onConfirmSelfAudit={handleClientConfirmSelfAudit}
-              onConfirmSpotCheck={handleClientConfirmSpotCheck}
               onRequestCashPayment={handleClientRequestCashPayment}
               onApproveOvertime={handleClientApproveOvertime}
               onDisputeOvertime={handleClientDisputeOvertime}
@@ -9969,8 +9853,6 @@ export default function App() {
           onAddClientProfile={handleAddClientProfile}
           onStaffCreateJob={handleStaffCreateJob}
           onStaffAssignGuard={handleStaffAssignGuard}
-          onUploadSelfAuditPhotos={handleStaffUploadSelfAuditPhotos}
-          onUploadSpotCheck={handleStaffUploadSpotCheck}
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}

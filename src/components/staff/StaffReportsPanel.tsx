@@ -4,10 +4,8 @@ import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
 import { SelfAuditPhotoGallery } from '../jobs/SelfAuditPhotoGallery';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { FileText } from 'lucide-react';
-import { isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from '../../lib/spotChecks';
 import { buildIncidentReportViews, listIncidentReportsForRequest } from '../../lib/incidentReports';
 import { IncidentReportDetailView } from '../reports/IncidentReportDetailView';
-import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppList, AppListRow } from '../ui/app/AppPrimitives';
 
@@ -17,9 +15,7 @@ interface StaffReportsPanelProps {
 }
 
 export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) {
-  const withAudits = requests.filter(
-    (r) => r.checkInAudit || r.checkOutAudit || (r.spotChecks?.length ?? 0) > 0 || isNoSpotCheckFlagged(r)
-  );
+  const withAudits = requests.filter((r) => r.checkInAudit || r.checkOutAudit);
 
   return (
     <div className="animate-fade-in -mx-4 sm:-mx-5">
@@ -27,7 +23,7 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
         <div className="app-empty-state">
           <div className="app-empty-state-icon"><FileText className="w-5 h-5" /></div>
           <p className="app-empty-state-title">No reports yet</p>
-          <p className="app-empty-state-body">Self-audit logs and spot check photos from completed jobs will appear here.</p>
+          <p className="app-empty-state-body">Guard check-in logs and activity reports from completed jobs will appear here.</p>
         </div>
       ) : (
         <AppList>
@@ -49,11 +45,6 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                       {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
                     </div>
                     <p>Uniform ✓ · Equipment ✓ · GPS {req.checkInAudit.gpsVerified ? '✓' : '×'}</p>
-                    {req.checkInAudit.staffUploadedBy && (
-                      <p className="text-xs text-brand-text-muted">
-                        Photos uploaded by staff ({req.checkInAudit.staffUploadedBy})
-                      </p>
-                    )}
                     {req.checkInAudit.clientConfirmedAt && (
                       <p className="text-xs text-emerald-400/90">
                         Client confirmed {new Date(req.checkInAudit.clientConfirmedAt).toLocaleString()}
@@ -61,47 +52,6 @@ export function StaffReportsPanel({ requests, guards }: StaffReportsPanelProps) 
                       </p>
                     )}
                     <SelfAuditPhotoGallery audit={req.checkInAudit} />
-                  </div>
-                )}
-                {(isNoSpotCheckFlagged(req) || (req.spotChecks?.length ?? 0) > 0) && (
-                  <div className="text-sm bg-brand-bg-sec rounded-xl p-3 space-y-2 w-full">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-brand-primary text-xs font-semibold">Staff spot checks</p>
-                      {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
-                    </div>
-                    {isNoSpotCheckFlagged(req) && (
-                      <p className="text-xs text-amber-400/90">No spot-check photo on file yet — staff-only, optional but flagged.</p>
-                    )}
-                    {(req.spotChecks?.length ?? 0) > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {sortedSpotChecks(req).map((check) => (
-                          <div key={check.id}>
-                            <img
-                              src={check.imageUrl}
-                              alt="Spot check"
-                              className="w-full h-24 object-cover rounded-lg border border-brand-border"
-                            />
-                            <p className="text-[10px] text-brand-text-muted mt-1">
-                              {check.uploadedBy} · {new Date(check.uploadedAt).toLocaleString()}
-                              {isSpotCheckClientConfirmed(check) ? (
-                                <>
-                                  <br />
-                                  <span className="text-emerald-400/90">
-                                    Client confirmed
-                                    {check.clientConfirmedAt ? ` · ${new Date(check.clientConfirmedAt).toLocaleString()}` : ''}
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <br />
-                                  <span className="text-amber-400/90">Awaiting client confirmation</span>
-                                </>
-                              )}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 )}
                 {req.checkOutAudit?.dailyActivityReport && (

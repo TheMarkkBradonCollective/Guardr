@@ -11,7 +11,6 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
       'Approve guard & client applications',
       'Activate approved guard accounts (manual)',
       'Review reports & monitor platform activity',
-      'Upload self-audit & spot-check photos',
       'No credential verification, job reviews, or disputes',
     ],
   },

@@ -210,7 +210,7 @@ export function GuardActiveShift({
         )}
 
         {(phase === 'on-duty' || phase === 'complete') && (
-          <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
+          <JobSelfAuditPhotosSection request={job} />
         )}
 
         {phase === 'upcoming' && (
@@ -269,7 +269,7 @@ export function GuardActiveShift({
               Skip self audit · clock in
             </button>
             <p className="text-xs text-brand-text-muted text-center">
-              Skipping flags this job as No Self Audit until staff add photos after the job.
+              Skipping flags this job until you complete your self-audit photos.
             </p>
           </div>
         )}

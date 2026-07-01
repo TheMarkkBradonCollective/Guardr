@@ -29,10 +29,10 @@ const ALL_METRICS = [
   'To verify',
   'Completed jobs',
   'Active clients',
-  'Open incidents',
+  'Active guards',
 ] as const;
 
-const MODERATOR_METRICS = ['Active jobs', 'On site now', 'To verify', 'Open incidents'];
+const MODERATOR_METRICS = ['Active jobs', 'On site now', 'To verify', 'Active guards'];
 
 const ADMIN_METRICS = [
   'Active jobs',
@@ -40,7 +40,7 @@ const ADMIN_METRICS = [
   'To verify',
   'Completed jobs',
   'Active clients',
-  'Open incidents',
+  'Active guards',
 ];
 
 const STAFF_OVERVIEW_CONFIG: Record<

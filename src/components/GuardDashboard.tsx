@@ -697,7 +697,7 @@ export function GuardDashboard({
       if (!(await showAppConfirm({
         title: 'Skip self audit?',
         message:
-          'Clock in without a self audit? This job will be flagged No Self Audit until staff add photos after the job.',
+          'Clock in without completing your self-audit photos? This job will be flagged No Self Audit until you upload them.',
         confirmLabel: 'Skip and clock in',
         tone: 'danger',
       }))) {
