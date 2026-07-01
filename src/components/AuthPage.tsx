@@ -519,7 +519,7 @@ export function AuthPage({
       id="guardr-auth-root"
     >
       <div className="auth-hero relative h-44 sm:h-52 shrink-0 overflow-hidden">
-        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-10 bg-brand-bg rounded-t-[2.5rem]" />
+        <div className="auth-hero-curve absolute inset-x-0 -bottom-px h-3 bg-brand-bg" />
         <header className="relative z-10 px-4 sm:px-6 h-14 flex items-center justify-between">
           <button
             type="button"

@@ -25,8 +25,10 @@
   --color-status-info: var(--status-info);
 
   --radius-app: 0px;
-  --radius-app-lg: 12px;
-  --radius-app-xl: 16px;
+  --radius-app-sm: 4px;
+  --radius-app-lg: 6px;
+  --radius-app-xl: 8px;
+  --radius-input: 8px;
   --radius-pill: 9999px;
 
   --color-gray-50:  #f7f7f7;
@@ -91,17 +93,17 @@ html.theme-dark {
   --brand-primary:       #6B8F6E;
   --brand-primary-hover: #5A7A5D;
   --brand-bg:            #000000;
-  --brand-bg-sec:        #131313;
-  --brand-surface:       #1A1A1A;
-  --brand-elevated:      #222222;
-  --brand-border:        #2C2C2C;
+  --brand-bg-sec:        #0A0A0A;
+  --brand-surface:       #111111;
+  --brand-elevated:      #1A1A1A;
+  --brand-border:        #242424;
   --brand-text:          #F5F5F5;
   --brand-text-muted:    #9CA3AF;
   --brand-accent:        #6B8F6E;
   --brand-accent-text:   #FFFFFF;
-  --brand-overlay:       rgba(15, 15, 15, 0.92);
-  --brand-chrome:        color-mix(in srgb, var(--brand-primary) 32%, var(--brand-bg-sec));
-  --brand-chrome-deep:   color-mix(in srgb, var(--brand-primary) 22%, var(--brand-bg));
+  --brand-overlay:       rgba(0, 0, 0, 0.94);
+  --brand-chrome:        #000000;
+  --brand-chrome-deep:   #000000;
   --brand-chrome-text:   var(--brand-text);
   --brand-chrome-muted:  var(--brand-text-muted);
   --brand-chrome-border: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
@@ -11543,3 +11545,375 @@ html.theme-light .role-experience-guard {
 }
 
 /* End role chrome section */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR IDENTITY — SHARP SAGE
+   Uber-sharp structure · sage reserved for action · clean high-contrast chrome
+═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --guardr-accent-bar: 3px;
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  letter-spacing: -0.04em;
+}
+
+.landing-wordmark-accent,
+.landing-hero-accent {
+  color: var(--brand-primary);
+}
+
+.landing-hero-accent {
+  font-weight: 900;
+}
+
+/* ─── Cards & surfaces — flat, structured, no floaty shadows ─────────────── */
+.app-card,
+.uber-card,
+.uber-card-flat,
+.client-action-card,
+.client-coverage-card,
+.landing-path-card,
+.landing-how-card,
+.auth-role-card,
+.legal-info-card,
+.shift-period-status-bar {
+  border-radius: var(--radius-app-lg) !important;
+  box-shadow: none !important;
+}
+
+.app-card-interactive:hover:not(:disabled),
+.client-action-card:hover:not(:disabled),
+.landing-path-card:hover,
+.uber-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Signature left accent — Guardr personality on path cards */
+.landing-path-card {
+  border-left-width: var(--guardr-accent-bar);
+  border-left-color: transparent;
+  padding: 1.375rem 1.5rem;
+  background: var(--brand-surface);
+}
+
+.landing-path-card-client {
+  border-left-color: var(--brand-primary);
+}
+
+.landing-path-card-guard:hover,
+.landing-path-card-client:hover {
+  border-left-color: var(--brand-primary);
+  background: var(--brand-elevated);
+}
+
+.landing-path-card-client {
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
+}
+
+/* ─── Landing hero & header ──────────────────────────────────────────────── */
+.landing-hero-title {
+  font-size: clamp(2.85rem, 9vw, 4.25rem);
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+
+.landing-hero-glow {
+  opacity: 0.2;
+}
+
+.landing-header {
+  background: color-mix(in srgb, var(--brand-bg) 94%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+}
+
+.landing-header-signin {
+  border-radius: var(--radius-app-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.landing-header-signin:hover {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-accent-text);
+}
+
+.landing-stat-pill {
+  border-radius: var(--radius-app-lg);
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.landing-trust-item {
+  border-left: 1px solid var(--brand-border);
+  padding-left: 1rem;
+}
+
+.landing-trust-item:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.landing-trust-value {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.landing-how-card {
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  padding: 1.5rem;
+}
+
+.landing-how-step {
+  color: var(--brand-primary);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.landing-how-icon {
+  border-radius: var(--radius-app-lg);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+}
+
+.landing-feature-icon {
+  border-radius: var(--radius-app-lg) !important;
+}
+
+.landing-preview-frame {
+  border-radius: var(--radius-app-xl);
+  border: 1px solid var(--brand-border);
+  box-shadow: none;
+}
+
+.landing-coverage-tag {
+  border-radius: var(--radius-app-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.landing-mobile-cta {
+  border-radius: var(--radius-app-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Forms & inputs — sharp Uber fields ─────────────────────────────────── */
+.uber-input,
+.uber-select {
+  border-radius: var(--radius-input) !important;
+  border-width: 1.5px;
+  font-weight: 500;
+  background: var(--brand-bg-sec);
+}
+
+.uber-input:focus,
+.uber-select:focus {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 22%, transparent) !important;
+}
+
+.uber-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+}
+
+/* ─── Buttons — confident, minimal lift ──────────────────────────────────── */
+.app-button-primary,
+.uber-button-primary,
+.app-cta-dark,
+.uber-button-sage {
+  border-radius: var(--radius-app-lg) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.app-button-primary:hover:not(:disabled),
+.uber-button-primary:hover,
+.app-cta-dark:hover:not(:disabled) {
+  transform: none !important;
+  opacity: 1;
+  background: var(--brand-primary-hover) !important;
+  box-shadow: none !important;
+}
+
+.uber-button-sage {
+  box-shadow: none !important;
+}
+
+.uber-button-sage:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.app-button-outline,
+.uber-button-outline {
+  border-radius: var(--radius-app-lg) !important;
+  border-width: 1.5px;
+  font-weight: 700;
+}
+
+.app-button-outline:hover:not(:disabled),
+.uber-button-outline:hover {
+  transform: none !important;
+}
+
+/* ─── Segmented controls ─────────────────────────────────────────────────── */
+.segmented-control {
+  border-radius: var(--radius-app-lg);
+  padding: 2px;
+}
+
+.segmented-control-btn {
+  border-radius: calc(var(--radius-app-lg) - 2px);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.segmented-control-btn-active {
+  box-shadow: none;
+  font-weight: 800;
+}
+
+/* ─── Auth — sage hero band, sharp handoff ───────────────────────────────── */
+.auth-experience-client .auth-hero,
+.auth-experience-guard .auth-hero {
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--brand-primary) 92%, #000000) 0%,
+    color-mix(in srgb, var(--brand-primary) 48%, #0a0a0a) 42%,
+    #0a0a0a 100%
+  );
+}
+
+html.theme-light .auth-experience-client .auth-hero,
+html.theme-light .auth-experience-guard .auth-hero {
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--brand-primary) 88%, #ffffff) 0%,
+    color-mix(in srgb, var(--brand-primary) 35%, #f2f4f2) 50%,
+    var(--brand-bg-sec) 100%
+  );
+}
+
+html.theme-light .auth-experience-client .auth-hero header,
+html.theme-light .auth-experience-guard .auth-hero header {
+  color: var(--brand-text);
+}
+
+html.theme-light .auth-experience-client .auth-hero header button,
+html.theme-light .auth-experience-guard .auth-hero header button,
+html.theme-light .auth-experience-client .auth-hero .text-white,
+html.theme-light .auth-experience-guard .auth-hero .text-white {
+  color: var(--brand-text) !important;
+}
+
+.auth-hero-curve {
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.auth-role-card {
+  border-radius: var(--radius-app-lg) !important;
+  border-width: 1.5px;
+}
+
+.auth-role-card-active {
+  border-left-width: var(--guardr-accent-bar);
+  border-left-color: var(--brand-primary);
+  box-shadow: none !important;
+}
+
+.experience-badge {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.experience-badge::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+/* ─── App chrome — Uber black / clean white ──────────────────────────────── */
+html.theme-dark .role-experience-client .app-screen-header:not(.app-screen-header--map),
+html.theme-dark .role-experience-guard .app-screen-header:not(.app-screen-header--map),
+html.theme-dark .role-experience-client .bottom-nav-bar,
+html.theme-dark .role-experience-guard .bottom-nav-bar {
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  border-color: #1f1f1f !important;
+}
+
+html.theme-light .role-experience-client .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-header--map),
+html.theme-light .role-experience-client .bottom-nav-bar,
+html.theme-light .role-experience-guard .bottom-nav-bar {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+}
+
+.app-screen-header h1 {
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.bottom-nav-item[aria-current="page"] {
+  font-weight: 800;
+  color: var(--brand-primary) !important;
+}
+
+.bottom-nav-center-map-icon {
+  border-radius: var(--radius-app-lg) !important;
+}
+
+/* ─── Entity cards — flat list rows (Uber driver style) ──────────────────── */
+.app-item-card,
+.wf-list-card {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.app-item-card:hover,
+.wf-list-card:hover {
+  transform: none !important;
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg-sec));
+}
+
+.app-list-row {
+  border-radius: 0;
+}
+
+/* ─── Staff sidebar — sage accent on active only ───────────────────────── */
+.staff-sidebar {
+  background: var(--brand-chrome-deep, var(--brand-bg-sec));
+}
+
+html.theme-dark .staff-sidebar {
+  background: #000000;
+  border-right-color: #1f1f1f;
+}
+
+/* ─── Focus & selection ──────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-primary) 28%, transparent);
+}
+
+/* End sharp sage identity */

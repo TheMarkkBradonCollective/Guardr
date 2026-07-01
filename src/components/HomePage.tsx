@@ -203,7 +203,9 @@ export function HomePage({
         <div className="landing-container landing-header-inner">
           <div className="flex items-center gap-2.5 min-w-0">
             <Logo size={isMobile ? 26 : 28} className="text-brand-primary shrink-0" />
-            <span className="font-black text-xl tracking-[-0.04em] leading-none">Guardr</span>
+            <span className="landing-wordmark font-black text-xl tracking-[-0.05em] leading-none">
+              Guard<span className="landing-wordmark-accent">r</span>
+            </span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" className="landing-header-theme" />
@@ -257,15 +259,18 @@ export function HomePage({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.04 }}
-              className="landing-hero-title font-black tracking-[-0.04em]"
+              className="landing-hero-title font-black"
             >
               {isMobile ? (
-                <>Security, when you need it.</>
+                <>
+                  Security,
+                  <span className="landing-hero-accent"> when you need it.</span>
+                </>
               ) : (
                 <>
                   Security,
                   <br />
-                  when you need it.
+                  <span className="landing-hero-accent">when you need it.</span>
                 </>
               )}
             </motion.h1>
