@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { SecurityRequest } from '../../types';
 import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
@@ -6,7 +6,7 @@ import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
 import { computeGuardPay } from '../../lib/payments';
 import { CALIFORNIA_CITIES, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity, type CaliforniaCity } from '../../lib/californiaCities';
 import { listingFieldsFromJob } from '../../lib/jobListing';
-import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
+import { JobLocationCoordsFields, type JobLocationCoordsFieldsHandle } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
@@ -45,6 +45,7 @@ export function EditRequestForm({
   const [operational, setOperational] = useState<JobOperationalDetails>(() => operationalDetailsFromJob(request));
   const [latitude, setLatitude] = useState(request.latitude);
   const [longitude, setLongitude] = useState(request.longitude);
+  const coordsFieldsRef = useRef<JobLocationCoordsFieldsHandle>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -77,6 +78,9 @@ export function EditRequestForm({
     setError(null);
     setSaving(true);
     try {
+      const pendingCoords = coordsFieldsRef.current?.commitPending();
+      const submitLatitude = pendingCoords?.lat ?? latitude;
+      const submitLongitude = pendingCoords?.lng ?? longitude;
       const location = siteName.trim() ? `${siteName.trim()} — ${address.trim()}` : address.trim();
 
       if (titleOnlyLocked) {
@@ -86,8 +90,8 @@ export function EditRequestForm({
           address: address.trim(),
           state: formatCityLabel(state),
           location,
-          latitude,
-          longitude,
+          latitude: submitLatitude,
+          longitude: submitLongitude,
         });
       } else if (paidReschedule) {
         const guardPay = computeGuardPay(request.hourlyRate);
@@ -104,8 +108,8 @@ export function EditRequestForm({
           durationHours,
           estimatedPayout,
           guardPay,
-          latitude,
-          longitude,
+          latitude: submitLatitude,
+          longitude: submitLongitude,
         });
       } else {
         const guardPay = computeGuardPay(hourlyRate);
@@ -131,8 +135,8 @@ export function EditRequestForm({
           contactPhone: listing.contactPhone.trim() || undefined,
           parkingInstructions: listing.parkingInstructions.trim() || undefined,
           accessInstructions: listing.accessInstructions.trim() || undefined,
-          latitude,
-          longitude,
+          latitude: submitLatitude,
+          longitude: submitLongitude,
           operationalDetails: normalizeJobOperationalDetails(operational),
         });
       }
@@ -202,6 +206,7 @@ export function EditRequestForm({
         }}
       />
       <JobLocationCoordsFields
+        ref={coordsFieldsRef}
         latitude={latitude}
         longitude={longitude}
         onCoordsChange={(coords) => {

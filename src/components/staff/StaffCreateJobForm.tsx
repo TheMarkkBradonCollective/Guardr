@@ -21,6 +21,7 @@ import { CALIFORNIA_CITIES, DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCity
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
 import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { UseCurrentLocationButton } from '../jobs/UseCurrentLocationButton';
+import { useJobLocationCoords } from '../jobs/useJobLocationCoords';
 import { JobPostOrdersFields } from '../jobs/JobPostOrdersFields';
 import { JobOperationalDetailsFields } from '../jobs/JobOperationalDetailsFields';
 import { EMPTY_JOB_OPERATIONAL_DETAILS, normalizeJobOperationalDetails } from '../../lib/jobOperationalDetails';
@@ -83,8 +84,15 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
   const [assignGuardId, setAssignGuardId] = useState('');
   const [listing, setListing] = useState<JobListingFields>(() => ({ ...EMPTY_LISTING_FIELDS }));
   const [operational, setOperational] = useState<JobOperationalDetails>(EMPTY_JOB_OPERATIONAL_DETAILS);
-  const [latitude, setLatitude] = useState<number | undefined>();
-  const [longitude, setLongitude] = useState<number | undefined>();
+  const {
+    latitude,
+    longitude,
+    coordsFieldsRef,
+    onCoordsChange,
+    applyLocatedCoords,
+    resolveCoordsForSubmit,
+    resetCoords,
+  } = useJobLocationCoords();
   const [breakMinutes, setBreakMinutes] = useState(30);
   const [customBreakMinutes, setCustomBreakMinutes] = useState('');
   const [breakPaid, setBreakPaid] = useState(true);
@@ -129,8 +137,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
     setAssignGuardId('');
     setListing({ ...EMPTY_LISTING_FIELDS });
     setOperational(EMPTY_JOB_OPERATIONAL_DETAILS);
-    setLatitude(undefined);
-    setLongitude(undefined);
+    resetCoords();
     setBreakMinutes(30);
     setCustomBreakMinutes('');
     setError('');
@@ -157,7 +164,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
       setError('That guard has not worked with this client before. Leave the job open for applications.');
       return;
     }
-    if (latitude == null || longitude == null) {
+    const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
+    if (submitLatitude == null || submitLongitude == null) {
       setError('Map coordinates are required before this job can go live.');
       return;
     }
@@ -186,8 +194,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         contactPhone: listing.contactPhone.trim() || undefined,
         parkingInstructions: listing.parkingInstructions.trim() || undefined,
         accessInstructions: listing.accessInstructions.trim() || undefined,
-        latitude,
-        longitude,
+        latitude: submitLatitude,
+        longitude: submitLongitude,
         operationalDetails: normalizeJobOperationalDetails(operational),
         breakMinutes: effectiveBreakMinutes,
         breakPaid,
@@ -307,8 +315,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
           <div className="mt-2">
             <UseCurrentLocationButton
               onLocated={({ coords, addressLine, stateCode }) => {
-                setLatitude(coords.lat);
-                setLongitude(coords.lng);
+                applyLocatedCoords(coords);
                 if (addressLine) setAddress(addressLine);
                 setJobState(cityFromGeocode(addressLine, stateCode));
               }}
@@ -455,18 +462,11 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         {address.trim().length > 0 && (
           <div className="sm:col-span-2">
             <JobLocationCoordsFields
+              ref={coordsFieldsRef}
               latitude={latitude}
               longitude={longitude}
               requiredBeforePublish
-              onCoordsChange={(coords) => {
-                if (coords) {
-                  setLatitude(coords.lat);
-                  setLongitude(coords.lng);
-                } else {
-                  setLatitude(undefined);
-                  setLongitude(undefined);
-                }
-              }}
+              onCoordsChange={onCoordsChange}
             />
           </div>
         )}
