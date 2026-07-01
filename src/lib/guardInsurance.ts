@@ -49,10 +49,6 @@ export function formatCoiSummaryLine(policy: GuardInsurancePolicy | undefined): 
   const parts: string[] = [];
   if (policy.carrier?.trim()) parts.push(policy.carrier.trim());
   if (policy.policyNumber?.trim()) parts.push(`#${policy.policyNumber.trim()}`);
-  if (policy.expiryDate?.trim()) {
-    const expired = isInsuranceExpired(policy);
-    parts.push(expired ? `Expired ${policy.expiryDate}` : `Expires ${policy.expiryDate}`);
-  }
   return parts.join(' · ');
 }
 
@@ -68,7 +64,7 @@ export function getCoiUploadStatus(guard: Pick<SecurityGuard, 'insurancePolicy'>
 export function getCoiCredentialUploadLabel(guard: Pick<SecurityGuard, 'insurancePolicy'>): string | null {
   const status = getCoiUploadStatus(guard);
   if (status === 'on-file') return 'On file';
-  if (status === 'expired') return 'On file · expired';
+  if (status === 'expired') return 'On file';
   if (status === 'listed') return 'Incomplete — upload COI document';
   return 'Not on file';
 }

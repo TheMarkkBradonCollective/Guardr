@@ -40,16 +40,15 @@ export function GuardCoiItemCard({
   const canEdit = editing && !staffMode && !!onSave;
   const policy = guard.insurancePolicy;
   const docUrl = policy?.documentUrl?.trim();
-  const docIsImage = docUrl && /\.(jpe?g|png|gif|webp)(\?|$)/i.test(docUrl);
 
   const cardBody = hasOnFile ? (
     <div className="app-cert-item">
       <button
         type="button"
         onClick={() => setShowDetail(true)}
-        className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${docUrl && docIsImage ? ' flex gap-3' : ''}`}
+        className={`app-cert-item-interactive app-cert-item-body min-w-0 flex-1 text-left${docUrl ? ' flex gap-3' : ''}`}
       >
-        {docUrl && docIsImage && (
+        {docUrl && (
           <img
             src={docUrl}
             alt={`${guard.name} COI preview`}

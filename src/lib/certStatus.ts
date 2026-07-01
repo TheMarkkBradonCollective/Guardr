@@ -31,7 +31,7 @@ export function getCredentialUploadLabel(cert: Certification, options?: { staffM
     return options?.staffMode ? 'Listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
   }
   if (permitExpiryIsMissing(cert)) return 'On file · Expiry required';
-  return isCertExpired(cert) ? 'On file · Expired' : 'On file';
+  return 'On file';
 }
 
 export function getCredentialUploadBadgeClass(cert: Certification): string {
@@ -117,7 +117,7 @@ export function getCourseUploadStatusLabel(status: CourseUploadStatus, options?:
     case 'listed':
       return options?.staffMode ? 'Listed' : CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
     case 'expired':
-      return 'On file · Expired';
+      return 'On file';
     default:
       return CREDENTIAL_NOT_LISTED_OR_ON_FILE_LABEL;
   }
@@ -163,11 +163,9 @@ export function formatCredentialSlotStatusSummary(counts: CredentialSlotStatusCo
   if (counts.listed > 0) {
     segments.push(`${counts.listed} listed`);
   }
-  if (counts.expired > 0) {
-    segments.push(`${counts.expired} expired`);
-  }
-  if (counts.onFile > 0) {
-    segments.push(`${counts.onFile} on file`);
+  const onFileCount = counts.onFile + counts.expired;
+  if (onFileCount > 0) {
+    segments.push(`${onFileCount} on file`);
   }
   if (segments.length === 0) return 'On file';
   return segments.join(' · ');

@@ -85,7 +85,7 @@ export function getCoiSectionStatus(guard: SecurityGuard, staffMode = false): Cr
     return { label: policy?.rejectionReason ?? 'Rejected — resubmit', tone: 'danger' };
   }
   if (uploadStatus === 'expired') {
-    return { label: 'On file · expired', tone: 'warning' };
+    return { label: 'On file', tone: 'warning' };
   }
   if (resolved === 'pending' && guardInsuranceSubmitted(guard)) {
     return { label: 'Submitted — pending review', tone: 'warning' };
@@ -108,7 +108,7 @@ export function getAggregateSectionStatus(
   options?: { expired?: boolean }
 ): CredentialSectionStatus {
   if (options?.expired) {
-    return { label: 'On file · expired', tone: 'warning' };
+    return { label: 'On file', tone: 'warning' };
   }
   if (complete && verified) {
     return { label: 'Verified — on file', tone: 'success' };
