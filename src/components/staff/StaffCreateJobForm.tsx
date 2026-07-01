@@ -157,6 +157,10 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
       setError('That guard has not worked with this client before. Leave the job open for applications.');
       return;
     }
+    if (latitude == null || longitude == null) {
+      setError('Map coordinates are required before this job can go live.');
+      return;
+    }
     setSaving(true);
     try {
       const jobId = await onCreate({
@@ -453,6 +457,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             <JobLocationCoordsFields
               latitude={latitude}
               longitude={longitude}
+              requiredBeforePublish
               onCoordsChange={(coords) => {
                 if (coords) {
                   setLatitude(coords.lat);

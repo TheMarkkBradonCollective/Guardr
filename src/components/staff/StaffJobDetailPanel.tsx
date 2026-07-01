@@ -7,6 +7,7 @@ import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { isGuardAccountActive } from '../../lib/guardAccountActivation';
 import {
   canStaffEditJobTitleAndLocation,
+  canStaffEditJobMapCoordinates,
   isJobScheduleLocked,
   canStaffReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
@@ -59,8 +60,12 @@ export function StaffJobDetailPanel({
   const [editing, setEditing] = useState(false);
   useEffect(() => setEditing(false), [req.id]);
   const scheduleLocked = isJobScheduleLocked(req);
-  const showEdit =
+  const coordsMissing = isJobLocationCoordsMissing(req);
+  const showEditListing =
     canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
+  const showEditCoords =
+    onEditJobListing && staffRole && canStaffEditJobMapCoordinates(req, staffRole) && coordsMissing;
+  const showEdit = showEditListing || showEditCoords;
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isAwaitingClientGuardApproval(req);
@@ -253,7 +258,13 @@ export function StaffJobDetailPanel({
       )}
       <div className="app-action-row--equal pt-2 border-t border-brand-border">
         {req.status === 'pending-review' && (
-          <button type="button" onClick={() => onApproveRequest(req.id)} className="app-button-primary app-btn-sm">
+          <button
+            type="button"
+            onClick={() => onApproveRequest(req.id)}
+            disabled={coordsMissing}
+            title={coordsMissing ? 'Add map coordinates before approving' : undefined}
+            className="app-button-primary app-btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Approve Job
           </button>
         )}

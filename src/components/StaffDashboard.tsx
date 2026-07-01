@@ -36,6 +36,7 @@ import {
   canStaffManageJobs,
   hasExecutivePaymentControls,
   canSetTrustedStatus,
+  isStaffRole,
 } from '../lib/permissions';
 import type { StaffCreateJobInput } from './staff/StaffCreateJobForm';
 import type { AddCertificationResult } from '../lib/certUniqueness';
@@ -444,6 +445,7 @@ export function StaffDashboard({
   const canResolveDisputes = canHandleDisputes(currentUser);
   const canManageJobs = canManageCompanyOperations(currentUser);
   const canEditJobListing = canEditJobListingDetails(currentUser);
+  const canStaffEditJobListings = isStaffRole(currentUser.role);
   const canStaffJobs = canStaffManageJobs(currentUser);
   const canSuspend = canSuspendUsers(currentUser);
 
@@ -510,7 +512,7 @@ export function StaffDashboard({
             onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
             onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
-            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
+            onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
           />
@@ -550,7 +552,7 @@ export function StaffDashboard({
             canManageClientAccounts={canManageClientAccounts}
             canReviewJobRequests={canReviewJobs}
             canEditJobListing={canEditJobListing}
-            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
+            onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             staffRole={currentUser.role}
             initialQueue={staffApprovalQueue}
             onQueueChange={(queue) => onUpdateStaffApprovalQueue?.(queue ?? null)}
@@ -569,7 +571,7 @@ export function StaffDashboard({
             onDenyRequest={canReviewJobs ? onDenyRequest : undefined}
             onCreateJob={canManageJobs ? onStaffCreateJob : undefined}
             onAssignGuard={canManageJobs ? onStaffAssignGuard : undefined}
-            onEditJobListing={canEditJobListing ? onEditJobListing : undefined}
+            onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             selectedId={selectedJobId}

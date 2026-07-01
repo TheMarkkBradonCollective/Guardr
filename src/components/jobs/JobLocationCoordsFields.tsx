@@ -6,12 +6,15 @@ interface JobLocationCoordsFieldsProps {
   latitude?: number;
   longitude?: number;
   onCoordsChange: (coords: { lat: number; lng: number } | null) => void;
+  /** Staff must add coords before the job can publish. */
+  requiredBeforePublish?: boolean;
 }
 
 export function JobLocationCoordsFields({
   latitude,
   longitude,
   onCoordsChange,
+  requiredBeforePublish = false,
 }: JobLocationCoordsFieldsProps) {
   const [latInput, setLatInput] = useState(latitude != null ? String(latitude) : '');
   const [lngInput, setLngInput] = useState(longitude != null ? String(longitude) : '');
@@ -46,10 +49,12 @@ export function JobLocationCoordsFields({
       <div>
         <p className="text-xs font-medium text-brand-text-muted flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-brand-primary" />
-          Map coordinates (optional)
+          Map coordinates {requiredBeforePublish ? '(required)' : '(recommended)'}
         </p>
         <p className="text-[11px] text-brand-text-muted mt-1 leading-snug">
-          Coordinates are set automatically when you use current location, or enter them manually below.
+          {requiredBeforePublish
+            ? 'Latitude and longitude are required before this job can go live on the map.'
+            : 'Use current location or enter manually. If you skip this, staff will add coordinates before your job goes live.'}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -60,7 +60,7 @@ import {
   isCashClientPayment,
   parsePaymentMethod,
 } from './lib/cashPayments';
-import { isJobLocationCoordsMissing, resolveJobMapCoordinates } from './lib/jobLocation';
+import { hasJobCoordinates, isJobLocationCoordsMissing, jobMapCoordsApprovalBlocker, resolveJobMapCoordinates } from './lib/jobLocation';
 import { ChangePasswordPrompt } from './components/auth/ChangePasswordPrompt';
 import {
   provisionedPasswordFields,
@@ -357,6 +357,7 @@ import {
   canStaffReschedulePaidSchedule,
   canEditJobTitleAndLocation,
   canStaffEditJobTitleAndLocation,
+  canStaffEditJobMapCoordinates,
   isJobPaid,
   jobEditBlockedReason,
   sanitizeJobListingUpdates,
@@ -4513,10 +4514,15 @@ export default function App() {
       location,
     });
 
-    // Trusted clients skip the approval queue.
+    const latitude = resolvedCoords.latitude ?? newRequest.latitude;
+    const longitude = resolvedCoords.longitude ?? newRequest.longitude;
+    const coordsReady = hasJobCoordinates({ latitude, longitude });
+
+    // Trusted clients skip the approval queue when map coordinates are on file.
     const clientIsTrusted = clientRecord?.trusted === true;
-    const initialStatus: SecurityRequest['status'] = clientIsTrusted ? 'open' : 'pending-review';
-    const openedAt = clientIsTrusted ? new Date().toISOString() : undefined;
+    const initialStatus: SecurityRequest['status'] =
+      clientIsTrusted && coordsReady ? 'open' : 'pending-review';
+    const openedAt = clientIsTrusted && coordsReady ? new Date().toISOString() : undefined;
 
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
@@ -4540,8 +4546,8 @@ export default function App() {
       contactPhone: newRequest.contactPhone,
       parkingInstructions: newRequest.parkingInstructions,
       accessInstructions: newRequest.accessInstructions,
-      latitude: resolvedCoords.latitude ?? newRequest.latitude,
-      longitude: resolvedCoords.longitude ?? newRequest.longitude,
+      latitude,
+      longitude,
       operationalDetails: normalizeJobOperationalDetails(newRequest.operationalDetails),
       startDate, endDate, durationHours, hourlyRate, guardPay,
       platformFeePerHour,
@@ -4669,7 +4675,16 @@ export default function App() {
       }
     }
 
-    showAppToast('Job posted — pending Guardr review.', { tone: 'success' });
+    if (initialStatus === 'open') {
+      showAppToast('Job posted — complete payment when ready to publish on the marketplace.', { tone: 'success' });
+    } else if (clientIsTrusted && !coordsReady) {
+      showAppToast(
+        'Job submitted for staff review — map coordinates are required before it can go live.',
+        { tone: 'info' }
+      );
+    } else {
+      showAppToast('Job posted — pending Guardr review.', { tone: 'success' });
+    }
   };
 
   const handleStaffCreateJob = async (input: StaffCreateJobInput): Promise<string> => {
@@ -4707,6 +4722,23 @@ export default function App() {
     const address = input.address;
     const location = siteName ? `${siteName} — ${address}` : address;
     const assignedGuardId = input.assignGuardId ?? null;
+
+    const resolvedCoords = await resolveJobMapCoordinates({
+      latitude: input.latitude,
+      longitude: input.longitude,
+      siteName,
+      address,
+      state: formatCityLabel(input.state) || resolveJobCity(input.state),
+      location,
+    });
+    const latitude = resolvedCoords.latitude ?? input.latitude;
+    const longitude = resolvedCoords.longitude ?? input.longitude;
+    if (!hasJobCoordinates({ latitude, longitude })) {
+      throw new Error(
+        'Map coordinates are required before this job can go live. Use current location or enter latitude and longitude.'
+      );
+    }
+
     const status: SecurityRequest['status'] = assignedGuardId ? 'accepted' : 'open';
 
     const freshJob: SecurityRequest = {
@@ -4731,8 +4763,8 @@ export default function App() {
       contactPhone: input.contactPhone,
       parkingInstructions: input.parkingInstructions,
       accessInstructions: input.accessInstructions,
-      latitude: input.latitude,
-      longitude: input.longitude,
+      latitude,
+      longitude,
       operationalDetails: normalizeJobOperationalDetails(input.operationalDetails),
       startDate: input.startDate,
       endDate: input.endDate,
@@ -5978,20 +6010,31 @@ export default function App() {
     }
     const job = requests.find((r) => r.id === requestId);
     if (!job) return;
-    const openedAt = new Date().toISOString();
     const resolvedCoords = await resolveJobMapCoordinates(job);
+    const mergedJob = {
+      ...job,
+      latitude: resolvedCoords.latitude ?? job.latitude,
+      longitude: resolvedCoords.longitude ?? job.longitude,
+    };
+    const coordsBlocker = jobMapCoordsApprovalBlocker(mergedJob);
+    if (coordsBlocker) {
+      appToast(coordsBlocker, 'error');
+      return;
+    }
+    const openedAt = new Date().toISOString();
     const patch = {
       status: 'open' as const,
       openedAt,
-      ...resolvedCoords,
+      latitude: mergedJob.latitude,
+      longitude: mergedJob.longitude,
     };
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...patch } : r));
     if (isDbConnected) {
       await supabase.from('security_requests').update({
         status: 'open',
         opened_at: openedAt,
-        ...(resolvedCoords.latitude != null ? { latitude: resolvedCoords.latitude } : {}),
-        ...(resolvedCoords.longitude != null ? { longitude: resolvedCoords.longitude } : {}),
+        latitude: mergedJob.latitude,
+        longitude: mergedJob.longitude,
       }).eq('id', requestId);
     }
     if (job) {
@@ -6478,13 +6521,31 @@ export default function App() {
   };
 
   const handleStaffEditJobListing = async (requestId: string, updates: Partial<SecurityRequest>) => {
-    if (!currentUser || !canEditJobListingDetails(currentUser)) {
-      appToast('Only directors and administrators can edit job listings.', 'error');
+    if (!currentUser) return;
+    const existing = requests.find((r) => r.id === requestId);
+    if (!existing) {
+      appToast('Job not found.', 'error');
       return;
     }
-    const existing = requests.find((r) => r.id === requestId);
-    if (!existing || !canStaffEditJobTitleAndLocation(existing, currentUser.role)) {
-      appToast(existing ? 'This job cannot be edited in its current status.' : 'Job not found.', 'error');
+
+    const canFullEdit =
+      canEditJobListingDetails(currentUser) && canStaffEditJobTitleAndLocation(existing, currentUser.role);
+    const canCoordsEdit = canStaffEditJobMapCoordinates(existing, currentUser.role);
+
+    if (!canFullEdit && !canCoordsEdit) {
+      appToast('You do not have permission to edit this job.', 'error');
+      return;
+    }
+
+    if (!canFullEdit && canCoordsEdit) {
+      const latitude = updates.latitude ?? existing.latitude;
+      const longitude = updates.longitude ?? existing.longitude;
+      if (!hasJobCoordinates({ latitude, longitude })) {
+        appToast('Enter valid map coordinates before saving.', 'error');
+        return;
+      }
+      await persistJobListingUpdate(requestId, existing, { latitude, longitude });
+      appToast('Map coordinates saved.', 'success');
       return;
     }
 
