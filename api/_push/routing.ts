@@ -126,6 +126,8 @@ export function resolveNotificationUrl(
       return options.requestId
         ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}`
         : '/staff/messages?mtab=team';
+    case 'standing_crew_invite':
+      return '/guard/crew';
     case 'test':
       return '/';
     default:
@@ -330,6 +332,8 @@ export function resolveNotificationUrlForRole(
       return options.requestId
         ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}`
         : '/staff/messages?mtab=team';
+    case 'standing_crew_invite':
+      return '/guard/crew';
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === 'client') return '/client/home';
@@ -390,6 +394,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['guard'];
     case 'team_chat_message':
       return ['guard', 'dispatch', 'admin'];
+    case 'standing_crew_invite':
+      return ['guard'];
     case 'test':
       return [];
     default:

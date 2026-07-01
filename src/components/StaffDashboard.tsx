@@ -249,6 +249,7 @@ interface StaffDashboardProps {
   onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
+  headerActions?: React.ReactNode;
 }
 
 export function StaffDashboard({
@@ -363,6 +364,7 @@ export function StaffDashboard({
   onUpdateStaffApprovalQueue,
   onOpenLegal,
   legalAcceptances = [],
+  headerActions,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -852,6 +854,7 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
       hideHeader={isStaffMessagesSection(section)}
+      headerActions={headerActions}
     >
       <AppPageTransition motionKey={section} className="h-full min-h-0">
         {renderSection()}

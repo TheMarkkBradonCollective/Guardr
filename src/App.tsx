@@ -28,6 +28,8 @@ import {
   GuardMessage,
   GuardInsurancePolicy,
   GuardWeaponGearId,
+  GuardStandingCrewMember,
+  UserNotification,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canUploadJobSelfAuditPhotos, canUploadJobSpotCheck, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
 import type { StaffSelfAuditPhotoPayload } from './components/staff/StaffSelfAuditPhotoUpload';
@@ -183,6 +185,28 @@ import {
   applyTrustedRevocationToJobs,
   jobAffectedByTrustedRevocation,
 } from './lib/guardTeamFlow';
+import {
+  acceptStandingCrewInvite,
+  declineStandingCrewInvite,
+  inviteToStandingCrew,
+  removeStandingCrewMember,
+} from './lib/guardStandingCrew';
+import {
+  markAllNotificationsRead,
+  markNotificationClicked,
+  upsertNotification,
+} from './lib/notificationInbox';
+import { registerInboxPersistHandler } from './lib/inboxPersistBridge';
+import {
+  appendInboxNotification,
+  loadUserNotifications,
+  persistUserNotifications,
+} from './lib/userNotificationStore';
+import {
+  loadStandingCrewMembers,
+  persistStandingCrewMember,
+} from './lib/standingCrewStore';
+import { NotificationBellMenu } from './components/notifications/NotificationBellMenu';
 import {
   persistJobGuardSlots,
   persistJobTeamMeta,
@@ -469,6 +493,8 @@ export default function App() {
     loadPlatformSettingsFromStorage()
   );
   const [isDbConnected, setIsDbConnected] = useState(false);
+  const [standingCrewMembers, setStandingCrewMembers] = useState<GuardStandingCrewMember[]>([]);
+  const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
 
@@ -1306,6 +1332,35 @@ export default function App() {
     return unsubscribe;
   }, [currentUser?.id, currentUser?.email, currentUser?.role]);
 
+  useEffect(() => {
+    if (!currentUser) {
+      setUserNotifications([]);
+      return;
+    }
+    void loadUserNotifications(currentUser.id, isDbConnected).then(setUserNotifications);
+  }, [currentUser?.id, isDbConnected]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      registerInboxPersistHandler(null);
+      return;
+    }
+    const userId = currentUser.id;
+    registerInboxPersistHandler((input) => {
+      if (input.userId !== userId) return;
+      void (async () => {
+        const notification = await appendInboxNotification(input, isDbConnected);
+        setUserNotifications((prev) => upsertNotification(prev, notification));
+      })();
+    });
+    return () => registerInboxPersistHandler(null);
+  }, [currentUser?.id, isDbConnected]);
+
+  useEffect(() => {
+    if (isDbConnected) return;
+    void loadStandingCrewMembers(false).then(setStandingCrewMembers);
+  }, [isDbConnected]);
+
   // ── Active guard identity ──────────────────────────────────
   const [activeGuardId, setActiveGuardId] = useState<string>(() =>
     currentUser?.role === 'guard' ? currentUser.id : ''
@@ -1895,6 +1950,13 @@ export default function App() {
         const loaded = platformSettingsFromDbRow(dbPlatformSettings);
         setPlatformSettings(loaded);
         savePlatformSettingsToStorage(loaded);
+      }
+
+      try {
+        const crewRows = await loadStandingCrewMembers(true);
+        setStandingCrewMembers(crewRows);
+      } catch (crewErr) {
+        console.warn('Standing crew load (run migration if missing):', crewErr);
       }
 
       setIsDbConnected(true);
@@ -6764,8 +6826,10 @@ export default function App() {
     if (currentUser) {
       void reportPushEvent(currentUser, {
         type: 'assignment',
+        title: 'Crew invitation',
         recipientUserId: inviteeId,
         requestId,
+        url: `/guard/my-jobs?jc=${encodeURIComponent(requestId)}`,
         body: `${activeGuard.name} invited you to join "${job.title}"`,
       });
     }
@@ -6850,6 +6914,103 @@ export default function App() {
     await persistTeamJobUpdate(result.job, result.slots);
     appToast('Invitation declined.', 'info');
   };
+
+  const handleInviteStandingCrew = async (memberGuardId: string) => {
+    const lead = guards.find((g) => g.id === activeGuardId);
+    if (!lead || !currentUser) return;
+    const member = guards.find((g) => g.id === memberGuardId);
+    const result = inviteToStandingCrew(standingCrewMembers, lead, memberGuardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setStandingCrewMembers(result.members);
+    await persistStandingCrewMember(result.invite, isDbConnected);
+    void reportPushEvent(currentUser, {
+      type: 'standing_crew_invite',
+      title: 'Standing crew invitation',
+      recipientUserId: memberGuardId,
+      guardId: lead.id,
+      url: '/guard/crew',
+      body: `${lead.name} invited you to join their standing crew.`,
+    });
+    appToast(`Invitation sent to ${member?.name ?? 'guard'}.`, 'success');
+  };
+
+  const handleAcceptStandingCrewInvite = async (inviteId: string) => {
+    const result = acceptStandingCrewInvite(standingCrewMembers, activeGuardId, inviteId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setStandingCrewMembers(result.members);
+    if (result.invite) {
+      await persistStandingCrewMember(result.invite, isDbConnected);
+      const lead = guards.find((g) => g.id === result.invite!.leadGuardId);
+      if (currentUser && lead) {
+        void reportPushEvent(currentUser, {
+          type: 'standing_crew_invite',
+          title: 'Crew invitation accepted',
+          recipientUserId: lead.id,
+          guardId: activeGuardId,
+          url: '/guard/crew',
+          body: `${activeGuard.name} accepted your standing crew invitation.`,
+        });
+      }
+    }
+    appToast('You joined the standing crew.', 'success');
+  };
+
+  const handleDeclineStandingCrewInvite = async (inviteId: string) => {
+    const result = declineStandingCrewInvite(standingCrewMembers, activeGuardId, inviteId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setStandingCrewMembers(result.members);
+    const declined = result.members.find((m) => m.id === inviteId);
+    if (declined) await persistStandingCrewMember(declined, isDbConnected);
+    appToast('Invitation declined.', 'info');
+  };
+
+  const handleRemoveStandingCrew = async (memberGuardId: string) => {
+    const result = removeStandingCrewMember(standingCrewMembers, activeGuardId, memberGuardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    setStandingCrewMembers(result.members);
+    const removed = result.members.find(
+      (m) => m.leadGuardId === activeGuardId && m.memberGuardId === memberGuardId
+    );
+    if (removed) await persistStandingCrewMember(removed, isDbConnected);
+    appToast('Guard removed from your standing crew.', 'success');
+  };
+
+  const handleNotificationClick = async (notification: UserNotification) => {
+    if (!currentUser) return;
+    const next = markNotificationClicked(userNotifications, notification.id);
+    setUserNotifications(next);
+    await persistUserNotifications(next, currentUser.id, isDbConnected);
+    if (notification.url) {
+      navigateFromLocation(notification.url, { source: 'deeplink' });
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    if (!currentUser) return;
+    const next = markAllNotificationsRead(userNotifications);
+    setUserNotifications(next);
+    await persistUserNotifications(next, currentUser.id, isDbConnected);
+  };
+
+  const notificationBellMenu = currentUser ? (
+    <NotificationBellMenu
+      notifications={userNotifications}
+      onNotificationClick={handleNotificationClick}
+      onMarkAllRead={handleMarkAllNotificationsRead}
+    />
+  ) : null;
 
   const handleClientApproveFullTeam = async (requestId: string) => {
     const job = requests.find((r) => r.id === requestId);
@@ -9387,6 +9548,12 @@ export default function App() {
           guard={activeGuard}
           tab={resolvedGuardTab}
           onTabChange={setGuardTab}
+          headerRight={notificationBellMenu}
+          standingCrewMembers={standingCrewMembers}
+          onInviteStandingCrew={handleInviteStandingCrew}
+          onRemoveStandingCrew={handleRemoveStandingCrew}
+          onAcceptStandingCrewInvite={handleAcceptStandingCrewInvite}
+          onDeclineStandingCrewInvite={handleDeclineStandingCrewInvite}
           requests={guardJobs}
           payments={guardPayouts}
           onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
@@ -9544,6 +9711,7 @@ export default function App() {
           onOpenLegal={openLegalPage}
           messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
           hideHeader={clientHideHeader}
+          headerRight={notificationBellMenu}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -9660,6 +9828,7 @@ export default function App() {
         <StaffDashboard
           section={staffSection}
           onSectionChange={setStaffSection}
+          headerActions={notificationBellMenu}
           selectedGuardId={staffGuardId}
           onSelectedGuardIdChange={setStaffGuardId}
           selectedClientId={staffClientId}

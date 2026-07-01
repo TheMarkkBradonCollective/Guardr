@@ -1,9 +1,10 @@
 import React from 'react';
-import { SecurityGuard } from '../../types';
+import type { GuardStandingCrewMember, SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
 import { getCrewDisplayName } from '../../lib/guardTeams';
 import { GuardTeamPanel } from './GuardTeamPanel';
+import { GuardStandingCrewPanel } from './GuardStandingCrewPanel';
 import { AppEmptyState, AppScreen, AppSection } from '../ui/app/AppPrimitives';
 import { MapPin, MessageCircle, Users } from 'lucide-react';
 import type { ScheduleJob } from '../../lib/guardSchedule';
@@ -13,6 +14,8 @@ interface GuardCrewHubPanelProps {
   coordinatingJobs: GuardJobView[];
   leadOpportunityJobs: GuardJobView[];
   coworkerGuards: SecurityGuard[];
+  standingCrewMembers?: GuardStandingCrewMember[];
+  trusted?: boolean;
   scheduleRequests?: ScheduleJob[];
   onApplyAsLead?: (jobId: string) => void | Promise<void>;
   onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
@@ -23,6 +26,10 @@ interface GuardCrewHubPanelProps {
   ) => void | Promise<void>;
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
+  onInviteStandingCrew?: (guardId: string) => void | Promise<void>;
+  onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
+  onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
+  onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
 }
 
 function CrewJobCard({
@@ -89,6 +96,8 @@ export function GuardCrewHubPanel({
   coordinatingJobs,
   leadOpportunityJobs,
   coworkerGuards,
+  standingCrewMembers = [],
+  trusted = false,
   scheduleRequests = [],
   onApplyAsLead,
   onInviteGuard,
@@ -96,10 +105,25 @@ export function GuardCrewHubPanel({
   onUpdateCrewProfile,
   onAcceptInvite,
   onDeclineInvite,
+  onInviteStandingCrew,
+  onRemoveStandingCrew,
+  onAcceptStandingCrewInvite,
+  onDeclineStandingCrewInvite,
 }: GuardCrewHubPanelProps) {
   return (
     <AppScreen>
-      <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 px-3 py-3 mb-1 space-y-2">
+      <GuardStandingCrewPanel
+        guard={guard}
+        members={standingCrewMembers}
+        guards={coworkerGuards}
+        trusted={trusted}
+        onInvite={onInviteStandingCrew}
+        onRemove={onRemoveStandingCrew}
+        onAcceptInvite={onAcceptStandingCrewInvite}
+        onDeclineInvite={onDeclineStandingCrewInvite}
+      />
+
+      <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/8 px-3 py-3 mb-1 mt-4 space-y-2">
         <div className="flex items-start gap-2">
           <Users className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
           <div>

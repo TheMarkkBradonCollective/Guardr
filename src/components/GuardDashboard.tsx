@@ -13,6 +13,7 @@ import {
   GuardMessage,
   TeamChatThread,
   TeamChatMessage,
+  GuardStandingCrewMember,
 } from '../types';
 import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
 import { MapRouteBanner } from './map/MapRouteBanner';
@@ -59,6 +60,7 @@ import {
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
 import { getCoordinatingCrewJobs, getOpenCrewLeadOpportunities } from '../lib/guardTeams';
+import { getPendingStandingCrewIncoming } from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
@@ -121,6 +123,12 @@ interface GuardDashboardProps {
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
+  standingCrewMembers?: GuardStandingCrewMember[];
+  onInviteStandingCrew?: (guardId: string) => void | Promise<void>;
+  onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
+  onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
+  onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
+  headerRight?: React.ReactNode;
   feeConfig?: import('../lib/payments').PlatformFeeConfig;
   onSubmitPriceOffer?: (
     requestId: string,
@@ -223,6 +231,12 @@ export function GuardDashboard({
   onJoinTeamWithCode,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
+  standingCrewMembers = [],
+  onInviteStandingCrew,
+  onRemoveStandingCrew,
+  onAcceptStandingCrewInvite,
+  onDeclineStandingCrewInvite,
+  headerRight,
   feeConfig,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
@@ -470,6 +484,11 @@ export function GuardDashboard({
   );
 
   const trustedGuard = isGuardTrusted(guard);
+  const pendingStandingCrewInvites = useMemo(
+    () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
+    [standingCrewMembers, guard.id]
+  );
+  const showCrewTab = trustedGuard || pendingStandingCrewInvites.length > 0;
 
   const coordinatingCrewJobs = useMemo(
     () => getCoordinatingCrewJobs(guard.id, requests),
@@ -482,10 +501,10 @@ export function GuardDashboard({
   }, [requests, guard, trustedGuard]);
 
   useEffect(() => {
-    if (tab === 'crew' && !trustedGuard) {
+    if (tab === 'crew' && !showCrewTab) {
       setTab('map');
     }
-  }, [tab, trustedGuard, setTab]);
+  }, [tab, showCrewTab, setTab]);
 
   useEffect(() => {
     if (!guard.stripeConnectAccountId) return;
@@ -881,7 +900,7 @@ export function GuardDashboard({
     { id: 'messages', icon: MessagesSquare, label: 'Messages' },
     { id: 'map', icon: Map, label: 'Map' },
     { id: 'earnings', icon: DollarSign, label: 'Pay' },
-    ...(trustedGuard ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
+    ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
   const renderGuardMainPanel = () => (
@@ -1070,7 +1089,7 @@ export function GuardDashboard({
             </div>
           )}
 
-          {tab === 'crew' && trustedGuard && (
+          {tab === 'crew' && showCrewTab && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
               <div className="guard-scroll-panel flex-1">
                 <GuardCrewHubPanel
@@ -1078,6 +1097,8 @@ export function GuardDashboard({
                   coordinatingJobs={coordinatingCrewJobs}
                   leadOpportunityJobs={crewLeadOpportunityJobs}
                   coworkerGuards={coworkerGuards}
+                  standingCrewMembers={standingCrewMembers}
+                  trusted={trustedGuard}
                   scheduleRequests={requests}
                   onApplyAsLead={onApplyAsTeamLead}
                   onInviteGuard={onInviteTeamGuard}
@@ -1085,6 +1106,10 @@ export function GuardDashboard({
                   onUpdateCrewProfile={onUpdateCrewProfile}
                   onAcceptInvite={onAcceptTeamInvite}
                   onDeclineInvite={onDeclineTeamInvite}
+                  onInviteStandingCrew={onInviteStandingCrew}
+                  onRemoveStandingCrew={onRemoveStandingCrew}
+                  onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
+                  onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
                 />
               </div>
             </div>
@@ -1361,6 +1386,7 @@ export function GuardDashboard({
       title={guardScreenTitle}
       locationLabel={guardHeaderStatus}
       hideHeader={shellHideHeader}
+      headerRight={headerRight}
       accountMenu={{
         userName: guard.name,
         userSubtitle: currentUser.email,

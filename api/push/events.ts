@@ -100,6 +100,8 @@ function resolveNotificationUrl(type, options = {}) {
       return options.requestId ? `/guard/my-jobs?jc=${encodeURIComponent(options.requestId)}` : "/guard/my-jobs";
     case "team_chat_message":
       return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
+    case "standing_crew_invite":
+      return "/guard/crew";
     case "test":
       return "/";
     default:
@@ -226,6 +228,8 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
         return options.requestId ? `/guard/messages?jc=${encodeURIComponent(options.requestId)}` : "/guard/messages";
       }
       return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
+    case "standing_crew_invite":
+      return "/guard/crew";
     default:
       if (isStaff) return resolveNotificationUrl(type, options);
       if (role === "client") return "/client/home";
@@ -285,6 +289,8 @@ function rolesForNotificationType(type) {
       return ["guard"];
     case "team_chat_message":
       return ["guard", "dispatch", "admin"];
+    case "standing_crew_invite":
+      return ["guard"];
     case "test":
       return [];
     default:
@@ -341,7 +347,8 @@ var PREF_COLUMN = {
   client_trusted_status: "client_trusted_status",
   job_relisted: "job_relisted",
   job_schedule_changed: "assignment",
-  team_chat_message: "team_chat_message"
+  team_chat_message: "team_chat_message",
+  standing_crew_invite: "assignment"
 };
 async function isTypeEnabledForUser(db, userId, type) {
   const column = PREF_COLUMN[type];
@@ -926,6 +933,10 @@ async function authorizePushEvent(db, session, event) {
         return null;
       }
       return "Not authorized to send crew chat notifications for this job";
+    case "standing_crew_invite":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard" && event.recipientUserId) return null;
+      return "Only guards can send standing crew invitations";
     default:
       return "Unknown notification type";
   }

@@ -41,6 +41,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   job_relisted: 'job_relisted',
   job_schedule_changed: 'assignment',
   team_chat_message: 'team_chat_message',
+  standing_crew_invite: 'assignment',
 };
 
 async function isTypeEnabledForUser(

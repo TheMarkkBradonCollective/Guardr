@@ -32,6 +32,7 @@ export type PushNotificationType =
   | 'job_relisted'
   | 'job_schedule_changed'
   | 'team_chat_message'
+  | 'standing_crew_invite'
   | 'account_update'
   | 'job_status_update'
   | 'payout_ready'

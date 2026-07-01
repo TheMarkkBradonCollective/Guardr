@@ -16,6 +16,7 @@ interface ClientAppLayoutProps {
   onOpenLegal?: (page: LegalPageId) => void;
   messagesBadge?: number;
   hideHeader?: boolean;
+  headerRight?: React.ReactNode;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -53,6 +54,7 @@ export function ClientAppLayout({
   onOpenLegal,
   messagesBadge = 0,
   hideHeader = false,
+  headerRight,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
@@ -80,6 +82,7 @@ export function ClientAppLayout({
     <RoleAppShell
       title={screenTitle}
       locationLabel={clientLabel}
+      headerRight={headerRight}
       accountMenu={{
         userName: currentUser.name,
         userSubtitle: currentUser.email,

@@ -43,6 +43,7 @@ interface StaffOpsLayoutProps {
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   hideHeader?: boolean;
+  headerActions?: React.ReactNode;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -82,6 +83,7 @@ export function StaffOpsLayout({
   fullBleed = false,
   onOpenLegal,
   hideHeader = false,
+  headerActions,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const showFinance = canAccessFinancialControls(currentUser);
@@ -192,15 +194,18 @@ export function StaffOpsLayout({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <AccountMenu
-              userName={currentUser.name}
-              userSubtitle={ROLE_LABELS[currentUser.role]}
-              avatarUrl={currentUser.avatar}
-              onOpenProfile={() => navigate('profile')}
-              onOpenSettings={() => navigate('preferences')}
-              onSignOut={onSignOut}
-              active={activeSection === 'profile' || activeSection === 'preferences'}
-            />
+            <div className="flex items-center gap-2 shrink-0">
+              {headerActions}
+              <AccountMenu
+                userName={currentUser.name}
+                userSubtitle={ROLE_LABELS[currentUser.role]}
+                avatarUrl={currentUser.avatar}
+                onOpenProfile={() => navigate('profile')}
+                onOpenSettings={() => navigate('preferences')}
+                onSignOut={onSignOut}
+                active={activeSection === 'profile' || activeSection === 'preferences'}
+              />
+            </div>
           </header>
         ) : (
           <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
@@ -218,15 +223,18 @@ export function StaffOpsLayout({
               </h1>
               <p className="text-xs text-brand-text-muted truncate font-medium mt-0.5">{currentUser.name}</p>
             </div>
-            <AccountMenu
-              userName={currentUser.name}
-              userSubtitle={ROLE_LABELS[currentUser.role]}
-              avatarUrl={currentUser.avatar}
-              onOpenProfile={() => navigate('profile')}
-              onOpenSettings={() => navigate('preferences')}
-              onSignOut={onSignOut}
-              active={activeSection === 'profile' || activeSection === 'preferences'}
-            />
+            <div className="flex items-center gap-2 shrink-0">
+              {headerActions}
+              <AccountMenu
+                userName={currentUser.name}
+                userSubtitle={ROLE_LABELS[currentUser.role]}
+                avatarUrl={currentUser.avatar}
+                onOpenProfile={() => navigate('profile')}
+                onOpenSettings={() => navigate('preferences')}
+                onSignOut={onSignOut}
+                active={activeSection === 'profile' || activeSection === 'preferences'}
+              />
+            </div>
           </header>
         )}
 

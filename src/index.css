@@ -11917,3 +11917,35 @@ html.theme-dark .staff-sidebar {
 }
 
 /* End sharp sage identity */
+
+/* ─── Notification bell inbox ─────────────────────────────────────────────── */
+.notification-bell-btn {
+  position: relative;
+}
+
+.notification-bell-badge {
+  box-shadow: 0 0 0 2px var(--brand-bg, #fff);
+}
+
+.notification-inbox-panel {
+  animation: notification-inbox-in 0.16s ease-out;
+}
+
+@keyframes notification-inbox-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-inbox-item--unread {
+  border-left: 3px solid var(--brand-primary);
+}
+
+html.theme-dark .notification-inbox-item--unread {
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+}

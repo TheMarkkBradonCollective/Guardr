@@ -1,5 +1,6 @@
 import type { SessionUser } from '../types';
 import type { PushSubscriptionDto } from './push';
+import { inboxPayloadFromPushEvent, persistInboxNotification } from './inboxPersistBridge';
 
 export async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -138,6 +139,7 @@ export type PushEventType =
   | 'account_update'
   | 'job_status_update'
   | 'payout_ready'
+  | 'standing_crew_invite'
   | 'test';
 
 export async function reportPushEvent(
@@ -155,8 +157,12 @@ export async function reportPushEvent(
     ticketId?: string;
     clientId?: string;
     priority?: 'normal' | 'high';
+    url?: string;
   }
 ): Promise<void> {
+  const inboxPayload = inboxPayloadFromPushEvent(event);
+  if (inboxPayload) persistInboxNotification(inboxPayload);
+
   try {
     const res = await fetchWithRetry('/api/push/events', {
       method: 'POST',

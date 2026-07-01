@@ -32,6 +32,7 @@ export type PushNotificationType =
   | 'job_relisted'
   | 'job_schedule_changed'
   | 'team_chat_message'
+  | 'standing_crew_invite'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

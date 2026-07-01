@@ -356,6 +356,35 @@ export interface SecurityGuard {
   insurancePolicy?: GuardInsurancePolicy;
 }
 
+export type StandingCrewMemberStatus = 'pending' | 'active' | 'declined' | 'removed';
+
+/** Persistent roster a trusted guard maintains across jobs. */
+export interface GuardStandingCrewMember {
+  id: string;
+  leadGuardId: string;
+  memberGuardId: string;
+  status: StandingCrewMemberStatus;
+  invitedAt: string;
+  respondedAt?: string;
+}
+
+/** In-app notification inbox row — unread until read/clicked. */
+export interface UserNotification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  url?: string;
+  requestId?: string;
+  guardId?: string;
+  ticketId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  readAt?: string;
+  clickedAt?: string;
+}
+
 export interface StaffSpotCheck {
   id: string;
   imageUrl: string;
