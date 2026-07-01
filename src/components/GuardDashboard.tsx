@@ -60,7 +60,10 @@ import {
 } from '../lib/guardJobs';
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
 import { getCoordinatingCrewJobs } from '../lib/guardTeams';
-import { getPendingStandingCrewIncoming } from '../lib/guardStandingCrew';
+import {
+  getPendingStandingCrewIncoming,
+  shouldOfferTeamCodeJoin,
+} from '../lib/guardStandingCrew';
 import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
@@ -1200,7 +1203,11 @@ export function GuardDashboard({
                 themeMode={themeMode as 'dark' | 'light' | 'grey'}
                 onChangeTheme={onChangeTheme}
                 onOpenLegal={onOpenLegal}
-                onJoinTeamWithCode={onJoinTeamWithCode}
+                onJoinTeamWithCode={
+                  shouldOfferTeamCodeJoin(guard, standingCrewMembers)
+                    ? onJoinTeamWithCode
+                    : undefined
+                }
               />
             </div>
           )}

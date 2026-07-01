@@ -125,7 +125,8 @@ export function GuardTeamPanel({
 
       {!trusted && !onTeam && job.status === 'open' && (
         <p className="text-xs text-brand-text-muted">
-          Trusted guards can coordinate crews and skip Guardr review on Stripe jobs. Cash jobs always go through staff. To join an existing crew, enter the crew code in Settings or accept a coordinator invite.
+          Trusted guards coordinate crews from the Crew tab. To join an existing crew, enter the crew
+          code in Settings or accept a coordinator invite.
         </p>
       )}
 

@@ -5,6 +5,7 @@ import {
   acceptStandingCrewInvite,
   getPendingStandingCrewIncoming,
   inviteToStandingCrew,
+  shouldOfferTeamCodeJoin,
 } from './guardStandingCrew';
 
 function trustedLead(): SecurityGuard {
@@ -42,4 +43,27 @@ test('getPendingStandingCrewIncoming lists invites for member', () => {
   if ('error' in invited) return;
   const pending = getPendingStandingCrewIncoming(invited.members, 'member-1');
   assert.equal(pending.length, 1);
+});
+
+test('shouldOfferTeamCodeJoin hides for trusted guards and standing roster members', () => {
+  const member = {
+    id: 'guard-2',
+    name: 'Member',
+    email: 'member@test.com',
+    userStatus: 'active',
+    verified: true,
+  } as SecurityGuard;
+
+  assert.equal(shouldOfferTeamCodeJoin(trustedLead(), []), false);
+  assert.equal(shouldOfferTeamCodeJoin(member, []), true);
+
+  const invited = inviteToStandingCrew([], trustedLead(), 'guard-2');
+  assert.ok(!('error' in invited));
+  if ('error' in invited) return;
+  assert.equal(shouldOfferTeamCodeJoin(member, invited.members), false);
+
+  const accepted = acceptStandingCrewInvite(invited.members, 'guard-2', invited.invite.id);
+  assert.ok(!('error' in accepted));
+  if ('error' in accepted) return;
+  assert.equal(shouldOfferTeamCodeJoin(member, accepted.members), false);
 });
