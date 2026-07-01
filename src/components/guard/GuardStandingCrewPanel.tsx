@@ -34,6 +34,27 @@ function guardName(guards: SecurityGuard[], id: string): string {
   return guards.find((g) => g.id === id)?.name ?? 'Guard';
 }
 
+function memberDisplay(guards: SecurityGuard[], memberGuardId: string): SecurityGuard {
+  return (
+    guards.find((g) => g.id === memberGuardId) ?? {
+      id: memberGuardId,
+      name: 'Guard',
+      email: '',
+      badgeNumber: memberGuardId.slice(0, 8),
+      avatar: '',
+      phone: '',
+      bio: '',
+      isArmed: false,
+      backgroundChecked: false,
+      verified: false,
+      rating: 0,
+      jobsCompleted: 0,
+      certifications: [],
+      experience: [],
+    }
+  );
+}
+
 export function GuardStandingCrewPanel({
   guard,
   members,
@@ -169,14 +190,18 @@ export function GuardStandingCrewPanel({
             ) : (
               <ul className="divide-y divide-brand-border rounded-lg border border-brand-border overflow-hidden bg-brand-surface/40">
                 {active.map((row) => {
-                  const member = guards.find((g) => g.id === row.memberGuardId);
-                  if (!member) return null;
+                  const member = memberDisplay(guards, row.memberGuardId);
+                  const missing = !guards.some((g) => g.id === row.memberGuardId);
                   return (
                     <li key={row.id} className="flex items-center gap-3 px-3 py-2.5">
                       <ProfileAvatar src={member.avatar} name={member.name} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{member.name}</p>
-                        <WfBadge tone="success">Active</WfBadge>
+                        {missing ? (
+                          <WfBadge tone="warning">Profile unavailable</WfBadge>
+                        ) : (
+                          <WfBadge tone="success">Active</WfBadge>
+                        )}
                       </div>
                       {onRemove && (
                         <button
@@ -192,13 +217,15 @@ export function GuardStandingCrewPanel({
                   );
                 })}
                 {pendingOutgoing.map((row) => {
-                  const member = guards.find((g) => g.id === row.memberGuardId);
-                  if (!member) return null;
+                  const member = memberDisplay(guards, row.memberGuardId);
+                  const missing = !guards.some((g) => g.id === row.memberGuardId);
                   return (
                     <li key={row.id} className="flex items-center gap-3 px-3 py-2.5 bg-brand-primary/5">
                       <ProfileAvatar src={member.avatar} name={member.name} size="sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate">{member.name}</p>
+                        <p className="text-sm font-semibold truncate">
+                          {missing ? 'Pending invite' : member.name}
+                        </p>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
                           <Clock className="w-3 h-3" />
                           Pending

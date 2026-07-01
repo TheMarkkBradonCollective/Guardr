@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -21,7 +21,7 @@ import { formatShiftRange } from '../../lib/dates';
 import { getGuardDisplayHeadline, getGuardDisplaySummary } from '../../lib/guardResume';
 import { CertBadgeRow } from '../guard/CertBadgeRow';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { AppItemCardStack, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppItemCardStack, AppEmptyState, AppScreen, AppSection, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import {
   GUARD_APPROVED_BADGE_LABEL,
@@ -54,6 +54,7 @@ interface GuardDirectoryScreenProps {
   standingCrewMembers?: GuardStandingCrewMember[];
   /** Called when the client taps "Hire" directly from the directory */
   onRequestGuard?: (guard: SecurityGuard) => void;
+  onTeamDetailOpenChange?: (open: boolean) => void;
 }
 
 const SORT_OPTIONS: { id: GuardSortKey; label: string }[] = [
@@ -90,9 +91,14 @@ export function GuardDirectoryScreen({
   requests = [],
   standingCrewMembers = [],
   onRequestGuard,
+  onTeamDetailOpenChange,
 }: GuardDirectoryScreenProps) {
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('guards');
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    onTeamDetailOpenChange?.(selectedListingId != null);
+  }, [selectedListingId, onTeamDetailOpenChange]);
   const [filters, setFilters] = useState<GuardDirectoryFilters>(DEFAULT_GUARD_FILTERS);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -193,7 +199,7 @@ export function GuardDirectoryScreen({
     return (
       <AppScreen className="app-full-page-detail">
         <AppSubScreenHeader title={selectedTeam.crewName} onBack={() => setSelectedListingId(null)} />
-        <div className="px-5 pb-8 space-y-4">
+        <div className="app-section-body pb-8 space-y-4">
           {selectedTeam.crewDescription && (
             <p className="text-sm text-brand-text-muted leading-relaxed whitespace-pre-wrap">
               {selectedTeam.crewDescription}
@@ -220,6 +226,18 @@ export function GuardDirectoryScreen({
                 coordinator
               </p>
             </div>
+          )}
+          {coordinator && onRequestGuard && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedListingId(null);
+                onRequestGuard(coordinator);
+              }}
+              className="app-button-primary w-full"
+            >
+              Request {coordinator.name}
+            </button>
           )}
           {coordinator && (
             <button
@@ -353,7 +371,7 @@ export function GuardDirectoryScreen({
               : filtered.length === 0
               ? 'No guards found'
               : `${filtered.length} guard${filtered.length !== 1 ? 's' : ''}`}
-            {activeFilterCount > 0 && (
+            {activeFilterCount > 0 && directoryTab === 'guards' && (
               <button
                 type="button"
                 onClick={clearAllFilters}
@@ -363,6 +381,7 @@ export function GuardDirectoryScreen({
               </button>
             )}
           </p>
+          {directoryTab === 'guards' && (
           <div className="flex items-center gap-2">
             {onToggleFavorite && (
               <button
@@ -408,10 +427,11 @@ export function GuardDirectoryScreen({
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* ── Active filter chips ───────────────────────────────────── */}
-        {activeFilterCount > 0 && (
+        {directoryTab === 'guards' && activeFilterCount > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-0.5">
             {filters.armedOnly && (
               <FilterChip label="Armed only" onRemove={() => updateFilter('armedOnly', false)} />
@@ -584,9 +604,10 @@ export function GuardDirectoryScreen({
       {directoryTab === 'teams' ? (
         <AppSection title="Coordinated crews">
           {filteredTeams.length === 0 ? (
-            <p className="app-empty-state text-sm">
-              No trusted teams listed yet. Trusted guards maintain a standing crew profile clients can browse here.
-            </p>
+            <AppEmptyState icon={<Users className="w-5 h-5" />} title="No trusted teams yet">
+              Trusted guards maintain a standing crew profile you can browse here. Check back as
+              coordinators build their teams.
+            </AppEmptyState>
           ) : (
             <AppItemCardStack>
               {filteredTeams.map((crew) => (

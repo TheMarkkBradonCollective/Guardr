@@ -546,6 +546,11 @@ export default function App() {
     return null;
   });
   const [clientMessagesDetailOpen, setClientMessagesDetailOpen] = useState(false);
+  const [clientTeamDetailOpen, setClientTeamDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (clientView !== 'guards') setClientTeamDetailOpen(false);
+  }, [clientView]);
   const [jobChatRequestId, setJobChatRequestIdState] = useState<string | null>(
     () => initialRoute?.jobChatRequestId ?? null
   );
@@ -9754,7 +9759,7 @@ export default function App() {
       (clientView === 'messages' && clientMessagesDetailOpen) ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
-      (clientView === 'guards' && !!clientGuardId) ||
+      (clientView === 'guards' && (!!clientGuardId || clientTeamDetailOpen)) ||
       (clientView === 'requests' && !!clientRequestsSelectedId);
 
     return (
@@ -9870,6 +9875,7 @@ export default function App() {
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
               requestsSelectedId={clientRequestsSelectedId}
               onMessagesDetailOpenChange={setClientMessagesDetailOpen}
+              onTeamDetailOpenChange={setClientTeamDetailOpen}
             />
           )}
         </ClientAppLayout>

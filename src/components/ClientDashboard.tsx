@@ -111,6 +111,7 @@ interface ClientDashboardProps {
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
   requestsSelectedId?: string | null;
   onMessagesDetailOpenChange?: (open: boolean) => void;
+  onTeamDetailOpenChange?: (open: boolean) => void;
 }
 
 export function ClientDashboard({
@@ -174,6 +175,7 @@ export function ClientDashboard({
   onRequestsSelectedIdChange,
   requestsSelectedId = null,
   onMessagesDetailOpenChange,
+  onTeamDetailOpenChange,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -408,6 +410,7 @@ export function ClientDashboard({
         requests={requests}
         standingCrewMembers={standingCrewMembers}
         onRequestGuard={startDirectGuardRequest}
+        onTeamDetailOpenChange={onTeamDetailOpenChange}
       />
     );
   }

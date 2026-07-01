@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { GuardStandingCrewMember, SecurityGuard } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { formatShiftRange } from '../../lib/dates';
@@ -42,6 +42,7 @@ interface GuardCrewHubPanelProps {
   onRemoveStandingCrew?: (guardId: string) => void | Promise<void>;
   onAcceptStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
   onDeclineStandingCrewInvite?: (inviteId: string) => void | Promise<void>;
+  onDetailOpenChange?: (open: boolean) => void;
 }
 
 function crewJobLabel(job: GuardJobView, guard: SecurityGuard, coworkerGuards: SecurityGuard[]): string {
@@ -165,6 +166,7 @@ export function GuardCrewHubPanel({
   onRemoveStandingCrew,
   onAcceptStandingCrewInvite,
   onDeclineStandingCrewInvite,
+  onDetailOpenChange,
 }: GuardCrewHubPanelProps) {
   const pendingInvites = useMemo(
     () => getPendingStandingCrewIncoming(standingCrewMembers, guard.id),
@@ -183,6 +185,18 @@ export function GuardCrewHubPanel({
     pendingInvites.length > 0 ? 'team' : coordinatingJobs.length > 0 ? 'active' : 'team'
   );
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    onDetailOpenChange?.(selectedJobId != null);
+  }, [selectedJobId, onDetailOpenChange]);
+
+  const prevPendingCount = useRef(pendingInvites.length);
+  useEffect(() => {
+    if (pendingInvites.length > prevPendingCount.current && pendingInvites.length > 0) {
+      setActiveTab('team');
+    }
+    prevPendingCount.current = pendingInvites.length;
+  }, [pendingInvites.length]);
 
   const selectedJob = coordinatingJobs.find((j) => j.id === selectedJobId) ?? null;
 

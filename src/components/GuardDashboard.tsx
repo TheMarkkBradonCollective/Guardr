@@ -321,6 +321,7 @@ export function GuardDashboard({
   }, [guard, tab, setTab]);
   const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
   const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
+  const [crewJobDetailOpen, setCrewJobDetailOpen] = useState(false);
   const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
@@ -505,6 +506,10 @@ export function GuardDashboard({
       setTab('map');
     }
   }, [tab, showCrewTab, setTab]);
+
+  useEffect(() => {
+    if (tab !== 'crew') setCrewJobDetailOpen(false);
+  }, [tab]);
 
   useEffect(() => {
     if (!guard.stripeConnectAccountId) return;
@@ -1108,6 +1113,7 @@ export function GuardDashboard({
                   onRemoveStandingCrew={onRemoveStandingCrew}
                   onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
                   onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
+                  onDetailOpenChange={setCrewJobDetailOpen}
                 />
             </div>
           )}
@@ -1376,7 +1382,8 @@ export function GuardDashboard({
 
   const shellHideHeader =
     (tab === 'messages' && guardMessagesDetailOpen) ||
-    (tab === 'myJobs' && !!guardSelectedJobId);
+    (tab === 'myJobs' && !!guardSelectedJobId) ||
+    (tab === 'crew' && crewJobDetailOpen);
 
   return (
     <RoleAppShell
