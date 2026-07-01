@@ -8537,6 +8537,13 @@ html.theme-light .role-experience-guard .app-screen-header:not(.app-screen-heade
       max-height: 100dvh;
     }
     
+    .page-shell[class*="auth-experience"] .auth-form-scroll {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      max-height: 100dvh;
+    }
+    
     .auth-hero-curve {
       display: none;
     }
@@ -11132,7 +11139,7 @@ html:has(#guardr-auth-root) #root {
 }
 
 .auth-form-scroll {
-  flex: 1 1 0%;
+  flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   overflow-x: hidden;
@@ -11140,9 +11147,6 @@ html:has(#guardr-auth-root) #root {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-}
-
-.auth-form-scroll-inner {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 

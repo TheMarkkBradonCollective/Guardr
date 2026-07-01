@@ -558,8 +558,8 @@ export function AuthPage({
         </div>
       </div>
 
-      <div className="auth-form-scroll flex-[1_1_0%] min-h-0 w-full">
-        <div className="auth-form-scroll-inner w-full max-w-md mx-auto px-5 py-6 sm:py-10 animate-fade-in">
+      <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
+        <div className="w-full max-w-md animate-fade-in">
           <div className="mb-7">
             <p className="experience-badge">
               {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
