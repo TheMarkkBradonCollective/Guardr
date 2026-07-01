@@ -433,7 +433,7 @@ export function ClientJobActionsPanel({
                       {payingJobId === req.id ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecting...</>
                       ) : (
-                        <><CreditCard className="w-3.5 h-3.5" /> Pay Now</>
+                        <><CreditCard className="w-3.5 h-3.5" /> Pay by card</>
                       )}
                     </button>
                   )}
@@ -454,7 +454,7 @@ export function ClientJobActionsPanel({
                       {cashRequestJobId === req.id ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Requesting...</>
                       ) : (
-                        <><Banknote className="w-3.5 h-3.5" /> Pay in Cash</>
+                        <><Banknote className="w-3.5 h-3.5" /> Pay in cash</>
                       )}
                     </button>
                   )}

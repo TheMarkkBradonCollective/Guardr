@@ -208,7 +208,7 @@ export function StaffSettingsPanel({
           </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <label
-              className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
+              className={`flex items-start gap-3 rounded-xl border border-brand-primary/30 bg-brand-primary/5 p-4 ${
                 canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'
               }`}
             >
@@ -219,7 +219,29 @@ export function StaffSettingsPanel({
                 onChange={() => void toggleStripe()}
                 disabled={!canEditPaymentModes || savingModes}
               />
-              <span className="text-sm font-semibold">Card (Stripe)</span>
+              <span>
+                <span className="text-sm font-semibold block">Card (Stripe)</span>
+                <span className="text-xs text-brand-text-muted">Primary — recommended for all jobs</span>
+              </span>
+            </label>
+            <label
+              className={`flex items-start gap-3 rounded-xl border border-brand-border p-4 ${
+                canEditPaymentModes ? 'cursor-pointer' : 'opacity-90'
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={cashEnabled}
+                onChange={() => void toggleCash()}
+                disabled={!canEditPaymentModes || savingModes}
+              />
+              <span>
+                <span className="text-sm font-semibold block">Cash</span>
+                <span className="text-xs text-brand-text-muted">
+                  Secondary — client requests; staff confirms payment received
+                </span>
+              </span>
             </label>
           </div>
           {!canEditPaymentModes && (
