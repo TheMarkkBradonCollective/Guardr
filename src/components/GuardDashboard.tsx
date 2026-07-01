@@ -1091,8 +1091,7 @@ export function GuardDashboard({
 
           {tab === 'crew' && showCrewTab && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <div className="guard-scroll-panel flex-1">
-                <GuardCrewHubPanel
+              <GuardCrewHubPanel
                   guard={guard}
                   coordinatingJobs={coordinatingCrewJobs}
                   leadOpportunityJobs={crewLeadOpportunityJobs}
@@ -1111,7 +1110,6 @@ export function GuardDashboard({
                   onAcceptStandingCrewInvite={onAcceptStandingCrewInvite}
                   onDeclineStandingCrewInvite={onDeclineStandingCrewInvite}
                 />
-              </div>
             </div>
           )}
 
