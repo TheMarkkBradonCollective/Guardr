@@ -171,7 +171,7 @@ export function ClientActiveShift({
         )}
 
         {(phase === 'on-duty' || phase === 'on-site') && request.checkInAudit && (
-          <JobSelfAuditPhotosSection request={request} hideStaffAttribution />
+          <JobSelfAuditPhotosSection request={request} />
         )}
 
         {jobActions && (

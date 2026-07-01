@@ -1,4 +1,4 @@
-import { PlatformRole, SecurityRequest } from '../types';
+import { SecurityRequest } from '../types';
 
 export type SelfAuditPhotoKind = 'self' | 'uniform' | 'shoes';
 
@@ -46,16 +46,6 @@ export function shouldShowJobSelfAuditPhotos(req: Pick<SecurityRequest, 'checkIn
   const audit = req.checkInAudit;
   if (!audit) return false;
   return hasAnySelfAuditPhoto(audit) || !!audit.selfAuditSkipped || !!audit.checkedAt;
-}
-
-/** Staff may upload during active jobs when photos are missing; after completion, only to clear No Self Audit */
-export function canStaffUploadSelfAuditPhotos(req: SecurityRequest, role?: PlatformRole): boolean {
-  if (!req.assignedGuardId || !ACTIVE_JOB_STATUSES.includes(req.status)) return false;
-  if ((role === 'director' || role === 'owner') && req.status === 'completed') {
-    return isNoSelfAuditFlagged(req) || !selfAuditPhotosComplete(req.checkInAudit);
-  }
-  if (req.status === 'completed') return isNoSelfAuditFlagged(req);
-  return isNoSelfAuditFlagged(req) || !selfAuditPhotosComplete(req.checkInAudit);
 }
 
 export function isSelfAuditClientConfirmed(audit: SecurityRequest['checkInAudit'] | undefined): boolean {

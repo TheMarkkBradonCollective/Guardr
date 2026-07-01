@@ -10,7 +10,6 @@ import { getClientLiveJobs, inferClientShiftPhase, CLIENT_SHIFT_PHASE_LABELS } f
 import { canClientApproveStaffScheduleChange } from '../../lib/jobScheduleChange';
 import { canClientApproveOvertime } from '../../lib/shiftBilling';
 import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClientConfirmed } from '../../lib/selfAuditPhotos';
-import { hasUnconfirmedSpotChecks } from '../../lib/spotChecks';
 import {
   AppDashboardZone,
   AppEmptyState,
@@ -75,7 +74,6 @@ function clientActionCount(requests: SecurityRequest[]): number {
   for (const req of requests) {
     if (canClientApproveOvertime(req)) count += 1;
     if (canClientApproveStaffScheduleChange(req)) count += 1;
-    if (hasUnconfirmedSpotChecks(req)) count += 1;
     if (
       hasSelfAuditPhotosToReview(req) &&
       req.checkInAudit &&

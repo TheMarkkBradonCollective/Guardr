@@ -52,7 +52,6 @@ import { JobTeamRoster } from '../jobs/JobTeamRoster';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { ClientSelfAuditConfirm } from './ClientSelfAuditConfirm';
-import { ClientSpotCheckConfirm } from './ClientSpotCheckConfirm';
 import {
   Award,
   Banknote,
@@ -83,7 +82,6 @@ export interface ClientJobActionsPanelProps {
   onUpdateStatus?: (requestId: string, status: SecurityRequest['status']) => void;
   onAddReview?: (requestId: string, rating: number, reviewText: string) => void;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
-  onConfirmSpotCheck?: (requestId: string, spotCheckId: string) => void | Promise<void>;
   onRequestCashPayment?: (requestId: string) => void | Promise<void>;
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onDisputeOvertime?: (requestId: string, input: OvertimeDisputeInput) => void | Promise<void>;
@@ -127,7 +125,6 @@ export function ClientJobActionsPanel({
   onUpdateStatus,
   onAddReview,
   onConfirmSelfAudit,
-  onConfirmSpotCheck,
   onRequestCashPayment,
   onApproveOvertime,
   onDisputeOvertime,
@@ -682,7 +679,6 @@ export function ClientJobActionsPanel({
         )}
 
         {onConfirmSelfAudit && <ClientSelfAuditConfirm request={req} onConfirm={onConfirmSelfAudit} />}
-        {onConfirmSpotCheck && <ClientSpotCheckConfirm request={req} onConfirm={onConfirmSpotCheck} />}
 
         {req.status === 'in-progress' && hiredGuard && onUpdateStatus && context === 'jobs' && (
           <button

@@ -16,12 +16,10 @@ import { formatCityLabel } from '../../lib/californiaCities';
 import { clientPaymentStatusHint } from '../../lib/paymentDisplay';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
 import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { isNoSpotCheckFlagged } from '../../lib/spotChecks';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { WfBadge } from '../ui/wireframe';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
-import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { Clock, MapPin, Navigation } from 'lucide-react';
 import type { MapViewerRole } from './MapOfferCard';
 
@@ -155,7 +153,6 @@ function StaffPeek({ job, guards }: { job: SecurityRequest; guards: SecurityGuar
       <div className="flex flex-wrap gap-1.5">
         <JobStatusBadge job={job} variant="staff" />
         {isNoSelfAuditFlagged(job) && <NoSelfAuditBadge />}
-        {isNoSpotCheckFlagged(job) && <NoSpotCheckBadge />}
         {isJobLocationCoordsMissing(job) && <NoMapCoordsBadge />}
       </div>
       <p className="font-bold text-sm leading-snug tracking-tight">{job.title}</p>

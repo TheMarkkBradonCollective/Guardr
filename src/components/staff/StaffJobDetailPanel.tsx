@@ -10,37 +10,27 @@ import {
   isJobScheduleLocked,
   canStaffReschedulePaidSchedule,
 } from '../../lib/jobEditRules';
-import { canStaffUploadSelfAuditPhotos, isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
-import { canStaffAddSpotCheck, hasSpotChecks, isNoSpotCheckFlagged } from '../../lib/spotChecks';
+import { isNoSelfAuditFlagged } from '../../lib/selfAuditPhotos';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
-import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobSelfAuditPhotosSection } from '../jobs/JobSelfAuditPhotosSection';
-import { JobSpotCheckPhotosSection } from '../jobs/JobSpotCheckPhotosSection';
 import { NoSelfAuditBadge } from '../jobs/NoSelfAuditBadge';
-import { NoSpotCheckBadge } from '../jobs/NoSpotCheckBadge';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { WfBadge, WfListCard } from '../ui/wireframe';
 import { ArrowLeft, Loader2, UserPlus, X } from 'lucide-react';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
-import { StaffSelfAuditPhotoUpload, type StaffSelfAuditPhotoPayload } from './StaffSelfAuditPhotoUpload';
-import { StaffSpotCheckUpload } from './StaffSpotCheckUpload';
 
 export interface StaffJobDetailPanelProps {
   req: SecurityRequest;
   guards: SecurityGuard[];
   canManageJobs?: boolean;
-  canUploadSelfAuditPhotos?: boolean;
-  canUploadSpotCheck?: boolean;
   canEditJobListing?: boolean;
   staffRole?: PlatformRole;
   onApproveRequest: (id: string) => void;
   onDenyRequest: (id: string) => void;
   onAssignGuard?: (requestId: string, guardId: string) => Promise<void>;
-  onUploadSelfAuditPhotos?: (requestId: string, photos: StaffSelfAuditPhotoPayload) => void | Promise<void>;
-  onUploadSpotCheck?: (requestId: string, imageUrl: string) => void | Promise<void>;
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   onApproveGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
@@ -57,10 +47,6 @@ export function StaffJobDetailPanel({
   onApproveRequest,
   onDenyRequest,
   onAssignGuard,
-  onUploadSelfAuditPhotos,
-  canUploadSelfAuditPhotos,
-  onUploadSpotCheck,
-  canUploadSpotCheck,
   onEditJobListing,
   onApproveGuardApplication,
   onDenyGuardApplication,
@@ -71,22 +57,10 @@ export function StaffJobDetailPanel({
   const [assignGuardId, setAssignGuardId] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [auditUploadOpen, setAuditUploadOpen] = useState(() => isNoSelfAuditFlagged(req));
-  const [spotCheckOpen, setSpotCheckOpen] = useState(false);
   useEffect(() => setEditing(false), [req.id]);
-  useEffect(() => setSpotCheckOpen(false), [req.id]);
-  useEffect(() => {
-    if (isNoSelfAuditFlagged(req)) setAuditUploadOpen(true);
-  }, [req.id, req.checkInAudit?.selfAuditSkipped, req.checkInAudit?.selfieUpload, req.checkInAudit?.uniformPhoto, req.checkInAudit?.shoesPhoto]);
   const scheduleLocked = isJobScheduleLocked(req);
   const showEdit =
     canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
-  const canUploadAudit =
-    !!canUploadSelfAuditPhotos &&
-    !!onUploadSelfAuditPhotos &&
-    canStaffUploadSelfAuditPhotos(req, staffRole);
-  const canAddSpotCheck =
-    !!canUploadSpotCheck && !!onUploadSpotCheck && canStaffAddSpotCheck(req);
   const assigned = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isAwaitingClientGuardApproval(req);
@@ -132,7 +106,6 @@ export function StaffJobDetailPanel({
           <div className="flex flex-wrap items-center gap-2">
             <JobStatusBadge job={req} variant="staff" />
             {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
-            {isNoSpotCheckFlagged(req) && <NoSpotCheckBadge />}
             {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
             <span className="text-xs text-brand-text-muted">{req.id}</span>
           </div>
@@ -156,24 +129,15 @@ export function StaffJobDetailPanel({
           Schedule is locked after payment. Title and location can still be updated.
         </p>
       )}
-      {!editing && !auditUploadOpen && <JobSelfAuditPhotosSection request={req} />}
-      {!editing && !spotCheckOpen && (hasSpotChecks(req) || isNoSpotCheckFlagged(req)) && (
-        <JobSpotCheckPhotosSection request={req} />
-      )}
+      {!editing && <JobSelfAuditPhotosSection request={req} />}
       <StaffJobActionsBar
         request={req}
-        showEdit={showEdit}
+        showEdit={!!showEdit}
         editing={editing}
         onStartEdit={() => setEditing(true)}
-        canUploadAudit={canUploadAudit}
-        auditUploadOpen={auditUploadOpen}
-        onToggleAuditUpload={() => setAuditUploadOpen((open) => !open)}
-        canUploadSpotCheck={canAddSpotCheck}
-        spotCheckOpen={spotCheckOpen}
-        onToggleSpotCheck={() => setSpotCheckOpen((open) => !open)}
       />
       <EditRequestSheet
-        open={editing && showEdit}
+        open={editing && !!showEdit}
         request={req}
         scheduleLocked={scheduleLocked}
         paidReschedule={canStaffReschedulePaidSchedule(req)}
@@ -299,24 +263,6 @@ export function StaffJobDetailPanel({
           </button>
         )}
       </div>
-      <AppFormSheet
-        open={auditUploadOpen && canUploadAudit}
-        onClose={() => setAuditUploadOpen(false)}
-        title="Upload self-audit photos"
-      >
-        {canUploadAudit && onUploadSelfAuditPhotos && (
-          <StaffSelfAuditPhotoUpload request={req} onUpload={onUploadSelfAuditPhotos} />
-        )}
-      </AppFormSheet>
-      <AppFormSheet
-        open={spotCheckOpen && canAddSpotCheck}
-        onClose={() => setSpotCheckOpen(false)}
-        title="Spot check photo"
-      >
-        {canAddSpotCheck && onUploadSpotCheck && (
-          <StaffSpotCheckUpload request={req} onUpload={onUploadSpotCheck} />
-        )}
-      </AppFormSheet>
     </div>
   );
 }

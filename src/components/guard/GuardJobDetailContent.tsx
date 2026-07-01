@@ -105,7 +105,7 @@ export function GuardJobDetailContent({
         jobStatus={job.status}
         footer={
           <div className="space-y-3">
-            <JobSelfAuditPhotosSection request={job} hideStaffAttribution />
+            <JobSelfAuditPhotosSection request={job} />
             <div className="space-y-3 border-t border-brand-border pt-3">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Your qualification checklist</p>

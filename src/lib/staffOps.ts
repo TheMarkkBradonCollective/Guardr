@@ -12,7 +12,6 @@ import {
 } from './approvalSubmissions';
 import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLocation';
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
-import { hasSpotChecks, isNoSpotCheckFlagged, isSpotCheckClientConfirmed, sortedSpotChecks } from './spotChecks';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { getPendingInsuranceReviews } from './guardInsurance';
 import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
@@ -507,16 +506,16 @@ export function buildOverviewActionQueue(
       r.assignedGuardId &&
       (r.status === 'accepted' ||
         r.status === 'in-progress' ||
-        (r.status === 'completed' && (isNoSelfAuditFlagged(r) || isNoSpotCheckFlagged(r))))
+        (r.status === 'completed' && isNoSelfAuditFlagged(r)))
   );
   if (activeGuardJobs.length > 0) {
     items.push({
       id: 'active-guard-jobs',
       title: 'Edit or update active guard jobs',
-      description: 'Update listings, self-audit photos, or staff spot checks for guards on coverage',
+      description: 'Update listings or review guard check-ins on active coverage',
       count: activeGuardJobs.length,
       section: 'jobs',
-      tone: activeGuardJobs.some((r) => isNoSelfAuditFlagged(r) || isNoSpotCheckFlagged(r)) ? 'urgent' : 'normal',
+      tone: activeGuardJobs.some((r) => isNoSelfAuditFlagged(r)) ? 'urgent' : 'normal',
     });
   }
 
@@ -578,7 +577,7 @@ export function buildOverviewLiveJobs(
     .filter(
       (r) =>
         ['accepted', 'in-progress'].includes(r.status) ||
-        (r.status === 'completed' && (isNoSelfAuditFlagged(r) || isNoSpotCheckFlagged(r)))
+        (r.status === 'completed' && isNoSelfAuditFlagged(r))
     )
     .map((r) => ({
       id: r.id,
@@ -643,33 +642,6 @@ export function buildPlatformActivityFeed(
         message: `${req.clientName} confirmed self-audit photos — ${site}`,
         sortKey: new Date(req.checkInAudit.clientConfirmedAt).getTime() + 2,
       });
-    }
-    if (isNoSpotCheckFlagged(req)) {
-      const ts = req.checkInAudit?.checkedAt ?? req.startDate;
-      items.push({
-        id: `${req.id}-no-spot-check`,
-        timestamp: ts,
-        message: `No staff spot check on file — ${guard?.name ?? 'Guard'} at ${site}`,
-        sortKey: new Date(ts).getTime() + 3,
-      });
-    } else if (hasSpotChecks(req)) {
-      const latest = sortedSpotChecks(req)[0];
-      items.push({
-        id: `${req.id}-spot-check`,
-        timestamp: latest.uploadedAt,
-        message: `Staff spot check saved — ${guard?.name ?? 'Guard'} at ${site}`,
-        sortKey: new Date(latest.uploadedAt).getTime() + 3,
-      });
-      for (const check of sortedSpotChecks(req)) {
-        if (isSpotCheckClientConfirmed(check)) {
-          items.push({
-            id: `${req.id}-spot-check-client-${check.id}`,
-            timestamp: check.clientConfirmedAt!,
-            message: `${req.clientName} confirmed staff spot check — ${site}`,
-            sortKey: new Date(check.clientConfirmedAt!).getTime() + 4,
-          });
-        }
-      }
     }
     for (const incident of listIncidentReportsForRequest(req)) {
       items.push({
