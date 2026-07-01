@@ -11,15 +11,10 @@ Step-by-step for connecting **GoDaddy domain** → **Vercel** → **Supabase** +
 2. Create a project (or open your existing one)
 3. Wait until the database is ready
 
-### 2. Run database migrations
+### 2. Run database schema
 1. In Supabase: **SQL Editor** → **New query**
-2. Open each file in `supabase/migrations/` **in filename order** (oldest first)
-3. Paste and **Run** each file one at a time
-
-Minimum order:
-- `20260606000000_initial_schema.sql`
-- `20260606000001_add_staff_role.sql`
-- … through latest migration
+2. Open **`supabase/complete_schema_setup.sql`** from this repo
+3. Paste the full script and **Run** once (idempotent — safe to re-run on existing databases)
 
 ### 3. Get your API keys
 **Project Settings → API**
@@ -148,7 +143,7 @@ If guards see *"You can only create new accounts if you've signed up for Connect
 
 ## Quick checklist
 
-- [ ] Supabase migrations applied
+- [ ] `supabase/complete_schema_setup.sql` applied in Supabase SQL Editor
 - [ ] Supabase Site URL = `https://guardr.co`
 - [ ] All env vars in Vercel (especially `VITE_*` for frontend)
 - [ ] Redeployed on Vercel

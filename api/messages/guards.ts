@@ -139,7 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (missingGuardMessagesTable(error.message)) {
           return res.status(500).json({
             error:
-              'guard_messages table is missing. Run supabase/migrations/20260706120000_guard_messages.sql',
+              'guard_messages table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor',
           });
         }
         return res.status(500).json({ error: error.message });
@@ -195,7 +195,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (missingGuardMessagesTable(error.message)) {
           return res.status(500).json({
             error:
-              'guard_messages table is missing. Run supabase/migrations/20260706120000_guard_messages.sql',
+              'guard_messages table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor',
           });
         }
         return res.status(500).json({ error: error.message });

@@ -1,9 +1,9 @@
 -- =============================================================================
--- Guardr — COMPLETE SCHEMA SETUP (run once in Supabase SQL Editor)
+-- Guardr — COMPLETE SITE SCHEMA (single source of truth)
+-- Run once in Supabase SQL Editor for new projects or to catch up existing DBs.
 -- Idempotent: safe to re-run. Does NOT delete your data.
 -- Adds all tables, columns, constraints, RLS policies, and realtime.
--- Last updated: Jun 25, 2026 — Founder role, approved user_status, listed_weapon_gear,
---   two-step guard activation (pending → approved → active), COI, crew teams, schedule changes.
+-- Replaces the former supabase/migrations/ folder (87 incremental files).
 -- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
 
@@ -958,6 +958,56 @@ CREATE INDEX IF NOT EXISTS idx_team_chat_threads_request_id ON team_chat_threads
 CREATE INDEX IF NOT EXISTS idx_team_chat_threads_status ON team_chat_threads(status);
 CREATE INDEX IF NOT EXISTS idx_team_chat_messages_thread_id ON team_chat_messages(thread_id);
 
+-- ── STANDING CREW ROSTER (trusted guard teams) ───────────────────────────────
+CREATE TABLE IF NOT EXISTS guard_standing_crew_members (
+  id TEXT PRIMARY KEY,
+  lead_guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  member_guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'active', 'declined', 'removed')),
+  invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  responded_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (lead_guard_id, member_guard_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_standing_crew_lead
+  ON guard_standing_crew_members (lead_guard_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_standing_crew_member
+  ON guard_standing_crew_members (member_guard_id, status);
+
+COMMENT ON TABLE guard_standing_crew_members IS
+  'Persistent roster a trusted guard maintains across jobs; pending until member accepts';
+
+-- ── USER NOTIFICATION INBOX ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_notifications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT,
+  request_id TEXT,
+  guard_id TEXT,
+  ticket_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  read_at TIMESTAMPTZ,
+  clicked_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_notifications_user_created
+  ON user_notifications (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_user_notifications_unread
+  ON user_notifications (user_id)
+  WHERE read_at IS NULL;
+
+COMMENT ON TABLE user_notifications IS
+  'Persistent in-app notification inbox — unread until read_at or clicked_at is set';
+
 -- ── MARKETPLACE LEGAL ACCEPTANCES ─────────────────────────────────────────────
 DO $$
 BEGIN
@@ -1109,6 +1159,8 @@ ALTER TABLE team_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE
@@ -1121,7 +1173,8 @@ BEGIN
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
-    'user_legal_acceptances', 'guard_insurance_policies'
+    'user_legal_acceptances', 'guard_insurance_policies',
+    'guard_standing_crew_members', 'user_notifications'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NULL THEN
@@ -1165,7 +1218,8 @@ BEGIN
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'message_reactions',
-    'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots'
+    'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots',
+    'guard_standing_crew_members', 'user_notifications'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
@@ -1372,6 +1426,18 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'push_notification_dedup'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_standing_crew_members'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'user_notifications'
 ORDER BY column_name;
 
 SELECT policyname, cmd

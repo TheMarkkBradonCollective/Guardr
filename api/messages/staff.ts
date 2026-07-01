@@ -145,7 +145,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (missingStaffMessagesTable(error.message)) {
           return res.status(500).json({
             error:
-              'staff_messages table is missing. Run supabase/migrations/20260623120000_messaging_and_notification_prefs.sql',
+              'staff_messages table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor',
           });
         }
         return res.status(500).json({ error: error.message });
@@ -201,7 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (missingStaffMessagesTable(error.message)) {
           return res.status(500).json({
             error:
-              'staff_messages table is missing. Run supabase/migrations/20260623120000_messaging_and_notification_prefs.sql',
+              'staff_messages table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor',
           });
         }
         return res.status(500).json({ error: error.message });

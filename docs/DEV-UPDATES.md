@@ -272,7 +272,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | 5:47 PM | 48-hour credential grace period |
 | 5:47 PM | Document photo proof required for all credentials |
 | 5:47 PM | Image save fixes: compression, realtime race blocking |
-| 5:47 PM | `fix_everything.sql` one-shot database catch-up script |
+| 5:47 PM | `complete_schema_setup.sql` one-shot database schema script |
 | 5:47 PM | Staff verify buttons on each 32-hour course cert |
 | 5:47 PM | Optional client site briefing fields (expanded to **150+ fields**) |
 | 5:47 PM | Support messages and reports split onto distinct views |
@@ -384,7 +384,7 @@ _Times below come from git commit timestamps. They reflect when work was committ
 | **Founder rename** | Owner → Founder across UI, permissions, API session auth, SQL + migration `20260625120000_rename_owner_to_founder.sql` |
 | **Auth scroll fix** | Login/signup form column scrolls on desktop side-by-side layout |
 | **General guide** | **Whole app — start to finish** section; per-role guides (Moderator, Administrator, Director, Founder); guide UI filters by staff role |
-| **Complete SQL** | `complete_schema_setup.sql` / `fix_everything.sql` synced for live deploy |
+| **Complete SQL** | `complete_schema_setup.sql` — single idempotent schema for the whole site |
 | **Tests** | 105 passing; production build verified |
 
 ---

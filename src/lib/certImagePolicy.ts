@@ -10,9 +10,9 @@ export function certDatabaseErrorMessage(error: { code?: string; message?: strin
   if (error.code === 'PGRST204' || error.message?.includes('column')) {
     const missing = error.message?.match(/'([^']+)'\s+column/i)?.[1];
     if (missing === 'image_url') {
-      return 'Could not save credential photo — database schema is out of date. In Supabase → SQL Editor, run the full script: supabase/fix_everything.sql';
+      return 'Could not save credential photo — database schema is out of date. In Supabase → SQL Editor, run: supabase/complete_schema_setup.sql';
     }
-    return 'Could not save — run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
+    return 'Could not save — run supabase/complete_schema_setup.sql in Supabase SQL Editor, then try again.';
   }
   if (error.message?.includes('payload') || error.message?.includes('too large')) {
     return 'Photo is too large to save. Try a smaller image or retake the photo.';

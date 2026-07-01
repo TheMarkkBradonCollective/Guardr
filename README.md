@@ -102,4 +102,4 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 
 ## Database Migrations
 
-Supabase migrations live in `supabase/migrations/`. For a one-shot catch-up on an existing database, run **`supabase/fix_everything.sql`** in the Supabase SQL Editor (idempotent, safe to re-run).
+Supabase schema lives in **`supabase/complete_schema_setup.sql`**. Run that file in the Supabase SQL Editor for fresh installs or to catch up an existing database (idempotent, safe to re-run).

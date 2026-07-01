@@ -1,4 +1,0 @@
-ALTER TABLE notification_preferences
-  ADD COLUMN IF NOT EXISTS guard_clockout BOOLEAN NOT NULL DEFAULT true,
-  ADD COLUMN IF NOT EXISTS guard_break_start BOOLEAN NOT NULL DEFAULT true,
-  ADD COLUMN IF NOT EXISTS guard_break_end BOOLEAN NOT NULL DEFAULT true;

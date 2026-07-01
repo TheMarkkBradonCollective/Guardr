@@ -40,7 +40,7 @@ export async function upsertPushSubscription(
   if (error) {
     if (error.message.includes('push_subscriptions') || error.code === '42P01') {
       throw new Error(
-        'push_subscriptions table is missing. Run supabase/migrations/20260612120000_push_subscriptions.sql'
+        'push_subscriptions table is missing. Run supabase/complete_schema_setup.sql in the Supabase SQL Editor'
       );
     }
     throw new Error(error.message);

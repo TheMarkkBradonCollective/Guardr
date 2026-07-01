@@ -1,2 +1,0 @@
--- Superseded by 20260608000000_full_database_reset.sql
--- Legacy cleanup of demo rows is no longer needed; the reset migration drops and recreates an empty schema.

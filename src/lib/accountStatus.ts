@@ -77,10 +77,10 @@ export function guardAccountDatabaseErrorMessage(
 ): string {
   const msg = error.message ?? '';
   if (msg.includes('user_status') || msg.includes('guards_user_status_check')) {
-    return 'Database is missing the approved account status. Run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
+    return 'Database is missing the approved account status. Run supabase/complete_schema_setup.sql in Supabase SQL Editor, then try again.';
   }
   if (error.code === 'PGRST204' || msg.toLowerCase().includes('column')) {
-    return 'Database schema is out of date. Run supabase/fix_everything.sql in Supabase SQL Editor, then try again.';
+    return 'Database schema is out of date. Run supabase/complete_schema_setup.sql in Supabase SQL Editor, then try again.';
   }
   const detail = msg.trim();
   if (detail) {
