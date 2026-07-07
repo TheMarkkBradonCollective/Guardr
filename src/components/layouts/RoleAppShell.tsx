@@ -3,6 +3,7 @@ import { AppScreenHeader } from './AppScreenHeader';
 import { BottomNavBar, BottomNavItem } from './BottomNavBar';
 import { MoreMenuSheet } from './MoreMenuSheet';
 import { AccountMenu, type AccountMenuProps } from './AccountMenu';
+import { Logo } from '../Logo';
 
 interface RoleAppShellProps {
   title: string;
@@ -56,12 +57,56 @@ export function RoleAppShell({
     setMoreOpen(false);
   };
 
+  // All nav items for the desktop sidebar (primary + overflow combined)
+  const allSideNavItems = [...navItems, ...overflowNavItems];
+
   return (
     <div
       className={`role-app-shell page-shell fixed inset-0 flex flex-col h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text${
         experience ? ` role-experience-${experience}` : ''
       }`}
     >
+      {/* ── Desktop sidebar nav (hidden on mobile/tablet via CSS) ── */}
+      <aside className="role-side-nav" aria-label="Main navigation">
+        <div className="role-side-nav-brand">
+          <Logo size={26} className="text-brand-primary shrink-0" />
+          <span className="role-side-nav-brand-name">
+            Guard<span className="role-side-nav-brand-accent">r</span>
+          </span>
+        </div>
+
+        <nav className="role-side-nav-items" role="navigation">
+          {allSideNavItems.map(({ id, label, icon: Icon, badge }) => {
+            const active = activeNavId === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => navigate(id)}
+                className={`role-side-nav-item${active ? ' role-side-nav-item-active' : ''}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                <Icon
+                  className="role-side-nav-item-icon"
+                  strokeWidth={active ? 2.5 : 2}
+                />
+                <span className="role-side-nav-item-label">{label}</span>
+                {badge != null && badge > 0 && (
+                  <span className="role-side-nav-item-badge">
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="role-side-nav-footer">
+          <AccountMenu {...accountMenu} />
+        </div>
+      </aside>
+
+      {/* ── Header (all sizes; hidden on desktop when sidebar is active) ── */}
       {!hideHeader ? (
         <AppScreenHeader
           title={title}
@@ -81,7 +126,7 @@ export function RoleAppShell({
       )}
 
       <main className="flex-1 min-h-0 min-w-0 overflow-hidden">
-        <div className={`h-full max-w-full min-w-0 ${fullBleed ? 'overflow-hidden' : 'overflow-hidden'}`}>
+        <div className="h-full max-w-full min-w-0 overflow-hidden">
           {children}
         </div>
       </main>

@@ -12,6 +12,14 @@ import {
   MessageSquare,
   CreditCard,
   Navigation,
+  BadgeCheck,
+  Zap,
+  Lock,
+  Star,
+  FileText,
+  Users,
+  TrendingUp,
+  Smartphone,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { ThemeMode } from '../lib/platform/theme';
@@ -35,15 +43,15 @@ interface HomePageProps {
 }
 
 const CLIENT_FEATURES = [
-  { icon: MapPin, title: 'Post by site', body: 'Set location, hours, and coverage type in minutes.' },
-  { icon: Shield, title: 'Licensed professionals', body: 'Independent guards apply with credentials they upload to the platform.' },
-  { icon: Clock, title: 'Live visibility', body: 'Track check-ins, audits, and support from one dashboard.' },
+  { icon: MapPin, title: 'Post by site', body: 'Set location, hours, and coverage type in minutes. Add special requirements and let guards apply.' },
+  { icon: BadgeCheck, title: 'Verified credentials', body: 'Independent guards apply with state licenses, certifications, and profile verified by the platform.' },
+  { icon: Clock, title: 'Live visibility', body: 'Track check-ins, shift audits, and guard activity from one real-time dashboard.' },
 ];
 
 const GUARD_FEATURES = [
-  { icon: MapPin, title: 'Jobs near you', body: 'Browse open posts on the map — you choose what fits.' },
-  { icon: Shield, title: 'Your credentials', body: 'Your license, certs, and profile — owned by you.' },
-  { icon: CheckCircle2, title: 'Direct pay', body: 'Complete shifts and get paid through the platform.' },
+  { icon: MapPin, title: 'Jobs near you', body: 'Browse open posts on the map filtered by distance, rate, and type. You choose what fits.' },
+  { icon: Lock, title: 'Own your credentials', body: 'Your license, certs, and professional profile — stored on the platform and portable.' },
+  { icon: CreditCard, title: 'Direct pay', body: 'Complete shifts and receive earnings through the platform. Track every payment in your dashboard.' },
 ];
 
 const COVERAGE_TYPES = [
@@ -51,7 +59,10 @@ const COVERAGE_TYPES = [
   'Construction sites',
   'Retail protection',
   'Nightlife & venues',
+  'Corporate campuses',
+  'Hospital & healthcare',
   'Short & recurring posts',
+  'Armed transport',
 ];
 
 const HOW_IT_WORKS = [
@@ -59,19 +70,19 @@ const HOW_IT_WORKS = [
     step: '01',
     icon: Navigation,
     title: 'Post or discover',
-    body: 'Clients post coverage needs. Guards browse open jobs on the map.',
+    body: 'Clients post coverage needs with full site details. Guards browse open jobs on the map in real time.',
   },
   {
     step: '02',
     icon: MessageSquare,
     title: 'Match & confirm',
-    body: 'Review credentials, message directly, and lock in the details.',
+    body: 'Review credentials, message directly through the platform, and lock in the job details.',
   },
   {
     step: '03',
     icon: CreditCard,
     title: 'Track & complete',
-    body: 'Live check-ins, shift audits, and payment through the platform.',
+    body: 'Live check-ins, shift audits, incident reports, and payment — all handled through Guardr.',
   },
 ];
 
@@ -80,6 +91,39 @@ const TRUST_METRICS = [
   { value: 'Licensed', label: 'Independent pros' },
   { value: 'Live', label: 'Shift tracking' },
   { value: 'Direct', label: 'Platform payments' },
+];
+
+const PLATFORM_HIGHLIGHTS = [
+  {
+    icon: Smartphone,
+    title: 'Mobile-first design',
+    body: 'Built for guards on the move. Full functionality on any device, installable as a PWA.',
+  },
+  {
+    icon: FileText,
+    title: 'Digital credentials',
+    body: 'Upload licenses and certs once. They travel with your profile across every job.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Earnings tracking',
+    body: 'Full history of shifts, rates, and payouts. No spreadsheets required.',
+  },
+  {
+    icon: Users,
+    title: 'Team coordination',
+    body: 'Form standing crews, coordinate multi-guard posts, and manage team communications.',
+  },
+  {
+    icon: Zap,
+    title: 'Instant notifications',
+    body: 'Real-time alerts for new jobs, shift updates, check-ins, and platform messages.',
+  },
+  {
+    icon: Star,
+    title: 'Reputation system',
+    body: 'Build a verified track record. Clients rate completed shifts; guards build their profile.',
+  },
 ];
 
 function LandingProductPreview({ formFactor }: { formFactor: FormFactor }) {
@@ -410,14 +454,14 @@ export function HomePage({
                 Request coverage at your site
               </h2>
               <p className="landing-feature-lead">
-                Post jobs, review licensed guards, and monitor active coverage —
-                with dedicated messaging and support when you need it.
+                Post jobs with full site details, review licensed guards, and monitor active
+                coverage — with dedicated messaging and support when you need it.
               </p>
               <ul className="landing-feature-list">
                 {CLIENT_FEATURES.map(({ icon: Icon, title, body }) => (
                   <li key={title} className="landing-feature-item">
                     <span className="landing-feature-icon landing-feature-icon--client">
-                      <Icon className="w-5 h-5 text-brand-text" />
+                      <Icon className="w-5 h-5 text-brand-text" strokeWidth={1.75} />
                     </span>
                     <div>
                       <p className="font-bold text-brand-text tracking-tight">{title}</p>
@@ -442,14 +486,14 @@ export function HomePage({
                 Work independently, get paid directly
               </h2>
               <p className="landing-feature-lead">
-                Map-first job discovery, earnings tracking, credentials, and shift tools.
+                Map-first job discovery, earnings tracking, digital credentials, and full shift tools.
                 You contract per assignment — not an employee of Guardr or the client.
               </p>
               <ul className="landing-feature-list">
                 {GUARD_FEATURES.map(({ icon: Icon, title, body }) => (
                   <li key={title} className="landing-feature-item">
                     <span className="landing-feature-icon landing-feature-icon--guard">
-                      <Icon className="w-5 h-5 text-brand-primary" />
+                      <Icon className="w-5 h-5 text-brand-primary" strokeWidth={1.75} />
                     </span>
                     <div>
                       <p className="font-bold text-brand-text tracking-tight">{title}</p>
@@ -471,11 +515,57 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="landing-section landing-coverage-section bg-brand-bg-sec border-t border-brand-border">
+      {/* Platform highlights section */}
+      <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
+        <div className="landing-container">
+          <div className="landing-section-head landing-section-head--center">
+            <p className="experience-badge">Everything included</p>
+            <h2 className="landing-section-title">Built for the job, not around it</h2>
+            <p className="landing-section-lead">
+              Every feature on Guardr is designed for how security work actually happens.
+            </p>
+          </div>
+          <motion.div
+            className="landing-highlights-grid"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.06 } },
+            }}
+          >
+            {PLATFORM_HIGHLIGHTS.map(({ icon: Icon, title, body }) => (
+              <motion.div
+                key={title}
+                variants={{
+                  hidden: { opacity: 0, y: 12 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+                }}
+                className="landing-highlight-card"
+              >
+                <span className="landing-highlight-icon">
+                  <Icon className="w-5 h-5" strokeWidth={1.75} />
+                </span>
+                <div>
+                  <p className="landing-highlight-title">{title}</p>
+                  <p className="landing-highlight-body">{body}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="landing-section landing-coverage-section border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-coverage-inner">
           <div className="landing-section-head landing-section-head--center">
+            <p className="experience-badge">Coverage types</p>
             <h2 className="landing-section-title">Built for real-world coverage</h2>
-            <p className="landing-section-lead">Any site, any shift length, any requirement.</p>
+            <p className="landing-section-lead">
+              Any site, any shift length, any requirement. Post what you need — guards apply with
+              the credentials to match.
+            </p>
           </div>
           <div className={`landing-coverage-grid landing-coverage-grid--${formFactor}`}>
             {COVERAGE_TYPES.map((tag) => (
@@ -487,11 +577,12 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="landing-section border-t border-brand-border">
+      <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
         <div className="landing-container landing-rules-inner">
           <div className="app-card-elevated landing-rules-card text-center space-y-4">
-            <h2 className="text-xl font-bold">Transparent marketplace rules</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed">
+            <p className="experience-badge experience-badge--center">Marketplace rules</p>
+            <h2 className="text-xl font-black tracking-tight">Transparent by design</h2>
+            <p className="text-sm text-brand-text-muted leading-relaxed max-w-sm mx-auto">
               {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
               independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
             </p>
@@ -504,7 +595,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="landing-section border-t border-brand-border bg-brand-bg-sec">
+      <section className="landing-section border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-legal-inner">
           <div className="landing-section-head landing-section-head--center">
             <h2 className="landing-section-title landing-section-title--sm">Policies &amp; data</h2>
@@ -516,37 +607,45 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="landing-section landing-final-cta border-t border-brand-border bg-brand-bg">
+      <section className="landing-section landing-final-cta border-t border-brand-border bg-brand-bg-sec">
         <div className="landing-container landing-final-cta-inner">
-          <h2 className="landing-final-title font-black tracking-[-0.04em]">Ready when you are</h2>
-          <p className="landing-final-lead">
-            Choose your path — each experience is built for how you use Guardr.
-          </p>
-          <div className={`landing-final-actions landing-final-actions--${formFactor}`}>
-            <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark">
-              I need security
-            </button>
-            <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark">
-              I&apos;m a guard
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigateToAuth(undefined, 'sign-in')}
-            className="landing-final-signin"
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.45 }}
           >
-            Sign in to your account
-          </button>
+            <p className="experience-badge experience-badge--center">Get started</p>
+            <h2 className="landing-final-title font-black tracking-[-0.04em]">Ready when you are</h2>
+            <p className="landing-final-lead">
+              Choose your path — each experience is purpose-built for how you use Guardr.
+            </p>
+            <div className={`landing-final-actions landing-final-actions--${formFactor}`}>
+              <button type="button" onClick={() => onNavigateToAuth('client', 'sign-up')} className="app-cta-dark">
+                I need security
+              </button>
+              <button type="button" onClick={() => onNavigateToAuth('guard', 'sign-up')} className="app-cta-outline-dark">
+                I&apos;m a guard
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateToAuth(undefined, 'sign-in')}
+              className="landing-final-signin"
+            >
+              Sign in to your account
+            </button>
+          </motion.div>
         </div>
       </section>
 
-      <footer className="landing-footer border-t border-brand-border">
+      <footer className="landing-footer border-t border-brand-border bg-brand-bg">
         <div className="landing-container landing-footer-inner">
-          <div className="flex items-center gap-2">
-            <Logo size={24} className="text-brand-primary" />
+          <div className="flex items-center gap-2.5">
+            <Logo size={22} className="text-brand-primary" />
             <div>
-              <span className="font-semibold block">Guardr</span>
-              <span className="text-[10px] uppercase tracking-wider text-brand-text-muted">
+              <span className="font-black text-sm tracking-[-0.04em] block leading-none">Guardr</span>
+              <span className="text-[10px] uppercase tracking-wider text-brand-text-muted mt-0.5 block">
                 by{' '}
                 <SignatureSecuritySpecialistLink className="text-brand-text-muted hover:text-brand-primary hover:underline transition-colors uppercase tracking-wider" />
               </span>
@@ -565,9 +664,9 @@ export function HomePage({
               </button>
             )}
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
-            <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right">
-              © {new Date().getFullYear()} {LEGAL_ENTITY_NAME} — independent contractor marketplace.
-              Credential handling follows applicable state licensing rules.
+            <p className="text-xs text-brand-text-muted max-w-xs text-center sm:text-right leading-relaxed">
+              © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}<br className="hidden sm:block" />
+              Independent contractor marketplace. State licensing rules apply.
             </p>
           </div>
         </div>

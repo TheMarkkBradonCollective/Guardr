@@ -1641,16 +1641,13 @@ html.theme-grey {
   opacity: 0.8;
 }
 
-/* ─── FORMERLY HORIZONTAL SCROLL — NOW WRAPPING STACK ───── */
+/* ─── WRAPPING ROW (formerly horizontal scroll — now grid/wrap) ─── */
 .app-scroll-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 0.75rem;
+  width: 100%;
   max-width: 100%;
-}
-
-.app-scroll-row > * {
-  flex-shrink: 0;
 }
 
 .app-section-title {
@@ -2137,20 +2134,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .map-browse-scroll,
 .client-map-browse-scroll {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: 0.625rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
   padding: 0 0.75rem 0.5rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
 }
 
 .map-browse-plus-wrap,
 .client-map-browse-plus-wrap {
   position: relative;
-  flex-shrink: 0;
-  scroll-snap-align: start;
+  min-width: 0;
 }
 
 .map-browse-plus-card,
@@ -3285,27 +3279,23 @@ a.app-item-card:active,
 }
 
 /* Formerly horizontal scroll — now wrapping */
+/* .app-h-scroll: converted to wrapping grid — no horizontal scroll */
 .app-h-scroll {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.875rem;
+  width: 100%;
   max-width: 100%;
   padding: 0 0 0.25rem;
-  scrollbar-width: none;
-}
-
-.app-h-scroll::-webkit-scrollbar {
-  display: none;
 }
 
 .app-h-scroll > * {
-  scroll-snap-align: start;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .app-h-tile {
-  min-width: 11rem;
-  max-width: 13rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .app-h-tile-label {
@@ -5227,31 +5217,60 @@ html.theme-grey .guardr-lightning-flash {
   font-weight: 800;
 }
 
+/* ── Inbox list and rows ────────────────────────────────────── */
 .app-inbox-list {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--brand-border);
 }
 
 .app-inbox-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   width: 100%;
   text-align: left;
-  padding: 0.875rem 1rem;
+  padding: 0.8125rem 1rem;
   border-bottom: 1px solid var(--brand-border);
   background: var(--brand-surface);
-  transition: background 0.15s ease;
+  transition: background 0.12s ease;
+  cursor: pointer;
+  min-height: 4.5rem;
 }
 
 .app-inbox-row:hover {
-  background: var(--brand-elevated);
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-surface));
+}
+
+.app-inbox-row:active {
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-surface));
 }
 
 .app-inbox-row-selected {
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface)) !important;
   box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+/* ── Leading avatar/icon container ──────────────────────────── */
+.app-inbox-row-leading {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  overflow: hidden;
+  border: 1.5px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  align-self: center;
+}
+
+html.theme-dark .app-inbox-row-leading {
+  background: color-mix(in srgb, var(--brand-primary) 16%, #1a1a1a);
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, #2a2a2a);
 }
 
 .app-inbox-row-main {
@@ -5261,35 +5280,36 @@ html.theme-grey .guardr-lightning-flash {
 
 .app-inbox-row-top {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .app-inbox-row-title {
   font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
   min-width: 0;
+  color: var(--brand-text);
 }
 
 .app-inbox-row-meta {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--brand-text-muted);
   flex-shrink: 0;
-  padding-top: 0.125rem;
+  letter-spacing: 0;
 }
 
 .app-inbox-row-subtitle {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--brand-text-muted);
-  margin-top: 0.125rem;
+  margin-top: 0.0625rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5298,41 +5318,91 @@ html.theme-grey .guardr-lightning-flash {
 .app-inbox-row-preview {
   font-size: 0.8125rem;
   color: var(--brand-text-muted);
-  margin-top: 0.25rem;
+  margin-top: 0.1875rem;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .app-inbox-row-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
-  margin-top: 0.375rem;
+  margin-top: 0.3125rem;
 }
 
+/* Chevron — hide on desktop (split view handles navigation) */
+.app-inbox-row-chevron {
+  flex-shrink: 0;
+  color: var(--brand-text-muted);
+  opacity: 0.55;
+}
+
+/* ── Unread state: bold title + unread dot ───────────────────── */
+.app-inbox-row-unread .app-inbox-row-title {
+  font-weight: 800;
+  color: var(--brand-text);
+}
+
+.app-inbox-row-unread .app-inbox-row-preview {
+  color: var(--brand-text);
+  font-weight: 500;
+}
+
+.app-inbox-row-unread .app-inbox-row-meta {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.app-inbox-unread-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Chat header: messenger-style ───────────────────────────── */
 .app-chat-header {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.875rem 1rem;
+  padding: 0 0.875rem;
   border-bottom: 1px solid var(--brand-border);
   background: var(--brand-surface);
   flex-shrink: 0;
+  height: 3.5rem;
   min-height: 3.5rem;
+}
+
+html.theme-dark .app-chat-header {
+  background: #111111;
+  border-bottom-color: #1e1e1e;
+}
+
+html.theme-light .app-chat-header {
+  background: #ffffff;
+  border-bottom-color: #e5e5e5;
 }
 
 .app-chat-header-back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
   margin-left: -0.25rem;
   color: var(--brand-primary);
   flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+
+.app-chat-header-back:hover {
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
 }
 
 .app-chat-header-action {
@@ -5342,8 +5412,9 @@ html.theme-grey .guardr-lightning-flash {
   width: 2rem;
   height: 2rem;
   color: var(--brand-text-muted);
-  border-radius: 0.5rem;
-  transition: color 0.15s ease, background 0.15s ease;
+  border-radius: 50%;
+  transition: color 0.12s ease, background 0.12s ease;
+  flex-shrink: 0;
 }
 
 .app-chat-header-action:hover {
@@ -5352,8 +5423,8 @@ html.theme-grey .guardr-lightning-flash {
 }
 
 .app-chat-header-action-danger:hover {
-  color: #dc2626;
-  background: color-mix(in srgb, #dc2626 10%, var(--brand-surface));
+  color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 10%, transparent);
 }
 
 .app-chat-header-title {
@@ -5363,39 +5434,56 @@ html.theme-grey .guardr-lightning-flash {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--brand-text);
 }
 
 .app-chat-header-sub {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--brand-text-muted);
-  margin-top: 0.125rem;
+  margin-top: 0.0625rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
 }
 
+/* ── Chat pane: messenger-style background ─────────────────── */
 .app-chat-pane {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 1rem 1rem 1.25rem;
-  background: var(--brand-bg-sec);
+  padding: 0.75rem 0.875rem 1rem;
+  background: var(--brand-bg);
   display: flex;
   flex-direction: column;
   gap: 0;
+  overscroll-behavior: contain;
+}
+
+html.theme-dark .app-chat-pane {
+  background: #080808;
+}
+
+html.theme-grey .app-chat-pane {
+  background: var(--brand-bg);
+}
+
+html.theme-light .app-chat-pane {
+  background: #f5f5f5;
 }
 
 .app-chat-thread {
   display: flex;
   flex-direction: column;
   gap: 0.1875rem;
+  margin-top: auto;
 }
 
 .app-chat-row {
   display: flex;
   width: 100%;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .app-chat-row-outgoing {
@@ -5407,7 +5495,7 @@ html.theme-grey .guardr-lightning-flash {
 }
 
 .app-chat-row-group-first {
-  margin-top: 0.875rem;
+  margin-top: 1rem;
 }
 
 .app-chat-row-chained {
@@ -5417,122 +5505,171 @@ html.theme-grey .guardr-lightning-flash {
 /* Avatar for incoming messages */
 .app-chat-row-avatar {
   flex-shrink: 0;
-  width: 1.875rem;
+  width: 2rem;
   align-self: flex-end;
+  padding-bottom: 0.125rem;
 }
 
 .app-chat-avatar {
-  width: 1.875rem;
-  height: 1.875rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
-  background: var(--brand-elevated);
-  color: var(--brand-text-muted);
+  background: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-bg-sec));
+  color: var(--brand-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.01em;
   flex-shrink: 0;
+  border: 1.5px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+html.theme-dark .app-chat-avatar {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #1a1a1a);
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, #2a2a2a);
 }
 
 .app-chat-avatar-staff {
-  background: color-mix(in srgb, var(--brand-primary) 15%, var(--brand-surface));
+  background: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-surface));
   color: var(--brand-primary);
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
 }
 
-/* Date separator between message groups */
+/* Date separator — pill style, no horizontal lines */
 .app-chat-date-sep {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0 0.5rem;
+  justify-content: center;
+  margin: 1.25rem 0 0.75rem;
   flex-shrink: 0;
-  padding: 0 0.125rem;
 }
 
 .app-chat-date-sep::before,
 .app-chat-date-sep::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--brand-border);
+  display: none;
 }
 
 .app-chat-date-sep > span {
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   color: var(--brand-text-muted);
   white-space: nowrap;
+  background: color-mix(in srgb, var(--brand-border) 60%, transparent);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(4px);
 }
 
-.app-chat-bubble {
-  max-width: min(78%, 22rem);
-  padding: 0.625rem 0.9375rem;
+html.theme-dark .app-chat-date-sep > span {
+  background: color-mix(in srgb, var(--brand-elevated) 80%, transparent);
   border: 1px solid var(--brand-border);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--brand-text) 5%, transparent);
-  border-radius: 1.125rem;
-  word-break: break-word;
 }
 
+/* ── Bubbles: proper messenger style ────────────────────────── */
+.app-chat-bubble {
+  max-width: min(82%, 28rem);
+  min-width: 3rem;
+  padding: 0.5625rem 0.875rem;
+  border-radius: 1.25rem;
+  word-break: break-word;
+  position: relative;
+}
+
+/* Outgoing: solid brand fill, no border */
 .app-chat-bubble-outgoing {
   background: var(--brand-primary);
-  color: var(--brand-accent-text);
-  border-color: var(--brand-primary);
-  border-bottom-right-radius: 0.25rem;
+  color: #ffffff;
+  border: none;
+  border-bottom-right-radius: 0.3125rem;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--brand-primary) 45%, transparent);
 }
 
+html.theme-dark .app-chat-bubble-outgoing {
+  background: var(--brand-primary);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+}
+
+/* Incoming: clean surface, hairline border */
 .app-chat-bubble-incoming {
   background: var(--brand-surface);
   color: var(--brand-text);
-  border-color: var(--brand-border);
-  border-bottom-left-radius: 0.25rem;
+  border: 1px solid var(--brand-border);
+  border-bottom-left-radius: 0.3125rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
-.app-chat-bubble-staff {
-  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-surface));
-  color: var(--brand-text);
-  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
-  border-bottom-left-radius: 0.25rem;
+html.theme-dark .app-chat-bubble-incoming {
+  background: #1c1c1c;
+  border-color: #2a2a2a;
+  box-shadow: none;
 }
 
-.app-chat-bubble-system {
+html.theme-grey .app-chat-bubble-incoming {
   background: var(--brand-elevated);
+  border-color: var(--brand-border);
+}
+
+html.theme-light .app-chat-bubble-incoming {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+/* Staff: sage-tinted with distinct border */
+.app-chat-bubble-staff {
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface));
+  color: var(--brand-text);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
+  border-bottom-left-radius: 0.3125rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+html.theme-dark .app-chat-bubble-staff {
+  background: color-mix(in srgb, var(--brand-primary) 14%, #1a1a1a);
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, #2a2a2a);
+}
+
+/* System: subtle pill, no border */
+.app-chat-bubble-system {
+  background: transparent;
   color: var(--brand-text-muted);
-  border-style: dashed;
+  border: none;
   max-width: 100%;
   text-align: center;
   font-size: 0.8125rem;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-pill);
+  padding: 0.375rem 1rem;
 }
 
-/* Bubble group radius modifiers — connected messages from same sender */
+/* ── Bubble group radius (connected messages from same sender) ── */
+/* Outgoing group: tighten top-right corner on first, bottom-right on last */
 .app-chat-bubble-outgoing.app-chat-bubble-gfirst {
-  border-bottom-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.3125rem;
 }
 .app-chat-bubble-outgoing.app-chat-bubble-gmid {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
 }
 .app-chat-bubble-outgoing.app-chat-bubble-glast {
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 1.125rem;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 1.25rem;
 }
+
+/* Incoming/staff group: mirror on left side */
 .app-chat-bubble-incoming.app-chat-bubble-gfirst,
 .app-chat-bubble-staff.app-chat-bubble-gfirst {
-  border-bottom-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.3125rem;
 }
 .app-chat-bubble-incoming.app-chat-bubble-gmid,
 .app-chat-bubble-staff.app-chat-bubble-gmid {
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem;
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
 }
 .app-chat-bubble-incoming.app-chat-bubble-glast,
 .app-chat-bubble-staff.app-chat-bubble-glast {
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 1.125rem;
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 1.25rem;
 }
 
 .app-chat-bubble-sender {
@@ -5544,11 +5681,11 @@ html.theme-grey .guardr-lightning-flash {
 }
 
 .app-chat-bubble-brand {
-  font-size: 0.625rem;
-  font-weight: 800;
+  font-size: 0.5625rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.7;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
 }
 
 .app-chat-bubble-name {
@@ -5558,74 +5695,107 @@ html.theme-grey .guardr-lightning-flash {
 }
 
 .app-chat-bubble-role {
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 0.5625rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   padding: 0.125rem 0.375rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, currentColor 12%, transparent);
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .app-chat-bubble-outgoing .app-chat-bubble-sender {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .app-chat-bubble-body {
   font-size: 0.9375rem;
   line-height: 1.5;
   word-break: break-word;
+  letter-spacing: -0.005em;
 }
 
 .app-chat-bubble-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.25rem;
-  margin-top: 0.3125rem;
+  gap: 0.3125rem;
+  margin-top: 0.25rem;
 }
 
 .app-chat-bubble-time {
   font-size: 0.625rem;
-  opacity: 0.55;
+  opacity: 0.5;
   letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
+.app-chat-bubble-outgoing .app-chat-bubble-time {
+  opacity: 0.7;
+}
+
+/* ── Composer: clean messenger input bar ────────────────────── */
 .app-chat-composer {
   border-top: 1px solid var(--brand-border);
   background: var(--brand-surface);
   flex-shrink: 0;
-  box-shadow: 0 -1px 0 var(--brand-border);
+}
+
+html.theme-dark .app-chat-composer {
+  background: #111111;
+  border-top-color: #1e1e1e;
+}
+
+html.theme-light .app-chat-composer {
+  background: #ffffff;
+  border-top-color: #e5e5e5;
 }
 
 .app-chat-composer-inner {
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.625rem 0.75rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-chat-composer-field {
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
-  padding: 0.375rem 0.375rem 0.375rem 0.875rem;
-  border: 1px solid var(--brand-border);
-  border-radius: 1.25rem;
-  background: var(--brand-bg);
+  padding: 0.3125rem 0.3125rem 0.3125rem 1rem;
+  border: 1.5px solid var(--brand-border);
+  border-radius: 1.5rem;
+  background: var(--brand-bg-sec);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+html.theme-dark .app-chat-composer-field {
+  background: #1a1a1a;
+  border-color: #282828;
+}
+
+html.theme-light .app-chat-composer-field {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
 }
 
 .app-chat-composer-input {
   flex: 1;
   min-width: 0;
-  min-height: 2.25rem;
-  max-height: 7.5rem;
-  padding: 0.5rem 0;
+  min-height: 2rem;
+  max-height: 8rem;
+  padding: 0.4375rem 0;
   font-size: 0.9375rem;
-  line-height: 1.4;
+  line-height: 1.45;
   border: none;
   background: transparent;
   color: var(--brand-text);
   resize: none;
   field-sizing: content;
+  font-family: var(--font-sans);
+}
+
+.app-chat-composer-input::placeholder {
+  color: var(--brand-text-muted);
+  opacity: 0.7;
 }
 
 .app-chat-composer-input:focus {
@@ -5634,26 +5804,44 @@ html.theme-grey .guardr-lightning-flash {
 
 .app-chat-composer-field:focus-within {
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  background: var(--brand-surface);
+}
+
+html.theme-dark .app-chat-composer-field:focus-within {
+  background: #1e1e1e;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
 }
 
 .app-chat-composer-send {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.125rem;
+  height: 2.125rem;
   flex-shrink: 0;
   background: var(--brand-primary);
-  color: var(--brand-accent-text);
+  color: #ffffff;
   border: none;
   border-radius: 50%;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.app-chat-composer-send:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  transform: scale(1.08);
+}
+
+.app-chat-composer-send:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .app-chat-composer-send:disabled {
-  opacity: 0.45;
+  opacity: 0.3;
   cursor: not-allowed;
+  background: var(--brand-text-muted);
 }
 
 .app-messages-hub {
@@ -5698,7 +5886,15 @@ html.theme-grey .guardr-lightning-flash {
   padding: 2rem 1.5rem;
   text-align: center;
   color: var(--brand-text-muted);
-  background: var(--brand-bg-sec);
+  background: var(--brand-bg);
+}
+
+html.theme-dark .app-messages-empty-detail {
+  background: #080808;
+}
+
+html.theme-light .app-messages-empty-detail {
+  background: #f5f5f5;
 }
 
 .app-messages-quick-actions {
@@ -5924,8 +6120,8 @@ html.theme-grey .guardr-lightning-flash {
 }
 
 .app-chat-action-btn {
-  width: 1.875rem;
-  height: 1.875rem;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5934,14 +6130,22 @@ html.theme-grey .guardr-lightning-flash {
   border: 1px solid var(--brand-border);
   color: var(--brand-text-muted);
   cursor: pointer;
-  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+  transition: background 0.1s ease, color 0.1s ease, transform 0.1s ease;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+html.theme-dark .app-chat-action-btn {
+  background: #1a1a1a;
+  border-color: #2e2e2e;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .app-chat-action-btn:hover {
   background: var(--brand-elevated);
-  border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--brand-border));
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
   color: var(--brand-text);
+  transform: scale(1.1);
 }
 
 /* ── Floating emoji picker ────────────────────────────────── */
@@ -6033,18 +6237,18 @@ html.theme-grey .guardr-lightning-flash {
 /* ── Reply quote inside bubble ────────────────────────────── */
 .app-chat-bubble-reply {
   display: flex;
-  padding: 0.375rem 0.5rem;
-  border-left: 3px solid currentColor;
-  border-radius: 0 0.5rem 0.5rem 0;
-  background: rgba(0, 0, 0, 0.07);
-  margin-bottom: 0.4375rem;
-  opacity: 0.9;
+  padding: 0.3125rem 0.5rem;
+  border-left: 2.5px solid currentColor;
+  border-radius: 0 0.4375rem 0.4375rem 0;
+  background: rgba(0, 0, 0, 0.08);
+  margin-bottom: 0.375rem;
+  opacity: 0.88;
   gap: 0.375rem;
-  cursor: pointer;
+  cursor: default;
 }
 
 .app-chat-bubble-outgoing .app-chat-bubble-reply {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .app-chat-bubble-reply-content {
@@ -6077,11 +6281,16 @@ html.theme-grey .guardr-lightning-flash {
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
-  padding: 0.5rem 0.875rem 0.5rem 1rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.875rem;
   border-left: 3px solid var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-surface));
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
   border-bottom: 1px solid var(--brand-border);
   flex-shrink: 0;
+}
+
+html.theme-dark .app-chat-reply-bar {
+  background: color-mix(in srgb, var(--brand-primary) 10%, #111111);
+  border-bottom-color: #1e1e1e;
 }
 
 .app-chat-reply-bar-body {
@@ -6138,40 +6347,50 @@ html.theme-grey .guardr-lightning-flash {
   height: 0.875rem;
 }
 
-/* ── Typing indicator ─────────────────────────────────────── */
+/* ── Typing indicator ──────────────────────────────────────── */
 .app-chat-typing {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 0.875rem 0.25rem;
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.25rem 0.125rem;
   flex-shrink: 0;
 }
 
 .app-chat-typing-bubble {
   display: flex;
   align-items: center;
-  gap: 0.3125rem;
-  padding: 0.625rem 0.875rem;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
   background: var(--brand-surface);
   border: 1px solid var(--brand-border);
-  border-radius: 1.125rem;
-  border-bottom-left-radius: 0.25rem;
+  border-radius: 1.25rem;
+  border-bottom-left-radius: 0.3125rem;
+}
+
+html.theme-dark .app-chat-typing-bubble {
+  background: #1c1c1c;
+  border-color: #2a2a2a;
+}
+
+html.theme-light .app-chat-typing-bubble {
+  background: #ffffff;
+  border-color: #e0e0e0;
 }
 
 .app-chat-typing-dot {
-  width: 0.375rem;
-  height: 0.375rem;
+  width: 0.3125rem;
+  height: 0.3125rem;
   border-radius: 50%;
   background: var(--brand-text-muted);
-  animation: chat-typing-bounce 1.4s ease infinite;
+  animation: chat-typing-bounce 1.4s ease-in-out infinite;
 }
 
-.app-chat-typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.app-chat-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+.app-chat-typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.app-chat-typing-dot:nth-child(3) { animation-delay: 0.36s; }
 
 @keyframes chat-typing-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30%            { transform: translateY(-4px); opacity: 1; }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30%            { transform: translateY(-3px); opacity: 1; }
 }
 
 .staff-overview {
@@ -11978,3 +12197,2482 @@ html.theme-dark .notification-inbox-item--unread {
 .crew-hub-sticky-head .app-segmented-control {
   margin-bottom: 0.75rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — DESIGN COMPLETION LAYER
+   All missing classes, final visual polish, perfect cross-theme consistency.
+   One cohesive, premium product experience.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── LANDING PAGE: MISSING BASE CLASSES ───────────────────────────────── */
+
+.landing-wordmark {
+  font-size: 1.3125rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--brand-text);
+  user-select: none;
+}
+
+.landing-wordmark-accent {
+  color: var(--brand-primary);
+}
+
+.landing-hero-copy {
+  display: flex;
+  flex-direction: column;
+  max-width: 44rem;
+}
+
+.landing-feature-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-feature-column--guard {
+  position: relative;
+  padding: 2rem;
+  border-radius: var(--radius-app-xl);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+html.theme-light .landing-feature-column--guard {
+  background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+.landing-leadership-messages blockquote {
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  padding: 1rem 1.25rem;
+  transition: border-color 0.15s ease;
+}
+
+.landing-leadership-messages blockquote:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+}
+
+/* ─── LANDING HERO: DEEPER VISUAL IMPACT ───────────────────────────────── */
+
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 80% 10%, color-mix(in srgb, var(--brand-primary) 6%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, color-mix(in srgb, var(--brand-primary) 4%, transparent), transparent 65%);
+  pointer-events: none;
+}
+
+/* ─── TRUST STRIP: DIVIDER TREATMENT ───────────────────────────────────── */
+
+.landing-trust-strip {
+  padding-block: 2rem;
+}
+
+html.theme-light .landing-trust-strip {
+  background: var(--brand-elevated);
+}
+
+/* ─── SECTION TRANSITIONS: SUBTLE GRADIENTS ────────────────────────────── */
+
+.landing-how-section {
+  background: color-mix(in srgb, var(--brand-bg-sec) 60%, var(--brand-bg));
+}
+
+html.theme-light .landing-how-section {
+  background: var(--brand-elevated);
+}
+
+.landing-coverage-section {
+  background: var(--brand-bg-sec);
+}
+
+/* ─── HOW IT WORKS CARDS: STEP CONNECTOR ───────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .landing-how-grid--desktop {
+    position: relative;
+  }
+
+  .landing-how-grid--desktop::before {
+    content: "";
+    position: absolute;
+    top: 2.5rem;
+    left: calc(33.333% + 0.625rem);
+    right: calc(33.333% + 0.625rem);
+    height: 1px;
+    background: color-mix(in srgb, var(--brand-border) 80%, transparent);
+    pointer-events: none;
+  }
+}
+
+/* ─── LANDING PAGE: FEATURES SECTION VISUAL REFINEMENTS ────────────────── */
+
+.landing-features-section {
+  position: relative;
+}
+
+.landing-features-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── CTA SECTION: COMMANDING FINISH ───────────────────────────────────── */
+
+.landing-final-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-final-cta::before {
+  content: "";
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60vw;
+  max-width: 36rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+/* ─── LANDING FOOTER: MULTI-COLUMN LAYOUT ──────────────────────────────── */
+
+@media (min-width: 768px) {
+  .landing-footer-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+/* ─── AUTH EXPERIENCE: PREMIUM FORM PANELS ─────────────────────────────── */
+
+.auth-panel-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-form-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.375rem;
+  display: block;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── DASHBOARD CARDS: CONSISTENT METRIC DISPLAY ───────────────────────── */
+
+.dashboard-kpi-card {
+  padding: 1.125rem;
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dashboard-kpi-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.dashboard-kpi-value {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.dashboard-kpi-delta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-kpi-delta--up { color: var(--status-success); }
+.dashboard-kpi-delta--down { color: var(--status-danger); }
+.dashboard-kpi-delta--neutral { color: var(--brand-text-muted); }
+
+/* ─── GUARD DASHBOARD HERO: SHIFT STATUS BAND ──────────────────────────── */
+
+.guard-shift-hero {
+  padding: 1.125rem 1.25rem;
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+/* ─── CLIENT DASHBOARD HERO: COVERAGE OVERVIEW ─────────────────────────── */
+
+.client-coverage-hero {
+  padding: 1rem 1.25rem 1.25rem;
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+/* ─── MAP INTERFACE: GLASS OVERLAY IMPROVEMENTS ────────────────────────── */
+
+.map-overlay-panel {
+  background: color-mix(in srgb, var(--brand-bg) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-float);
+}
+
+html.theme-dark .map-overlay-panel {
+  background: rgba(10, 10, 10, 0.92);
+  border-color: #222;
+}
+
+/* ─── NOTIFICATION PANEL: PREMIUM ──────────────────────────────────────── */
+
+.notification-inbox-panel {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+}
+
+html.theme-dark .notification-inbox-panel {
+  background: #111111;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+
+.notification-inbox-item {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+}
+
+.notification-inbox-item:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.notification-inbox-item:last-child {
+  border-bottom: none;
+}
+
+/* ─── INLINE ACTION CHIPS: QUICK FILTERS ───────────────────────────────── */
+
+.action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 1.5px solid var(--brand-border);
+  background: transparent;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.action-chip:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  color: var(--brand-text);
+}
+
+.action-chip-active {
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* ─── SHIFT CARD: PREMIUM JOB CARD DESIGN ──────────────────────────────── */
+
+.shift-card-rate-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1875rem;
+}
+
+.shift-card-rate-value {
+  font-size: 1.375rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.shift-card-rate-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+/* ─── FORM SHEET: POLISHED SECTION HEADERS ─────────────────────────────── */
+
+.form-sheet-section {
+  padding: 1.125rem 1.25rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+.form-sheet-section:first-child {
+  border-top: none;
+}
+
+.form-sheet-section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.875rem;
+}
+
+/* ─── PROFILE HEADER: PREMIUM AVATAR DISPLAY ───────────────────────────── */
+
+.profile-avatar-ring {
+  border: 3px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  border-radius: 50%;
+  padding: 3px;
+  display: inline-block;
+}
+
+.profile-avatar-ring img,
+.profile-avatar-ring .app-avatar-placeholder {
+  border-radius: 50%;
+}
+
+/* ─── CREDENTIAL CARD: POLISHED DOCUMENT STYLE ─────────────────────────── */
+
+.credential-card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+}
+
+.credential-card-item:hover {
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--brand-bg));
+}
+
+.credential-card-item:last-child {
+  border-bottom: none;
+}
+
+.credential-icon-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ─── SITE STATS BAND: PLATFORM METRICS ────────────────────────────────── */
+
+.landing-stats-band {
+  padding-block: 2.5rem;
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-bg));
+  border-top: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+html.theme-dark .landing-stats-band {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #000000);
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, #1a1a1a);
+}
+
+.landing-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.landing-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.landing-stat-number {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-stat-desc {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: -0.01em;
+}
+
+/* ─── LANDING PAGE: PLATFORM HIGHLIGHTS ROW ────────────────────────────── */
+
+.landing-highlights-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .landing-highlights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-highlights-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.landing-highlight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem 1.375rem;
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.landing-highlight-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--brand-surface));
+}
+
+.landing-highlight-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-primary);
+}
+
+.landing-highlight-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+}
+
+.landing-highlight-body {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+}
+
+/* ─── LANDING FEATURE SECTION: VISUAL DEPTH ────────────────────────────── */
+
+.landing-feature-section-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Guard section accent */
+.landing-feature-column--guard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-primary);
+  border-radius: 0 0 0 var(--radius-app-xl);
+}
+
+/* ─── BOTTOM CTA BAR: MOBILE ELEVATION ─────────────────────────────────── */
+
+.landing-mobile-cta-bar {
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
+}
+
+html.theme-dark .landing-mobile-cta-bar {
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.45);
+}
+
+/* ─── SEGMENTED TABS: UNDERLINE INDICATOR PRECISION ────────────────────── */
+
+/* Segmented control: tabs fit in viewport — no horizontal scroll */
+.app-segmented-control {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── JOB LIST: PREMIUM RATE DISPLAY ────────────────────────────────────── */
+
+.job-rate-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.job-rate-value {
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+}
+
+.job-rate-unit {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+/* ─── SUPPORT TICKET: STATUS CARDS ──────────────────────────────────────── */
+
+.support-ticket-row {
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+  cursor: pointer;
+}
+
+.support-ticket-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.support-ticket-row:last-child {
+  border-bottom: none;
+}
+
+/* ─── PAYMENT ROW: TRANSACTION HISTORY ──────────────────────────────────── */
+
+.payment-row-amount {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-row-amount--credit { color: var(--status-success); }
+.payment-row-amount--debit  { color: var(--brand-text); }
+
+/* ─── GUARD BADGE PANEL: CREDENTIAL STATUS CARD ─────────────────────────── */
+
+.guard-badge-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-app-xl);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  text-align: center;
+  gap: 1rem;
+}
+
+/* ─── STAFF OVERVIEW: ACTIVITY TIMELINE ─────────────────────────────────── */
+
+.activity-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.625rem 0;
+}
+
+.activity-timeline-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.activity-timeline-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.activity-timeline-connector {
+  width: 1px;
+  flex: 1;
+  background: var(--brand-border);
+  margin: 2px 0;
+}
+
+/* ─── MESSAGES: THREAD HEADER ────────────────────────────────────────────── */
+
+.message-thread-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+.message-thread-header-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ─── GUIDE DOCUMENT: MARKDOWN BODY ─────────────────────────────────────── */
+
+.guide-doc-body {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--brand-text);
+}
+
+.guide-doc-body h1, .guide-doc-body h2, .guide-doc-body h3 {
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.guide-doc-body h1 { font-size: 1.875rem; font-weight: 900; }
+.guide-doc-body h2 { font-size: 1.375rem; font-weight: 800; }
+.guide-doc-body h3 { font-size: 1.125rem; font-weight: 700; }
+
+.guide-doc-body p {
+  margin-bottom: 1em;
+}
+
+.guide-doc-body ul, .guide-doc-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+.guide-doc-body li {
+  margin-bottom: 0.375rem;
+}
+
+.guide-doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  color: var(--brand-primary);
+}
+
+/* ─── INSTALL PROMPT: PWA BANNER ─────────────────────────────────────────── */
+
+.pwa-install-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+  box-shadow: var(--shadow-card);
+}
+
+/* ─── LEGAL PAGES: CLEAN DOCUMENT LAYOUT ────────────────────────────────── */
+
+.legal-doc-body {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--brand-text);
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.legal-doc-body h1 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc-body h2 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc-body p {
+  margin-bottom: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+/* ─── SETTINGS SCREEN: TOGGLE ROWS ──────────────────────────────────────── */
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.settings-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.settings-section {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.settings-section-head {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  padding: 0.75rem 1.25rem 0.5rem;
+}
+
+/* ─── GUARD MARKETPLACE: FILTER CHIPS ───────────────────────────────────── */
+
+.marketplace-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  overflow: hidden;
+}
+
+/* ─── INLINE HELP TEXT: CONSISTENT ──────────────────────────────────────── */
+
+.app-help-text {
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+  margin-top: 0.375rem;
+}
+
+.app-error-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-danger);
+  margin-top: 0.375rem;
+}
+
+/* ─── ACCOUNT PENDING SCREEN ─────────────────────────────────────────────── */
+
+.account-pending-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.account-pending-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--status-warning) 12%, var(--brand-bg-sec));
+  color: var(--status-warning);
+  margin-bottom: 0.5rem;
+}
+
+.account-pending-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  color: var(--brand-text);
+}
+
+.account-pending-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--brand-text-muted);
+  max-width: 28rem;
+}
+
+/* ─── THEME TOGGLE: FINAL POLISH ─────────────────────────────────────────── */
+
+.theme-toggle {
+  background: var(--brand-bg-sec) !important;
+  border-color: var(--brand-border) !important;
+  transition: border-color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border)) !important;
+}
+
+html.theme-light .theme-toggle {
+  background: var(--brand-elevated) !important;
+  border-color: var(--brand-border) !important;
+}
+
+/* ─── LANDING PAGE CTA BUTTONS: SHARP IDENTITY ──────────────────────────── */
+
+/* Client CTA — full sage-green fill */
+.landing-path-card-client .landing-path-card-action--accent {
+  font-weight: 900;
+  font-size: 0.9375rem;
+}
+
+/* Guard CTA — strong black */
+.landing-path-card-guard .landing-path-card-action {
+  font-weight: 900;
+  font-size: 0.9375rem;
+}
+
+/* ─── APP FORM: CHECKBOX AND RADIO CUSTOM ────────────────────────────────── */
+
+.app-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.3125rem;
+  border: 1.5px solid var(--brand-border);
+  background: var(--brand-bg-sec);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+}
+
+.app-checkbox:checked {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.app-checkbox:checked::after {
+  content: "";
+  width: 5px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.app-checkbox:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ─── PROGRESS BAR: BRAND CONSISTENT ────────────────────────────────────── */
+
+.app-progress-track {
+  height: 4px;
+  background: var(--brand-border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.app-progress-fill {
+  height: 100%;
+  background: var(--brand-primary);
+  border-radius: var(--radius-pill);
+  transition: width 0.3s ease;
+}
+
+.app-progress-fill--success { background: var(--status-success); }
+.app-progress-fill--warning { background: var(--status-warning); }
+.app-progress-fill--danger  { background: var(--status-danger); }
+
+/* ─── CAROUSEL / SCROLL SNAP CONTAINERS ─────────────────────────────────── */
+
+/* .scroll-snap-x: converted to wrapping grid — no horizontal scroll */
+.scroll-snap-x {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.125rem 0;
+}
+
+.scroll-snap-item {
+  min-width: 0;
+  width: 100%;
+}
+
+/* ─── GUARDR GLOBAL: LINK CONSISTENCY ───────────────────────────────────── */
+
+a.app-link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-underline-offset: 3px;
+  transition: color 0.12s ease;
+}
+
+a.app-link:hover {
+  color: var(--brand-primary-hover);
+  text-decoration: underline;
+}
+
+/* ─── DIVIDER WITH LABEL ─────────────────────────────────────────────────── */
+
+.app-divider-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin: 1rem 0;
+}
+
+.app-divider-label::before,
+.app-divider-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── LANDING PAGE: RESPONSIVE COVERAGE GRID ─────────────────────────────── */
+
+@media (min-width: 768px) {
+  .landing-coverage-grid--tablet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ─── DARK/GREY THEME: LANDING FEATURE GUARD COLUMN ─────────────────────── */
+
+html.theme-dark .landing-feature-column--guard,
+html.theme-grey .landing-feature-column--guard {
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+/* ─── ALL THEMES: LANDING SECTION CONSISTENT PADDING ─────────────────────── */
+
+@media (max-width: 639px) {
+  .landing-section {
+    padding-block: 3rem;
+  }
+
+  .landing-how-card {
+    padding: 1.25rem;
+  }
+
+  .landing-feature-column--guard {
+    padding: 1.5rem;
+  }
+}
+
+/* ─── GUARDR WORDMARK: HERO TREATMENT ────────────────────────────────────── */
+
+html.theme-dark .landing-wordmark {
+  color: #f5f5f5;
+}
+
+html.theme-grey .landing-wordmark {
+  color: var(--brand-text);
+}
+
+/* ─── AUTH: ROLE CARDS EQUAL HEIGHT ─────────────────────────────────────── */
+
+.auth-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+/* ─── ONBOARDING TOUR: STEP INDICATORS ──────────────────────────────────── */
+
+.onboarding-step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.onboarding-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--brand-border);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.onboarding-dot-active {
+  background: var(--brand-primary);
+  transform: scale(1.4);
+}
+
+/* ─── GUARD AVAILABILITY CALENDAR: POLISH ───────────────────────────────── */
+
+.availability-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.availability-day-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.availability-day-cell:hover {
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-primary);
+}
+
+.availability-day-available {
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
+}
+
+.availability-day-unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── LOADING STATES: CONSISTENT SKELETON SIZES ─────────────────────────── */
+
+.skeleton-title  { height: 1.5rem; border-radius: 0.75rem; }
+.skeleton-header { height: 1.125rem; border-radius: 0.5625rem; }
+.skeleton-body   { height: 0.875rem; border-radius: 0.4375rem; }
+.skeleton-sm     { height: 0.75rem; border-radius: 0.375rem; }
+
+/* ─── SWITCH TOGGLE COMPONENT ────────────────────────────────────────────── */
+
+.app-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  background: var(--brand-border);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.app-switch::after {
+  content: "";
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.app-switch-on {
+  background: var(--brand-primary);
+}
+
+.app-switch-on::after {
+  transform: translateX(1.25rem);
+}
+
+/* ─── LEGAL ACCEPTANCE CHECKBOX ROW ─────────────────────────────────────── */
+
+.legal-accept-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+/* ─── GUARD STANDING CREW: MEMBER CARDS ─────────────────────────────────── */
+
+.crew-member-card {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  transition: border-color 0.15s ease;
+}
+
+.crew-member-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+}
+
+/* ─── GUARD RATE DISPLAY: LARGE HERO RATE ────────────────────────────────── */
+
+.guard-hero-rate {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.guard-hero-rate-unit {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0;
+}
+
+/* ─── EARNINGS BREAKDOWN: CLEAN ACCOUNTING TABLE ─────────────────────────── */
+
+.earnings-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 60%, transparent);
+  font-size: 0.875rem;
+}
+
+.earnings-line:last-child {
+  border-bottom: none;
+}
+
+.earnings-line-total {
+  font-weight: 900;
+  font-size: 1rem;
+  border-top: 2px solid var(--brand-border);
+  padding-top: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.earnings-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ─── SCROLL-TO-TOP ANCHOR ───────────────────────────────────────────────── */
+
+.scroll-top-anchor {
+  scroll-margin-top: 4rem;
+}
+
+/* ─── PLATFORM ANNOUNCEMENT BANNER ──────────────────────────────────────── */
+
+.platform-announcement {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--status-info) 8%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--status-info) 22%, var(--brand-border));
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--brand-text);
+}
+
+/* ─── REFINED TYPOGRAPHY: CONSISTENT HIERARCHY ───────────────────────────── */
+
+/* Screen/page titles — strongest on mobile */
+.screen-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: var(--brand-text);
+}
+
+/* Section subheadings */
+.section-title {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--brand-text);
+}
+
+/* Label caps */
+.label-caps {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+/* ─── HOVER SURFACE: CONSISTENT PRESS FEEDBACK ───────────────────────────── */
+
+.hover-surface {
+  transition: background 0.12s ease;
+}
+
+.hover-surface:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.hover-surface:active {
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg));
+}
+
+/* ─── LANDING PAGE: HERO SECTION FINAL SIZES ─────────────────────────────── */
+
+/* Remove overly tight letter-spacing on landing titles at large sizes */
+@media (min-width: 1024px) {
+  .landing-section-title {
+    letter-spacing: -0.04em;
+  }
+
+  .landing-final-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+  }
+}
+
+/* ─── THEME-SPECIFIC PREVIEW FRAME ──────────────────────────────────────── */
+
+html.theme-dark .landing-preview-map {
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--brand-primary) 28%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 70% 65%, color-mix(in srgb, var(--brand-primary) 16%, transparent) 0%, transparent 40%),
+    linear-gradient(180deg, #0d1a0d, #111111);
+}
+
+html.theme-grey .landing-preview-map {
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--brand-primary) 30%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 70% 65%, color-mix(in srgb, var(--brand-primary) 18%, transparent) 0%, transparent 40%),
+    linear-gradient(180deg, #172017, #20272B);
+}
+
+/* ─── LANDING RULES SECTION: IMPROVED PILL DISPLAY ──────────────────────── */
+
+.landing-rules-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: left;
+  padding: 0.875rem 1rem;
+}
+
+.landing-rules-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--brand-primary);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* ─── SECTION DIVIDER LINE ────────────────────────────────────────────────── */
+
+.section-divider {
+  height: 1px;
+  background: var(--brand-border);
+  margin: 0;
+}
+
+/* ─── END DESIGN COMPLETION LAYER ────────────────────────────────────────── */
+
+/* ─── EXPERIENCE BADGE: CENTERED VARIANT ─────────────────────────────────── */
+
+.experience-badge--center {
+  justify-content: center;
+  display: flex;
+  margin-inline: auto;
+}
+
+/* ─── LANDING COVERAGE SECTION: RESPONSIVE COVERAGE IMPROVEMENTS ─────────── */
+
+.landing-coverage-inner {
+  max-width: 56rem;
+}
+
+/* Consistent coverage tag sizing */
+.landing-coverage-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+}
+
+/* ─── PLATFORM HIGHLIGHTS: MOBILE STACKING ───────────────────────────────── */
+
+@media (max-width: 639px) {
+  .landing-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── LANDING WORDMARK: HEADER BASELINE ──────────────────────────────────── */
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* ─── LANDING PATH CARDS: UNIFORM HEIGHT ─────────────────────────────────── */
+
+.landing-path-grid > .landing-path-card {
+  min-height: 9rem;
+}
+
+/* ─── APP BUTTON: DISABLED OPACITY ───────────────────────────────────────── */
+
+.app-button-primary:disabled,
+.app-button-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── FINAL ───────────────────────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — MESSENGER POLISH LAYER
+   Making chat screens feel like a real messenger app.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Chat thread shell: consistent background across all themes ─────────── */
+
+.app-chat-thread-shell {
+  background: var(--brand-bg);
+}
+
+html.theme-dark .app-chat-thread-shell {
+  background: #080808;
+}
+
+html.theme-light .app-chat-thread-shell {
+  background: #f5f5f5;
+}
+
+/* ─── Chat pane: pushes messages to the bottom (WhatsApp/iMessage style) ── */
+
+.app-chat-pane {
+  justify-content: flex-end;
+}
+
+/* ─── Chat thread: consistent comfortable gaps ───────────────────────────── */
+
+.app-chat-thread {
+  margin-top: 0;
+}
+
+/* ─── Bubble: consistent padding and focus on readability ───────────────── */
+
+.app-chat-bubble-body {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* Outgoing bubble: no box-shadow in light theme (already flat) */
+html.theme-light .app-chat-bubble-outgoing {
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--brand-primary) 40%, transparent);
+}
+
+/* ─── Receipt: double-check style for "seen" ─────────────────────────────── */
+
+.app-chat-receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: -0.125rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.app-chat-receipt-check {
+  width: 0.8125rem;
+  height: 0.8125rem;
+}
+
+/* ─── Inbox tabs: fit all tabs in viewport — no horizontal scroll ────────── */
+
+.app-inbox-tabs {
+  overflow: hidden;       /* never scroll horizontally */
+  flex-wrap: nowrap;      /* single row */
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+html.theme-dark .app-inbox-tabs {
+  background: #111111;
+  border-bottom-color: #1e1e1e;
+}
+
+html.theme-light .app-inbox-tabs {
+  background: #ffffff;
+  border-bottom-color: #e5e5e5;
+}
+
+.app-inbox-tab {
+  padding: 0.6875rem 0.625rem;   /* tighter padding so 4 tabs always fit */
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;                   /* let flex squeeze instead of overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-inbox-tab::after {
+  bottom: -1px;
+  left: 10%;
+  right: 10%;
+}
+
+.app-inbox-tab-active {
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.app-inbox-tab-active::after {
+  background: var(--brand-primary);
+}
+
+/* ─── Inbox list: clean list style ──────────────────────────────────────── */
+
+html.theme-dark .app-inbox-row {
+  background: #111111;
+  border-bottom-color: #1e1e1e;
+}
+
+html.theme-dark .app-inbox-row:hover {
+  background: #161616;
+}
+
+html.theme-dark .app-inbox-row-selected {
+  background: color-mix(in srgb, var(--brand-primary) 10%, #111111) !important;
+}
+
+html.theme-light .app-inbox-row {
+  background: #ffffff;
+  border-bottom-color: #f0f0f0;
+}
+
+html.theme-light .app-inbox-row:hover {
+  background: #fafafa;
+}
+
+/* ─── Messages split list sidebar background ─────────────────────────────── */
+
+@media (min-width: 768px) {
+  .app-messages-split-list {
+    background: var(--brand-surface);
+  }
+
+  html.theme-dark .app-messages-split-list {
+    background: #111111;
+    border-right-color: #1e1e1e;
+  }
+
+  html.theme-light .app-messages-split-list {
+    background: #fafafa;
+    border-right-color: #e5e5e5;
+  }
+}
+
+/* ─── Quick actions: messager-style support tiles ────────────────────────── */
+
+.app-messages-quick-actions {
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+html.theme-dark .app-messages-quick-actions {
+  background: #111111;
+  border-bottom-color: #1e1e1e;
+}
+
+/* ─── Chat row: comfortable group spacing ────────────────────────────────── */
+
+.app-chat-row-group-first:not(:first-child) {
+  margin-top: 1.125rem;
+}
+
+/* ─── Avatar: visible even in dark mode ──────────────────────────────────── */
+
+html.theme-dark .app-chat-avatar {
+  border: 1.5px solid color-mix(in srgb, var(--brand-primary) 30%, #2a2a2a);
+}
+
+/* ─── Emoji picker: elevated glass on dark ───────────────────────────────── */
+
+html.theme-dark .app-chat-emoji-picker {
+  background: #1a1a1a;
+  border-color: #2e2e2e;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* ─── Reply bar cancel button: consistent dark ───────────────────────────── */
+
+html.theme-dark .app-chat-reply-bar-cancel:hover {
+  background: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}
+
+/* ─── Reaction buttons: messenger-native feel ────────────────────────────── */
+
+html.theme-dark .app-chat-reaction-btn {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+/* ─── Chat header shadow on scroll ──────────────────────────────────────── */
+
+.app-chat-header {
+  box-shadow: 0 1px 0 var(--brand-border);
+}
+
+html.theme-dark .app-chat-header {
+  box-shadow: 0 1px 0 #1e1e1e;
+}
+
+/* ─── Inbox hub: consistent background ───────────────────────────────────── */
+
+html.theme-dark .app-messages-hub {
+  background: #111111;
+}
+
+/* ─── Read-only footer: styled banner ────────────────────────────────────── */
+
+.app-chat-readonly-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+html.theme-dark .app-chat-readonly-footer {
+  background: #111111;
+  border-top-color: #1e1e1e;
+}
+
+/* ─── Empty thread: centered minimal state ───────────────────────────────── */
+
+.app-chat-thread-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.app-chat-thread-empty-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+  color: var(--brand-primary);
+  margin-bottom: 0.5rem;
+}
+
+.app-chat-thread-empty-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+}
+
+.app-chat-thread-empty-hint {
+  font-size: 0.8125rem;
+  color: var(--brand-text-muted);
+  max-width: 18rem;
+  line-height: 1.5;
+}
+
+/* ─── END MESSENGER POLISH LAYER ────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — RESPONSIVE LAYOUT SYSTEM
+   Three completely different experiences: mobile / tablet / desktop.
+   Mobile: compact touch-first. Tablet: split panes, wider content.
+   Desktop: persistent sidebar nav, multi-column layouts, no bottom nav.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── DESKTOP SIDEBAR NAV: hidden by default ─────────────────────────────── */
+
+.role-side-nav {
+  display: none;
+}
+
+/* ─── DESKTOP: grid layout — sidebar + main column ───────────────────────── */
+
+body[data-form-factor="desktop"] .role-app-shell {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  grid-template-rows: auto 1fr;
+  /* sidebar spans all rows; header + main in column 2 */
+}
+
+body[data-form-factor="desktop"] .role-side-nav {
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  height: 100%;
+  overflow: hidden;
+  background: var(--brand-bg-sec);
+  border-right: 1px solid var(--brand-border);
+  padding: 0;
+  z-index: 10;
+}
+
+html.theme-dark body[data-form-factor="desktop"] .role-side-nav {
+  background: #0a0a0a;
+  border-right-color: #1a1a1a;
+}
+
+html.theme-light body[data-form-factor="desktop"] .role-side-nav {
+  background: #f8f9f8;
+  border-right-color: #e8ebe8;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > main {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Hide bottom nav on desktop */
+body[data-form-factor="desktop"] .role-app-shell > nav.bottom-nav-bar {
+  display: none !important;
+}
+
+/* ─── SIDEBAR BRAND AREA ─────────────────────────────────────────────────── */
+
+.role-side-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  flex-shrink: 0;
+}
+
+html.theme-dark .role-side-nav-brand {
+  border-bottom-color: #1a1a1a;
+}
+
+.role-side-nav-brand-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--brand-text);
+  user-select: none;
+}
+
+.role-side-nav-brand-accent {
+  color: var(--brand-primary);
+}
+
+/* ─── SIDEBAR NAV ITEMS ──────────────────────────────────────────────────── */
+
+.role-side-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.75rem 0.625rem;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.role-side-nav-items::-webkit-scrollbar { display: none; }
+
+.role-side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--brand-text-muted);
+  transition: background 0.12s ease, color 0.12s ease;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  position: relative;
+}
+
+.role-side-nav-item:hover:not(.role-side-nav-item-active) {
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+  color: var(--brand-text);
+}
+
+.role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+html.theme-dark .role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+
+.role-side-nav-item-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.role-side-nav-item-label {
+  flex: 1;
+  min-width: 0;
+  truncate: true;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-side-nav-item-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 0.5625rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  background: var(--status-danger);
+  color: #ffffff;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── SIDEBAR FOOTER (account menu) ─────────────────────────────────────── */
+
+.role-side-nav-footer {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+html.theme-dark .role-side-nav-footer {
+  border-top-color: #1a1a1a;
+}
+
+/* Sidebar footer: account menu fills width */
+.role-side-nav-footer .account-menu-trigger {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.625rem;
+  gap: 0.75rem;
+}
+
+/* Hide the header account menu on desktop (sidebar footer has it) */
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header .account-menu-trigger,
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header--compact .account-menu-trigger {
+  display: none;
+}
+
+/* Adjust header padding on desktop (no account menu) */
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* ─── DESKTOP HEADER: cleaner with sidebar ───────────────────────────────── */
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header h1 {
+  font-size: 1.5rem !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* ─── TABLET: keep bottom nav but improve layout ────────────────────────── */
+
+body[data-form-factor="tablet"] .role-app-shell > .app-screen-header h1 {
+  font-size: 1.25rem;
+}
+
+/* ─── APP SCREEN: constrain and center on larger screens ─────────────────── */
+
+/* Guard experience content shell on desktop */
+body[data-form-factor="desktop"] .role-experience-guard .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+/* Wider content on desktop for list screens */
+body[data-form-factor="desktop"] .role-experience-guard .app-screen--wide {
+  max-width: 68rem;
+}
+
+/* ─── DESKTOP: content area improvements ────────────────────────────────── */
+
+/* Client content shell is wider on desktop */
+body[data-form-factor="desktop"] .client-content-shell {
+  max-width: min(1100px, 100%);
+  margin-inline: auto;
+}
+
+body[data-form-factor="tablet"] .client-content-shell {
+  max-width: min(900px, 100%);
+  margin-inline: auto;
+}
+
+/* Guard form/profile shells get constrained width */
+body[data-form-factor="desktop"] .client-form-shell,
+body[data-form-factor="desktop"] .guard-form-shell {
+  max-width: min(44rem, 100%);
+  margin-inline: auto;
+}
+
+body[data-form-factor="tablet"] .client-form-shell,
+body[data-form-factor="tablet"] .guard-form-shell {
+  max-width: min(40rem, 100%);
+  margin-inline: auto;
+}
+
+/* ─── DASHBOARD GRIDS: more columns on larger screens ─────────────────────── */
+
+/* Glance tiles (client home) */
+body[data-form-factor="tablet"] .client-home-screen .grid-cols-2 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .client-home-screen .grid-cols-2 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Quick action tiles: more per row on desktop */
+body[data-form-factor="desktop"] .client-home-quick-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+body[data-form-factor="tablet"] .client-home-quick-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+/* Metric strip: 4 columns on desktop */
+body[data-form-factor="desktop"] .app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+body[data-form-factor="tablet"] .app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+/* ─── SECTION PADDING: more breathing room on larger screens ──────────────── */
+
+body[data-form-factor="desktop"] .app-section {
+  padding-inline: 1.5rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header {
+  padding-inline: 1.5rem;
+}
+
+body[data-form-factor="tablet"] .app-screen-header {
+  padding-inline: 1.25rem;
+}
+
+/* ─── MESSAGES: wider split on desktop ─────────────────────────────────── */
+
+body[data-form-factor="desktop"] .app-messages-split-list {
+  width: 24rem;
+  max-width: 32%;
+}
+
+body[data-form-factor="desktop"] .app-messages-split-list {
+  min-width: 20rem;
+}
+
+/* ─── MOBILE: compact, optimized touch experience ─────────────────────────── */
+
+body[data-form-factor="mobile"] .role-app-shell > .app-screen-header {
+  padding-block: 0.625rem;
+}
+
+body[data-form-factor="mobile"] .app-section {
+  padding-inline: 1rem;
+}
+
+/* Mobile: full-width cards, no excessive side margins */
+body[data-form-factor="mobile"] .app-item-card {
+  border-radius: 0 !important;
+}
+
+/* Mobile: larger tap targets */
+body[data-form-factor="mobile"] .app-inbox-tab {
+  padding: 0.875rem 0.75rem;
+}
+
+body[data-form-factor="mobile"] .app-inbox-row {
+  min-height: 4.75rem;
+}
+
+/* ─── DESKTOP: cards with slightly more padding ────────────────────────── */
+
+body[data-form-factor="desktop"] .app-card,
+body[data-form-factor="desktop"] .uber-card {
+  padding: 1.5rem;
+}
+
+body[data-form-factor="desktop"] .wf-metric-tile {
+  padding: 1.25rem 1.5rem;
+}
+
+/* ─── LANDING PAGE: more dramatic desktop/tablet differences ──────────────── */
+
+/* Desktop: hero has even more vertical breathing room */
+body[data-form-factor="desktop"] .landing-page--desktop .landing-hero-inner {
+  padding-block: 7rem 9rem;
+}
+
+/* Desktop: section padding larger */
+body[data-form-factor="desktop"] .landing-page--desktop .landing-section {
+  padding-block: 5.5rem;
+}
+
+/* Tablet: section padding slightly more than mobile */
+body[data-form-factor="tablet"] .landing-page--tablet .landing-section {
+  padding-block: 4rem;
+}
+
+/* ─── TABLET: bottom nav slightly taller for touch comfort ────────────────── */
+
+body[data-form-factor="tablet"] .bottom-nav-inner {
+  min-height: 4rem;
+}
+
+/* ─── DESKTOP: app-screen-header has subtitle on same row for wider space ── */
+
+body[data-form-factor="desktop"] .app-screen-header .min-w-0.flex-1 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header .min-w-0.flex-1 > p {
+  /* subtitle inline with title on desktop */
+  margin: 0;
+}
+
+/* ─── STAFF SIDEBAR IMPROVEMENTS on desktop ─────────────────────────────── */
+
+body[data-form-factor="desktop"] .staff-sidebar {
+  width: 16rem;
+}
+
+/* ─── FORM FIELDS: 2-column on tablet/desktop ────────────────────────────── */
+
+/* Auth form fields */
+body[data-form-factor="tablet"] .auth-form-2col,
+body[data-form-factor="desktop"] .auth-form-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+/* ─── DESKTOP: hover states are more visible (mouse users) ───────────────── */
+
+body[data-form-factor="desktop"] .app-inbox-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-surface));
+}
+
+body[data-form-factor="desktop"] .landing-path-card:hover {
+  cursor: pointer;
+}
+
+/* ─── TABLET SPLIT VIEW: improved panel sizes ────────────────────────────── */
+
+body[data-form-factor="tablet"] .tablet-split-panel {
+  grid-template-columns: minmax(260px, 36%) 1fr;
+}
+
+body[data-form-factor="desktop"] .tablet-split-panel {
+  grid-template-columns: minmax(280px, 32%) 1fr;
+  gap: 1.75rem;
+}
+
+/* ─── GUARD DASHBOARD HOME: glance tile grid ─────────────────────────────── */
+
+body[data-form-factor="desktop"] .guard-home-glance-grid,
+body[data-form-factor="tablet"] .guard-home-glance-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ─── DESKTOP/TABLET: app screen gets inner padding for breathing room ──── */
+
+body[data-form-factor="desktop"] .app-screen-padded {
+  padding: 1.5rem;
+}
+
+body[data-form-factor="tablet"] .app-screen-padded {
+  padding: 1.25rem;
+}
+
+body[data-form-factor="mobile"] .app-screen-padded {
+  padding: 1rem;
+}
+
+/* ─── DESKTOP: wider inbox list in messages ─────────────────────────────── */
+
+@media (min-width: 1024px) {
+  body[data-form-factor="desktop"] .app-messages-split-list {
+    width: 26rem;
+    max-width: 34%;
+  }
+}
+
+/* ─── TYPOGRAPHY: scale up on desktop ───────────────────────────────────── */
+
+body[data-form-factor="desktop"] .screen-title {
+  font-size: 1.75rem;
+}
+
+body[data-form-factor="desktop"] .app-dashboard-hero-title {
+  font-size: 2.25rem;
+}
+
+body[data-form-factor="tablet"] .app-dashboard-hero-title {
+  font-size: 2rem;
+}
+
+/* ─── DESKTOP: app-screen-header inline layout ──────────────────────────── */
+
+body[data-form-factor="desktop"] .app-screen-header {
+  min-height: 3.75rem;
+}
+
+/* ─── REMOVE EXCESS CHROME: desktop has sidebar identity, header is minimal ─ */
+
+/* On desktop, the header doesn't need an account avatar since sidebar has it */
+body[data-form-factor="desktop"] .role-app-shell .account-menu-trigger {
+  display: none;
+}
+
+body[data-form-factor="desktop"] .role-side-nav .account-menu-trigger {
+  display: flex !important;
+}
+
+/* ─── MOBILE: safe insets ───────────────────────────────────────────────── */
+
+body[data-form-factor="mobile"] .app-screen {
+  padding-bottom: 0;
+}
+
+/* ─── END RESPONSIVE LAYOUT SYSTEM ─────────────────────────────────────── */
+
+/* ─── APP SCREEN HEADER: responsive title sizing ─────────────────────────── */
+
+.app-screen-header-title {
+  font-size: 1.1875rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+body[data-form-factor="tablet"] .app-screen-header-title {
+  font-size: 1.3125rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header-title {
+  font-size: 1.5rem;
+}
+
+.app-screen-header-subtitle {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ─── DESKTOP: sidebar active indicator on nav items ────────────────────── */
+
+.role-side-nav-item-active::before {
+  content: "";
+  position: absolute;
+  left: -0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.25rem;
+  border-radius: 0 2px 2px 0;
+  background: var(--brand-primary);
+}
+
+/* ─── TABLET/DESKTOP: client home stat tiles larger ─────────────────────── */
+
+body[data-form-factor="tablet"] .client-home-stat-pill,
+body[data-form-factor="desktop"] .client-home-stat-pill {
+  padding: 0.875rem 0.75rem;
+}
+
+body[data-form-factor="desktop"] .client-home-stat-value {
+  font-size: 2.25rem;
+}
+
+body[data-form-factor="tablet"] .client-home-stat-value {
+  font-size: 2rem;
+}
+
+/* ─── DESKTOP: live card wider ───────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .client-home-live-card {
+  border-radius: var(--radius-app-lg);
+}
+
+/* ─── DESKTOP: app sections get more space ──────────────────────────────── */
+
+body[data-form-factor="desktop"] .app-section {
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .app-section-head {
+  margin-bottom: 1rem;
+}
+
+/* ─── MOBILE: compact section spacing ───────────────────────────────────── */
+
+body[data-form-factor="mobile"] .app-section {
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+/* ─── DESKTOP: staff sidebar wider ──────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  body[data-form-factor="desktop"] .staff-sidebar {
+    width: 16rem;
+  }
+}
+
+/* ─── DESKTOP: account menu in sidebar footer fills width ───────────────── */
+
+body[data-form-factor="desktop"] .role-side-nav-footer > * {
+  width: 100%;
+}
+
+/* ─── END HEADER RESPONSIVE ─────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — NO HORIZONTAL SCROLL ENFORCEMENT
+   Everything must fit within the viewport. No left/right sliding ever.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Global: clip all horizontal overflow at document root ─────────────── */
+
+html,
+body,
+#root {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── All shell containers: enforce no horizontal overflow ──────────────── */
+
+.page-shell,
+.role-app-shell,
+.staff-shell,
+.auth-experience-client,
+.auth-experience-guard {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ─── Main content areas: never overflow horizontally ───────────────────── */
+
+.app-screen,
+.role-app-shell main,
+.role-app-shell main > div,
+.client-content-shell,
+.client-form-shell,
+.guard-form-shell {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── All flex children: allow shrinking so they fit ────────────────────── */
+
+.app-screen > *,
+.app-section > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ─── Segmented controls: wrap instead of overflow ─────────────────────── */
+
+.segmented-control {
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.segmented-control-full {
+  flex-wrap: nowrap;   /* full-width stays single row */
+}
+
+/* ─── Quick action rows: always wrap ───────────────────────────────────── */
+
+.app-quick-action-row {
+  flex-wrap: wrap !important;
+  overflow-x: hidden !important;
+}
+
+/* ─── Card stacks: full width only ─────────────────────────────────────── */
+
+.app-item-card-stack {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ─── Text: always truncate on single-line elements ────────────────────── */
+
+.app-screen-header h1,
+.app-subscreen-title,
+.app-chat-header-title,
+.app-inbox-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ─── Inbox rows: never overflow their container ───────────────────────── */
+
+.app-inbox-row {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.app-inbox-row-main {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─── Forms: inputs must not stretch beyond their container ─────────────── */
+
+input,
+select,
+textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ─── Images and media: never overflow ─────────────────────────────────── */
+
+img,
+video,
+svg {
+  max-width: 100%;
+}
+
+/* ─── Table overflow: always wrap in a scrollable container ─────────────── */
+
+/* Tables inside overflow-x-auto wrappers scroll only within their container */
+.overflow-x-auto {
+  max-width: 100%;
+}
+
+/* ─── Chip / badge rows: wrap instead of overflow ──────────────────────── */
+
+.chip-row,
+.badge-row,
+.filter-row {
+  flex-wrap: wrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* ─── Landing page: never overflow on any device ───────────────────────── */
+
+.landing-page,
+.landing-container,
+.landing-hero,
+.landing-section {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── Bottom navigation: always fits in viewport width ─────────────────── */
+
+.bottom-nav-bar {
+  overflow: hidden;
+  max-width: 100vw;
+}
+
+.bottom-nav-inner {
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Desktop sidebar: never causes horizontal overflow ─────────────────── */
+
+.role-side-nav {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.role-side-nav-item {
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ─── Map containers: clip within their bounds ──────────────────────────── */
+
+.guardr-map-root,
+.guard-map-layout,
+.client-map-layout,
+.staff-map-layout {
+  overflow: hidden;
+}
+
+/* ─── Messages hub: contained ───────────────────────────────────────────── */
+
+.app-messages-hub,
+.app-messages-split,
+.app-messages-split-list,
+.app-messages-split-detail {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── Chat pane: contained ──────────────────────────────────────────────── */
+
+.app-chat-pane,
+.app-chat-thread,
+.app-chat-bubble {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── App cards: never wider than container ─────────────────────────────── */
+
+.app-card,
+.uber-card,
+.app-item-card,
+.wf-list-card {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ─── Staff panels: contained ───────────────────────────────────────────── */
+
+.staff-main,
+.staff-main-content,
+.staff-pane-body,
+.staff-split-pane,
+.staff-split-pane-list,
+.staff-split-pane-detail {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── END NO HORIZONTAL SCROLL ENFORCEMENT ──────────────────────────────── */

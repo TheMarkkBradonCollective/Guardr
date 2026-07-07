@@ -391,6 +391,7 @@ export function AppInboxRow({
   badges,
   leading,
   selected = false,
+  unread = false,
   onClick,
 }: {
   title: string;
@@ -400,19 +401,24 @@ export function AppInboxRow({
   badges?: React.ReactNode;
   leading?: React.ReactNode;
   selected?: boolean;
+  /** Bolds the title and preview to indicate unread messages */
+  unread?: boolean;
   onClick?: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`app-inbox-row ${selected ? 'app-inbox-row-selected' : ''}`}
+      className={`app-inbox-row ${selected ? 'app-inbox-row-selected' : ''} ${unread ? 'app-inbox-row-unread' : ''}`}
     >
       {leading && <div className="app-inbox-row-leading shrink-0">{leading}</div>}
       <div className="app-inbox-row-main">
         <div className="app-inbox-row-top">
           <p className="app-inbox-row-title">{title}</p>
-          {meta && <span className="app-inbox-row-meta">{meta}</span>}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {meta && <span className="app-inbox-row-meta">{meta}</span>}
+            {unread && <span className="app-inbox-unread-dot" aria-hidden />}
+          </div>
         </div>
         {subtitle && <p className="app-inbox-row-subtitle">{subtitle}</p>}
         {preview && <p className="app-inbox-row-preview">{preview}</p>}
@@ -429,35 +435,36 @@ export function AppChatHeader({
   onBack,
   trailing,
   hideBackOnDesktop = false,
+  avatar,
 }: {
   title: string;
   subtitle?: string;
   onBack?: () => void;
   trailing?: React.ReactNode;
   hideBackOnDesktop?: boolean;
+  /** Optional leading avatar element displayed between back button and title */
+  avatar?: React.ReactNode;
 }) {
   return (
-    <div className="app-subscreen-header">
+    <div className="app-chat-header">
       {onBack ? (
         <button
           type="button"
           onClick={onBack}
-          className={`app-subscreen-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
+          className={`app-chat-header-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
           aria-label="Back"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+          <ArrowLeft className="w-4.5 h-4.5" />
         </button>
       ) : (
         <span className="w-0 shrink-0" aria-hidden />
       )}
+      {avatar && <div className="shrink-0">{avatar}</div>}
       <div className="min-w-0 flex-1">
-        <h1 className="app-subscreen-title">{title}</h1>
-        {subtitle && (
-          <p className="text-xs text-brand-text-muted truncate mt-0.5">{subtitle}</p>
-        )}
+        <h1 className="app-chat-header-title">{title}</h1>
+        {subtitle && <p className="app-chat-header-sub">{subtitle}</p>}
       </div>
-      {trailing}
+      {trailing && <div className="flex items-center gap-0.5 shrink-0">{trailing}</div>}
     </div>
   );
 }
