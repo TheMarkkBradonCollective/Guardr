@@ -15,6 +15,7 @@ import { AccountPendingScreen } from './account/AccountPendingScreen';
 import { RequestSecurityFlow, RequestFlowPreset } from './client/RequestSecurityFlow';
 import { DirectGuardRequestFlow } from './client/DirectGuardRequestFlow';
 import { ClientReportsScreen } from './client/ClientReportsScreen';
+import { ClientInvoicePanel } from './client/ClientInvoicePanel';
 import { ClientRequestsList } from './client/ClientRequestsList';
 import { GuardDirectoryScreen } from './client/GuardDirectoryScreen';
 import { GuardProfileScreen } from './client/GuardProfileScreen';
@@ -123,6 +124,7 @@ export function ClientDashboard({
   clientEmail,
   accountStatus,
   approved,
+  avatarUrl,
   activeView,
   onViewChange,
   profileGuardId,
@@ -452,18 +454,32 @@ export function ClientDashboard({
   }
 
   if (view === 'reports') {
+    const clientRecord: Client = {
+      id: clientId,
+      name: companyName,
+      companyName,
+      email: clientEmail,
+      phone: '',
+      avatar: avatarUrl ?? '',
+      totalRequests: requests.length,
+    };
     return page(
       'reports',
-      <ClientReportsScreen
-        reports={recentReports}
-        incidentDetails={incidentDetails}
-        selectedIncidentId={selectedIncidentId}
-        onSelectIncident={setSelectedIncidentId}
-        onBack={() => {
-          setSelectedIncidentId(null);
-          navigate('home');
-        }}
-      />
+      <div className="space-y-6">
+        <ClientReportsScreen
+          reports={recentReports}
+          incidentDetails={incidentDetails}
+          selectedIncidentId={selectedIncidentId}
+          onSelectIncident={setSelectedIncidentId}
+          onBack={() => {
+            setSelectedIncidentId(null);
+            navigate('home');
+          }}
+        />
+        <div className="px-4 pb-8">
+          <ClientInvoicePanel client={clientRecord} requests={requests} />
+        </div>
+      </div>
     );
   }
 

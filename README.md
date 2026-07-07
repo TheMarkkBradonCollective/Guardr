@@ -102,4 +102,26 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 
 ## Database Migrations
 
-Supabase schema lives in **`supabase/complete_schema_setup.sql`**. Run that file in the Supabase SQL Editor for fresh installs or to catch up an existing database (idempotent, safe to re-run).
+Supabase schema lives in:
+
+1. **`supabase/complete_schema_setup.sql`** — core schema (idempotent, safe to re-run)
+2. **`supabase/platform_v2_extensions.sql`** — auth hardening, audit log, availability, compliance alerts, invoicing, RLS helpers
+
+Run both files in the Supabase SQL Editor for fresh installs or to catch up an existing database.
+
+## Platform v1.0 Features
+
+- **Supabase Auth bridge** — PBKDF2 password hashing, auth user linking, server-side migration API (`/api/auth/bridge`)
+- **Role-based RLS** — helper functions + policies on new tables (audit log, availability, invoices)
+- **Trusted-client auto-publish** — configurable in Staff → Settings → Approval rules
+- **Audit log** — Staff → Settings (immutable action history)
+- **SLA dashboard** — Staff → Analytics (approval time, fill time, no-show rate)
+- **Guard availability calendar** — Guard → Settings
+- **Client invoicing** — Client → Reports (generate & download)
+- **Offline sync** — auto-flush queued field records on reconnect
+- **Onboarding tours** — per-role walkthrough on first sign-in
+- **Compliance alerts** — credential expiry scanning engine
+- **CI/CD** — GitHub Actions (lint, test, build, E2E)
+- **Rate limiting** — API middleware (60 req/min, 10/min for auth)
+- **Sentry scaffold** — set `VITE_SENTRY_DSN` to enable
+- **Capacitor** — native shell deps installed; run `npm run build && npx cap sync`

@@ -168,6 +168,17 @@ export function StaffSettingsPanel({
     }
   };
 
+  const canEdit = canEditPaymentModes;
+
+  const persistSettings = async (patch: Partial<PlatformSettings>) => {
+    if (!onUpdatePlatformSettings || !canEdit) return;
+    await onUpdatePlatformSettings({
+      ...platformSettings,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
   const toggleCash = async () => {
     if (!canEditPaymentModes || savingModes) return;
     const next = !cashEnabled;
@@ -432,14 +443,69 @@ export function StaffSettingsPanel({
       </AppFormSection>
 
       <AppFormSection title="Approval rules">
-        <div className="pb-6">
+        <div className="pb-6 space-y-4">
           <label className="uber-label block mb-1">Job posting review</label>
-          <select className="uber-input w-full max-w-lg" defaultValue="staff-all" disabled aria-describedby="job-review-note">
-            <option value="staff-all">All jobs require staff review before going live</option>
+          <select
+            className="uber-input w-full max-w-lg"
+            value={platformSettings.jobReviewMode ?? 'trusted-auto'}
+            disabled={!canEdit}
+            onChange={(e) => {
+              const jobReviewMode = e.target.value as PlatformSettings['jobReviewMode'];
+              void persistSettings({ jobReviewMode });
+            }}
+            aria-describedby="job-review-note"
+          >
+            <option value="staff-all">All jobs require staff review</option>
+            <option value="trusted-auto">Trusted clients auto-publish (with coordinates)</option>
+            <option value="none">No review — all jobs go live immediately</option>
           </select>
-          <p id="job-review-note" className="text-xs text-brand-text-muted mt-2">
-            Trusted-client auto-publish is planned for a future release. Every job offer is reviewed by staff today.
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={platformSettings.trustedClientAutoPublish !== false}
+              disabled={!canEdit}
+              onChange={(e) => void persistSettings({ trustedClientAutoPublish: e.target.checked })}
+            />
+            Enable trusted-client auto-publish
+          </label>
+          <p id="job-review-note" className="text-xs text-brand-text-muted">
+            Trusted clients with valid map coordinates skip the approval queue when auto-publish is enabled.
+            Mark clients as trusted from the Clients panel.
           </p>
+        </div>
+      </AppFormSection>
+
+      <AppFormSection title="Integrations">
+        <div className="pb-6 space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={platformSettings.smsNotificationsEnabled === true}
+              disabled={!canEdit}
+              onChange={(e) => void persistSettings({ smsNotificationsEnabled: e.target.checked })}
+            />
+            SMS notifications (Twilio — configure in env)
+          </label>
+          <label className="uber-label block">Background check provider</label>
+          <select
+            className="uber-input w-full max-w-lg"
+            value={platformSettings.backgroundCheckProvider ?? 'manual'}
+            disabled={!canEdit}
+            onChange={(e) => void persistSettings({ backgroundCheckProvider: e.target.value })}
+          >
+            <option value="manual">Manual staff review</option>
+            <option value="checkr">Checkr (API key required)</option>
+          </select>
+          <label className="uber-label block">Insurance verification</label>
+          <select
+            className="uber-input w-full max-w-lg"
+            value={platformSettings.insuranceVerificationMode ?? 'manual'}
+            disabled={!canEdit}
+            onChange={(e) => void persistSettings({ insuranceVerificationMode: e.target.value })}
+          >
+            <option value="manual">Manual COI review</option>
+            <option value="api">Automated verification API</option>
+          </select>
         </div>
       </AppFormSection>
 

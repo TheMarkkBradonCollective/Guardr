@@ -12,10 +12,19 @@ export type {
 } from '../../lib/platformFees';
 export { DEFAULT_PLATFORM_FEE_CONFIG, TIERED_PLATFORM_FEE_PRESET } from '../../lib/platformFees';
 
+export type JobReviewMode = 'staff-all' | 'trusted-auto' | 'none';
+
 export interface PlatformSettings {
   paymentCashEnabled: boolean;
   paymentStripeEnabled: boolean;
   feeConfig: PlatformFeeConfig;
+  /** Job posting review policy */
+  jobReviewMode?: JobReviewMode;
+  /** When true, trusted clients auto-publish jobs with valid coordinates */
+  trustedClientAutoPublish?: boolean;
+  smsNotificationsEnabled?: boolean;
+  backgroundCheckProvider?: string;
+  insuranceVerificationMode?: string;
   /** Automatically release Stripe payouts after shift completion delay */
   autoStripePayoutEnabled?: boolean;
   /** Hours after completion before auto Stripe payout (default 48) */
@@ -46,6 +55,11 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   autoStripePayoutEnabled: true,
   autoStripePayoutDelayHours: 48,
   verifiedGuardSelfServe: true,
+  jobReviewMode: 'trusted-auto',
+  trustedClientAutoPublish: true,
+  smsNotificationsEnabled: false,
+  backgroundCheckProvider: 'manual',
+  insuranceVerificationMode: 'manual',
   crewTeamPayBumpPerHour: 1,
   teamLeadBonusPerGuardPerHour: 1,
   teamLeadBonusClientSharePercent: 100,
@@ -101,6 +115,11 @@ export function normalizePlatformSettings(
     autoStripePayoutEnabled: input.autoStripePayoutEnabled ?? true,
     autoStripePayoutDelayHours: input.autoStripePayoutDelayHours ?? 48,
     verifiedGuardSelfServe: input.verifiedGuardSelfServe ?? true,
+    jobReviewMode: input.jobReviewMode ?? 'trusted-auto',
+    trustedClientAutoPublish: input.trustedClientAutoPublish ?? true,
+    smsNotificationsEnabled: input.smsNotificationsEnabled ?? false,
+    backgroundCheckProvider: input.backgroundCheckProvider ?? 'manual',
+    insuranceVerificationMode: input.insuranceVerificationMode ?? 'manual',
     crewTeamPayBumpPerHour: bumpRate,
     teamLeadBonusPerGuardPerHour: bumpRate,
     teamLeadBonusClientSharePercent: 100,
@@ -147,6 +166,11 @@ export function platformSettingsFromDbRow(row: {
   auto_stripe_payout_enabled?: boolean | null;
   auto_stripe_payout_delay_hours?: number | null;
   verified_guard_self_serve?: boolean | null;
+  job_review_mode?: string | null;
+  trusted_client_auto_publish?: boolean | null;
+  sms_notifications_enabled?: boolean | null;
+  background_check_provider?: string | null;
+  insurance_verification_mode?: string | null;
   updated_at?: string | null;
 }): PlatformSettings {
   return (
@@ -166,6 +190,11 @@ export function platformSettingsFromDbRow(row: {
           ? Number(row.auto_stripe_payout_delay_hours)
           : 48,
       verifiedGuardSelfServe: row.verified_guard_self_serve ?? true,
+      jobReviewMode: (row.job_review_mode as JobReviewMode) ?? 'trusted-auto',
+      trustedClientAutoPublish: row.trusted_client_auto_publish ?? true,
+      smsNotificationsEnabled: row.sms_notifications_enabled ?? false,
+      backgroundCheckProvider: row.background_check_provider ?? 'manual',
+      insuranceVerificationMode: row.insurance_verification_mode ?? 'manual',
       crewTeamPayBumpPerHour:
         row.team_lead_bonus_per_guard_per_hour != null
           ? Number(row.team_lead_bonus_per_guard_per_hour)
@@ -195,6 +224,11 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     auto_stripe_payout_enabled: settings.autoStripePayoutEnabled ?? true,
     auto_stripe_payout_delay_hours: settings.autoStripePayoutDelayHours ?? 48,
     verified_guard_self_serve: settings.verifiedGuardSelfServe ?? true,
+    job_review_mode: settings.jobReviewMode ?? 'trusted-auto',
+    trusted_client_auto_publish: settings.trustedClientAutoPublish ?? true,
+    sms_notifications_enabled: settings.smsNotificationsEnabled ?? false,
+    background_check_provider: settings.backgroundCheckProvider ?? 'manual',
+    insurance_verification_mode: settings.insuranceVerificationMode ?? 'manual',
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,

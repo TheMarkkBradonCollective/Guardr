@@ -76,6 +76,8 @@ import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
 import { StaffAnalyticsPanel } from './staff/StaffAnalyticsPanel';
+import { StaffSlaDashboard } from './staff/StaffSlaDashboard';
+import { StaffAuditLogPanel } from './staff/StaffAuditLogPanel';
 import { StaffSettingsPanel } from './staff/StaffSettingsPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { DevNotesPage } from './docs/DevNotesPage';
@@ -770,12 +772,15 @@ export function StaffDashboard({
         );
       case 'analytics':
         return (
-          <StaffAnalyticsPanel
-            guards={guards}
-            clients={clients}
-            requests={requests}
-            showFinancials={showFinance}
-          />
+          <div className="space-y-8">
+            <StaffSlaDashboard requests={requests} guards={guards} clients={clients} />
+            <StaffAnalyticsPanel
+              guards={guards}
+              clients={clients}
+              requests={requests}
+              showFinancials={showFinance}
+            />
+          </div>
         );
       case 'guide':
         return <AppGuidePage audience="staff" staffRole={currentUser.role} />;
@@ -792,16 +797,19 @@ export function StaffDashboard({
         );
       case 'settings':
         return showSettings ? (
-          <StaffSettingsPanel
-            currentUser={currentUser}
-            platformSettings={platformSettings}
-            onUpdatePlatformSettings={onUpdatePlatformSettings}
-            showStaffOnboard={canManageStaff}
-            onAddStaffProfile={onAddStaffProfile}
-            guards={guards}
-            clients={clients}
-            legalAcceptances={legalAcceptances}
-          />
+          <div className="space-y-8">
+            <StaffSettingsPanel
+              currentUser={currentUser}
+              platformSettings={platformSettings}
+              onUpdatePlatformSettings={onUpdatePlatformSettings}
+              showStaffOnboard={canManageStaff}
+              onAddStaffProfile={onAddStaffProfile}
+              guards={guards}
+              clients={clients}
+              legalAcceptances={legalAcceptances}
+            />
+            <StaffAuditLogPanel />
+          </div>
         ) : null;
       case 'profile':
         return (

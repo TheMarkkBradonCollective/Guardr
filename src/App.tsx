@@ -225,6 +225,12 @@ import {
 import { isGuardAccountActive } from './lib/guardAccountActivation';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
+import { writeAuditLog } from './lib/auditLog';
+import { signOutAuth } from './lib/auth/authService';
+import { getTourForRole, isTourCompleted } from './lib/onboardingTours';
+import { OnboardingTourOverlay } from './components/onboarding/OnboardingTour';
+import { useOfflineSync } from './hooks/useOfflineSync';
+import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
@@ -432,6 +438,7 @@ export default function App() {
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
+  const [onboardingTourDismissed, setOnboardingTourDismissed] = useState(false);
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -1405,6 +1412,15 @@ export default function App() {
       return;
     }
   }, [currentUser, guards]);
+
+  useOfflineSync(
+    currentUser?.role === 'guard' ? activeGuardId : undefined,
+    (result) => {
+      if (result.synced > 0) {
+        showAppToast(`Synced ${result.synced} offline record${result.synced === 1 ? '' : 's'}.`, { tone: 'success' });
+      }
+    }
+  );
 
   // Keep session id aligned when the guard row id differs (e.g. after DB reset / staff provisioned account).
   useEffect(() => {
@@ -2400,6 +2416,7 @@ export default function App() {
     setCurrentUser(user);
     setPasswordChangePromptOpen(!!options?.passwordChangeRecommended);
     setIsAuthView(false);
+    void writeAuditLog(user, 'sign_in', 'session', user.id);
   };
 
   const handleDismissPasswordChange = () => {
@@ -2452,6 +2469,8 @@ export default function App() {
   };
 
   const handleSignOut = () => {
+    if (currentUser) void writeAuditLog(currentUser, 'sign_out', 'session', currentUser.id);
+    void signOutAuth();
     localStorage.removeItem('guardr_current_user');
     clearPersistedAppRoute();
     setCurrentUser(null);
@@ -4518,11 +4537,16 @@ export default function App() {
     const longitude = resolvedCoords.longitude ?? newRequest.longitude;
     const coordsReady = hasJobCoordinates({ latitude, longitude });
 
-    // Trusted clients skip the approval queue when map coordinates are on file.
+    const reviewMode = platformSettings.jobReviewMode ?? 'trusted-auto';
+    const autoPublish = platformSettings.trustedClientAutoPublish !== false;
     const clientIsTrusted = clientRecord?.trusted === true;
-    const initialStatus: SecurityRequest['status'] =
-      clientIsTrusted && coordsReady ? 'open' : 'pending-review';
-    const openedAt = clientIsTrusted && coordsReady ? new Date().toISOString() : undefined;
+    let initialStatus: SecurityRequest['status'] = 'pending-review';
+    if (reviewMode === 'none' && coordsReady) {
+      initialStatus = 'open';
+    } else if (reviewMode === 'trusted-auto' && autoPublish && clientIsTrusted && coordsReady) {
+      initialStatus = 'open';
+    }
+    const openedAt = initialStatus === 'open' ? new Date().toISOString() : undefined;
 
     const freshJob: SecurityRequest = {
       id: `req-${Date.now()}`,
@@ -4685,6 +4709,7 @@ export default function App() {
     } else {
       showAppToast('Job posted — pending Guardr review.', { tone: 'success' });
     }
+    void writeAuditLog(currentUser, 'job_posted', 'security_request', freshJob.id, { status: initialStatus });
   };
 
   const handleStaffCreateJob = async (input: StaffCreateJobInput): Promise<string> => {
@@ -9415,6 +9440,25 @@ export default function App() {
     />
   ) : null;
 
+  const activeOnboardingTour =
+    currentUser && !onboardingTourDismissed
+      ? getTourForRole(currentUser.role)
+      : null;
+  const showOnboardingTour =
+    activeOnboardingTour &&
+    currentUser &&
+    !isTourCompleted(currentUser.id, activeOnboardingTour.id);
+
+  const onboardingTourOverlay =
+    showOnboardingTour && currentUser && activeOnboardingTour ? (
+      <OnboardingTourOverlay
+        tour={activeOnboardingTour}
+        userId={currentUser.id}
+        onComplete={() => setOnboardingTourDismissed(true)}
+        onSkip={() => setOnboardingTourDismissed(true)}
+      />
+    ) : null;
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -9666,6 +9710,7 @@ export default function App() {
           onOpenLegal={openLegalPage}
         />
         {passwordChangeOverlay}
+        {onboardingTourOverlay}
         <InstallPrompt />
       </>
     );
@@ -9825,6 +9870,7 @@ export default function App() {
           )}
         </ClientAppLayout>
         {passwordChangeOverlay}
+        {onboardingTourOverlay}
         <InstallPrompt />
       </>
     );
@@ -9950,6 +9996,7 @@ export default function App() {
           legalAcceptances={legalAcceptanceRecords}
         />
         {passwordChangeOverlay}
+        {onboardingTourOverlay}
         <InstallPrompt />
       </>
     );

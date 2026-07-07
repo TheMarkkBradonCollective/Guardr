@@ -43,6 +43,7 @@ import { showAppToast } from './ui/AppToast';
 import { showAppConfirm } from './ui/AppConfirm';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
+import { GuardAvailabilityCalendar } from './guard/GuardAvailabilityCalendar';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
@@ -1199,17 +1200,22 @@ export function GuardDashboard({
 
           {tab === 'settings' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <UserSettingsScreen
-                currentUser={currentUser}
-                themeMode={themeMode as 'dark' | 'light' | 'grey'}
-                onChangeTheme={onChangeTheme}
-                onOpenLegal={onOpenLegal}
-                onJoinTeamWithCode={
-                  shouldOfferTeamCodeJoin(guard, standingCrewMembers)
-                    ? onJoinTeamWithCode
-                    : undefined
-                }
-              />
+              <div className="flex-1 overflow-y-auto">
+                <UserSettingsScreen
+                  currentUser={currentUser}
+                  themeMode={themeMode as 'dark' | 'light' | 'grey'}
+                  onChangeTheme={onChangeTheme}
+                  onOpenLegal={onOpenLegal}
+                  onJoinTeamWithCode={
+                    shouldOfferTeamCodeJoin(guard, standingCrewMembers)
+                      ? onJoinTeamWithCode
+                      : undefined
+                  }
+                />
+                <div className="px-4 pb-8 max-w-lg mx-auto">
+                  <GuardAvailabilityCalendar guardId={guard.id} />
+                </div>
+              </div>
             </div>
           )}
         </AppPageTransition>
