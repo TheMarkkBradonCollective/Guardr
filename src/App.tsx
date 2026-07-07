@@ -1455,10 +1455,17 @@ export default function App() {
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {
+    const LOAD_TIMEOUT_MS = 12_000;
+
     (async () => {
       try {
         setLoading(true);
-        await loadFromSupabase();
+        await Promise.race([
+          loadFromSupabase(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Supabase load timed out')), LOAD_TIMEOUT_MS)
+          ),
+        ]);
       } catch (e) {
         console.error('Supabase init error:', e);
         setGuards([]);
