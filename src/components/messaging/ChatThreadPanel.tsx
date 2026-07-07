@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CornerDownLeft, SmilePlus } from 'lucide-react';
+import { CornerDownLeft, SmilePlus, MessageCircle, Lock } from 'lucide-react';
 import { PlatformRole } from '../../types';
 import { isStaffSender, senderLabel } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
@@ -235,17 +235,23 @@ export function ChatThreadPanel({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-brand-bg">
+    <div className="app-chat-thread-shell flex flex-col h-full min-h-0">
       {headerNote && (
-        <p className="shrink-0 text-xs font-medium text-brand-text-muted px-4 py-2.5 border-b border-brand-border bg-brand-surface">
-          {headerNote}
-        </p>
+        <div className="shrink-0 px-4 py-2 border-b border-brand-border bg-brand-surface flex items-center justify-center">
+          <p className="text-xs font-medium text-brand-text-muted text-center">{headerNote}</p>
+        </div>
       )}
 
       <div className="app-chat-pane">
         {messages.length === 0 ? (
-          <div className="app-chat-bubble app-chat-bubble-system mx-auto">
-            <p>No messages yet. Say hello to get started.</p>
+          <div className="app-chat-thread-empty">
+            <div className="app-chat-thread-empty-icon">
+              <MessageCircle className="w-6 h-6" strokeWidth={1.75} />
+            </div>
+            <p className="app-chat-thread-empty-title">No messages yet</p>
+            <p className="app-chat-thread-empty-hint">
+              {readOnly ? 'This conversation is closed.' : 'Say hello to get started.'}
+            </p>
           </div>
         ) : (
           <div className="app-chat-thread">
@@ -472,9 +478,10 @@ export function ChatThreadPanel({
       </div>
 
       {readOnly ? (
-        <p className="shrink-0 text-xs text-center text-brand-text-muted px-4 py-3 border-t border-brand-border">
-          {readOnlyMessage}
-        </p>
+        <div className="app-chat-readonly-footer">
+          <Lock className="w-3.5 h-3.5 shrink-0 opacity-60" strokeWidth={2} />
+          <span>{readOnlyMessage}</span>
+        </div>
       ) : (
         <AppChatComposer
           value={draft}
