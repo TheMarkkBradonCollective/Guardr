@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
+import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
 import { JobListingProfile } from '../jobs/JobListingProfile';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
 import { JobBillingSummaryFromGuardJob } from '../jobs/JobBillingSummary';
@@ -51,6 +52,7 @@ export function MapSelectionExperience({
   staffActions,
 }: MapSelectionExperienceProps) {
   const [expanded, setExpanded] = useState(false);
+  const cardInsetRef = useMapBottomOverlayInset(true);
   const selected = useMemo(() => job, [job?.id]);
   const guardBody = guardFullBody ?? detailActions;
 
@@ -82,6 +84,7 @@ export function MapSelectionExperience({
   return (
     <div className={`map-selection-layer ${bottomOffsetClass}`}>
       <MapOfferCard
+        ref={cardInsetRef}
         summary={
           <MapJobPeekSummary
             role={role}

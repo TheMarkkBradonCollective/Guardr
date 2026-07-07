@@ -16,6 +16,7 @@ import {
   GuardStandingCrewMember,
 } from '../types';
 import { ShiftMap, type MapZoomControls } from './guard/ShiftMap';
+import { MapViewportInsetsProvider } from '../lib/mapViewportInsets';
 import { MapRouteBanner } from './map/MapRouteBanner';
 import { MapRouteSummary } from '../lib/mapRouting';
 import { MapSelectionExperience } from './map/MapSelectionExperience';
@@ -964,6 +965,8 @@ export function GuardDashboard({
         </div>
       )}
 
+      {activeTab === 'map' && (
+        <MapViewportInsetsProvider>
       {activeTab === 'map' && !showShiftOverlay && (
         <MapPinFilterStepper
           filters={GUARD_MAP_STATUS_FILTERS}
@@ -993,6 +996,7 @@ export function GuardDashboard({
           onRouteLoadingChange={setMapRouteLoading}
           getPinKind={(job) => guardMapPinKind(guard.id, job as unknown as SecurityRequest)}
           zoomRef={mapZoomRef}
+          routeFitResetKey={guardSelectedJobId ?? ''}
         />
       )}
 
@@ -1080,6 +1084,8 @@ export function GuardDashboard({
             />
           }
         />
+      )}
+        </MapViewportInsetsProvider>
       )}
 
       {tab !== 'map' && (

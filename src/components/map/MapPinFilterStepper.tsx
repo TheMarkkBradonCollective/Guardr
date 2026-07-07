@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { useMapViewportInsets } from '../../lib/mapViewportInsets';
 
 export interface MapPinFilterOption<T extends string> {
   id: T;
@@ -23,6 +24,13 @@ export function MapPinFilterStepper<T extends string>({
   onZoomOut,
   routeSlot,
 }: MapPinFilterStepperProps<T>) {
+  const { setTopInset } = useMapViewportInsets();
+
+  useEffect(() => {
+    setTopInset(routeSlot ? 132 : 88);
+    return () => setTopInset(72);
+  }, [routeSlot, setTopInset]);
+
   const currentIndex = Math.max(
     0,
     filters.findIndex((filter) => filter.id === value)
