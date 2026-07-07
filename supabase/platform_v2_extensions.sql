@@ -1,0 +1,4 @@
+-- =============================================================================
+-- DEPRECATED — merged into complete_schema_setup.sql (Platform v1.0 section)
+-- Run supabase/complete_schema_setup.sql only. This file is kept for reference.
+-- =============================================================================

@@ -7,9 +7,12 @@ import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
 import { registerServiceWorker } from './lib/push';
+import { initSentry } from './lib/sentry';
 import './index.css';
 
 applyThemeToDocument(loadTheme());
+
+void initSentry();
 
 void registerServiceWorker().catch((error) => {
   console.warn('[pwa] service worker registration failed:', error);
