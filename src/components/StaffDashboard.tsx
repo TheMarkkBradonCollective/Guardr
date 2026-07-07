@@ -6,6 +6,7 @@ import {
   Experience,
   GuardEducation,
   GuardPayoutInvoice,
+  GuardStandingCrewMember,
   Payment,
   SecurityGuard,
   SecurityRequest,
@@ -98,6 +99,7 @@ interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
   requests: SecurityRequest[];
+  standingCrewMembers?: GuardStandingCrewMember[];
   supportTickets?: SupportTicket[];
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
@@ -254,6 +256,7 @@ export function StaffDashboard({
   guards,
   clients,
   requests,
+  standingCrewMembers = [],
   supportTickets = [],
   jobChatThreads = [],
   jobChatMessages = [],
@@ -588,6 +591,7 @@ export function StaffDashboard({
           <StaffGuardsPanel
             guards={guards}
             requests={requests}
+            standingCrewMembers={standingCrewMembers}
             canManage={canManageGuardAccounts}
             canSuspend={canSuspend}
             onUpdateUserStatus={onUpdateGuardUserStatus}
@@ -648,6 +652,7 @@ export function StaffDashboard({
           <StaffGuardCrewsPanel
             requests={requests}
             guards={guards}
+            standingCrewMembers={standingCrewMembers}
             canManage={canReviewJobs}
             selectedJobId={internalCrewJobId}
             onSelectedJobIdChange={setInternalCrewJobId}

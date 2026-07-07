@@ -12,7 +12,18 @@ import {
   confirmSuspendAccount,
 } from '../../lib/importantActionConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
+import {
+  Certification,
+  Experience,
+  GuardEducation,
+  GuardStandingCrewMember,
+  SecurityGuard,
+  SecurityRequest,
+} from '../../types';
+import {
+  getActiveStandingCrewMembers,
+  getPendingStandingCrewOutgoing,
+} from '../../lib/guardStandingCrew';
 import { certDisplayName } from '../../lib/certCatalog';
 import { groupGuardCertsByCategory } from '../../lib/certMatching';
 import {
@@ -26,7 +37,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { ArrowLeft, Camera, Check, Save, User, X } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Save, User, Users, X } from 'lucide-react';
 import { GuardResumeEditor, GuardResumeSavePayload } from '../profile/GuardResumeEditor';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import { processProfilePhotoFile } from '../../lib/profilePhoto';
@@ -50,6 +61,7 @@ import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
   requests: SecurityRequest[];
+  standingCrewMembers?: GuardStandingCrewMember[];
   canManage: boolean;
   canVerifyCredentials?: boolean;
   canSuspend: boolean;
@@ -101,6 +113,7 @@ interface StaffGuardDetailPanelProps {
 export function StaffGuardDetailPanel({
   guard,
   requests,
+  standingCrewMembers = [],
   canManage,
   canVerifyCredentials = false,
   canSuspend,
@@ -746,6 +759,67 @@ export function StaffGuardDetailPanel({
                 }
                 renderCertActions={renderStaffCertActions}
               />
+            </section>
+          )}
+
+          {/* Standing crew section — shown for trusted guards */}
+          {guard.trusted && !editing && (
+            <section className="staff-detail-section space-y-3">
+              <WfSectionHeader title="Standing crew" className="!px-0 !mb-0" />
+              {guard.standingCrewName ? (
+                <div className="rounded-lg border border-brand-border bg-brand-surface overflow-hidden">
+                  <div className="px-4 py-3 border-b border-brand-border bg-brand-bg-sec">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-sm text-brand-text">{guard.standingCrewName}</p>
+                      <WfBadge tone="primary">Trusted lead</WfBadge>
+                    </div>
+                    {guard.standingCrewDescription && (
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        {guard.standingCrewDescription}
+                      </p>
+                    )}
+                  </div>
+                  {(() => {
+                    const activeMembers = getActiveStandingCrewMembers(standingCrewMembers, guard.id);
+                    const pendingMembers = getPendingStandingCrewOutgoing(standingCrewMembers, guard.id);
+                    const allMembers = [...activeMembers, ...pendingMembers];
+                    return allMembers.length === 0 ? (
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-brand-text-muted">No crew members yet.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-brand-border">
+                        {allMembers.map((m) => {
+                          // memberGuardId refers to a guard in the platform; we only have
+                          // this guard's own data here, so show ID if not resolvable
+                          const displayName = m.memberGuardId;
+                          return (
+                            <div key={m.id} className="flex items-center gap-3 px-4 py-2.5">
+                              <div className="w-7 h-7 rounded-full bg-brand-bg-sec border border-brand-border flex items-center justify-center shrink-0">
+                                <User className="w-3.5 h-3.5 text-brand-text-muted" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-brand-text truncate">
+                                  {displayName}
+                                </p>
+                              </div>
+                              <WfBadge tone={m.status === 'active' ? 'success' : 'warning'}>
+                                {m.status === 'active' ? 'Active' : 'Pending'}
+                              </WfBadge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <p className="text-sm text-brand-text-muted">
+                  <Users className="w-4 h-4 inline mr-1.5 opacity-60" />
+                  Trusted guard — no crew profile set yet. They can configure their team name and
+                  invite members from their Crew hub.
+                </p>
+              )}
             </section>
           )}
 
