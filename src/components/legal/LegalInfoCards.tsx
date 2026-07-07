@@ -38,11 +38,11 @@ export function LegalInfoCards({ onOpenLegal, className = '' }: LegalInfoCardsPr
             className="legal-info-card group text-left border border-brand-border bg-brand-surface p-4 transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/5"
           >
             <div className="flex items-start gap-3">
-              <span className="shrink-0 w-10 h-10 border border-brand-border bg-brand-bg flex items-center justify-center text-brand-primary group-hover:border-brand-primary/30">
+              <span className="shrink-0 w-10 h-10 rounded-lg border border-brand-border bg-brand-bg-sec flex items-center justify-center text-brand-primary group-hover:border-brand-primary/40 group-hover:bg-brand-primary/6 transition-colors">
                 <Icon className="w-5 h-5" strokeWidth={1.75} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-sm text-brand-text">{title}</p>
+                <p className="font-bold text-sm text-brand-text tracking-tight">{title}</p>
                 <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{description}</p>
                 <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-primary">
                   Read {LEGAL_DOCUMENTS[id].title.toLowerCase()}

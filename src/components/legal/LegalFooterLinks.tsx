@@ -21,7 +21,7 @@ export function LegalFooterLinks({ onOpenLegal, className = '' }: LegalFooterLin
           key={page}
           type="button"
           onClick={() => onOpenLegal(page)}
-          className="font-semibold text-brand-text-muted hover:text-brand-primary transition-colors"
+          className="legal-footer-link font-semibold"
         >
           {page === 'ica'
             ? 'Independent Contractor Agreement'

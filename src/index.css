@@ -11978,3 +11978,1428 @@ html.theme-dark .notification-inbox-item--unread {
 .crew-hub-sticky-head .app-segmented-control {
   margin-bottom: 0.75rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — DESIGN COMPLETION LAYER
+   All missing classes, final visual polish, perfect cross-theme consistency.
+   One cohesive, premium product experience.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── LANDING PAGE: MISSING BASE CLASSES ───────────────────────────────── */
+
+.landing-wordmark {
+  font-size: 1.3125rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--brand-text);
+  user-select: none;
+}
+
+.landing-wordmark-accent {
+  color: var(--brand-primary);
+}
+
+.landing-hero-copy {
+  display: flex;
+  flex-direction: column;
+  max-width: 44rem;
+}
+
+.landing-feature-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-feature-column--guard {
+  position: relative;
+  padding: 2rem;
+  border-radius: var(--radius-app-xl);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+html.theme-light .landing-feature-column--guard {
+  background: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+.landing-leadership-messages blockquote {
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  padding: 1rem 1.25rem;
+  transition: border-color 0.15s ease;
+}
+
+.landing-leadership-messages blockquote:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+}
+
+/* ─── LANDING HERO: DEEPER VISUAL IMPACT ───────────────────────────────── */
+
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 80% 10%, color-mix(in srgb, var(--brand-primary) 6%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, color-mix(in srgb, var(--brand-primary) 4%, transparent), transparent 65%);
+  pointer-events: none;
+}
+
+/* ─── TRUST STRIP: DIVIDER TREATMENT ───────────────────────────────────── */
+
+.landing-trust-strip {
+  padding-block: 2rem;
+}
+
+html.theme-light .landing-trust-strip {
+  background: var(--brand-elevated);
+}
+
+/* ─── SECTION TRANSITIONS: SUBTLE GRADIENTS ────────────────────────────── */
+
+.landing-how-section {
+  background: color-mix(in srgb, var(--brand-bg-sec) 60%, var(--brand-bg));
+}
+
+html.theme-light .landing-how-section {
+  background: var(--brand-elevated);
+}
+
+.landing-coverage-section {
+  background: var(--brand-bg-sec);
+}
+
+/* ─── HOW IT WORKS CARDS: STEP CONNECTOR ───────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .landing-how-grid--desktop {
+    position: relative;
+  }
+
+  .landing-how-grid--desktop::before {
+    content: "";
+    position: absolute;
+    top: 2.5rem;
+    left: calc(33.333% + 0.625rem);
+    right: calc(33.333% + 0.625rem);
+    height: 1px;
+    background: color-mix(in srgb, var(--brand-border) 80%, transparent);
+    pointer-events: none;
+  }
+}
+
+/* ─── LANDING PAGE: FEATURES SECTION VISUAL REFINEMENTS ────────────────── */
+
+.landing-features-section {
+  position: relative;
+}
+
+.landing-features-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── CTA SECTION: COMMANDING FINISH ───────────────────────────────────── */
+
+.landing-final-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-final-cta::before {
+  content: "";
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60vw;
+  max-width: 36rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+/* ─── LANDING FOOTER: MULTI-COLUMN LAYOUT ──────────────────────────────── */
+
+@media (min-width: 768px) {
+  .landing-footer-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+/* ─── AUTH EXPERIENCE: PREMIUM FORM PANELS ─────────────────────────────── */
+
+.auth-panel-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-form-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.375rem;
+  display: block;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── DASHBOARD CARDS: CONSISTENT METRIC DISPLAY ───────────────────────── */
+
+.dashboard-kpi-card {
+  padding: 1.125rem;
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dashboard-kpi-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.dashboard-kpi-value {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.dashboard-kpi-delta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-kpi-delta--up { color: var(--status-success); }
+.dashboard-kpi-delta--down { color: var(--status-danger); }
+.dashboard-kpi-delta--neutral { color: var(--brand-text-muted); }
+
+/* ─── GUARD DASHBOARD HERO: SHIFT STATUS BAND ──────────────────────────── */
+
+.guard-shift-hero {
+  padding: 1.125rem 1.25rem;
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+/* ─── CLIENT DASHBOARD HERO: COVERAGE OVERVIEW ─────────────────────────── */
+
+.client-coverage-hero {
+  padding: 1rem 1.25rem 1.25rem;
+  background: var(--brand-bg);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+/* ─── MAP INTERFACE: GLASS OVERLAY IMPROVEMENTS ────────────────────────── */
+
+.map-overlay-panel {
+  background: color-mix(in srgb, var(--brand-bg) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, transparent);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-float);
+}
+
+html.theme-dark .map-overlay-panel {
+  background: rgba(10, 10, 10, 0.92);
+  border-color: #222;
+}
+
+/* ─── NOTIFICATION PANEL: PREMIUM ──────────────────────────────────────── */
+
+.notification-inbox-panel {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-app-xl);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+}
+
+html.theme-dark .notification-inbox-panel {
+  background: #111111;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+
+.notification-inbox-item {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+}
+
+.notification-inbox-item:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.notification-inbox-item:last-child {
+  border-bottom: none;
+}
+
+/* ─── INLINE ACTION CHIPS: QUICK FILTERS ───────────────────────────────── */
+
+.action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 1.5px solid var(--brand-border);
+  background: transparent;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.action-chip:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+  color: var(--brand-text);
+}
+
+.action-chip-active {
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* ─── SHIFT CARD: PREMIUM JOB CARD DESIGN ──────────────────────────────── */
+
+.shift-card-rate-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1875rem;
+}
+
+.shift-card-rate-value {
+  font-size: 1.375rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.shift-card-rate-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+/* ─── FORM SHEET: POLISHED SECTION HEADERS ─────────────────────────────── */
+
+.form-sheet-section {
+  padding: 1.125rem 1.25rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+.form-sheet-section:first-child {
+  border-top: none;
+}
+
+.form-sheet-section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin-bottom: 0.875rem;
+}
+
+/* ─── PROFILE HEADER: PREMIUM AVATAR DISPLAY ───────────────────────────── */
+
+.profile-avatar-ring {
+  border: 3px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  border-radius: 50%;
+  padding: 3px;
+  display: inline-block;
+}
+
+.profile-avatar-ring img,
+.profile-avatar-ring .app-avatar-placeholder {
+  border-radius: 50%;
+}
+
+/* ─── CREDENTIAL CARD: POLISHED DOCUMENT STYLE ─────────────────────────── */
+
+.credential-card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+}
+
+.credential-card-item:hover {
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--brand-bg));
+}
+
+.credential-card-item:last-child {
+  border-bottom: none;
+}
+
+.credential-icon-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ─── SITE STATS BAND: PLATFORM METRICS ────────────────────────────────── */
+
+.landing-stats-band {
+  padding-block: 2.5rem;
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-bg));
+  border-top: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+html.theme-dark .landing-stats-band {
+  background: color-mix(in srgb, var(--brand-primary) 8%, #000000);
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, #1a1a1a);
+}
+
+.landing-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.landing-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.landing-stat-number {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-stat-desc {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: -0.01em;
+}
+
+/* ─── LANDING PAGE: PLATFORM HIGHLIGHTS ROW ────────────────────────────── */
+
+.landing-highlights-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .landing-highlights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-highlights-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.landing-highlight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem 1.375rem;
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.landing-highlight-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 3%, var(--brand-surface));
+}
+
+.landing-highlight-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-primary);
+}
+
+.landing-highlight-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--brand-text);
+}
+
+.landing-highlight-body {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+}
+
+/* ─── LANDING FEATURE SECTION: VISUAL DEPTH ────────────────────────────── */
+
+.landing-feature-section-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Guard section accent */
+.landing-feature-column--guard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-primary);
+  border-radius: 0 0 0 var(--radius-app-xl);
+}
+
+/* ─── BOTTOM CTA BAR: MOBILE ELEVATION ─────────────────────────────────── */
+
+.landing-mobile-cta-bar {
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
+}
+
+html.theme-dark .landing-mobile-cta-bar {
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.45);
+}
+
+/* ─── SEGMENTED TABS: UNDERLINE INDICATOR PRECISION ────────────────────── */
+
+.app-segmented-control {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-segmented-control::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── JOB LIST: PREMIUM RATE DISPLAY ────────────────────────────────────── */
+
+.job-rate-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.job-rate-value {
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+}
+
+.job-rate-unit {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+/* ─── SUPPORT TICKET: STATUS CARDS ──────────────────────────────────────── */
+
+.support-ticket-row {
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  transition: background 0.12s ease;
+  cursor: pointer;
+}
+
+.support-ticket-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.support-ticket-row:last-child {
+  border-bottom: none;
+}
+
+/* ─── PAYMENT ROW: TRANSACTION HISTORY ──────────────────────────────────── */
+
+.payment-row-amount {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-row-amount--credit { color: var(--status-success); }
+.payment-row-amount--debit  { color: var(--brand-text); }
+
+/* ─── GUARD BADGE PANEL: CREDENTIAL STATUS CARD ─────────────────────────── */
+
+.guard-badge-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-app-xl);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  text-align: center;
+  gap: 1rem;
+}
+
+/* ─── STAFF OVERVIEW: ACTIVITY TIMELINE ─────────────────────────────────── */
+
+.activity-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.625rem 0;
+}
+
+.activity-timeline-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.activity-timeline-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.activity-timeline-connector {
+  width: 1px;
+  flex: 1;
+  background: var(--brand-border);
+  margin: 2px 0;
+}
+
+/* ─── MESSAGES: THREAD HEADER ────────────────────────────────────────────── */
+
+.message-thread-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+.message-thread-header-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ─── GUIDE DOCUMENT: MARKDOWN BODY ─────────────────────────────────────── */
+
+.guide-doc-body {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--brand-text);
+}
+
+.guide-doc-body h1, .guide-doc-body h2, .guide-doc-body h3 {
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.guide-doc-body h1 { font-size: 1.875rem; font-weight: 900; }
+.guide-doc-body h2 { font-size: 1.375rem; font-weight: 800; }
+.guide-doc-body h3 { font-size: 1.125rem; font-weight: 700; }
+
+.guide-doc-body p {
+  margin-bottom: 1em;
+}
+
+.guide-doc-body ul, .guide-doc-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+.guide-doc-body li {
+  margin-bottom: 0.375rem;
+}
+
+.guide-doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  color: var(--brand-primary);
+}
+
+/* ─── INSTALL PROMPT: PWA BANNER ─────────────────────────────────────────── */
+
+.pwa-install-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+  box-shadow: var(--shadow-card);
+}
+
+/* ─── LEGAL PAGES: CLEAN DOCUMENT LAYOUT ────────────────────────────────── */
+
+.legal-doc-body {
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--brand-text);
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.legal-doc-body h1 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc-body h2 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.legal-doc-body p {
+  margin-bottom: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+/* ─── SETTINGS SCREEN: TOGGLE ROWS ──────────────────────────────────────── */
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.settings-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.settings-section {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.settings-section-head {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  padding: 0.75rem 1.25rem 0.5rem;
+}
+
+/* ─── GUARD MARKETPLACE: FILTER CHIPS ───────────────────────────────────── */
+
+.marketplace-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.marketplace-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── INLINE HELP TEXT: CONSISTENT ──────────────────────────────────────── */
+
+.app-help-text {
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--brand-text-muted);
+  margin-top: 0.375rem;
+}
+
+.app-error-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-danger);
+  margin-top: 0.375rem;
+}
+
+/* ─── ACCOUNT PENDING SCREEN ─────────────────────────────────────────────── */
+
+.account-pending-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.account-pending-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--status-warning) 12%, var(--brand-bg-sec));
+  color: var(--status-warning);
+  margin-bottom: 0.5rem;
+}
+
+.account-pending-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  color: var(--brand-text);
+}
+
+.account-pending-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--brand-text-muted);
+  max-width: 28rem;
+}
+
+/* ─── THEME TOGGLE: FINAL POLISH ─────────────────────────────────────────── */
+
+.theme-toggle {
+  background: var(--brand-bg-sec) !important;
+  border-color: var(--brand-border) !important;
+  transition: border-color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border)) !important;
+}
+
+html.theme-light .theme-toggle {
+  background: var(--brand-elevated) !important;
+  border-color: var(--brand-border) !important;
+}
+
+/* ─── LANDING PAGE CTA BUTTONS: SHARP IDENTITY ──────────────────────────── */
+
+/* Client CTA — full sage-green fill */
+.landing-path-card-client .landing-path-card-action--accent {
+  font-weight: 900;
+  font-size: 0.9375rem;
+}
+
+/* Guard CTA — strong black */
+.landing-path-card-guard .landing-path-card-action {
+  font-weight: 900;
+  font-size: 0.9375rem;
+}
+
+/* ─── APP FORM: CHECKBOX AND RADIO CUSTOM ────────────────────────────────── */
+
+.app-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.3125rem;
+  border: 1.5px solid var(--brand-border);
+  background: var(--brand-bg-sec);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+}
+
+.app-checkbox:checked {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.app-checkbox:checked::after {
+  content: "";
+  width: 5px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.app-checkbox:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ─── PROGRESS BAR: BRAND CONSISTENT ────────────────────────────────────── */
+
+.app-progress-track {
+  height: 4px;
+  background: var(--brand-border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.app-progress-fill {
+  height: 100%;
+  background: var(--brand-primary);
+  border-radius: var(--radius-pill);
+  transition: width 0.3s ease;
+}
+
+.app-progress-fill--success { background: var(--status-success); }
+.app-progress-fill--warning { background: var(--status-warning); }
+.app-progress-fill--danger  { background: var(--status-danger); }
+
+/* ─── CAROUSEL / SCROLL SNAP CONTAINERS ─────────────────────────────────── */
+
+.scroll-snap-x {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  gap: 0.75rem;
+  padding: 0.125rem 0.25rem;
+}
+
+.scroll-snap-x::-webkit-scrollbar { display: none; }
+
+.scroll-snap-item {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+/* ─── GUARDR GLOBAL: LINK CONSISTENCY ───────────────────────────────────── */
+
+a.app-link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-underline-offset: 3px;
+  transition: color 0.12s ease;
+}
+
+a.app-link:hover {
+  color: var(--brand-primary-hover);
+  text-decoration: underline;
+}
+
+/* ─── DIVIDER WITH LABEL ─────────────────────────────────────────────────── */
+
+.app-divider-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+  margin: 1rem 0;
+}
+
+.app-divider-label::before,
+.app-divider-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--brand-border);
+}
+
+/* ─── LANDING PAGE: RESPONSIVE COVERAGE GRID ─────────────────────────────── */
+
+@media (min-width: 768px) {
+  .landing-coverage-grid--tablet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ─── DARK/GREY THEME: LANDING FEATURE GUARD COLUMN ─────────────────────── */
+
+html.theme-dark .landing-feature-column--guard,
+html.theme-grey .landing-feature-column--guard {
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+}
+
+/* ─── ALL THEMES: LANDING SECTION CONSISTENT PADDING ─────────────────────── */
+
+@media (max-width: 639px) {
+  .landing-section {
+    padding-block: 3rem;
+  }
+
+  .landing-how-card {
+    padding: 1.25rem;
+  }
+
+  .landing-feature-column--guard {
+    padding: 1.5rem;
+  }
+}
+
+/* ─── GUARDR WORDMARK: HERO TREATMENT ────────────────────────────────────── */
+
+html.theme-dark .landing-wordmark {
+  color: #f5f5f5;
+}
+
+html.theme-grey .landing-wordmark {
+  color: var(--brand-text);
+}
+
+/* ─── AUTH: ROLE CARDS EQUAL HEIGHT ─────────────────────────────────────── */
+
+.auth-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+/* ─── ONBOARDING TOUR: STEP INDICATORS ──────────────────────────────────── */
+
+.onboarding-step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.onboarding-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--brand-border);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.onboarding-dot-active {
+  background: var(--brand-primary);
+  transform: scale(1.4);
+}
+
+/* ─── GUARD AVAILABILITY CALENDAR: POLISH ───────────────────────────────── */
+
+.availability-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.availability-day-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-app-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.availability-day-cell:hover {
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-primary);
+}
+
+.availability-day-available {
+  background: color-mix(in srgb, var(--status-success) 12%, transparent);
+  color: var(--status-success);
+}
+
+.availability-day-unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── LOADING STATES: CONSISTENT SKELETON SIZES ─────────────────────────── */
+
+.skeleton-title  { height: 1.5rem; border-radius: 0.75rem; }
+.skeleton-header { height: 1.125rem; border-radius: 0.5625rem; }
+.skeleton-body   { height: 0.875rem; border-radius: 0.4375rem; }
+.skeleton-sm     { height: 0.75rem; border-radius: 0.375rem; }
+
+/* ─── SWITCH TOGGLE COMPONENT ────────────────────────────────────────────── */
+
+.app-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  background: var(--brand-border);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.app-switch::after {
+  content: "";
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.app-switch-on {
+  background: var(--brand-primary);
+}
+
+.app-switch-on::after {
+  transform: translateX(1.25rem);
+}
+
+/* ─── LEGAL ACCEPTANCE CHECKBOX ROW ─────────────────────────────────────── */
+
+.legal-accept-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+/* ─── GUARD STANDING CREW: MEMBER CARDS ─────────────────────────────────── */
+
+.crew-member-card {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-app-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  transition: border-color 0.15s ease;
+}
+
+.crew-member-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+}
+
+/* ─── GUARD RATE DISPLAY: LARGE HERO RATE ────────────────────────────────── */
+
+.guard-hero-rate {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-text);
+}
+
+.guard-hero-rate-unit {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  letter-spacing: 0;
+}
+
+/* ─── EARNINGS BREAKDOWN: CLEAN ACCOUNTING TABLE ─────────────────────────── */
+
+.earnings-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 60%, transparent);
+  font-size: 0.875rem;
+}
+
+.earnings-line:last-child {
+  border-bottom: none;
+}
+
+.earnings-line-total {
+  font-weight: 900;
+  font-size: 1rem;
+  border-top: 2px solid var(--brand-border);
+  padding-top: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.earnings-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ─── SCROLL-TO-TOP ANCHOR ───────────────────────────────────────────────── */
+
+.scroll-top-anchor {
+  scroll-margin-top: 4rem;
+}
+
+/* ─── PLATFORM ANNOUNCEMENT BANNER ──────────────────────────────────────── */
+
+.platform-announcement {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-app-lg);
+  background: color-mix(in srgb, var(--status-info) 8%, var(--brand-bg-sec));
+  border: 1px solid color-mix(in srgb, var(--status-info) 22%, var(--brand-border));
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--brand-text);
+}
+
+/* ─── REFINED TYPOGRAPHY: CONSISTENT HIERARCHY ───────────────────────────── */
+
+/* Screen/page titles — strongest on mobile */
+.screen-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: var(--brand-text);
+}
+
+/* Section subheadings */
+.section-title {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--brand-text);
+}
+
+/* Label caps */
+.label-caps {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+/* ─── HOVER SURFACE: CONSISTENT PRESS FEEDBACK ───────────────────────────── */
+
+.hover-surface {
+  transition: background 0.12s ease;
+}
+
+.hover-surface:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--brand-bg));
+}
+
+.hover-surface:active {
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-bg));
+}
+
+/* ─── LANDING PAGE: HERO SECTION FINAL SIZES ─────────────────────────────── */
+
+/* Remove overly tight letter-spacing on landing titles at large sizes */
+@media (min-width: 1024px) {
+  .landing-section-title {
+    letter-spacing: -0.04em;
+  }
+
+  .landing-final-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+  }
+}
+
+/* ─── THEME-SPECIFIC PREVIEW FRAME ──────────────────────────────────────── */
+
+html.theme-dark .landing-preview-map {
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--brand-primary) 28%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 70% 65%, color-mix(in srgb, var(--brand-primary) 16%, transparent) 0%, transparent 40%),
+    linear-gradient(180deg, #0d1a0d, #111111);
+}
+
+html.theme-grey .landing-preview-map {
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--brand-primary) 30%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 70% 65%, color-mix(in srgb, var(--brand-primary) 18%, transparent) 0%, transparent 40%),
+    linear-gradient(180deg, #172017, #20272B);
+}
+
+/* ─── LANDING RULES SECTION: IMPROVED PILL DISPLAY ──────────────────────── */
+
+.landing-rules-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: left;
+  padding: 0.875rem 1rem;
+}
+
+.landing-rules-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--brand-primary);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* ─── SECTION DIVIDER LINE ────────────────────────────────────────────────── */
+
+.section-divider {
+  height: 1px;
+  background: var(--brand-border);
+  margin: 0;
+}
+
+/* ─── END DESIGN COMPLETION LAYER ────────────────────────────────────────── */
+
+/* ─── EXPERIENCE BADGE: CENTERED VARIANT ─────────────────────────────────── */
+
+.experience-badge--center {
+  justify-content: center;
+  display: flex;
+  margin-inline: auto;
+}
+
+/* ─── LANDING COVERAGE SECTION: RESPONSIVE COVERAGE IMPROVEMENTS ─────────── */
+
+.landing-coverage-inner {
+  max-width: 56rem;
+}
+
+/* Consistent coverage tag sizing */
+.landing-coverage-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+}
+
+/* ─── PLATFORM HIGHLIGHTS: MOBILE STACKING ───────────────────────────────── */
+
+@media (max-width: 639px) {
+  .landing-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── LANDING WORDMARK: HEADER BASELINE ──────────────────────────────────── */
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* ─── LANDING PATH CARDS: UNIFORM HEIGHT ─────────────────────────────────── */
+
+.landing-path-grid > .landing-path-card {
+  min-height: 9rem;
+}
+
+/* ─── APP BUTTON: DISABLED OPACITY ───────────────────────────────────────── */
+
+.app-button-primary:disabled,
+.app-button-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── FINAL ───────────────────────────────────────────────────────────────── */
