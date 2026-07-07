@@ -13898,3 +13898,585 @@ html.theme-dark .app-chat-readonly-footer {
 }
 
 /* ─── END MESSENGER POLISH LAYER ────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — RESPONSIVE LAYOUT SYSTEM
+   Three completely different experiences: mobile / tablet / desktop.
+   Mobile: compact touch-first. Tablet: split panes, wider content.
+   Desktop: persistent sidebar nav, multi-column layouts, no bottom nav.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── DESKTOP SIDEBAR NAV: hidden by default ─────────────────────────────── */
+
+.role-side-nav {
+  display: none;
+}
+
+/* ─── DESKTOP: grid layout — sidebar + main column ───────────────────────── */
+
+body[data-form-factor="desktop"] .role-app-shell {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  grid-template-rows: auto 1fr;
+  /* sidebar spans all rows; header + main in column 2 */
+}
+
+body[data-form-factor="desktop"] .role-side-nav {
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  height: 100%;
+  overflow: hidden;
+  background: var(--brand-bg-sec);
+  border-right: 1px solid var(--brand-border);
+  padding: 0;
+  z-index: 10;
+}
+
+html.theme-dark body[data-form-factor="desktop"] .role-side-nav {
+  background: #0a0a0a;
+  border-right-color: #1a1a1a;
+}
+
+html.theme-light body[data-form-factor="desktop"] .role-side-nav {
+  background: #f8f9f8;
+  border-right-color: #e8ebe8;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > main {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Hide bottom nav on desktop */
+body[data-form-factor="desktop"] .role-app-shell > nav.bottom-nav-bar {
+  display: none !important;
+}
+
+/* ─── SIDEBAR BRAND AREA ─────────────────────────────────────────────────── */
+
+.role-side-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--brand-border);
+  flex-shrink: 0;
+}
+
+html.theme-dark .role-side-nav-brand {
+  border-bottom-color: #1a1a1a;
+}
+
+.role-side-nav-brand-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--brand-text);
+  user-select: none;
+}
+
+.role-side-nav-brand-accent {
+  color: var(--brand-primary);
+}
+
+/* ─── SIDEBAR NAV ITEMS ──────────────────────────────────────────────────── */
+
+.role-side-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.75rem 0.625rem;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.role-side-nav-items::-webkit-scrollbar { display: none; }
+
+.role-side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--brand-text-muted);
+  transition: background 0.12s ease, color 0.12s ease;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  position: relative;
+}
+
+.role-side-nav-item:hover:not(.role-side-nav-item-active) {
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+  color: var(--brand-text);
+}
+
+.role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+html.theme-dark .role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+
+.role-side-nav-item-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.role-side-nav-item-label {
+  flex: 1;
+  min-width: 0;
+  truncate: true;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-side-nav-item-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 0.5625rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  background: var(--status-danger);
+  color: #ffffff;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── SIDEBAR FOOTER (account menu) ─────────────────────────────────────── */
+
+.role-side-nav-footer {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid var(--brand-border);
+}
+
+html.theme-dark .role-side-nav-footer {
+  border-top-color: #1a1a1a;
+}
+
+/* Sidebar footer: account menu fills width */
+.role-side-nav-footer .account-menu-trigger {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.625rem;
+  gap: 0.75rem;
+}
+
+/* Hide the header account menu on desktop (sidebar footer has it) */
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header .account-menu-trigger,
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header--compact .account-menu-trigger {
+  display: none;
+}
+
+/* Adjust header padding on desktop (no account menu) */
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* ─── DESKTOP HEADER: cleaner with sidebar ───────────────────────────────── */
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header h1 {
+  font-size: 1.5rem !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* ─── TABLET: keep bottom nav but improve layout ────────────────────────── */
+
+body[data-form-factor="tablet"] .role-app-shell > .app-screen-header h1 {
+  font-size: 1.25rem;
+}
+
+/* ─── APP SCREEN: constrain and center on larger screens ─────────────────── */
+
+/* Guard experience content shell on desktop */
+body[data-form-factor="desktop"] .role-experience-guard .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+/* Wider content on desktop for list screens */
+body[data-form-factor="desktop"] .role-experience-guard .app-screen--wide {
+  max-width: 68rem;
+}
+
+/* ─── DESKTOP: content area improvements ────────────────────────────────── */
+
+/* Client content shell is wider on desktop */
+body[data-form-factor="desktop"] .client-content-shell {
+  max-width: min(1100px, 100%);
+  margin-inline: auto;
+}
+
+body[data-form-factor="tablet"] .client-content-shell {
+  max-width: min(900px, 100%);
+  margin-inline: auto;
+}
+
+/* Guard form/profile shells get constrained width */
+body[data-form-factor="desktop"] .client-form-shell,
+body[data-form-factor="desktop"] .guard-form-shell {
+  max-width: min(44rem, 100%);
+  margin-inline: auto;
+}
+
+body[data-form-factor="tablet"] .client-form-shell,
+body[data-form-factor="tablet"] .guard-form-shell {
+  max-width: min(40rem, 100%);
+  margin-inline: auto;
+}
+
+/* ─── DASHBOARD GRIDS: more columns on larger screens ─────────────────────── */
+
+/* Glance tiles (client home) */
+body[data-form-factor="tablet"] .client-home-screen .grid-cols-2 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body[data-form-factor="desktop"] .client-home-screen .grid-cols-2 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Quick action tiles: more per row on desktop */
+body[data-form-factor="desktop"] .client-home-quick-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+body[data-form-factor="tablet"] .client-home-quick-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+/* Metric strip: 4 columns on desktop */
+body[data-form-factor="desktop"] .app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+body[data-form-factor="tablet"] .app-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+/* ─── SECTION PADDING: more breathing room on larger screens ──────────────── */
+
+body[data-form-factor="desktop"] .app-section {
+  padding-inline: 1.5rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header {
+  padding-inline: 1.5rem;
+}
+
+body[data-form-factor="tablet"] .app-screen-header {
+  padding-inline: 1.25rem;
+}
+
+/* ─── MESSAGES: wider split on desktop ─────────────────────────────────── */
+
+body[data-form-factor="desktop"] .app-messages-split-list {
+  width: 24rem;
+  max-width: 32%;
+}
+
+body[data-form-factor="desktop"] .app-messages-split-list {
+  min-width: 20rem;
+}
+
+/* ─── MOBILE: compact, optimized touch experience ─────────────────────────── */
+
+body[data-form-factor="mobile"] .role-app-shell > .app-screen-header {
+  padding-block: 0.625rem;
+}
+
+body[data-form-factor="mobile"] .app-section {
+  padding-inline: 1rem;
+}
+
+/* Mobile: full-width cards, no excessive side margins */
+body[data-form-factor="mobile"] .app-item-card {
+  border-radius: 0 !important;
+}
+
+/* Mobile: larger tap targets */
+body[data-form-factor="mobile"] .app-inbox-tab {
+  padding: 0.875rem 0.75rem;
+}
+
+body[data-form-factor="mobile"] .app-inbox-row {
+  min-height: 4.75rem;
+}
+
+/* ─── DESKTOP: cards with slightly more padding ────────────────────────── */
+
+body[data-form-factor="desktop"] .app-card,
+body[data-form-factor="desktop"] .uber-card {
+  padding: 1.5rem;
+}
+
+body[data-form-factor="desktop"] .wf-metric-tile {
+  padding: 1.25rem 1.5rem;
+}
+
+/* ─── LANDING PAGE: more dramatic desktop/tablet differences ──────────────── */
+
+/* Desktop: hero has even more vertical breathing room */
+body[data-form-factor="desktop"] .landing-page--desktop .landing-hero-inner {
+  padding-block: 7rem 9rem;
+}
+
+/* Desktop: section padding larger */
+body[data-form-factor="desktop"] .landing-page--desktop .landing-section {
+  padding-block: 5.5rem;
+}
+
+/* Tablet: section padding slightly more than mobile */
+body[data-form-factor="tablet"] .landing-page--tablet .landing-section {
+  padding-block: 4rem;
+}
+
+/* ─── TABLET: bottom nav slightly taller for touch comfort ────────────────── */
+
+body[data-form-factor="tablet"] .bottom-nav-inner {
+  min-height: 4rem;
+}
+
+/* ─── DESKTOP: app-screen-header has subtitle on same row for wider space ── */
+
+body[data-form-factor="desktop"] .app-screen-header .min-w-0.flex-1 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header .min-w-0.flex-1 > p {
+  /* subtitle inline with title on desktop */
+  margin: 0;
+}
+
+/* ─── STAFF SIDEBAR IMPROVEMENTS on desktop ─────────────────────────────── */
+
+body[data-form-factor="desktop"] .staff-sidebar {
+  width: 16rem;
+}
+
+/* ─── FORM FIELDS: 2-column on tablet/desktop ────────────────────────────── */
+
+/* Auth form fields */
+body[data-form-factor="tablet"] .auth-form-2col,
+body[data-form-factor="desktop"] .auth-form-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+/* ─── DESKTOP: hover states are more visible (mouse users) ───────────────── */
+
+body[data-form-factor="desktop"] .app-inbox-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-surface));
+}
+
+body[data-form-factor="desktop"] .landing-path-card:hover {
+  cursor: pointer;
+}
+
+/* ─── TABLET SPLIT VIEW: improved panel sizes ────────────────────────────── */
+
+body[data-form-factor="tablet"] .tablet-split-panel {
+  grid-template-columns: minmax(260px, 36%) 1fr;
+}
+
+body[data-form-factor="desktop"] .tablet-split-panel {
+  grid-template-columns: minmax(280px, 32%) 1fr;
+  gap: 1.75rem;
+}
+
+/* ─── GUARD DASHBOARD HOME: glance tile grid ─────────────────────────────── */
+
+body[data-form-factor="desktop"] .guard-home-glance-grid,
+body[data-form-factor="tablet"] .guard-home-glance-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ─── DESKTOP/TABLET: app screen gets inner padding for breathing room ──── */
+
+body[data-form-factor="desktop"] .app-screen-padded {
+  padding: 1.5rem;
+}
+
+body[data-form-factor="tablet"] .app-screen-padded {
+  padding: 1.25rem;
+}
+
+body[data-form-factor="mobile"] .app-screen-padded {
+  padding: 1rem;
+}
+
+/* ─── DESKTOP: wider inbox list in messages ─────────────────────────────── */
+
+@media (min-width: 1024px) {
+  body[data-form-factor="desktop"] .app-messages-split-list {
+    width: 26rem;
+    max-width: 34%;
+  }
+}
+
+/* ─── TYPOGRAPHY: scale up on desktop ───────────────────────────────────── */
+
+body[data-form-factor="desktop"] .screen-title {
+  font-size: 1.75rem;
+}
+
+body[data-form-factor="desktop"] .app-dashboard-hero-title {
+  font-size: 2.25rem;
+}
+
+body[data-form-factor="tablet"] .app-dashboard-hero-title {
+  font-size: 2rem;
+}
+
+/* ─── DESKTOP: app-screen-header inline layout ──────────────────────────── */
+
+body[data-form-factor="desktop"] .app-screen-header {
+  min-height: 3.75rem;
+}
+
+/* ─── REMOVE EXCESS CHROME: desktop has sidebar identity, header is minimal ─ */
+
+/* On desktop, the header doesn't need an account avatar since sidebar has it */
+body[data-form-factor="desktop"] .role-app-shell .account-menu-trigger {
+  display: none;
+}
+
+body[data-form-factor="desktop"] .role-side-nav .account-menu-trigger {
+  display: flex !important;
+}
+
+/* ─── MOBILE: safe insets ───────────────────────────────────────────────── */
+
+body[data-form-factor="mobile"] .app-screen {
+  padding-bottom: 0;
+}
+
+/* ─── END RESPONSIVE LAYOUT SYSTEM ─────────────────────────────────────── */
+
+/* ─── APP SCREEN HEADER: responsive title sizing ─────────────────────────── */
+
+.app-screen-header-title {
+  font-size: 1.1875rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+body[data-form-factor="tablet"] .app-screen-header-title {
+  font-size: 1.3125rem;
+}
+
+body[data-form-factor="desktop"] .app-screen-header-title {
+  font-size: 1.5rem;
+}
+
+.app-screen-header-subtitle {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--brand-text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ─── DESKTOP: sidebar active indicator on nav items ────────────────────── */
+
+.role-side-nav-item-active::before {
+  content: "";
+  position: absolute;
+  left: -0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.25rem;
+  border-radius: 0 2px 2px 0;
+  background: var(--brand-primary);
+}
+
+/* ─── TABLET/DESKTOP: client home stat tiles larger ─────────────────────── */
+
+body[data-form-factor="tablet"] .client-home-stat-pill,
+body[data-form-factor="desktop"] .client-home-stat-pill {
+  padding: 0.875rem 0.75rem;
+}
+
+body[data-form-factor="desktop"] .client-home-stat-value {
+  font-size: 2.25rem;
+}
+
+body[data-form-factor="tablet"] .client-home-stat-value {
+  font-size: 2rem;
+}
+
+/* ─── DESKTOP: live card wider ───────────────────────────────────────────── */
+
+body[data-form-factor="desktop"] .client-home-live-card {
+  border-radius: var(--radius-app-lg);
+}
+
+/* ─── DESKTOP: app sections get more space ──────────────────────────────── */
+
+body[data-form-factor="desktop"] .app-section {
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+body[data-form-factor="desktop"] .app-section-head {
+  margin-bottom: 1rem;
+}
+
+/* ─── MOBILE: compact section spacing ───────────────────────────────────── */
+
+body[data-form-factor="mobile"] .app-section {
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
+}
+
+/* ─── DESKTOP: staff sidebar wider ──────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  body[data-form-factor="desktop"] .staff-sidebar {
+    width: 16rem;
+  }
+}
+
+/* ─── DESKTOP: account menu in sidebar footer fills width ───────────────── */
+
+body[data-form-factor="desktop"] .role-side-nav-footer > * {
+  width: 100%;
+}
+
+/* ─── END HEADER RESPONSIVE ─────────────────────────────────────────────── */
