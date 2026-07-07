@@ -295,21 +295,21 @@ export function ClientHomeScreen({
 
       {recentGuards.length > 0 && onHireGuard && (
         <AppDashboardZone title="Your guards" actionLabel="Browse all" onAction={() => runAction('guards')}>
-          <div className="app-scroll-row scrollbar-hide -mx-5 px-5 pb-1">
-            {recentGuards.map((guard) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-5 pb-1">
+            {recentGuards.slice(0, 6).map((guard) => (
               <div
                 key={guard.id}
-                className="shrink-0 snap-start w-36 app-item-card flex-col items-center gap-2 !p-3 text-center !border !border-brand-border"
+                className="app-item-card flex-col items-center gap-2 !p-3 text-center !border !border-brand-border min-w-0"
               >
                 <button
                   type="button"
                   onClick={() => runProtectedCallback(() => onViewGuard?.(guard))}
-                  className={`flex flex-col items-center gap-2 w-full ${protectedActionClass}`}
+                  className={`flex flex-col items-center gap-2 w-full min-w-0 ${protectedActionClass}`}
                   aria-disabled={accountPending}
                 >
                   <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" className="w-12 h-12 text-sm" />
-                  <div>
-                    <p className="font-semibold text-xs leading-snug line-clamp-2">{guard.name}</p>
+                  <div className="w-full min-w-0">
+                    <p className="font-semibold text-xs leading-snug line-clamp-2 truncate">{guard.name}</p>
                     <p className="text-[10px] text-brand-text-muted flex items-center justify-center gap-0.5 mt-0.5">
                       <Star className="w-2.5 h-2.5 fill-brand-primary text-brand-primary" />
                       {guard.rating.toFixed(1)}

@@ -1641,16 +1641,13 @@ html.theme-grey {
   opacity: 0.8;
 }
 
-/* ─── FORMERLY HORIZONTAL SCROLL — NOW WRAPPING STACK ───── */
+/* ─── WRAPPING ROW (formerly horizontal scroll — now grid/wrap) ─── */
 .app-scroll-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 0.75rem;
+  width: 100%;
   max-width: 100%;
-}
-
-.app-scroll-row > * {
-  flex-shrink: 0;
 }
 
 .app-section-title {
@@ -2137,20 +2134,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .map-browse-scroll,
 .client-map-browse-scroll {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: 0.625rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
   padding: 0 0.75rem 0.5rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
 }
 
 .map-browse-plus-wrap,
 .client-map-browse-plus-wrap {
   position: relative;
-  flex-shrink: 0;
-  scroll-snap-align: start;
+  min-width: 0;
 }
 
 .map-browse-plus-card,
@@ -3285,27 +3279,23 @@ a.app-item-card:active,
 }
 
 /* Formerly horizontal scroll — now wrapping */
+/* .app-h-scroll: converted to wrapping grid — no horizontal scroll */
 .app-h-scroll {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.875rem;
+  width: 100%;
   max-width: 100%;
   padding: 0 0 0.25rem;
-  scrollbar-width: none;
-}
-
-.app-h-scroll::-webkit-scrollbar {
-  display: none;
 }
 
 .app-h-scroll > * {
-  scroll-snap-align: start;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .app-h-tile {
-  min-width: 11rem;
-  max-width: 13rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .app-h-tile-label {
@@ -12767,16 +12757,12 @@ html.theme-dark .landing-mobile-cta-bar {
 
 /* ─── SEGMENTED TABS: UNDERLINE INDICATOR PRECISION ────────────────────── */
 
+/* Segmented control: tabs fit in viewport — no horizontal scroll */
 .app-segmented-control {
   display: flex;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.app-segmented-control::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ─── JOB LIST: PREMIUM RATE DISPLAY ────────────────────────────────────── */
@@ -13014,17 +13000,11 @@ html.theme-dark .landing-mobile-cta-bar {
 .marketplace-filter-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--brand-border);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.marketplace-filter-bar::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 /* ─── INLINE HELP TEXT: CONSISTENT ──────────────────────────────────────── */
@@ -13172,22 +13152,19 @@ html.theme-light .theme-toggle {
 
 /* ─── CAROUSEL / SCROLL SNAP CONTAINERS ─────────────────────────────────── */
 
+/* .scroll-snap-x: converted to wrapping grid — no horizontal scroll */
 .scroll-snap-x {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
   gap: 0.75rem;
-  padding: 0.125rem 0.25rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.125rem 0;
 }
 
-.scroll-snap-x::-webkit-scrollbar { display: none; }
-
 .scroll-snap-item {
-  flex-shrink: 0;
-  scroll-snap-align: start;
+  min-width: 0;
+  width: 100%;
 }
 
 /* ─── GUARDR GLOBAL: LINK CONSISTENCY ───────────────────────────────────── */
@@ -13691,11 +13668,11 @@ html.theme-light .app-chat-bubble-outgoing {
   height: 0.8125rem;
 }
 
-/* ─── Inbox tabs: messenger-app tab bar ──────────────────────────────────── */
+/* ─── Inbox tabs: fit all tabs in viewport — no horizontal scroll ────────── */
 
 .app-inbox-tabs {
-  overflow-x: auto;
-  flex-wrap: nowrap;
+  overflow: hidden;       /* never scroll horizontally */
+  flex-wrap: nowrap;      /* single row */
   background: var(--brand-surface);
   border-bottom: 1px solid var(--brand-border);
 }
@@ -13711,18 +13688,21 @@ html.theme-light .app-inbox-tabs {
 }
 
 .app-inbox-tab {
-  padding: 0.75rem 0.875rem;
-  font-size: 0.8125rem;
+  padding: 0.6875rem 0.625rem;   /* tighter padding so 4 tabs always fit */
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   flex: 1;
-  min-width: max-content;
+  min-width: 0;                   /* let flex squeeze instead of overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-inbox-tab::after {
   bottom: -1px;
-  left: 12%;
-  right: 12%;
+  left: 10%;
+  right: 10%;
 }
 
 .app-inbox-tab-active {
@@ -14480,3 +14460,219 @@ body[data-form-factor="desktop"] .role-side-nav-footer > * {
 }
 
 /* ─── END HEADER RESPONSIVE ─────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR — NO HORIZONTAL SCROLL ENFORCEMENT
+   Everything must fit within the viewport. No left/right sliding ever.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Global: clip all horizontal overflow at document root ─────────────── */
+
+html,
+body,
+#root {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── All shell containers: enforce no horizontal overflow ──────────────── */
+
+.page-shell,
+.role-app-shell,
+.staff-shell,
+.auth-experience-client,
+.auth-experience-guard {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ─── Main content areas: never overflow horizontally ───────────────────── */
+
+.app-screen,
+.role-app-shell main,
+.role-app-shell main > div,
+.client-content-shell,
+.client-form-shell,
+.guard-form-shell {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── All flex children: allow shrinking so they fit ────────────────────── */
+
+.app-screen > *,
+.app-section > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ─── Segmented controls: wrap instead of overflow ─────────────────────── */
+
+.segmented-control {
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.segmented-control-full {
+  flex-wrap: nowrap;   /* full-width stays single row */
+}
+
+/* ─── Quick action rows: always wrap ───────────────────────────────────── */
+
+.app-quick-action-row {
+  flex-wrap: wrap !important;
+  overflow-x: hidden !important;
+}
+
+/* ─── Card stacks: full width only ─────────────────────────────────────── */
+
+.app-item-card-stack {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ─── Text: always truncate on single-line elements ────────────────────── */
+
+.app-screen-header h1,
+.app-subscreen-title,
+.app-chat-header-title,
+.app-inbox-row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ─── Inbox rows: never overflow their container ───────────────────────── */
+
+.app-inbox-row {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.app-inbox-row-main {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─── Forms: inputs must not stretch beyond their container ─────────────── */
+
+input,
+select,
+textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ─── Images and media: never overflow ─────────────────────────────────── */
+
+img,
+video,
+svg {
+  max-width: 100%;
+}
+
+/* ─── Table overflow: always wrap in a scrollable container ─────────────── */
+
+/* Tables inside overflow-x-auto wrappers scroll only within their container */
+.overflow-x-auto {
+  max-width: 100%;
+}
+
+/* ─── Chip / badge rows: wrap instead of overflow ──────────────────────── */
+
+.chip-row,
+.badge-row,
+.filter-row {
+  flex-wrap: wrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* ─── Landing page: never overflow on any device ───────────────────────── */
+
+.landing-page,
+.landing-container,
+.landing-hero,
+.landing-section {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── Bottom navigation: always fits in viewport width ─────────────────── */
+
+.bottom-nav-bar {
+  overflow: hidden;
+  max-width: 100vw;
+}
+
+.bottom-nav-inner {
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Desktop sidebar: never causes horizontal overflow ─────────────────── */
+
+.role-side-nav {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.role-side-nav-item {
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ─── Map containers: clip within their bounds ──────────────────────────── */
+
+.guardr-map-root,
+.guard-map-layout,
+.client-map-layout,
+.staff-map-layout {
+  overflow: hidden;
+}
+
+/* ─── Messages hub: contained ───────────────────────────────────────────── */
+
+.app-messages-hub,
+.app-messages-split,
+.app-messages-split-list,
+.app-messages-split-detail {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── Chat pane: contained ──────────────────────────────────────────────── */
+
+.app-chat-pane,
+.app-chat-thread,
+.app-chat-bubble {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── App cards: never wider than container ─────────────────────────────── */
+
+.app-card,
+.uber-card,
+.app-item-card,
+.wf-list-card {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ─── Staff panels: contained ───────────────────────────────────────────── */
+
+.staff-main,
+.staff-main-content,
+.staff-pane-body,
+.staff-split-pane,
+.staff-split-pane-list,
+.staff-split-pane-detail {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ─── END NO HORIZONTAL SCROLL ENFORCEMENT ──────────────────────────────── */
