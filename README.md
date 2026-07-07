@@ -102,12 +102,7 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 
 ## Database Migrations
 
-Supabase schema lives in:
-
-1. **`supabase/complete_schema_setup.sql`** — core schema (idempotent, safe to re-run)
-2. **`supabase/platform_v2_extensions.sql`** — auth hardening, audit log, availability, compliance alerts, invoicing, RLS helpers
-
-Run both files in the Supabase SQL Editor for fresh installs or to catch up an existing database.
+Supabase schema lives in **`supabase/complete_schema_setup.sql`**. Run that file in the Supabase SQL Editor for fresh installs or to catch up an existing database (idempotent, safe to re-run). It includes all v1.0 platform extensions (auth linking, audit log, availability, invoicing, RLS helpers).
 
 ## Platform v1.0 Features
 
