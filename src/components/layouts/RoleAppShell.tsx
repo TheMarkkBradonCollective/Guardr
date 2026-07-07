@@ -20,6 +20,8 @@ interface RoleAppShellProps {
   moreMenuTitle?: string;
   fullBleed?: boolean;
   hideHeader?: boolean;
+  headerExtension?: React.ReactNode;
+  headerOverride?: React.ReactNode;
   flatNav?: boolean;
   variant?: 'default' | 'dark';
   experience?: 'client' | 'guard';
@@ -41,6 +43,8 @@ export function RoleAppShell({
   moreMenuTitle = 'More',
   fullBleed = false,
   hideHeader = false,
+  headerExtension,
+  headerOverride,
   flatNav = false,
   variant = 'default',
   experience,
@@ -107,13 +111,18 @@ export function RoleAppShell({
       </aside>
 
       {/* ── Header (all sizes; hidden on desktop when sidebar is active) ── */}
-      {!hideHeader ? (
+      {headerOverride ? (
+        <div className="app-screen-header-slot shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-brand-border bg-brand-surface">
+          {headerOverride}
+        </div>
+      ) : !hideHeader ? (
         <AppScreenHeader
           title={title}
           subtitle={subtitle}
           locationLabel={locationLabel}
           accountMenu={accountMenu}
           right={headerRight}
+          extension={headerExtension}
           className={`${isMapMode ? 'app-screen-header--map bg-brand-bg/90 backdrop-blur-xl' : ''}${
             experience ? ` role-header-${experience}` : ''
           }`}

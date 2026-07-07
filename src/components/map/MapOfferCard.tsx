@@ -14,17 +14,20 @@ interface MapOfferCardProps {
   children?: React.ReactNode;
 }
 
-export function MapOfferCard({
-  summary,
-  expanded = false,
-  onClose,
-  onExpand,
-  onPrimaryAction,
-  primaryLabel,
-  children,
-}: MapOfferCardProps) {
+export const MapOfferCard = React.forwardRef<HTMLDivElement, MapOfferCardProps>(function MapOfferCard(
+  {
+    summary,
+    expanded = false,
+    onClose,
+    onExpand,
+    onPrimaryAction,
+    primaryLabel,
+    children,
+  },
+  ref
+) {
   return (
-    <div className={`map-offer-card ${expanded ? 'map-offer-card-expanded' : ''}`}>
+    <div ref={ref} className={`map-offer-card ${expanded ? 'map-offer-card-expanded' : ''}`}>
       <div className="map-offer-card-handle" aria-hidden />
       <div className="map-offer-card-header">
         <div className="min-w-0 flex-1">{summary}</div>
@@ -57,4 +60,4 @@ export function MapOfferCard({
       )}
     </div>
   );
-}
+});

@@ -30,6 +30,7 @@ import { WfBadge } from '../ui/wireframe';
 import { Briefcase, FileText, LifeBuoy, MessageCircle } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { guardForRequest } from '../../lib/clientShift';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
 type InboxTab = 'jobs' | 'support';
 
@@ -51,6 +52,8 @@ interface ClientMessagesPanelProps {
   onOpenCompose?: () => void;
   onOpenReport?: () => void;
   onDetailOpenChange?: (open: boolean) => void;
+  onMessagesChromeChange?: (chrome: MessagesChrome) => void;
+  shellHeaderTrailing?: React.ReactNode;
 }
 
 function formatInboxMeta(iso: string): string {
@@ -80,8 +83,11 @@ export function ClientMessagesPanel({
   onOpenCompose,
   onOpenReport,
   onDetailOpenChange,
+  onMessagesChromeChange,
+  shellHeaderTrailing,
 }: ClientMessagesPanelProps) {
   const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [chatRequestId, setChatRequestId] = useState<string | null>(initialChatRequestId);
   const [chatOpen, setChatOpen] = useState(initialChatOpen);
   const [supportTicketId, setSupportTicketId] = useState<string | null>(initialSupportTicketId);
@@ -167,6 +173,7 @@ export function ClientMessagesPanel({
     : null;
 
   const hasSelection = !!(chatOpen && chatRequest) || !!activeTicket;
+  const embedHeaderInShell = !splitView && hasSelection;
 
   useEffect(() => {
     onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
@@ -221,6 +228,53 @@ export function ClientMessagesPanel({
         ))}
     </div>
   );
+
+  useEffect(() => {
+    if (!onMessagesChromeChange) return;
+
+    const extension = !embedHeaderInShell ? header : null;
+    let override: React.ReactNode | null = null;
+
+    if (embedHeaderInShell) {
+      if (chatOpen && chatRequest) {
+        override = (
+          <AppChatHeader
+            title={chatRequest.title}
+            subtitle={chatRequest.location ?? undefined}
+            onBack={clearSelection}
+            trailing={shellHeaderTrailing}
+          />
+        );
+      } else if (activeTicket) {
+        const isReport = activeTicket.kind === 'report';
+        const threadSubtitle = isReport
+          ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
+          : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
+
+        override = (
+          <AppChatHeader
+            title={activeTicket.subject}
+            subtitle={threadSubtitle}
+            onBack={clearSelection}
+            trailing={shellHeaderTrailing}
+          />
+        );
+      }
+    }
+
+    onMessagesChromeChange({ extension, override });
+    return () => onMessagesChromeChange(EMPTY_MESSAGES_CHROME);
+  }, [
+    onMessagesChromeChange,
+    embedHeaderInShell,
+    activeTab,
+    jobRows.length,
+    supportRowsAll.length,
+    chatOpen,
+    chatRequest,
+    activeTicket,
+    shellHeaderTrailing,
+  ]);
 
   // ── List: filtered by tab ──────────────────────────────
   const list = (
@@ -281,6 +335,7 @@ export function ClientMessagesPanel({
             onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
             onBack={clearSelection}
             hideBackOnDesktop
+            hideShellHeader={embedHeaderInShell}
           />
         </div>
       );
@@ -294,12 +349,14 @@ export function ClientMessagesPanel({
 
       return (
         <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
-          <AppChatHeader
-            title={activeTicket.subject}
-            subtitle={threadSubtitle}
-            onBack={clearSelection}
-            hideBackOnDesktop
-          />
+          {!embedHeaderInShell && (
+            <AppChatHeader
+              title={activeTicket.subject}
+              subtitle={threadSubtitle}
+              onBack={clearSelection}
+              hideBackOnDesktop
+            />
+          )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
               messages={activeTicket.messages.map((msg) => ({
@@ -335,6 +392,7 @@ export function ClientMessagesPanel({
         list={list}
         detail={detailView ?? <div />}
         hasSelection={hasSelection}
+        shellInboxHeader
         emptyDetailTitle="Your conversations"
         emptyDetailHint="Select a job chat or support thread from the inbox"
       />

@@ -38,10 +38,10 @@ interface AppPageTransitionProps {
 /** Cross-fade + slide for tab / section / route changes */
 export function AppPageTransition({ motionKey, children, className = '' }: AppPageTransitionProps) {
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="sync" initial={false}>
       <motion.div
         key={motionKey}
-        initial="initial"
+        initial={false}
         animate="animate"
         exit="exit"
         variants={pageVariants}

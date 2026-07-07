@@ -6554,6 +6554,7 @@ html.theme-light .app-chat-typing-bubble {
 .app-page-transition {
   height: 100%;
   min-height: 0;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -12177,6 +12178,33 @@ html.theme-dark .notification-inbox-item--unread {
   min-height: 3rem;
 }
 
+.app-screen-header--with-extension {
+  padding-bottom: 0;
+}
+
+.app-screen-header-row {
+  width: 100%;
+}
+
+.app-screen-header-extension {
+  width: 100%;
+}
+
+.app-screen-header-extension .app-inbox-tabs {
+  border-bottom: none;
+  background: transparent;
+}
+
+.app-screen-header-slot .app-chat-header {
+  border-bottom: none;
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 /* Crew hub — segmented tabs like Jobs / Messages */
 .crew-hub-screen {
   display: flex;
@@ -14603,14 +14631,18 @@ svg {
 /* ─── Bottom navigation: always fits in viewport width ─────────────────── */
 
 .bottom-nav-bar {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   max-width: 100vw;
 }
 
 .bottom-nav-inner {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 100%;
   max-width: 100%;
+  align-items: flex-end;
+  padding-top: 0.7rem;
 }
 
 /* ─── Desktop sidebar: never causes horizontal overflow ─────────────────── */

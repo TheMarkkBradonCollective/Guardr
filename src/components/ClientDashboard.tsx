@@ -24,6 +24,7 @@ import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppScreen, AppStatusBanner } from './ui/app/AppPrimitives';
+import type { MessagesChrome } from '../lib/messagesChrome';
 
 export type ClientView =
   | 'map'
@@ -111,6 +112,8 @@ interface ClientDashboardProps {
   onRequestsSelectedIdChange?: (jobId: string | null) => void;
   requestsSelectedId?: string | null;
   onMessagesDetailOpenChange?: (open: boolean) => void;
+  onMessagesChromeChange?: (chrome: MessagesChrome) => void;
+  messagesShellHeaderTrailing?: React.ReactNode;
   onTeamDetailOpenChange?: (open: boolean) => void;
 }
 
@@ -175,6 +178,8 @@ export function ClientDashboard({
   onRequestsSelectedIdChange,
   requestsSelectedId = null,
   onMessagesDetailOpenChange,
+  onMessagesChromeChange,
+  messagesShellHeaderTrailing,
   onTeamDetailOpenChange,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
@@ -435,6 +440,8 @@ export function ClientDashboard({
         onOpenCompose={onOpenSupportCompose}
         onOpenReport={onOpenSupportReport}
         onDetailOpenChange={onMessagesDetailOpenChange}
+        onMessagesChromeChange={onMessagesChromeChange}
+        shellHeaderTrailing={messagesShellHeaderTrailing}
       />
     );
   }

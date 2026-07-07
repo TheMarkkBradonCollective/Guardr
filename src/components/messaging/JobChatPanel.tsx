@@ -17,6 +17,7 @@ interface JobChatPanelProps {
   onBack?: () => void;
   compact?: boolean;
   hideBackOnDesktop?: boolean;
+  hideShellHeader?: boolean;
 }
 
 export function JobChatPanel({
@@ -28,6 +29,7 @@ export function JobChatPanel({
   onBack,
   compact = false,
   hideBackOnDesktop = false,
+  hideShellHeader = false,
 }: JobChatPanelProps) {
   const canChat = canParticipateInJobChat(currentUser, request);
   const readOnly = isJobChatReadOnly(request) || thread?.status === 'archived';
@@ -47,7 +49,7 @@ export function JobChatPanel({
 
   return (
     <div className={`flex flex-col ${compact ? 'h-[420px]' : 'h-full'} min-h-0 bg-brand-bg`}>
-      {!compact && onBack && (
+      {!compact && onBack && !hideShellHeader && (
         <AppChatHeader
           title={request.title}
           subtitle={headerSubtitle}

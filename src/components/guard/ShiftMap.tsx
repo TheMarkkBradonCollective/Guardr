@@ -10,6 +10,7 @@ import { useUserLocation } from '../../lib/useUserLocation';
 import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { MapRouteLayer } from '../map/MapRouteLayer';
+import { MapUserInteractionTracker } from '../map/MapUserInteractionTracker';
 import { MapRouteSummary } from '../../lib/mapRouting';
 
 const MAP_VIEWPORT_KEY = 'guardr_map_viewport';
@@ -62,6 +63,7 @@ interface MapControllerProps {
   hadSavedViewport: boolean;
   recenterRef: React.MutableRefObject<(() => void) | null>;
   zoomRef?: React.MutableRefObject<MapZoomControls | null>;
+  suppressPinFlyTo?: boolean;
 }
 
 export interface MapZoomControls {
@@ -74,7 +76,13 @@ export interface MapZoomControls {
  * flies to a pin when it is first selected, and exposes a recenter callback for the
  * locate button. Does NOT auto-follow the user — free roam otherwise.
  */
-function MapController({ selectedPin, userLocation, hadSavedViewport, recenterRef }: MapControllerProps) {
+function MapController({
+  selectedPin,
+  userLocation,
+  hadSavedViewport,
+  recenterRef,
+  suppressPinFlyTo = false,
+}: MapControllerProps) {
   const map = useMap();
   const prevSelectedPinIdRef = useRef<string | null>(null);
   const hasInitialGPSCenteredRef = useRef(false);
@@ -98,13 +106,17 @@ function MapController({ selectedPin, userLocation, hadSavedViewport, recenterRe
     }
   }, [userLocation, map, hadSavedViewport]);
 
-  // Fly to a pin the moment it becomes selected (not on every re-render)
+  // Fly to a pin when selected — skip when a route fit will frame the job instead.
   useEffect(() => {
+    if (suppressPinFlyTo) {
+      prevSelectedPinIdRef.current = selectedPin?.job.id ?? null;
+      return;
+    }
     if (selectedPin && selectedPin.job.id !== prevSelectedPinIdRef.current) {
       map.flyTo([selectedPin.coords.lat, selectedPin.coords.lng], 14, { animate: true, duration: 0.75 });
     }
     prevSelectedPinIdRef.current = selectedPin?.job.id ?? null;
-  }, [selectedPin, map]);
+  }, [selectedPin, map, suppressPinFlyTo]);
 
   return null;
 }
@@ -121,6 +133,25 @@ function MapZoomBridge({ zoomRef }: { zoomRef: React.MutableRefObject<MapZoomCon
       zoomRef.current = null;
     };
   }, [map, zoomRef]);
+
+  return null;
+}
+
+/** Leaflet often renders a blank canvas until the container size is recalculated. */
+function MapInvalidateSize() {
+  const map = useMap();
+
+  useEffect(() => {
+    const syncSize = () => map.invalidateSize();
+    const raf = requestAnimationFrame(syncSize);
+    const timer = window.setTimeout(syncSize, 120);
+    window.addEventListener('resize', syncSize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+      window.removeEventListener('resize', syncSize);
+    };
+  }, [map]);
 
   return null;
 }
@@ -155,6 +186,8 @@ interface ShiftMapProps {
   /** Return the status kind for a job to color-code its blip. Return null to use the default brand color. */
   getPinKind?: (job: ShiftMapJob) => string | null;
   zoomRef?: React.MutableRefObject<MapZoomControls | null>;
+  /** Resets route auto-fit when the selected job changes. */
+  routeFitResetKey?: string;
 }
 
 function pinHourlyRate(job: ShiftMapJob, pinMode: 'guard' | 'staff' | 'client'): number {
@@ -175,6 +208,7 @@ export function ShiftMap({
   onRouteLoadingChange,
   getPinKind,
   zoomRef,
+  routeFitResetKey = '',
 }: ShiftMapProps) {
   const themeMode = useThemeMode();
   const userLocation = useUserLocation(true);
@@ -266,12 +300,15 @@ export function ShiftMap({
         attributionControl={false}
       >
         <MapViewportSaver />
+        <MapInvalidateSize />
+        <MapUserInteractionTracker />
         {zoomRef && <MapZoomBridge zoomRef={zoomRef} />}
         <MapController
           selectedPin={selectedPin}
           userLocation={userLocation}
           hadSavedViewport={hadSavedViewport}
           recenterRef={recenterRef}
+          suppressPinFlyTo={drawRoute && !!routeFrom && !!selectedPin}
         />
         <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
 
@@ -297,6 +334,7 @@ export function ShiftMap({
             to={selectedPin.coords}
             active
             onRoute={handleRouteChange}
+            fitResetKey={routeFitResetKey || selectedPin.job.id}
           />
         )}
 

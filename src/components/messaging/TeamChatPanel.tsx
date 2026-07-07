@@ -18,6 +18,7 @@ interface TeamChatPanelProps {
   onBack?: () => void;
   compact?: boolean;
   hideBackOnDesktop?: boolean;
+  hideShellHeader?: boolean;
 }
 
 export function TeamChatPanel({
@@ -29,6 +30,7 @@ export function TeamChatPanel({
   onBack,
   compact = false,
   hideBackOnDesktop = false,
+  hideShellHeader = false,
 }: TeamChatPanelProps) {
   const canChat = canParticipateInTeamChat(currentUser, request);
   const readOnly = isTeamChatReadOnly(request) || thread?.status === 'archived';
@@ -44,7 +46,7 @@ export function TeamChatPanel({
 
   return (
     <div className={`flex flex-col ${compact ? 'h-[420px]' : 'h-full'} min-h-0 bg-brand-bg`}>
-      {!compact && onBack && (
+      {!compact && onBack && !hideShellHeader && (
         <AppChatHeader
           title={`${request.title} · Team`}
           subtitle={readOnly ? 'Archived' : teamChatRosterLabel(request)}

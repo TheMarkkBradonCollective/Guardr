@@ -24,6 +24,7 @@ import {
   isJobScheduleLocked,
 } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
+import { MapViewportInsetsProvider } from '../../lib/mapViewportInsets';
 
 interface ClientMapScreenProps extends ClientJobActionsBindings {
   requests: SecurityRequest[];
@@ -126,6 +127,7 @@ export function ClientMapScreen({
   };
 
   return (
+    <MapViewportInsetsProvider>
     <div className="h-full min-h-0 relative overflow-hidden guard-map-layout client-map-layout">
       {!showShiftOverlay && (
         <MapPinFilterStepper<ClientMapStatusFilter>
@@ -158,6 +160,7 @@ export function ClientMapScreen({
         onRouteLoadingChange={setRouteLoading}
         getPinKind={(job) => clientMapPinKind(job as SecurityRequest)}
         zoomRef={mapZoomRef}
+        routeFitResetKey={selectedBrowseJobId ?? ''}
       />
 
       {showShiftOverlay && activeLiveJob && activeGuard && (
@@ -217,5 +220,6 @@ export function ClientMapScreen({
         </div>
       )}
     </div>
+    </MapViewportInsetsProvider>
   );
 }

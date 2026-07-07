@@ -4,6 +4,7 @@ import { ClientView } from '../ClientDashboard';
 import { RoleAppShell } from './RoleAppShell';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import { MessagesSquare, Home, Map, ClipboardList, Users, BookOpen } from 'lucide-react';
 
 interface ClientAppLayoutProps {
@@ -17,6 +18,7 @@ interface ClientAppLayoutProps {
   messagesBadge?: number;
   hideHeader?: boolean;
   headerRight?: React.ReactNode;
+  messagesChrome?: MessagesChrome;
 }
 
 const PRIMARY_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
@@ -55,6 +57,7 @@ export function ClientAppLayout({
   messagesBadge = 0,
   hideHeader = false,
   headerRight,
+  messagesChrome = EMPTY_MESSAGES_CHROME,
 }: ClientAppLayoutProps) {
   const clientLabel = currentUser.clientName || currentUser.name;
   const screenTitle = VIEW_TITLES[activeView] ?? 'Client dashboard';
@@ -78,11 +81,18 @@ export function ClientAppLayout({
     <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
   ) : undefined;
 
+  const chromeActive = activeView === 'messages';
+  const shellHeaderOverride = chromeActive ? messagesChrome.override : null;
+  const shellHeaderExtension = chromeActive ? messagesChrome.extension : null;
+  const shellHideHeader = hideHeader && !shellHeaderOverride;
+
   return (
     <RoleAppShell
       title={screenTitle}
       locationLabel={clientLabel}
       headerRight={headerRight}
+      headerExtension={shellHeaderExtension}
+      headerOverride={shellHeaderOverride}
       accountMenu={{
         userName: currentUser.name,
         userSubtitle: currentUser.email,
@@ -105,7 +115,7 @@ export function ClientAppLayout({
       activeNavId={navHighlightView}
       onNavigate={(id) => onNavigate?.(id as ClientView)}
       fullBleed={fullBleed}
-      hideHeader={hideHeader}
+      hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
       experience="client"
     >
