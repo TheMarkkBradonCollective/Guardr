@@ -9779,7 +9779,7 @@ export default function App() {
             onOpenProfile={() => handleClientNavigate('profile')}
             onOpenSettings={() => handleClientNavigate('settings')}
             onSignOut={handleSignOut}
-            active={clientView === 'profile' || clientView === 'settings'}
+            active={false}
           />
         </div>
       ) : null;
