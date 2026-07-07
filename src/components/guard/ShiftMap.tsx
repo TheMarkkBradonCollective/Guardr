@@ -125,6 +125,25 @@ function MapZoomBridge({ zoomRef }: { zoomRef: React.MutableRefObject<MapZoomCon
   return null;
 }
 
+/** Leaflet often renders a blank canvas until the container size is recalculated. */
+function MapInvalidateSize() {
+  const map = useMap();
+
+  useEffect(() => {
+    const syncSize = () => map.invalidateSize();
+    const raf = requestAnimationFrame(syncSize);
+    const timer = window.setTimeout(syncSize, 120);
+    window.addEventListener('resize', syncSize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+      window.removeEventListener('resize', syncSize);
+    };
+  }, [map]);
+
+  return null;
+}
+
 function MapViewportSaver() {
   useMapEvents({
     moveend(e) {
@@ -266,6 +285,7 @@ export function ShiftMap({
         attributionControl={false}
       >
         <MapViewportSaver />
+        <MapInvalidateSize />
         {zoomRef && <MapZoomBridge zoomRef={zoomRef} />}
         <MapController
           selectedPin={selectedPin}

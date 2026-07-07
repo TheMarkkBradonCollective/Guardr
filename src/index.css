@@ -6554,6 +6554,7 @@ html.theme-light .app-chat-typing-bubble {
 .app-page-transition {
   height: 100%;
   min-height: 0;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -14603,14 +14604,18 @@ svg {
 /* ─── Bottom navigation: always fits in viewport width ─────────────────── */
 
 .bottom-nav-bar {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   max-width: 100vw;
 }
 
 .bottom-nav-inner {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 100%;
   max-width: 100%;
+  align-items: flex-end;
+  padding-top: 0.7rem;
 }
 
 /* ─── Desktop sidebar: never causes horizontal overflow ─────────────────── */

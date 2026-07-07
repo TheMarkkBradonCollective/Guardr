@@ -42,11 +42,12 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     [viewportWidth, isStandalone]
   );
 
-  useEffect(() => {
+  // Apply layout attributes synchronously so the first paint uses the correct shell.
+  if (typeof document !== 'undefined') {
     document.body.dataset.formFactor = value.formFactor;
     document.body.dataset.standalone = value.isStandalone ? 'true' : 'false';
     document.body.classList.toggle('pwa-standalone', value.isStandalone || value.isNativeShell);
-  }, [value.formFactor, value.isStandalone, value.isNativeShell]);
+  }
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
 }
