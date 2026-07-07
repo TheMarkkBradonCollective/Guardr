@@ -9970,6 +9970,7 @@ export default function App() {
           onEditJobListing={handleStaffEditJobListing}
           onApproveGuardApplication={handleStaffApproveGuardApplication}
           onDenyGuardApplication={handleStaffDenyGuardApplication}
+          standingCrewMembers={standingCrewMembers}
           onApproveCrewMember={handleStaffApproveCrewMember}
           onDenyCrewMember={handleStaffDenyCrewMember}
           onRemoveCrewMember={handleStaffRemoveFromCrew}

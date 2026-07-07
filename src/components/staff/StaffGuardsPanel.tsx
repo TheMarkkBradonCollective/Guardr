@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Certification, Experience, GuardEducation, SecurityGuard, SecurityRequest } from '../../types';
+import {
+  Certification,
+  Experience,
+  GuardEducation,
+  GuardStandingCrewMember,
+  SecurityGuard,
+  SecurityRequest,
+} from '../../types';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
@@ -17,6 +24,7 @@ import { guardHasMissingWorkCredentials } from '../../lib/guardMissingCredential
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
+  standingCrewMembers?: GuardStandingCrewMember[];
   canManage: boolean;
   canSuspend: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
@@ -80,6 +88,7 @@ interface StaffGuardsPanelProps {
 export function StaffGuardsPanel({
   guards,
   requests,
+  standingCrewMembers = [],
   canManage,
   canSuspend,
   onUpdateUserStatus,
@@ -194,6 +203,7 @@ export function StaffGuardsPanel({
         ? (status, rejectionReason) => onReviewGuardInsurance(guard.id, status, rejectionReason)
         : undefined,
       onOpenJob,
+      standingCrewMembers,
     };
   }
 
