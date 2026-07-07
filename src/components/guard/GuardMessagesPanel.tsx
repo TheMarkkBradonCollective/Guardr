@@ -12,7 +12,7 @@ import {
 } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { threadForRequest } from '../../lib/jobChat';
-import { threadForTeamRequest } from '../../lib/teamChat';
+import { threadForTeamRequest, teamChatRosterLabel } from '../../lib/teamChat';
 import {
   buildGuardJobInboxRows,
   buildGuardSupportInboxRows,
@@ -40,6 +40,7 @@ import {
 } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
 import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare, Users } from 'lucide-react';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
 type ActiveView =
   | { kind: 'list' }
@@ -77,6 +78,8 @@ interface GuardMessagesPanelProps {
   onOpenSupportCompose?: () => void;
   onOpenSupportReport?: () => void;
   onDetailOpenChange?: (open: boolean) => void;
+  onMessagesChromeChange?: (chrome: MessagesChrome) => void;
+  shellHeaderTrailing?: React.ReactNode;
 }
 
 function formatInboxMeta(iso: string): string {
@@ -115,8 +118,11 @@ export function GuardMessagesPanel({
   onOpenSupportCompose,
   onOpenSupportReport,
   onDetailOpenChange,
+  onMessagesChromeChange,
+  shellHeaderTrailing,
 }: GuardMessagesPanelProps) {
   const { formFactor } = useDevice();
+  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [activeView, setActiveView] = useState<ActiveView>(() => {
     if (initialTeamChatRequestId) {
       return { kind: 'team', requestId: initialTeamChatRequestId };
@@ -241,6 +247,7 @@ export function GuardMessagesPanel({
   };
 
   const hasSelection = activeView.kind !== 'list';
+  const embedHeaderInShell = !splitView && hasSelection;
 
   useEffect(() => {
     onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
@@ -274,6 +281,80 @@ export function GuardMessagesPanel({
         ))}
     </div>
   );
+
+  useEffect(() => {
+    if (!onMessagesChromeChange) return;
+
+    const extension = !embedHeaderInShell ? header : null;
+    let override: React.ReactNode | null = null;
+
+    if (embedHeaderInShell) {
+      if (activeView.kind === 'guard-channel') {
+        override = (
+          <AppChatHeader
+            title="Guard chat"
+            onBack={backToList}
+            trailing={shellHeaderTrailing}
+          />
+        );
+      } else if (activeView.kind === 'team') {
+        const job = jobById.get(activeView.requestId);
+        if (job) {
+          override = (
+            <AppChatHeader
+              title={`${job.title} · Team`}
+              subtitle={teamChatRosterLabel(job)}
+              onBack={backToList}
+              trailing={shellHeaderTrailing}
+            />
+          );
+        }
+      } else if (activeView.kind === 'job') {
+        const job = jobById.get(activeView.requestId);
+        if (job) {
+          override = (
+            <AppChatHeader
+              title={job.title}
+              subtitle={job.location ?? undefined}
+              onBack={backToList}
+              trailing={shellHeaderTrailing}
+            />
+          );
+        }
+      } else if (activeView.kind === 'support') {
+        const ticket = myTickets.find((t) => t.id === activeView.ticketId);
+        if (ticket) {
+          const isReport = ticket.kind === 'report';
+          const threadSubtitle = isReport
+            ? `${categoryLabel(ticket.category)} · ${supportStatusLabel(ticket)}`
+            : `${categoryLabel(ticket.category)} · ${SUPPORT_STATUS_LABEL[ticket.status]}`;
+
+          override = (
+            <AppChatHeader
+              title={ticket.subject}
+              subtitle={threadSubtitle}
+              onBack={backToList}
+              trailing={shellHeaderTrailing}
+            />
+          );
+        }
+      }
+    }
+
+    onMessagesChromeChange({ extension, override });
+    return () => onMessagesChromeChange(EMPTY_MESSAGES_CHROME);
+  }, [
+    onMessagesChromeChange,
+    embedHeaderInShell,
+    activeTab,
+    teamRows.length,
+    jobRows.length,
+    supportRows.length,
+    activeView,
+    jobById,
+    myTickets,
+    shellHeaderTrailing,
+  ]);
 
   // ── List: filtered by active tab ─────────────────────────
   const list = (
@@ -343,11 +424,13 @@ export function GuardMessagesPanel({
     if (activeView.kind === 'guard-channel' && onSendGuardMessage) {
       return (
         <div className="h-full flex flex-col min-h-0 app-full-page-screen">
-          <AppChatHeader
-            title="Guard chat"
-            onBack={backToList}
-            hideBackOnDesktop
-          />
+          {!embedHeaderInShell && (
+            <AppChatHeader
+              title="Guard chat"
+              onBack={backToList}
+              hideBackOnDesktop
+            />
+          )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
@@ -375,6 +458,7 @@ export function GuardMessagesPanel({
               onSend={(body) => onSendTeamChatMessage(job.id, body)}
               onBack={backToList}
               hideBackOnDesktop
+              hideShellHeader={embedHeaderInShell}
             />
           </div>
         );
@@ -394,6 +478,7 @@ export function GuardMessagesPanel({
               onSend={(body) => onSendJobChatMessage(job.id, body)}
               onBack={backToList}
               hideBackOnDesktop
+              hideShellHeader={embedHeaderInShell}
             />
           </div>
         );
@@ -410,12 +495,14 @@ export function GuardMessagesPanel({
 
         return (
           <div className="h-full flex flex-col min-h-0 bg-brand-bg app-full-page-screen">
-            <AppChatHeader
-              title={ticket.subject}
-              subtitle={threadSubtitle}
-              onBack={backToList}
-              hideBackOnDesktop
-            />
+            {!embedHeaderInShell && (
+              <AppChatHeader
+                title={ticket.subject}
+                subtitle={threadSubtitle}
+                onBack={backToList}
+                hideBackOnDesktop
+              />
+            )}
             <div className="flex-1 min-h-0">
               <ChatThreadPanel
                 messages={ticket.messages.map((msg) => ({
@@ -452,6 +539,7 @@ export function GuardMessagesPanel({
         list={list}
         detail={detailView ?? <div />}
         hasSelection={hasSelection && !!detailView}
+        shellInboxHeader
         emptyDetailTitle="Your conversations"
         emptyDetailHint="Select guard chat, a team crew, a job thread, or support from the inbox"
       />

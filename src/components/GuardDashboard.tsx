@@ -47,6 +47,8 @@ import { GuardAvailabilityCalendar } from './guard/GuardAvailabilityCalendar';
 import { SupportComposePage } from './support/SupportComposePage';
 import { SupportReportPage } from './support/SupportReportPage';
 import { RoleAppShell } from './layouts/RoleAppShell';
+import { AccountMenu } from './layouts/AccountMenu';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { SlideToConfirm } from './ui/SlideToConfirm';
@@ -325,7 +327,14 @@ export function GuardDashboard({
   }, [guard, tab, setTab]);
   const [guardSelectedJobId, setGuardSelectedJobId] = useState<string | null>(null);
   const [guardMessagesDetailOpen, setGuardMessagesDetailOpen] = useState(false);
+  const [guardMessagesChrome, setGuardMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
   const [crewJobDetailOpen, setCrewJobDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (tab !== 'messages') {
+      setGuardMessagesChrome(EMPTY_MESSAGES_CHROME);
+    }
+  }, [tab]);
   const [guardBrowseTab, setGuardBrowseTab] = useState<GuardJobsBrowseTab>('available');
   const [mapStatusFilter, setMapStatusFilter] = useState<GuardMapStatusFilter>('all');
   const mapZoomRef = useRef<MapZoomControls | null>(null);
@@ -912,6 +921,37 @@ export function GuardDashboard({
     ...(showCrewTab ? [{ id: 'crew' as const, icon: Users, label: 'Crew' }] : []),
   ];
 
+  const accountMenu = {
+    userName: guard.name,
+    userSubtitle: currentUser.email,
+    avatarUrl: guard.avatar,
+    onOpenProfile: () => setTab('profile'),
+    onOpenSettings: () => setTab('settings'),
+    onSignOut,
+    hideProfile: accountNeedsActivation,
+    active: activeTab === 'profile' || activeTab === 'settings',
+    extraLinks: accountNeedsActivation
+      ? []
+      : [
+          {
+            label: 'General guide',
+            icon: BookOpen,
+            onClick: () => setTab('guide'),
+            active: tab === 'guide',
+          },
+        ],
+  };
+
+  const messagesChromeActive =
+    tab === 'messages' && supportMode !== 'compose' && supportMode !== 'report';
+  const messagesShellHeaderTrailing =
+    messagesChromeActive ? (
+      <div className="shrink-0 flex items-center gap-2">
+        {headerRight}
+        <AccountMenu {...accountMenu} />
+      </div>
+    ) : null;
+
   const renderGuardMainPanel = () => (
     <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
       {!accountPreActive && activeTab !== 'profile' && (
@@ -1169,6 +1209,8 @@ export function GuardDashboard({
                   onOpenSupportCompose={onOpenSupportCompose}
                   onOpenSupportReport={onOpenSupportReport}
                   onDetailOpenChange={setGuardMessagesDetailOpen}
+                  onMessagesChromeChange={setGuardMessagesChrome}
+                  shellHeaderTrailing={messagesShellHeaderTrailing}
                 />
               )}
             </div>
@@ -1394,10 +1436,13 @@ export function GuardDashboard({
           ? 'Trusted Guardr professional'
           : 'Available for vetted jobs';
 
+  const shellHeaderOverride = messagesChromeActive ? guardMessagesChrome.override : null;
+  const shellHeaderExtension = messagesChromeActive ? guardMessagesChrome.extension : null;
+
   const shellHideHeader =
-    (tab === 'messages' && guardMessagesDetailOpen) ||
-    (tab === 'myJobs' && !!guardSelectedJobId) ||
-    (tab === 'crew' && crewJobDetailOpen);
+    ((tab === 'myJobs' && !!guardSelectedJobId) ||
+      (tab === 'crew' && crewJobDetailOpen)) &&
+    !shellHeaderOverride;
 
   return (
     <RoleAppShell
@@ -1405,26 +1450,9 @@ export function GuardDashboard({
       locationLabel={guardHeaderStatus}
       hideHeader={shellHideHeader}
       headerRight={headerRight}
-      accountMenu={{
-        userName: guard.name,
-        userSubtitle: currentUser.email,
-        avatarUrl: guard.avatar,
-        onOpenProfile: () => setTab('profile'),
-        onOpenSettings: () => setTab('settings'),
-        onSignOut,
-        hideProfile: accountNeedsActivation,
-        active: activeTab === 'profile' || activeTab === 'settings',
-        extraLinks: accountNeedsActivation
-          ? []
-          : [
-              {
-                label: 'General guide',
-                icon: BookOpen,
-                onClick: () => setTab('guide'),
-                active: tab === 'guide',
-              },
-            ],
-      }}
+      headerExtension={shellHeaderExtension}
+      headerOverride={shellHeaderOverride}
+      accountMenu={accountMenu}
       navItems={accountNeedsActivation ? [] : NAV_TABS}
       activeNavId={showPendingGate ? 'activation' : tab}
       onNavigate={(id) => setTab(id as GuardTab)}

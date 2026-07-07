@@ -12178,6 +12178,33 @@ html.theme-dark .notification-inbox-item--unread {
   min-height: 3rem;
 }
 
+.app-screen-header--with-extension {
+  padding-bottom: 0;
+}
+
+.app-screen-header-row {
+  width: 100%;
+}
+
+.app-screen-header-extension {
+  width: 100%;
+}
+
+.app-screen-header-extension .app-inbox-tabs {
+  border-bottom: none;
+  background: transparent;
+}
+
+.app-screen-header-slot .app-chat-header {
+  border-bottom: none;
+  background: transparent;
+}
+
+body[data-form-factor="desktop"] .role-app-shell > .app-screen-header-slot {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 /* Crew hub — segmented tabs like Jobs / Messages */
 .crew-hub-screen {
   display: flex;

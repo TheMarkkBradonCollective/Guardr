@@ -76,7 +76,9 @@ import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
+import { AccountMenu } from './components/layouts/AccountMenu';
 import { ClientDashboard } from './components/ClientDashboard';
+import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from './lib/messagesChrome';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
@@ -553,7 +555,14 @@ export default function App() {
     return null;
   });
   const [clientMessagesDetailOpen, setClientMessagesDetailOpen] = useState(false);
+  const [clientMessagesChrome, setClientMessagesChrome] = useState<MessagesChrome>(EMPTY_MESSAGES_CHROME);
   const [clientTeamDetailOpen, setClientTeamDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (clientView !== 'messages') {
+      setClientMessagesChrome(EMPTY_MESSAGES_CHROME);
+    }
+  }, [clientView]);
 
   useEffect(() => {
     if (clientView !== 'guards') setClientTeamDetailOpen(false);
@@ -9754,11 +9763,26 @@ export default function App() {
     };
 
     const clientHideHeader =
-      (clientView === 'messages' && clientMessagesDetailOpen) ||
       clientView === 'support-compose' ||
       clientView === 'support-report' ||
       (clientView === 'guards' && (!!clientGuardId || clientTeamDetailOpen)) ||
       (clientView === 'requests' && !!clientRequestsSelectedId);
+
+    const clientMessagesShellHeaderTrailing =
+      clientView === 'messages' ? (
+        <div className="shrink-0 flex items-center gap-2">
+          {notificationBellMenu}
+          <AccountMenu
+            userName={currentUser.name}
+            userSubtitle={currentUser.email}
+            avatarUrl={currentUser.avatar}
+            onOpenProfile={() => handleClientNavigate('profile')}
+            onOpenSettings={() => handleClientNavigate('settings')}
+            onSignOut={handleSignOut}
+            active={clientView === 'profile' || clientView === 'settings'}
+          />
+        </div>
+      ) : null;
 
     return (
       <>
@@ -9773,6 +9797,7 @@ export default function App() {
           messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
           hideHeader={clientHideHeader}
           headerRight={notificationBellMenu}
+          messagesChrome={clientMessagesChrome}
         >
           {clientView === 'profile' ? (
             <UserProfileScreen
@@ -9872,6 +9897,8 @@ export default function App() {
               onRequestsSelectedIdChange={setClientRequestsSelectedIdState}
               requestsSelectedId={clientRequestsSelectedId}
               onMessagesDetailOpenChange={setClientMessagesDetailOpen}
+              onMessagesChromeChange={setClientMessagesChrome}
+              messagesShellHeaderTrailing={clientMessagesShellHeaderTrailing}
               onTeamDetailOpenChange={setClientTeamDetailOpen}
             />
           )}

@@ -9,6 +9,8 @@ interface MessagesHubLayoutProps {
   hasSelection: boolean;
   emptyDetailTitle?: string;
   emptyDetailHint?: string;
+  /** When true, inbox tabs are rendered in the app shell header instead. */
+  shellInboxHeader?: boolean;
 }
 
 export function MessagesHubEmptyDetail({
@@ -36,9 +38,11 @@ export function MessagesHubLayout({
   hasSelection,
   emptyDetailTitle = 'Select a conversation',
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
+  shellInboxHeader = false,
 }: MessagesHubLayoutProps) {
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+  const inboxHeader = shellInboxHeader ? null : header;
 
   const emptyDetail = (
     <MessagesHubEmptyDetail
@@ -51,7 +55,7 @@ export function MessagesHubLayout({
     return (
       <div className="app-messages-split h-full min-h-0">
         <div className="app-messages-split-list flex flex-col min-h-0">
-          <div className="flex-shrink-0">{header}</div>
+          {inboxHeader ? <div className="flex-shrink-0">{inboxHeader}</div> : null}
           <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
         </div>
         <div className="app-messages-split-detail flex flex-col min-h-0">
@@ -67,7 +71,7 @@ export function MessagesHubLayout({
 
   return (
     <div className="h-full flex flex-col min-h-0">
-      <div className="flex-shrink-0">{header}</div>
+      {inboxHeader ? <div className="flex-shrink-0">{inboxHeader}</div> : null}
       <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>
     </div>
   );
