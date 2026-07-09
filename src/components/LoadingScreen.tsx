@@ -178,9 +178,8 @@ export function LoadingScreen() {
 
       <div className="guardr-loading-core">
         <div className="guardr-loading-logo-wrap">
-          <Logo size={64} className="guardr-loading-logo" />
+          <Logo size={120} variant="wordmark" className="guardr-loading-logo" />
         </div>
-        <p className="guardr-loading-brand">Guardr</p>
         <p className="guardr-loading-caption">Anytime. Anywhere.</p>
 
         <div className="guardr-loading-lane" aria-hidden="true">
