@@ -16,7 +16,7 @@ export const MARKETING_SERVICES_INTRO = 'Post coverage for:';
 /** Short list for compact promo graphics (3 bullets). */
 export const MARKETING_SERVICES_SHORT = [
   'Event security',
-  'Construction sites',
+  'Executive protection',
   'Nightlife & venues',
 ] as const;
 
@@ -30,7 +30,7 @@ export const MARKETING_SERVICES_FULL = [
   'Armed transport',
 ] as const;
 
-export const MARKETING_CTA_LABEL = 'Get started';
+export const MARKETING_CTA_LABEL = 'Book now';
 
 export const MARKETING_CONTACT = {
   website: `www.${SITE_DOMAIN}`,

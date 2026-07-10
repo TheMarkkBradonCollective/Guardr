@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guardr — Digital Business Card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #7c9a7a;
+        --brand-dark: #5e7b61;
+        --ink: #000000;
+        --paper: #ffffff;
+        --grey: #7a7a7a;
+        --grey-dark: #4a4a4a;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #111;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 24px;
+      }
+
+      .card {
+        position: relative;
+        width: min(1050px, 100%);
+        aspect-ratio: 3.5 / 2;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Top-left grey corner + mini logo */
+      .corner-tl {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, var(--grey) 0%, var(--grey) 50%, transparent 50%);
+        z-index: 4;
+      }
+
+      .corner-tl svg {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 22px;
+        height: 22px;
+      }
+
+      /* Bottom-right grey accent behind logo panel */
+      .corner-br {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 58%;
+        height: 72%;
+        background: linear-gradient(155deg, transparent 42%, var(--grey-dark) 42%, var(--grey) 100%);
+        z-index: 1;
+      }
+
+      /* Diagonal green divider */
+      .divider {
+        position: absolute;
+        top: -10%;
+        left: 54%;
+        width: 5.5%;
+        height: 120%;
+        background: var(--brand);
+        transform: rotate(17deg);
+        z-index: 3;
+      }
+
+      .left {
+        position: relative;
+        z-index: 2;
+        width: 56%;
+        height: 100%;
+        padding: 42px 36px 28px 40px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .headline {
+        line-height: 0.95;
+        margin-bottom: 14px;
+      }
+
+      .headline-primary {
+        display: block;
+        font-size: clamp(34px, 5.2vw, 52px);
+        font-weight: 900;
+        letter-spacing: 0.03em;
+      }
+
+      .headline-secondary {
+        display: block;
+        margin-top: 2px;
+        font-size: clamp(30px, 4.8vw, 48px);
+        font-weight: 300;
+        letter-spacing: 0.1em;
+      }
+
+      .subhead {
+        max-width: 26rem;
+        margin-bottom: 18px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--brand);
+        font-weight: 500;
+      }
+
+      .services-intro {
+        margin-bottom: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .services {
+        list-style: none;
+        display: grid;
+        gap: 6px;
+        margin-bottom: auto;
+      }
+
+      .services li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .services li::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--paper);
+        flex-shrink: 0;
+      }
+
+      .cta-wrap {
+        margin-top: 16px;
+        margin-bottom: 18px;
+      }
+
+      .cta {
+        display: inline-block;
+        padding: 10px 26px;
+        background: var(--brand);
+        color: var(--ink);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transform: skewX(-14deg);
+      }
+
+      .cta span {
+        display: inline-block;
+        transform: skewX(14deg);
+      }
+
+      .website {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .website-icon {
+        width: 16px;
+        height: 16px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--brand);
+        color: var(--ink);
+        font-size: 9px;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+
+      .right {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 44%;
+        height: 100%;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .logo-large {
+        width: clamp(110px, 16vw, 150px);
+        height: clamp(110px, 16vw, 150px);
+        margin-bottom: 10px;
+      }
+
+      .brand-name {
+        font-size: clamp(42px, 6vw, 58px);
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        line-height: 1;
+      }
+
+      @media (max-width: 720px) {
+        .card {
+          aspect-ratio: auto;
+          min-height: 520px;
+        }
+
+        .left {
+          width: 100%;
+          padding: 36px 28px 24px;
+        }
+
+        .right {
+          position: relative;
+          width: 100%;
+          padding: 0 28px 32px;
+          flex-direction: row;
+          justify-content: flex-start;
+          gap: 16px;
+        }
+
+        .logo-large {
+          width: 72px;
+          height: 72px;
+          margin-bottom: 0;
+        }
+
+        .brand-name {
+          font-size: 36px;
+        }
+
+        .divider,
+        .corner-br {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <article class="card" aria-label="Guardr digital business card">
+      <div class="corner-tl" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <path
+            fill="#7C9A7A"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M 50,15 C 68,17 80,21 86,24 A 4,4 0 0,1 88,28 L 88,43 H 76 V 34 C 71,32 62,30 50,28 C 38,30 29,32 24,34 L 24,66 C 24,74 37,81 50,84 C 63,81 76,74 76,66 V 56 H 50 V 45 H 88 V 66 C 88,78 71,87 50,90 C 29,87 12,78 12,66 L 12,28 A 4,4 0 0,1 14,24 C 20,21 32,17 50,15 Z"
+          />
+        </svg>
+      </div>
+
+      <div class="corner-br" aria-hidden="true"></div>
+      <div class="divider" aria-hidden="true"></div>
+
+      <div class="left">
+        <h1 class="headline">
+          <span class="headline-primary">SECURITY</span>
+          <span class="headline-secondary">MARKETPLACE</span>
+        </h1>
+
+        <p class="subhead">
+          Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one
+          place.
+        </p>
+
+        <p class="services-intro">Post coverage for:</p>
+        <ul class="services">
+          <li>Event security</li>
+          <li>Executive protection</li>
+          <li>Nightlife &amp; venues</li>
+        </ul>
+
+        <div class="cta-wrap">
+          <a class="cta" href="https://www.guardr.co"><span>Book now</span></a>
+        </div>
+
+        <div class="website">
+          <span class="website-icon" aria-hidden="true">W</span>
+          <span>www.guardr.co</span>
+        </div>
+      </div>
+
+      <div class="right">
+        <svg class="logo-large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true">
+          <path
+            fill="#7C9A7A"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M 50,15 C 68,17 80,21 86,24 A 4,4 0 0,1 88,28 L 88,43 H 76 V 34 C 71,32 62,30 50,28 C 38,30 29,32 24,34 L 24,66 C 24,74 37,81 50,84 C 63,81 76,74 76,66 V 56 H 50 V 45 H 88 V 66 C 88,78 71,87 50,90 C 29,87 12,78 12,66 L 12,28 A 4,4 0 0,1 14,24 C 20,21 32,17 50,15 Z"
+          />
+        </svg>
+        <div class="brand-name">Guardr</div>
+      </div>
+    </article>
+  </body>
+</html>
