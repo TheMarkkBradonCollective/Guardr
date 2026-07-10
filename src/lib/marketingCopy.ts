@@ -17,7 +17,7 @@ export const MARKETING_SERVICES_INTRO = 'Post coverage for:';
 export const MARKETING_SERVICES_SHORT = [
   'Event security',
   'Construction sites',
-  'Executive protection',
+  'Nightlife & venues',
 ] as const;
 
 /** Full list for flyers and larger layouts (6 bullets). */
