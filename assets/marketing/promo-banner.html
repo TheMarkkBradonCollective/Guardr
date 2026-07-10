@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guardr Promo Banner (editable)</title>
+  <style>
+    :root {
+      --brand-primary: #5e7b61;
+      --brand-primary-dark: #3d5240;
+      --brand-accent: #c8d4a8;
+      --brand-bg: #0f1a12;
+      --brand-text: #ffffff;
+      --brand-muted: #d8e4d8;
+      --banner-width: 1200px;
+      --banner-height: 630px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111;
+      color: #fff;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .editor-panel {
+      max-width: var(--banner-width);
+      margin: 0 auto 24px;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 12px;
+      background: #1a1a1a;
+    }
+
+    .editor-panel h1 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .editor-panel p {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .editor-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .editor-grid input,
+    .editor-grid textarea {
+      width: 100%;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    .editor-grid textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .editor-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .banner-wrap {
+      max-width: var(--banner-width);
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .banner {
+      position: relative;
+      width: var(--banner-width);
+      height: var(--banner-height);
+      overflow: hidden;
+      background: var(--brand-bg);
+    }
+
+    .banner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(118deg, transparent 58%, var(--brand-accent) 58%, var(--brand-accent) 60%, transparent 60%),
+        linear-gradient(135deg, #000 0 18%, transparent 18%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .banner-content {
+      position: relative;
+      z-index: 3;
+      width: 62%;
+      height: 100%;
+      padding: 42px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .banner-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .banner-logo img {
+      width: 42px;
+      height: 42px;
+    }
+
+    .banner-logo span {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1.15;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+    }
+
+    .banner-title {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .banner-tagline {
+      color: var(--brand-accent);
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.35;
+      max-width: 92%;
+      margin-bottom: 22px;
+    }
+
+    .banner-services-intro {
+      color: var(--brand-muted);
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+
+    .banner-services {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      margin-bottom: auto;
+    }
+
+    .banner-services li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .banner-services li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.62em;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .banner-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 4px;
+      background: var(--brand-accent);
+      color: #111;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-top: 18px;
+      margin-bottom: 22px;
+    }
+
+    .banner-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .banner-footer span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+
+    .banner-footer .icon {
+      color: var(--brand-accent);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .banner-photo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 46%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: 1;
+    }
+
+    .banner-photo-placeholder {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 46%;
+      height: 100%;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(15, 26, 18, 0.1), rgba(15, 26, 18, 0.55)),
+        linear-gradient(135deg, #2a3d2d, #1a2a1d 45%, #3f5642);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 24px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 900px) {
+      .editor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .banner-wrap {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-panel">
+    <h1>Edit banner text</h1>
+    <p>
+      Change the fields below and the banner updates live. When it looks right, screenshot the banner
+      (or use your browser print-to-PDF) for social posts, flyers, or Canva reference.
+    </p>
+    <div class="editor-grid" id="editor"></div>
+  </div>
+
+  <div class="banner-wrap">
+    <div class="banner" id="banner" aria-label="Promotional banner preview">
+      <div class="banner-content">
+        <div class="banner-logo">
+          <img src="../../public/logo.svg" alt="" />
+          <span id="out-logo-text"></span>
+        </div>
+        <h2 class="banner-title" id="out-title"></h2>
+        <p class="banner-tagline" id="out-tagline"></p>
+        <p class="banner-services-intro" id="out-services-intro"></p>
+        <ul class="banner-services" id="out-services"></ul>
+        <div class="banner-cta" id="out-cta"></div>
+        <div class="banner-footer">
+          <span><span class="icon">🌐</span><span id="out-website"></span></span>
+          <span><span class="icon">📞</span><span id="out-phone"></span></span>
+        </div>
+      </div>
+      <img class="banner-photo" id="out-photo" alt="" hidden />
+      <div class="banner-photo-placeholder" id="photo-placeholder">
+        Drop a guard photo URL in the editor, or replace this block with your own image in design software.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const content = {
+      logoText: "Guardr",
+      titleLine1: "Security",
+      titleLine2: "Marketplace",
+      tagline: "Connect with licensed security professionals — anytime, anywhere.",
+      servicesIntro: "Coverage types available on Guardr:",
+      services: [
+        "Event security",
+        "Site patrol & access control",
+        "Executive protection",
+      ],
+      cta: "Get started",
+      website: "WWW.GUARDR.CO",
+      phone: "YOUR PHONE HERE",
+      photoUrl: "",
+    };
+
+    const fields = [
+      { key: "logoText", label: "Logo text" },
+      { key: "titleLine1", label: "Headline line 1" },
+      { key: "titleLine2", label: "Headline line 2" },
+      { key: "tagline", label: "Tagline", type: "textarea" },
+      { key: "servicesIntro", label: "Services intro", type: "textarea" },
+      { key: "services", label: "Services (one per line)", type: "textarea", full: true },
+      { key: "cta", label: "Button text" },
+      { key: "website", label: "Website" },
+      { key: "phone", label: "Phone" },
+      { key: "photoUrl", label: "Photo URL (optional)", full: true },
+    ];
+
+    const editor = document.getElementById("editor");
+
+    function readServices(value) {
+      return value
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+
+    function render() {
+      document.getElementById("out-logo-text").textContent = content.logoText;
+      document.getElementById("out-title").innerHTML = `${content.titleLine1}<br />${content.titleLine2}`;
+      document.getElementById("out-tagline").textContent = content.tagline;
+      document.getElementById("out-services-intro").textContent = content.servicesIntro;
+      document.getElementById("out-cta").textContent = content.cta;
+      document.getElementById("out-website").textContent = content.website;
+      document.getElementById("out-phone").textContent = content.phone;
+
+      const servicesEl = document.getElementById("out-services");
+      servicesEl.innerHTML = "";
+      content.services.forEach((service) => {
+        const li = document.createElement("li");
+        li.textContent = service;
+        servicesEl.appendChild(li);
+      });
+
+      const photo = document.getElementById("out-photo");
+      const placeholder = document.getElementById("photo-placeholder");
+      if (content.photoUrl.trim()) {
+        photo.src = content.photoUrl.trim();
+        photo.hidden = false;
+        placeholder.hidden = true;
+      } else {
+        photo.removeAttribute("src");
+        photo.hidden = true;
+        placeholder.hidden = false;
+      }
+    }
+
+    fields.forEach((field) => {
+      const label = document.createElement("label");
+      label.className = field.full ? "full" : "";
+      label.textContent = field.label;
+
+      const input = document.createElement(field.type === "textarea" ? "textarea" : "input");
+      input.value = field.key === "services" ? content.services.join("\n") : content[field.key];
+      input.addEventListener("input", () => {
+        if (field.key === "services") {
+          content.services = readServices(input.value);
+        } else {
+          content[field.key] = input.value;
+        }
+        render();
+      });
+
+      label.appendChild(input);
+      editor.appendChild(label);
+    });
+
+    render();
+  </script>
+</body>
+</html>
