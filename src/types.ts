@@ -141,6 +141,8 @@ export interface Client {
   themePreference?: 'dark' | 'light' | 'grey';
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
+  /** PBKDF2 hash — replaces plaintext password after migration */
+  passwordHash?: string;
   mustChangePassword?: boolean;
 
   // --- Sign-up intake fields (used by staff to evaluate pending accounts) ---
@@ -326,6 +328,8 @@ export interface SecurityGuard {
   stripeConnectAccountId?: string;
   /** Set when staff provisions the account; used for sign-in only */
   password?: string;
+  /** PBKDF2 hash — replaces plaintext password after migration */
+  passwordHash?: string;
   mustChangePassword?: boolean;
   /** Government ID verification — separate from profile avatar */
   idVerificationStatus?: 'not_submitted' | 'pending' | 'verified' | 'rejected';

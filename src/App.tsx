@@ -1626,6 +1626,7 @@ export default function App() {
         stripeConnectAccountId: g.stripe_connect_account_id || undefined,
         themePreference: isThemeMode(g.theme_preference) ? g.theme_preference : undefined,
         password: g.password ?? undefined,
+        passwordHash: g.password_hash ?? undefined,
         mustChangePassword: g.must_change_password ?? false,
         idVerificationStatus: g.id_verification_status ?? 'not_submitted',
         idState: g.id_state ?? undefined,
@@ -1697,6 +1698,7 @@ export default function App() {
         rating: c.rating != null ? Number(c.rating) : undefined,
         themePreference: isThemeMode(c.theme_preference) ? c.theme_preference : undefined,
         password: c.password ?? undefined,
+        passwordHash: c.password_hash ?? undefined,
         mustChangePassword: c.must_change_password ?? false,
         businessType: c.business_type ?? undefined,
         industries: Array.isArray(c.industries) ? c.industries : undefined,
@@ -2655,9 +2657,7 @@ export default function App() {
     if (role === 'client') {
       const client = profile as Client;
       const accountStatus = client.accountStatus ?? 'pending';
-      try {
-        // Base insert — only original columns that are guaranteed to exist
-        await supabase.from('clients').insert({
+      const { error: insertError } = await supabase.from('clients').insert({
           id: client.id,
           name: client.name,
           first_name: client.firstName,
@@ -2673,8 +2673,8 @@ export default function App() {
           password,
           must_change_password: false,
         });
-      } catch (e) {
-        console.error('Client DB insert error:', e);
+      if (insertError) {
+        console.error('Client DB insert error:', insertError);
         throw new Error('Could not create client account. This email may already be registered.');
       }
 
@@ -3673,8 +3673,7 @@ export default function App() {
     };
     setClients((prev) => [...prev, newClient]);
     if (isDbConnected) {
-      try {
-        await supabase.from('clients').insert({
+      const { error: insertError } = await supabase.from('clients').insert({
           id: newClient.id,
           name: newClient.name,
           first_name: newClient.firstName,
@@ -3690,9 +3689,9 @@ export default function App() {
           password,
           must_change_password: mustChangePassword,
         });
-      } catch (e) {
+      if (insertError) {
         setClients((prev) => prev.filter((c) => c.id !== newClient.id));
-        console.error('Client insert error:', e);
+        console.error('Client insert error:', insertError);
         throw new Error('Could not save client to the database.');
       }
     }
@@ -3808,7 +3807,16 @@ export default function App() {
       )
     );
     if (isDbConnected) {
-      await supabase.from('clients').update({ approved: true, account_status: 'active' }).eq('id', clientId);
+      const { error: approveError } = await supabase
+        .from('clients')
+        .update({ approved: true, account_status: 'active' })
+        .eq('id', clientId);
+      if (approveError) {
+        console.error('Client approval update error:', approveError);
+        appToast('Could not save client approval to the database. Please try again.', 'error');
+        await loadFromSupabase();
+        return;
+      }
     }
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',
@@ -9512,6 +9520,7 @@ export default function App() {
             onSignUp={handleSignUp}
             guardsList={guards}
             clientsList={clients}
+            isDbConnected={isDbConnected}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
             onOpenGuide={openPublicGuide}

@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { personNameFromPayload } from '../lib/personName';
-import { SessionUser, SecurityGuard, Client, PlatformRole } from '../types';
-import { resolvePlatformRole, ROLE_LABELS } from '../lib/permissions';
+import { SessionUser, SecurityGuard, Client } from '../types';
+import { ROLE_LABELS } from '../lib/permissions';
 import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
 import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalContent';
@@ -29,6 +29,7 @@ import {
   shouldPromptPasswordChange,
   verifyAccountPassword,
 } from '../lib/accountPasswords';
+import { signInWithCredentials } from '../lib/auth/authService';
 
 const SERVICE_TYPE_OPTIONS = [
   'Event security',
@@ -143,6 +144,7 @@ interface AuthPageProps {
   initialRole?: 'guard' | 'client';
   initialMode?: 'sign-in' | 'sign-up';
   themeMode?: string;
+  isDbConnected?: boolean;
 }
 
 /** Lightweight person entry for the referredBy autocomplete */
@@ -175,6 +177,7 @@ export function AuthPage({
   onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
+  isDbConnected = true,
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
@@ -270,7 +273,7 @@ export function AuthPage({
           firstName: normalized.firstName,
           middleName: normalized.middleName,
           lastName: normalized.lastName,
-          email,
+          email: emailLower,
           companyName: company,
           phone: phone.trim() || '',
           avatar: '',
@@ -309,7 +312,7 @@ export function AuthPage({
           {
             id: randomId,
             name: normalized.name,
-            email,
+            email: emailLower,
             role: 'client',
             clientName: company || normalized.name,
             avatar: '',
@@ -351,7 +354,7 @@ export function AuthPage({
         {
           id: randomId,
           name: normalized.name,
-          email,
+          email: emailLower,
           role: 'guard',
           badgeNumber: newGuardProfile.badgeNumber,
           avatar: newGuardProfile.avatar,
@@ -362,7 +365,7 @@ export function AuthPage({
       return;
     }
 
-    const emailLower = email.toLowerCase();
+    const emailLower = email.trim().toLowerCase();
     const bootstrapOwner = OWNER_BOOTSTRAP_ACCOUNTS[emailLower];
 
     if (bootstrapOwner) {
@@ -457,58 +460,26 @@ export function AuthPage({
       return;
     }
 
-    const matchedClient = clientsList.find((c) => c.email.toLowerCase() === emailLower);
-    if (matchedClient) {
-      const storedPassword = resolveStoredPassword(emailLower, matchedClient);
-      if (!verifyAccountPassword(storedPassword, password)) {
-        setErrorMsg('Invalid password.');
-        return;
-      }
-      onSignIn(
-        {
-          id: matchedClient.id,
-          name: matchedClient.name,
-          email: matchedClient.email,
-          role: 'client',
-          clientName: matchedClient.companyName || matchedClient.name,
-          avatar: matchedClient.avatar,
-        },
-        signInOptionsForPassword(storedPassword)
-      );
+    const signInAttempt = await signInWithCredentials(email, password, guardsList, clientsList);
+    if (signInAttempt.status === 'ok') {
+      onSignIn(signInAttempt.result.sessionUser, {
+        passwordChangeRecommended: signInAttempt.result.passwordChangeRecommended,
+      });
       return;
     }
-
-    const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
-    if (matchedGuard) {
-      if (matchedGuard.userStatus === 'blocked') {
-        setErrorMsg('Account blocked. Contact administration.');
-        return;
-      }
-      const storedPassword = resolveStoredPassword(emailLower, matchedGuard);
-      if (!verifyAccountPassword(storedPassword, password)) {
-        setErrorMsg('Invalid password.');
-        return;
-      }
-      const platformRole: PlatformRole = resolvePlatformRole({
-        isStaff: matchedGuard.isStaff,
-        staffRole: matchedGuard.staffRole,
-      });
-      onSignIn(
-        {
-          id: matchedGuard.id,
-          name: matchedGuard.name,
-          email: matchedGuard.email,
-          role: platformRole,
-          badgeNumber: matchedGuard.badgeNumber,
-          avatar: matchedGuard.avatar,
-          hourlyRate: matchedGuard.hourlyRateRequirement,
-          staffRole: matchedGuard.staffRole,
-        },
-        signInOptionsForPassword(storedPassword)
-      );
-    } else {
-      setErrorMsg('Account not found. Please sign up or check your email address.');
+    if (signInAttempt.status === 'invalid_password') {
+      setErrorMsg('Invalid password.');
+      return;
     }
+    if (signInAttempt.status === 'blocked') {
+      setErrorMsg('Account blocked. Contact administration.');
+      return;
+    }
+    if (!isDbConnected) {
+      setErrorMsg('Unable to verify your account right now. Check your connection and try again.');
+      return;
+    }
+    setErrorMsg('Account not found. Please sign up or check your email address.');
   };
 
   const ROLES = [
