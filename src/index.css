@@ -10234,6 +10234,18 @@ html.theme-dark textarea.uber-input:focus {
 .uber-input.pr-11 { padding-right: 2.75rem !important; }
 .uber-input.pr-12 { padding-right: 3rem !important; }
 
+/* Compact field size override: base .uber-input rules only set `height`
+   with !important, but the separate `min-height: 3.25rem` floor (set
+   without !important further down) still wins over Tailwind's `!h-9`
+   utility since min-height and height are independent properties. This
+   silently forced "compact" job-form fields back to full 52px height. */
+.uber-input.\!h-9 {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* ─── STATUS BADGE: CONSISTENT INDICATORS ───────────────────────────────── */
 
 .status-badge {
