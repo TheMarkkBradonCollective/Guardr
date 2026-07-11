@@ -31,6 +31,9 @@
           state = {};
         }
         state[surface] = record;
+        if (surface === 'apk') {
+          delete state.pwa;
+        }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       })();
     </script>

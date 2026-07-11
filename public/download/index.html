@@ -257,8 +257,74 @@
           );
         }
 
+        function isAndroidDevice() {
+          return /android/i.test(navigator.userAgent || '');
+        }
+
+        /** Capacitor / Android WebView — looks like standalone but is the APK, not a PWA. */
+        function isAndroidWebView() {
+          return isAndroidDevice() && /;\s*wv\)/i.test(navigator.userAgent || '');
+        }
+
         function isNativeShell() {
           return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        }
+
+        function isLikelyNativeApk() {
+          return isNativeShell() || isAndroidWebView();
+        }
+
+        function isLikelyPwaContext() {
+          if (isLikelyNativeApk()) return false;
+          return isStandalone();
+        }
+
+        function readInstallCookie(name) {
+          var match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+          if (!match) return null;
+          var raw = decodeURIComponent(match[1]);
+          var parts = raw.split('|');
+          return {
+            version: parts[0],
+            versionCode: parts[1] ? parseInt(parts[1], 10) : undefined,
+          };
+        }
+
+        function applyQueryRegistration(state) {
+          var params = new URLSearchParams(location.search);
+          var surface = params.get('surface');
+          var version = params.get('version') || params.get('apkVersion');
+          var versionCode = params.get('versionCode');
+          if (surface === 'apk' && version) {
+            var code = versionCode ? parseInt(versionCode, 10) : undefined;
+            return persistSurface('apk', version, isNaN(code) ? undefined : code);
+          }
+          if ((params.get('apk') === '1' || params.get('from') === 'apk') && version) {
+            var build = versionCode ? parseInt(versionCode, 10) : undefined;
+            return persistSurface('apk', version, isNaN(build) ? undefined : build);
+          }
+          return state;
+        }
+
+        function mergeCookieInstall(state) {
+          var apkCookie = readInstallCookie('guardr_apk');
+          var pwaCookie = readInstallCookie('guardr_pwa');
+          if (apkCookie && apkCookie.version) {
+            state.apk = {
+              version: apkCookie.version,
+              versionCode: apkCookie.versionCode,
+              registeredAt: Date.now(),
+            };
+            delete state.pwa;
+          }
+          if (pwaCookie && pwaCookie.version && !state.apk) {
+            state.pwa = {
+              version: pwaCookie.version,
+              registeredAt: Date.now(),
+            };
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          return state;
         }
 
         function setBadge(el, text, kind) {
@@ -268,7 +334,13 @@
 
         function nativeAppInfo() {
           return new Promise(function (resolve) {
-            if (!isNativeShell() || !window.Capacitor) {
+            if (!window.Capacitor) {
+              resolve(null);
+              return;
+            }
+            var isNative =
+              window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+            if (!isNative && !isLikelyNativeApk()) {
               resolve(null);
               return;
             }
@@ -284,15 +356,16 @@
           });
         }
 
-        function relatedPwaInstalled() {
-          if (!navigator.getInstalledRelatedApps) return Promise.resolve(false);
-          return navigator.getInstalledRelatedApps()
-            .then(function (apps) {
-              return apps.some(function (app) {
-                return app.platform === 'webapp' || app.platform === 'window-controls-overlay';
-              });
-            })
-            .catch(function () { return false; });
+        function clearStalePwaRecord(state) {
+          if (state.apk) {
+            delete state.pwa;
+            return state;
+          }
+          if (state.pwa && !isLikelyPwaContext() && !readInstallCookie('guardr_pwa')) {
+            delete state.pwa;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          }
+          return state;
         }
 
         function persistSurface(surface, version, versionCode) {
@@ -302,11 +375,14 @@
             versionCode: versionCode,
             registeredAt: Date.now(),
           };
+          if (surface === 'apk') {
+            delete state.pwa;
+          }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           return state;
         }
 
-        function render(latest, state, live, relatedPwa) {
+        function render(latest, state, live) {
           var apkBadge = document.getElementById('apk-badge');
           var apkDetail = document.getElementById('apk-detail');
           var pwaBadge = document.getElementById('pwa-badge');
@@ -354,7 +430,7 @@
           }
 
           var pwaRecord = state.pwa;
-          var pwaActive = live === 'pwa' || !!pwaRecord || relatedPwa;
+          var pwaActive = !apkInstalled && (live === 'pwa' || !!pwaRecord);
           if (pwaActive) {
             setBadge(pwaBadge, 'Optional — auto-updates', 'ok');
             var pwaVersion = pwaRecord ? pwaRecord.version : latest.webVersion;
@@ -373,22 +449,35 @@
         fetch('/download/version.json', { cache: 'no-store' })
           .then(function (res) { return res.json(); })
           .then(function (latest) {
-            return Promise.all([nativeAppInfo(), relatedPwaInstalled()]).then(function (parts) {
-              var nativeInfo = parts[0];
-              var relatedPwa = parts[1];
-              var state = readState();
+            return nativeAppInfo().then(function (nativeInfo) {
+              var apkDetailPending = null;
+              var state = clearStalePwaRecord(mergeCookieInstall(readState()));
+              state = applyQueryRegistration(state);
               var live = 'browser';
 
               if (nativeInfo && nativeInfo.version) {
                 live = 'apk';
                 var code = parseInt(nativeInfo.build, 10);
                 state = persistSurface('apk', nativeInfo.version, isNaN(code) ? undefined : code);
-              } else if (isStandalone() && !isNativeShell()) {
+              } else if (isLikelyNativeApk()) {
+                live = 'apk';
+                if (state.apk) {
+                  // Already registered via cookie / prior app launch.
+                } else {
+                  apkDetailPending =
+                    'Guardr Android app detected. Open the app once while online so we can read your APK version, or re-download below.';
+                }
+              } else if (isLikelyPwaContext()) {
                 live = 'pwa';
                 state = persistSurface('pwa', latest.webVersion);
               }
 
-              render(latest, state, live, relatedPwa);
+              render(latest, state, live);
+
+              if (typeof apkDetailPending === 'string' && !state.apk) {
+                document.getElementById('apk-detail').textContent = apkDetailPending;
+                setBadge(document.getElementById('apk-badge'), 'App detected', 'ok');
+              }
             });
           })
           .catch(function () {
