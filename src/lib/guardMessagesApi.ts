@@ -1,3 +1,4 @@
+import { apiUrl } from './siteConfig';
 import type { GuardMessage, SessionUser } from '../types';
 import { parseApiResponse, sessionBody } from './pushApi';
 
@@ -7,7 +8,7 @@ export async function fetchGuardMessagesFromApi(user: SessionUser): Promise<Guar
     email: user.email,
     role: user.role,
   });
-  const res = await fetch(`/api/messages/guards?${params.toString()}`);
+  const res = await fetch(apiUrl(`/api/messages/guards?${params.toString()}`));
   const data = await parseApiResponse<{ messages?: GuardMessage[] }>(res);
   if (!res.ok) {
     throw new Error((data as { error?: string }).error ?? `Failed to load guard messages (${res.status})`);
@@ -19,7 +20,7 @@ export async function postGuardMessageToApi(
   user: SessionUser,
   message: GuardMessage
 ): Promise<void> {
-  const res = await fetch('/api/messages/guards', {
+  const res = await fetch(apiUrl('/api/messages/guards'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

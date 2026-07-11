@@ -1,3 +1,4 @@
+import { apiUrl } from './siteConfig';
 import type { SessionUser } from '../types';
 import { subscribePush } from './pushApi';
 
@@ -74,7 +75,7 @@ export async function fetchVapidPublicKey(): Promise<string | null> {
   if (envKey) return envKey;
 
   try {
-    const res = await fetch('/api/push/vapid-public-key');
+    const res = await fetch(apiUrl('/api/push/vapid-public-key'));
     if (!res.ok) return readCachedVapidKey();
     const data = (await res.json()) as { publicKey?: string };
     const key = data.publicKey?.trim();

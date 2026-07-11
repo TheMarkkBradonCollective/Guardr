@@ -1,10 +1,11 @@
 /**
- * Capacitor shell config — used when wrapping the Vite build for App Store / Play Store.
+ * Capacitor shell config — wraps the Vite build for Android APK / iOS.
  *
- * Setup (step 5 of cross-platform roadmap):
- *   npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
- *   npx cap init
- *   npm run build && npx cap sync
+ * Build APK:
+ *   npm run android:apk
+ *
+ * Sync after web changes:
+ *   npm run build && npx cap sync android
  */
 const config = {
   appId: 'com.signaturesecurity.guardr',
@@ -13,9 +14,15 @@ const config = {
   server: {
     androidScheme: 'https',
   },
+  android: {
+    allowMixedContent: false,
+  },
   plugins: {
     SplashScreen: {
-      backgroundColor: '#FFFFFF',
+      launchShowDuration: 1200,
+      launchAutoHide: true,
+      backgroundColor: '#000000',
+      showSpinner: false,
     },
     StatusBar: {
       style: 'DARK',
