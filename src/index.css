@@ -80,7 +80,7 @@ html.theme-light {
   --brand-chrome-muted:  var(--brand-text-muted);
   --brand-chrome-border: var(--brand-border);
   --status-success:      #3F7D4F;
-  --status-warning:      #B7791F;
+  --status-warning:      #946219; /* darkened from #B7791F: 3.64:1 on white failed WCAG AA text contrast (4.5:1) */
   --status-danger:       #DC2626;
   --status-info:         #2F6F8F;
   --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.06);
