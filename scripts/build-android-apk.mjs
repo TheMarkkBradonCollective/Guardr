@@ -26,6 +26,9 @@ function run(cmd, args, options = {}) {
   }
 }
 
+console.log('→ Generating download version manifest…');
+run('npm', ['run', 'generate:download-version']);
+
 console.log('→ Generating Android launcher icons…');
 run('npm', ['run', 'generate:android-icons']);
 

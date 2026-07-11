@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Guardr install registry</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        var STORAGE_KEY = 'guardr_install_v1';
+        var params = new URLSearchParams(location.search);
+        var surface = params.get('surface');
+        var version = params.get('version');
+        var versionCode = params.get('versionCode');
+        if (!surface || !version) return;
+        if (surface !== 'apk' && surface !== 'pwa') return;
+
+        var record = {
+          version: version,
+          registeredAt: Date.now(),
+        };
+        if (versionCode) {
+          var code = parseInt(versionCode, 10);
+          if (!isNaN(code)) record.versionCode = code;
+        }
+
+        var state = {};
+        try {
+          state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch (e) {
+          state = {};
+        }
+        state[surface] = record;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      })();
+    </script>
+  </body>
+</html>

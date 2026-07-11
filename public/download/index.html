@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#5E7B61" />
-    <meta name="description" content="Download the Guardr Android app for guards — job alerts, shift check-ins, and marketplace access." />
-    <title>Download Guardr for Android</title>
+    <meta name="description" content="Download the Guardr Android app or compare with the Save to Home Screen version." />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Install Guardr — APK or Home Screen</title>
     <link rel="icon" type="image/png" sizes="64x64" href="/logo-64.png" />
     <style>
       :root {
@@ -16,6 +17,9 @@
         --card: #141414;
         --text: #f5f5f5;
         --muted: #a3a3a3;
+        --ok: #86efac;
+        --warn: #fbbf24;
+        --line: rgba(132, 162, 121, 0.22);
       }
       * { box-sizing: border-box; }
       body {
@@ -24,94 +28,376 @@
         font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         background: radial-gradient(ellipse at top, #1a2419 0%, var(--bg) 55%);
         color: var(--text);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
+        padding: 24px 16px 40px;
       }
-      main {
-        width: min(480px, 100%);
+      .wrap { max-width: 560px; margin: 0 auto; }
+      .card {
         background: var(--card);
-        border: 1px solid rgba(132, 162, 121, 0.25);
-        border-radius: 20px;
-        padding: 28px 24px;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
       }
       .logo {
-        width: 72px;
-        height: 72px;
-        border-radius: 18px;
-        margin-bottom: 16px;
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        margin-bottom: 12px;
       }
-      h1 {
-        margin: 0 0 8px;
-        font-size: 1.75rem;
-        letter-spacing: -0.02em;
-      }
-      p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+      h1 { margin: 0 0 6px; font-size: 1.6rem; letter-spacing: -0.02em; }
+      h2 { margin: 0 0 12px; font-size: 1.05rem; color: var(--sage-bright); }
+      p { margin: 0 0 12px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
         width: 100%;
-        padding: 16px 20px;
+        padding: 15px 18px;
         border: none;
         border-radius: 14px;
         background: linear-gradient(180deg, var(--sage-bright), var(--sage));
         color: #fff;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
       }
-      .btn:hover { filter: brightness(1.05); }
+      .btn.secondary {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--text);
+        margin-top: 10px;
+      }
+      .status-grid { display: grid; gap: 12px; }
+      .status {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .status-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .status-title { font-weight: 600; font-size: 0.98rem; }
+      .badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .badge.ok { background: rgba(134, 239, 172, 0.15); color: var(--ok); }
+      .badge.warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
+      .badge.muted { background: rgba(163, 163, 163, 0.12); color: var(--muted); }
+      .status p { margin: 0; font-size: 0.88rem; }
+      .compare {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+      }
+      .compare th, .compare td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .compare th { color: var(--sage-bright); font-weight: 600; }
+      .compare tr:last-child th, .compare tr:last-child td { border-bottom: none; }
+      .context {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(94, 123, 97, 0.14);
+        color: #d4e0d3;
+        font-size: 0.88rem;
+        margin-bottom: 14px;
+      }
       ol {
-        margin: 20px 0 0;
+        margin: 14px 0 0;
         padding-left: 20px;
         color: var(--muted);
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-      .note {
-        margin-top: 20px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: rgba(94, 123, 97, 0.12);
         font-size: 0.9rem;
-        color: #d4e0d3;
+        line-height: 1.55;
       }
       .back {
         display: inline-block;
-        margin-top: 18px;
+        margin-top: 8px;
         color: var(--sage-bright);
         text-decoration: none;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
       }
+      .hidden { display: none; }
     </style>
   </head>
   <body>
-    <main>
-      <img class="logo" src="/icon-192.png" width="72" height="72" alt="Guardr" />
-      <h1>Guardr for Android</h1>
-      <p>
-        Install the Guardr app for reliable job alerts, shift check-ins, and guard marketplace access —
-        optimized for guards in the field.
-      </p>
-      <a class="btn" href="/download/guardr.apk" download="guardr.apk">
-        Download APK
-      </a>
-      <ol>
-        <li>Tap <strong>Download APK</strong> above.</li>
-        <li>If prompted, allow downloads from this site.</li>
-        <li>Open the downloaded file and tap <strong>Install</strong>.</li>
-        <li>If Android blocks the install, enable <strong>Install unknown apps</strong> for your browser or Files app.</li>
-      </ol>
-      <div class="note">
-        Beta build for Signature Security guard network. For the web app, visit
-        <a href="https://guardr.co" style="color: #b8d4b6">guardr.co</a>.
+    <div class="wrap">
+      <div class="card">
+        <img class="logo" src="/icon-192.png" width="64" height="64" alt="Guardr" />
+        <h1>Install Guardr</h1>
+        <p>Choose how you want Guardr on your phone. This page checks what you have installed and whether an APK update is available.</p>
+        <div id="live-context" class="context">Checking your device…</div>
       </div>
+
+      <div class="card">
+        <h2>Your installs</h2>
+        <div class="status-grid">
+          <div class="status" id="apk-status">
+            <div class="status-head">
+              <span class="status-title">Android APK app</span>
+              <span class="badge muted" id="apk-badge">Checking…</span>
+            </div>
+            <p id="apk-detail">Looking for an installed APK…</p>
+          </div>
+          <div class="status" id="pwa-status">
+            <div class="status-head">
+              <span class="status-title">Save to Home Screen (PWA)</span>
+              <span class="badge muted" id="pwa-badge">Checking…</span>
+            </div>
+            <p id="pwa-detail">Looking for a home-screen install…</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Download Android APK</h2>
+        <p id="apk-download-copy">Latest APK for guards who want the native app icon, permissions, and more reliable notifications.</p>
+        <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
+        <p id="latest-version" style="margin-top:10px;font-size:0.85rem;"></p>
+        <ol id="apk-steps">
+          <li>Tap <strong>Download APK</strong>.</li>
+          <li>Open the file and tap <strong>Install</strong> (enable unknown apps if prompted).</li>
+          <li>Re-open this page after installing — we will detect your version.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>APK vs Save to Home Screen</h2>
+        <p>Both use the same Guardr account and data. Pick what fits your workflow — you can switch anytime.</p>
+        <table class="compare">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Android APK</th>
+              <th>Save to Home Screen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Updates</th>
+              <td><strong>Manual</strong> — download &amp; reinstall from this page when we release a new APK</td>
+              <td><strong>Automatic</strong> — refreshes with guardr.co (no reinstall)</td>
+            </tr>
+            <tr>
+              <th>Notifications</th>
+              <td>Best for guards — native app + permission prompts, harder for the OS to silence</td>
+              <td>Good — can be less reliable when the phone limits background browser apps</td>
+            </tr>
+            <tr>
+              <th>Permissions</th>
+              <td>Camera, location, photos — full native prompts for field work</td>
+              <td>Browser-controlled — may need to re-allow in Chrome/Safari settings</td>
+            </tr>
+            <tr>
+              <th>Icon on phone</th>
+              <td>Real app icon from the APK install</td>
+              <td>Shortcut icon from your browser’s “Add to Home Screen”</td>
+            </tr>
+            <tr>
+              <th>Best for</th>
+              <td>Guards in the field, daily shifts, job alerts</td>
+              <td>Quick access, clients, staff, trying Guardr without installing an APK</td>
+            </tr>
+          </tbody>
+        </table>
+        <a class="btn secondary" href="https://guardr.co">Open Guardr in browser</a>
+      </div>
+
       <a class="back" href="https://guardr.co">← Back to Guardr</a>
-    </main>
+    </div>
+
+    <script>
+      (function () {
+        var STORAGE_KEY = 'guardr_install_v1';
+
+        function parseParts(version) {
+          return String(version || '0').split('.').map(function (n) {
+            var x = parseInt(n, 10);
+            return isNaN(x) ? 0 : x;
+          });
+        }
+
+        function compareVersions(a, b) {
+          var av = parseParts(a);
+          var bv = parseParts(b);
+          for (var i = 0; i < 3; i += 1) {
+            var diff = (av[i] || 0) - (bv[i] || 0);
+            if (diff !== 0) return diff < 0 ? -1 : 1;
+          }
+          return 0;
+        }
+
+        function readState() {
+          try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          } catch (e) {
+            return {};
+          }
+        }
+
+        function isStandalone() {
+          return (
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true
+          );
+        }
+
+        function isNativeShell() {
+          return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        }
+
+        function setBadge(el, text, kind) {
+          el.textContent = text;
+          el.className = 'badge ' + (kind || 'muted');
+        }
+
+        function nativeAppInfo() {
+          return new Promise(function (resolve) {
+            if (!isNativeShell() || !window.Capacitor) {
+              resolve(null);
+              return;
+            }
+            if (window.Capacitor.Plugins && window.Capacitor.Plugins.App && window.Capacitor.Plugins.App.getInfo) {
+              window.Capacitor.Plugins.App.getInfo().then(resolve).catch(function () { resolve(null); });
+              return;
+            }
+            if (window.Capacitor.nativePromise) {
+              window.Capacitor.nativePromise('App', 'getInfo', {}).then(resolve).catch(function () { resolve(null); });
+              return;
+            }
+            resolve(null);
+          });
+        }
+
+        function relatedPwaInstalled() {
+          if (!navigator.getInstalledRelatedApps) return Promise.resolve(false);
+          return navigator.getInstalledRelatedApps()
+            .then(function (apps) {
+              return apps.some(function (app) {
+                return app.platform === 'webapp' || app.platform === 'window-controls-overlay';
+              });
+            })
+            .catch(function () { return false; });
+        }
+
+        function persistSurface(surface, version, versionCode) {
+          var state = readState();
+          state[surface] = {
+            version: version,
+            versionCode: versionCode,
+            registeredAt: Date.now(),
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          return state;
+        }
+
+        function render(latest, state, live, relatedPwa) {
+          var apkBadge = document.getElementById('apk-badge');
+          var apkDetail = document.getElementById('apk-detail');
+          var pwaBadge = document.getElementById('pwa-badge');
+          var pwaDetail = document.getElementById('pwa-detail');
+          var liveContext = document.getElementById('live-context');
+          var latestVersion = document.getElementById('latest-version');
+          var downloadBtn = document.getElementById('apk-download-btn');
+          var downloadCopy = document.getElementById('apk-download-copy');
+
+          latestVersion.textContent =
+            'Latest APK: v' + latest.apkVersion + ' (build ' + latest.apkVersionCode + ') · Web: v' + latest.webVersion;
+
+          if (live === 'apk') {
+            liveContext.textContent = 'You are viewing this page inside the Guardr Android app.';
+          } else if (live === 'pwa') {
+            liveContext.textContent = 'You are viewing this page from your Guardr home-screen shortcut (auto-updating web app).';
+          } else {
+            liveContext.textContent = 'You are viewing this page in your browser. Install options are below.';
+          }
+
+          var apkRecord = state.apk;
+          var apkInstalled = !!apkRecord;
+          var apkNeedsUpdate = apkInstalled && compareVersions(apkRecord.version, latest.apkVersion) < 0;
+
+          if (!apkInstalled) {
+            setBadge(apkBadge, 'Not detected', 'muted');
+            apkDetail.textContent =
+              'No APK install recorded yet. Open the Guardr app at least once, or download below. ' +
+              'If you already installed an older APK, download again to update.';
+            downloadCopy.textContent = 'Install the Guardr Android app for guards who want the native icon, permissions, and stronger notifications.';
+            downloadBtn.textContent = 'Download APK';
+          } else if (apkNeedsUpdate) {
+            setBadge(apkBadge, 'Update available', 'warn');
+            apkDetail.textContent =
+              'Installed APK v' + apkRecord.version + ' · Latest v' + latest.apkVersion +
+              '. Download and install again to update (your data stays in your account).';
+            downloadCopy.textContent = 'A newer APK is available. Download and reinstall to get the latest app shell, icons, and permissions.';
+            downloadBtn.textContent = 'Download update (v' + latest.apkVersion + ')';
+          } else {
+            setBadge(apkBadge, 'Up to date', 'ok');
+            apkDetail.textContent =
+              'Installed APK v' + apkRecord.version + ' matches the latest release. ' +
+              'Re-download only if you reinstall on a new phone.';
+            downloadBtn.textContent = 'Re-download APK (v' + latest.apkVersion + ')';
+          }
+
+          var pwaRecord = state.pwa;
+          var pwaActive = live === 'pwa' || !!pwaRecord || relatedPwa;
+          if (pwaActive) {
+            setBadge(pwaBadge, 'Optional — auto-updates', 'ok');
+            var pwaVersion = pwaRecord ? pwaRecord.version : latest.webVersion;
+            pwaDetail.textContent =
+              'Home-screen version detected (v' + pwaVersion + '). ' +
+              'It updates automatically when guardr.co updates — no reinstall needed. ' +
+              'Stay on this if you prefer zero maintenance; switch to APK if you need stronger notifications and native permissions.';
+          } else {
+            setBadge(pwaBadge, 'Not installed', 'muted');
+            pwaDetail.textContent =
+              'To use the web shortcut: open guardr.co in Chrome → menu → Add to Home screen / Install app. ' +
+              'That version auto-updates and is great for quick access without an APK.';
+          }
+        }
+
+        fetch('/download/version.json', { cache: 'no-store' })
+          .then(function (res) { return res.json(); })
+          .then(function (latest) {
+            return Promise.all([nativeAppInfo(), relatedPwaInstalled()]).then(function (parts) {
+              var nativeInfo = parts[0];
+              var relatedPwa = parts[1];
+              var state = readState();
+              var live = 'browser';
+
+              if (nativeInfo && nativeInfo.version) {
+                live = 'apk';
+                var code = parseInt(nativeInfo.build, 10);
+                state = persistSurface('apk', nativeInfo.version, isNaN(code) ? undefined : code);
+              } else if (isStandalone() && !isNativeShell()) {
+                live = 'pwa';
+                state = persistSurface('pwa', latest.webVersion);
+              }
+
+              render(latest, state, live, relatedPwa);
+            });
+          })
+          .catch(function () {
+            document.getElementById('live-context').textContent =
+              'Could not load version info. You can still download the APK below.';
+            setBadge(document.getElementById('apk-badge'), 'Unknown', 'muted');
+            setBadge(document.getElementById('pwa-badge'), 'Unknown', 'muted');
+          });
+      })();
+    </script>
   </body>
 </html>

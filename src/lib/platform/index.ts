@@ -1,6 +1,7 @@
 export * from './device';
 export * from './theme';
 export * from './nativePermissions';
+export * from './installRegistry';
 export * from './offlineQueue';
 export * from './offlineSync';
 export { DeviceProvider, useDevice } from './DeviceProvider';
