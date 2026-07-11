@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { ensureNativePermissions } from './lib/platform/nativePermissions';
 import App from './App.tsx';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppToastHost } from './components/ui/AppToast';
@@ -24,6 +25,7 @@ async function initNativeShell(): Promise<void> {
   } catch (error) {
     console.warn('[native] status bar setup failed:', error);
   }
+  await ensureNativePermissions();
 }
 
 void initNativeShell();

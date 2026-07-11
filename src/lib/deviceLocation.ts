@@ -1,4 +1,5 @@
 import type { GeoCoords } from './geo';
+import { Capacitor } from '@capacitor/core';
 
 export interface GeoPosition {
   lat: number;
@@ -12,9 +13,12 @@ export interface JobSiteLocationResult {
 }
 
 function geolocationErrorMessage(error: GeolocationPositionError): string {
+  const settingsHint = Capacitor.isNativePlatform()
+    ? 'Allow location access in your device Settings → Apps → Guardr → Permissions.'
+    : 'Allow location access in your browser settings.';
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      return 'Location permission denied. Allow location access in your browser settings.';
+      return `Location permission denied. ${settingsHint}`;
     case error.POSITION_UNAVAILABLE:
       return 'Current location is unavailable on this device.';
     case error.TIMEOUT:
