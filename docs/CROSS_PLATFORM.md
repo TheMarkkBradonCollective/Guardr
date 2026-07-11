@@ -22,12 +22,8 @@ A future migration to **Next.js** is optional if you need SSR, API routes, or ed
 2. **PWA installability** — manifest, service worker, install prompt, standalone safe areas
 3. **Guard mobile UX** — Uber-style bottom nav, large touch targets, optional map
 4. **Staff command center** — ops sidebar; tablet split panels on staff-ops branch
-5. **Capacitor wrappers** — run after web/PWA stable:
-   ```bash
-   npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
-   npm run build && npx cap add ios && npx cap add android && npx cap sync
-   ```
-6. **App Store + Play Store** — Apple Developer account, push notifications, Stripe compliance
+5. **Capacitor wrappers** — Android APK available (`npm run android:apk`); iOS pending Apple Developer account
+6. **App Store + Play Store** — Apple Developer account, FCM native push, Stripe compliance
 
 ## Device Experience Matrix
 
@@ -87,8 +83,9 @@ public/sw.js          — service worker shell cache
 
 ## Next Steps
 
+- [x] Android APK build + download page (`/download/`)
 - [ ] Wire offline queue flush on `online` event in guard shift flow
-- [ ] Add Capacitor push notification plugin
+- [ ] Add Capacitor FCM push notification plugin (Web Push works in APK today)
 - [ ] Generate PNG icon set (192, 512) for store requirements
 - [ ] Tablet split panels for staff live jobs (staff-ops branch)
 - [ ] E2E test PWA install on iOS Safari + Android Chrome

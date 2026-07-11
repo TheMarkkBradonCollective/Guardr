@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#5E7B61" />
+    <meta name="description" content="Download the Guardr Android app for guards — job alerts, shift check-ins, and marketplace access." />
+    <title>Download Guardr for Android</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="/logo-64.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --sage: #5e7b61;
+        --sage-bright: #84a279;
+        --bg: #0a0a0a;
+        --card: #141414;
+        --text: #f5f5f5;
+        --muted: #a3a3a3;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: radial-gradient(ellipse at top, #1a2419 0%, var(--bg) 55%);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      main {
+        width: min(480px, 100%);
+        background: var(--card);
+        border: 1px solid rgba(132, 162, 121, 0.25);
+        border-radius: 20px;
+        padding: 28px 24px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      }
+      .logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+      }
+      p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 16px 20px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(180deg, var(--sage-bright), var(--sage));
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn:hover { filter: brightness(1.05); }
+      ol {
+        margin: 20px 0 0;
+        padding-left: 20px;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      .note {
+        margin-top: 20px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(94, 123, 97, 0.12);
+        font-size: 0.9rem;
+        color: #d4e0d3;
+      }
+      .back {
+        display: inline-block;
+        margin-top: 18px;
+        color: var(--sage-bright);
+        text-decoration: none;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="/icon-192.png" width="72" height="72" alt="Guardr" />
+      <h1>Guardr for Android</h1>
+      <p>
+        Install the Guardr app for reliable job alerts, shift check-ins, and guard marketplace access —
+        optimized for guards in the field.
+      </p>
+      <a class="btn" href="/download/guardr.apk" download="guardr.apk">
+        Download APK
+      </a>
+      <ol>
+        <li>Tap <strong>Download APK</strong> above.</li>
+        <li>If prompted, allow downloads from this site.</li>
+        <li>Open the downloaded file and tap <strong>Install</strong>.</li>
+        <li>If Android blocks the install, enable <strong>Install unknown apps</strong> for your browser or Files app.</li>
+      </ol>
+      <div class="note">
+        Beta build for Signature Security guard network. For the web app, visit
+        <a href="https://guardr.co" style="color: #b8d4b6">guardr.co</a>.
+      </div>
+      <a class="back" href="https://guardr.co">← Back to Guardr</a>
+    </main>
+  </body>
+</html>

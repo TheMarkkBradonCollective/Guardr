@@ -16,7 +16,11 @@
     "test:e2e": "playwright test",
     "generate:logos": "node scripts/generate-logo-assets.mjs",
     "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
-    "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs"
+    "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs",
+    "generate:android-icons": "node scripts/generate-android-icons.mjs",
+    "cap:sync": "npm run build && npx cap sync android",
+    "android:apk": "node scripts/build-android-apk.mjs",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
@@ -40,6 +44,8 @@
     "@capacitor/cli": "^7.2.0",
     "@capacitor/core": "^7.2.0",
     "@capacitor/ios": "^7.2.0",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
     "@playwright/test": "^1.52.0",
     "@sentry/react": "^9.30.0",
     "@types/express": "^4.17.21",

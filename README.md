@@ -99,6 +99,7 @@ Duration is auto-calculated from start/end date-time — clients never enter dur
 - Job reporting & ratings
 - Theme switching
 - Mobile-responsive PWA shell
+- **Android APK** — [guardr.co/download](https://guardr.co/download) (Capacitor native shell; see [docs/ANDROID-APK.md](docs/ANDROID-APK.md))
 
 ## Database Migrations
 
@@ -119,4 +120,4 @@ Supabase schema lives in **`supabase/complete_schema_setup.sql`**. Run that file
 - **CI/CD** — GitHub Actions (lint, test, build, E2E)
 - **Rate limiting** — API middleware (60 req/min, 10/min for auth)
 - **Sentry scaffold** — set `VITE_SENTRY_DSN` to enable
-- **Capacitor** — native shell deps installed; run `npm run build && npx cap sync`
+- **Capacitor** — Android APK build ready; run `npm run android:apk` (see [docs/ANDROID-APK.md](docs/ANDROID-APK.md))

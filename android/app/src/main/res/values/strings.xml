@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Guardr</string>
+    <string name="title_activity_main">Guardr</string>
+    <string name="package_name">com.signaturesecurity.guardr</string>
+    <string name="custom_url_scheme">com.signaturesecurity.guardr</string>
+</resources>

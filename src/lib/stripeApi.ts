@@ -1,5 +1,7 @@
 /** Client-side helpers for Guardr Stripe API routes (secrets stay server-side). */
 
+import { apiUrl } from './siteConfig';
+
 async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   if (!text) {
@@ -24,7 +26,7 @@ export async function createCashDepositCheckoutSession(params: {
   jobTitle: string;
   amountCents: number;
 }): Promise<{ url: string; sessionId: string }> {
-  const res = await fetch('/api/stripe/checkout/cash-deposit', {
+  const res = await fetch(apiUrl('/api/stripe/checkout/cash-deposit'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -40,7 +42,7 @@ export async function createCheckoutSession(params: {
   jobTitle: string;
   amountCents: number;
 }): Promise<{ url: string; sessionId: string }> {
-  const res = await fetch('/api/stripe/checkout/create-session', {
+  const res = await fetch(apiUrl('/api/stripe/checkout/create-session'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -56,7 +58,7 @@ export async function createOvertimeCheckoutSession(params: {
   jobTitle: string;
   amountCents: number;
 }): Promise<{ url: string; sessionId: string }> {
-  const res = await fetch('/api/stripe/checkout/overtime-charge', {
+  const res = await fetch(apiUrl('/api/stripe/checkout/overtime-charge'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -72,7 +74,7 @@ export async function createScheduleChangeCheckoutSession(params: {
   jobTitle: string;
   amountCents: number;
 }): Promise<{ url: string; sessionId: string }> {
-  const res = await fetch('/api/stripe/checkout/schedule-change-charge', {
+  const res = await fetch(apiUrl('/api/stripe/checkout/schedule-change-charge'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -87,7 +89,7 @@ export async function createConnectAccount(params: {
   email: string;
   name?: string;
 }): Promise<{ accountId: string }> {
-  const res = await fetch('/api/stripe/connect/create-account', {
+  const res = await fetch(apiUrl('/api/stripe/connect/create-account'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -98,7 +100,7 @@ export async function createConnectAccount(params: {
 }
 
 export async function createConnectAccountLink(accountId: string): Promise<{ url: string }> {
-  const res = await fetch('/api/stripe/connect/account-link', {
+  const res = await fetch(apiUrl('/api/stripe/connect/account-link'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ accountId }),
@@ -113,7 +115,7 @@ export async function getConnectAccountStatus(accountId: string): Promise<{
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
 }> {
-  const res = await fetch(`/api/stripe/connect/status/${accountId}`);
+  const res = await fetch(apiUrl(`/api/stripe/connect/status/${accountId}`));
   const data = await parseApiResponse<{
     chargesEnabled: boolean;
     payoutsEnabled: boolean;
@@ -131,7 +133,7 @@ export async function releasePayout(params: {
   durationHours: number;
   force?: boolean;
 }): Promise<{ transferId: string; amountCents: number }> {
-  const res = await fetch('/api/stripe/payout/release', {
+  const res = await fetch(apiUrl('/api/stripe/payout/release'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -142,7 +144,7 @@ export async function releasePayout(params: {
 }
 
 export async function holdJobPayment(jobId: string): Promise<void> {
-  const res = await fetch('/api/stripe/payment/hold', {
+  const res = await fetch(apiUrl('/api/stripe/payment/hold'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jobId }),
@@ -157,7 +159,7 @@ export async function refundPayment(params: {
   paymentIntentId: string;
   jobId: string;
 }): Promise<void> {
-  const res = await fetch('/api/stripe/payment/refund', {
+  const res = await fetch(apiUrl('/api/stripe/payment/refund'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -180,7 +182,7 @@ export async function fetchPayments(): Promise<
     created_at?: string;
   }>
 > {
-  const res = await fetch('/api/stripe/payments');
+  const res = await fetch(apiUrl('/api/stripe/payments'));
   const data = await parseApiResponse<{ payments?: unknown[]; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to load payments');
   return (data.payments ?? []) as Array<{
@@ -197,7 +199,7 @@ export async function fetchPayments(): Promise<
 
 export async function isStripeConfigured(): Promise<boolean> {
   try {
-    const res = await fetch('/api/stripe/health');
+    const res = await fetch(apiUrl('/api/stripe/health'));
     const data = await parseApiResponse<{ configured?: boolean }>(res);
     return !!data.configured;
   } catch {

@@ -1,3 +1,4 @@
+import { apiUrl } from './siteConfig';
 import type { SessionUser } from '../types';
 import type { PushSubscriptionDto } from './push';
 import { inboxPayloadFromPushEvent, persistInboxNotification } from './inboxPersistBridge';
@@ -72,7 +73,7 @@ export async function subscribePush(
   subscription: PushSubscriptionDto,
   options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
 ): Promise<void> {
-  const res = await fetchWithRetry('/api/push/subscribe', {
+  const res = await fetchWithRetry(apiUrl('/api/push/subscribe'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     keepalive: true,
@@ -83,7 +84,7 @@ export async function subscribePush(
 }
 
 export async function unsubscribePush(user: SessionUser, endpoint?: string): Promise<void> {
-  const res = await fetchWithRetry('/api/push/unsubscribe', {
+  const res = await fetchWithRetry(apiUrl('/api/push/unsubscribe'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     keepalive: true,
@@ -94,7 +95,7 @@ export async function unsubscribePush(user: SessionUser, endpoint?: string): Pro
 }
 
 export async function sendTestPush(user: SessionUser, siteId?: string): Promise<{ sent: number; failed: number }> {
-  const res = await fetchWithRetry('/api/push/test', {
+  const res = await fetchWithRetry(apiUrl('/api/push/test'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sessionBody(user, { siteId })),
@@ -164,7 +165,7 @@ export async function reportPushEvent(
   if (inboxPayload) persistInboxNotification(inboxPayload);
 
   try {
-    const res = await fetchWithRetry('/api/push/events', {
+    const res = await fetchWithRetry(apiUrl('/api/push/events'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       keepalive: true,
