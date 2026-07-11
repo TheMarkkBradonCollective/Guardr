@@ -815,7 +815,7 @@ export function ClientJobActionsPanel({
         <div className="space-y-4">
           <div className="flex gap-1 justify-center py-2">
             {[1, 2, 3, 4, 5].map((s) => (
-              <button key={s} type="button" onClick={() => setReviewRating(s)}>
+              <button key={s} type="button" onClick={() => setReviewRating(s)} aria-label={`${s} star${s === 1 ? '' : 's'}`}>
                 <Star
                   className={`w-8 h-8 ${reviewRating >= s ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'}`}
                 />

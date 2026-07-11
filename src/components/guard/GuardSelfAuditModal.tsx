@@ -58,7 +58,7 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
         <p id="guard-self-audit-title" className="font-semibold text-brand-primary">
           Self audit
         </p>
-        <button type="button" onClick={onClose} className="text-brand-text-muted hover:text-brand-text text-lg">
+        <button type="button" onClick={onClose} aria-label="Close" className="text-brand-text-muted hover:text-brand-text text-lg">
           ×
         </button>
       </div>
