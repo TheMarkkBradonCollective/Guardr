@@ -10218,6 +10218,22 @@ html.theme-dark textarea.uber-input:focus {
   background: #1a1a1a !important;
 }
 
+/* ─── ICON-IN-FIELD SPACING ──────────────────────────────────────────────
+   The shorthand "padding" rule above is !important and resets all four
+   sides, which silently wiped out Tailwind's pl- and pr- utilities used
+   to clear leading/trailing icons (email, phone, password reveal, select
+   chevrons). Restore per-side padding with matching specificity so the
+   icon never overlaps the placeholder or typed value. */
+.uber-input.pl-9 { padding-left: 2.25rem !important; }
+.uber-input.pl-10 { padding-left: 2.5rem !important; }
+.uber-input.pl-11 { padding-left: 2.75rem !important; }
+.uber-input.pl-12 { padding-left: 3rem !important; }
+.uber-input.pr-8 { padding-right: 2rem !important; }
+.uber-input.pr-9 { padding-right: 2.25rem !important; }
+.uber-input.pr-10 { padding-right: 2.5rem !important; }
+.uber-input.pr-11 { padding-right: 2.75rem !important; }
+.uber-input.pr-12 { padding-right: 3rem !important; }
+
 /* ─── STATUS BADGE: CONSISTENT INDICATORS ───────────────────────────────── */
 
 .status-badge {

@@ -11,6 +11,11 @@ const PORT = Number(process.env.PORT) || 3000;
 
 async function configureServer() {
   if (process.env.NODE_ENV !== 'production') {
+    // Serve static marketing/download pages (public/download, public/marketing)
+    // before Vite's SPA fallback, so directory requests like `/download/`
+    // resolve to their own index.html instead of the app shell — matching
+    // how Vercel serves these in production.
+    app.use(express.static(path.join(process.cwd(), 'public')));
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
