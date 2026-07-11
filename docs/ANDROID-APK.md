@@ -56,7 +56,21 @@ npm run android:open
 - **One codebase** — same React app as the website, bundled into the APK
 - **API calls** — `apiUrl()` in `src/lib/siteConfig.ts` routes `/api/*` to `https://guardr.co` when running in the native shell
 - **Push notifications** — Web Push (VAPID) via the bundled service worker on Android; FCM native push is a future upgrade
+- **Runtime permissions** — location, camera, photos, and notifications are requested on first launch (see `src/lib/platform/nativePermissions.ts`)
 - **Release signing** — beta builds use the debug keystore for sideload distribution; replace with a production keystore before Play Store submission
+
+## Permissions
+
+The Android app requests permissions needed for guard field work:
+
+| Permission | Used for |
+|------------|----------|
+| **Location** | Map, job proximity, check-in validation |
+| **Camera** | Self-audit photos, ID verification selfies |
+| **Photos** | Credential and document uploads from gallery |
+| **Notifications** | Job alerts, shift reminders, operational push |
+
+Permissions are declared in `android/app/src/main/AndroidManifest.xml` and requested at runtime on first launch via Capacitor (`@capacitor/geolocation`, `@capacitor/camera`).
 
 ## Play Store (future)
 
