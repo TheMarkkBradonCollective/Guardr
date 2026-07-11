@@ -4267,6 +4267,33 @@ html.theme-light .staff-ops-btn-primary {
   letter-spacing: -0.01em;
 }
 
+/* Compact button overrides: the shared `min-height: 3rem` above is not
+   !important, but as a plain min-height floor it still wins over
+   Tailwind's !h-8/!h-9/!h-10/!h-11 utilities (min-height and height are
+   independent properties, so an important `height` alone can't shrink
+   a box past its min-height). Every "compact" action button sitewide
+   using these utilities was silently rendering at the full 48px. */
+.app-button-primary.\!h-8,
+.app-button-outline.\!h-8 {
+  min-height: 2rem !important;
+  height: 2rem !important;
+}
+.app-button-primary.\!h-9,
+.app-button-outline.\!h-9 {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+}
+.app-button-primary.\!h-10,
+.app-button-outline.\!h-10 {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+}
+.app-button-primary.\!h-11,
+.app-button-outline.\!h-11 {
+  min-height: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
 html.theme-light .app-button-primary,
 html.theme-light .staff-ops-btn-primary {
   background: var(--brand-primary);
