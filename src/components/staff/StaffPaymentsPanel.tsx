@@ -84,7 +84,9 @@ function PipelineSection({
   limit?: number;
 }) {
   const meta = PIPELINE_SECTION_META[stage];
-  const visible = limit ? items.slice(0, limit) : items;
+  const [expanded, setExpanded] = React.useState(false);
+  const effectiveLimit = expanded ? undefined : limit;
+  const visible = effectiveLimit ? items.slice(0, effectiveLimit) : items;
 
   if (visible.length === 0) return null;
 
@@ -121,9 +123,18 @@ function PipelineSection({
         ))}
       </AppItemCardStack>
       {limit && items.length > limit && (
-        <p className="text-xs text-brand-text-muted">
-          Showing {limit} of {items.length} completed payouts.
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-brand-text-muted">
+            {expanded ? `Showing all ${items.length}.` : `Showing ${limit} of ${items.length}.`}
+          </p>
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            className="text-xs font-semibold text-brand-primary hover:underline"
+          >
+            {expanded ? 'Show fewer' : `Show all ${items.length}`}
+          </button>
+        </div>
       )}
     </section>
   );

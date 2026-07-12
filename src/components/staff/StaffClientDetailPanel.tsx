@@ -360,23 +360,30 @@ export function StaffClientDetailPanel({
         {clientRequests.length === 0 ? (
           <p className="text-sm text-brand-text-muted">No jobs posted yet.</p>
         ) : (
-          <AppItemCardStack>
-            {clientRequests.slice(0, 12).map((job) => (
-              <JobListCard
-                key={job.id}
-                job={job}
-                subtitle={job.location}
-                meta={
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <WfBadge>{job.status.replace('-', ' ')}</WfBadge>
-                    <span>{formatShiftRange(job.startDate, job.endDate)}</span>
-                  </div>
-                }
-                onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
-                showStatus={false}
-              />
-            ))}
-          </AppItemCardStack>
+          <>
+            {clientRequests.length > 12 && (
+              <p className="text-xs text-brand-text-muted mb-2">
+                Showing 12 most recent of {clientRequests.length} jobs
+              </p>
+            )}
+            <AppItemCardStack>
+              {clientRequests.slice(0, 12).map((job) => (
+                <JobListCard
+                  key={job.id}
+                  job={job}
+                  subtitle={job.location}
+                  meta={
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <WfBadge>{job.status.replace('-', ' ')}</WfBadge>
+                      <span>{formatShiftRange(job.startDate, job.endDate)}</span>
+                    </div>
+                  }
+                  onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
+                  showStatus={false}
+                />
+              ))}
+            </AppItemCardStack>
+          </>
         )}
       </section>
     </div>

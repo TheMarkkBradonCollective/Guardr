@@ -213,14 +213,14 @@ export function StaffGuardDetailPanel({
     [requests, guard.id]
   );
 
-  const guardJobs = useMemo(
+  const allGuardJobs = useMemo(
     () =>
       requests
         .filter((r) => r.assignedGuardId === guard.id)
-        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-        .slice(0, 8),
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()),
     [requests, guard.id]
   );
+  const guardJobs = useMemo(() => allGuardJobs.slice(0, 8), [allGuardJobs]);
 
   const allCerts = useMemo(() => {
     const flat: Certification[] = (Object.values(groupedCerts) as Certification[][]).flat();
@@ -828,16 +828,23 @@ export function StaffGuardDetailPanel({
             {guardJobs.length === 0 ? (
               <p className="text-sm text-brand-text-muted">No jobs on record.</p>
             ) : (
-              <AppItemCardStack>
-                {guardJobs.map((job) => (
-                  <JobListCard
-                    key={job.id}
-                    job={job}
-                    subtitle={`${job.clientName} · ${job.status.replace('-', ' ')}`}
-                    onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
-                  />
-                ))}
-              </AppItemCardStack>
+              <>
+                {allGuardJobs.length > guardJobs.length && (
+                  <p className="text-xs text-brand-text-muted">
+                    Showing {guardJobs.length} most recent of {allGuardJobs.length} jobs
+                  </p>
+                )}
+                <AppItemCardStack>
+                  {guardJobs.map((job) => (
+                    <JobListCard
+                      key={job.id}
+                      job={job}
+                      subtitle={`${job.clientName} · ${job.status.replace('-', ' ')}`}
+                      onClick={onOpenJob ? () => onOpenJob(job.id) : undefined}
+                    />
+                  ))}
+                </AppItemCardStack>
+              </>
             )}
           </section>
         </>
