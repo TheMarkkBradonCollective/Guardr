@@ -15402,3 +15402,253 @@ textarea:focus-visible {
 }
 
 /* ─── END GUARDR VISUAL REMASTER ─────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF OPS REMASTER — fixes remaster conflicts; Uber Ops console polish
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Staff surfaces stay flat — remaster card chrome does not belong here */
+.staff-shell .staff-ops-card,
+.staff-shell .staff-detail-pane,
+.staff-shell .staff-detail-section,
+.staff-shell .staff-detail-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.staff-shell .app-list-row {
+  margin-inline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+}
+
+/* Sidebar theme backgrounds (undo global override at 10575) */
+.staff-sidebar.staff-sidebar-light {
+  background: #ffffff !important;
+  border-right-color: #e8ebe8 !important;
+}
+
+.staff-sidebar.staff-sidebar-dark {
+  background: #050505 !important;
+  border-right-color: #1a1a1a !important;
+}
+
+.staff-sidebar.staff-sidebar-grey {
+  background: #1c211c !important;
+  border-right-color: color-mix(in srgb, var(--brand-primary) 18%, #2a302a) !important;
+}
+
+.staff-sidebar-brand {
+  margin: 0 !important;
+  background: transparent !important;
+  padding: 0.5rem 0.75rem 1rem !important;
+  border-bottom-color: inherit !important;
+}
+
+.staff-sidebar-wordmark {
+  color: var(--brand-text);
+}
+
+.staff-sidebar-wordmark--on-dark {
+  color: #ffffff;
+}
+
+.staff-sidebar-role {
+  color: var(--brand-text-muted);
+}
+
+.staff-sidebar-role--on-dark {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+/* Nav: rounded pills, consistent active treatment across themes */
+.staff-sidebar .uber-side-nav-item {
+  border-radius: 0.625rem !important;
+  margin: 0.125rem 0.625rem !important;
+  padding: 0.625rem 0.875rem !important;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item-active {
+  background: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent) !important;
+}
+
+.staff-sidebar.staff-sidebar-light .uber-side-nav-item-active svg {
+  color: var(--brand-accent-text) !important;
+  opacity: 1 !important;
+}
+
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item-active,
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 16%, rgba(255, 255, 255, 0.06)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 3px 0 0 var(--brand-primary) !important;
+}
+
+.staff-sidebar.staff-sidebar-dark .uber-side-nav-item-active svg,
+.staff-sidebar.staff-sidebar-grey .uber-side-nav-item-active svg {
+  color: var(--brand-primary) !important;
+  opacity: 1 !important;
+}
+
+.staff-sidebar .mb-5 > p {
+  padding-left: 1.125rem !important;
+  margin-bottom: 0.375rem !important;
+  opacity: 0.72 !important;
+}
+
+/* Main chrome */
+.staff-main-header {
+  background: color-mix(in srgb, var(--brand-surface) 90%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  border-bottom-color: color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary)) !important;
+}
+
+.staff-main-content {
+  background:
+    radial-gradient(ellipse 70% 40% at 100% 0%, color-mix(in srgb, var(--brand-primary) 5%, transparent), transparent 55%),
+    var(--brand-bg) !important;
+}
+
+/* Overview console */
+.staff-overview {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.staff-overview .app-dashboard-hero,
+.staff-overview .app-dashboard-zone-head,
+.staff-overview .app-dashboard-zone-body {
+  padding-inline: 0 !important;
+}
+
+.staff-overview .app-metric-strip {
+  margin-inline: 0 !important;
+}
+
+.staff-overview-focus-band {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+  background: var(--brand-surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.staff-overview-empty-card,
+.staff-overview-chart-card,
+.staff-overview-feed-card,
+.staff-overview-visual-card {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+  background: var(--brand-surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.staff-overview-quick-link {
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.staff-overview-quick-link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card);
+}
+
+.staff-overview-metrics,
+.staff-payment-summary-grid {
+  border-radius: var(--radius-card) !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.staff-summary-cell {
+  background: var(--brand-surface);
+}
+
+/* Split list/detail (guards, jobs, clients, etc.) */
+.staff-shell .tablet-split-panel {
+  gap: 1.25rem;
+  align-items: stretch;
+  min-height: calc(100dvh - 8rem);
+}
+
+.staff-shell .tablet-split-panel > div:first-child {
+  min-height: 0;
+}
+
+.staff-shell .tablet-split-panel > div:last-child {
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary));
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.staff-shell .tablet-split-panel .app-item-card-stack {
+  gap: 0.5rem !important;
+}
+
+.staff-shell .tablet-split-panel .app-item-card {
+  padding: 0.875rem 1rem !important;
+}
+
+.staff-shell .tablet-split-panel .app-item-card-selected {
+  border-color: var(--brand-primary) !important;
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface)) !important;
+}
+
+/* Staff detail metrics */
+.staff-detail-pane .wf-metric-label,
+.staff-detail-section .wf-metric-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+.staff-detail-pane .wf-metric-value,
+.staff-detail-section .wf-metric-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+/* Staff forms: sections as grouped cards, not every random div */
+.staff-shell .app-form-section {
+  margin-bottom: 1rem;
+}
+
+.staff-pane-header,
+.staff-detail-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary)) !important;
+}
+
+.staff-split-pane-list,
+.staff-split-pane-detail {
+  background: var(--brand-surface);
+}
+
+@media (min-width: 1024px) {
+  .staff-sidebar {
+    width: 17rem !important;
+  }
+
+  .staff-shell .tablet-split-panel {
+    grid-template-columns: minmax(300px, 34%) 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ─── END STAFF OPS REMASTER ─────────────────────────────────────────────── */

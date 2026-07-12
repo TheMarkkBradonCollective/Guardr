@@ -126,8 +126,9 @@ export function StaffOpsLayout({
         <div className="flex items-center gap-2.5">
           <Logo size={24} className="shrink-0" />
           <span
-            className="font-black text-xl tracking-[-0.04em] leading-none"
-            style={{ color: isDarkSidebar ? '#ffffff' : undefined }}
+            className={`font-black text-xl tracking-[-0.04em] leading-none staff-sidebar-wordmark${
+              isDarkSidebar ? ' staff-sidebar-wordmark--on-dark' : ''
+            }`}
           >
             Guardr
           </span>
@@ -136,8 +137,9 @@ export function StaffOpsLayout({
           )}
         </div>
         <p
-          className="text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5"
-          style={{ color: isDarkSidebar ? 'rgba(255,255,255,0.38)' : undefined }}
+          className={`text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5 staff-sidebar-role${
+            isDarkSidebar ? ' staff-sidebar-role--on-dark' : ''
+          }`}
         >
           {ROLE_LABELS[currentUser.role]}
         </p>
