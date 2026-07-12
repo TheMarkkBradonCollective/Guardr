@@ -342,6 +342,11 @@ export function ShiftMap({
           <Marker
             key={job.id}
             position={[coords.lat, coords.lng]}
+            // Leaflet applies `alt` as the marker's accessible name (role="button"
+            // + tabindex, so it's already keyboard-reachable) — without this it
+            // falls back to the icon HTML content ("$45"), which reads out as a
+            // bare dollar amount with no idea what job or site it belongs to.
+            alt={`${job.title || 'Security job'}${job.siteName ? ` at ${job.siteName}` : ''}, $${pinHourlyRate(job, pinMode)}/hr`}
             icon={createShiftIcon(
               pinHourlyRate(job, pinMode),
               selectedJobId === job.id,
