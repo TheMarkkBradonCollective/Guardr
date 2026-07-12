@@ -36,6 +36,27 @@ function useTopmostEscapeClose(active: boolean, onClose: () => void) {
   }, [active, onClose]);
 }
 
+/**
+ * Returns keyboard/screen-reader focus to whatever was focused before the
+ * dialog opened (e.g. the button that triggered it), once it closes. Doesn't
+ * force focus *into* the dialog on open — several dialog bodies already set
+ * their own `autoFocus` on a specific field, and forcing focus onto the
+ * panel/first-focusable element here would fight with that intentional
+ * placement (e.g. steal focus from an autofocused input to an earlier
+ * Cancel button in DOM order).
+ */
+function useReturnFocusOnClose(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    return () => {
+      if (previouslyFocused && document.contains(previouslyFocused) && typeof previouslyFocused.focus === 'function') {
+        previouslyFocused.focus();
+      }
+    };
+  }, [active]);
+}
+
 /** Uber-style snappy ease — confident, not bouncy */
 export const APP_MOTION_EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -108,6 +129,7 @@ export function AppModal({
   position = 'fixed',
 }: AppModalProps) {
   useTopmostEscapeClose(open, onClose);
+  useReturnFocusOnClose(open);
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
@@ -187,6 +209,7 @@ export function AppOverlaySheet({
   ariaLabel,
 }: AppOverlaySheetProps) {
   useTopmostEscapeClose(open, onClose);
+  useReturnFocusOnClose(open);
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
@@ -250,6 +273,7 @@ interface AppDrawerProps {
 /** Left sidebar drawer with slide-in */
 export function AppDrawer({ open, onClose, title, subtitle, children, footer }: AppDrawerProps) {
   useTopmostEscapeClose(open, onClose);
+  useReturnFocusOnClose(open);
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
