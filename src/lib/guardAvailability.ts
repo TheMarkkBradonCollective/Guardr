@@ -79,3 +79,40 @@ export function defaultAvailabilitySlots(guardId: string): GuardAvailabilitySlot
     isAvailable: true,
   }));
 }
+
+/** True when a slot's end time is not strictly after its start time (same-day window). */
+export function isInvalidAvailabilityWindow(slot: Pick<GuardAvailabilitySlot, 'startTime' | 'endTime'>): boolean {
+  return Boolean(slot.startTime && slot.endTime && slot.endTime <= slot.startTime);
+}
+
+const AVAILABILITY_STORAGE_PREFIX = 'guardr_guard_availability_';
+
+/**
+ * There is no `guard_availability` table in the schema yet, so this feature
+ * had no persistence at all — edits lived only in component state and were
+ * lost on refresh/navigation, with no "Save" button even appearing since it
+ * only rendered when a parent passed `onSave` (no caller ever did). Persist
+ * to localStorage per guard as a real, working fix until a server-backed
+ * version exists; this mirrors how theme preference is already persisted
+ * (see lib/platform/theme.ts) rather than inventing a new pattern.
+ */
+export function loadAvailabilitySlots(guardId: string): GuardAvailabilitySlot[] | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`${AVAILABILITY_STORAGE_PREFIX}${guardId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAvailabilitySlots(guardId: string, slots: GuardAvailabilitySlot[]): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(`${AVAILABILITY_STORAGE_PREFIX}${guardId}`, JSON.stringify(slots));
+  } catch {
+    // Storage unavailable/full — availability simply won't persist this session.
+  }
+}
