@@ -11,9 +11,12 @@ import { canClientApproveStaffScheduleChange } from '../../lib/jobScheduleChange
 import { canClientApproveOvertime } from '../../lib/shiftBilling';
 import { canClientConfirmSelfAudit, hasSelfAuditPhotosToReview, isSelfAuditClientConfirmed } from '../../lib/selfAuditPhotos';
 import {
+  AppDashboardHero,
   AppDashboardZone,
   AppEmptyState,
   AppItemCard,
+  AppMetricCell,
+  AppMetricStrip,
   AppScreen,
   AppStatusBanner,
 } from '../ui/app/AppPrimitives';
@@ -24,7 +27,6 @@ import {
   Building2,
   FileText,
   Plus,
-  ClipboardList,
   Users,
   Clock,
   Map,
@@ -127,15 +129,25 @@ export function ClientHomeScreen({
     callback?.();
   };
 
+  const liveStatus = hasLiveCoverage ? (
+    <button
+      type="button"
+      onClick={() => runAction('map')}
+      className={`app-live-pill ${protectedActionClass}`}
+      aria-disabled={accountPending}
+    >
+      <Radio className="w-3.5 h-3.5" />
+      {coverage.activeAssignments} live
+    </button>
+  ) : undefined;
+
   return (
-    <AppScreen className="client-home-screen">
-      <header className="client-home-header px-5 pt-4 pb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-text-muted">{todayLabel}</p>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-[-0.04em] leading-tight mt-1">
-          {timeGreeting()}
-        </h1>
-        <p className="text-sm text-brand-text-muted mt-1">{companyName}</p>
-      </header>
+    <AppScreen className="client-home-screen role-experience-client">
+      <AppDashboardHero
+        kicker={`${todayLabel} · ${companyName}`}
+        title={timeGreeting()}
+        status={liveStatus}
+      />
 
       {accountPending && (
         <div className="px-5 pb-4">
@@ -244,30 +256,23 @@ export function ClientHomeScreen({
         )}
       </div>
 
-      <div className="px-5 py-4">
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
+      <AppDashboardZone title="At a glance" className="!mb-4">
+        <AppMetricStrip className="app-metric-strip--count-2">
+          <AppMetricCell
+            label="Open jobs"
+            value={openRequestCount}
+            sub="Active requests"
             onClick={() => runAction('requests')}
-            className={`client-home-glance-tile ${protectedActionClass}`}
-            aria-disabled={accountPending}
-          >
-            <ClipboardList className="w-5 h-5 text-brand-primary" />
-            <p className="client-home-glance-value">{openRequestCount}</p>
-            <p className="client-home-glance-label">Open jobs</p>
-          </button>
-          <button
-            type="button"
+            accent={openRequestCount > 0}
+          />
+          <AppMetricCell
+            label="Upcoming"
+            value={upcoming.length}
+            sub="Scheduled shifts"
             onClick={() => runAction('requests')}
-            className={`client-home-glance-tile ${protectedActionClass}`}
-            aria-disabled={accountPending}
-          >
-            <Calendar className="w-5 h-5 text-brand-primary" />
-            <p className="client-home-glance-value">{upcoming.length}</p>
-            <p className="client-home-glance-label">Upcoming shifts</p>
-          </button>
-        </div>
-      </div>
+          />
+        </AppMetricStrip>
+      </AppDashboardZone>
 
       <AppDashboardZone title="Quick actions">
         <div className="client-home-quick-grid px-5 pb-1">

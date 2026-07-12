@@ -15652,3 +15652,360 @@ textarea:focus-visible {
 }
 
 /* ─── END STAFF OPS REMASTER ─────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR V4 — VISIBLE FULL-APP TRANSFORMATION
+   Cohesive premium surface across every role; sage brand preserved.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Ambient canvas (every role) ───────────────────────────────────────── */
+
+.page-shell,
+.role-app-shell,
+.staff-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.page-shell::before,
+.role-app-shell::before,
+.staff-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, color-mix(in srgb, var(--brand-primary) 9%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 8%, color-mix(in srgb, var(--brand-primary) 6%, transparent), transparent 50%);
+  opacity: 0.9;
+}
+
+.role-app-shell > *,
+.staff-shell > *,
+.page-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.role-experience-client .app-screen {
+  --experience-accent: var(--brand-primary);
+}
+
+.role-experience-guard .app-screen {
+  --experience-accent: var(--brand-primary);
+}
+
+/* ─── Form system (app-input + uber-input unified) ─────────────────────── */
+
+.app-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.app-field-label,
+.uber-label {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--brand-text-muted) !important;
+}
+
+.app-field-hint {
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+  line-height: 1.4;
+}
+
+.app-field-error {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-danger);
+}
+
+.app-input,
+.app-textarea,
+.app-select,
+.uber-input,
+.uber-select {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.8125rem 1rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  font-family: var(--font-sans) !important;
+  color: var(--brand-text) !important;
+  background: var(--brand-surface) !important;
+  border: 1.5px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  border-radius: var(--radius-input) !important;
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--brand-text) 4%, transparent);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+html.theme-dark .app-input,
+html.theme-dark .app-textarea,
+html.theme-dark .app-select,
+html.theme-dark .uber-input,
+html.theme-dark .uber-select,
+html.theme-grey .app-input,
+html.theme-grey .app-textarea,
+html.theme-grey .app-select,
+html.theme-grey .uber-input,
+html.theme-grey .uber-select {
+  background: var(--brand-bg-sec) !important;
+}
+
+.app-textarea,
+textarea.uber-input {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: 1.5 !important;
+}
+
+.app-input:focus,
+.app-textarea:focus,
+.app-select:focus,
+.uber-input:focus,
+.uber-select:focus {
+  border-color: var(--brand-primary) !important;
+  box-shadow: var(--focus-ring), inset 0 1px 2px color-mix(in srgb, var(--brand-text) 3%, transparent) !important;
+  outline: none !important;
+}
+
+.app-input::placeholder,
+.app-textarea::placeholder,
+.uber-input::placeholder {
+  color: var(--brand-text-muted) !important;
+  opacity: 0.72 !important;
+}
+
+/* Chip toggles (auth + filters) */
+.app-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--brand-border);
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border));
+}
+
+.app-chip-selected {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--brand-surface));
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 25%, transparent);
+}
+
+.app-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 35%, var(--brand-border));
+  background: color-mix(in srgb, var(--status-danger) 8%, var(--brand-surface));
+  color: var(--status-danger);
+  margin-bottom: 1rem;
+}
+
+.app-error-banner-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--status-danger);
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Elevated flow surfaces (auth, wizards) */
+.app-flow-surface,
+.auth-form-surface {
+  padding: 1.5rem 1.25rem 1.75rem;
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary));
+  background: color-mix(in srgb, var(--brand-surface) 94%, transparent);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+@media (min-width: 640px) {
+  .app-flow-surface,
+  .auth-form-surface {
+    padding: 2rem 1.75rem 2.25rem;
+  }
+}
+
+/* Auth experience */
+.auth-experience-client .auth-hero,
+.auth-experience-guard .auth-hero {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--brand-primary-hover) 92%, #000) 0%,
+    var(--brand-primary) 48%,
+    color-mix(in srgb, var(--brand-primary) 55%, #0a0f0a) 100%
+  ) !important;
+}
+
+.auth-form-scroll {
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, color-mix(in srgb, var(--brand-primary) 8%, transparent), transparent 60%),
+    var(--brand-bg);
+}
+
+.segmented-control {
+  background: color-mix(in srgb, var(--brand-bg-sec) 80%, var(--brand-surface)) !important;
+  border: 1px solid var(--brand-border) !important;
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--brand-text) 4%, transparent);
+}
+
+.segmented-control-btn-active {
+  background: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 30%, transparent) !important;
+  font-weight: 700 !important;
+}
+
+.auth-role-card {
+  border-radius: var(--radius-card) !important;
+  background: var(--brand-surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.auth-role-card-active {
+  border-color: var(--brand-primary) !important;
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface)) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Client home — unified with staff overview */
+.client-home-screen .app-dashboard-hero {
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+
+.client-home-screen .app-dashboard-zone-head,
+.client-home-screen .app-dashboard-zone-body {
+  padding-inline: 1.25rem;
+}
+
+.client-home-screen .app-metric-strip {
+  margin-inline: 1.25rem;
+}
+
+.client-home-live-card,
+.client-home-empty-live {
+  margin-inline: 1.25rem;
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border)) !important;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--brand-primary) 10%, var(--brand-surface)),
+    var(--brand-surface)
+  ) !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 1.25rem !important;
+}
+
+.client-home-quick-tile {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+}
+
+.client-home-quick-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card) !important;
+}
+
+.client-home-quick-tile-primary {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--brand-primary) 14%, var(--brand-surface)),
+    var(--brand-surface)
+  ) !important;
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border)) !important;
+}
+
+.app-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent);
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.app-live-pill:hover {
+  background: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Landing polish */
+.landing-leadership-card {
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary));
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  text-align: left;
+}
+
+.legal-info-card {
+  padding: 1.25rem !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;
+}
+
+.legal-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card) !important;
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--brand-border)) !important;
+}
+
+/* Wizard / request flows */
+.app-form-section,
+.app-flow-surface .app-form-section {
+  margin-bottom: 1rem;
+}
+
+.role-app-shell .app-form-section,
+.staff-shell .app-form-section {
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary));
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+}
+
+/* Stronger screen titles sitewide */
+.app-screen-title,
+.app-page-lead-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+}
+
+.app-card-elevated {
+  padding: 1.5rem !important;
+}
+
+/* ─── END GUARDR V4 ──────────────────────────────────────────────────────── */

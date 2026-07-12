@@ -9551,6 +9551,7 @@ export default function App() {
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
             themeMode={themeMode}
+            onChangeTheme={changeThemeMode}
           />
           <InstallPrompt />
         </>
