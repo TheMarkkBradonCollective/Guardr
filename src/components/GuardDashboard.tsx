@@ -52,6 +52,7 @@ import { AccountMenu } from './layouts/AccountMenu';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../lib/messagesChrome';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
+import { AppScreen } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
 import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users } from 'lucide-react';
 import {
@@ -897,13 +898,15 @@ export function GuardDashboard({
   const accountPreActive = isGuardAccountPreActive(guard);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-brand-bg p-6">
-        <div className="uber-card max-w-md w-full text-center space-y-5 rounded-2xl">
-          <AlertTriangle className="w-10 h-10 text-red-400 mx-auto" />
-          <h2 className="font-black text-lg uppercase">Account {GUARD_STATUS_LABELS[userStatus]}</h2>
-          <p className="text-brand-text-muted text-sm">Contact Guardr support to restore access.</p>
+      <AppScreen className="flex min-h-screen items-center justify-center p-6">
+        <div className="app-card-elevated max-w-md w-full text-center p-8 space-y-4">
+          <div className="app-empty-state-icon mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <h2 className="text-xl font-black tracking-[-0.03em]">Account {GUARD_STATUS_LABELS[userStatus]}</h2>
+          <p className="text-brand-text-muted text-sm leading-relaxed">Contact Guardr support to restore access.</p>
         </div>
-      </div>
+      </AppScreen>
     );
   }
 

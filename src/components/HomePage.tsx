@@ -358,7 +358,7 @@ export function HomePage({
                 className="landing-leadership-messages space-y-3 mb-6 max-w-xl"
               >
                 {ownerMessage?.trim() && (
-                  <blockquote className="rounded-xl border border-brand-border bg-brand-surface-elevated/80 p-4 text-left">
+                  <blockquote className="landing-leadership-card">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
                       Markeith White · Founder
                     </p>
@@ -366,7 +366,7 @@ export function HomePage({
                   </blockquote>
                 )}
                 {directorMessage?.trim() && (
-                  <blockquote className="rounded-xl border border-brand-border bg-brand-surface-elevated/80 p-4 text-left">
+                  <blockquote className="landing-leadership-card">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-brand-primary mb-1.5">
                       Tyrone Johnson · Director
                     </p>
@@ -505,7 +505,7 @@ export function HomePage({
               <button
                 type="button"
                 onClick={() => onNavigateToAuth('guard', 'sign-up')}
-                className="uber-button-sage landing-feature-cta"
+                className="app-button-primary landing-feature-cta"
               >
                 Create guard account
                 <ArrowRight className="w-4 h-4" />

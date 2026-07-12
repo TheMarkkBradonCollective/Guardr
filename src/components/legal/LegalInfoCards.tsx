@@ -35,7 +35,7 @@ export function LegalInfoCards({ onOpenLegal, className = '' }: LegalInfoCardsPr
             key={id}
             type="button"
             onClick={() => onOpenLegal(id)}
-            className="legal-info-card group text-left border border-brand-border bg-brand-surface p-4 transition-colors hover:border-brand-primary/40 hover:bg-brand-primary/5"
+            className="landing-how-card legal-info-card group text-left w-full"
           >
             <div className="flex items-start gap-3">
               <span className="shrink-0 w-10 h-10 rounded-lg border border-brand-border bg-brand-bg-sec flex items-center justify-center text-brand-primary group-hover:border-brand-primary/40 group-hover:bg-brand-primary/6 transition-colors">

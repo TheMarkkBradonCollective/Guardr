@@ -640,3 +640,107 @@ export function AppChatComposer({
     </div>
   );
 }
+
+/* ─── Form primitives (Guardr v4 — use across auth, flows, profile) ─── */
+
+export function AppFormField({
+  label,
+  children,
+  hint,
+  error,
+  className = '',
+  htmlFor,
+}: {
+  label?: string;
+  children: React.ReactNode;
+  hint?: string;
+  error?: string;
+  className?: string;
+  htmlFor?: string;
+}) {
+  return (
+    <div className={`app-form-field ${className}`.trim()}>
+      {label && (
+        <label className="app-field-label" htmlFor={htmlFor}>
+          {label}
+        </label>
+      )}
+      {children}
+      {error && <p className="app-field-error">{error}</p>}
+      {hint && !error && <p className="app-field-hint">{hint}</p>}
+    </div>
+  );
+}
+
+export function AppInput({
+  className = '',
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={`app-input uber-input ${className}`.trim()} {...props} />;
+}
+
+export function AppTextarea({
+  className = '',
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea className={`app-input app-textarea uber-input ${className}`.trim()} {...props} />;
+}
+
+export function AppSelect({
+  className = '',
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select className={`app-input app-select uber-select ${className}`.trim()} {...props}>
+      {children}
+    </select>
+  );
+}
+
+export function AppChip({
+  selected = false,
+  children,
+  className = '',
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`app-chip ${selected ? 'app-chip-selected' : ''} ${className}`.trim()}
+      aria-pressed={selected}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function AppChipGroup({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`app-chip-group ${className}`.trim()}>{children}</div>;
+}
+
+export function AppErrorBanner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="app-error-banner" role="alert">
+      <span className="app-error-banner-dot" aria-hidden />
+      <div className="min-w-0 flex-1 text-sm font-medium leading-relaxed">{children}</div>
+    </div>
+  );
+}
+
+export function AppFlowSurface({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`app-flow-surface ${className}`.trim()}>{children}</div>;
+}

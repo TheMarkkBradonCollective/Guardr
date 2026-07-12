@@ -17,6 +17,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
+import { ThemeToggle } from './ui/ThemeToggle';
+import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -30,6 +32,7 @@ import {
   verifyAccountPassword,
 } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
+import type { ThemeMode } from '../lib/platform/theme';
 
 const MIN_GUARD_HOURLY_RATE = 15;
 const MAX_GUARD_HOURLY_RATE = 300;
@@ -156,7 +159,8 @@ interface AuthPageProps {
   onAuthRoleChange?: (role: 'guard' | 'client') => void;
   initialRole?: 'guard' | 'client';
   initialMode?: 'sign-in' | 'sign-up';
-  themeMode?: string;
+  themeMode?: ThemeMode;
+  onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
 }
 
@@ -190,6 +194,8 @@ export function AuthPage({
   onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
+  themeMode = 'dark',
+  onChangeTheme,
   isDbConnected = true,
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
@@ -520,7 +526,10 @@ export function AuthPage({
             <Logo size={26} className="text-white" />
             <span className="font-black text-lg tracking-[-0.04em]">Guardr</span>
           </div>
-          <div className="w-14 flex justify-end">
+          <div className="w-14 flex justify-end items-center gap-1">
+            {onChangeTheme && (
+              <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
+            )}
             {onOpenGuide && (
               <button
                 type="button"
@@ -543,7 +552,7 @@ export function AuthPage({
       </div>
 
       <div className="auth-form-scroll flex flex-1 min-h-0 items-start justify-center px-5 py-6 sm:py-10">
-        <div className="w-full max-w-md animate-fade-in">
+        <AppFlowSurface className="w-full max-w-md animate-fade-in">
           <div className="mb-7">
             <p className="experience-badge">
               {role === 'guard' ? 'Guard workspace' : 'Client workspace'}
@@ -584,12 +593,7 @@ export function AuthPage({
           </div>
 
           <div className="space-y-5">
-            {errorMsg && (
-              <div className="mb-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/8 text-red-400 text-sm px-4 py-3">
-                <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                {errorMsg}
-              </div>
-            )}
+            {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
 
             {isSignUp && (
               <div className="mb-6">
@@ -1136,7 +1140,7 @@ export function AuthPage({
               <LegalFooterLinks onOpenLegal={onOpenLegal} />
             </div>
           )}
-        </div>
+        </AppFlowSurface>
       </div>
     </div>
   );
