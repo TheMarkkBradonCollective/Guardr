@@ -29,9 +29,14 @@ export function StaffAuditLogPanel() {
         </button>
       </div>
       <p className="text-sm text-brand-text-muted">Immutable record of platform actions for compliance and dispute resolution.</p>
+      {entries.length >= 200 && (
+        <p className="text-xs text-brand-text-muted">
+          Showing the 200 most recent entries. Older activity is still retained but not shown here.
+        </p>
+      )}
       <div className="rounded-xl border border-brand-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-brand-surface-elevated text-brand-text-muted text-xs uppercase">
+          <thead className="bg-brand-surface-elevated text-brand-text-muted text-xs uppercase sticky top-0 z-10">
             <tr>
               <th className="text-left p-3">Time</th>
               <th className="text-left p-3">Actor</th>

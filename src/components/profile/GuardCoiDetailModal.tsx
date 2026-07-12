@@ -307,7 +307,20 @@ export function GuardCoiDetailModal({
 
           {staffMode && onReview && policy && status === 'pending' && (
             <div className="flex flex-wrap gap-2 pt-2 border-t border-brand-border">
-              <button type="button" className="app-button-primary" onClick={() => onReview('verified')}>
+              <button
+                type="button"
+                disabled={saving}
+                className="app-button-primary disabled:opacity-50"
+                onClick={() => {
+                  if (saving) return;
+                  setSaving(true);
+                  void onReview('verified')
+                    .catch((err) =>
+                      showAppToast(err instanceof Error ? err.message : 'Could not verify COI.', { tone: 'error' })
+                    )
+                    .finally(() => setSaving(false));
+                }}
+              >
                 Verify insurance
               </button>
               <input
@@ -315,13 +328,21 @@ export function GuardCoiDetailModal({
                 placeholder="Rejection reason (if rejecting)"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
+                disabled={saving}
               />
               <button
                 type="button"
-                className="app-button-secondary"
-                onClick={() =>
-                  onReview('rejected', rejectionReason.trim() || 'Document incomplete or expired')
-                }
+                disabled={saving}
+                className="app-button-secondary disabled:opacity-50"
+                onClick={() => {
+                  if (saving) return;
+                  setSaving(true);
+                  void onReview('rejected', rejectionReason.trim() || 'Document incomplete or expired')
+                    .catch((err) =>
+                      showAppToast(err instanceof Error ? err.message : 'Could not reject COI.', { tone: 'error' })
+                    )
+                    .finally(() => setSaving(false));
+                }}
               >
                 Reject
               </button>

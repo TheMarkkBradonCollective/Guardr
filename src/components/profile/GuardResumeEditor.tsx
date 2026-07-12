@@ -182,8 +182,12 @@ export function GuardResumeEditor({
           label="Years of experience"
           value={payload.yearsExperience != null ? String(payload.yearsExperience) : ''}
           editing={editing}
-          onChange={(v) => onChange({ yearsExperience: v ? parseInt(v, 10) || undefined : undefined })}
+          onChange={(v) => {
+            const parsed = v ? parseInt(v, 10) : NaN;
+            onChange({ yearsExperience: Number.isFinite(parsed) ? Math.max(0, parsed) : undefined });
+          }}
           type="number"
+          min={0}
         />
         <ResumeField
           label="Skills"
@@ -339,6 +343,7 @@ function ResumeField({
   multiline,
   rows = 3,
   type = 'text',
+  min,
 }: {
   label: string;
   value: string;
@@ -348,6 +353,7 @@ function ResumeField({
   multiline?: boolean;
   rows?: number;
   type?: string;
+  min?: number;
 }) {
   return (
     <div>
@@ -364,6 +370,7 @@ function ResumeField({
         ) : (
           <input
             type={type}
+            min={min}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}

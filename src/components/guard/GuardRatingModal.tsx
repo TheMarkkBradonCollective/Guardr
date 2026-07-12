@@ -12,6 +12,14 @@ interface GuardRatingModalProps {
 export function GuardRatingModal({ open, clientName, onSubmit, onSkip }: GuardRatingModalProps) {
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  // Modal is controlled by the parent's `open` prop, which typically flips
+  // to false right after submit — reset the local guard whenever it reopens
+  // so a later rating prompt isn't stuck disabled.
+  React.useEffect(() => {
+    if (open) setSubmitted(false);
+  }, [open]);
 
   return (
     <AppModal open={open} align="center" position="absolute" zIndex={1004} onClose={onSkip} panelClassName="p-6 space-y-5">
@@ -40,13 +48,18 @@ export function GuardRatingModal({ open, clientName, onSubmit, onSkip }: GuardRa
       />
 
       <div className="app-action-row--2">
-        <button type="button" onClick={onSkip} className="app-button-outline">
+        <button type="button" onClick={onSkip} className="app-button-outline" disabled={submitted}>
           Skip
         </button>
         <button
           type="button"
-          onClick={() => onSubmit(rating, note || 'Good assignment.')}
-          className="app-button-primary"
+          disabled={submitted}
+          onClick={() => {
+            if (submitted) return;
+            setSubmitted(true);
+            onSubmit(rating, note || 'Good assignment.');
+          }}
+          className="app-button-primary disabled:opacity-50"
         >
           Submit
         </button>

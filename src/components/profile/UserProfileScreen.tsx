@@ -137,7 +137,7 @@ export function UserProfileScreen({
       ...normalized,
       phone: phone.trim(),
     companyName: companyName.trim(),
-    hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
+    hourlyRateRequirement: hourlyRate ? Math.max(0, parseInt(hourlyRate, 10) || 0) : resume.hourlyRateRequirement,
     avatar: avatarOverride ?? avatar,
     ...resume,
     summary: resume.summary.trim(),
@@ -267,6 +267,7 @@ export function UserProfileScreen({
             onChange={setHourlyRate}
             editing={editing}
             type="number"
+            min={0}
           />
         )}
         {guard && (
@@ -284,7 +285,7 @@ export function UserProfileScreen({
           editing={editing}
           credentialsEditing={credentialsEditing}
           payload={resume}
-          onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : r.hourlyRateRequirement }))}
+          onChange={(patch) => setResume((r) => ({ ...r, ...patch, hourlyRateRequirement: hourlyRate ? Math.max(0, parseInt(hourlyRate, 10) || 0) : r.hourlyRateRequirement }))}
           onAddCertification={onAddCertification}
           onDeleteCertification={onDeleteCertification}
           onAttachCertificationImage={onAttachCertificationImage}
@@ -307,6 +308,7 @@ function Field({
   editing,
   readOnly,
   type = 'text',
+  min,
 }: {
   label: string;
   value: string;
@@ -314,6 +316,7 @@ function Field({
   editing: boolean;
   readOnly?: boolean;
   type?: string;
+  min?: number;
 }) {
   return (
     <div>
@@ -321,6 +324,7 @@ function Field({
       {editing && !readOnly && onChange ? (
         <input
           type={type}
+          min={min}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="uber-input w-full mt-1"

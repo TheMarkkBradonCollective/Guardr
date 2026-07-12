@@ -30,6 +30,19 @@ import {
   verifyAccountPassword,
 } from '../lib/accountPasswords';
 
+const MIN_GUARD_HOURLY_RATE = 15;
+const MAX_GUARD_HOURLY_RATE = 300;
+const DEFAULT_GUARD_HOURLY_RATE = 35;
+
+/** Matches the hourly-rate input's own min={15}/max={300} — parseInt(x) || 35
+ * alone let negative/zero values through since they're truthy, e.g. -5 || 35
+ * evaluates to -5, not 35. */
+function clampHourlyRate(raw: string): number {
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_GUARD_HOURLY_RATE;
+  return Math.min(MAX_GUARD_HOURLY_RATE, Math.max(MIN_GUARD_HOURLY_RATE, parsed));
+}
+
 const SERVICE_TYPE_OPTIONS = [
   'Event security',
   'Site patrol',
@@ -337,7 +350,7 @@ export function AuthPage({
         jobsCompleted: 0,
         certifications: [],
         experience: [],
-        hourlyRateRequirement: parseInt(hourlyRate) || 35,
+        hourlyRateRequirement: clampHourlyRate(hourlyRate),
         userStatus: 'pending',
       };
 
@@ -670,6 +683,8 @@ export function AuthPage({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text p-1"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -683,11 +698,19 @@ export function AuthPage({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="uber-label block mb-2">Phone</label>
-                      <input type="text" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="uber-input" />
+                      <input type="tel" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="uber-input" />
                     </div>
                     <div>
                       <label className="uber-label block mb-2">Hourly rate ($)</label>
-                      <input type="number" min="15" max="300" placeholder="35" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className="uber-input" />
+                      <input
+                        type="number"
+                        min={MIN_GUARD_HOURLY_RATE}
+                        max={MAX_GUARD_HOURLY_RATE}
+                        placeholder={String(DEFAULT_GUARD_HOURLY_RATE)}
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                        className="uber-input"
+                      />
                     </div>
                   </div>
                   <div>

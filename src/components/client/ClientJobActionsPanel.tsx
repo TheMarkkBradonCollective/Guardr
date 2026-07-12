@@ -165,6 +165,7 @@ export function ClientJobActionsPanel({
   const [payingScheduleJobId, setPayingScheduleJobId] = useState<string | null>(null);
   const [pendingGuardActionId, setPendingGuardActionId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const disputeClockOutIso = overtimeDisputeClockOutLocal
     ? new Date(overtimeDisputeClockOutLocal).toISOString()
@@ -721,7 +722,10 @@ export function ClientJobActionsPanel({
           <div className="border-t border-brand-border pt-3 w-full">
             <button
               type="button"
-              onClick={() => setReviewOpen(true)}
+              onClick={() => {
+                setReviewSubmitting(false);
+                setReviewOpen(true);
+              }}
               className="app-button-outline !w-full !h-9 !text-xs gap-1.5"
             >
               <Award className="w-3.5 h-3.5" /> Rate guard
@@ -815,7 +819,7 @@ export function ClientJobActionsPanel({
         <div className="space-y-4">
           <div className="flex gap-1 justify-center py-2">
             {[1, 2, 3, 4, 5].map((s) => (
-              <button key={s} type="button" onClick={() => setReviewRating(s)}>
+              <button key={s} type="button" onClick={() => setReviewRating(s)} aria-label={`${s} star${s === 1 ? '' : 's'}`}>
                 <Star
                   className={`w-8 h-8 ${reviewRating >= s ? 'fill-brand-primary text-brand-primary' : 'text-brand-border'}`}
                 />
@@ -831,11 +835,14 @@ export function ClientJobActionsPanel({
           />
           <button
             type="button"
+            disabled={reviewSubmitting}
             onClick={() => {
+              if (reviewSubmitting) return;
+              setReviewSubmitting(true);
               onAddReview?.(req.id, reviewRating || 5, reviewNote || 'Good work.');
               setReviewOpen(false);
             }}
-            className="app-button-primary w-full"
+            className="app-button-primary w-full disabled:opacity-50"
           >
             Submit review
           </button>

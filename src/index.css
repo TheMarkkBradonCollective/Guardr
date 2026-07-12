@@ -80,7 +80,7 @@ html.theme-light {
   --brand-chrome-muted:  var(--brand-text-muted);
   --brand-chrome-border: var(--brand-border);
   --status-success:      #3F7D4F;
-  --status-warning:      #B7791F;
+  --status-warning:      #946219; /* darkened from #B7791F: 3.64:1 on white failed WCAG AA text contrast (4.5:1) */
   --status-danger:       #DC2626;
   --status-info:         #2F6F8F;
   --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.06);
@@ -4265,6 +4265,33 @@ html.theme-light .staff-ops-btn-primary {
   min-height: 3rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+/* Compact button overrides: the shared `min-height: 3rem` above is not
+   !important, but as a plain min-height floor it still wins over
+   Tailwind's !h-8/!h-9/!h-10/!h-11 utilities (min-height and height are
+   independent properties, so an important `height` alone can't shrink
+   a box past its min-height). Every "compact" action button sitewide
+   using these utilities was silently rendering at the full 48px. */
+.app-button-primary.\!h-8,
+.app-button-outline.\!h-8 {
+  min-height: 2rem !important;
+  height: 2rem !important;
+}
+.app-button-primary.\!h-9,
+.app-button-outline.\!h-9 {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+}
+.app-button-primary.\!h-10,
+.app-button-outline.\!h-10 {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+}
+.app-button-primary.\!h-11,
+.app-button-outline.\!h-11 {
+  min-height: 2.75rem !important;
+  height: 2.75rem !important;
 }
 
 html.theme-light .app-button-primary,
@@ -10216,6 +10243,34 @@ html.theme-dark .uber-input:focus,
 html.theme-dark input.uber-input:focus,
 html.theme-dark textarea.uber-input:focus {
   background: #1a1a1a !important;
+}
+
+/* ─── ICON-IN-FIELD SPACING ──────────────────────────────────────────────
+   The shorthand "padding" rule above is !important and resets all four
+   sides, which silently wiped out Tailwind's pl- and pr- utilities used
+   to clear leading/trailing icons (email, phone, password reveal, select
+   chevrons). Restore per-side padding with matching specificity so the
+   icon never overlaps the placeholder or typed value. */
+.uber-input.pl-9 { padding-left: 2.25rem !important; }
+.uber-input.pl-10 { padding-left: 2.5rem !important; }
+.uber-input.pl-11 { padding-left: 2.75rem !important; }
+.uber-input.pl-12 { padding-left: 3rem !important; }
+.uber-input.pr-8 { padding-right: 2rem !important; }
+.uber-input.pr-9 { padding-right: 2.25rem !important; }
+.uber-input.pr-10 { padding-right: 2.5rem !important; }
+.uber-input.pr-11 { padding-right: 2.75rem !important; }
+.uber-input.pr-12 { padding-right: 3rem !important; }
+
+/* Compact field size override: base .uber-input rules only set `height`
+   with !important, but the separate `min-height: 3.25rem` floor (set
+   without !important further down) still wins over Tailwind's `!h-9`
+   utility since min-height and height are independent properties. This
+   silently forced "compact" job-form fields back to full 52px height. */
+.uber-input.\!h-9 {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* ─── STATUS BADGE: CONSISTENT INDICATORS ───────────────────────────────── */

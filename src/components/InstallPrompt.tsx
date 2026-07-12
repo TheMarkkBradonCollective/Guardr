@@ -141,6 +141,7 @@ export function InstallPrompt() {
 
             <button
               onClick={() => setShowGuide(false)}
+              aria-label="Close install guide"
               className="absolute top-4 right-4 text-brand-text-muted hover:text-brand-text transition-colors"
             >
               <X size={16} />
