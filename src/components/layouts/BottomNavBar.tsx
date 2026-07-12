@@ -71,8 +71,8 @@ export function BottomNavBar({
 
   return (
     <nav
-      className={`bottom-nav-bar shrink-0 z-[1001] border-t border-brand-border ${
-        flat ? 'bg-brand-bg' : 'bg-brand-surface/95 backdrop-blur-xl'
+      className={`bottom-nav-bar shrink-0 z-[1001] border-t border-brand-border bg-brand-surface/92 backdrop-blur-xl backdrop-saturate-150 shadow-[var(--shadow-nav)] ${
+        flat ? '!bg-brand-bg' : ''
       }`}
       aria-label="Main navigation"
     >

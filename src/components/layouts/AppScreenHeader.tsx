@@ -25,7 +25,7 @@ export function AppScreenHeader({
 
   return (
     <header
-      className={`app-screen-header shrink-0 border-b border-brand-border bg-brand-bg transition-colors ${extension ? 'app-screen-header--with-extension' : ''} ${className}`}
+      className={`app-screen-header shrink-0 border-b border-brand-border bg-brand-surface/88 backdrop-blur-xl backdrop-saturate-150 transition-colors ${extension ? 'app-screen-header--with-extension' : ''} ${className}`}
     >
       <div className="app-screen-header-row px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 flex items-center gap-3">
         <div className="min-w-0 flex-1 flex items-center gap-3">

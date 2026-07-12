@@ -24,7 +24,7 @@ export function StaffAuditLogPanel() {
           <ScrollText className="w-5 h-5 text-brand-primary" />
           <h2 className="text-lg font-bold text-brand-text">Audit log</h2>
         </div>
-        <button type="button" onClick={() => void refresh()} className="uber-btn uber-btn-secondary text-sm flex items-center gap-1">
+        <button type="button" onClick={() => void refresh()} className="app-button-outline app-btn-sm flex items-center gap-1">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
