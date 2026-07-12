@@ -324,6 +324,7 @@ html.theme-grey {
   height: 100%;
   min-height: 0;
   padding: 1rem 0.75rem;
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
 }
 
 .staff-sidebar-brand {
@@ -349,7 +350,7 @@ html.theme-grey {
 
 .staff-sidebar-close {
   position: absolute;
-  top: 0.75rem;
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
   right: 0.75rem;
   z-index: 2;
   padding: 0.5rem;

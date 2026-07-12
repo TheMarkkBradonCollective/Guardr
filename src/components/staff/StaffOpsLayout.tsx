@@ -187,7 +187,7 @@ export function StaffOpsLayout({
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0">
         {hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 border-b border-brand-border">
+          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
             <button
               type="button"
               className="p-2 -ml-2 text-brand-text"
@@ -210,7 +210,7 @@ export function StaffOpsLayout({
             </div>
           </header>
         ) : (
-          <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-brand-border">
+          <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
             <button
               type="button"
               className="lg:hidden p-2 -ml-2 text-brand-text"
