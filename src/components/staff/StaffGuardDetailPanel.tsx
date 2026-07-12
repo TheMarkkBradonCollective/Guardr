@@ -241,7 +241,7 @@ export function StaffGuardDetailPanel({
       ...normalized,
       phone: phone.trim(),
       badgeNumber: badgeNumber.trim(),
-      hourlyRateRequirement: hourlyRate ? parseInt(hourlyRate, 10) : resume.hourlyRateRequirement,
+      hourlyRateRequirement: hourlyRate ? Math.max(0, parseInt(hourlyRate, 10) || 0) : resume.hourlyRateRequirement,
       avatar: avatarOverride ?? avatar,
       ...resume,
       summary: resume.summary.trim(),
@@ -538,7 +538,7 @@ export function StaffGuardDetailPanel({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <EditField label="Badge number" value={badgeNumber} onChange={setBadgeNumber} />
               <EditField label="Phone" value={phone} onChange={setPhone} type="tel" />
-              <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" />
+              <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" min={0} />
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
@@ -871,17 +871,20 @@ function EditField({
   value,
   onChange,
   type = 'text',
+  min,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
+  min?: number;
 }) {
   return (
     <div>
       <label className="wf-metric-label">{label}</label>
       <input
         type={type}
+        min={min}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="uber-input w-full mt-1 text-sm"
