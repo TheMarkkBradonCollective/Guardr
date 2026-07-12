@@ -8860,10 +8860,19 @@ export default function App() {
     }
   };
 
-  const persistJobChatMessageToDb = async (message: JobChatMessage) => {
-    if (!isDbConnected) return;
+  /**
+   * Returns whether the message actually reached the shared thread. The
+   * previous version never checked Supabase's `{ error }` return (only a
+   * thrown exception was caught), so a rejected write — e.g. an RLS policy
+   * failure — looked identical to success: the sender's own device already
+   * shows the message via localStorage, but it never reaches the other
+   * participant's thread, and they'd still get a "new message" push
+   * notification for a message they can never actually see.
+   */
+  const persistJobChatMessageToDb = async (message: JobChatMessage): Promise<boolean> => {
+    if (!isDbConnected) return false;
     try {
-      await supabase.from('job_chat_messages').upsert({
+      const { error } = await supabase.from('job_chat_messages').upsert({
         id: message.id,
         thread_id: message.threadId,
         sender_id: message.senderId,
@@ -8872,8 +8881,14 @@ export default function App() {
         body: message.body,
         created_at: message.createdAt,
       });
+      if (error) {
+        console.warn('Job chat message DB sync:', error);
+        return false;
+      }
+      return true;
     } catch (e) {
       console.warn('Job chat message DB sync:', e);
+      return false;
     }
   };
 
@@ -9155,7 +9170,14 @@ export default function App() {
       saveJobChatMessagesToStorage(next);
       return next;
     });
-    await persistJobChatMessageToDb(message);
+    const synced = await persistJobChatMessageToDb(message);
+    if (!synced) {
+      // Message still shows locally (it's already in state/localStorage
+      // above), but don't tell the other participant a message is waiting
+      // when it never actually reached the shared thread for them to read.
+      appToast('Message saved on this device but failed to send — check your connection and try again.', 'error');
+      return;
+    }
     await notifyJobChatParticipants(req, currentUser, body.trim());
   };
 
