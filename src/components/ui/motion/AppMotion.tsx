@@ -8,6 +8,34 @@ export function AppMotionProvider({ children }: { children: React.ReactNode }) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }
 
+/**
+ * Shared open-dialog stack so Escape only closes the topmost overlay.
+ * Without this, AppModal/AppOverlaySheet/AppDrawer each register their own
+ * independent `window` keydown listener, so a single Escape press with two
+ * dialogs stacked (e.g. a confirm prompt over a detail sheet) closes both.
+ */
+const openDialogStack: symbol[] = [];
+
+/** Registers this dialog while `active`; its `onClose` only fires on Escape when it's topmost. */
+function useTopmostEscapeClose(active: boolean, onClose: () => void) {
+  useEffect(() => {
+    if (!active) return;
+    const token = Symbol('dialog');
+    openDialogStack.push(token);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && openDialogStack[openDialogStack.length - 1] === token) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      const idx = openDialogStack.indexOf(token);
+      if (idx !== -1) openDialogStack.splice(idx, 1);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [active, onClose]);
+}
+
 /** Uber-style snappy ease — confident, not bouncy */
 export const APP_MOTION_EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -79,19 +107,15 @@ export function AppModal({
   ariaLabelledBy,
   position = 'fixed',
 }: AppModalProps) {
+  useTopmostEscapeClose(open, onClose);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const panelInitial =
     align === 'bottom'
@@ -162,19 +186,15 @@ export function AppOverlaySheet({
   zIndex = 2100,
   ariaLabel,
 }: AppOverlaySheetProps) {
+  useTopmostEscapeClose(open, onClose);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const sheet = (
     <AnimatePresence>
@@ -229,19 +249,15 @@ interface AppDrawerProps {
 
 /** Left sidebar drawer with slide-in */
 export function AppDrawer({ open, onClose, title, subtitle, children, footer }: AppDrawerProps) {
+  useTopmostEscapeClose(open, onClose);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>

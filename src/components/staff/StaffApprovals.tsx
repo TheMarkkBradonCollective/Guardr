@@ -257,6 +257,22 @@ export function StaffApprovals({
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [viewCoi, setViewCoi] = useState<SecurityGuard | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  // Guards approve/reject/verify actions below from double-submission —
+  // these are real marketplace writes (credential verification, account
+  // approval) and had no in-flight protection, so a fast double-click
+  // could fire the same mutation twice.
+  const [actionPending, setActionPending] = useState(false);
+  const runGuardedAction = async (action: () => Promise<void>, onError?: (message: string) => void) => {
+    if (actionPending) return;
+    setActionPending(true);
+    try {
+      await action();
+    } catch (err) {
+      onError?.(err instanceof Error ? err.message : 'Action failed.');
+    } finally {
+      setActionPending(false);
+    }
+  };
 
   const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
     canVerifyGuardCredentials && cert.status === 'pending' ? (
@@ -279,24 +295,22 @@ export function StaffApprovals({
           )}
           <button
             type="button"
-            onClick={() => onRejectCert(guard.id, cert.id)}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+            disabled={actionPending}
+            onClick={() => void runGuardedAction(async () => onRejectCert(guard.id, cert.id))}
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1 disabled:opacity-50"
           >
             <X className="w-3 h-3" /> Reject
           </button>
           <button
             type="button"
-            disabled={!staffCanVerifyCertification(cert)}
+            disabled={actionPending || !staffCanVerifyCertification(cert)}
             title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
-            onClick={() => {
-              void (async () => {
-                try {
-                  await onApproveCert(guard.id, cert.id);
-                } catch (err) {
-                  showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
-                }
-              })();
-            }}
+            onClick={() =>
+              void runGuardedAction(
+                async () => onApproveCert(guard.id, cert.id),
+                (message) => showAppToast(message, { tone: 'error' })
+              )
+            }
             className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
           >
             <Check className="w-3 h-3" /> Verify
@@ -774,37 +788,33 @@ export function StaffApprovals({
                   <>
                     <button
                       type="button"
-                      onClick={() => {
-                        void (async () => {
-                          try {
+                      disabled={actionPending}
+                      onClick={() =>
+                        void runGuardedAction(
+                          async () => {
                             await onReviewGuardInsurance(guard.id, 'rejected', 'Document needs correction');
                             setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not reject COI.', {
-                              tone: 'error',
-                            });
-                          }
-                        })();
-                      }}
-                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                          },
+                          (message) => showAppToast(message || 'Could not reject COI.', { tone: 'error' })
+                        )
+                      }
+                      className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
                     >
                       <X className="w-3.5 h-3.5" /> Reject
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        void (async () => {
-                          try {
+                      disabled={actionPending}
+                      onClick={() =>
+                        void runGuardedAction(
+                          async () => {
                             await onReviewGuardInsurance(guard.id, 'verified');
                             setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not verify COI.', {
-                              tone: 'error',
-                            });
-                          }
-                        })();
-                      }}
-                      className="app-button-primary app-btn-sm"
+                          },
+                          (message) => showAppToast(message || 'Could not verify COI.', { tone: 'error' })
+                        )
+                      }
+                      className="app-button-primary app-btn-sm disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Verify
                     </button>
@@ -868,25 +878,25 @@ export function StaffApprovals({
                   <>
                 <button
                   type="button"
-                  onClick={() => onRejectCert(guard.id, cert.id)}
-                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                  disabled={actionPending}
+                  onClick={() => void runGuardedAction(async () => onRejectCert(guard.id, cert.id))}
+                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
                 >
                   <X className="w-3.5 h-3.5" /> Reject
                 </button>
                 <button
                   type="button"
-                  disabled={!staffCanVerifyCertification(cert)}
+                  disabled={actionPending || !staffCanVerifyCertification(cert)}
                   title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
-                  onClick={() => {
-                    void (async () => {
-                      try {
+                  onClick={() =>
+                    void runGuardedAction(
+                      async () => {
                         await onApproveCert(guard.id, cert.id);
                         setActiveItemId(null);
-                      } catch (err) {
-                        showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
-                      }
-                    })();
-                  }}
+                      },
+                      (message) => showAppToast(message || 'Could not verify credential.', { tone: 'error' })
+                    )
+                  }
                   className="app-button-primary app-btn-sm disabled:opacity-50"
                 >
                   <Check className="w-3.5 h-3.5" /> Verify
@@ -1352,11 +1362,14 @@ export function StaffApprovals({
                   <div className="pt-3 border-t border-brand-border">
                     <button
                       type="button"
-                      onClick={() => {
-                        onApproveClient(client.id);
-                        setActiveItemId(null);
-                      }}
-                      className="app-button-primary app-btn-sm gap-1"
+                      disabled={actionPending}
+                      onClick={() =>
+                        void runGuardedAction(async () => {
+                          onApproveClient(client.id);
+                          setActiveItemId(null);
+                        })
+                      }
+                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Approve client
                     </button>

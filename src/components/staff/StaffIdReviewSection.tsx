@@ -1,5 +1,5 @@
 import { showAppToast } from '../ui/AppToast';
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, RefreshCw, X } from 'lucide-react';
 import { SecurityGuard } from '../../types';
 import {
@@ -39,6 +39,8 @@ export function StaffIdReviewSection({
   const resubmitPending = guardIdVerificationResubmitPending(guard);
   const canApprove = staffCanApproveIdVerification(guard);
   const canRequestResubmit = staffCanRequestIdResubmit(guard);
+  // Prevents a fast double-click from firing duplicate approve/reject writes.
+  const [actionPending, setActionPending] = useState(false);
 
   if (!canManage) return null;
   if (status === 'not_submitted') return null;
@@ -72,16 +74,21 @@ export function StaffIdReviewSection({
         {canApprove && onApprove && (
           <button
             type="button"
+            disabled={actionPending}
             onClick={() => {
+              if (actionPending) return;
+              setActionPending(true);
               void (async () => {
                 try {
                   await onApprove(guard.id);
                 } catch (err) {
                   showAppToast(err instanceof Error ? err.message : 'Could not approve ID.', { tone: 'error' });
+                } finally {
+                  setActionPending(false);
                 }
               })();
             }}
-            className="app-button-primary app-btn-sm gap-1"
+            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
           >
             <Check className="w-3.5 h-3.5" /> Approve ID
           </button>
@@ -121,14 +128,23 @@ export function StaffIdReviewSection({
         {onReject && !applicationBlocked && status !== 'verified' && (
           <button
             type="button"
+            disabled={actionPending}
             onClick={() => {
+              if (actionPending) return;
               void (async () => {
                 const reason = await promptRejectGuardApplicationNote();
                 if (reason === null) return;
-                void onReject(guard.id, reason);
+                setActionPending(true);
+                try {
+                  await onReject(guard.id, reason);
+                } catch (err) {
+                  showAppToast(err instanceof Error ? err.message : 'Could not reject application.', { tone: 'error' });
+                } finally {
+                  setActionPending(false);
+                }
               })();
             }}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1"
+            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1 disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" /> Reject application
           </button>
