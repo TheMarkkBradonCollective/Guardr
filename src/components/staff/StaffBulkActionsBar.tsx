@@ -25,12 +25,12 @@ export function StaffBulkActionsBar({
         {selectedCount} {entityLabel} selected
       </span>
       {onApproveAll && (
-        <button type="button" onClick={onApproveAll} className="uber-btn uber-btn-primary text-sm">
+        <button type="button" onClick={onApproveAll} className="app-button-primary app-btn-sm">
           Approve all
         </button>
       )}
       {onSuspendAll && (
-        <button type="button" onClick={onSuspendAll} className="uber-btn uber-btn-secondary text-sm">
+        <button type="button" onClick={onSuspendAll} className="app-button-outline app-btn-sm">
           Suspend all
         </button>
       )}

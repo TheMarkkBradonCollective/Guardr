@@ -42,7 +42,7 @@ export function ClientInvoicePanel({ client, requests }: ClientInvoicePanelProps
                 key={r.id}
                 type="button"
                 onClick={() => generateForJob(r)}
-                className="uber-btn uber-btn-secondary text-xs"
+                className="app-button-outline app-btn-sm"
               >
                 Generate for {r.title?.slice(0, 24) || 'job'}
               </button>
@@ -58,7 +58,7 @@ export function ClientInvoicePanel({ client, requests }: ClientInvoicePanelProps
                 <button
                   type="button"
                   onClick={() => downloadInvoicePdf(inv, client)}
-                  className="uber-btn uber-btn-secondary text-xs flex items-center gap-1"
+                  className="app-button-outline app-btn-sm flex items-center gap-1"
                 >
                   <Download className="w-3 h-3" /> Download
                 </button>

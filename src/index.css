@@ -24,12 +24,13 @@
   --color-status-danger: var(--status-danger);
   --color-status-info: var(--status-info);
 
-  --radius-app: 0px;
-  --radius-app-sm: 4px;
-  --radius-app-lg: 6px;
-  --radius-app-xl: 8px;
-  --radius-input: 8px;
+  --radius-app: 10px;
+  --radius-app-sm: 8px;
+  --radius-app-lg: 14px;
+  --radius-app-xl: 18px;
+  --radius-input: 12px;
   --radius-pill: 9999px;
+  --radius-sheet: 22px;
 
   --color-gray-50:  #f7f7f7;
   --color-gray-100: #eeeeee;
@@ -83,10 +84,12 @@ html.theme-light {
   --status-warning:      #946219; /* darkened from #B7791F: 3.64:1 on white failed WCAG AA text contrast (4.5:1) */
   --status-danger:       #DC2626;
   --status-info:         #2F6F8F;
-  --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.06);
-  --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.06);
-  --shadow-float:        0 6px 24px rgba(0, 0, 0, 0.08);
-  --shadow-nav:          0 -2px 12px rgba(0, 0, 0, 0.04);
+  --shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card:         0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-float:        0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-nav:          0 -1px 0 rgba(0, 0, 0, 0.06), 0 -8px 24px rgba(0, 0, 0, 0.04);
+  --radius-card:         14px;
+  --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 22%, transparent);
 }
 
 html.theme-dark {
@@ -111,10 +114,12 @@ html.theme-dark {
   --status-warning:      #F5B85B;
   --status-danger:       #F87171;
   --status-info:         #78B9D8;
-  --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.22);
-  --shadow-card:         0 2px 16px rgba(0, 0, 0, 0.35);
-  --shadow-float:        0 8px 28px rgba(0, 0, 0, 0.45);
-  --shadow-nav:          0 -2px 16px rgba(0, 0, 0, 0.25);
+  --shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.32), 0 8px 28px rgba(0, 0, 0, 0.22);
+  --shadow-float:        0 12px 40px rgba(0, 0, 0, 0.48), 0 4px 12px rgba(0, 0, 0, 0.28);
+  --shadow-nav:          0 -1px 0 rgba(255, 255, 255, 0.06), 0 -8px 28px rgba(0, 0, 0, 0.32);
+  --radius-card:         14px;
+  --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 28%, transparent);
 }
 
 html.theme-grey {
@@ -139,10 +144,12 @@ html.theme-grey {
   --status-warning:      #F3BD63;
   --status-danger:       #F98080;
   --status-info:         #82C4E4;
-  --shadow-sm:           0 1px 4px rgba(0, 0, 0, 0.28);
-  --shadow-card:         0 2px 16px rgba(0, 0, 0, 0.32);
-  --shadow-float:        0 8px 28px rgba(0, 0, 0, 0.38);
-  --shadow-nav:          0 -2px 16px rgba(0, 0, 0, 0.22);
+  --shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.16);
+  --shadow-card:         0 2px 12px rgba(0, 0, 0, 0.28), 0 8px 28px rgba(0, 0, 0, 0.2);
+  --shadow-float:        0 12px 40px rgba(0, 0, 0, 0.42), 0 4px 12px rgba(0, 0, 0, 0.24);
+  --shadow-nav:          0 -1px 0 rgba(255, 255, 255, 0.05), 0 -8px 28px rgba(0, 0, 0, 0.26);
+  --radius-card:         14px;
+  --focus-ring:          0 0 0 3px color-mix(in srgb, var(--brand-primary) 26%, transparent);
 }
 
 /* Legacy nested wrappers still work */
@@ -14763,3 +14770,635 @@ svg {
 }
 
 /* ─── END NO HORIZONTAL SCROLL ENFORCEMENT ──────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUARDR VISUAL REMASTER — Canonical surface system (July 2026)
+   One coherent Uber-grade layer; sage brand + themes preserved.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Canvas & ambient depth ─────────────────────────────────────────────── */
+
+body,
+#root {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -18%, color-mix(in srgb, var(--brand-primary) 7%, transparent), transparent 62%),
+    var(--brand-bg);
+}
+
+html.theme-dark body,
+html.theme-dark #root,
+html.theme-grey body,
+html.theme-grey #root {
+  background:
+    radial-gradient(ellipse 80% 45% at 50% -12%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 58%),
+    var(--brand-bg);
+}
+
+/* ─── Typography rhythm ──────────────────────────────────────────────────── */
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.app-screen-title,
+.app-page-lead-title,
+.app-subscreen-title {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.app-page-lead-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.app-page-lead-sub {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--brand-text-muted);
+  max-width: 42ch;
+}
+
+/* ─── Surfaces: cards, panels, zones ─────────────────────────────────────── */
+
+.app-card,
+.app-card-interactive,
+.uber-card,
+.uber-card-flat,
+.uber-panel,
+.client-action-card,
+.client-coverage-card,
+.staff-ops-card {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-card) !important;
+  background: var(--brand-surface) !important;
+}
+
+.app-card-elevated {
+  border-radius: var(--radius-app-xl) !important;
+  box-shadow: var(--shadow-float) !important;
+}
+
+.app-card-interactive:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--brand-border)) !important;
+  box-shadow: var(--shadow-float) !important;
+  transform: translateY(-2px);
+}
+
+/* ─── List cards: separated elevated rows (not flat stacked strips) ───────── */
+
+.app-item-card,
+.wf-list-card {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-sm) !important;
+  background: var(--brand-surface) !important;
+  padding: 1rem 1.125rem !important;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease !important;
+}
+
+button.app-item-card:hover,
+a.app-item-card:hover,
+.wf-list-card-interactive:hover,
+.app-item-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 32%, var(--brand-border)) !important;
+  box-shadow: var(--shadow-card) !important;
+  transform: translateY(-1px);
+}
+
+.app-item-card-selected,
+.app-item-card.ring-2 {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 1px var(--brand-primary), var(--shadow-card) !important;
+  background: color-mix(in srgb, var(--brand-primary) 5%, var(--brand-surface)) !important;
+}
+
+.app-item-card-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.625rem !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.app-item-card-stack .app-item-card,
+.app-item-card-stack .wf-list-card {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.app-item-card-stack .app-item-card:last-child,
+.app-item-card-stack .wf-list-card:last-child {
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+}
+
+.app-list-row {
+  border-radius: var(--radius-app-lg);
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  margin-inline: 1.25rem;
+}
+
+/* ─── Buttons: one family ─────────────────────────────────────────────────── */
+
+.app-button-primary,
+.app-button-outline,
+.app-button-danger,
+.uber-button,
+.uber-button-primary,
+.uber-button-sage,
+.uber-button-green,
+.uber-button-outline,
+.staff-ops-btn-primary,
+.staff-ops-btn-outline,
+.staff-ops-btn-danger,
+.app-cta-dark {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    opacity 0.16s ease !important;
+}
+
+.app-button-primary,
+.uber-button-primary,
+.uber-button-sage,
+.uber-button-green,
+.staff-ops-btn-primary,
+.app-cta-dark {
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent) !important;
+}
+
+.app-button-primary:hover:not(:disabled),
+.uber-button-primary:hover,
+.uber-button-sage:hover,
+.staff-ops-btn-primary:hover:not(:disabled),
+.app-cta-dark:hover:not(:disabled) {
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-primary) 36%, transparent) !important;
+}
+
+/* Legacy uber-btn alias (was undefined — caused unstyled controls) */
+.uber-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
+}
+
+.uber-btn-primary {
+  background: var(--brand-primary);
+  color: var(--brand-accent-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+}
+
+.uber-btn-primary:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+}
+
+.uber-btn-secondary {
+  background: transparent;
+  color: var(--brand-text);
+  border: 1.5px solid var(--brand-border);
+  padding: 0.4375rem 0.9375rem;
+}
+
+.uber-btn-secondary:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+}
+
+/* ─── Form fields ────────────────────────────────────────────────────────── */
+
+.uber-input,
+.uber-select,
+.inline-search-input,
+.app-search-bar input {
+  border-radius: var(--radius-input) !important;
+  border: 1.5px solid color-mix(in srgb, var(--brand-border) 92%, var(--brand-primary)) !important;
+  background: var(--brand-bg-sec) !important;
+  min-height: 3rem;
+  font-size: 0.9375rem !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+}
+
+html.theme-light .uber-input,
+html.theme-light .uber-select {
+  background: var(--brand-surface) !important;
+}
+
+.uber-input:focus,
+.uber-select:focus,
+.inline-search-input:focus {
+  border-color: var(--brand-primary) !important;
+  box-shadow: var(--focus-ring) !important;
+  outline: none !important;
+}
+
+.uber-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
+/* ─── Chrome: header, bottom nav, sidebar ────────────────────────────────── */
+
+.app-screen-header {
+  background: color-mix(in srgb, var(--brand-surface) 88%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom-color: color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary)) !important;
+}
+
+.app-screen-header-title {
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+.bottom-nav-bar {
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  border-top-color: color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-nav) !important;
+}
+
+.bottom-nav-item {
+  border-radius: var(--radius-app-lg);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.bottom-nav-center-map-icon {
+  box-shadow: var(--shadow-card) !important;
+  border-width: 1.5px !important;
+}
+
+.role-side-nav-item {
+  border-radius: var(--radius-app-lg) !important;
+  margin-inline: 0.5rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent) !important;
+  color: var(--brand-primary) !important;
+  font-weight: 700;
+}
+
+html.theme-dark .role-side-nav-item-active {
+  background: color-mix(in srgb, var(--brand-primary) 18%, #1a1a1a) !important;
+}
+
+/* ─── Modals, sheets, overlays ───────────────────────────────────────────── */
+
+.modal-overlay {
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.modal-panel {
+  border-radius: var(--radius-sheet) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-float) !important;
+}
+
+.guardr-bottom-sheet-uber,
+.more-menu-panel {
+  border-top-left-radius: var(--radius-sheet) !important;
+  border-top-right-radius: var(--radius-sheet) !important;
+  background: color-mix(in srgb, var(--brand-surface) 96%, transparent) !important;
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border-top: 1px solid color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-float) !important;
+}
+
+.guardr-bottom-sheet-uber::before,
+.more-menu-panel::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-text-muted) 35%, transparent);
+  margin: 0.625rem auto 0.5rem;
+}
+
+/* ─── Dashboard & metrics ────────────────────────────────────────────────── */
+
+.app-dashboard-hero {
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+
+.app-dashboard-hero-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.app-dashboard-zone-title,
+.app-section-head h2 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.app-metric-strip {
+  border-radius: var(--radius-card) !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 90%, var(--brand-primary)) !important;
+  margin-inline: 1.25rem;
+}
+
+.app-metric-cell {
+  background: var(--brand-surface);
+}
+
+.app-metric-cell-value {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+/* ─── Segmented controls & chips ─────────────────────────────────────────── */
+
+.segmented-control,
+.app-segmented-control {
+  padding: 0.25rem !important;
+  border-radius: var(--radius-pill) !important;
+  background: var(--brand-bg-sec) !important;
+  border: 1px solid var(--brand-border) !important;
+}
+
+.segmented-control-btn-active,
+.app-segmented-control-item-active {
+  background: var(--brand-surface) !important;
+  color: var(--brand-text) !important;
+  box-shadow: var(--shadow-sm) !important;
+  font-weight: 700 !important;
+}
+
+.wf-badge,
+.badge-open,
+.badge-assigned,
+.badge-active,
+.badge-done,
+.app-pill-btn {
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Landing & auth ─────────────────────────────────────────────────────── */
+
+.landing-page {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, color-mix(in srgb, var(--brand-primary) 9%, transparent), transparent 65%),
+    var(--brand-bg);
+}
+
+.landing-header-signin {
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease;
+}
+
+.landing-header-signin:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.landing-path-card {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.landing-path-card:hover {
+  box-shadow: var(--shadow-float) !important;
+  transform: translateY(-2px);
+}
+
+.landing-how-card,
+.landing-feature-tile,
+.landing-trust-metric {
+  border-radius: var(--radius-card) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.landing-preview-frame {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-float) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary)) !important;
+}
+
+.auth-role-card {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.auth-role-card-active {
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* ─── Messaging & chat ───────────────────────────────────────────────────── */
+
+.app-inbox-row {
+  border-radius: var(--radius-app-lg);
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.app-inbox-row:hover,
+.app-inbox-row-selected {
+  background: color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface));
+  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--brand-border));
+}
+
+.app-chat-bubble-outgoing {
+  border-radius: 1.125rem 1.125rem 0.375rem 1.125rem !important;
+  background: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-primary) 24%, transparent) !important;
+}
+
+.app-chat-bubble-incoming {
+  border-radius: 1.125rem 1.125rem 1.125rem 0.375rem !important;
+  background: var(--brand-bg-sec) !important;
+  border: 1px solid var(--brand-border) !important;
+}
+
+/* ─── Map & shift UI ─────────────────────────────────────────────────────── */
+
+.map-offer-card {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-float) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary)) !important;
+}
+
+.map-route-banner {
+  border-radius: var(--radius-pill) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* ─── Empty states & loading ─────────────────────────────────────────────── */
+
+.app-empty-state {
+  border-radius: var(--radius-card);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--brand-bg-sec) 70%, var(--brand-surface));
+  border: 1px dashed color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary));
+}
+
+.app-empty-state--dashed {
+  background: transparent;
+}
+
+.app-empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--brand-primary);
+  margin-bottom: 0.75rem;
+}
+
+.app-empty-state-title {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.skeleton,
+.skeleton-line,
+.skeleton-card {
+  border-radius: var(--radius-app-lg) !important;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-bg-sec) 80%, var(--brand-border)) 0%,
+    color-mix(in srgb, var(--brand-elevated) 90%, var(--brand-border)) 50%,
+    color-mix(in srgb, var(--brand-bg-sec) 80%, var(--brand-border)) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ─── Staff ops ──────────────────────────────────────────────────────────── */
+
+.staff-sidebar {
+  border-right: 1px solid color-mix(in srgb, var(--brand-border) 85%, var(--brand-primary)) !important;
+}
+
+.staff-pane-header,
+.staff-detail-header {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent) !important;
+}
+
+.staff-split-pane-list,
+.staff-split-pane-detail {
+  border-color: color-mix(in srgb, var(--brand-border) 88%, var(--brand-primary)) !important;
+}
+
+/* ─── Toasts & banners ───────────────────────────────────────────────────── */
+
+.app-toast {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-float) !important;
+  border: 1px solid color-mix(in srgb, var(--brand-border) 80%, var(--brand-primary)) !important;
+}
+
+.app-status-banner {
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface));
+  padding: 1rem 1.125rem;
+}
+
+/* ─── Screen scroll regions ───────────────────────────────────────────────── */
+
+.app-screen {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.app-form-section {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-section-link {
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+.app-section-link:hover {
+  opacity: 0.85;
+}
+
+/* ─── Focus & accessibility ───────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── END GUARDR VISUAL REMASTER ─────────────────────────────────────────── */

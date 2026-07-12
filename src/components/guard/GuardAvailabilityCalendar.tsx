@@ -157,14 +157,14 @@ export function GuardAvailabilityCalendar({
       )}
       {!readOnly && (
         <div className="flex gap-2">
-          <button type="button" onClick={addSlot} className="uber-btn uber-btn-secondary text-sm flex items-center gap-1">
+          <button type="button" onClick={addSlot} className="app-button-outline app-btn-sm flex items-center gap-1">
             <Plus className="w-4 h-4" /> Add slot
           </button>
           <button
             type="button"
             onClick={() => void handleSave()}
             disabled={saving || !dirty}
-            className="uber-btn uber-btn-primary text-sm disabled:opacity-50"
+            className="app-button-primary app-btn-sm disabled:opacity-50"
           >
             {saving ? 'Saving…' : dirty ? 'Save availability' : 'Saved'}
           </button>

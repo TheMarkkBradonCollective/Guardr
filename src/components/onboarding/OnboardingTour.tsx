@@ -27,8 +27,8 @@ export function OnboardingTourOverlay({ tour, userId, onComplete, onSkip }: Onbo
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-brand-surface border border-brand-border shadow-2xl p-6">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 modal-overlay">
+      <div className="w-full max-w-md modal-panel p-6">
         <div className="flex items-start justify-between mb-4">
           <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
             Step {stepIndex + 1} of {tour.steps.length}
@@ -44,7 +44,7 @@ export function OnboardingTourOverlay({ tour, userId, onComplete, onSkip }: Onbo
             <button
               type="button"
               onClick={() => setStepIndex((i) => i - 1)}
-              className="uber-btn uber-btn-secondary flex items-center gap-1"
+              className="app-button-outline app-btn-sm flex items-center gap-1"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -52,7 +52,7 @@ export function OnboardingTourOverlay({ tour, userId, onComplete, onSkip }: Onbo
           <button
             type="button"
             onClick={() => (isLast ? finish() : setStepIndex((i) => i + 1))}
-            className="uber-btn uber-btn-primary flex-1 flex items-center justify-center gap-1"
+            className="app-button-primary app-btn-sm flex-1 flex items-center justify-center gap-1"
           >
             {isLast ? 'Get started' : 'Next'}
             {!isLast && <ChevronRight className="w-4 h-4" />}
