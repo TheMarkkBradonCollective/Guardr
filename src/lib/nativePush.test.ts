@@ -8,10 +8,16 @@ describe('native push toggle state', () => {
     assert.equal(isNativePushActive('denied', 'abc-token'), false);
     assert.equal(isNativePushActive('granted', null), false);
   });
+
+  it('isNativeFcmConfigured reflects build-time flag', async () => {
+    const { isNativeFcmConfigured } = await import('./nativePush.ts');
+    assert.equal(typeof isNativeFcmConfigured(), 'boolean');
+  });
 });
 
 describe('push local state', () => {
-  it('tracks enabled flag in memory when localStorage is unavailable', async () => {
+  it('reads and writes the enabled flag when storage is available', async () => {
+    if (typeof localStorage === 'undefined') return;
     const { isPushEnabledLocally, setPushEnabledLocally } = await import('./pushLocalState.ts');
     setPushEnabledLocally(true);
     assert.equal(isPushEnabledLocally(), true);

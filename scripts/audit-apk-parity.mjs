@@ -114,6 +114,12 @@ if (await fileExists(pluginsJsonPath)) {
   warn('android/app/src/main/assets/capacitor.plugins.json missing — run npx cap sync android');
 }
 
+if (!(await fileExists('android/app/google-services.json'))) {
+  warn(
+    'android/app/google-services.json is missing — APK push toggle is disabled; add Firebase config before shipping native push'
+  );
+}
+
 const bundledConfigPath = 'android/app/src/main/assets/capacitor.config.json';
 if (await fileExists(bundledConfigPath)) {
   const bundled = await readJson(bundledConfigPath);

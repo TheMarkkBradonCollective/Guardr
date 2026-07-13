@@ -1,15 +1,17 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {defineConfig} from 'vite';
 
 const pkg = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+const nativeFcmConfigured = existsSync(path.resolve(__dirname, 'android/app/google-services.json'));
 
 export default defineConfig(() => {
   return {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+      'import.meta.env.VITE_NATIVE_FCM_CONFIGURED': JSON.stringify(nativeFcmConfigured),
     },
     plugins: [react(), tailwindcss()],
     resolve: {
