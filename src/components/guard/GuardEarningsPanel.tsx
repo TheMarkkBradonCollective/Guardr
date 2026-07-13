@@ -55,6 +55,9 @@ export function GuardEarningsPanel({
   );
 
   const alreadyPaid = breakdown.cashPaid + breakdown.stripePaid;
+  const readyToCollect = Math.max(breakdown.cashAvailable ?? 0, breakdown.onlineAvailable ?? 0);
+  const needsBankForOnline =
+    !stripeReady && (breakdown.onlineAvailable > 0 || (breakdown.cashAvailable ?? 0) === 0);
 
   return (
     <AppScreen>
@@ -64,8 +67,15 @@ export function GuardEarningsPanel({
         <div className="app-inline-banner space-y-3 mx-5 mb-0">
           <div className="flex items-center gap-2">
             <Link2 className="w-4 h-4" />
-            <p className="text-sm font-semibold">Connect your bank to get paid online</p>
+            <p className="text-sm font-semibold">
+              {stripeConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid online'}
+            </p>
           </div>
+          <p className="text-xs text-brand-text-muted leading-relaxed">
+            {stripeConnected
+              ? 'Stripe still needs a few payout details before online bank transfers are enabled.'
+              : 'Link your bank through Stripe to receive online payouts. Cash pickup stays available without this step.'}
+          </p>
           <button
             type="button"
             onClick={onConnectStripe}
@@ -78,7 +88,7 @@ export function GuardEarningsPanel({
               </>
             ) : (
               <>
-                <Link2 className="w-4 h-4" /> Connect bank account
+                <Link2 className="w-4 h-4" /> {stripeConnected ? 'Finish bank setup' : 'Connect bank account'}
               </>
             )}
           </button>
@@ -89,13 +99,24 @@ export function GuardEarningsPanel({
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted mb-1">
           Ready to collect
         </p>
-        <p className="app-pay-amount mb-1">${(breakdown.cashAvailable ?? breakdown.onlineAvailable).toFixed(2)}</p>
+        <p className="app-pay-amount mb-1">${readyToCollect.toFixed(2)}</p>
+        {(breakdown.cashAvailable ?? 0) > 0 || breakdown.onlineAvailable > 0 ? (
+          <p className="text-xs text-brand-text-muted mb-3 leading-relaxed">
+            {(breakdown.cashAvailable ?? 0) > 0 && (
+              <span>Cash pickup ${(breakdown.cashAvailable ?? 0).toFixed(2)}</span>
+            )}
+            {(breakdown.cashAvailable ?? 0) > 0 && breakdown.onlineAvailable > 0 ? ' · ' : null}
+            {breakdown.onlineAvailable > 0 && (
+              <span>Bank transfer ${breakdown.onlineAvailable.toFixed(2)}</span>
+            )}
+          </p>
+        ) : null}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => void onRequestStripePayout?.()}
-            disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout}
+            disabled={breakdown.onlineAvailable <= 0 || stripeRequestPending || !onRequestStripePayout || !stripeReady}
             className="app-button-primary !text-sm !h-auto !py-3 flex-col items-start gap-1 disabled:opacity-40 text-left"
           >
             <span className="flex items-center gap-2 font-semibold">
@@ -106,9 +127,19 @@ export function GuardEarningsPanel({
               )}
               Send to my bank
             </span>
-            {breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
+            {!stripeReady && needsBankForOnline && (
+              <span className="text-[11px] font-normal opacity-70 leading-snug">
+                Connect your bank through Stripe first
+              </span>
+            )}
+            {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) > 0 && (
               <span className="text-[11px] font-normal opacity-70 leading-snug">
                 Pending deposit — cash pickup available now
+              </span>
+            )}
+            {stripeReady && breakdown.onlineAvailable <= 0 && (breakdown.cashAvailable ?? 0) <= 0 && (
+              <span className="text-[11px] font-normal opacity-70 leading-snug">
+                No bank payouts ready yet — complete more shifts first
               </span>
             )}
           </button>
