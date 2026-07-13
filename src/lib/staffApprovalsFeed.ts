@@ -108,19 +108,24 @@ function scheduleChangeItems(requests: SecurityRequest[], auditLog: AuditLogEntr
   }));
 
   for (const entry of auditLog) {
-    if (entry.action !== 'schedule_change_approved' || !entry.entityId || pendingIds.has(entry.entityId)) {
+    if (
+      (entry.action !== 'schedule_change_approved' && entry.action !== 'schedule_change_rejected') ||
+      !entry.entityId ||
+      pendingIds.has(entry.entityId)
+    ) {
       continue;
     }
     const req = requests.find((r) => r.id === entry.entityId);
     if (!req) continue;
     const actor = actorLabel(entry);
+    const denied = entry.action === 'schedule_change_rejected';
     items.push({
       id: req.id,
       queue: 'schedule-changes',
       title: req.title,
       subtitle: `${req.clientName} · ${req.location}`,
-      status: 'approved',
-      statusLabel: 'Schedule approved',
+      status: denied ? 'denied' : 'approved',
+      statusLabel: denied ? 'Schedule declined' : 'Schedule approved',
       submittedAt: req.scheduleChangeRequestedAt,
       reviewedAt: actor.at,
       reviewedByName: actor.name,
@@ -134,7 +139,12 @@ function scheduleChangeItems(requests: SecurityRequest[], auditLog: AuditLogEntr
 
 function applicationItems(requests: SecurityRequest[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return requests
-    .filter((r) => r.applicants.length > 0 || r.staffApprovedGuardAt || r.pendingGuardId)
+    .filter((r) => {
+      if (r.applicants.length === 0 && !r.staffApprovedGuardAt && !r.pendingGuardId) return false;
+      if (r.pendingGuardId) return true;
+      if (r.staffApprovedGuardAt) return true;
+      return r.status === 'open' && !r.assignedGuardId && r.applicants.length > 0;
+    })
     .map((req) => {
       const pending = Boolean(req.pendingGuardId);
       const approved = Boolean(req.staffApprovedGuardAt);
@@ -336,6 +346,38 @@ export function filterApprovalsFeedByQueue(
 
 export function countPendingInFeed(feed: ApprovalFeedItem[]): number {
   return feed.filter((item) => item.status === 'pending' || item.status === 'in_review').length;
+}
+
+export function countPendingInFeedByQueue(
+  feed: ApprovalFeedItem[],
+  queue: ApprovalQueueId
+): number {
+  return filterApprovalsFeedByQueue(feed, queue).filter(
+    (item) => item.status === 'pending' || item.status === 'in_review'
+  ).length;
+}
+
+export function resolveApprovalFocusItemId(
+  feed: ApprovalFeedItem[],
+  queue: ApprovalQueueId,
+  guardId: string,
+  guards: SecurityGuard[]
+): string | null {
+  const scoped = filterApprovalsFeedByQueue(feed, queue);
+  const guard = guards.find((g) => g.id === guardId);
+  const matches = scoped.filter((item) => {
+    if (item.queue === 'guard-accounts') return item.id === guardId;
+    if (item.queue === 'credentials') {
+      if (item.id === coiApprovalItemId(guardId)) return true;
+      return guard?.certifications.some((cert) => cert.id === item.id) ?? false;
+    }
+    return false;
+  });
+  const pending = matches.find((item) => item.status === 'pending' || item.status === 'in_review');
+  if (pending) return pending.id;
+  if (matches[0]) return matches[0].id;
+  if (queue === 'guard-accounts' || queue === 'all') return guardId;
+  return null;
 }
 
 export function findFeedItem(feed: ApprovalFeedItem[], id: string): ApprovalFeedItem | undefined {

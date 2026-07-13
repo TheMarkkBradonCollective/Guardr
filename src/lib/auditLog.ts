@@ -12,6 +12,7 @@ export type AuditAction =
   | 'client_approved'
   | 'cert_verified'
   | 'schedule_change_approved'
+  | 'schedule_change_rejected'
   | 'payment_recorded'
   | 'payout_released'
   | 'trusted_status_changed'

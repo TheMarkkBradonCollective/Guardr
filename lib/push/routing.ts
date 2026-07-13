@@ -87,10 +87,10 @@ export function resolveNotificationUrl(
         : '/staff/approvals?aq=applications';
     case 'guard_pending_approval':
       return options.guardId
-        ? `/staff/guards?g=${encodeURIComponent(options.guardId)}`
-        : '/staff/approvals?aq=accounts';
+        ? `/staff/approvals?aq=guard-accounts&g=${encodeURIComponent(options.guardId)}`
+        : '/staff/approvals?aq=guard-accounts';
     case 'client_pending_approval':
-      return '/staff/approvals?aq=accounts';
+      return '/staff/approvals?aq=client-accounts';
     case 'credential_pending':
       return options.guardId
         ? `/staff/approvals?aq=credentials&g=${encodeURIComponent(options.guardId)}`

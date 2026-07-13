@@ -1,4 +1,5 @@
 import type { SecurityRequest, SecurityGuard, Client, SupportTicket } from '../types';
+import { computePlatformStats } from './staffOps';
 
 export interface SlaMetrics {
   avgTimeToApproveHours: number;
@@ -47,7 +48,7 @@ export function computeSlaMetrics(
     avgTimeToFillHours: avg(fillTimes),
     guardNoShowRate: completed.length ? noShows.length / completed.length : 0,
     openJobsCount: requests.filter((r) => r.status === 'open').length,
-    pendingApprovalsCount: requests.filter((r) => r.status === 'pending-review').length,
+    pendingApprovalsCount: computePlatformStats(guards, clients, requests).pendingApprovals,
     avgClientRating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
     jobsCompletedThisWeek: weekCompleted.length,
     activeGuardsCount: guards.filter((g) => g.userStatus === 'active' && !g.isStaff).length,

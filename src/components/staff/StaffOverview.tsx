@@ -82,6 +82,7 @@ interface StaffOverviewProps {
 
 const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> = {
   'pending-jobs': <Briefcase className="w-4 h-4" />,
+  'pending-schedule-changes': <Briefcase className="w-4 h-4" />,
   'pending-certs': <ClipboardCheck className="w-4 h-4" />,
   'guard-applications': <UserCheck className="w-4 h-4" />,
   'open-marketplace': <Briefcase className="w-4 h-4" />,

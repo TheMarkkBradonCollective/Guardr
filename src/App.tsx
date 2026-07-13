@@ -977,10 +977,14 @@ export default function App() {
     );
   };
 
-  const openStaffApprovals = (queue: ApprovalQueueId | null) => {
+  const openStaffApprovals = (
+    queue: ApprovalQueueId | null,
+    options?: { guardId?: string | null }
+  ) => {
     setStaffApprovalQueueState(queue);
     setStaffSectionState('approvals');
-    setStaffGuardIdState(null);
+    const nextGuardId = options && 'guardId' in options ? options.guardId ?? null : null;
+    setStaffGuardIdState(nextGuardId);
     setStaffClientIdState(null);
     setStaffJobIdState(null);
     setStaffTeamIdState(null);
@@ -992,7 +996,7 @@ export default function App() {
         role: 'staff',
         staffSection: 'approvals',
         staffApprovalQueue: queue ?? undefined,
-        staffGuardId: undefined,
+        staffGuardId: nextGuardId ?? undefined,
         staffClientId: undefined,
         staffJobId: undefined,
         staffTeamId: undefined,
@@ -1009,12 +1013,13 @@ export default function App() {
 
   const updateStaffApprovalQueue = (queue: ApprovalQueueId | null) => {
     setStaffApprovalQueueState(queue);
+    setStaffGuardIdState(null);
     syncAppRoute(
       buildAppRoute({
         role: 'staff',
         staffSection: 'approvals',
         staffApprovalQueue: queue ?? undefined,
-        staffGuardId: staffGuardId ?? undefined,
+        staffGuardId: undefined,
         staffClientId: staffClientId ?? undefined,
         staffJobId: staffJobId ?? undefined,
         staffTeamId: staffTeamId ?? undefined,
@@ -6595,6 +6600,10 @@ export default function App() {
         .eq('id', requestId);
     }
     if (currentUser) {
+      void writeAuditLog(currentUser, 'schedule_change_rejected', 'security_request', requestId, {
+        title: existing.title,
+        clientName: existing.clientName,
+      });
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: existing.clientId,

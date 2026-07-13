@@ -11,9 +11,11 @@ import {
 import { loadAuditLog, type AuditLogEntry } from '../../lib/auditLog';
 import {
   buildStaffApprovalsFeed,
+  countPendingInFeedByQueue,
   filterApprovalsFeedByQueue,
   findFeedItem,
   formatApprovalTimestamp,
+  resolveApprovalFocusItemId,
   type ApprovalFeedItem,
 } from '../../lib/staffApprovalsFeed';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
@@ -112,6 +114,7 @@ interface StaffApprovalsProps {
   onEditJobListing?: (requestId: string, updates: Partial<SecurityRequest>) => void | Promise<void>;
   staffRole?: PlatformRole;
   initialQueue?: ApprovalQueueId | null;
+  initialFocusGuardId?: string | null;
   onQueueChange?: (queue: ApprovalQueueId | null) => void;
 }
 
@@ -165,6 +168,12 @@ function ApprovalReviewMeta({ item }: { item?: ApprovalFeedItem }) {
         <span className="font-semibold text-brand-text">Status: </span>
         {item.statusLabel}
       </p>
+      {item.submittedAt && (
+        <p>
+          <span className="font-semibold text-brand-text">Submitted: </span>
+          {formatApprovalTimestamp(item.submittedAt)}
+        </p>
+      )}
       {item.reviewedAt && (
         <p>
           <span className="font-semibold text-brand-text">Reviewed: </span>
@@ -202,6 +211,11 @@ function ApprovalFeedRow({
       meta={
         <div className="space-y-1">
           <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
+          {item.submittedAt && (item.status === 'pending' || item.status === 'in_review') && (
+            <p className="text-[11px] text-brand-text-muted">
+              Submitted {formatApprovalTimestamp(item.submittedAt)}
+            </p>
+          )}
           {(item.reviewedAt || item.reviewedByName) &&
             item.status !== 'pending' &&
             item.status !== 'in_review' && (
@@ -303,6 +317,7 @@ export function StaffApprovals({
   onEditJobListing,
   staffRole,
   initialQueue = null,
+  initialFocusGuardId = null,
   onQueueChange,
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
@@ -428,9 +443,12 @@ export function StaffApprovals({
   );
 
   const queueCounts = useMemo(() => {
-    const counts: Partial<Record<ApprovalQueueId, number>> = { all: approvalFeed.length };
-    for (const item of approvalFeed) {
-      counts[item.queue] = (counts[item.queue] ?? 0) + 1;
+    const counts: Partial<Record<ApprovalQueueId, number>> = {
+      all: countPendingInFeedByQueue(approvalFeed, 'all'),
+    };
+    for (const queueId of APPROVAL_QUEUE_TAB_ORDER) {
+      if (queueId === 'all' || queueId === 'accounts') continue;
+      counts[queueId] = countPendingInFeedByQueue(approvalFeed, queueId);
     }
     return counts;
   }, [approvalFeed]);
@@ -464,6 +482,17 @@ export function StaffApprovals({
     }
     setActiveQueue((current) => normalizeApprovalQueueId(current ?? initialQueue, permittedQueues));
   }, [permittedQueues, initialQueue]);
+
+  useEffect(() => {
+    if (!initialFocusGuardId || activeItemId || !activeQueue) return;
+    const focusId = resolveApprovalFocusItemId(
+      approvalFeed,
+      activeQueue,
+      initialFocusGuardId,
+      guards
+    );
+    if (focusId) setActiveItemId(focusId);
+  }, [initialFocusGuardId, activeQueue, approvalFeed, guards, activeItemId]);
 
   useEffect(() => {
     if (!activeItemId) return;
@@ -626,8 +655,22 @@ export function StaffApprovals({
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
             <p className="font-semibold text-sm">{req.title}</p>
-            <WfBadge tone="warning">{isBilling ? 'Confirm billing' : 'Schedule change'}</WfBadge>
-            {req.scheduleChangeRequestedBy === 'staff' && (
+            {feedItem ? (
+              <WfBadge
+                tone={
+                  feedItem.status === 'pending'
+                    ? 'warning'
+                    : feedItem.status === 'approved'
+                      ? 'success'
+                      : 'danger'
+                }
+              >
+                {feedItem.statusLabel}
+              </WfBadge>
+            ) : (
+              <WfBadge tone="warning">{isBilling ? 'Confirm billing' : 'Schedule change'}</WfBadge>
+            )}
+            {isPending && req.scheduleChangeRequestedBy === 'staff' && (
               <WfBadge tone="default">Staff proposed</WfBadge>
             )}
           </div>
@@ -727,7 +770,10 @@ export function StaffApprovals({
       const ranked = rankApplicantGuards(req, guards);
       const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
       const awaitingClientGuard = isAwaitingClientGuardApproval(req);
-      const canActOnApplications = feedItem?.status === 'pending' || feedItem?.status === 'in_review';
+      const canActOnApplications =
+        (feedItem?.status === 'pending' || feedItem?.status === 'in_review') &&
+        req.status === 'open' &&
+        !req.assignedGuardId;
       return (
         <ApprovalDetailScreen
           title={req.title}
@@ -1399,7 +1445,7 @@ export function StaffApprovals({
   };
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in space-y-4" data-tour="staff-approvals">
       {permittedQueues.length === 0 ? (
         <AppEmptyState dashed icon={<ClipboardCheck className="w-5 h-5" />} title="All clear">
           Nothing is waiting for approval right now.

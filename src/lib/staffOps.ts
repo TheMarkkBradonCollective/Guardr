@@ -110,6 +110,7 @@ export interface PlatformStats {
   pendingCertApprovals: number;
   pendingGuardApplicationJobs: number;
   pendingGuardApplications: number;
+  pendingClientAccounts: number;
   completedJobs: number;
 }
 
@@ -285,12 +286,14 @@ export function computePlatformStats(
   const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
+  const pendingClientAccounts = getPendingClientAccounts(clients).length;
   const pendingApprovals =
     pendingJobApprovals +
     pendingScheduleChanges +
     pendingCertApprovals +
     pendingGuardApplicationJobs +
-    pendingGuardAccounts;
+    pendingGuardAccounts +
+    pendingClientAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const activeGuardIds = new Set(
@@ -325,6 +328,7 @@ export function computePlatformStats(
     pendingCertApprovals,
     pendingGuardApplicationJobs,
     pendingGuardApplications,
+    pendingClientAccounts,
     completedJobs,
   };
 }
@@ -380,16 +384,22 @@ export function buildOverviewMetricCells(
       value: String(stats.pendingApprovals),
       sub:
         stats.pendingApprovals === 0
-          ? 'No job offers or credentials waiting for review'
+          ? 'No approvals waiting for review'
           : [
               stats.pendingJobApprovals > 0
                 ? `${stats.pendingJobApprovals} job offer${stats.pendingJobApprovals === 1 ? '' : 's'}`
+                : null,
+              stats.pendingScheduleChanges > 0
+                ? `${stats.pendingScheduleChanges} schedule change${stats.pendingScheduleChanges === 1 ? '' : 's'}`
                 : null,
               stats.pendingCertApprovals > 0
                 ? `${stats.pendingCertApprovals} credential${stats.pendingCertApprovals === 1 ? '' : 's'}`
                 : null,
               stats.pendingGuardApplicationJobs > 0
                 ? `${stats.pendingGuardApplications} guard application${stats.pendingGuardApplications === 1 ? '' : 's'}`
+                : null,
+              stats.pendingClientAccounts > 0
+                ? `${stats.pendingClientAccounts} client sign-up${stats.pendingClientAccounts === 1 ? '' : 's'}`
                 : null,
             ]
               .filter(Boolean)

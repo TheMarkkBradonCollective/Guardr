@@ -244,7 +244,7 @@ interface StaffDashboardProps {
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
   staffApprovalQueue?: ApprovalQueueId | null;
-  onOpenStaffApprovals?: (queue?: ApprovalQueueId | null) => void;
+  onOpenStaffApprovals?: (queue?: ApprovalQueueId | null, options?: { guardId?: string | null }) => void;
   onClearStaffApprovalQueue?: () => void;
   onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
@@ -560,6 +560,7 @@ export function StaffDashboard({
             onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
             staffRole={currentUser.role}
             initialQueue={staffApprovalQueue}
+            initialFocusGuardId={section === 'approvals' ? selectedGuardId : null}
             onQueueChange={(queue) => onUpdateStaffApprovalQueue?.(queue ?? null)}
             onViewGuard={(guardId) => navigateSection('guards', { guardId })}
           />
