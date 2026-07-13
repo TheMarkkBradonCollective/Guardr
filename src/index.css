@@ -442,13 +442,9 @@ html.theme-grey {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  margin: -1rem -1.25rem;
-}
-
-@media (min-width: 640px) {
-  .staff-split-pane {
-    margin: -1.25rem -1.5rem;
-  }
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .staff-split-pane-list,
@@ -14602,11 +14598,16 @@ body,
 
 .page-shell,
 .role-app-shell,
-.staff-shell,
 .auth-experience-client,
 .auth-experience-guard {
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+.staff-shell {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* ─── Main content areas: never overflow horizontally ───────────────────── */
@@ -16325,6 +16326,105 @@ textarea.uber-input {
   border-bottom: 1px solid var(--brand-border) !important;
   padding: 0.75rem 0 !important;
   box-shadow: none !important;
+}
+
+/* ─── STAFF VIEWPORT FIT — no side clipping on mobile/APK ─────────────── */
+
+.staff-shell .staff-main-header {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+}
+
+@media (min-width: 640px) {
+  .staff-shell .staff-main-header:not(.staff-main-header-compact) {
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px)) !important;
+  }
+}
+
+.staff-shell .staff-main-content--padded {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+@media (min-width: 640px) {
+  .staff-shell .staff-main-content--padded {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+.staff-shell .staff-main-content--bleed {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.staff-shell .staff-split-pane {
+  margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+.staff-shell .staff-pane-header,
+.staff-shell .staff-pane-footer,
+.staff-shell .staff-pane-body {
+  padding-inline: 0 !important;
+}
+
+.staff-shell .-mx-4,
+.staff-shell .sm\:-mx-5 {
+  margin-inline: 0 !important;
+}
+
+.staff-shell .app-dashboard-hero,
+.staff-shell .app-dashboard-zone-head,
+.staff-shell .app-dashboard-zone-body {
+  padding-inline: 0 !important;
+}
+
+.staff-shell .app-metric-strip {
+  margin-inline: 0 !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+.staff-shell .app-metric-cell:nth-child(even) {
+  border-left: none !important;
+  box-shadow: inset 1px 0 0 var(--brand-border);
+}
+
+.staff-shell .app-item-card-selected,
+.staff-shell .app-item-card.ring-2 {
+  border-left: none !important;
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+  padding-left: 0 !important;
+}
+
+.staff-shell .staff-overview-quick-links {
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.staff-shell .staff-overview {
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.staff-shell .tablet-split-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.staff-shell .app-screen-header,
+.staff-shell .app-subscreen-header {
+  padding-inline: 0 !important;
+  max-width: 100%;
 }
 
 /* ─── END STAFF NATIVE APP UI ────────────────────────────────────────────── */
