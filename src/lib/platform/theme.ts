@@ -1,4 +1,13 @@
+import { applyThemeBranding } from './themeBranding';
+
 export type ThemeMode = 'dark' | 'light' | 'grey';
+
+export {
+  THEME_ICON_BACKGROUNDS,
+  THEME_BROWSER_COLORS,
+  applyThemeBranding,
+  themeIconAssetPath,
+} from './themeBranding';
 
 export const THEME_MODES: ThemeMode[] = ['dark', 'light', 'grey'];
 
@@ -8,8 +17,8 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
   grey: 'Shade',
 };
 
-/** Default — dark reduces glare on field guard mobile use */
-export const DEFAULT_THEME: ThemeMode = 'dark';
+/** Default — light matches the white app icon background and field-readable UI. */
+export const DEFAULT_THEME: ThemeMode = 'light';
 
 const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 
@@ -46,6 +55,7 @@ export function applyThemeToDocument(mode: ThemeMode): void {
   html.classList.add(`theme-${mode}`);
   html.dataset.theme = mode;
   html.style.colorScheme = mode === 'light' || mode === 'grey' ? 'light' : 'dark';
+  applyThemeBranding(mode);
 }
 
 /** Read active theme from the document root (for maps, etc.) */

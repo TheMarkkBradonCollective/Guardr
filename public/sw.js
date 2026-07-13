@@ -1,5 +1,5 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v6';
+const CACHE_NAME = 'guardr-cache-v7';
 const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
 const OFFLINE_URLS = [
   '/',
@@ -16,6 +16,15 @@ const OFFLINE_URLS = [
   '/icon-512.png',
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
+  '/icons/favicon-light.png',
+  '/icons/favicon-dark.png',
+  '/icons/favicon-grey.png',
+  '/icons/apple-touch-icon-light.png',
+  '/icons/apple-touch-icon-dark.png',
+  '/icons/apple-touch-icon-grey.png',
+  '/icons/icon-light-192.png',
+  '/icons/icon-dark-192.png',
+  '/icons/icon-grey-192.png',
   '/badge-72.png',
   '/manifest.json',
   WALKIE_CHIRP_SOUND,
