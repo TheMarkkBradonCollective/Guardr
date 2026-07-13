@@ -147,8 +147,11 @@ function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boo
     case 'schedule-changes':
     case 'applications':
       return canReviewJobRequests({ role });
+    case 'guard-accounts':
     case 'accounts':
-      return canManageGuards({ role }) || canManageClients({ role });
+      return canManageGuards({ role });
+    case 'client-accounts':
+      return canManageClients({ role });
     default:
       return false;
   }

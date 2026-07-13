@@ -16464,4 +16464,30 @@ textarea.uber-input {
   overscroll-behavior-x: none;
 }
 
+.staff-approvals-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-inline: 0;
+  background: var(--brand-bg);
+}
+
+.staff-approvals-tabs .app-segmented-control {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.staff-approvals-tabs .app-segmented-control::-webkit-scrollbar {
+  display: none;
+}
+
+.staff-approvals-tabs .app-segmented-control-item {
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+  padding-inline: 0.875rem;
+}
+
 /* ─── END STAFF NATIVE APP UI ────────────────────────────────────────────── */

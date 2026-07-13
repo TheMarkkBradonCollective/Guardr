@@ -123,11 +123,49 @@ export interface OpsActivityItem {
 export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
 
 export type ApprovalQueueId =
-  | 'accounts'
   | 'job-offers'
   | 'schedule-changes'
   | 'applications'
-  | 'credentials';
+  | 'credentials'
+  | 'guard-accounts'
+  | 'client-accounts'
+  /** @deprecated Legacy URL — use guard-accounts or client-accounts */
+  | 'accounts';
+
+export const APPROVAL_QUEUE_TAB_ORDER: ApprovalQueueId[] = [
+  'job-offers',
+  'schedule-changes',
+  'applications',
+  'credentials',
+  'guard-accounts',
+  'client-accounts',
+];
+
+export const APPROVAL_QUEUE_TAB_LABELS: Record<
+  Exclude<ApprovalQueueId, 'accounts'>,
+  string
+> = {
+  'job-offers': 'Jobs',
+  'schedule-changes': 'Schedule',
+  applications: 'Applications',
+  credentials: 'Credentials',
+  'guard-accounts': 'Guards',
+  'client-accounts': 'Clients',
+};
+
+/** Map legacy queue ids and invalid values to a concrete approvals tab. */
+export function normalizeApprovalQueueId(
+  queue: ApprovalQueueId | null | undefined,
+  permitted: ApprovalQueueId[] = APPROVAL_QUEUE_TAB_ORDER
+): ApprovalQueueId | null {
+  if (!queue) return permitted[0] ?? null;
+  if (queue === 'accounts') {
+    if (permitted.includes('guard-accounts')) return 'guard-accounts';
+    if (permitted.includes('client-accounts')) return 'client-accounts';
+    return permitted[0] ?? null;
+  }
+  return permitted.includes(queue) ? queue : permitted[0] ?? null;
+}
 
 export interface OverviewActionItem {
   id: string;
@@ -474,15 +512,25 @@ export function buildOverviewActionQueue(
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
   const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
   const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
-  const accountQueueCount = pendingGuardAccounts + pendingClientAccounts;
-  if (accountQueueCount > 0) {
+  if (pendingGuardAccounts > 0) {
     items.push({
-      id: 'pending-accounts',
-      title: 'Approve guard and client profiles',
-      description: 'Review guard card and certs to activate account',
-      count: accountQueueCount,
+      id: 'pending-guard-accounts',
+      title: 'Approve guard profiles',
+      description: 'Review guard credentials and activate marketplace accounts',
+      count: pendingGuardAccounts,
       section: 'approvals',
-      approvalQueue: 'accounts',
+      approvalQueue: 'guard-accounts',
+      tone: 'urgent',
+    });
+  }
+  if (pendingClientAccounts > 0) {
+    items.push({
+      id: 'pending-client-accounts',
+      title: 'Approve client sign-ups',
+      description: 'Review new client accounts before they can post jobs',
+      count: pendingClientAccounts,
+      section: 'approvals',
+      approvalQueue: 'client-accounts',
       tone: 'urgent',
     });
   }

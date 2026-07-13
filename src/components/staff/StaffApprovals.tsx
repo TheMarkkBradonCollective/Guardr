@@ -3,6 +3,11 @@ import { SlideToConfirm } from '../ui/SlideToConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Certification, Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
 import type { ApprovalQueueId } from '../../lib/staffOps';
+import {
+  APPROVAL_QUEUE_TAB_LABELS,
+  APPROVAL_QUEUE_TAB_ORDER,
+  normalizeApprovalQueueId,
+} from '../../lib/staffOps';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { canStaffEditJobTitleAndLocation, canStaffEditJobMapCoordinates, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
@@ -48,9 +53,9 @@ import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from '../../lib/certImagePolicy';
 import { NoMapCoordsBadge } from '../jobs/NoMapCoordsBadge';
 import { JobBillingSummaryFromRequest } from '../jobs/JobBillingSummary';
-import { AppEmptyState, AppItemCard, AppItemCardStack, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppItemCardStack, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { WfBadge, WfListCard } from '../ui/wireframe';
-import { Briefcase, Check, ChevronRight, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
+import { Briefcase, Check, ClipboardCheck, Eye, Globe, MapPin, Pencil, Phone, Shield, UserCheck, X } from 'lucide-react';
 
 interface StaffApprovalsProps {
   requests: SecurityRequest[];
@@ -111,7 +116,7 @@ interface StaffApprovalsProps {
 }
 
 const QUEUE_META: Record<
-  ApprovalQueueId,
+  Exclude<ApprovalQueueId, 'accounts'>,
   { title: string; description: string; icon: React.ReactNode }
 > = {
   'job-offers': {
@@ -134,10 +139,15 @@ const QUEUE_META: Record<
     description: '',
     icon: <ClipboardCheck className="w-4 h-4" />,
   },
-  accounts: {
-    title: 'Profile approval',
+  'guard-accounts': {
+    title: 'Guard profiles',
     description: '',
     icon: <Shield className="w-4 h-4" />,
+  },
+  'client-accounts': {
+    title: 'Client sign-ups',
+    description: '',
+    icon: <UserCheck className="w-4 h-4" />,
   },
 };
 
@@ -190,20 +200,6 @@ function ApprovalDetailScreen({
   );
 }
 
-function ApprovalQueueHeader({
-  title,
-  onBack,
-}: {
-  title: string;
-  onBack: () => void;
-}) {
-  return (
-    <div className="mb-4">
-      <AppSubScreenHeader title={title} onBack={onBack} backLabel="Approvals" />
-    </div>
-  );
-}
-
 export function StaffApprovals({
   requests,
   guards,
@@ -252,7 +248,6 @@ export function StaffApprovals({
   const pendingClientAccounts = getPendingClientAccounts(clients);
   const jobsWithApplications = getOpenJobsWithApplications(requests);
 
-  const [activeQueue, setActiveQueue] = useState<ApprovalQueueId | null>(initialQueue);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [viewCoi, setViewCoi] = useState<SecurityGuard | null>(null);
@@ -324,13 +319,82 @@ export function StaffApprovals({
       </div>
     ) : null;
 
-  useEffect(() => {
-    setActiveQueue(initialQueue);
-    setActiveItemId(null);
-  }, [initialQueue]);
+  const queueCounts = useMemo(
+    () => ({
+      'job-offers': pendingJobs.length,
+      'schedule-changes': pendingScheduleChanges.length,
+      applications: jobsWithApplications.length,
+      credentials: pendingCerts.length + pendingInsuranceReviews.length,
+      'guard-accounts': pendingGuardAccounts.length + approvedGuardsAwaitingActivation.length,
+      'client-accounts': pendingClientAccounts.length,
+    }),
+    [
+      pendingJobs.length,
+      pendingScheduleChanges.length,
+      jobsWithApplications.length,
+      pendingCerts.length,
+      pendingInsuranceReviews.length,
+      pendingGuardAccounts.length,
+      approvedGuardsAwaitingActivation.length,
+      pendingClientAccounts.length,
+    ]
+  );
+
+  const permittedQueues = useMemo(
+    () =>
+      APPROVAL_QUEUE_TAB_ORDER.filter((id) => {
+        if (id === 'credentials') return canVerifyGuardCredentials;
+        if (id === 'job-offers' || id === 'schedule-changes' || id === 'applications') {
+          return canReviewJobRequests;
+        }
+        if (id === 'guard-accounts') return canApproveGuardAccounts;
+        if (id === 'client-accounts') return canManageClientAccounts;
+        return false;
+      }),
+    [
+      canVerifyGuardCredentials,
+      canReviewJobRequests,
+      canApproveGuardAccounts,
+      canManageClientAccounts,
+    ]
+  );
+
+  const [activeQueue, setActiveQueue] = useState<ApprovalQueueId | null>(() =>
+    normalizeApprovalQueueId(initialQueue, permittedQueues)
+  );
+
+  const activeTabLabel =
+    activeQueue && activeQueue !== 'accounts'
+      ? APPROVAL_QUEUE_TAB_LABELS[activeQueue]
+      : 'Approvals';
+
+  const tabOptions = useMemo(
+    () =>
+      permittedQueues.map((id) => ({
+        id,
+        label:
+          queueCounts[id] > 0
+            ? `${APPROVAL_QUEUE_TAB_LABELS[id]} (${queueCounts[id]})`
+            : APPROVAL_QUEUE_TAB_LABELS[id],
+      })),
+    [permittedQueues, queueCounts]
+  );
 
   useEffect(() => {
-    if (!activeItemId || !activeQueue) return;
+    setActiveQueue((current) => normalizeApprovalQueueId(initialQueue ?? current, permittedQueues));
+    setActiveItemId(null);
+  }, [initialQueue, permittedQueues]);
+
+  useEffect(() => {
+    if (!permittedQueues.length) {
+      setActiveQueue(null);
+      return;
+    }
+    setActiveQueue((current) => normalizeApprovalQueueId(current ?? initialQueue, permittedQueues));
+  }, [permittedQueues, initialQueue]);
+
+  useEffect(() => {
+    if (!activeItemId || !activeQueue || activeQueue === 'accounts') return;
     const stillExists =
       (activeQueue === 'job-offers' && pendingJobs.some((r) => r.id === activeItemId)) ||
       (activeQueue === 'schedule-changes' && pendingScheduleChanges.some((r) => r.id === activeItemId)) ||
@@ -339,10 +403,11 @@ export function StaffApprovals({
         (pendingCerts.some(({ cert }) => cert.id === activeItemId) ||
           (isCoiApprovalItemId(activeItemId) &&
             pendingInsuranceReviews.some((g) => coiApprovalItemId(g.id) === activeItemId)))) ||
-      (activeQueue === 'accounts' &&
+      (activeQueue === 'guard-accounts' &&
         (pendingGuardAccounts.some((g) => g.id === activeItemId) ||
-          approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId) ||
-          pendingClientAccounts.some((c) => c.id === activeItemId)));
+          approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId))) ||
+      (activeQueue === 'client-accounts' &&
+        pendingClientAccounts.some((c) => c.id === activeItemId));
     if (!stillExists) setActiveItemId(null);
   }, [
     activeItemId,
@@ -357,79 +422,36 @@ export function StaffApprovals({
     pendingClientAccounts,
   ]);
 
-  const selectQueue = (queue: ApprovalQueueId | null) => {
-    setActiveQueue(queue);
+  const selectQueue = (queue: ApprovalQueueId) => {
+    const next = normalizeApprovalQueueId(queue, permittedQueues);
+    if (!next) return;
+    setActiveQueue(next);
     setActiveItemId(null);
     setEditingJobId(null);
-    onQueueChange?.(queue);
+    onQueueChange?.(next);
   };
 
-  const queueCounts = useMemo(
-    () => ({
-      'job-offers': pendingJobs.length,
-      'schedule-changes': pendingScheduleChanges.length,
-      applications: jobsWithApplications.length,
-      credentials: pendingCerts.length + pendingInsuranceReviews.length,
-      accounts:
-        pendingGuardAccounts.length +
-        approvedGuardsAwaitingActivation.length +
-        pendingClientAccounts.length,
-    }),
-    [
-      pendingJobs.length,
-      pendingScheduleChanges.length,
-      jobsWithApplications.length,
-      pendingCerts.length,
-      pendingInsuranceReviews.length,
-      pendingGuardAccounts.length,
-      approvedGuardsAwaitingActivation.length,
-      pendingClientAccounts.length,
-    ]
-  );
+  const renderApprovalsTabs = () => {
+    if (!activeQueue || activeQueue === 'accounts' || permittedQueues.length === 0) return null;
+    return (
+      <div className="staff-approvals-tabs -mx-0 mb-4">
+        <AppSegmentedControl
+          options={tabOptions}
+          value={activeQueue}
+          onChange={selectQueue}
+        />
+      </div>
+    );
+  };
 
-  const availableQueues = (Object.keys(QUEUE_META) as ApprovalQueueId[]).filter((id) => {
-    if (queueCounts[id] === 0) return false;
-    if (id === 'credentials') return canVerifyGuardCredentials;
-    if (id === 'job-offers' || id === 'schedule-changes' || id === 'applications') {
-      return canReviewJobRequests;
-    }
-    if (id === 'accounts') return canApproveGuardAccounts || canManageClientAccounts;
-    return false;
-  });
-
-  const queueEmpty = availableQueues.length === 0;
-
-  const renderHub = () => (
-    <div className="space-y-4">
-      {queueEmpty ? (
-        <AppEmptyState
-          dashed
-          icon={<ClipboardCheck className="w-5 h-5" />}
-          title="All clear"
-        >
-          Nothing is waiting for approval right now.
-        </AppEmptyState>
-      ) : (
-        <AppItemCardStack>
-          {availableQueues.map((queueId) => {
-            const meta = QUEUE_META[queueId];
-            return (
-              <AppItemCard key={queueId} onClick={() => selectQueue(queueId)} className="!items-center">
-                <span className="staff-overview-action-icon shrink-0">{meta.icon}</span>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold">{meta.title}</p>
-                    <WfBadge tone="warning">{queueCounts[queueId]}</WfBadge>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-brand-text-muted shrink-0" />
-              </AppItemCard>
-            );
-          })}
-        </AppItemCardStack>
-      )}
-    </div>
-  );
+  const renderTabEmptyState = (queueId: Exclude<ApprovalQueueId, 'accounts'>) => {
+    const meta = QUEUE_META[queueId];
+    return (
+      <AppEmptyState dashed icon={meta.icon} title="All clear">
+        Nothing in {meta.title.toLowerCase()} right now.
+      </AppEmptyState>
+    );
+  };
 
   const renderJobOfferDetail = (req: SecurityRequest) => {
     const coordsMissing = isJobLocationCoordsMissing(req);
@@ -571,8 +593,7 @@ export function StaffApprovals({
     editingJobId != null ? pendingJobs.find((r) => r.id === editingJobId) ?? null : null;
 
   const renderQueueList = () => {
-    if (!activeQueue) return null;
-    const meta = QUEUE_META[activeQueue];
+    if (!activeQueue || activeQueue === 'accounts') return null;
 
     if (activeQueue === 'job-offers') {
       if (activeItemId) {
@@ -581,28 +602,26 @@ export function StaffApprovals({
         return (
           <ApprovalDetailScreen
             title={req.title}
-            backLabel={meta.title}
+            backLabel={activeTabLabel}
             onBack={() => setActiveItemId(null)}
           >
             {renderJobOfferDetail(req)}
           </ApprovalDetailScreen>
         );
       }
+      if (pendingJobs.length === 0) return renderTabEmptyState('job-offers');
       return (
-        <>
-          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {pendingJobs.map((req) => (
-              <ApprovalListRow
-                key={req.id}
-                title={req.title}
-                subtitle={`${req.clientName} · ${req.location}`}
-                meta={<WfBadge tone="warning">Review & approve</WfBadge>}
-                onViewDetails={() => setActiveItemId(req.id)}
-              />
-            ))}
-          </AppItemCardStack>
-        </>
+        <AppItemCardStack>
+          {pendingJobs.map((req) => (
+            <ApprovalListRow
+              key={req.id}
+              title={req.title}
+              subtitle={`${req.clientName} · ${req.location}`}
+              meta={<WfBadge tone="warning">Review & approve</WfBadge>}
+              onViewDetails={() => setActiveItemId(req.id)}
+            />
+          ))}
+        </AppItemCardStack>
       );
     }
 
@@ -613,32 +632,30 @@ export function StaffApprovals({
         return (
           <ApprovalDetailScreen
             title={req.title}
-            backLabel={meta.title}
+            backLabel={activeTabLabel}
             onBack={() => setActiveItemId(null)}
           >
             {renderScheduleChangeDetail(req)}
           </ApprovalDetailScreen>
         );
       }
+      if (pendingScheduleChanges.length === 0) return renderTabEmptyState('schedule-changes');
       return (
-        <>
-          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {pendingScheduleChanges.map((req) => (
-              <ApprovalListRow
-                key={req.id}
-                title={req.title}
-                subtitle={`${req.clientName} · ${req.location}`}
-                meta={
-                  <WfBadge tone="warning" className="w-fit">
-                    {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
-                  </WfBadge>
-                }
-                onViewDetails={() => setActiveItemId(req.id)}
-              />
-            ))}
-          </AppItemCardStack>
-        </>
+        <AppItemCardStack>
+          {pendingScheduleChanges.map((req) => (
+            <ApprovalListRow
+              key={req.id}
+              title={req.title}
+              subtitle={`${req.clientName} · ${req.location}`}
+              meta={
+                <WfBadge tone="warning" className="w-fit">
+                  {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
+                </WfBadge>
+              }
+              onViewDetails={() => setActiveItemId(req.id)}
+            />
+          ))}
+        </AppItemCardStack>
       );
     }
 
@@ -652,7 +669,7 @@ export function StaffApprovals({
         return (
           <ApprovalDetailScreen
             title={req.title}
-            backLabel={meta.title}
+            backLabel={activeTabLabel}
             onBack={() => setActiveItemId(null)}
           >
             <div className="staff-detail-pane space-y-3">
@@ -726,22 +743,20 @@ export function StaffApprovals({
           </ApprovalDetailScreen>
         );
       }
+      if (jobsWithApplications.length === 0) return renderTabEmptyState('applications');
       return (
-        <>
-          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {jobsWithApplications.map((req) => (
-              <ApprovalListRow
-                key={req.id}
-                title={req.title}
-                subtitle={`${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}${
-                  isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''
-                }`}
-                onViewDetails={() => setActiveItemId(req.id)}
-              />
-            ))}
-          </AppItemCardStack>
-        </>
+        <AppItemCardStack>
+          {jobsWithApplications.map((req) => (
+            <ApprovalListRow
+              key={req.id}
+              title={req.title}
+              subtitle={`${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}${
+                isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''
+              }`}
+              onViewDetails={() => setActiveItemId(req.id)}
+            />
+          ))}
+        </AppItemCardStack>
       );
     }
 
@@ -757,7 +772,7 @@ export function StaffApprovals({
         return (
           <ApprovalDetailScreen
             title={`${guard.name} — ${coiViewSectionLabel()}`}
-            backLabel={meta.title}
+            backLabel={activeTabLabel}
             onBack={() => setActiveItemId(null)}
           >
             <div className="staff-detail-pane space-y-4">
@@ -832,7 +847,7 @@ export function StaffApprovals({
         return (
           <ApprovalDetailScreen
             title={`${guard.name} — ${certDisplayName(cert)}`}
-            backLabel={meta.title}
+            backLabel={activeTabLabel}
             onBack={() => setActiveItemId(null)}
           >
             <div className="staff-detail-pane space-y-4">
@@ -916,10 +931,9 @@ export function StaffApprovals({
       const pendingSections = groupPendingCredentialApprovals(pendingCerts, pendingInsuranceReviews, {
         hideEmpty: true,
       });
+      if (queueCounts.credentials === 0) return renderTabEmptyState('credentials');
       return (
-        <>
-          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
-          <div className="space-y-5">
+        <div className="space-y-5">
             {pendingInsuranceReviews.length > 0 && (
               <section className="credential-view-section space-y-2">
                 <div className="credential-view-section-header">
@@ -986,18 +1000,16 @@ export function StaffApprovals({
                 </AppItemCardStack>
               </section>
             ))}
-          </div>
-        </>
+        </div>
       );
     }
 
-    if (activeQueue === 'accounts') {
+    if (activeQueue === 'guard-accounts') {
       if (activeItemId) {
         const guard =
           pendingGuardAccounts.find((g) => g.id === activeItemId) ??
           approvedGuardsAwaitingActivation.find((g) => g.id === activeItemId) ??
           null;
-        const client = pendingClientAccounts.find((c) => c.id === activeItemId) ?? null;
 
         if (guard) {
           const checklist = getGuardActivationChecklist(guard);
@@ -1010,7 +1022,7 @@ export function StaffApprovals({
           return (
             <ApprovalDetailScreen
               title={guard.name}
-              backLabel={meta.title}
+              backLabel={activeTabLabel}
               onBack={() => setActiveItemId(null)}
             >
               <div className="staff-detail-pane space-y-4">
@@ -1146,8 +1158,68 @@ export function StaffApprovals({
           );
         }
 
-        if (client) {
-          const budgetLabel: Record<string, string> = {
+        return null;
+      }
+
+      if (queueCounts['guard-accounts'] === 0) return renderTabEmptyState('guard-accounts');
+      return (
+        <AppItemCardStack>
+          {pendingGuardAccounts.map((guard) => (
+            <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
+              <WfListCard
+                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                title={guard.name}
+                subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
+                meta={
+                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                    <GuardRosterStatusBadges guard={guard} />
+                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                  </div>
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setActiveItemId(guard.id)}
+                className="app-button-outline app-btn-sm gap-1.5 w-fit"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                View details
+              </button>
+            </div>
+          ))}
+          {approvedGuardsAwaitingActivation.map((guard) => (
+            <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
+              <WfListCard
+                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
+                title={guard.name}
+                subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
+                meta={
+                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                    <GuardRosterStatusBadges guard={guard} />
+                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
+                  </div>
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setActiveItemId(guard.id)}
+                className="app-button-outline app-btn-sm gap-1.5 w-fit"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                View details
+              </button>
+            </div>
+          ))}
+        </AppItemCardStack>
+      );
+    }
+
+    if (activeQueue === 'client-accounts') {
+      if (activeItemId) {
+        const client = pendingClientAccounts.find((c) => c.id === activeItemId) ?? null;
+        if (!client) return null;
+
+        const budgetLabel: Record<string, string> = {
             'under-500': 'Under $500',
             '500-2000': '$500 – $2,000',
             '2000-5000': '$2,000 – $5,000',
@@ -1169,7 +1241,7 @@ export function StaffApprovals({
           return (
             <ApprovalDetailScreen
               title={client.companyName || client.name}
-              backLabel={meta.title}
+              backLabel={activeTabLabel}
               onBack={() => setActiveItemId(null)}
             >
               <div className="staff-detail-pane space-y-5">
@@ -1378,71 +1450,20 @@ export function StaffApprovals({
               </div>
             </ApprovalDetailScreen>
           );
-        }
-
-        return null;
       }
 
+      if (pendingClientAccounts.length === 0) return renderTabEmptyState('client-accounts');
       return (
-        <>
-          <ApprovalQueueHeader title={meta.title} onBack={() => selectQueue(null)} />
-          <AppItemCardStack>
-            {pendingGuardAccounts.map((guard) => (
-              <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-                <WfListCard
-                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                  title={guard.name}
-                  subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
-                  meta={
-                    <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                      <GuardRosterStatusBadges guard={guard} />
-                      <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                    </div>
-                  }
-                />
-                <button
-                  type="button"
-                  onClick={() => setActiveItemId(guard.id)}
-                  className="app-button-outline app-btn-sm gap-1.5 w-fit"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  View details
-                </button>
-              </div>
-            ))}
-            {approvedGuardsAwaitingActivation.map((guard) => (
-              <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-                <WfListCard
-                  avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                  title={guard.name}
-                  subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
-                  meta={
-                    <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                      <GuardRosterStatusBadges guard={guard} />
-                      <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                    </div>
-                  }
-                />
-                <button
-                  type="button"
-                  onClick={() => setActiveItemId(guard.id)}
-                  className="app-button-outline app-btn-sm gap-1.5 w-fit"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  View details
-                </button>
-              </div>
-            ))}
-            {pendingClientAccounts.map((client) => (
-              <ApprovalListRow
-                key={client.id}
-                title={client.companyName || client.name}
-                subtitle="Client sign-up"
-                onViewDetails={() => setActiveItemId(client.id)}
-              />
-            ))}
-          </AppItemCardStack>
-        </>
+        <AppItemCardStack>
+          {pendingClientAccounts.map((client) => (
+            <ApprovalListRow
+              key={client.id}
+              title={client.companyName || client.name}
+              subtitle="Client sign-up"
+              onViewDetails={() => setActiveItemId(client.id)}
+            />
+          ))}
+        </AppItemCardStack>
       );
     }
 
@@ -1451,7 +1472,16 @@ export function StaffApprovals({
 
   return (
     <div className="animate-fade-in space-y-4">
-      {!activeQueue ? renderHub() : renderQueueList()}
+      {permittedQueues.length === 0 ? (
+        <AppEmptyState dashed icon={<ClipboardCheck className="w-5 h-5" />} title="All clear">
+          Nothing is waiting for approval right now.
+        </AppEmptyState>
+      ) : (
+        <>
+          {!activeItemId && renderApprovalsTabs()}
+          {renderQueueList()}
+        </>
+      )}
 
       {viewCert && (
         <CertDetailModal
