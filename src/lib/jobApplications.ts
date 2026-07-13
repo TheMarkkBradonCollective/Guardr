@@ -5,17 +5,24 @@ import { toGuardJobView } from './guardJobView';
 export { guardCanApplyToJob };
 
 export function guardHasApplied(job: Pick<SecurityRequest, 'applicants'>, guardId: string): boolean {
-  return job.applicants.includes(guardId);
+  return (job.applicants ?? []).includes(guardId);
 }
 
 export function getOpenJobsWithApplications(requests: SecurityRequest[]): SecurityRequest[] {
   return requests
-    .filter((r) => r.status === 'open' && !r.assignedGuardId && r.applicants.length > 0)
-    .sort((a, b) => b.applicants.length - a.applicants.length || new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    .filter((r) => r.status === 'open' && !r.assignedGuardId && (r.applicants?.length ?? 0) > 0)
+    .sort(
+      (a, b) =>
+        (b.applicants?.length ?? 0) - (a.applicants?.length ?? 0) ||
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    );
 }
 
 export function countPendingGuardApplications(requests: SecurityRequest[]): number {
-  return getOpenJobsWithApplications(requests).reduce((sum, job) => sum + job.applicants.length, 0);
+  return getOpenJobsWithApplications(requests).reduce(
+    (sum, job) => sum + (job.applicants?.length ?? 0),
+    0
+  );
 }
 
 export function guardMeetsJobRequirements(guard: SecurityGuard, job: SecurityRequest): boolean {

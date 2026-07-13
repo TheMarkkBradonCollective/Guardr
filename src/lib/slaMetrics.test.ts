@@ -17,6 +17,7 @@ const baseRequest = (overrides: Partial<SecurityRequest>): SecurityRequest =>
     endDate: new Date(Date.now() + 8 * 3600000).toISOString(),
     hourlyRate: 35,
     guardsNeeded: 1,
+    applicants: [],
     ...overrides,
   }) as SecurityRequest;
 
