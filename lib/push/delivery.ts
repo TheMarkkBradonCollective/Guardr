@@ -80,6 +80,7 @@ async function getWebPush() {
 }
 
 import { isPushConfigured } from './config';
+import { isFcmConfigured, isFcmNativeEndpoint, sendFcmNativeNotification } from './fcm';
 
 async function ensureVapidConfigured(): Promise<boolean> {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
@@ -129,6 +130,10 @@ async function sendToSubscription(
   payload: Record<string, unknown>,
   attempt = 0
 ): Promise<PushSendResult> {
+  if (isFcmNativeEndpoint(subscription.endpoint)) {
+    return sendFcmNativeNotification(subscription.endpoint, payload, attempt);
+  }
+
   if (!(await ensureVapidConfigured())) {
     return { ok: false, endpoint: subscription.endpoint };
   }
@@ -184,7 +189,9 @@ async function deliverToSubscriptions(
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
   if (!subscriptions.length) return { sent: 0, failed: 0 };
-  if (!(await ensureVapidConfigured())) return { sent: 0, failed: subscriptions.length };
+  const webPushReady = await ensureVapidConfigured();
+  const fcmReady = isFcmConfigured();
+  if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
 
   const prefCache = new Map<string, boolean>();
   const filtered: typeof subscriptions = [];

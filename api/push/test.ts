@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isFcmConfigured, isFcmNativeEndpoint, sendFcmNativeNotification } from '../../lib/push/fcm';
 
 type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 
@@ -127,7 +128,10 @@ async function verifySession(
 }
 
 function isPushConfigured(): boolean {
-  return !!(process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim());
+  return (
+    !!(process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim()) ||
+    isFcmConfigured()
+  );
 }
 
 function jsonError(res: VercelResponse, status: number, message: string) {
@@ -142,7 +146,7 @@ async function sendTestToUser(
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
   const subject = process.env.VAPID_SUBJECT?.trim() || 'mailto:support@guardr.co';
-  if (!publicKey || !privateKey) return { sent: 0, failed: 0 };
+  const webPushReady = !!(publicKey && privateKey);
 
   const { data: subscriptions, error } = await db
     .from('push_subscriptions')
@@ -151,11 +155,14 @@ async function sendTestToUser(
   if (error) throw new Error(error.message);
   if (!subscriptions?.length) return { sent: 0, failed: 0 };
 
-  const mod = await import('web-push');
-  const webpush = ('default' in mod && mod.default ? mod.default : mod) as typeof import('web-push');
-  webpush.setVapidDetails(subject, publicKey, privateKey);
+  let webpush: typeof import('web-push') | null = null;
+  if (webPushReady) {
+    const mod = await import('web-push');
+    webpush = ('default' in mod && mod.default ? mod.default : mod) as typeof import('web-push');
+    webpush.setVapidDetails(subject, publicKey!, privateKey!);
+  }
 
-  const message = JSON.stringify({
+  const message = {
     title: 'Guardr test alert',
     body: 'Push notifications are working. You will receive operational alerts here.',
     url: '/',
@@ -163,15 +170,25 @@ async function sendTestToUser(
     data: { url: '/', type: 'test', siteId },
     tag: siteId ? `test-${siteId}` : 'test',
     priority: 'normal',
-  });
+  };
 
   let sent = 0;
   let failed = 0;
   for (const sub of subscriptions) {
+    if (isFcmNativeEndpoint(sub.endpoint)) {
+      const result = await sendFcmNativeNotification(sub.endpoint, message);
+      if (result.ok) sent += 1;
+      else failed += 1;
+      continue;
+    }
+    if (!webpush) {
+      failed += 1;
+      continue;
+    }
     try {
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        message,
+        JSON.stringify(message),
         { TTL: 60 * 60, urgency: 'normal' }
       );
       sent += 1;
@@ -196,7 +213,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return jsonError(
         res,
         503,
-        'Web Push is not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY on the server.'
+        'Push is not configured. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY, or FCM_SERVER_KEY on the server.'
       );
     }
 

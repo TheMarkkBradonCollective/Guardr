@@ -331,6 +331,8 @@ function resolveNotificationUrl(type, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      return "/client/messages";
     case "job_submitted":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=job-offers";
     case "guard_application":
@@ -444,6 +446,9 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      if (role === "client") return "/client/messages";
+      return "/staff/messages?mtab=team";
     case "support_ticket":
     case "support_ticket_status":
       if (role === "client" && options.requestId) {
@@ -525,6 +530,8 @@ function rolesForNotificationType(type) {
       return ["dispatch", "admin"];
     case "guard_message":
       return ["guard"];
+    case "client_message":
+      return ["client"];
     case "job_submitted":
     case "guard_pending_approval":
     case "client_pending_approval":
@@ -573,6 +580,76 @@ function buildNotificationData(type, options = {}) {
   };
 }
 
+// lib/push/fcm.ts
+var FCM_NATIVE_ENDPOINT_PREFIX = "fcm-native:";
+function isFcmConfigured() {
+  return !!process.env.FCM_SERVER_KEY?.trim();
+}
+function isFcmNativeEndpoint(endpoint) {
+  return endpoint.startsWith(FCM_NATIVE_ENDPOINT_PREFIX);
+}
+function fcmTokenFromEndpoint(endpoint) {
+  if (!isFcmNativeEndpoint(endpoint)) return null;
+  const token = endpoint.slice(FCM_NATIVE_ENDPOINT_PREFIX.length).trim();
+  return token || null;
+}
+function stringifyDataValue(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
+}
+async function sendFcmNativeNotification(endpoint, payload, attempt = 0) {
+  const serverKey = process.env.FCM_SERVER_KEY?.trim();
+  if (!serverKey) return { ok: false, endpoint };
+  const token = fcmTokenFromEndpoint(endpoint);
+  if (!token) return { ok: false, endpoint };
+  const data = {};
+  const nested = payload.data;
+  if (nested && typeof nested === "object") {
+    for (const [key, value] of Object.entries(nested)) {
+      data[key] = stringifyDataValue(value);
+    }
+  }
+  if (payload.url) data.url = stringifyDataValue(payload.url);
+  if (payload.eventType) data.eventType = stringifyDataValue(payload.eventType);
+  if (payload.priority) data.priority = stringifyDataValue(payload.priority);
+  try {
+    const res = await fetch("https://fcm.googleapis.com/fcm/send", {
+      method: "POST",
+      headers: {
+        Authorization: `key=${serverKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        to: token,
+        notification: {
+          title: String(payload.title ?? "Guardr"),
+          body: String(payload.body ?? "")
+        },
+        data,
+        priority: payload.priority === "high" ? "high" : "normal"
+      })
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && body.success === 1) return { ok: true };
+    const errCode = body.results?.[0]?.error;
+    if (errCode === "NotRegistered" || errCode === "InvalidRegistration") {
+      return { ok: false, statusCode: 410, endpoint };
+    }
+    if (attempt < 2 && res.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      return sendFcmNativeNotification(endpoint, payload, attempt + 1);
+    }
+    return { ok: false, statusCode: res.status, endpoint };
+  } catch {
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+      return sendFcmNativeNotification(endpoint, payload, attempt + 1);
+    }
+    return { ok: false, endpoint };
+  }
+}
+
 // api/_push/delivery.ts
 var PREF_COLUMN = {
   assignment: "assignment",
@@ -588,6 +665,7 @@ var PREF_COLUMN = {
   job_chat_message: "job_chat_message",
   staff_message: "staff_message",
   guard_message: "guard_message",
+  client_message: "client_message",
   job_submitted: "job_submitted",
   job_open_to_guards: "job_open_to_guards",
   guard_application: "guard_application",
@@ -654,6 +732,9 @@ async function sleep(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 async function sendToSubscription(subscription, payload, attempt = 0) {
+  if (isFcmNativeEndpoint(subscription.endpoint)) {
+    return sendFcmNativeNotification(subscription.endpoint, payload, attempt);
+  }
   if (!await ensureVapidConfigured()) {
     return { ok: false, endpoint: subscription.endpoint };
   }
@@ -686,7 +767,9 @@ async function removeInvalidSubscriptions(db, endpoints) {
 }
 async function deliverToSubscriptions(db, subscriptions, payload) {
   if (!subscriptions.length) return { sent: 0, failed: 0 };
-  if (!await ensureVapidConfigured()) return { sent: 0, failed: subscriptions.length };
+  const webPushReady = await ensureVapidConfigured();
+  const fcmReady = isFcmConfigured();
+  if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
   const prefCache = /* @__PURE__ */ new Map();
   const filtered = [];
   for (const sub of subscriptions) {

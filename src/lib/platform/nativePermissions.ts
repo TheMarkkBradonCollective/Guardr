@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 /**
  * Request Android/iOS runtime permissions needed by Guardr field workflows.
@@ -21,11 +22,9 @@ export async function ensureNativePermissions(): Promise<void> {
     console.warn('[native] camera/photos permission request failed:', error);
   }
 
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    try {
-      await Notification.requestPermission();
-    } catch (error) {
-      console.warn('[native] notification permission request failed:', error);
-    }
+  try {
+    await PushNotifications.requestPermissions();
+  } catch (error) {
+    console.warn('[native] push permission request failed:', error);
   }
 }

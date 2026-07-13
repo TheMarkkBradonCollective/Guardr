@@ -1,6 +1,17 @@
 import { apiUrl } from './siteConfig';
 import type { SessionUser } from '../types';
 import { subscribePush } from './pushApi';
+import {
+  getNativePushPermission,
+  getStoredNativePushSubscription,
+  isNativePushPlatform,
+  listenForNativePushNavigation,
+  listenForNativePushReceived,
+  subscribeToNativePush,
+  unsubscribeFromNativePush,
+} from './nativePush';
+
+export { isNativePushPlatform };
 
 const PUSH_ENABLED_KEY = 'guardr_push_enabled';
 const VAPID_CACHE_KEY = 'guardr_vapid_public_key';
@@ -32,13 +43,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
-export function isPushSupported(): boolean {
+export function isWebPushSupported(): boolean {
   return (
     typeof window !== 'undefined' &&
     'serviceWorker' in navigator &&
     'PushManager' in window &&
     'Notification' in window
   );
+}
+
+export function isPushSupported(): boolean {
+  return isWebPushSupported() || isNativePushPlatform();
 }
 
 function readCachedVapidKey(): string | null {
@@ -90,6 +105,7 @@ export async function fetchVapidPublicKey(): Promise<string | null> {
 }
 
 export async function isPushConfigured(): Promise<boolean> {
+  if (isNativePushPlatform()) return true;
   const key = await fetchVapidPublicKey();
   return !!key;
 }
@@ -107,26 +123,57 @@ export function setPushEnabledLocally(enabled: boolean): void {
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) return null;
+  if (isNativePushPlatform() || !('serviceWorker' in navigator)) return null;
   return navigator.serviceWorker.register('/service-worker.js');
 }
 
 export async function getPushPermission(): Promise<NotificationPermission | 'unsupported'> {
-  if (!isPushSupported()) return 'unsupported';
+  if (isNativePushPlatform()) return getNativePushPermission();
+  if (!isWebPushSupported()) return 'unsupported';
   return Notification.permission;
 }
 
 export async function requestPushPermission(): Promise<NotificationPermission | 'unsupported'> {
-  if (!isPushSupported()) return 'unsupported';
+  if (isNativePushPlatform()) {
+    const { requestNativePushPermission } = await import('./nativePush');
+    return requestNativePushPermission();
+  }
+  if (!isWebPushSupported()) return 'unsupported';
   return Notification.requestPermission();
 }
 
+export async function getExistingPushSubscription(): Promise<PushSubscriptionDto | null> {
+  if (isNativePushPlatform()) {
+    return getStoredNativePushSubscription();
+  }
+  if (!isWebPushSupported()) return null;
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+  if (!subscription) return null;
+  const json = subscription.toJSON();
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return null;
+  return {
+    endpoint: json.endpoint,
+    keys: {
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+    },
+    expirationTime: json.expirationTime ?? null,
+  };
+}
+
+/** @deprecated Use getExistingPushSubscription */
 export async function getExistingSubscription(): Promise<PushSubscription | null> {
+  if (isNativePushPlatform() || !isWebPushSupported()) return null;
   const registration = await navigator.serviceWorker.ready;
   return registration.pushManager.getSubscription();
 }
 
 export async function subscribeToPush(): Promise<PushSubscriptionDto | null> {
+  if (isNativePushPlatform()) {
+    return subscribeToNativePush();
+  }
+
   const vapidPublicKey = await fetchVapidPublicKey();
   if (!vapidPublicKey) {
     throw new Error('Push notifications are not configured on the server');
@@ -163,6 +210,11 @@ export async function subscribeToPush(): Promise<PushSubscriptionDto | null> {
 }
 
 export async function unsubscribeFromPush(): Promise<void> {
+  if (isNativePushPlatform()) {
+    await unsubscribeFromNativePush();
+    return;
+  }
+  if (!isWebPushSupported()) return;
   const subscription = await getExistingSubscription();
   if (subscription) {
     await subscription.unsubscribe();
@@ -178,21 +230,31 @@ export function sessionPayload(user: SessionUser) {
 }
 
 export function listenForPushNavigation(onNavigate: (url: string) => void): () => void {
-  if (!('serviceWorker' in navigator)) return () => undefined;
+  const cleanups: Array<() => void> = [];
 
-  const handler = (event: MessageEvent) => {
-    const type = event.data?.type;
-    const url = event.data?.url;
-    if (
-      (type === SW_MESSAGE.NOTIFICATION_CLICK || type === SW_MESSAGE.LEGACY_NAVIGATE) &&
-      typeof url === 'string'
-    ) {
-      onNavigate(url);
-    }
+  if (isNativePushPlatform()) {
+    cleanups.push(listenForNativePushNavigation(onNavigate));
+  }
+
+  if ('serviceWorker' in navigator) {
+    const handler = (event: MessageEvent) => {
+      const type = event.data?.type;
+      const url = event.data?.url;
+      if (
+        (type === SW_MESSAGE.NOTIFICATION_CLICK || type === SW_MESSAGE.LEGACY_NAVIGATE) &&
+        typeof url === 'string'
+      ) {
+        onNavigate(url);
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handler);
+    cleanups.push(() => navigator.serviceWorker.removeEventListener('message', handler));
+  }
+
+  return () => {
+    for (const cleanup of cleanups) cleanup();
   };
-
-  navigator.serviceWorker.addEventListener('message', handler);
-  return () => navigator.serviceWorker.removeEventListener('message', handler);
 }
 
 export function listenForPushSubscriptionChange(onChanged: () => void): () => void {
@@ -213,11 +275,21 @@ export async function syncPushSubscriptionWithServer(
   user: SessionUser,
   options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
 ): Promise<boolean> {
-  if (!isPushEnabledLocally() || Notification.permission !== 'granted') return false;
+  if (!isPushEnabledLocally()) return false;
+
+  const permission = await getPushPermission();
+  if (permission !== 'granted') return false;
 
   const subscription = await subscribeToPush();
   if (!subscription) return false;
 
   await subscribePush(user, subscription, options);
   return true;
+}
+
+export function initNativePushListeners(): () => void {
+  if (!isNativePushPlatform()) return () => undefined;
+  return listenForNativePushReceived((notification) => {
+    console.info('[native-push] received', notification.title ?? notification.id);
+  });
 }

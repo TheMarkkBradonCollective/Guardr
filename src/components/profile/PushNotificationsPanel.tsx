@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, Send } from 'lucide-react';
 import type { NotificationPreferences, SessionUser } from '../../types';
 import {
-  getExistingSubscription,
+  getExistingPushSubscription,
   getPushPermission,
+  isNativePushPlatform,
   isPushConfigured,
   isPushEnabledLocally,
   isPushSupported,
@@ -59,7 +60,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     void (async () => {
       const perm = await getPushPermission();
       setPermission(perm);
-      const sub = await getExistingSubscription();
+      const sub = await getExistingPushSubscription();
       const localOn = !!sub && isPushEnabledLocally();
       setEnabled(localOn);
       setServerSynced(localOn && perm === 'granted');
@@ -108,7 +109,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     setMessage(null);
     try {
       if (enabled) {
-        const sub = await getExistingSubscription();
+        const sub = await getExistingPushSubscription();
         await unsubscribeFromPush();
         try {
           await unsubscribePush(currentUser, sub?.endpoint);
@@ -174,10 +175,14 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     return (
       <AppFormSection>
         <p className="uber-label">Push notifications</p>
-        <p className="text-sm text-brand-text-muted mt-2">This browser does not support Web Push.</p>
+        <p className="text-sm text-brand-text-muted mt-2">
+          Push notifications are not available in this environment.
+        </p>
       </AppFormSection>
     );
   }
+
+  const nativeApp = isNativePushPlatform();
 
   return (
     <AppFormSection className="space-y-4">
@@ -188,9 +193,15 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5 text-brand-text-muted" />}
       </div>
 
-      {!configured && (
+      {!configured && !nativeApp && (
         <p className="text-xs text-amber-600">
           Server VAPID keys are not configured yet. Push notifications will be available once the server is set up.
+        </p>
+      )}
+
+      {nativeApp && (
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Guardr app notifications use Firebase Cloud Messaging. Enable the toggle below to register this device.
         </p>
       )}
 
@@ -198,7 +209,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         <span className="text-sm font-medium">Enable push notifications</span>
         <button
           type="button"
-          disabled={busy || !configured}
+          disabled={busy || (!configured && !nativeApp)}
           onClick={() => void handleToggle()}
           className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
             enabled ? 'bg-brand-primary' : 'bg-brand-border'
@@ -290,7 +301,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       </button>
 
       <p className="text-xs text-brand-text-muted">
-        Browser permission: {permission}
+        {nativeApp ? 'App' : 'Browser'} permission: {permission}
         {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
         {permission === 'granted' && !serverSynced && enabled
           ? ' — device subscribed locally but not synced to server yet.'
