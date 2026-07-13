@@ -118,9 +118,11 @@ import {
   type IdVerificationSlot,
 } from './lib/staffDocumentReview';
 import {
+  staffApproveIdVerificationBlocker,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
 } from './lib/guardIdentityVerification';
+import { guardApplicationCredentialVerificationBlocker } from './lib/guardApplicationIntake';
 import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
 import { computeGuardPay, computeJobBilling, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
@@ -2761,6 +2763,16 @@ export default function App() {
     }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard?.insurancePolicy) return;
+    if (status === 'verified') {
+      const coiBlocker = guardApplicationCredentialVerificationBlocker(
+        guard,
+        'Certificate of Insurance'
+      );
+      if (coiBlocker) {
+        appToast(coiBlocker, 'error');
+        return;
+      }
+    }
     const reviewedAt = new Date().toISOString();
     const nextPolicy: GuardInsurancePolicy = {
       ...guard.insurancePolicy,
@@ -3404,10 +3416,10 @@ export default function App() {
     }
     const before = guards.find((g) => g.id === guardId);
     const cert = before?.certifications.find((c) => c.id === certId);
-    if (!cert) throw new Error('Credential not found.');
-    const verifyBlocker = staffVerifyCertificationBlocker(cert);
+    if (!cert || !before) throw new Error('Credential not found.');
+    const verifyBlocker = staffVerifyCertificationBlocker(cert, before);
     if (verifyBlocker) throw new Error(verifyBlocker);
-    if (!staffCanVerifyCertification(cert)) {
+    if (!staffCanVerifyCertification(cert, before)) {
       throw new Error('This credential cannot be verified yet.');
     }
 
@@ -4438,6 +4450,8 @@ export default function App() {
     }
     const guard = guards.find((g) => g.id === guardId);
     if (!guard) throw new Error('Guard not found.');
+    const idBlocker = staffApproveIdVerificationBlocker(guard);
+    if (idBlocker) throw new Error(idBlocker);
     if (!staffCanApproveIdVerification(guard)) {
       throw new Error('Cannot approve ID yet — ensure state, number, expiration, and all photos are on file.');
     }

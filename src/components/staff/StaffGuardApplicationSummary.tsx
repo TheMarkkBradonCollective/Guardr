@@ -5,8 +5,7 @@ import {
   guardArmedPreferenceLabel,
   guardCardStatusLabel,
   guardHasApplicationIntake,
-  listGuardUploadedCredentials,
-  type UploadedCredentialTone,
+  listGuardUploadedCredentialLabels,
 } from '../../lib/guardApplicationIntake';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
@@ -36,32 +35,6 @@ function ChipList({ items }: { items: string[] }) {
   );
 }
 
-function UploadedCredentialRow({
-  label,
-  statusLabel,
-  tone,
-}: {
-  label: string;
-  statusLabel: string;
-  tone: UploadedCredentialTone;
-}) {
-  const toneClass =
-    tone === 'approved'
-      ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-      : tone === 'pending'
-        ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
-        : tone === 'denied'
-          ? 'text-red-400 border-red-500/30 bg-red-500/10'
-          : 'text-brand-text-muted border-brand-border bg-brand-bg-sec/60';
-
-  return (
-    <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${toneClass}`}>
-      <span className="text-sm font-medium text-brand-text">{label}</span>
-      <span className="text-xs font-semibold shrink-0">{statusLabel}</span>
-    </div>
-  );
-}
-
 interface StaffGuardApplicationSummaryProps {
   guard: SecurityGuard;
 }
@@ -69,7 +42,7 @@ interface StaffGuardApplicationSummaryProps {
 export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSummaryProps) {
   const serviceAreas = formatGuardServiceAreasList(guard.serviceAreas);
   const hasIntake = guardHasApplicationIntake(guard);
-  const uploadedCredentials = listGuardUploadedCredentials(guard);
+  const uploadedCredentialLabels = listGuardUploadedCredentialLabels(guard);
 
   return (
     <section className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4 space-y-4">
@@ -127,22 +100,13 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
         </p>
       )}
 
-      {uploadedCredentials.length > 0 && (
+      {uploadedCredentialLabels.length > 0 && (
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="uber-label text-xs">Uploaded credentials</p>
           <p className="text-xs text-brand-text-muted leading-relaxed -mt-1">
             Each item is reviewed on its own in the Guard credentials tab.
           </p>
-          <div className="space-y-2">
-            {uploadedCredentials.map((row) => (
-              <UploadedCredentialRow
-                key={row.key}
-                label={row.label}
-                statusLabel={row.statusLabel}
-                tone={row.tone}
-              />
-            ))}
-          </div>
+          <ChipList items={uploadedCredentialLabels} />
         </div>
       )}
     </section>

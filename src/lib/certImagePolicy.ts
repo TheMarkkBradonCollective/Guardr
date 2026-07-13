@@ -1,5 +1,6 @@
-import { Certification } from '../types';
-import { credentialExpectsStaffVerification, resolveCertCatalogId } from './certCatalog';
+import { Certification, SecurityGuard } from '../types';
+import { credentialExpectsStaffVerification, certDisplayName, resolveCertCatalogId } from './certCatalog';
+import { guardApplicationCredentialVerificationBlocker } from './guardApplicationIntake';
 
 export type CertImageMutationResult = { ok: true } | { ok: false; error: string };
 
@@ -106,15 +107,23 @@ export function certPhotoIsLockedForEditor(
 
 /** Any credential with a document photo can be staff-verified for client-facing trust. */
 export function staffCanVerifyCertification(
-  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>,
+  guard?: Pick<SecurityGuard, 'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'>
 ): boolean {
-  if (cert.status !== 'pending') return false;
-  return certHasDocumentProof(cert);
+  return staffVerifyCertificationBlocker(cert, guard) === null && cert.status === 'pending';
 }
 
 export function staffVerifyCertificationBlocker(
-  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>
+  cert: Pick<Certification, 'status' | 'imageUrl' | 'name' | 'catalogId'>,
+  guard?: Pick<SecurityGuard, 'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'>
 ): string | null {
+  if (guard) {
+    const applicationBlocker = guardApplicationCredentialVerificationBlocker(
+      guard,
+      certDisplayName(cert)
+    );
+    if (applicationBlocker) return applicationBlocker;
+  }
   if (cert.status !== 'pending') return null;
   if (!certHasDocumentProof(cert)) {
     return 'Document photo required — credential must be on file before staff can verify for clients';

@@ -2,6 +2,7 @@ import { SecurityGuard } from '../types';
 import { licenseStatesMatch, resolveGuardCardLicenseState } from './californiaCities';
 import { isGuardSubmittedIdentityVerification } from './approvalSubmissions';
 import { getGuardUserStatus } from './accountStatus';
+import { guardApplicationCredentialVerificationBlocker } from './guardApplicationIntake';
 
 export type GuardIdVerificationStatus = 'not_submitted' | 'pending' | 'verified' | 'rejected';
 
@@ -157,9 +158,22 @@ export function guardIdVerificationResubmitPending(
   return getGuardIdVerificationStatus(guard) === 'rejected';
 }
 
+export function staffApproveIdVerificationBlocker(
+  guard: Pick<
+    SecurityGuard,
+    'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'
+  >
+): string | null {
+  return guardApplicationCredentialVerificationBlocker(guard, 'Government ID');
+}
+
 export function staffCanApproveIdVerification(
   guard: Pick<
     SecurityGuard,
+    | 'name'
+    | 'userStatus'
+    | 'isStaff'
+    | 'mustChangePassword'
     | 'idVerificationStatus'
     | 'idState'
     | 'idNumber'
@@ -169,6 +183,7 @@ export function staffCanApproveIdVerification(
     | 'idSelfieUrl'
   >
 ): boolean {
+  if (staffApproveIdVerificationBlocker(guard)) return false;
   return getGuardIdVerificationStatus(guard) === 'pending' && guardIdVerificationSubmissionReady(guard);
 }
 

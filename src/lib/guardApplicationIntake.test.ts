@@ -1,11 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  guardApplicationCredentialVerificationBlocker,
   guardArmedPreferenceFromSignup,
   guardArmedPreferenceLabel,
   guardCardStatusLabel,
   guardHasApplicationIntake,
-  listGuardUploadedCredentials,
+  listGuardUploadedCredentialLabels,
 } from './guardApplicationIntake.ts';
 import type { SecurityGuard } from '../types.ts';
 
@@ -55,16 +56,42 @@ describe('guardApplicationIntake', () => {
     assert.equal(guardHasApplicationIntake(baseGuard({ yearsExperience: 2 })), true);
   });
 
-  it('lists uploaded credentials only when submitted', () => {
-    assert.equal(listGuardUploadedCredentials(baseGuard()).length, 0);
-    assert.equal(
-      listGuardUploadedCredentials(
+  it('lists uploaded credential labels only when submitted', () => {
+    assert.deepEqual(listGuardUploadedCredentialLabels(baseGuard()), []);
+    assert.deepEqual(
+      listGuardUploadedCredentialLabels(
         baseGuard({
           idVerificationStatus: 'pending',
-          certifications: [{ id: 'c1', name: 'Guard Card', issuer: 'BSIS', number: '1', status: 'pending', issueDate: '', expiryDate: '' }],
+          certifications: [
+            {
+              id: 'c1',
+              name: 'Guard Card',
+              issuer: 'BSIS',
+              number: '1',
+              status: 'pending',
+              issueDate: '',
+              expiryDate: '',
+              imageUrl: 'scan.jpg',
+            },
+          ],
         })
-      ).length,
-      1
+      ),
+      ['Government ID', 'BSIS Guard Card']
+    );
+  });
+
+  it('blocks credential verification until application is approved', () => {
+    const pendingGuard = baseGuard({ userStatus: 'pending' });
+    assert.match(
+      guardApplicationCredentialVerificationBlocker(pendingGuard, 'Guard Card') ?? '',
+      /application must be approved/i
+    );
+    assert.equal(
+      guardApplicationCredentialVerificationBlocker(
+        baseGuard({ userStatus: 'approved' }),
+        'Guard Card'
+      ),
+      null
     );
   });
 });

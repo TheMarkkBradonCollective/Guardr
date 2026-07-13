@@ -2,73 +2,37 @@ import type { SecurityGuard } from '../types';
 import { formatServiceAreaLabel } from './californiaCities';
 import type { GuardArmedPreference, GuardCardStatus } from '../types';
 import { certDisplayName } from './certCatalog';
-import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
-import { formatCoiSummaryLine } from './guardInsurance';
+import { getGuardIdVerificationStatus } from './guardIdentityVerification';
+import { isGuardAccountPending } from './accountStatus';
+import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 
 export type { GuardArmedPreference, GuardCardStatus };
 
-export type UploadedCredentialTone = 'pending' | 'approved' | 'denied' | 'default';
-
-export interface GuardUploadedCredentialRow {
-  key: string;
-  label: string;
-  statusLabel: string;
-  tone: UploadedCredentialTone;
+/** Block credential verification until self-signup guard application is approved. */
+export function guardApplicationCredentialVerificationBlocker(
+  guard: Pick<SecurityGuard, 'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'>,
+  credentialLabel: string
+): string | null {
+  if (guard.isStaff || !isSelfSubmittedGuardAccount(guard as SecurityGuard)) return null;
+  if (!isGuardAccountPending(guard)) return null;
+  return `${credentialLabel} — ${guard.name}'s application must be approved before you can verify this credential for ${guard.name}.`;
 }
 
-function credentialTone(
-  status: 'pending' | 'verified' | 'rejected' | 'approved' | 'denied' | 'expired'
-): UploadedCredentialTone {
-  if (status === 'pending') return 'pending';
-  if (status === 'verified' || status === 'approved') return 'approved';
-  if (status === 'rejected' || status === 'denied' || status === 'expired') return 'denied';
-  return 'default';
-}
-
-export function listGuardUploadedCredentials(guard: SecurityGuard): GuardUploadedCredentialRow[] {
-  const rows: GuardUploadedCredentialRow[] = [];
-  const idStatus = getGuardIdVerificationStatus(guard);
-  if (idStatus !== 'not_submitted') {
-    rows.push({
-      key: 'gov-id',
-      label: 'Government ID',
-      statusLabel: ID_VERIFICATION_STATUS_LABELS[idStatus],
-      tone: credentialTone(idStatus === 'verified' ? 'verified' : idStatus),
-    });
+export function listGuardUploadedCredentialLabels(guard: SecurityGuard): string[] {
+  const labels: string[] = [];
+  if (getGuardIdVerificationStatus(guard) !== 'not_submitted') {
+    labels.push('Government ID');
   }
-
   const policy = guard.insurancePolicy;
   if (policy && policy.status !== 'not_submitted') {
-    rows.push({
-      key: 'coi',
-      label: 'Certificate of Insurance',
-      statusLabel:
-        policy.status === 'verified'
-          ? 'Verified'
-          : policy.status === 'rejected'
-            ? 'Rejected'
-            : 'Pending review',
-      tone: credentialTone(policy.status === 'verified' ? 'verified' : policy.status),
-    });
+    labels.push('Certificate of Insurance');
   }
-
   for (const cert of guard.certifications) {
     if (!cert.imageUrl && cert.status === 'pending') continue;
     if (cert.status === 'rejected' && !cert.imageUrl) continue;
-    rows.push({
-      key: cert.id,
-      label: certDisplayName(cert),
-      statusLabel:
-        cert.status === 'verified'
-          ? 'Verified'
-          : cert.status === 'rejected'
-            ? 'Rejected'
-            : 'Pending review',
-      tone: credentialTone(cert.status),
-    });
+    labels.push(certDisplayName(cert));
   }
-
-  return rows;
+  return labels;
 }
 
 export const GUARD_CARD_STATUS_OPTIONS: { value: GuardCardStatus; label: string }[] = [

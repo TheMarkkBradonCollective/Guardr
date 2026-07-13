@@ -6,6 +6,7 @@ import {
   getGuardIdVerificationStatus,
   guardIdVerificationResubmitPending,
   ID_VERIFICATION_SLOT_LABELS,
+  staffApproveIdVerificationBlocker,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
 } from '../../lib/guardIdentityVerification';
@@ -36,6 +37,7 @@ export function StaffIdReviewSection({
 }: StaffIdReviewSectionProps) {
   const status = getGuardIdVerificationStatus(guard);
   const applicationBlocked = getGuardUserStatus(guard) === 'blocked';
+  const applicationVerifyBlocker = staffApproveIdVerificationBlocker(guard);
   const resubmitPending = guardIdVerificationResubmitPending(guard);
   const canApprove = staffCanApproveIdVerification(guard);
   const canRequestResubmit = staffCanRequestIdResubmit(guard);
@@ -65,6 +67,11 @@ export function StaffIdReviewSection({
 
   return (
     <div className="space-y-3">
+      {applicationVerifyBlocker && (
+        <p className="text-xs text-amber-500 leading-relaxed border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2">
+          {applicationVerifyBlocker}
+        </p>
+      )}
       {resubmitPending && guard.idVerificationRejectionReason && (
         <p className="text-sm text-amber-500 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed">
           Awaiting guard resubmit — approval on hold. {guard.idVerificationRejectionReason}
