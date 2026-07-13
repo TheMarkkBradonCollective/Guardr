@@ -119,6 +119,11 @@ interface ClientDashboardProps {
   onMessagesChromeChange?: (chrome: MessagesChrome) => void;
   messagesShellHeaderTrailing?: React.ReactNode;
   onTeamDetailOpenChange?: (open: boolean) => void;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }
 
 export function ClientDashboard({
@@ -188,6 +193,11 @@ export function ClientDashboard({
   onMessagesChromeChange,
   messagesShellHeaderTrailing,
   onTeamDetailOpenChange,
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -573,7 +583,17 @@ export function ClientDashboard({
   }
 
   if (view === 'guide') {
-    return page('guide', <AppGuidePage audience="client" />);
+    return page(
+      'guide',
+      <AppGuidePage
+        audience="client"
+        tutorialAvailable={tutorialAvailable}
+        tutorialCompleted={tutorialCompleted}
+        tutorialActive={tutorialActive}
+        onStartTutorial={onStartTutorial}
+        onEnterPracticeMode={onEnterPracticeMode}
+      />
+    );
   }
 
   return page(

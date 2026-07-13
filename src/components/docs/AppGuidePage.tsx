@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
-import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AppScreen, AppScreenTitle, AppSegmentedControl, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import type { PlatformRole } from '../../types';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ const CLIENT_GUARD_TABS: { id: AudienceFilter; label: string }[] = [
 const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'moderator', label: 'Moderator' },
-  { id: 'administrator', label: 'Administrator' },
+  { id: 'administrator', label: 'Admin' },
   { id: 'director', label: 'Director' },
   { id: 'founder', label: 'Founder' },
   { id: 'client', label: 'Clients' },
@@ -240,6 +240,59 @@ function SectionCard({
   );
 }
 
+// ── Tutorial panel ────────────────────────────────────────────────────────────
+
+function TutorialPracticePanel({
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
+}: {
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
+}) {
+  if (!tutorialAvailable || (!onStartTutorial && !onEnterPracticeMode)) return null;
+
+  return (
+    <div className="px-4 pt-2 pb-4 border-b border-brand-border">
+      <div className="rounded-xl border border-brand-border bg-brand-bg-sec/60 p-4 space-y-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">Tutorial & practice</p>
+          <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
+            Walk through the app with private practice data that never goes live. Practice data stays on
+            this device and is removed when you end the tutorial.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          {onStartTutorial && (
+            <button type="button" onClick={onStartTutorial} className="app-button-primary !w-auto !h-10 !px-5">
+              {tutorialCompleted ? 'Restart tutorial' : 'Start tutorial'}
+            </button>
+          )}
+          {onEnterPracticeMode && tutorialCompleted && !tutorialActive && (
+            <button
+              type="button"
+              onClick={onEnterPracticeMode}
+              className="app-button-outline !w-auto !h-10 !px-5"
+            >
+              Practice mode
+            </button>
+          )}
+        </div>
+        {tutorialActive && (
+          <p className="text-xs text-brand-primary font-medium">
+            Tutorial or practice mode is active — use End tutorial (top right) when you are done.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Hub (index) view ──────────────────────────────────────────────────────────
 
 function GuideHub({
@@ -249,6 +302,11 @@ function GuideHub({
   highlightAudience,
   onSelect,
   onBack,
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
 }: {
   sections: GuideSection[];
   tabs: { id: AudienceFilter; label: string }[];
@@ -256,6 +314,11 @@ function GuideHub({
   highlightAudience?: GuideAudienceTag;
   onSelect: (section: GuideSection) => void;
   onBack?: () => void;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }) {
   const defaultTab = highlightAudience ?? initialAudience;
   const [audience, setAudience] = useState<AudienceFilter>(defaultTab);
@@ -274,18 +337,21 @@ function GuideHub({
         <AppScreenTitle>Guide</AppScreenTitle>
       )}
 
+      <TutorialPracticePanel
+        tutorialAvailable={tutorialAvailable}
+        tutorialCompleted={tutorialCompleted}
+        tutorialActive={tutorialActive}
+        onStartTutorial={onStartTutorial}
+        onEnterPracticeMode={onEnterPracticeMode}
+      />
+
       <div className="px-4 pb-3 border-b border-brand-border">
-        <div className="segmented-control segmented-control-full flex flex-wrap gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setAudience(tab.id)}
-              className={`segmented-control-btn flex-1 text-center min-w-[4.5rem] text-xs ${audience === tab.id ? 'segmented-control-btn-active' : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="app-guide-tabs -mx-0">
+          <AppSegmentedControl<AudienceFilter>
+            options={tabs}
+            value={audience}
+            onChange={setAudience}
+          />
         </div>
       </div>
 
@@ -304,11 +370,25 @@ export interface AppGuidePageProps {
   audience?: 'staff' | 'guard' | 'client' | 'all';
   staffRole?: PlatformRole;
   onBack?: () => void;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }
 
 const ALL_SECTIONS = parseGuide();
 
-export function AppGuidePage({ audience: initialAudience, staffRole, onBack }: AppGuidePageProps) {
+export function AppGuidePage({
+  audience: initialAudience,
+  staffRole,
+  onBack,
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
+}: AppGuidePageProps) {
   const [activeSection, setActiveSection] = useState<GuideSection | null>(null);
 
   const tabs = useMemo(
@@ -345,6 +425,11 @@ export function AppGuidePage({ audience: initialAudience, staffRole, onBack }: A
       highlightAudience={highlightAudience}
       onSelect={handleSelect}
       onBack={onBack}
+      tutorialAvailable={tutorialAvailable}
+      tutorialCompleted={tutorialCompleted}
+      tutorialActive={tutorialActive}
+      onStartTutorial={onStartTutorial}
+      onEnterPracticeMode={onEnterPracticeMode}
     />
   );
 }

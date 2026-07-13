@@ -16542,7 +16542,8 @@ textarea.uber-input {
   overscroll-behavior-x: none;
 }
 
-.staff-approvals-tabs {
+.staff-approvals-tabs,
+.app-guide-tabs {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -16550,7 +16551,8 @@ textarea.uber-input {
   background: var(--brand-bg);
 }
 
-.staff-approvals-tabs .app-segmented-control {
+.staff-approvals-tabs .app-segmented-control,
+.app-guide-tabs .app-segmented-control {
   overflow-x: clip;
   flex-wrap: wrap;
   gap: 0.375rem;
@@ -16558,7 +16560,8 @@ textarea.uber-input {
   scrollbar-width: none;
 }
 
-.staff-approvals-tabs .app-segmented-control-item {
+.staff-approvals-tabs .app-segmented-control-item,
+.app-guide-tabs .app-segmented-control-item {
   flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;

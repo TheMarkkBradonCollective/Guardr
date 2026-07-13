@@ -825,7 +825,17 @@ export function StaffDashboard({
           </div>
         );
       case 'guide':
-        return <AppGuidePage audience="staff" staffRole={currentUser.role} />;
+        return (
+          <AppGuidePage
+            audience="staff"
+            staffRole={currentUser.role}
+            tutorialAvailable={tutorialAvailable}
+            tutorialCompleted={tutorialCompleted}
+            tutorialActive={tutorialActive}
+            onStartTutorial={onStartTutorial}
+            onEnterPracticeMode={onEnterPracticeMode}
+          />
+        );
       case 'dev-updates':
         return showFinance ? (
           <DevNotesPage />
@@ -870,11 +880,6 @@ export function StaffDashboard({
             onChangeTheme={onChangeTheme}
             isDbConnected={isDbConnected}
             onOpenLegal={onOpenLegal}
-            tutorialAvailable={tutorialAvailable}
-            tutorialCompleted={tutorialCompleted}
-            tutorialActive={tutorialActive}
-            onStartTutorial={onStartTutorial}
-            onEnterPracticeMode={onEnterPracticeMode}
           />
         );
       default:

@@ -1253,7 +1253,14 @@ export function GuardDashboard({
 
           {tab === 'guide' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
-              <AppGuidePage audience="guard" />
+              <AppGuidePage
+                audience="guard"
+                tutorialAvailable={tutorialAvailable}
+                tutorialCompleted={tutorialCompleted}
+                tutorialActive={tutorialActive}
+                onStartTutorial={onStartTutorial}
+                onEnterPracticeMode={onEnterPracticeMode}
+              />
             </div>
           )}
 
@@ -1288,11 +1295,6 @@ export function GuardDashboard({
                       ? onJoinTeamWithCode
                       : undefined
                   }
-                  tutorialAvailable={tutorialAvailable}
-                  tutorialCompleted={tutorialCompleted}
-                  tutorialActive={tutorialActive}
-                  onStartTutorial={onStartTutorial}
-                  onEnterPracticeMode={onEnterPracticeMode}
                 />
                 <div className="px-4 pb-8 max-w-lg mx-auto">
                   <GuardAvailabilityCalendar guardId={guard.id} />

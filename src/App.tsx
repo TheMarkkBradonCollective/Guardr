@@ -10214,7 +10214,6 @@ export default function App() {
               onChangeTheme={changeThemeMode}
               isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
-              {...tutorialSettingsProps}
             />
           ) : clientView === 'support-compose' ? (
             <SupportComposePage
@@ -10306,6 +10305,7 @@ export default function App() {
               onMessagesChromeChange={setClientMessagesChrome}
               messagesShellHeaderTrailing={clientMessagesShellHeaderTrailing}
               onTeamDetailOpenChange={setClientTeamDetailOpen}
+              {...tutorialSettingsProps}
             />
           )}
         </ClientAppLayout>
