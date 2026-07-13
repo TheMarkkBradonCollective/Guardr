@@ -32,11 +32,9 @@ import {
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { isGuardAccountApproved, isGuardUserStatusActive } from '../../lib/accountStatus';
-import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
@@ -49,7 +47,9 @@ import {
   certViewSectionLabel,
   coiViewSectionLabel,
   guardIdFromCoiApprovalItemId,
+  guardIdFromGovIdApprovalItemId,
   isCoiApprovalItemId,
+  isGovIdApprovalItemId,
 } from '../../lib/guardCredentialSections';
 import { formatCoiSummaryLine, getPendingInsuranceReviews } from '../../lib/guardInsurance';
 import { promptStaffResubmitNote } from '../../lib/staffDocumentReview';
@@ -356,56 +356,6 @@ export function StaffApprovals({
       setActionPending(false);
     }
   };
-
-  const renderGuardAccountCertActions = (guard: SecurityGuard, cert: Certification) =>
-    canVerifyGuardCredentials && cert.status === 'pending' ? (
-      <div className="flex flex-col items-end gap-1.5">
-        <div className="app-action-row--equal justify-end">
-          {cert.imageUrl && onRequestCertImageResubmit && (
-            <button
-              type="button"
-              onClick={() => {
-                void (async () => {
-                  const note = await promptStaffResubmitNote(`${cert.name} photo`);
-                  if (note === null) return;
-                  onRequestCertImageResubmit(guard.id, cert.id, note);
-                })();
-              }}
-              className="app-button-outline app-btn-sm gap-1"
-            >
-              Request clearer photo
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={actionPending}
-            onClick={() => void runGuardedAction(async () => onRejectCert(guard.id, cert.id))}
-            className="app-button-outline app-btn-sm text-red-400 border-red-500/40 gap-1 disabled:opacity-50"
-          >
-            <X className="w-3 h-3" /> Reject
-          </button>
-          <button
-            type="button"
-            disabled={actionPending || !staffCanVerifyCertification(cert)}
-            title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
-            onClick={() =>
-              void runGuardedAction(
-                async () => onApproveCert(guard.id, cert.id),
-                (message) => showAppToast(message, { tone: 'error' })
-              )
-            }
-            className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
-          >
-            <Check className="w-3 h-3" /> Verify
-          </button>
-        </div>
-        {staffVerifyCertificationBlocker(cert) && (
-          <p className="text-xs text-amber-500 text-right max-w-xs leading-relaxed">
-            {staffVerifyCertificationBlocker(cert)}
-          </p>
-        )}
-      </div>
-    ) : null;
 
   const permittedQueues = useMemo(
     () => {
@@ -870,6 +820,45 @@ export function StaffApprovals({
     }
 
     if (effectiveQueue === 'credentials') {
+      if (isGovIdApprovalItemId(activeItemId)) {
+        const guardId = guardIdFromGovIdApprovalItemId(activeItemId);
+        const guard = guards.find((g) => g.id === guardId) ?? null;
+        if (!guard) return null;
+        return (
+          <ApprovalDetailScreen
+            title={`${guard.name} — Government ID`}
+            backLabel={activeTabLabel}
+            onBack={() => setActiveItemId(null)}
+          >
+            <div className="staff-detail-pane space-y-4">
+              <ApprovalReviewMeta item={feedItem} />
+              <p className="text-sm text-brand-text-muted">Government ID verification</p>
+              <StaffIdReviewSection
+                guard={guard}
+                canManage={canVerifyGuardCredentials}
+                onApprove={onApproveIdentityVerification}
+                onReject={
+                  onRejectIdentityVerification
+                    ? (guardId, reason) => onRejectIdentityVerification(guardId, reason)
+                    : undefined
+                }
+                onRequestResubmit={
+                  onRequestIdentityResubmit
+                    ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                    : undefined
+                }
+              />
+              {onViewGuard && (
+                <div className="app-action-row--equal pt-2 border-t border-brand-border">
+                  <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
+                    Full profile
+                  </button>
+                </div>
+              )}
+            </div>
+          </ApprovalDetailScreen>
+        );
+      }
       if (isCoiApprovalItemId(activeItemId)) {
         const guardId = guardIdFromCoiApprovalItemId(activeItemId);
         const guard =
@@ -1066,158 +1055,90 @@ export function StaffApprovals({
           <div className="staff-detail-pane space-y-4">
             <ApprovalReviewMeta item={feedItem} />
             <p className="text-sm text-brand-text-muted">{guard.email}</p>
-            <p className="text-xs text-brand-text-muted">
-              {isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
-            </p>
 
-            {isPendingProfile ? (
-              <>
-                <StaffGuardApplicationSummary guard={guard} />
-                {approvalBlockers.length > 0 && (
-                  <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
-                    <p className="font-semibold">Before you can approve:</p>
-                    <ul className="list-disc list-inside text-xs space-y-0.5">
-                      {approvalBlockers.map((blocker) => (
-                        <li key={blocker}>{blocker}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="app-action-row--equal pt-2 border-t border-brand-border">
-                  {onViewGuard && (
-                    <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
-                      Full profile
-                    </button>
-                  )}
-                </div>
-                {canApproveGuardAccounts && onApproveGuardAccount && (
-                  <div className="pt-2">
-                    <SlideToConfirm
-                      label="Slide to approve application"
-                      confirmedLabel="Approved"
-                      tone="success"
-                      disabled={!canTakeAction}
-                      disabledHint={approvalBlockers.join(' · ') || 'Application must be pending and not blocked'}
-                      onConfirm={() => {
-                        void (async () => {
-                          if (!canTakeAction) return;
-                          try {
-                            await onApproveGuardAccount(guard.id);
-                            setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
-                          }
-                        })();
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <StaffGuardActivationChecklistView guard={guard} />
-                {isApprovedAwaitingActivation && approvalBlockers.length > 0 && (
-                  <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
-                    <p className="font-semibold">Before you can activate:</p>
-                    <ul className="list-disc list-inside text-xs space-y-0.5">
-                      {approvalBlockers.map((blocker) => (
-                        <li key={blocker}>{blocker}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <GuardCredentialsPanel
-                  guard={guard}
-                  editing={false}
-                  staffMode={canManageGuardAccounts}
-                  onSubmitIdentityVerification={
-                    canManageGuardAccounts && onUpdateGuardIdImages
-                      ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                      : undefined
+            <StaffGuardApplicationSummary guard={guard} />
+
+            {isPendingProfile && approvalBlockers.length > 0 && (
+              <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
+                <p className="font-semibold">Before you can approve:</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {approvalBlockers.map((blocker) => (
+                    <li key={blocker}>{blocker}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {isApprovedAwaitingActivation && approvalBlockers.length > 0 && (
+              <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
+                <p className="font-semibold">Before you can grant eligibility:</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {approvalBlockers.map((blocker) => (
+                    <li key={blocker}>{blocker}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-brand-text-muted pt-1">
+                  Verify each uploaded credential under Guard credentials, then return here to activate.
+                </p>
+              </div>
+            )}
+
+            <div className="app-action-row--equal pt-2 border-t border-brand-border">
+              {onViewGuard && (
+                <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
+                  Full profile
+                </button>
+              )}
+              {isApprovedAwaitingActivation && canActivateGuardAccounts && onActivateGuardAccount && (
+                <button
+                  type="button"
+                  disabled={!canTakeAction}
+                  title={
+                    canTakeAction
+                      ? 'Grant marketplace eligibility'
+                      : approvalBlockers.join(' · ') || 'All credentials must be verified before activation'
                   }
-                  onAddCertification={
-                    canManageGuardAccounts && onAddCertification
-                      ? (cert) => onAddCertification(guard.id, cert)
-                      : undefined
-                  }
-                  onDeleteCertification={
-                    canManageGuardAccounts && onDeleteCertification
-                      ? (certId) => onDeleteCertification(guard.id, certId)
-                      : undefined
-                  }
-                  onAttachCertificationImage={
-                    canManageGuardAccounts && onAttachCertificationImage
-                      ? (certId, imageUrl) => onAttachCertificationImage(guard.id, certId, imageUrl)
-                      : undefined
-                  }
-                  onUpdateCertification={
-                    onUpdateCertification
-                      ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
-                      : undefined
-                  }
-                  onReviewInsurance={
-                    canVerifyGuardCredentials && onReviewGuardInsurance
-                      ? (status, rejectionReason) =>
-                          Promise.resolve(onReviewGuardInsurance(guard.id, status, rejectionReason))
-                      : undefined
-                  }
-                  staffIdReview={
-                    canVerifyGuardCredentials ? (
-                      <StaffIdReviewSection
-                        guard={guard}
-                        canManage={canVerifyGuardCredentials}
-                        onApprove={onApproveIdentityVerification}
-                        onReject={
-                          onRejectIdentityVerification
-                            ? (guardId, reason) => onRejectIdentityVerification(guardId, reason)
-                            : undefined
-                        }
-                        onRequestResubmit={
-                          onRequestIdentityResubmit
-                            ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                            : undefined
-                        }
-                      />
-                    ) : undefined
-                  }
-                  renderCertActions={(cert) => renderGuardAccountCertActions(guard, cert)}
-                />
-                <div className="app-action-row--equal pt-2 border-t border-brand-border">
-                  {onViewGuard && (
-                    <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
-                      Full profile
-                    </button>
-                  )}
-                  {isApprovedAwaitingActivation && canActivateGuardAccounts && onActivateGuardAccount && (
-                    <button
-                      type="button"
-                      disabled={!canTakeAction}
-                      title={
-                        canTakeAction
-                          ? 'Grant marketplace eligibility'
-                          : approvalBlockers.join(' · ') || 'All credentials must be verified before activation'
+                  onClick={() => {
+                    void (async () => {
+                      if (!canTakeAction) return;
+                      try {
+                        await onActivateGuardAccount(guard.id);
+                        setActiveItemId(null);
+                      } catch (err) {
+                        showAppToast(
+                          err instanceof Error ? err.message : 'Could not grant marketplace eligibility.',
+                          { tone: 'error' }
+                        );
                       }
-                      onClick={() => {
-                        void (async () => {
-                          if (!canTakeAction) return;
-                          try {
-                            await onActivateGuardAccount(guard.id);
-                            setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(
-                              err instanceof Error ? err.message : 'Could not grant marketplace eligibility.',
-                              { tone: 'error' }
-                            );
-                          }
-                        })();
-                      }}
-                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
-                    >
-                      <Check className="w-3.5 h-3.5" /> Grant eligibility
-                    </button>
-                  )}
-                </div>
-              </>
+                    })();
+                  }}
+                  className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+                >
+                  <Check className="w-3.5 h-3.5" /> Grant eligibility
+                </button>
+              )}
+            </div>
+
+            {isPendingProfile && canApproveGuardAccounts && onApproveGuardAccount && (
+              <div className="pt-2">
+                <SlideToConfirm
+                  label="Slide to approve application"
+                  confirmedLabel="Approved"
+                  tone="success"
+                  disabled={!canTakeAction}
+                  disabledHint={approvalBlockers.join(' · ') || 'Application must be pending and not blocked'}
+                  onConfirm={() => {
+                    void (async () => {
+                      if (!canTakeAction) return;
+                      try {
+                        await onApproveGuardAccount(guard.id);
+                        setActiveItemId(null);
+                      } catch (err) {
+                        showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+                      }
+                    })();
+                  }}
+                />
+              </div>
             )}
           </div>
         </ApprovalDetailScreen>

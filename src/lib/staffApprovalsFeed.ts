@@ -3,8 +3,9 @@ import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { getClientAccountStatus } from './accountStatus';
 import { certDisplayName } from './certCatalog';
-import { coiApprovalItemId, isCoiApprovalItemId } from './guardCredentialSections';
+import { coiApprovalItemId, govIdApprovalItemId, isCoiApprovalItemId } from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
+import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
 import { isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import type { ApprovalQueueId } from './staffOps';
@@ -181,6 +182,7 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
       if (cert.submittedByRole === 'staff') continue;
       if (!isSelfSubmittedGuardAccount(guard) && cert.submittedByRole !== 'guard') continue;
       if (cert.status === 'rejected' && !cert.imageUrl) continue;
+      if (cert.status === 'pending' && !cert.imageUrl) continue;
 
       const pending = cert.status === 'pending';
       const audit = latestAudit(auditLog, cert.id, ['cert_verified']);
@@ -235,6 +237,31 @@ function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): Ap
       reviewedByEmail: policy.reviewedBy,
       sortKey: new Date(policy.reviewedAt ?? policy.submittedAt ?? 0).getTime() || Date.now(),
     });
+
+    const idStatus = getGuardIdVerificationStatus(guard);
+    if (idStatus !== 'not_submitted') {
+      items.push({
+        id: govIdApprovalItemId(guard.id),
+        queue: 'credentials',
+        title: `${guard.name} — Government ID`,
+        subtitle: ID_VERIFICATION_STATUS_LABELS[idStatus],
+        status:
+          idStatus === 'verified' ? 'approved' : idStatus === 'rejected' ? 'denied' : 'pending',
+        statusLabel:
+          idStatus === 'verified'
+            ? 'Verified'
+            : idStatus === 'rejected'
+              ? 'Rejected'
+              : 'Pending review',
+        submittedAt: guard.idVerificationSubmittedAt,
+        reviewedAt: guard.idVerificationReviewedAt,
+        reviewedByName: undefined,
+        reviewedByEmail: undefined,
+        sortKey: new Date(
+          guard.idVerificationReviewedAt ?? guard.idVerificationSubmittedAt ?? 0
+        ).getTime() || Date.now(),
+      });
+    }
   }
 
   return items;
@@ -413,6 +440,7 @@ export function resolveApprovalFocusItemId(
     if (item.queue === 'staff-accounts') return item.id === guardId;
     if (item.queue === 'credentials') {
       if (item.id === coiApprovalItemId(guardId)) return true;
+      if (item.id === govIdApprovalItemId(guardId)) return true;
       return guard?.certifications.some((cert) => cert.id === item.id) ?? false;
     }
     return false;

@@ -293,6 +293,18 @@ export function guardIdFromCoiApprovalItemId(itemId: string): string {
   return itemId.slice(4);
 }
 
+export function govIdApprovalItemId(guardId: string): string {
+  return `gov-id-${guardId}`;
+}
+
+export function isGovIdApprovalItemId(itemId: string): boolean {
+  return itemId.startsWith('gov-id-');
+}
+
+export function guardIdFromGovIdApprovalItemId(itemId: string): string {
+  return itemId.slice('gov-id-'.length);
+}
+
 /** Group a flat cert list by view section (e.g. staff approval queue). */
 export function groupCertsByViewSection(
   certs: Certification[],

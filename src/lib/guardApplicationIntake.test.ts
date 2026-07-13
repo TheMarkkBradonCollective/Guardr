@@ -5,6 +5,7 @@ import {
   guardArmedPreferenceLabel,
   guardCardStatusLabel,
   guardHasApplicationIntake,
+  listGuardUploadedCredentials,
 } from './guardApplicationIntake.ts';
 import type { SecurityGuard } from '../types.ts';
 
@@ -52,5 +53,18 @@ describe('guardApplicationIntake', () => {
   it('detects application intake data', () => {
     assert.equal(guardHasApplicationIntake(baseGuard()), false);
     assert.equal(guardHasApplicationIntake(baseGuard({ yearsExperience: 2 })), true);
+  });
+
+  it('lists uploaded credentials only when submitted', () => {
+    assert.equal(listGuardUploadedCredentials(baseGuard()).length, 0);
+    assert.equal(
+      listGuardUploadedCredentials(
+        baseGuard({
+          idVerificationStatus: 'pending',
+          certifications: [{ id: 'c1', name: 'Guard Card', issuer: 'BSIS', number: '1', status: 'pending', issueDate: '', expiryDate: '' }],
+        })
+      ).length,
+      1
+    );
   });
 });
