@@ -4967,6 +4967,21 @@ html.theme-light .staff-ops-btn-primary:hover {
   font-weight: 500;
 }
 
+.guardr-loading-version {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--brand-text-muted) 72%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+
 .guardr-loading-lane {
   position: relative;
   width: min(17.5rem, 72vw);

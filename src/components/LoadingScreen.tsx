@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { BadgeCheck, MapPin, Shield } from 'lucide-react';
+import { APP_VERSION } from '../lib/appVersion';
 import { Logo } from './Logo';
 
 const LANE_PRACTICALS = [Shield, MapPin, BadgeCheck] as const;
@@ -124,6 +126,18 @@ export function LoadingScreen() {
   // Lazy initializer runs once on mount — fresh random bolts every page load
   const [bolts] = useState<BoltConfig[]>(() => generateBolts(10));
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    void (async () => {
+      try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await SplashScreen.hide({ fadeOutDuration: 0 });
+      } catch (error) {
+        console.warn('[native] splash hide failed:', error);
+      }
+    })();
+  }, []);
+
   return (
     <div className="guardr-loading-screen" role="status" aria-live="polite" aria-label="Loading Guardr">
       <div className="guardr-loading-ambient" aria-hidden="true">
@@ -197,6 +211,10 @@ export function LoadingScreen() {
           ))}
         </div>
       </div>
+
+      <p className="guardr-loading-version" aria-hidden="true">
+        v{APP_VERSION}
+      </p>
     </div>
   );
 }

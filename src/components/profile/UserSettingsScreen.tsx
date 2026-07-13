@@ -7,6 +7,7 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { appVersionLabel } from '../../lib/appVersion';
 import { isNativeShell } from '../../lib/platform/device';
 import { SITE_URL } from '../../lib/siteConfig';
 import { TeamCodeJoinPanel } from '../guard/TeamCodeJoinPanel';
@@ -57,7 +58,7 @@ export function UserSettingsScreen({
 
       <AppFormSection title="About">
         <p className="text-sm text-brand-text-muted">
-          Guardr v{import.meta.env.VITE_APP_VERSION || '—'}
+          {appVersionLabel()}
           {isNativeShell() ? ' · Android app' : ' · Web'}
         </p>
         {isNativeShell() && (
