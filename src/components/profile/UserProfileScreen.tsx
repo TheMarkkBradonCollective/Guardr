@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
-import { ROLE_LABELS } from '../../lib/permissions';
+import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { isGuardAccountPreActive } from '../../lib/accountStatus';
 import { Camera, Save, User, X } from 'lucide-react';
@@ -131,20 +131,37 @@ export function UserProfileScreen({
   const roleLabel = ROLE_LABELS[currentUser.role as PlatformRole] ?? currentUser.role;
   const displayName = formatPersonName({ firstName, middleName, lastName });
 
+  const isStaffAccount = isStaffRole(currentUser.role);
+  const isGuardAccount = currentUser.role === 'guard';
+  const isClient = currentUser.role === 'client';
+
   const buildPayload = (avatarOverride?: string): ProfileSavePayload => {
     const normalized = personNameFromPayload({ firstName, middleName, lastName });
-    return {
+    const base: ProfileSavePayload = {
       ...normalized,
       phone: phone.trim(),
-    companyName: companyName.trim(),
-    hourlyRateRequirement: hourlyRate ? Math.max(0, parseInt(hourlyRate, 10) || 0) : resume.hourlyRateRequirement,
-    avatar: avatarOverride ?? avatar,
-    ...resume,
-    summary: resume.summary.trim(),
-    about: resume.about.trim(),
-    headline: resume.headline.trim(),
-    bio: resume.summary.trim(),
+      avatar: avatarOverride ?? avatar,
     };
+    if (isClient) {
+      return { ...base, companyName: companyName.trim() };
+    }
+    if (isStaffAccount) {
+      return base;
+    }
+    if (isGuardAccount) {
+      return {
+        ...base,
+        hourlyRateRequirement: hourlyRate
+          ? Math.max(0, parseInt(hourlyRate, 10) || 0)
+          : resume.hourlyRateRequirement,
+        ...resume,
+        summary: resume.summary.trim(),
+        about: resume.about.trim(),
+        headline: resume.headline.trim(),
+        bio: resume.summary.trim(),
+      };
+    }
+    return base;
   };
 
   const handleSave = async () => {
@@ -187,9 +204,7 @@ export function UserProfileScreen({
     }
   };
 
-  const isGuardLike = currentUser.role === 'guard' || ['owner', 'director', 'administrator', 'moderator'].includes(currentUser.role);
-  const isClient = currentUser.role === 'client';
-  const canBuildResume = isGuardLike && !!guard;
+  const canBuildResume = isGuardAccount && !!guard && !guard.isStaff;
   const credentialsEditing = editing || !!(guard && isGuardAccountPreActive(guard));
 
   return (
@@ -260,7 +275,7 @@ export function UserProfileScreen({
           <Field label="Company" value={companyName} onChange={setCompanyName} editing={editing} />
         )}
         <Field label="Phone" value={phone} onChange={setPhone} editing={editing} type="tel" />
-        {isGuardLike && (
+        {isGuardAccount && (
           <Field
             label="Minimum hourly rate ($)"
             value={hourlyRate}
@@ -270,7 +285,7 @@ export function UserProfileScreen({
             min={0}
           />
         )}
-        {guard && (
+        {isGuardAccount && guard && (
           <div className="flex justify-between text-sm py-2 border-t border-brand-border">
             <span className="text-brand-text-muted">Guard status</span>
             <span className="font-medium">{GUARD_STATUS_LABELS[getGuardDisplayStatus(guard)]}</span>
