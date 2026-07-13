@@ -16566,4 +16566,91 @@ textarea.uber-input {
   padding-inline: 0.875rem;
 }
 
-/* ─── END STAFF NATIVE APP UI ────────────────────────────────────────────── */
+.tutorial-end-bar {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tutorial-end-bar-primary,
+.tutorial-end-bar-secondary {
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--brand-border);
+  background: color-mix(in srgb, var(--brand-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--brand-text);
+  box-shadow: var(--shadow-float);
+}
+
+.tutorial-end-bar-primary {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-accent-text);
+}
+
+.tutorial-prompt-overlay {
+  background: color-mix(in srgb, var(--brand-bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tutorial-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--brand-bg) 35%, transparent);
+}
+
+.tutorial-step-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.tutorial-step-panel-inner {
+  pointer-events: auto;
+  max-width: 36rem;
+  margin: 0 auto;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-sheet);
+  padding: 1rem 1.125rem;
+  box-shadow: var(--shadow-float);
+}
+
+.tutorial-highlight {
+  outline: 3px solid var(--brand-primary) !important;
+  outline-offset: 4px;
+  border-radius: 12px;
+  position: relative;
+  z-index: 9998;
+}
+
+.tutorial-demo-card {
+  margin: 0.75rem 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-app-lg);
+  border: 1px dashed color-mix(in srgb, var(--brand-primary) 45%, var(--brand-border));
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--brand-surface));
+}
+
+.tutorial-demo-card-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+

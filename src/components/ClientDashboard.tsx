@@ -24,6 +24,7 @@ import { AppPageTransition } from './ui/motion/AppMotion';
 import { ClientMessagesPanel } from './client/ClientMessagesPanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppScreen, AppStatusBanner } from './ui/app/AppPrimitives';
+import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import type { MessagesChrome } from '../lib/messagesChrome';
 
 export type ClientView =
@@ -294,13 +295,27 @@ export function ClientDashboard({
     navigate('direct-request');
   };
 
-  const wrap = (node: React.ReactNode) => (
-    <div className="h-full max-w-full min-w-0 overflow-hidden">{node}</div>
+  const tutorialDemoRequest = requests.find((r) => isTutorialDemoId(r.id));
+
+  const tutorialDemoBanner = tutorialDemoRequest ? (
+    <div className="tutorial-demo-card relative z-[1003] mx-4 mt-3">
+      <p className="tutorial-demo-card-label">Tutorial practice request</p>
+      <p className="text-sm font-semibold text-brand-text">{tutorialDemoRequest.title}</p>
+      <p className="text-xs text-brand-text-muted mt-1">
+        Stored on this device only — not visible to guards or staff until you post a real job.
+      </p>
+    </div>
+  ) : null;
+
+  const wrap = (node: React.ReactNode, dataTour?: string) => (
+    <div className="h-full max-w-full min-w-0 overflow-hidden" data-tour={dataTour}>
+      {node}
+    </div>
   );
 
-  const page = (key: string, node: React.ReactNode) => (
+  const page = (key: string, node: React.ReactNode, dataTour?: string) => (
     <AppPageTransition motionKey={key} className="h-full min-h-0">
-      {wrap(node)}
+      {wrap(node, dataTour)}
     </AppPageTransition>
   );
 
@@ -312,7 +327,8 @@ export function ClientDashboard({
   }
 
   if (view === 'map') {
-    return (
+    return page(
+      'map',
       <ClientMapScreen
         requests={requests}
         guards={guards}
@@ -349,7 +365,8 @@ export function ClientDashboard({
         onCancelRequest={onCancelRequest}
         onEditRequest={onEditRequest}
         onUpdateStatus={onUpdateStatus}
-      />
+      />,
+      'client-map'
     );
   }
 
@@ -411,7 +428,9 @@ export function ClientDashboard({
     }
     return page(
       'guards',
-      <GuardDirectoryScreen
+      <>
+        {tutorialDemoBanner}
+        <GuardDirectoryScreen
         guards={guards}
         onSelectGuard={setSelectedGuard}
         favoriteGuardIds={favoriteGuardIds}
@@ -422,13 +441,17 @@ export function ClientDashboard({
         onRequestGuard={startDirectGuardRequest}
         onTeamDetailOpenChange={onTeamDetailOpenChange}
       />
+      </>,
+      'client-guards'
     );
   }
 
   if (view === 'messages' && currentUser && onSendJobChatMessage && onSendSupportMessage) {
     return page(
       'messages',
-      <ClientMessagesPanel
+      <>
+        {tutorialDemoBanner}
+        <ClientMessagesPanel
         requests={requests}
         guards={guards}
         currentUser={currentUser}
@@ -454,6 +477,8 @@ export function ClientDashboard({
         onMessagesChromeChange={onMessagesChromeChange}
         shellHeaderTrailing={messagesShellHeaderTrailing}
       />
+      </>,
+      'client-messages'
     );
   }
 
@@ -504,7 +529,9 @@ export function ClientDashboard({
   if (view === 'requests') {
     return page(
       'requests',
-      <ClientRequestsList
+      <>
+        {tutorialDemoBanner}
+        <ClientRequestsList
         requests={requests}
         guards={guards}
         clientEmail={clientEmail}
@@ -540,6 +567,8 @@ export function ClientDashboard({
         onSelectedJobIdChange={onRequestsSelectedIdChange}
         initialSelectedId={requestsSelectedId}
       />
+      </>,
+      'client-request'
     );
   }
 
@@ -563,6 +592,7 @@ export function ClientDashboard({
         setSelectedGuard(guard);
         navigate('guards');
       }}
-    />
+    />,
+    'client-home'
   );
 }

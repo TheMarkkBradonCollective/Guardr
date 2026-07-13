@@ -230,8 +230,22 @@ import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
 import { removeStoredPassword } from './lib/accountPasswords';
 import { writeAuditLog } from './lib/auditLog';
 import { signOutAuth } from './lib/auth/authService';
-import { getTourForRole, isTourCompleted } from './lib/onboardingTours';
-import { OnboardingTourOverlay } from './components/onboarding/OnboardingTour';
+import { getTourForRole, migrateLegacyTourCompletion } from './lib/onboardingTours';
+import { TutorialExperience } from './components/onboarding/OnboardingTour';
+import {
+  advanceTutorialStep,
+  declineTutorial,
+  endTutorial,
+  enterPracticeFromSettings,
+  isTutorialActive,
+  loadTutorialState,
+  restartTutorial,
+  retreatTutorialStep,
+  startTutorialSession,
+  updateTutorialDemoData,
+  type TutorialPersistedState,
+} from './lib/tutorialSession';
+import { addPracticeDemoRequest, isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
@@ -453,7 +467,7 @@ export default function App() {
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
-  const [onboardingTourDismissed, setOnboardingTourDismissed] = useState(false);
+  const [tutorialState, setTutorialState] = useState<TutorialPersistedState | null>(null);
 
   // ── Theme ──────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => loadTheme());
@@ -2500,6 +2514,26 @@ export default function App() {
   // ── Derived ────────────────────────────────────────────────
   // Only real guards (not clients/auditors/staff-only accounts)
   const verifiedGuards = guards.filter(g => !g.id.startsWith('client-') && !g.id.startsWith('auditor-'));
+
+  useEffect(() => {
+    if (!currentUser) {
+      setTutorialState(null);
+      return;
+    }
+    const tour = getTourForRole(currentUser.role);
+    if (tour) migrateLegacyTourCompletion(currentUser.id, tour.id);
+    setTutorialState(loadTutorialState(currentUser.id));
+  }, [currentUser?.id, currentUser?.role]);
+
+  const tutorialDemoRequests = tutorialState?.session?.demoData.requests ?? [];
+  const displayRequests = useMemo(
+    () =>
+      tutorialDemoRequests.length > 0
+        ? mergeTutorialRequests(requests, tutorialDemoRequests)
+        : requests,
+    [requests, tutorialDemoRequests]
+  );
+
   const sessionGuard =
     currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, verifiedGuards) : undefined;
   const activeGuard =
@@ -5145,6 +5179,10 @@ export default function App() {
   };
 
   const handleUpdateStatus = async (requestId: string, status: SecurityRequest['status']) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
+      return;
+    }
     const req = requests.find(r => r.id === requestId);
     if (req && status === 'completed') {
       const blocked = guardClockOutBlockedMessage(req);
@@ -6244,6 +6282,10 @@ export default function App() {
   };
 
   const handleApproveRequest = async (requestId: string) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
+      return;
+    }
     if (!currentUser || !canReviewJobRequests(currentUser)) {
       appToast('You do not have permission to approve job requests.', 'error');
       return;
@@ -6293,6 +6335,10 @@ export default function App() {
   };
 
   const handleDenyRequest = async (requestId: string) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
+      return;
+    }
     if (!currentUser || !canReviewJobRequests(currentUser)) {
       appToast('You do not have permission to decline job requests.', 'error');
       return;
@@ -6316,6 +6362,10 @@ export default function App() {
   };
 
   const handleCancelRequest = async (requestId: string) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
+      return;
+    }
     const existing = requests.find((r) => r.id === requestId);
     if (existing && !canClientEditRequest(existing)) {
       appToast('Paid or in-progress jobs cannot be cancelled from here. Contact staff for help.', 'error');
@@ -6572,6 +6622,10 @@ export default function App() {
   };
 
   const handleEditRequest = async (requestId: string, updates: Partial<SecurityRequest>) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this item is not sent to the live queue.', 'info');
+      return;
+    }
     const existing = requests.find((r) => r.id === requestId);
     if (!existing || !canClientEditJobListing(existing)) {
       appToast(existing ? jobEditBlockedReason(existing) ?? 'This job cannot be edited.' : 'Job not found.', 'error');
@@ -7940,6 +7994,10 @@ export default function App() {
 
   // ── Guard applies to open job (self-selection → client approval) ──
   const handleApplyToJob = async (requestId: string) => {
+    if (isTutorialDemoId(requestId)) {
+      appToast('Tutorial practice only — this job is not sent to the live queue.', 'info');
+      return;
+    }
     if (activeGuard.isStaff) {
       appToast('Staff accounts cannot apply to field jobs. Sign in with a guard account to work jobs.', 'error');
       return;
@@ -9763,24 +9821,58 @@ export default function App() {
     />
   ) : null;
 
-  const activeOnboardingTour =
-    currentUser && !onboardingTourDismissed
-      ? getTourForRole(currentUser.role)
-      : null;
-  const showOnboardingTour =
-    activeOnboardingTour &&
-    currentUser &&
-    !isTourCompleted(currentUser.id, activeOnboardingTour.id);
-
-  const onboardingTourOverlay =
-    showOnboardingTour && currentUser && activeOnboardingTour ? (
-      <OnboardingTourOverlay
+  const activeOnboardingTour = currentUser ? getTourForRole(currentUser.role) : null;
+  const tutorialOverlay =
+    currentUser && activeOnboardingTour && tutorialState ? (
+      <TutorialExperience
         tour={activeOnboardingTour}
-        userId={currentUser.id}
-        onComplete={() => setOnboardingTourDismissed(true)}
-        onSkip={() => setOnboardingTourDismissed(true)}
+        state={tutorialState}
+        onStart={() => {
+          const next = startTutorialSession(currentUser.id, currentUser.role);
+          setTutorialState(next);
+        }}
+        onDecline={() => setTutorialState(declineTutorial(currentUser.id))}
+        onEnd={() => setTutorialState(endTutorial(currentUser.id))}
+        onNext={() => {
+          if (!tutorialState) return;
+          setTutorialState(advanceTutorialStep(currentUser.id, tutorialState));
+        }}
+        onBack={() => {
+          if (!tutorialState) return;
+          setTutorialState(retreatTutorialStep(currentUser.id, tutorialState));
+        }}
+        onAddPracticeData={() => {
+          if (!tutorialState?.session || !activeOnboardingTour) return;
+          const demoData = addPracticeDemoRequest(
+            tutorialState.session.demoData,
+            activeOnboardingTour.role,
+            currentUser.id
+          );
+          setTutorialState(updateTutorialDemoData(currentUser.id, tutorialState, demoData));
+        }}
+        navigation={{
+          onGuardTab: (tab) => setGuardTab(tab as GuardTab),
+          onClientView: (view) => setClientView(view as ClientView),
+          onStaffSection: (section) => setStaffSection(section as StaffSection),
+        }}
       />
     ) : null;
+
+  const tutorialSettingsProps = currentUser
+    ? {
+        tutorialAvailable: Boolean(activeOnboardingTour),
+        tutorialCompleted: tutorialState?.lifecycle === 'completed',
+        tutorialActive: isTutorialActive(tutorialState),
+        onStartTutorial: () => {
+          const next = restartTutorial(currentUser.id, currentUser.role);
+          setTutorialState(next);
+        },
+        onEnterPracticeMode: () => {
+          const next = enterPracticeFromSettings(currentUser.id, currentUser.role);
+          setTutorialState(next);
+        },
+      }
+    : {};
 
   if (loading) {
     return <LoadingScreen />;
@@ -9915,7 +10007,7 @@ export default function App() {
       );
     }
 
-    const guardJobs = getGuardVisibleJobs(activeGuard, requests, platformSettings);
+    const guardJobs = getGuardVisibleJobs(activeGuard, displayRequests, platformSettings);
     const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
 
     return (
@@ -10033,9 +10125,10 @@ export default function App() {
           onRequestCashPayout={() => handleGuardRequestCashPayout(activeGuard.id)}
           onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
           onOpenLegal={openLegalPage}
+          {...tutorialSettingsProps}
         />
         {passwordChangeOverlay}
-        {onboardingTourOverlay}
+        {tutorialOverlay}
         <InstallPrompt />
       </>
     );
@@ -10045,7 +10138,7 @@ export default function App() {
   if (currentUser.role === 'client') {
     const clientRecord = clients.find(c => c.id === currentUser.id);
     // Show only THIS client's requests
-    const myRequests = requests.filter(r =>
+    const myRequests = displayRequests.filter(r =>
       r.clientId === currentUser.id ||
       r.clientName === currentUser.clientName ||
       r.clientName === currentUser.name
@@ -10121,6 +10214,7 @@ export default function App() {
               onChangeTheme={changeThemeMode}
               isDbConnected={isDbConnected}
               onOpenLegal={openLegalPage}
+              {...tutorialSettingsProps}
             />
           ) : clientView === 'support-compose' ? (
             <SupportComposePage
@@ -10216,7 +10310,7 @@ export default function App() {
           )}
         </ClientAppLayout>
         {passwordChangeOverlay}
-        {onboardingTourOverlay}
+        {tutorialOverlay}
         <InstallPrompt />
       </>
     );
@@ -10251,7 +10345,7 @@ export default function App() {
           onUpdateStaffApprovalQueue={updateStaffApprovalQueue}
           guards={verifiedGuards}
           clients={clients}
-          requests={requests}
+          requests={displayRequests}
           supportTickets={supportTickets}
           payments={payments}
           guardPayoutInvoices={guardPayoutInvoices}
@@ -10346,9 +10440,10 @@ export default function App() {
           onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
           legalAcceptances={legalAcceptanceRecords}
+          {...tutorialSettingsProps}
         />
         {passwordChangeOverlay}
-        {onboardingTourOverlay}
+        {tutorialOverlay}
         <InstallPrompt />
       </>
     );

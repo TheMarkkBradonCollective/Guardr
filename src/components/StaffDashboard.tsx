@@ -256,6 +256,11 @@ interface StaffDashboardProps {
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
   headerActions?: React.ReactNode;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }
 
 export function StaffDashboard({
@@ -375,6 +380,11 @@ export function StaffDashboard({
   onOpenLegal,
   legalAcceptances = [],
   headerActions,
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -522,7 +532,8 @@ export function StaffDashboard({
         );
       case 'map':
         return (
-          <StaffOpsMapScreen
+          <div data-tour="staff-map" className="h-full min-h-0">
+            <StaffOpsMapScreen
             requests={requests}
             guards={guards}
             canManageJobs={canManageJobs}
@@ -535,6 +546,7 @@ export function StaffDashboard({
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : undefined}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
           />
+          </div>
         );
       case 'approvals':
         return (
@@ -584,7 +596,8 @@ export function StaffDashboard({
         );
       case 'jobs':
         return (
-          <StaffJobsPanel
+          <div data-tour="staff-jobs" className="h-full min-h-0">
+            <StaffJobsPanel
             requests={requests}
             guards={guards}
             clients={clients}
@@ -603,6 +616,7 @@ export function StaffDashboard({
             staffRole={currentUser.role}
             feeConfig={platformSettings.feeConfig}
           />
+          </div>
         );
       case 'guards':
         return (
@@ -707,7 +721,7 @@ export function StaffDashboard({
       case 'team-chat':
       case 'job-chats':
         return onSendStaffMessage && onSendJobChat && onSendTeamChatMessage && onSendSupportMessage && onUpdateSupportStatus ? (
-          <div className="app-messages-hub h-full min-h-0">
+          <div data-tour="staff-messages" className="app-messages-hub h-full min-h-0">
             <StaffMessagesPanel
               requests={requests}
               guards={guards}
@@ -856,6 +870,11 @@ export function StaffDashboard({
             onChangeTheme={onChangeTheme}
             isDbConnected={isDbConnected}
             onOpenLegal={onOpenLegal}
+            tutorialAvailable={tutorialAvailable}
+            tutorialCompleted={tutorialCompleted}
+            tutorialActive={tutorialActive}
+            onStartTutorial={onStartTutorial}
+            onEnterPracticeMode={onEnterPracticeMode}
           />
         );
       default:

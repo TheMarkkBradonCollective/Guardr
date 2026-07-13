@@ -445,6 +445,7 @@ export function StaffOverview({
   return (
     <div
       className={`staff-overview staff-overview--${staffRole} staff-overview--${config.layout} animate-fade-in pb-8`}
+      data-tour="staff-overview"
     >
       <AppDashboardHero
         kicker={`${config.workspaceKicker} · ${formatOverviewDate()}`}

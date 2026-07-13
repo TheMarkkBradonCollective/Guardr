@@ -100,6 +100,7 @@ import {
   guardBreakBlockedMessage,
 } from '../lib/shiftBreaks';
 import type { IncidentReportFormInput } from '../lib/incidentReports';
+import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import { useUserLocation } from '../lib/useUserLocation';
 
 interface GuardDashboardProps {
@@ -200,6 +201,11 @@ interface GuardDashboardProps {
   tab?: GuardTab;
   onTabChange?: (tab: GuardTab) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }
 
 export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'crew';
@@ -299,6 +305,11 @@ export function GuardDashboard({
   tab: controlledTab,
   onTabChange,
   onOpenLegal,
+  tutorialAvailable,
+  tutorialCompleted,
+  tutorialActive,
+  onStartTutorial,
+  onEnterPracticeMode,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
   const isControlled = controlledTab !== undefined;
@@ -957,7 +968,10 @@ export function GuardDashboard({
     ) : null;
 
   const renderGuardMainPanel = () => (
-    <div className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}>
+    <div
+      className={`h-full min-h-0 relative overflow-hidden flex flex-col ${activeTab === 'map' ? 'guard-map-layout' : ''}`}
+      data-tour={activeTab === 'map' ? 'guard-map' : undefined}
+    >
       {!accountPreActive && activeTab !== 'profile' && (
         <GuardCredentialGraceBanner guard={guard} onOpenCredentials={() => setTab('profile')} />
       )}
@@ -965,6 +979,18 @@ export function GuardDashboard({
       {activeTab === 'map' && workBlockedMessage && (
         <div className="absolute top-0 left-0 right-0 z-[1002] px-4 py-3 bg-amber-500/15 border-b border-amber-500/30 text-sm text-brand-text">
           {workBlockedMessage}
+        </div>
+      )}
+
+      {activeTab === 'map' && requests.find((r) => isTutorialDemoId(r.id)) && (
+        <div data-tour="guard-demo-job" className="tutorial-demo-card relative z-[1003] mx-4 mt-3">
+          <p className="tutorial-demo-card-label">Tutorial practice job</p>
+          <p className="text-sm font-semibold mt-1">
+            {requests.find((r) => isTutorialDemoId(r.id))?.title}
+          </p>
+          <p className="text-xs text-brand-text-muted mt-1">
+            Only you can see this listing. Tap the map pin to preview how open jobs work.
+          </p>
         </div>
       )}
 
@@ -1094,7 +1120,7 @@ export function GuardDashboard({
       {tab !== 'map' && (
         <AppPageTransition motionKey={tab} className="absolute inset-0">
           {tab === 'earnings' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-earnings">
               <div className="guard-scroll-panel flex-1">
                 <GuardEarningsPanel
                   breakdown={earningsBreakdown}
@@ -1116,7 +1142,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'myJobs' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-my-jobs">
               <GuardMyJobsPanel
                 availableJobs={browseJobLists.available}
                 upcomingJobs={browseJobLists.upcoming}
@@ -1173,7 +1199,7 @@ export function GuardDashboard({
           )}
 
           {tab === 'messages' && (
-            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden">
+            <div className="absolute inset-0 bg-brand-bg flex flex-col overflow-hidden" data-tour="guard-messages">
               {supportMode === 'compose' && onCreateSupportTicket ? (
                 <SupportComposePage
                   onBack={() => onCloseSupportForm?.()}
@@ -1262,6 +1288,11 @@ export function GuardDashboard({
                       ? onJoinTeamWithCode
                       : undefined
                   }
+                  tutorialAvailable={tutorialAvailable}
+                  tutorialCompleted={tutorialCompleted}
+                  tutorialActive={tutorialActive}
+                  onStartTutorial={onStartTutorial}
+                  onEnterPracticeMode={onEnterPracticeMode}
                 />
                 <div className="px-4 pb-8 max-w-lg mx-auto">
                   <GuardAvailabilityCalendar guardId={guard.id} />

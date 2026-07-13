@@ -1,5 +1,6 @@
 import { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../types';
 import { computeLateClockOutHours, computeOvertimeAmount } from './shiftBilling';
+import { PLATFORM_FEE_PER_HOUR } from './payments';
 import {
   buildIncidentReportViews,
   incidentCategoryLabel,

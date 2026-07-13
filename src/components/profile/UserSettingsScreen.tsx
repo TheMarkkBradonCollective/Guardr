@@ -16,6 +16,11 @@ interface UserSettingsScreenProps {
   isDbConnected?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onJoinTeamWithCode?: (code: string) => void | Promise<void>;
+  tutorialAvailable?: boolean;
+  tutorialCompleted?: boolean;
+  tutorialActive?: boolean;
+  onStartTutorial?: () => void;
+  onEnterPracticeMode?: () => void;
 }
 
 export function UserSettingsScreen({
@@ -25,9 +30,44 @@ export function UserSettingsScreen({
   isDbConnected = false,
   onOpenLegal,
   onJoinTeamWithCode,
+  tutorialAvailable = false,
+  tutorialCompleted = false,
+  tutorialActive = false,
+  onStartTutorial,
+  onEnterPracticeMode,
 }: UserSettingsScreenProps) {
   return (
     <AppScreen>
+      {tutorialAvailable && (onStartTutorial || onEnterPracticeMode) && (
+        <AppFormSection title="Tutorial & practice">
+          <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-1">
+            Walk through the app with private practice data that never goes live. Practice data is
+            stored on this device and removed when you end the tutorial.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {onStartTutorial && (
+              <button type="button" onClick={onStartTutorial} className="app-button-primary !w-auto !h-10 !px-5">
+                {tutorialCompleted ? 'Restart tutorial' : 'Start tutorial'}
+              </button>
+            )}
+            {onEnterPracticeMode && tutorialCompleted && !tutorialActive && (
+              <button
+                type="button"
+                onClick={onEnterPracticeMode}
+                className="app-button-outline !w-auto !h-10 !px-5"
+              >
+                Practice mode
+              </button>
+            )}
+          </div>
+          {tutorialActive && (
+            <p className="text-xs text-brand-primary mt-3 font-medium">
+              Tutorial or practice mode is active — use End tutorial (top right) when you are done.
+            </p>
+          )}
+        </AppFormSection>
+      )}
+
       {currentUser.role === 'guard' && onJoinTeamWithCode && (
         <AppFormSection title="Join a crew">
           <p className="text-xs text-brand-text-muted leading-relaxed mb-3 -mt-1">
