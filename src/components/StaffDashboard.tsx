@@ -55,13 +55,12 @@ import {
   isStaffOpsMapSection,
   isStaffMessagesSection,
   StaffSection,
-  type ApprovalQueueId,
 } from '../lib/staffOps';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
-import { StaffApprovals } from './staff/StaffApprovals';
+import { StaffApplications } from './staff/StaffApplications';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
@@ -249,10 +248,6 @@ interface StaffDashboardProps {
   onSelectedSupportTicketIdChange?: (id: string | null) => void;
   selectedJobChatRequestId?: string | null;
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
-  staffApprovalQueue?: ApprovalQueueId | null;
-  onOpenStaffApprovals?: (queue?: ApprovalQueueId | null, options?: { guardId?: string | null }) => void;
-  onClearStaffApprovalQueue?: () => void;
-  onUpdateStaffApprovalQueue?: (queue: ApprovalQueueId | null) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
   headerActions?: React.ReactNode;
@@ -373,10 +368,6 @@ export function StaffDashboard({
   onSelectedSupportTicketIdChange,
   selectedJobChatRequestId,
   onSelectedJobChatRequestIdChange,
-  staffApprovalQueue = null,
-  onOpenStaffApprovals,
-  onClearStaffApprovalQueue,
-  onUpdateStaffApprovalQueue,
   onOpenLegal,
   legalAcceptances = [],
   headerActions,
@@ -421,16 +412,7 @@ export function StaffDashboard({
     navigateSection('jobs', { jobId });
   };
 
-  const navigateToApprovals = (queue?: ApprovalQueueId) => {
-    onOpenStaffApprovals?.(queue ?? null);
-  };
-
   const navigateSection = (next: StaffSection, selection: StaffSectionSelection = {}) => {
-    if (next === 'approvals') {
-      onOpenStaffApprovals?.(null);
-      return;
-    }
-    onClearStaffApprovalQueue?.();
     if (!isControlled) setInternalSection(next);
     const nextGuardId = next === 'guards'
       ? selection.guardId !== undefined ? selection.guardId : selectedGuardId
@@ -441,7 +423,7 @@ export function StaffDashboard({
     const nextClientId = next === 'clients'
       ? selection.clientId !== undefined ? selection.clientId : selectedClientId
       : null;
-    const nextJobId = next === 'jobs'
+    const nextJobId = next === 'jobs' || next === 'applications'
       ? selection.jobId !== undefined ? selection.jobId : selectedJobId
       : null;
 
@@ -497,7 +479,7 @@ export function StaffDashboard({
 
   const badges = useMemo(
     () => ({
-      approvals: stats.pendingApprovals,
+      applications: stats.pendingGuardApplications,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
@@ -523,7 +505,6 @@ export function StaffDashboard({
             liveJobs={overviewLiveJobs}
             weeklyTrend={overviewWeeklyTrend}
             onNavigate={navigateSection}
-            onNavigateApprovals={navigateToApprovals}
             onOpenJob={openJob}
             canUpdateJobs={canStaffJobs}
             staffName={currentUser.name}
@@ -548,50 +529,15 @@ export function StaffDashboard({
           />
           </div>
         );
-      case 'approvals':
+      case 'applications':
         return (
-          <StaffApprovals
+          <StaffApplications
             requests={requests}
             guards={guards}
-            clients={clients}
-            onApproveRequest={canReviewJobs ? onApproveRequest : async () => {}}
-            onDenyRequest={canReviewJobs ? onDenyRequest : async () => {}}
-            onApproveScheduleChange={canReviewJobs ? onApproveScheduleChange : undefined}
-            onRejectScheduleChange={canReviewJobs ? onRejectScheduleChange : undefined}
-            onApproveScheduleChangeBilling={canReviewJobs ? onApproveScheduleChangeBilling : undefined}
-            onApproveCert={onApproveCert}
-            onRejectCert={onRejectCert}
             onApproveGuardApplication={canReviewJobs ? onApproveGuardApplication : async () => {}}
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
-            onApproveClient={canManageClientAccounts ? onApproveClient : undefined}
-            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
-            onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
-            onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
-            canActivateGuardAccounts={canActivateApprovedGuards}
-            onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
-            onRejectIdentityVerification={canVerifyGuardCredentials ? onRejectGuardIdentityVerification : undefined}
-            onRequestIdentityResubmit={canVerifyGuardCredentials ? onRequestGuardIdResubmit : undefined}
-            onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
-            onReviewGuardInsurance={canVerifyGuardCredentials ? onReviewGuardInsurance : undefined}
-            onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
-            onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
-            onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
-            onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
-            onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
-            canApproveStaffAccounts={canApproveStaff}
-            canApproveGuardAccounts={canApproveGuardAccounts}
-            canVerifyGuardCredentials={canVerifyGuardCredentials}
-            canManageGuardAccounts={canManageGuardAccounts}
-            canManageClientAccounts={canManageClientAccounts}
             canReviewJobRequests={canReviewJobs}
-            canEditJobListing={canEditJobListing}
-            onEditJobListing={canStaffEditJobListings ? onEditJobListing : undefined}
-            staffRole={currentUser.role}
-            initialQueue={staffApprovalQueue}
-            initialFocusGuardId={section === 'approvals' ? selectedGuardId : null}
-            onQueueChange={(queue) => onUpdateStaffApprovalQueue?.(queue ?? null)}
-            onViewGuard={(guardId) => navigateSection('guards', { guardId })}
+            initialJobId={selectedJobId}
           />
         );
       case 'jobs':

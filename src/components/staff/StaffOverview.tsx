@@ -24,7 +24,6 @@ import {
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
 import { PlatformRole } from '../../types';
-import type { ApprovalQueueId } from '../../lib/staffOps';
 import { Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
   AppDashboardHero,
@@ -73,7 +72,6 @@ interface StaffOverviewProps {
   liveJobs: OverviewLiveJob[];
   weeklyTrend: number[];
   onNavigate: (section: StaffSection) => void;
-  onNavigateApprovals?: (queue?: ApprovalQueueId) => void;
   onOpenJob?: (jobId: string) => void;
   canUpdateJobs?: boolean;
   staffName: string;
@@ -102,7 +100,7 @@ const QUICK_LINK_META: Record<
 > = {
   overview: { label: 'Overview', icon: LayoutDashboard },
   map: { label: 'Map', icon: MapPin },
-  approvals: { label: 'Approvals', icon: ClipboardCheck },
+  applications: { label: 'Applications', icon: UserCheck },
   jobs: { label: 'Jobs', icon: Briefcase },
   guards: { label: 'Guards', icon: Shield },
   team: { label: 'Staff', icon: Users },
@@ -164,7 +162,6 @@ export function StaffOverview({
   actionItems,
   liveJobs,
   onNavigate,
-  onNavigateApprovals,
   onOpenJob,
   canUpdateJobs = false,
   staffName,
@@ -219,19 +216,7 @@ export function StaffOverview({
   );
 
   const renderMetricCell = ({ label, value, sub, accent, navigateTo }: (typeof metrics)[number]) => {
-    const handleMetricClick = () => {
-      if (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) {
-        onNavigateApprovals();
-        return;
-      }
-      if (navigateTo) onNavigate(navigateTo);
-    };
-
-    const isClickable =
-      (label === 'To verify' && onNavigateApprovals && stats.pendingApprovals > 0) ||
-      (navigateTo && navigateTo !== 'approvals');
-
-    if (isClickable) {
+    if (navigateTo) {
       return (
         <AppMetricCell
           key={label}
@@ -239,7 +224,7 @@ export function StaffOverview({
           value={value}
           sub={sub}
           accent={accent}
-          onClick={handleMetricClick}
+          onClick={() => onNavigate(navigateTo)}
         />
       );
     }
@@ -247,11 +232,7 @@ export function StaffOverview({
   };
 
   const attentionZone = (
-    <AppDashboardZone
-      title="Needs your attention"
-      actionLabel={filteredActions.length > 0 ? 'Approvals' : undefined}
-      onAction={filteredActions.length > 0 ? () => onNavigate('approvals') : undefined}
-    >
+    <AppDashboardZone title="Needs your attention">
       {filteredActions.length === 0 ? (
         <div className="staff-overview-empty-card">
           <CheckCircle2 className="w-5 h-5 text-brand-primary shrink-0" />
@@ -263,14 +244,7 @@ export function StaffOverview({
       ) : (
         <AppItemCardStack>
           {filteredActions.map((item) => (
-            <AppItemCard
-              key={item.id}
-              onClick={() =>
-                item.section === 'approvals' && item.approvalQueue && onNavigateApprovals
-                  ? onNavigateApprovals(item.approvalQueue)
-                  : onNavigate(item.section)
-              }
-            >
+            <AppItemCard key={item.id} onClick={() => onNavigate(item.section)}>
               <div className="flex items-start gap-3 w-full text-left">
                 <span
                   className={`staff-overview-action-icon ${

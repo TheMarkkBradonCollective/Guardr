@@ -1,6 +1,6 @@
 import { PlatformRole } from '../types';
 import { canApproveStaffAccounts, canHandleDisputes, canManageClients, canManageGuards, canReviewCertifications, canReviewJobRequests, ROLE_LABELS } from './permissions';
-import type { OverviewActionItem, OverviewMetricCell, StaffSection, ApprovalQueueId } from './staffOps';
+import type { OverviewActionItem, OverviewMetricCell, StaffSection } from './staffOps';
 
 export type StaffOverviewLayout = 'compact' | 'standard' | 'executive';
 
@@ -81,7 +81,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'No approvals or incidents waiting. Review analytics or open the ops map.',
-    quickLinkSections: ['approvals', 'jobs', 'clients', 'analytics', 'messages'],
+    quickLinkSections: ['applications', 'jobs', 'clients', 'analytics', 'messages'],
   },
   director: {
     roleLabel: ROLE_LABELS.director,
@@ -99,7 +99,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Nothing urgent in the queue. Review financials, team activity, or live jobs on the map.',
-    quickLinkSections: ['map', 'payments', 'team', 'analytics', 'jobs', 'approvals'],
+    quickLinkSections: ['map', 'payments', 'team', 'analytics', 'jobs', 'applications'],
   },
   owner: {
     roleLabel: ROLE_LABELS.owner,
@@ -117,7 +117,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Platform is clear. Review governance settings, financials, or staff activity.',
-    quickLinkSections: ['settings', 'team', 'payments', 'analytics', 'map', 'approvals'],
+    quickLinkSections: ['settings', 'team', 'payments', 'analytics', 'map', 'applications'],
   },
 };
 
@@ -138,26 +138,22 @@ export function filterOverviewMetrics(
   return cells.filter((cell) => allowed.has(cell.label));
 }
 
-function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boolean {
-  if (!queue) return true;
-  switch (queue) {
-    case 'credentials':
+function canActOnOverviewAction(role: PlatformRole, item: OverviewActionItem): boolean {
+  switch (item.id) {
+    case 'pending-certs':
       return canReviewCertifications({ role });
-    case 'job-offers':
-    case 'schedule-changes':
-    case 'applications':
+    case 'pending-jobs':
+    case 'pending-schedule-changes':
+    case 'guard-applications':
       return canReviewJobRequests({ role });
-    case 'guard-accounts':
-    case 'accounts':
+    case 'pending-guard-accounts':
       return canManageGuards({ role });
-    case 'staff-accounts':
+    case 'pending-staff-accounts':
       return canApproveStaffAccounts({ role });
-    case 'client-accounts':
+    case 'pending-client-accounts':
       return canManageClients({ role });
-    case 'all':
-      return true;
     default:
-      return false;
+      return true;
   }
 }
 
@@ -169,7 +165,7 @@ export function filterOverviewActionItems(
   return items.filter((item) => {
     if (item.section === 'payments' && !config.showPaymentsInQueue) return false;
     if (item.section === 'disputes' && !canHandleDisputes({ role })) return false;
-    if (item.section === 'approvals' && !canActOnApprovalQueue(role, item.approvalQueue)) return false;
+    if (!canActOnOverviewAction(role, item)) return false;
     return true;
   });
 }
