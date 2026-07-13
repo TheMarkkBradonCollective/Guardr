@@ -384,7 +384,7 @@ function appToast(message: string, tone: 'success' | 'error' | 'info' = 'error')
 }
 import type { GuardTab, GuardSupportMode } from './components/GuardDashboard';
 import type { ClientView } from './components/ClientDashboard';
-import { type ApprovalQueueId, resolveStaffSection, isStaffMessagesSection, type StaffSection } from './lib/staffOps';
+import { resolveStaffRouteSection, isStaffMessagesSection, type StaffSection } from './lib/staffOps';
 import {
   buildLocationLabel,
   canClientEditJobListing,
@@ -546,10 +546,10 @@ export default function App() {
   );
   const [staffSection, setStaffSectionState] = useState<StaffSection>(() => {
     if (initialRoute?.role !== 'staff') return 'overview';
-    return (
-      resolveStaffSection(initialRoute.staffSection, initialRoute.staffMessageTab) ??
-      initialRoute.staffSection ??
-      'overview'
+    return resolveStaffRouteSection(
+      initialRoute.staffSection,
+      initialRoute.staffApprovalQueue,
+      initialRoute.staffMessageTab
     );
   });
   const [staffGuardId, setStaffGuardIdState] = useState<string | null>(
@@ -609,9 +609,6 @@ export default function App() {
   const [supportMode, setSupportModeState] = useState<GuardSupportMode | null>(
     () => initialRoute?.supportMode ?? null
   );
-  const [staffApprovalQueue, setStaffApprovalQueueState] = useState<ApprovalQueueId | null>(
-    () => initialRoute?.staffApprovalQueue ?? null
-  );
   const [openJobChat, setOpenJobChatState] = useState(
     () => initialRoute?.openJobChat ?? false
   );
@@ -634,7 +631,6 @@ export default function App() {
       supportTicketId: supportTicketId ?? undefined,
       supportSection: supportSection ?? undefined,
       supportMode: supportMode ?? undefined,
-      staffApprovalQueue: staffApprovalQueue ?? undefined,
       openJobChat: openJobChat || undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
@@ -654,9 +650,12 @@ export default function App() {
         user?.role === 'guard' ? findGuardProfileForUser(user, guardsRef.current) : undefined;
       setGuardTabState(normalizeGuardTabForAccount(tab, guard));
     }
-    if (route.staffSection) {
-      const section =
-        resolveStaffSection(route.staffSection, route.staffMessageTab) ?? route.staffSection;
+    if (route.staffSection || route.staffApprovalQueue) {
+      const section = resolveStaffRouteSection(
+        route.staffSection,
+        route.staffApprovalQueue,
+        route.staffMessageTab
+      );
       setStaffSectionState(isStaffMessagesSection(section) ? 'messages' : section);
     }
     setStaffGuardIdState(route.staffGuardId ?? null);
@@ -670,7 +669,6 @@ export default function App() {
     setSupportTicketIdState(route.supportTicketId ?? null);
     setSupportSectionState(route.supportSection ?? 'support');
     setSupportModeState(route.supportMode ?? null);
-    setStaffApprovalQueueState(route.staffApprovalQueue ?? null);
     setOpenJobChatState(route.openJobChat ?? false);
     if (route.jobChatRequestId && !route.openJobChat) {
       if (route.role === 'client' && route.clientView === 'requests') {
@@ -877,13 +875,11 @@ export default function App() {
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
       setStaffSectionState('messages');
-      setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
           staffSection: 'messages',
           jobChatRequestId: requestId ?? undefined,
-          staffApprovalQueue: undefined,
         })
       );
       return;
@@ -925,14 +921,12 @@ export default function App() {
     const role = currentUser ? appRoleForUser(currentUser) : null;
     if (role === 'staff') {
       setStaffSectionState('messages');
-      setStaffApprovalQueueState(null);
       syncAppRoute(
         buildAppRoute({
           role: 'staff',
           staffSection: 'messages',
           supportTicketId: ticketId ?? undefined,
           supportMode: undefined,
-          staffApprovalQueue: undefined,
         })
       );
       return;
@@ -971,7 +965,7 @@ export default function App() {
     const nextClientId = normalizedSection === 'clients'
       ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
       : undefined;
-    const nextJobId = normalizedSection === 'jobs'
+    const nextJobId = normalizedSection === 'jobs' || normalizedSection === 'applications'
       ? selection.jobId !== undefined ? selection.jobId ?? undefined : staffJobId ?? undefined
       : undefined;
     const nextTeamId = normalizedSection === 'team'
@@ -980,8 +974,6 @@ export default function App() {
     const keepsMessages = normalizedSection === 'messages';
     const nextJobChatId = keepsMessages ? jobChatRequestId ?? undefined : undefined;
     const nextSupportId = keepsMessages ? supportTicketId ?? undefined : undefined;
-    const nextApprovalQueue =
-      section === 'approvals' ? staffApprovalQueue ?? undefined : undefined;
     const nextEdit = section === 'guards' && nextGuardId ? staffEdit || undefined : undefined;
     setStaffGuardIdState(nextGuardId ?? null);
     setStaffClientIdState(nextClientId ?? null);
@@ -989,7 +981,6 @@ export default function App() {
     setStaffTeamIdState(nextTeamId ?? null);
     if (!keepsMessages) setJobChatRequestIdState(null);
     if (!keepsMessages) setSupportTicketIdState(null);
-    if (normalizedSection !== 'approvals') setStaffApprovalQueueState(null);
     if (normalizedSection !== 'guards') setStaffEditState(false);
     syncAppRoute(
       buildAppRoute({
@@ -1002,60 +993,6 @@ export default function App() {
         staffEdit: nextEdit,
         jobChatRequestId: nextJobChatId,
         supportTicketId: nextSupportId,
-        staffApprovalQueue: nextApprovalQueue,
-      })
-    );
-  };
-
-  const openStaffApprovals = (
-    queue: ApprovalQueueId | null,
-    options?: { guardId?: string | null }
-  ) => {
-    setStaffApprovalQueueState(queue);
-    setStaffSectionState('approvals');
-    const nextGuardId = options && 'guardId' in options ? options.guardId ?? null : null;
-    setStaffGuardIdState(nextGuardId);
-    setStaffClientIdState(null);
-    setStaffJobIdState(null);
-    setStaffTeamIdState(null);
-    setStaffEditState(false);
-    setJobChatRequestIdState(null);
-    setSupportTicketIdState(null);
-    syncAppRoute(
-      buildAppRoute({
-        role: 'staff',
-        staffSection: 'approvals',
-        staffApprovalQueue: queue ?? undefined,
-        staffGuardId: nextGuardId ?? undefined,
-        staffClientId: undefined,
-        staffJobId: undefined,
-        staffTeamId: undefined,
-        staffEdit: undefined,
-        jobChatRequestId: undefined,
-        supportTicketId: undefined,
-      })
-    );
-  };
-
-  const clearStaffApprovalQueue = () => {
-    setStaffApprovalQueueState(null);
-  };
-
-  const updateStaffApprovalQueue = (queue: ApprovalQueueId | null) => {
-    setStaffApprovalQueueState(queue);
-    setStaffGuardIdState(null);
-    syncAppRoute(
-      buildAppRoute({
-        role: 'staff',
-        staffSection: 'approvals',
-        staffApprovalQueue: queue ?? undefined,
-        staffGuardId: undefined,
-        staffClientId: staffClientId ?? undefined,
-        staffJobId: staffJobId ?? undefined,
-        staffTeamId: staffTeamId ?? undefined,
-        staffEdit: staffEdit || undefined,
-        jobChatRequestId: jobChatRequestId ?? undefined,
-        supportTicketId: supportTicketId ?? undefined,
       })
     );
   };
@@ -10387,10 +10324,6 @@ export default function App() {
           onSelectedSupportTicketIdChange={setSupportTicketId}
           selectedJobChatRequestId={jobChatRequestId}
           onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
-          staffApprovalQueue={staffApprovalQueue}
-          onOpenStaffApprovals={openStaffApprovals}
-          onClearStaffApprovalQueue={clearStaffApprovalQueue}
-          onUpdateStaffApprovalQueue={updateStaffApprovalQueue}
           guards={verifiedGuards}
           clients={clients}
           requests={displayRequests}

@@ -27,7 +27,7 @@ interface StaffSidebarNavProps {
 const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
 const OPERATIONS_IDS: StaffSection[] = [
   'jobs',
-  'approvals',
+  'applications',
   'clients',
   'guards',
   'crews',

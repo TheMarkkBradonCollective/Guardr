@@ -14,7 +14,6 @@ import {
   BookOpen,
   Building2,
   Briefcase,
-  ClipboardCheck,
   ClipboardList,
   DollarSign,
   LayoutDashboard,
@@ -24,6 +23,7 @@ import {
   Scale,
   Settings,
   Shield,
+  UserCheck,
   Users,
   UsersRound,
   X,
@@ -49,7 +49,7 @@ interface StaffOpsLayoutProps {
 
 const SECTION_TITLES: Record<StaffSection, string> = {
   overview: 'Overview',
-  approvals: 'Approvals',
+  applications: 'Applications',
   jobs: 'Jobs',
   map: 'Operations map',
   guards: 'Field guards',
@@ -109,7 +109,7 @@ export function StaffOpsLayout({
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'map', label: 'Map', icon: Map },
     { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
-    { id: 'approvals', label: 'Approvals', icon: ClipboardCheck, badge: badges.approvals },
+    { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'crews', label: 'Teams', icon: UsersRound, badge: badges.crews },
