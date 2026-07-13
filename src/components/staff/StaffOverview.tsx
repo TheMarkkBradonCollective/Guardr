@@ -90,7 +90,8 @@ const ACTION_ICONS: Partial<Record<OverviewActionItem['id'], React.ReactNode>> =
   payments: <Shield className="w-4 h-4" />,
   support: <LifeBuoy className="w-4 h-4" />,
   'live-jobs': <MapPin className="w-4 h-4" />,
-  'pending-accounts': <UserCheck className="w-4 h-4" />,
+  'pending-guard-accounts': <Shield className="w-4 h-4" />,
+  'pending-client-accounts': <UserCheck className="w-4 h-4" />,
   'jobs-missing-coords': <MapPin className="w-4 h-4" />,
 };
 
