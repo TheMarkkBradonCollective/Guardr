@@ -1636,6 +1636,18 @@ export default function App() {
         specialties: parseJsonStringArray(g.specialties),
         yearsExperience: g.years_experience ?? undefined,
         availabilityNotes: g.availability_notes || undefined,
+        armedPreference:
+          g.armed_preference === 'armed' || g.armed_preference === 'unarmed' || g.armed_preference === 'both'
+            ? g.armed_preference
+            : undefined,
+        guardCardStatus:
+          g.guard_card_status === 'active' ||
+          g.guard_card_status === 'in_progress' ||
+          g.guard_card_status === 'none'
+            ? g.guard_card_status
+            : undefined,
+        hasReliableTransportation:
+          typeof g.has_reliable_transportation === 'boolean' ? g.has_reliable_transportation : undefined,
         isArmed: g.is_armed,
         listedWeaponGear: parseJsonStringArray(g.listed_weapon_gear).filter((value): value is GuardWeaponGearId =>
           ['oc-spray', 'baton', 'handcuffs', 'taser', 'firearm'].includes(value)
@@ -2927,6 +2939,28 @@ export default function App() {
         );
       }
       setStoredPassword(guard.email, { password, mustChangePassword: false, role: 'guard' });
+
+      const intakePayload: Record<string, unknown> = {
+        summary: guard.summary ?? '',
+        years_experience: guard.yearsExperience ?? null,
+        specialties: guard.specialties ?? [],
+        service_areas: normalizeGuardServiceAreas(guard.serviceAreas ?? []),
+        availability_notes: guard.availabilityNotes ?? '',
+        armed_preference: guard.armedPreference ?? null,
+        guard_card_status: guard.guardCardStatus ?? null,
+        has_reliable_transportation: guard.hasReliableTransportation ?? null,
+      };
+      const hasIntakeData = Object.values(intakePayload).some(
+        (value) => value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)
+      );
+      if (hasIntakeData) {
+        try {
+          await supabase.from('guards').update(intakePayload).eq('id', guard.id);
+        } catch (intakeErr) {
+          console.warn('Guard application intake fields not saved (migration may be pending):', intakeErr);
+        }
+      }
+
       await recordLegalAcceptances('guard', guard.id, requiredLegalDocumentsForRole('guard'));
       await loadFromSupabase();
       if (userStatus === 'pending') {

@@ -1,7 +1,7 @@
 {
   "name": "guardr",
   "private": true,
-  "version": "1.0.20",
+  "version": "1.0.21",
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp && npm run generate:download-version",
@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "node --import tsx --test lib/push/*.test.ts lib/platformFees.test.ts lib/agreementPricing.test.ts lib/rateLimit.test.ts src/lib/jobScheduleChange.test.ts src/lib/jobEditRules.test.ts src/lib/jobLocation.test.ts src/lib/californiaCities.test.ts src/lib/guardAvailability.test.ts src/lib/guardJobsBrowse.test.ts src/lib/guardJobs.test.ts src/lib/guardMarketplace.test.ts src/lib/guardCredentialSections.test.ts src/lib/guardAccountActivation.test.ts src/lib/appNavigation.test.ts src/lib/dbMutationGuard.test.ts src/lib/legalAcceptance.test.ts src/lib/bsisPermitExpiry.test.ts src/lib/certStaffVerification.test.ts src/lib/guardWeaponGear.test.ts src/lib/guardStandingCrew.test.ts src/lib/guardTeams.standingCrew.test.ts src/lib/platformSettings.test.ts src/lib/notificationInbox.test.ts src/lib/auth/passwordHash.test.ts src/lib/slaMetrics.test.ts src/lib/guardMessenger.test.ts src/lib/clientMessenger.test.ts src/lib/chatDisplay.test.ts src/lib/staffAccountApproval.test.ts",
+    "test": "node --import tsx --test lib/push/*.test.ts lib/platformFees.test.ts lib/agreementPricing.test.ts lib/rateLimit.test.ts src/lib/jobScheduleChange.test.ts src/lib/jobEditRules.test.ts src/lib/jobLocation.test.ts src/lib/californiaCities.test.ts src/lib/guardAvailability.test.ts src/lib/guardJobsBrowse.test.ts src/lib/guardJobs.test.ts src/lib/guardMarketplace.test.ts src/lib/guardCredentialSections.test.ts src/lib/guardAccountActivation.test.ts src/lib/appNavigation.test.ts src/lib/dbMutationGuard.test.ts src/lib/legalAcceptance.test.ts src/lib/bsisPermitExpiry.test.ts src/lib/certStaffVerification.test.ts src/lib/guardWeaponGear.test.ts src/lib/guardStandingCrew.test.ts src/lib/guardTeams.standingCrew.test.ts src/lib/platformSettings.test.ts src/lib/notificationInbox.test.ts src/lib/auth/passwordHash.test.ts src/lib/slaMetrics.test.ts src/lib/guardMessenger.test.ts src/lib/clientMessenger.test.ts src/lib/chatDisplay.test.ts src/lib/staffAccountApproval.test.ts src/lib/guardApplicationIntake.test.ts",
     "test:e2e": "playwright test",
     "generate:logos": "node scripts/generate-logo-assets.mjs",
     "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
