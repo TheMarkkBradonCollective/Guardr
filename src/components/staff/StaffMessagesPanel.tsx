@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ClientMessage,
   GuardMessage,
   JobChatMessage,
   JobChatThread,
@@ -13,6 +14,7 @@ import {
   TeamChatThread,
 } from '../../types';
 import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
+import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMessenger';
 import { threadForRequest } from '../../lib/jobChat';
 import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
@@ -42,6 +44,7 @@ import {
 type StaffMessageSelection =
   | { kind: 'staff-channel' }
   | { kind: 'guard-channel' }
+  | { kind: 'client-channel' }
   | { kind: 'job'; requestId: string }
   | { kind: 'team'; requestId: string }
   | { kind: 'support'; ticketId: string };
@@ -57,12 +60,14 @@ interface StaffMessagesPanelProps {
   teamChatMessages?: TeamChatMessage[];
   staffMessages: StaffMessage[];
   guardMessages?: GuardMessage[];
+  clientMessages?: ClientMessage[];
   supportTickets: SupportTicket[];
   currentUser: SessionUser;
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
   onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendStaffMessage: (body: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onSendClientMessage?: (body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
@@ -93,12 +98,14 @@ export function StaffMessagesPanel({
   teamChatMessages = [],
   staffMessages,
   guardMessages = [],
+  clientMessages = [],
   supportTickets,
   currentUser,
   onSendJobChat,
   onSendTeamChatMessage,
   onSendStaffMessage,
   onSendGuardMessage,
+  onSendClientMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
   onDeleteSupportTicket,
@@ -132,6 +139,11 @@ export function StaffMessagesPanel({
     return sorted[sorted.length - 1]?.createdAt;
   }, [guardMessages]);
 
+  const clientUpdatedAt = useMemo(() => {
+    const sorted = sortedClientMessages(clientMessages);
+    return sorted[sorted.length - 1]?.createdAt;
+  }, [clientMessages]);
+
   const allRows = useMemo(
     () =>
       buildStaffInboxRows({
@@ -144,12 +156,20 @@ export function StaffMessagesPanel({
         supportTickets,
         staffMessagesUpdatedAt: staffUpdatedAt,
         guardMessagesUpdatedAt: guardUpdatedAt,
+        clientMessagesUpdatedAt: clientUpdatedAt,
       }),
-    [requests, guards, threads, messages, teamChatThreads, teamChatMessages, supportTickets, staffUpdatedAt]
+    [requests, guards, threads, messages, teamChatThreads, teamChatMessages, supportTickets, staffUpdatedAt, guardUpdatedAt, clientUpdatedAt]
   );
 
   const teamRows = useMemo(
-    () => allRows.filter((r) => r.channel === 'staff-community' || r.channel === 'team-crew' || r.channel === 'guard-community'),
+    () =>
+      allRows.filter(
+        (r) =>
+          r.channel === 'staff-community' ||
+          r.channel === 'team-crew' ||
+          r.channel === 'guard-community' ||
+          r.channel === 'client-community'
+      ),
     [allRows]
   );
   const jobRows     = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
@@ -175,6 +195,12 @@ export function StaffMessagesPanel({
     }
     if (row.channel === 'guard-community') {
       setSelection({ kind: 'guard-channel' });
+      onSelectedJobChatRequestIdChange?.(null);
+      onSelectedSupportTicketIdChange?.(null);
+      return;
+    }
+    if (row.channel === 'client-community') {
+      setSelection({ kind: 'client-channel' });
       onSelectedJobChatRequestIdChange?.(null);
       onSelectedSupportTicketIdChange?.(null);
       return;
@@ -223,6 +249,7 @@ export function StaffMessagesPanel({
   const isRowSelected = (row: InboxRow) => {
     if (row.channel === 'staff-community' && effectiveSelection?.kind === 'staff-channel') return true;
     if (row.channel === 'guard-community' && effectiveSelection?.kind === 'guard-channel') return true;
+    if (row.channel === 'client-community' && effectiveSelection?.kind === 'client-channel') return true;
     if (row.requestId && row.channel === 'team-crew' && effectiveSelection?.kind === 'team' && effectiveSelection.requestId === row.requestId) return true;
     if (row.requestId && effectiveSelection?.kind === 'job' && effectiveSelection.requestId === row.requestId) return true;
     if (row.ticketId && effectiveSelection?.kind === 'support' && effectiveSelection.ticketId === row.ticketId) return true;
@@ -295,6 +322,8 @@ export function StaffMessagesPanel({
                   <MessagesSquare className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'guard-community' ? (
                   <MessageCircle className="w-5 h-5 text-brand-primary" />
+                ) : row.channel === 'client-community' ? (
+                  <MessageCircle className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'team-crew' ? (
                   <Users className="w-5 h-5 text-brand-primary" />
                 ) : row.channel === 'report' ? (
@@ -337,6 +366,31 @@ export function StaffMessagesPanel({
               guardChatLabels
               readOnly={!canPostGuardChat}
               readOnlyMessage="Guard chat is open to active guards and staff moderators."
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (effectiveSelection.kind === 'client-channel') {
+      const canPostClientChat = Boolean(onSendClientMessage) && canPostToClientChat(currentUser);
+      return (
+        <div className="flex flex-col h-full min-h-0 app-full-page-screen">
+          <AppChatHeader
+            title="Client chat"
+            subtitle="All-clients community channel"
+            onBack={clearSelection}
+            hideBackOnDesktop
+          />
+          <div className="flex-1 min-h-0">
+            <ChatThreadPanel
+              messages={sortedClientMessages(clientMessages)}
+              currentUserId={currentUser.id}
+              onSend={canPostClientChat ? onSendClientMessage : undefined}
+              placeholder="Message the client community…"
+              clientChatLabels
+              readOnly={!canPostClientChat}
+              readOnlyMessage="Client chat is open to active clients and staff moderators."
             />
           </div>
         </div>

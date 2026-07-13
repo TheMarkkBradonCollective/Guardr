@@ -73,6 +73,8 @@ function resolveNotificationUrl(type, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      return "/client/messages";
     case "job_submitted":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=job-offers";
     case "guard_application":
@@ -186,6 +188,9 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      if (role === "client") return "/client/messages";
+      return "/staff/messages?mtab=team";
     case "support_ticket":
     case "support_ticket_status":
       if (role === "client" && options.requestId) {
@@ -267,6 +272,8 @@ function rolesForNotificationType(type) {
       return ["dispatch", "admin"];
     case "guard_message":
       return ["guard"];
+    case "client_message":
+      return ["client"];
     case "job_submitted":
     case "guard_pending_approval":
     case "client_pending_approval":
@@ -330,6 +337,7 @@ var PREF_COLUMN = {
   job_chat_message: "job_chat_message",
   staff_message: "staff_message",
   guard_message: "guard_message",
+  client_message: "client_message",
   job_submitted: "job_submitted",
   job_open_to_guards: "job_open_to_guards",
   guard_application: "guard_application",
@@ -576,6 +584,10 @@ var EVENT_DEFAULTS = {
     title: "Guard chat",
     body: event.body || "New message from another guard"
   }),
+  client_message: (event) => ({
+    title: "Client chat",
+    body: event.body || "New message from another client"
+  }),
   job_submitted: (event) => ({
     title: "New job request",
     body: event.body || "A client submitted a job awaiting staff review"
@@ -753,6 +765,9 @@ async function buildEventDispatchPayloads(db, event) {
   if (event.type === "guard_message") {
     return [{ ...payload, role: "guard" }];
   }
+  if (event.type === "client_message") {
+    return [{ ...payload, role: "client" }];
+  }
   if (event.type === "guard_checkin" || event.type === "guard_clockout" || event.type === "guard_arrived" || event.type === "guard_break_start" || event.type === "guard_break_end" || event.type === "guard_left_site") {
     const payloads = [{ ...payload, role: "dispatch" }];
     if (event.requestId) {
@@ -821,7 +836,13 @@ async function authorizePushEvent(db, session, event) {
       if (session.platformRole === "guard" && event.guardId === session.userId) return null;
       return "Only staff or the applying guard can send application notifications";
     case "guard_message":
-      return session.platformRole === "guard" ? null : "Only guards can post to guard chat";
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "guard") return null;
+      return "Only staff or active guards can post to guard chat";
+    case "client_message":
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === "client") return null;
+      return "Only staff or active clients can post to client chat";
     case "guard_checkin":
     case "guard_clockout":
     case "guard_arrived":
@@ -1049,7 +1070,7 @@ async function dispatchPushEvent(db, event, options) {
       return { sent: 0, failed: 0 };
     }
   }
-  const excludeUserId = event.type === "guard_message" || event.type === "staff_message" ? session?.userId : void 0;
+  const excludeUserId = event.type === "guard_message" || event.type === "client_message" || event.type === "staff_message" ? session?.userId : void 0;
   const payloads = await buildEventDispatchPayloads(db, {
     ...event,
     type: event.type,

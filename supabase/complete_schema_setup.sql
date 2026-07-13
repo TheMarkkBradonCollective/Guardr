@@ -678,10 +678,19 @@ CREATE TABLE IF NOT EXISTS guard_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+CREATE TABLE IF NOT EXISTS client_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 CREATE TABLE IF NOT EXISTS message_reactions (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   message_type TEXT NOT NULL
-    CHECK (message_type IN ('job_chat', 'staff', 'guard', 'support')),
+    CHECK (message_type IN ('job_chat', 'staff', 'guard', 'client', 'support')),
   message_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
   user_name TEXT NOT NULL DEFAULT '',
@@ -698,7 +707,7 @@ CREATE INDEX IF NOT EXISTS message_reactions_user_idx
 CREATE TABLE IF NOT EXISTS chat_read_receipts (
   user_id TEXT NOT NULL,
   channel_type TEXT NOT NULL
-    CHECK (channel_type IN ('job_chat', 'staff', 'guard', 'support')),
+    CHECK (channel_type IN ('job_chat', 'staff', 'guard', 'client', 'support')),
   channel_id TEXT NOT NULL,
   last_read_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (user_id, channel_type, channel_id)
@@ -763,6 +772,21 @@ AS $$
   UNION ALL
 
   SELECT
+    'client'::TEXT AS channel_type,
+    'client-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM client_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'client'
+   AND r.channel_id = 'client-community'
+
+  UNION ALL
+
+  SELECT
     'staff'::TEXT AS channel_type,
     'staff-community'::TEXT AS channel_id,
     COUNT(m.id) FILTER (
@@ -804,6 +828,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   job_chat_message BOOLEAN NOT NULL DEFAULT true,
   staff_message BOOLEAN NOT NULL DEFAULT true,
   guard_message BOOLEAN NOT NULL DEFAULT true,
+  client_message BOOLEAN NOT NULL DEFAULT true,
   job_submitted BOOLEAN NOT NULL DEFAULT true,
   guard_application BOOLEAN NOT NULL DEFAULT true,
   guard_pending_approval BOOLEAN NOT NULL DEFAULT true,
@@ -825,6 +850,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
 );
 
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_message BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_message BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_submitted BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_application BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_pending_approval BOOLEAN NOT NULL DEFAULT true;
@@ -1113,6 +1139,7 @@ CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(statu
 CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);
 CREATE INDEX IF NOT EXISTS staff_messages_created_at_idx ON staff_messages(created_at);
 CREATE INDEX IF NOT EXISTS guard_messages_created_at_idx ON guard_messages(created_at);
+CREATE INDEX IF NOT EXISTS client_messages_created_at_idx ON client_messages(created_at);
 
 -- ── INDEXES ─────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_guards_email ON guards(email);
@@ -1158,6 +1185,7 @@ ALTER TABLE job_chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE message_reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_read_receipts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
@@ -1178,7 +1206,7 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
     'user_legal_acceptances', 'guard_insurance_policies',
@@ -1205,6 +1233,7 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'job_chat_messages_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'staff_messages_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'guard_messages_all', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'client_messages_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'message_reactions_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'chat_read_receipts_all', tbl);
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', 'notification_preferences_all', tbl);
@@ -1225,7 +1254,7 @@ BEGIN
     'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
     'security_requests', 'payments', 'guard_payout_invoices',
     'support_tickets', 'support_messages',
-    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'message_reactions',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
     'user_legal_acceptances', 'guard_insurance_policies', 'team_chat_messages', 'job_guard_slots',
     'guard_standing_crew_members', 'user_notifications'
   ]

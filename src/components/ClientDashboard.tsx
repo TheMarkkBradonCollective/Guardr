@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Client, GuardStandingCrewMember, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
+import { Client, ClientMessage, GuardStandingCrewMember, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
   computeCoverageSummary,
@@ -97,7 +97,10 @@ interface ClientDashboardProps {
   currentUser?: SessionUser;
   jobChatThreads?: JobChatThread[];
   jobChatMessages?: JobChatMessage[];
+  clientMessages?: ClientMessage[];
   onSendJobChatMessage?: (requestId: string, body: string) => void | Promise<void>;
+  onSendClientMessage?: (body: string) => void | Promise<void>;
+  onRefreshClientMessages?: () => void | Promise<void>;
   jobChatRequestId?: string | null;
   openJobChat?: boolean;
   onJobChatRequestIdChange?: (requestId: string | null) => void;
@@ -163,7 +166,10 @@ export function ClientDashboard({
   currentUser,
   jobChatThreads = [],
   jobChatMessages = [],
+  clientMessages = [],
   onSendJobChatMessage,
+  onSendClientMessage,
+  onRefreshClientMessages,
   jobChatRequestId = null,
   openJobChat = false,
   onJobChatRequestIdChange,
@@ -426,10 +432,15 @@ export function ClientDashboard({
         requests={requests}
         guards={guards}
         currentUser={currentUser}
+        accountStatus={accountStatus}
+        approved={approved}
         jobChatThreads={jobChatThreads}
         jobChatMessages={jobChatMessages}
+        clientMessages={clientMessages}
         supportTickets={supportTickets}
         onSendJobChatMessage={onSendJobChatMessage}
+        onSendClientMessage={onSendClientMessage}
+        onRefreshClientMessages={onRefreshClientMessages}
         onSendSupportMessage={onSendSupportMessage}
         initialChatRequestId={jobChatRequestId}
         initialChatOpen={openJobChat}

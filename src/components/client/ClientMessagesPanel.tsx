@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
+  ClientMessage,
   JobChatMessage,
   JobChatThread,
   SecurityGuard,
@@ -16,6 +17,7 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
+import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
@@ -27,22 +29,33 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
-import { Briefcase, FileText, LifeBuoy, MessageCircle } from 'lucide-react';
+import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare } from 'lucide-react';
 import { useDevice } from '../../lib/platform';
 import { guardForRequest } from '../../lib/clientShift';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
-type InboxTab = 'jobs' | 'support';
+type ActiveView =
+  | { kind: 'list' }
+  | { kind: 'client-channel' }
+  | { kind: 'job'; requestId: string }
+  | { kind: 'support'; ticketId: string };
+
+type InboxTab = 'chats' | 'jobs' | 'support';
 
 interface ClientMessagesPanelProps {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
   currentUser: SessionUser;
+  accountStatus?: 'pending' | 'active' | 'suspended';
+  approved?: boolean;
   jobChatThreads: JobChatThread[];
   jobChatMessages: JobChatMessage[];
+  clientMessages: ClientMessage[];
   supportTickets: SupportTicket[];
   onSendJobChatMessage: (requestId: string, body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
+  onSendClientMessage?: (body: string) => void | Promise<void>;
+  onRefreshClientMessages?: () => void | Promise<void>;
   initialChatRequestId?: string | null;
   initialChatOpen?: boolean;
   onChatRequestIdChange?: (requestId: string | null) => void;
@@ -69,11 +82,16 @@ export function ClientMessagesPanel({
   requests,
   guards,
   currentUser,
+  accountStatus,
+  approved,
   jobChatThreads,
   jobChatMessages,
+  clientMessages,
   supportTickets,
   onSendJobChatMessage,
   onSendSupportMessage,
+  onSendClientMessage,
+  onRefreshClientMessages,
   initialChatRequestId = null,
   initialChatOpen = false,
   onChatRequestIdChange,
@@ -88,21 +106,35 @@ export function ClientMessagesPanel({
 }: ClientMessagesPanelProps) {
   const { formFactor } = useDevice();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
-  const [chatRequestId, setChatRequestId] = useState<string | null>(initialChatRequestId);
-  const [chatOpen, setChatOpen] = useState(initialChatOpen);
-  const [supportTicketId, setSupportTicketId] = useState<string | null>(initialSupportTicketId);
 
-  const [activeTab, setActiveTab] = useState<InboxTab>(() =>
-    initialSupportTicketId ? 'support' : 'jobs'
-  );
+  const [activeView, setActiveView] = useState<ActiveView>(() => {
+    if (initialChatOpen && initialChatRequestId) {
+      return { kind: 'job', requestId: initialChatRequestId };
+    }
+    if (initialSupportTicketId) {
+      return { kind: 'support', ticketId: initialSupportTicketId };
+    }
+    return { kind: 'list' };
+  });
+
+  const [activeTab, setActiveTab] = useState<InboxTab>(() => {
+    if (initialChatOpen || initialChatRequestId) return 'jobs';
+    if (initialSupportTicketId) return 'support';
+    return 'chats';
+  });
 
   useEffect(() => {
-    setChatRequestId(initialChatRequestId);
-    setChatOpen(initialChatOpen);
+    if (!initialChatRequestId && !initialChatOpen) return;
+    setActiveTab('jobs');
+    if (initialChatOpen && initialChatRequestId) {
+      setActiveView({ kind: 'job', requestId: initialChatRequestId });
+    }
   }, [initialChatRequestId, initialChatOpen]);
 
   useEffect(() => {
-    setSupportTicketId(initialSupportTicketId);
+    if (!initialSupportTicketId) return;
+    setActiveTab('support');
+    setActiveView({ kind: 'support', ticketId: initialSupportTicketId });
   }, [initialSupportTicketId]);
 
   const requestById = useMemo(() => new Map(requests.map((r) => [r.id, r])), [requests]);
@@ -111,7 +143,23 @@ export function ClientMessagesPanel({
     [supportTickets, currentUser]
   );
 
-  const allRows = useMemo(
+  const clientChannelUpdatedAt = useMemo(() => {
+    const sorted = sortedClientMessages(clientMessages);
+    return sorted[sorted.length - 1]?.createdAt ?? new Date(0).toISOString();
+  }, [clientMessages]);
+
+  const communityRow: InboxRow = {
+    id: 'client-community',
+    channel: 'client-community',
+    title: 'Client chat',
+    subtitle: '',
+    preview: '',
+    updatedAt: clientChannelUpdatedAt,
+    badge: 'Community',
+    badgeTone: 'primary',
+  };
+
+  const jobRows = useMemo(
     () =>
       buildClientInboxRows({
         currentUser,
@@ -120,74 +168,81 @@ export function ClientMessagesPanel({
         jobChatThreads,
         jobChatMessages,
         supportTickets,
-      }),
+      }).filter((r) => r.channel === 'job'),
     [currentUser, requests, guards, jobChatThreads, jobChatMessages, supportTickets]
   );
 
-  const jobRows    = useMemo(() => allRows.filter((r) => r.channel === 'job'), [allRows]);
   const supportRowsAll = useMemo(
-    () => allRows.filter((r) => r.channel === 'support' || r.channel === 'report'),
-    [allRows]
+    () =>
+      buildClientInboxRows({
+        currentUser,
+        requests,
+        guards,
+        jobChatThreads,
+        jobChatMessages,
+        supportTickets,
+      }).filter((r) => r.channel === 'support' || r.channel === 'report'),
+    [currentUser, requests, guards, jobChatThreads, jobChatMessages, supportTickets]
   );
 
-  const tabRows = activeTab === 'jobs' ? jobRows : supportRowsAll;
-
-  // ── Selection helpers ──────────────────────────────────
-  const openJobChat = (requestId: string) => {
-    setSupportTicketId(null);
-    onSupportTicketIdChange?.(null);
-    setChatRequestId(requestId);
-    setChatOpen(true);
-    onChatRequestIdChange?.(requestId);
-    onChatOpenChange?.(true);
-  };
-
-  const closeJobChat = () => {
-    setChatOpen(false);
-    setChatRequestId(null);
-    onChatRequestIdChange?.(null);
-    onChatOpenChange?.(false);
-  };
-
-  const openSupportThread = (ticketId: string) => {
-    closeJobChat();
-    setSupportTicketId(ticketId);
-    onSupportTicketIdChange?.(ticketId);
-  };
-
-  const closeSupportThread = () => {
-    setSupportTicketId(null);
-    onSupportTicketIdChange?.(null);
-  };
+  const tabRows = useMemo((): InboxRow[] => {
+    switch (activeTab) {
+      case 'chats': return [communityRow];
+      case 'jobs': return jobRows;
+      case 'support': return supportRowsAll;
+    }
+  }, [activeTab, communityRow, jobRows, supportRowsAll]);
 
   const openRow = (row: InboxRow) => {
-    if (row.requestId) { openJobChat(row.requestId); return; }
-    if (row.ticketId)  { openSupportThread(row.ticketId); }
+    if (row.channel === 'client-community') {
+      setActiveView({ kind: 'client-channel' });
+      onChatRequestIdChange?.(null);
+      onChatOpenChange?.(false);
+      onSupportTicketIdChange?.(null);
+      return;
+    }
+    if (row.requestId) {
+      setActiveView({ kind: 'job', requestId: row.requestId });
+      onChatRequestIdChange?.(row.requestId);
+      onChatOpenChange?.(true);
+      onSupportTicketIdChange?.(null);
+      return;
+    }
+    if (row.ticketId) {
+      setActiveView({ kind: 'support', ticketId: row.ticketId });
+      onSupportTicketIdChange?.(row.ticketId);
+      onChatRequestIdChange?.(null);
+      onChatOpenChange?.(false);
+    }
   };
 
-  const clearSelection = () => { closeJobChat(); closeSupportThread(); };
+  const backToList = () => {
+    setActiveView({ kind: 'list' });
+    onChatOpenChange?.(false);
+    onChatRequestIdChange?.(null);
+    onSupportTicketIdChange?.(null);
+  };
 
-  const chatRequest  = chatRequestId ? requestById.get(chatRequestId) ?? null : null;
-  const activeTicket = supportTicketId
-    ? myTickets.find((t) => t.id === supportTicketId) ?? null
-    : null;
+  const isRowSelected = (row: InboxRow): boolean => {
+    if (row.channel === 'client-community' && activeView.kind === 'client-channel') return true;
+    if (row.requestId && activeView.kind === 'job' && activeView.requestId === row.requestId) return true;
+    if (row.ticketId && activeView.kind === 'support' && activeView.ticketId === row.ticketId) return true;
+    return false;
+  };
 
-  const hasSelection = !!(chatOpen && chatRequest) || !!activeTicket;
+  const hasSelection = activeView.kind !== 'list';
   const embedHeaderInShell = !splitView && hasSelection;
 
   useEffect(() => {
     onDetailOpenChange?.(formFactor === 'mobile' && hasSelection);
   }, [formFactor, hasSelection, onDetailOpenChange]);
 
-  const isRowSelected = (row: InboxRow) => {
-    if (row.requestId && chatOpen && chatRequestId === row.requestId) return true;
-    if (row.ticketId && supportTicketId === row.ticketId) return true;
-    return false;
-  };
-
   const renderInboxIcon = (row: InboxRow) => {
+    if (row.channel === 'client-community') {
+      return <MessagesSquare className="w-5 h-5 text-brand-primary" />;
+    }
     if (row.channel === 'job') {
-      const req   = row.requestId ? requestById.get(row.requestId) : null;
+      const req = row.requestId ? requestById.get(row.requestId) : null;
       const guard = req ? guardForRequest(guards, req) : null;
       return (
         <ProfileAvatar
@@ -202,30 +257,30 @@ export function ClientMessagesPanel({
     return <LifeBuoy className="w-5 h-5 shrink-0 text-brand-primary" strokeWidth={1.5} />;
   };
 
-  // ── Header: inbox tabs (title lives in AppScreenHeader) ──
   const header = (
     <div className="app-inbox-tabs" role="tablist">
-        {(
-          [
-            { id: 'jobs'    as InboxTab, label: 'Jobs',    count: jobRows.length,       icon: <Briefcase  className="w-3.5 h-3.5" strokeWidth={2} /> },
-            { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy  className="w-3.5 h-3.5" strokeWidth={2} /> },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.icon}
-            {tab.label}
-            {tab.count > 0 && (
-              <span className="app-inbox-tab-badge">{tab.count}</span>
-            )}
-          </button>
-        ))}
+      {(
+        [
+          { id: 'chats' as InboxTab, label: 'Chats', count: 1, icon: <MessagesSquare className="w-3.5 h-3.5" strokeWidth={2} /> },
+          { id: 'jobs' as InboxTab, label: 'Jobs', count: jobRows.length, icon: <Briefcase className="w-3.5 h-3.5" strokeWidth={2} /> },
+          { id: 'support' as InboxTab, label: 'Support', count: supportRowsAll.length, icon: <LifeBuoy className="w-3.5 h-3.5" strokeWidth={2} /> },
+        ] as const
+      ).map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === tab.id}
+          className={`app-inbox-tab${activeTab === tab.id ? ' app-inbox-tab-active' : ''}`}
+          onClick={() => setActiveTab(tab.id)}
+        >
+          {tab.icon}
+          {tab.label}
+          {tab.count > 0 && (
+            <span className="app-inbox-tab-badge">{tab.count}</span>
+          )}
+        </button>
+      ))}
     </div>
   );
 
@@ -236,29 +291,43 @@ export function ClientMessagesPanel({
     let override: React.ReactNode | null = null;
 
     if (embedHeaderInShell) {
-      if (chatOpen && chatRequest) {
+      if (activeView.kind === 'client-channel') {
         override = (
           <AppChatHeader
-            title={chatRequest.title}
-            subtitle={chatRequest.location ?? undefined}
-            onBack={clearSelection}
+            title="Client chat"
+            onBack={backToList}
             trailing={shellHeaderTrailing}
           />
         );
-      } else if (activeTicket) {
-        const isReport = activeTicket.kind === 'report';
-        const threadSubtitle = isReport
-          ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
-          : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
+      } else if (activeView.kind === 'job') {
+        const chatRequest = requestById.get(activeView.requestId);
+        if (chatRequest) {
+          override = (
+            <AppChatHeader
+              title={chatRequest.title}
+              subtitle={chatRequest.location ?? undefined}
+              onBack={backToList}
+              trailing={shellHeaderTrailing}
+            />
+          );
+        }
+      } else if (activeView.kind === 'support') {
+        const ticket = myTickets.find((t) => t.id === activeView.ticketId);
+        if (ticket) {
+          const isReport = ticket.kind === 'report';
+          const threadSubtitle = isReport
+            ? `${categoryLabel(ticket.category)} · ${supportStatusLabel(ticket)}`
+            : `${categoryLabel(ticket.category)} · ${SUPPORT_STATUS_LABEL[ticket.status]}`;
 
-        override = (
-          <AppChatHeader
-            title={activeTicket.subject}
-            subtitle={threadSubtitle}
-            onBack={clearSelection}
-            trailing={shellHeaderTrailing}
-          />
-        );
+          override = (
+            <AppChatHeader
+              title={ticket.subject}
+              subtitle={threadSubtitle}
+              onBack={backToList}
+              trailing={shellHeaderTrailing}
+            />
+          );
+        }
       }
     }
 
@@ -270,13 +339,12 @@ export function ClientMessagesPanel({
     activeTab,
     jobRows.length,
     supportRowsAll.length,
-    chatOpen,
-    chatRequest,
-    activeTicket,
+    activeView,
+    requestById,
+    myTickets,
     shellHeaderTrailing,
   ]);
 
-  // ── List: filtered by tab ──────────────────────────────
   const list = (
     <>
       {activeTab === 'support' && (
@@ -290,12 +358,14 @@ export function ClientMessagesPanel({
         <div className="app-inbox-tab-empty">
           <MessageCircle className="app-inbox-tab-empty-icon w-10 h-10" strokeWidth={1.5} />
           <p className="app-inbox-tab-empty-title">
-            {activeTab === 'jobs' ? 'No job chats yet' : 'No support conversations'}
+            {activeTab === 'jobs' ? 'No job chats yet' : activeTab === 'support' ? 'No support conversations' : 'No conversations yet'}
           </p>
           <p className="app-inbox-tab-empty-hint">
             {activeTab === 'jobs'
               ? 'Job chats appear here once a guard is assigned to your booking.'
-              : 'Use the buttons above to contact support or file a report.'}
+              : activeTab === 'support'
+              ? 'Use the buttons above to contact support or file a report.'
+              : 'Community messages will appear here.'}
           </p>
         </div>
       ) : (
@@ -322,68 +392,109 @@ export function ClientMessagesPanel({
     </>
   );
 
-  // ── Detail view ────────────────────────────────────────
+  const clientRecord = { accountStatus, approved };
+  const canPostClientChat = canPostToClientChat(currentUser, clientRecord);
+
   const detailView = (() => {
-    if (chatOpen && chatRequest) {
+    if (activeView.kind === 'client-channel') {
       return (
         <div className="h-full flex flex-col min-h-0 app-full-page-screen">
-          <JobChatPanel
-            request={chatRequest}
-            thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
-            messages={jobChatMessages}
-            currentUser={currentUser}
-            onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
-            onBack={clearSelection}
-            hideBackOnDesktop
-            hideShellHeader={embedHeaderInShell}
-          />
-        </div>
-      );
-    }
-
-    if (activeTicket) {
-      const isReport = activeTicket.kind === 'report';
-      const threadSubtitle = isReport
-        ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
-        : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
-
-      return (
-        <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
           {!embedHeaderInShell && (
             <AppChatHeader
-              title={activeTicket.subject}
-              subtitle={threadSubtitle}
-              onBack={clearSelection}
+              title="Client chat"
+              subtitle="All active clients and staff"
+              onBack={backToList}
               hideBackOnDesktop
             />
           )}
           <div className="flex-1 min-h-0">
             <ChatThreadPanel
-              messages={activeTicket.messages.map((msg) => ({
-                id: msg.id,
-                senderId: msg.senderId,
-                senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
-                senderRole: msg.senderRole,
-                body: msg.body,
-                createdAt: msg.createdAt,
-              }))}
+              messages={sortedClientMessages(clientMessages)}
               currentUserId={currentUser.id}
-              onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
-              placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
-              readOnly={activeTicket.status === 'resolved'}
-              readOnlyMessage={
-                isReport
-                  ? 'This report is closed. File a new report if you need further help.'
-                  : 'This conversation is resolved. Contact support again if you need more help.'
-              }
+              onSend={canPostClientChat ? onSendClientMessage : undefined}
+              placeholder="Message the client community…"
+              teamChat
+              clientChatLabels
+              readOnly={!canPostClientChat}
+              readOnlyMessage="Client chat opens once your account is active on Guardr."
             />
           </div>
         </div>
       );
     }
 
+    if (activeView.kind === 'job') {
+      const chatRequest = requestById.get(activeView.requestId);
+      if (chatRequest) {
+        return (
+          <div className="h-full flex flex-col min-h-0 app-full-page-screen">
+            <JobChatPanel
+              request={chatRequest}
+              thread={threadForRequest(jobChatThreads, chatRequest.id) ?? null}
+              messages={jobChatMessages}
+              currentUser={currentUser}
+              onSend={(body) => onSendJobChatMessage(chatRequest.id, body)}
+              onBack={backToList}
+              hideBackOnDesktop
+              hideShellHeader={embedHeaderInShell}
+            />
+          </div>
+        );
+      }
+    }
+
+    if (activeView.kind === 'support') {
+      const activeTicket = myTickets.find((t) => t.id === activeView.ticketId);
+      if (activeTicket) {
+        const isReport = activeTicket.kind === 'report';
+        const threadSubtitle = isReport
+          ? `${categoryLabel(activeTicket.category)} · ${supportStatusLabel(activeTicket)}`
+          : `${categoryLabel(activeTicket.category)} · ${SUPPORT_STATUS_LABEL[activeTicket.status]}`;
+
+        return (
+          <div className="h-full flex flex-col bg-brand-bg min-h-0 app-full-page-screen">
+            {!embedHeaderInShell && (
+              <AppChatHeader
+                title={activeTicket.subject}
+                subtitle={threadSubtitle}
+                onBack={backToList}
+                hideBackOnDesktop
+              />
+            )}
+            <div className="flex-1 min-h-0">
+              <ChatThreadPanel
+                messages={activeTicket.messages.map((msg) => ({
+                  id: msg.id,
+                  senderId: msg.senderId,
+                  senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+                  senderRole: msg.senderRole,
+                  body: msg.body,
+                  createdAt: msg.createdAt,
+                }))}
+                currentUserId={currentUser.id}
+                onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
+                placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
+                readOnly={activeTicket.status === 'resolved'}
+                readOnlyMessage={
+                  isReport
+                    ? 'This report is closed. File a new report if you need further help.'
+                    : 'This conversation is resolved. Contact support again if you need more help.'
+                }
+              />
+            </div>
+          </div>
+        );
+      }
+    }
+
     return null;
   })();
+
+  useEffect(() => {
+    if (activeView.kind === 'client-channel') {
+      void onRefreshClientMessages?.();
+    }
+  }, [activeView.kind, onRefreshClientMessages]);
 
   return (
     <div className="app-messages-hub h-full min-h-0">
@@ -391,10 +502,10 @@ export function ClientMessagesPanel({
         header={header}
         list={list}
         detail={detailView ?? <div />}
-        hasSelection={hasSelection}
+        hasSelection={hasSelection && !!detailView}
         shellInboxHeader
         emptyDetailTitle="Your conversations"
-        emptyDetailHint="Select a job chat or support thread from the inbox"
+        emptyDetailHint="Select client chat, a job thread, or support from the inbox"
       />
     </div>
   );

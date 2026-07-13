@@ -87,6 +87,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Guard chat',
     body: event.body || 'New message from another guard',
   }),
+  client_message: (event) => ({
+    title: 'Client chat',
+    body: event.body || 'New message from another client',
+  }),
   job_submitted: (event) => ({
     title: 'New job request',
     body: event.body || 'A client submitted a job awaiting staff review',
@@ -316,6 +320,10 @@ export async function buildEventDispatchPayloads(
 
   if (event.type === 'guard_message') {
     return [{ ...payload, role: 'guard' }];
+  }
+
+  if (event.type === 'client_message') {
+    return [{ ...payload, role: 'client' }];
   }
 
   if (

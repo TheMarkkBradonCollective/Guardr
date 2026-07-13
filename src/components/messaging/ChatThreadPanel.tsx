@@ -4,6 +4,7 @@ import { PlatformRole } from '../../types';
 import { isStaffSender, senderLabel } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
 import { guardChatSenderLabel } from '../../lib/guardMessenger';
+import { clientChatSenderLabel } from '../../lib/clientMessenger';
 import { ROLE_LABELS } from '../../lib/permissions';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone, AppChatSender, ChatReplyContext } from '../ui/app/AppPrimitives';
@@ -103,6 +104,8 @@ interface ChatThreadPanelProps {
   staffChatLabels?: boolean;
   /** Guard chat labels: Guardr · Guard · Name */
   guardChatLabels?: boolean;
+  /** Client chat labels: Guardr · Role · Name */
+  clientChatLabels?: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -133,21 +136,25 @@ function bubbleTone(
 function messageSenderLabel(
   msg: ChatBubbleMessage,
   staffChatLabels: boolean,
-  guardChatLabels: boolean
+  guardChatLabels: boolean,
+  clientChatLabels: boolean
 ): string {
   if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName);
   if (guardChatLabels) return guardChatSenderLabel(msg.senderRole, msg.senderName);
+  if (clientChatLabels) return clientChatSenderLabel(msg.senderRole, msg.senderName);
   return senderLabel(msg.senderRole, msg.senderName);
 }
 
 function messageSender(
   msg: ChatBubbleMessage,
   staffChatLabels: boolean,
-  guardChatLabels: boolean
+  guardChatLabels: boolean,
+  clientChatLabels: boolean
 ): AppChatSender | undefined {
-  if (staffChatLabels || guardChatLabels) {
+  if (staffChatLabels || guardChatLabels || clientChatLabels) {
     const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
-    const displayName = msg.senderName.trim() || (guardChatLabels ? 'Guard' : 'Staff');
+    const displayName =
+      msg.senderName.trim() || (guardChatLabels ? 'Guard' : clientChatLabels ? 'Client' : 'Staff');
     return { name: displayName, roleLabel, showBrand: true };
   }
   if (isStaffSender(msg.senderRole)) {
@@ -174,6 +181,7 @@ export function ChatThreadPanel({
   teamChat = false,
   staffChatLabels = false,
   guardChatLabels = false,
+  clientChatLabels = false,
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -264,11 +272,11 @@ export function ChatThreadPanel({
               const isStaff = tone === 'staff';
 
               const structuredSender = firstInGrp
-                ? messageSender(msg, staffChatLabels, guardChatLabels)
+                ? messageSender(msg, staffChatLabels, guardChatLabels, clientChatLabels)
                 : undefined;
               const label =
                 firstInGrp && !structuredSender && !mine
-                  ? messageSenderLabel(msg, staffChatLabels, guardChatLabels)
+                  ? messageSenderLabel(msg, staffChatLabels, guardChatLabels, clientChatLabels)
                   : undefined;
 
               const groupClass =

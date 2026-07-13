@@ -107,6 +107,7 @@ interface StaffDashboardProps {
   teamChatMessages?: TeamChatMessage[];
   staffMessages?: StaffMessage[];
   guardMessages?: import('../types').GuardMessage[];
+  clientMessages?: import('../types').ClientMessage[];
   payments?: Payment[];
   guardPayoutInvoices?: GuardPayoutInvoice[];
   onUpdateGuardUserStatus: (guardId: string, status: 'active' | 'suspended' | 'blocked') => Promise<void>;
@@ -222,6 +223,7 @@ interface StaffDashboardProps {
   ) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
   onSendGuardMessage?: (body: string) => void | Promise<void>;
+  onSendClientMessage?: (body: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
   onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
@@ -265,6 +267,7 @@ export function StaffDashboard({
   teamChatMessages = [],
   staffMessages = [],
   guardMessages = [],
+  clientMessages = [],
   payments = [],
   guardPayoutInvoices = [],
   onUpdateGuardUserStatus,
@@ -339,6 +342,7 @@ export function StaffDashboard({
   onResolveDispute,
   onSendStaffMessage,
   onSendGuardMessage,
+  onSendClientMessage,
   onRefreshStaffMessages,
   onSendJobChat,
   onSendTeamChatMessage,
@@ -700,12 +704,14 @@ export function StaffDashboard({
               teamChatMessages={teamChatMessages}
               staffMessages={staffMessages}
               guardMessages={guardMessages}
+              clientMessages={clientMessages}
               supportTickets={supportTickets}
               currentUser={currentUser}
               onSendJobChat={onSendJobChat}
               onSendTeamChatMessage={onSendTeamChatMessage}
               onSendStaffMessage={onSendStaffMessage}
               onSendGuardMessage={onSendGuardMessage}
+              onSendClientMessage={onSendClientMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
               onDeleteSupportTicket={onDeleteSupportTicket}

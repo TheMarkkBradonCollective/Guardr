@@ -78,6 +78,10 @@ var EVENT_DEFAULTS = {
     title: "Guard chat",
     body: event.body || "New message from another guard"
   }),
+  client_message: (event) => ({
+    title: "Client chat",
+    body: event.body || "New message from another client"
+  }),
   job_submitted: (event) => ({
     title: "New job request",
     body: event.body || "A client submitted a job awaiting staff review"
@@ -254,6 +258,9 @@ async function buildEventDispatchPayloads(db, event) {
   }
   if (event.type === "guard_message") {
     return [{ ...payload, role: "guard" }];
+  }
+  if (event.type === "client_message") {
+    return [{ ...payload, role: "client" }];
   }
   if (event.type === "guard_checkin" || event.type === "guard_clockout" || event.type === "guard_arrived" || event.type === "guard_break_start" || event.type === "guard_break_end" || event.type === "guard_left_site") {
     const payloads = [{ ...payload, role: "dispatch" }];

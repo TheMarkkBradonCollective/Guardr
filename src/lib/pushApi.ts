@@ -119,6 +119,7 @@ export type PushEventType =
   | 'job_chat_message'
   | 'staff_message'
   | 'guard_message'
+  | 'client_message'
   | 'job_submitted'
   | 'job_open_to_guards'
   | 'guard_application'

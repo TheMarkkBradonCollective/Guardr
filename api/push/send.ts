@@ -57,6 +57,8 @@ function resolveNotificationUrl(type, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      return "/client/messages";
     case "job_submitted":
       return options.requestId ? `/staff/jobs?j=${encodeURIComponent(options.requestId)}` : "/staff/approvals?aq=job-offers";
     case "guard_application":
@@ -170,6 +172,9 @@ function resolveNotificationUrlForRole(type, role, options = {}) {
       return "/staff/messages?mtab=team";
     case "guard_message":
       return "/guard/guard-chat";
+    case "client_message":
+      if (role === "client") return "/client/messages";
+      return "/staff/messages?mtab=team";
     case "support_ticket":
     case "support_ticket_status":
       if (role === "client" && options.requestId) {
@@ -251,6 +256,8 @@ function rolesForNotificationType(type) {
       return ["dispatch", "admin"];
     case "guard_message":
       return ["guard"];
+    case "client_message":
+      return ["client"];
     case "job_submitted":
     case "guard_pending_approval":
     case "client_pending_approval":
@@ -314,6 +321,7 @@ var PREF_COLUMN = {
   job_chat_message: "job_chat_message",
   staff_message: "staff_message",
   guard_message: "guard_message",
+  client_message: "client_message",
   job_submitted: "job_submitted",
   job_open_to_guards: "job_open_to_guards",
   guard_application: "guard_application",

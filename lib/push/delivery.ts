@@ -23,6 +23,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   job_chat_message: 'job_chat_message',
   staff_message: 'staff_message',
   guard_message: 'guard_message',
+  client_message: 'client_message',
   job_submitted: 'job_submitted',
   job_open_to_guards: 'job_open_to_guards',
   guard_application: 'guard_application',

@@ -15,6 +15,7 @@ const SYNC_TABLES = [
   'job_chat_messages',
   'staff_messages',
   'guard_messages',
+  'client_messages',
 ] as const;
 
 const DEBOUNCE_MS = 300;

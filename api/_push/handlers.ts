@@ -180,7 +180,7 @@ export async function dispatchPushEvent(
   }
 
   const excludeUserId =
-    event.type === 'guard_message' || event.type === 'staff_message' ? session?.userId : undefined;
+    event.type === 'guard_message' || event.type === 'client_message' || event.type === 'staff_message' ? session?.userId : undefined;
 
   const payloads = await buildEventDispatchPayloads(db, {
     ...event,

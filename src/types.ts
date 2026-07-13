@@ -1007,6 +1007,15 @@ export interface GuardMessage {
   createdAt: string;
 }
 
+export interface ClientMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: PlatformRole;
+  body: string;
+  createdAt: string;
+}
+
 export interface NotificationPreferences {
   userId: string;
   assignment: boolean;
@@ -1022,6 +1031,7 @@ export interface NotificationPreferences {
   jobChatMessage: boolean;
   staffMessage: boolean;
   guardMessage: boolean;
+  clientMessage: boolean;
   jobSubmitted: boolean;
   jobOpenToGuards: boolean;
   guardApplication: boolean;

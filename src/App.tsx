@@ -26,6 +26,7 @@ import {
   TeamChatMessage,
   StaffMessage,
   GuardMessage,
+  ClientMessage,
   GuardInsurancePolicy,
   GuardWeaponGearId,
   GuardStandingCrewMember,
@@ -272,6 +273,16 @@ import {
 } from './lib/guardMessenger';
 import { fetchGuardMessagesFromApi, postGuardMessageToApi } from './lib/guardMessagesApi';
 import {
+  buildClientMessage,
+  canPostToClientChat,
+  canReadClientChat,
+  loadClientMessagesFromStorage,
+  mergeClientMessages,
+  appendClientMessage,
+  saveClientMessagesToStorage,
+} from './lib/clientMessenger';
+import { fetchClientMessagesFromApi, postClientMessageToApi } from './lib/clientMessagesApi';
+import {
   buildStaffMessage,
   loadStaffMessagesFromStorage,
   mergeStaffMessages,
@@ -496,6 +507,7 @@ export default function App() {
   const [teamChatMessages, setTeamChatMessages] = useState<TeamChatMessage[]>(() => loadTeamChatMessagesFromStorage());
   const [staffMessages, setStaffMessages] = useState<StaffMessage[]>(() => loadStaffMessagesFromStorage());
   const [guardMessages, setGuardMessages] = useState<GuardMessage[]>(() => loadGuardMessagesFromStorage());
+  const [clientMessages, setClientMessages] = useState<ClientMessage[]>(() => loadClientMessagesFromStorage());
   const missedCheckinNotifiedRef = useRef<Set<string>>(new Set());
   const [guardPayoutInvoices, setGuardPayoutInvoices] = useState<GuardPayoutInvoice[]>(() =>
     loadGuardPayoutInvoicesFromStorage()
@@ -1526,6 +1538,7 @@ export default function App() {
       const { data: dbTeamChatMessages, error: teamChatMessagesErr } = await supabase.from('team_chat_messages').select('*');
       const { data: dbStaffMessages, error: staffMessagesErr } = await supabase.from('staff_messages').select('*');
       const { data: dbGuardMessages, error: guardMessagesErr } = await supabase.from('guard_messages').select('*');
+      const { data: dbClientMessages, error: clientMessagesErr } = await supabase.from('client_messages').select('*');
       const { data: dbPayoutInvoices, error: payoutInvoicesErr } = await supabase
         .from('guard_payout_invoices')
         .select('*');
@@ -1581,6 +1594,9 @@ export default function App() {
       }
       if (guardMessagesErr) {
         console.warn('Guard messages load (run migration if missing):', guardMessagesErr);
+      }
+      if (clientMessagesErr) {
+        console.warn('Client messages load (run migration if missing):', clientMessagesErr);
       }
       if (payoutInvoicesErr) {
         console.warn('Guard payout invoices load (run migration if missing):', payoutInvoicesErr);
@@ -2021,6 +2037,22 @@ export default function App() {
         });
       }
 
+      if (!clientMessagesErr && dbClientMessages != null) {
+        const mappedClientMessages = dbClientMessages.map((m: any) => ({
+          id: m.id,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderRole: m.sender_role,
+          body: m.body,
+          createdAt: m.created_at,
+        }));
+        setClientMessages((prev) => {
+          const next = mergeClientMessages(prev, mappedClientMessages);
+          saveClientMessagesToStorage(next);
+          return next;
+        });
+      }
+
       if (!platformSettingsErr && dbPlatformSettings) {
         const loaded = platformSettingsFromDbRow(dbPlatformSettings);
         setPlatformSettings(loaded);
@@ -2076,6 +2108,22 @@ export default function App() {
     createdAt: m.created_at,
   });
 
+  const mapDbClientMessageRow = (m: {
+    id: string;
+    sender_id: string;
+    sender_name: string;
+    sender_role: string;
+    body: string;
+    created_at: string;
+  }): ClientMessage => ({
+    id: m.id,
+    senderId: m.sender_id,
+    senderName: m.sender_name,
+    senderRole: m.sender_role as ClientMessage['senderRole'],
+    body: m.body,
+    createdAt: m.created_at,
+  });
+
   const refreshGuardMessages = useCallback(async () => {
     if (!currentUser || !canReadGuardChat(currentUser)) return;
 
@@ -2119,6 +2167,50 @@ export default function App() {
 
   const refreshGuardMessagesRef = useRef(refreshGuardMessages);
   refreshGuardMessagesRef.current = refreshGuardMessages;
+
+  const refreshClientMessages = useCallback(async () => {
+    if (!currentUser || !canReadClientChat(currentUser)) return;
+
+    const applyRemote = (remote: ClientMessage[]) => {
+      setClientMessages((prev) => {
+        const next = mergeClientMessages(prev, remote);
+        if (
+          next.length === prev.length &&
+          next.every((message, index) => message.id === prev[index]?.id)
+        ) {
+          return prev;
+        }
+        saveClientMessagesToStorage(next);
+        return next;
+      });
+    };
+
+    if (isDbConnected) {
+      try {
+        const { data, error } = await supabase
+          .from('client_messages')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && data) {
+          applyRemote(data.map((row: any) => mapDbClientMessageRow(row)));
+          return;
+        }
+        if (error) console.warn('Client messages client refresh:', error.message);
+      } catch (err) {
+        console.warn('Client messages client refresh:', err);
+      }
+    }
+
+    try {
+      const remote = await fetchClientMessagesFromApi(currentUser);
+      applyRemote(remote);
+    } catch (err) {
+      console.warn('Client messages API refresh:', err);
+    }
+  }, [currentUser, isDbConnected]);
+
+  const refreshClientMessagesRef = useRef(refreshClientMessages);
+  refreshClientMessagesRef.current = refreshClientMessages;
 
   const refreshStaffMessages = useCallback(async () => {
     if (!currentUser || !isStaffRole(currentUser.role)) return;
@@ -2271,6 +2363,18 @@ export default function App() {
         });
         if (isNew && !fromSelf) void playWalkieChirpSound();
       },
+      onClientMessage: (message) => {
+        const fromSelf = message.senderId === currentUser?.id;
+        let isNew = false;
+        setClientMessages((prev) => {
+          const next = appendClientMessage(prev, message);
+          if (next === prev) return prev;
+          isNew = true;
+          saveClientMessagesToStorage(next);
+          return next;
+        });
+        if (isNew && !fromSelf) void playWalkieChirpSound();
+      },
       onSupportMessage: (message) => {
         if (shouldSkipRealtimeSync()) return;
         const fromSelf = message.senderId === currentUser?.id;
@@ -2338,6 +2442,10 @@ export default function App() {
       }
       if ((guardTab === 'messages' || guardTab === 'guardChat') && currentUser?.role === 'guard') {
         void refreshGuardMessagesRef.current();
+        return;
+      }
+      if (clientView === 'messages' && currentUser?.role === 'client') {
+        void refreshClientMessagesRef.current();
         return;
       }
       if (!shouldSkipRealtimeSync()) {
@@ -8979,6 +9087,9 @@ export default function App() {
       ? verifiedGuards.find((g) => g.id === user.id) ?? guards.find((g) => g.id === user.id) ?? null
       : null;
 
+  const clientRecordForUser = (user: SessionUser) =>
+    user.role === 'client' ? clients.find((c) => c.id === user.id) ?? null : null;
+
   const persistGuardMessageToDb = async (message: GuardMessage) => {
     let persisted = false;
     if (isDbConnected) {
@@ -9019,6 +9130,50 @@ export default function App() {
     await persistGuardMessageToDb(message);
     void reportPushEvent(currentUser, {
       type: 'guard_message',
+      body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
+    });
+  };
+
+  const persistClientMessageToDb = async (message: ClientMessage) => {
+    let persisted = false;
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from('client_messages').upsert({
+          id: message.id,
+          sender_id: message.senderId,
+          sender_name: message.senderName,
+          sender_role: message.senderRole,
+          body: message.body,
+          created_at: message.createdAt,
+        });
+        if (!error) persisted = true;
+        else console.warn('Client message DB sync:', error);
+      } catch (e) {
+        console.warn('Client message DB sync:', e);
+      }
+    }
+    if (!persisted && currentUser && canPostToClientChat(currentUser, clientRecordForUser(currentUser))) {
+      try {
+        await postClientMessageToApi(currentUser, message);
+      } catch (e) {
+        console.warn('Client message API sync:', e);
+      }
+    }
+  };
+
+  const handleSendClientMessage = async (body: string) => {
+    if (!currentUser || !body.trim()) return;
+    if (!canPostToClientChat(currentUser, clientRecordForUser(currentUser))) return;
+    const message = buildClientMessage(currentUser, body);
+    beginLocalMutation();
+    setClientMessages((prev) => {
+      const next = [...prev, message];
+      saveClientMessagesToStorage(next);
+      return next;
+    });
+    await persistClientMessageToDb(message);
+    void reportPushEvent(currentUser, {
+      type: 'client_message',
       body: `${currentUser.name}: ${body.trim().slice(0, 120)}`,
     });
   };
@@ -9961,7 +10116,10 @@ export default function App() {
               currentUser={currentUser}
               jobChatThreads={jobChatThreads}
               jobChatMessages={jobChatMessages}
+              clientMessages={clientMessages}
               onSendJobChatMessage={handleSendJobChatMessage}
+              onSendClientMessage={handleSendClientMessage}
+              onRefreshClientMessages={refreshClientMessages}
               jobChatRequestId={jobChatRequestId}
               openJobChat={openJobChat}
               onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
@@ -10108,8 +10266,10 @@ export default function App() {
           teamChatMessages={teamChatMessages}
           staffMessages={staffMessages}
           guardMessages={guardMessages}
+          clientMessages={clientMessages}
           onSendStaffMessage={handleSendStaffMessage}
           onSendGuardMessage={handleSendGuardMessage}
+          onSendClientMessage={handleSendClientMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
           onSendTeamChatMessage={handleSendTeamChatMessage}

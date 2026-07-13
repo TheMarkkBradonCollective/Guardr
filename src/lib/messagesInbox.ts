@@ -14,7 +14,7 @@ import { isTeamChatEligible, isTeamChatReadOnly, threadForTeamRequest } from './
 import { guardHasJobTeamAssociation, getCrewDisplayName, isMultiGuardJob, teamRosterSummary } from './guardTeams';
 import { supportStatusLabel, ticketsForUser } from './support';
 
-export type InboxChannelKind = 'job' | 'team-crew' | 'support' | 'report' | 'guard-community' | 'staff-community';
+export type InboxChannelKind = 'job' | 'team-crew' | 'support' | 'report' | 'guard-community' | 'client-community' | 'staff-community';
 
 export type InboxRow = {
   id: string;
@@ -266,6 +266,7 @@ export function buildStaffInboxRows({
   supportTickets,
   staffMessagesUpdatedAt,
   guardMessagesUpdatedAt,
+  clientMessagesUpdatedAt,
 }: {
   requests: SecurityRequest[];
   guards: SecurityGuard[];
@@ -276,6 +277,7 @@ export function buildStaffInboxRows({
   supportTickets: SupportTicket[];
   staffMessagesUpdatedAt?: string;
   guardMessagesUpdatedAt?: string;
+  clientMessagesUpdatedAt?: string;
 }): InboxRow[] {
   const rows: InboxRow[] = [];
 
@@ -298,6 +300,17 @@ export function buildStaffInboxRows({
     preview: 'Community channel for active guards and staff',
     updatedAt: guardMessagesUpdatedAt ?? staffMessagesUpdatedAt ?? new Date(0).toISOString(),
     badge: 'Guards',
+    badgeTone: 'default',
+  });
+
+  rows.push({
+    id: 'client-community',
+    channel: 'client-community',
+    title: 'Client chat',
+    subtitle: 'All-clients channel',
+    preview: 'Community channel for active clients and staff',
+    updatedAt: clientMessagesUpdatedAt ?? staffMessagesUpdatedAt ?? new Date(0).toISOString(),
+    badge: 'Clients',
     badgeTone: 'default',
   });
 

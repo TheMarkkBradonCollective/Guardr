@@ -146,6 +146,18 @@ describe('buildEventDispatchPayloads', () => {
     assert.equal(payloads[0].excludeUserId, 'guard-sender');
   });
 
+  it('broadcasts client chat to all clients with sender exclusion support', async () => {
+    const payloads = await buildEventDispatchPayloads(mockDb(), {
+      type: 'client_message',
+      body: 'Hello clients',
+      excludeUserId: 'client-sender',
+    });
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].role, 'client');
+    assert.equal(payloads[0].excludeUserId, 'client-sender');
+  });
+
   it('targets guard trusted status to the guard recipient', async () => {
     const payloads = await buildEventDispatchPayloads(mockDb(), {
       type: 'guard_trusted_status',
