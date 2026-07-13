@@ -11,6 +11,9 @@ import { isPushEnabledLocally } from './pushLocalState';
 export const FCM_NATIVE_ENDPOINT_PREFIX = 'fcm-native:';
 const NATIVE_PUSH_TOKEN_KEY = 'guardr_native_push_token';
 
+export const NATIVE_FCM_NOT_CONFIGURED_MESSAGE =
+  'Push registration is not available in this app build yet. Add android/app/google-services.json from Firebase, set FCM_SERVER_KEY on the server, then rebuild the APK.';
+
 type PendingRegistration = {
   resolve: (token: string) => void;
   reject: (error: Error) => void;
@@ -21,6 +24,13 @@ let pendingRegistration: PendingRegistration | null = null;
 
 export function isNativePushPlatform(): boolean {
   return Capacitor.isNativePlatform();
+}
+
+/** True when this APK was built with Firebase google-services.json present. */
+export function isNativeFcmConfigured(): boolean {
+  const flag = (import.meta as ImportMeta & { env?: Record<string, string> }).env
+    ?.VITE_NATIVE_FCM_CONFIGURED;
+  return flag === 'true';
 }
 
 export function isFcmNativeEndpoint(endpoint: string): boolean {
@@ -107,7 +117,11 @@ export function initNativePushBridge(): void {
   });
 
   void PushNotifications.addListener('registrationError', (event: { error: string }) => {
-    rejectPendingRegistration(new Error(event.error || 'Push registration failed'));
+    const message = event.error || 'Push registration failed';
+    console.warn('[native-push] registration error:', message);
+    if (pendingRegistration) {
+      rejectPendingRegistration(new Error(message));
+    }
   });
 
   void PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
@@ -134,6 +148,10 @@ export async function requestNativePushPermission(): Promise<NotificationPermiss
 export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<string> {
   if (!isNativePushPlatform()) {
     throw new Error('Native push is only available in the Guardr app');
+  }
+
+  if (!isNativeFcmConfigured()) {
+    throw new Error(NATIVE_FCM_NOT_CONFIGURED_MESSAGE);
   }
 
   initNativePushBridge();
@@ -166,14 +184,18 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
 
     void PushNotifications.register().catch((error: unknown) => {
       clearTimeout(timeout);
-      pendingRegistration = null;
-      reject(error instanceof Error ? error : new Error('Push registration failed'));
+      if (pendingRegistration) {
+        pendingRegistration = null;
+        reject(error instanceof Error ? error : new Error('Push registration failed'));
+      } else {
+        console.warn('[native-push] register failed:', error);
+      }
     });
   });
 }
 
 export async function restoreNativePushIfEnabled(): Promise<void> {
-  if (!isNativePushPlatform() || !isPushEnabledLocally()) return;
+  if (!isNativePushPlatform() || !isPushEnabledLocally() || !isNativeFcmConfigured()) return;
 
   const permission = await getNativePushPermission();
   if (permission !== 'granted') return;

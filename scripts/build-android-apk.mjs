@@ -7,6 +7,7 @@
  *   public/download/guardr.apk  (copied for guardr.co/download)
  */
 import { copyFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -31,6 +32,13 @@ run('npm', ['run', 'generate:download-version']);
 
 console.log('→ Auditing APK / site parity…');
 run('node', ['scripts/audit-apk-parity.mjs']);
+
+if (!existsSync(path.join(ROOT, 'android/app/google-services.json'))) {
+  console.warn(
+    '\n⚠ android/app/google-services.json is missing — native push toggle will be disabled in this APK.',
+  );
+  console.warn('  Copy android/app/google-services.json.example and fill in Firebase values before shipping push.\n');
+}
 
 console.log('→ Generating Android launcher icons…');
 run('npm', ['run', 'generate:android-icons']);

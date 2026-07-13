@@ -14,7 +14,12 @@ import {
   unsubscribeFromNativePush,
 } from './nativePush';
 
-export { isNativePushPlatform, resolveNativePushToggleState } from './nativePush';
+export {
+  isNativePushPlatform,
+  isNativeFcmConfigured,
+  NATIVE_FCM_NOT_CONFIGURED_MESSAGE,
+  resolveNativePushToggleState,
+} from './nativePush';
 export { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 
 const VAPID_CACHE_KEY = 'guardr_vapid_public_key';

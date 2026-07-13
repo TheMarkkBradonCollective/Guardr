@@ -4,10 +4,12 @@ import type { NotificationPreferences, SessionUser } from '../../types';
 import {
   getExistingPushSubscription,
   getPushPermission,
+  isNativeFcmConfigured,
   isNativePushPlatform,
   isPushConfigured,
   isPushEnabledLocally,
   isPushSupported,
+  NATIVE_FCM_NOT_CONFIGURED_MESSAGE,
   resolveNativePushToggleState,
   setPushEnabledLocally,
   subscribeToPush,
@@ -123,6 +125,10 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
   const handleToggle = async () => {
     if (!supported || !configured || busy) return;
+    if (isNativePushPlatform() && !isNativeFcmConfigured()) {
+      setMessage(NATIVE_FCM_NOT_CONFIGURED_MESSAGE);
+      return;
+    }
     setBusy(true);
     setMessage(null);
     try {
@@ -204,6 +210,9 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   }
 
   const nativeApp = isNativePushPlatform();
+  const nativeFcmReady = !nativeApp || isNativeFcmConfigured();
+  const canTogglePush = configured && nativeFcmReady && !busy;
+  const osNotificationsAllowed = permission === 'granted';
 
   return (
     <AppFormSection className="space-y-4">
@@ -220,17 +229,24 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         </p>
       )}
 
-      {nativeApp && (
+      {nativeApp && !nativeFcmReady && (
+        <p className="text-xs text-amber-600 leading-relaxed">
+          {NATIVE_FCM_NOT_CONFIGURED_MESSAGE}
+        </p>
+      )}
+
+      {nativeApp && nativeFcmReady && (
         <p className="text-xs text-brand-text-muted leading-relaxed">
-          Guardr app notifications use Firebase Cloud Messaging. Enable the toggle below to register this device.
+          Guardr app notifications use Firebase Cloud Messaging. Android may already allow alerts — use the toggle
+          below to register this device with Guardr.
         </p>
       )}
 
       <div className="flex items-center justify-between gap-3 py-2 border-t border-brand-border">
-        <span className="text-sm font-medium">Enable push notifications</span>
+        <span className="text-sm font-medium">Register this device</span>
         <button
           type="button"
-          disabled={busy || (!configured && !nativeApp)}
+          disabled={!canTogglePush}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -325,15 +341,32 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         Test notification
       </button>
 
-      <p className="text-xs text-brand-text-muted">
-        {nativeApp ? 'App' : 'Browser'} permission: {permission}
-        {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
-        {permission === 'granted' && !serverSynced && enabled
-          ? ' — device subscribed locally but not synced to server yet.'
-          : ''}
-        {permission === 'granted' && !enabled && !busy && !message
-          ? ' — turn on the toggle above to register this device.'
-          : ''}
+      <p className="text-xs text-brand-text-muted leading-relaxed">
+        {nativeApp ? (
+          <>
+            Android notifications: {osNotificationsAllowed ? 'Allowed' : permission}
+            {' · '}
+            Guardr device registration: {enabled ? 'On' : 'Off'}
+            {!nativeFcmReady
+              ? ' — Firebase is not configured in this APK build.'
+              : permission === 'denied'
+                ? ' — enable notifications for Guardr in Android settings.'
+                : !enabled && !busy && !message
+                  ? ' — turn on the toggle above to register this device.'
+                  : ''}
+          </>
+        ) : (
+          <>
+            Browser permission: {permission}
+            {permission === 'denied' ? ' — enable notifications in browser settings.' : ''}
+            {permission === 'granted' && !serverSynced && enabled
+              ? ' — device subscribed locally but not synced to server yet.'
+              : ''}
+            {permission === 'granted' && !enabled && !busy && !message
+              ? ' — turn on the toggle above to register this device.'
+              : ''}
+          </>
+        )}
       </p>
 
       {message && (
@@ -342,6 +375,8 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             message.includes('unavailable') ||
             message.includes('failed') ||
             message.includes('not configured') ||
+            message.includes('google-services') ||
+            message.includes('Firebase') ||
             message.includes('Unauthorized') ||
             message.includes('missing')
               ? 'text-amber-600'
