@@ -21,6 +21,7 @@ export function WfSearchBar({
       <Search className="w-4 h-4 shrink-0" />
       <input
         type="search"
+        className="app-search-bar-input"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

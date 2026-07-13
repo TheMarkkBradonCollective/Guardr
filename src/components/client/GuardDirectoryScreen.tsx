@@ -342,7 +342,7 @@ export function GuardDirectoryScreen({
           <button
             type="button"
             onClick={() => { setShowFilterPanel((v) => !v); setShowSortMenu(false); }}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-colors shrink-0 ${
+            className={`relative flex items-center justify-center w-12 h-12 rounded-full border transition-colors shrink-0 ${
               directoryTab === 'teams'
                 ? 'opacity-40 pointer-events-none border-brand-border text-brand-text-muted'
                 : showFilterPanel || activeFilterCount > 0

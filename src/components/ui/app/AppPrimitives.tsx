@@ -249,6 +249,7 @@ export function InlineSearch({
       <Search className="w-4 h-4 shrink-0 text-brand-text-muted" strokeWidth={1.5} />
       <input
         type="search"
+        className="app-search-inline-input"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

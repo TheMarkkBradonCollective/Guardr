@@ -1644,12 +1644,15 @@ html.theme-grey {
   align-items: center;
   gap: 0.75rem;
   width: 100%;
+  min-height: 3rem;
   padding: 0.75rem 1rem;
   background: var(--brand-bg-sec);
   border: 1.5px solid var(--brand-border);
   border-radius: var(--radius-pill);
   color: var(--brand-text-muted);
   font-size: 0.9375rem;
+  font-weight: 500;
+  box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -3284,10 +3287,12 @@ a.app-item-card:active,
   align-items: center;
   gap: 0.75rem;
   margin: 0 1.25rem 0.5rem;
+  min-height: 3rem;
   padding: 0.8125rem 1rem;
   background: var(--brand-bg-sec);
   border-radius: var(--radius-pill);
-  border: none;
+  border: 1.5px solid var(--brand-border);
+  box-sizing: border-box;
 }
 
 .app-search-inline input {
@@ -8069,27 +8074,7 @@ button:active:not(:disabled) {
   opacity: 0.88;
 }
 
-/* ─── 40. SEARCH BAR: UBER SEARCH STYLE ─────────────────── */
-.app-search-bar {
-  height: 3rem;
-  border-radius: var(--radius-pill);
-  background: var(--brand-bg-sec);
-  border: 1.5px solid var(--brand-border);
-  font-weight: 500;
-}
-
-.app-search-bar:focus-within {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent);
-}
-
-.app-search-inline {
-  height: 3rem;
-  border-radius: var(--radius-pill);
-  background: var(--brand-bg-sec);
-}
-
-/* ─── 41. ACTIVITY LOG ROWS: CLEAN ─────────────────────── */
+/* ─── 40. ACTIVITY LOG ROWS: CLEAN ─────────────────────── */
 .app-list-row {
   min-height: 3.75rem;
   padding: 0.875rem 1.25rem;
@@ -15035,8 +15020,7 @@ a.app-item-card:hover,
 
 .uber-input,
 .uber-select,
-.inline-search-input,
-.app-search-bar input {
+.inline-search-input {
   border-radius: var(--radius-input) !important;
   border: 1.5px solid color-mix(in srgb, var(--brand-border) 92%, var(--brand-primary)) !important;
   background: var(--brand-bg-sec) !important;
@@ -15056,6 +15040,48 @@ html.theme-light .uber-select {
   border-color: var(--brand-primary) !important;
   box-shadow: var(--focus-ring) !important;
   outline: none !important;
+}
+
+/* Search shells own the border — inner inputs must stay flat */
+.app-search-bar-input,
+.app-search-inline-input,
+.app-search-bar input,
+.app-search-inline input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.app-search-bar-input:focus,
+.app-search-inline-input:focus,
+.app-search-bar input:focus,
+.app-search-inline input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.app-search-bar input[type='search'],
+.app-search-inline input[type='search'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.app-search-bar input[type='search']::-webkit-search-decoration,
+.app-search-bar input[type='search']::-webkit-search-cancel-button,
+.app-search-inline input[type='search']::-webkit-search-decoration,
+.app-search-inline input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.app-search-inline:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 15%, transparent);
 }
 
 .uber-label {
