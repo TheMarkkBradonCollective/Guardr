@@ -217,7 +217,7 @@ export function StaffOpsLayout({
           <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
             <button
               type="button"
-              className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
+              className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
             >
@@ -240,7 +240,7 @@ export function StaffOpsLayout({
           <header className="staff-main-header shrink-0 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
             <button
               type="button"
-              className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
+              className={`app-chrome-btn -ml-1 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
             >

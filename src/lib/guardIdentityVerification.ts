@@ -191,6 +191,10 @@ export function staffCanApproveIdVerification(
 export function staffCanRequestIdResubmit(
   guard: Pick<
     SecurityGuard,
+    | 'name'
+    | 'userStatus'
+    | 'isStaff'
+    | 'mustChangePassword'
     | 'idVerificationStatus'
     | 'idState'
     | 'idNumber'

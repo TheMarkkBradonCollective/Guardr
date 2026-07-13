@@ -34,6 +34,7 @@ import {
 import { isGuardAccountApproved, isGuardUserStatusActive } from '../../lib/accountStatus';
 import { guardApplicationCredentialVerificationBlocker } from '../../lib/guardApplicationIntake';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
 import { CertDetailModal } from '../credentials/CertDetailModal';
