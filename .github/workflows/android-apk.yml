@@ -40,8 +40,9 @@ jobs:
         run: npm run android:apk
         env:
           VITE_APP_URL: https://guardr.co
-          VITE_SUPABASE_URL: https://example.supabase.co
-          VITE_SUPABASE_ANON_KEY: placeholder
+          # Omit placeholder Supabase values — client falls back to production keys when unset/invalid.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
