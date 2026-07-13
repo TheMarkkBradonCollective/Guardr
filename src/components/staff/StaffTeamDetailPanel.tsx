@@ -118,14 +118,14 @@ export function StaffTeamDetailPanel({
         <ProfileAvatar src={member.avatar} name={member.name} size="lg" rounded="xl" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-lg">{member.name}</h2>
+            <h2 className="font-bold text-lg">{member.badgeNumber || member.name}</h2>
             {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
           </div>
           <p className="text-sm text-brand-text-muted mt-1">{member.email}</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-3">
             <div>
-              <p className="wf-metric-label">Badge</p>
+              <p className="wf-metric-label">Staff ID</p>
               <p className="wf-metric-value">{member.badgeNumber}</p>
             </div>
             <div>

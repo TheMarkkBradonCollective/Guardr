@@ -30,8 +30,8 @@ interface StaffSettingsPanelProps {
   platformSettings: PlatformSettings;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   showStaffOnboard: boolean;
+  requiresDirectorApproval?: boolean;
   onAddStaffProfile: (
-    name: string,
     email: string,
     badgeNumber: string,
     staffRole: StaffRole
@@ -75,6 +75,7 @@ export function StaffSettingsPanel({
   platformSettings,
   onUpdatePlatformSettings,
   showStaffOnboard,
+  requiresDirectorApproval = false,
   onAddStaffProfile,
   guards,
   clients,
@@ -519,13 +520,13 @@ export function StaffSettingsPanel({
         <AppFormSection title="Onboard staff">
           <div className="pb-6">
             <p className="text-sm text-brand-text-muted mb-4">
-              You can also manage staff from the Staff section in the sidebar — add accounts and change roles there.
-              Founders manage staff below their tier; Directors manage Moderators and Administrators.
+              Submit new staff with a Staff ID and email. Administrators need Director approval before the account can sign in.
             </p>
             <StaffAddStaffForm
               assignableRoles={assignableRoles}
+              requiresDirectorApproval={requiresDirectorApproval}
               onAdd={(input) =>
-                onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+                onAddStaffProfile(input.email, input.badgeNumber, input.staffRole)
               }
             />
           </div>

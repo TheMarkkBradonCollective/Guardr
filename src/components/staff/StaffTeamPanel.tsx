@@ -12,9 +12,10 @@ interface StaffTeamPanelProps {
   currentUserId: string;
   currentUserRole: PlatformRole;
   canManageStaff: boolean;
+  canProposeStaff: boolean;
+  requiresDirectorApproval?: boolean;
   onUpdateUserStatus: (id: string, status: 'active' | 'suspended' | 'blocked') => void;
   onAddStaff?: (input: {
-    name: string;
     email: string;
     badgeNumber: string;
     staffRole: StaffRole;
@@ -30,6 +31,8 @@ export function StaffTeamPanel({
   currentUserId,
   currentUserRole,
   canManageStaff,
+  canProposeStaff,
+  requiresDirectorApproval = false,
   onUpdateUserStatus,
   onAddStaff,
   onUpdateStaffRole,
@@ -68,9 +71,10 @@ export function StaffTeamPanel({
       {!showDetailOnly && (
         <>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            {canManageStaff && onAddStaff && assignableRoles.length > 0 && (
+            {canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
               <StaffAddStaffForm
                 assignableRoles={assignableRoles}
+                requiresDirectorApproval={requiresDirectorApproval}
                 onAdd={onAddStaff}
                 onCreated={(staffId) => {
                   setSearch('');
@@ -98,7 +102,7 @@ export function StaffTeamPanel({
           </p>
           <p className="app-empty-state-body">
             {roster.length === 0
-              ? 'Directors and Founders can add staff accounts above.'
+              ? 'Administrators can submit staff for approval. Directors and Founders can add staff directly.'
               : 'Try adjusting your search.'}
           </p>
         </div>
@@ -114,14 +118,13 @@ export function StaffTeamPanel({
 
             return (
               <WfListCard
-                avatar={<ProfileAvatar src={member.avatar} name={member.name} size="sm" rounded="lg" />}
-                title={member.name}
-                subtitle={member.email}
+                avatar={<ProfileAvatar src={member.avatar} name={member.badgeNumber || member.name} size="sm" rounded="lg" />}
+                title={member.badgeNumber || member.name}
+                subtitle={`${member.staffRole || 'Staff'} · ${member.email}`}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
                     <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
-                    <span>{accountStatus}</span>
-                    {member.badgeNumber && <span>Badge {member.badgeNumber}</span>}
+                    <span className="capitalize">{accountStatus}</span>
                   </div>
                 }
                 onClick={onSelect}

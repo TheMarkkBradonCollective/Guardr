@@ -1,5 +1,5 @@
 import { PlatformRole } from '../types';
-import { canHandleDisputes, canManageClients, canManageGuards, canReviewCertifications, canReviewJobRequests, ROLE_LABELS } from './permissions';
+import { canApproveStaffAccounts, canHandleDisputes, canManageClients, canManageGuards, canReviewCertifications, canReviewJobRequests, ROLE_LABELS } from './permissions';
 import type { OverviewActionItem, OverviewMetricCell, StaffSection, ApprovalQueueId } from './staffOps';
 
 export type StaffOverviewLayout = 'compact' | 'standard' | 'executive';
@@ -150,6 +150,8 @@ function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boo
     case 'guard-accounts':
     case 'accounts':
       return canManageGuards({ role });
+    case 'staff-accounts':
+      return canApproveStaffAccounts({ role });
     case 'client-accounts':
       return canManageClients({ role });
     case 'all':

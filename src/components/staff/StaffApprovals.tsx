@@ -74,6 +74,8 @@ interface StaffApprovalsProps {
   onDenyGuardApplication?: (requestId: string, guardId: string) => void | Promise<void>;
   onApproveClient?: (clientId: string) => void;
   onApproveGuardAccount?: (guardId: string) => void | Promise<void>;
+  onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
+  onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onActivateGuardAccount?: (
     guardId: string,
     options?: import('../../lib/guardMissingCredentials').ActivateGuardAccountOptions
@@ -105,6 +107,7 @@ interface StaffApprovalsProps {
   ) => Promise<CertUpdateResult>;
   onViewGuard?: (guardId: string) => void;
   canApproveGuardAccounts?: boolean;
+  canApproveStaffAccounts?: boolean;
   canActivateGuardAccounts?: boolean;
   canVerifyGuardCredentials?: boolean;
   canManageGuardAccounts?: boolean;
@@ -151,6 +154,11 @@ const QUEUE_META: Record<
     title: 'Guard profiles',
     description: '',
     icon: <Shield className="w-4 h-4" />,
+  },
+  'staff-accounts': {
+    title: 'Staff onboarding',
+    description: '',
+    icon: <UserCheck className="w-4 h-4" />,
   },
   'client-accounts': {
     title: 'Client sign-ups',
@@ -295,6 +303,8 @@ export function StaffApprovals({
   onDenyGuardApplication,
   onApproveClient,
   onApproveGuardAccount,
+  onApproveStaffAccount,
+  onRejectStaffAccount,
   onActivateGuardAccount,
   onApproveIdentityVerification,
   onRejectIdentityVerification,
@@ -308,6 +318,7 @@ export function StaffApprovals({
   onUpdateCertification,
   onViewGuard,
   canApproveGuardAccounts = false,
+  canApproveStaffAccounts = false,
   canActivateGuardAccounts = false,
   canVerifyGuardCredentials = false,
   canManageGuardAccounts = false,
@@ -404,6 +415,7 @@ export function StaffApprovals({
           return canReviewJobRequests;
         }
         if (id === 'guard-accounts') return canApproveGuardAccounts;
+        if (id === 'staff-accounts') return canApproveStaffAccounts;
         if (id === 'client-accounts') return canManageClientAccounts;
         return false;
       });
@@ -413,6 +425,7 @@ export function StaffApprovals({
       canVerifyGuardCredentials,
       canReviewJobRequests,
       canApproveGuardAccounts,
+      canApproveStaffAccounts,
       canManageClientAccounts,
     ]
   );
@@ -1187,6 +1200,69 @@ export function StaffApprovals({
                     })();
                   }}
                 />
+              </div>
+            )}
+          </div>
+        </ApprovalDetailScreen>
+      );
+    }
+
+    if (effectiveQueue === 'staff-accounts') {
+      const member = guards.find((g) => g.id === activeItemId && g.isStaff) ?? null;
+      if (!member) return null;
+
+      const isPending = feedItem?.status === 'pending';
+
+      return (
+        <ApprovalDetailScreen
+          title={member.badgeNumber || member.name}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <div className="staff-detail-pane space-y-4">
+            <ApprovalReviewMeta item={feedItem} />
+            <section className="space-y-2">
+              <p className="uber-label text-xs">Staff ID</p>
+              <p className="text-sm font-semibold">{member.badgeNumber}</p>
+              <p className="uber-label text-xs mt-3">Role</p>
+              <p className="text-sm">{member.staffRole || 'Staff'}</p>
+              <p className="uber-label text-xs mt-3">Email</p>
+              <p className="text-sm text-brand-text-muted">{member.email}</p>
+            </section>
+            {isPending && canApproveStaffAccounts && onApproveStaffAccount && onRejectStaffAccount && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() =>
+                    void runGuardedAction(
+                      async () => {
+                        await onRejectStaffAccount(member.id);
+                        setActiveItemId(null);
+                      },
+                      (message) => showAppToast(message || 'Could not reject staff account.', { tone: 'error' })
+                    )
+                  }
+                  className="app-button-outline app-btn-sm gap-1 disabled:opacity-50"
+                >
+                  <X className="w-3.5 h-3.5" /> Reject
+                </button>
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() =>
+                    void runGuardedAction(
+                      async () => {
+                        await onApproveStaffAccount(member.id);
+                        setActiveItemId(null);
+                      },
+                      (message) => showAppToast(message || 'Could not approve staff account.', { tone: 'error' })
+                    )
+                  }
+                  className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+                >
+                  <Check className="w-3.5 h-3.5" /> Approve
+                </button>
               </div>
             )}
           </div>

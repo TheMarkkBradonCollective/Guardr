@@ -189,6 +189,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
     staffApprovalQueue === 'all' ||
     staffApprovalQueue === 'accounts' ||
     staffApprovalQueue === 'guard-accounts' ||
+    staffApprovalQueue === 'staff-accounts' ||
     staffApprovalQueue === 'client-accounts' ||
     staffApprovalQueue === 'job-offers' ||
     staffApprovalQueue === 'schedule-changes' ||

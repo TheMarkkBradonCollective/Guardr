@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS staff (
   staff_role TEXT NOT NULL
     CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator')),
   user_status TEXT NOT NULL DEFAULT 'active'
-    CHECK (user_status IN ('active', 'suspended', 'blocked')),
+    CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
   password TEXT,
   must_change_password BOOLEAN NOT NULL DEFAULT false,
   theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light', 'grey')),
@@ -139,6 +139,10 @@ CREATE TABLE IF NOT EXISTS staff (
 ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_staff_role_check;
 ALTER TABLE staff ADD CONSTRAINT staff_staff_role_check
   CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Administrator', 'Moderator'));
+
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_user_status_check;
+ALTER TABLE staff ADD CONSTRAINT staff_user_status_check
+  CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked'));
 
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "staff_select" ON staff;

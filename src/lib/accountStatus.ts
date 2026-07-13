@@ -17,10 +17,24 @@ export function isClientAccountActive(client: Pick<Client, 'accountStatus' | 'ap
 }
 
 export function getGuardUserStatus(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): GuardUserStatus {
-  if (guard.isStaff) return 'active';
+  if (guard.isStaff) {
+    const normalized = normalizeGuardUserStatus(guard.userStatus);
+    if (normalized === 'suspended' || normalized === 'blocked' || normalized === 'pending') {
+      return normalized;
+    }
+    return 'active';
+  }
   const normalized = normalizeGuardUserStatus(guard.userStatus);
   if (normalized) return normalized;
   return 'pending';
+}
+
+export function isStaffAccountPending(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  return Boolean(guard.isStaff && getGuardUserStatus(guard) === 'pending');
+}
+
+export function isStaffUserStatusActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
+  return Boolean(guard.isStaff && getGuardUserStatus(guard) === 'active');
 }
 
 function normalizeGuardUserStatus(raw: unknown): GuardUserStatus | null {
@@ -48,7 +62,8 @@ export function isGuardAccountApproved(guard: Pick<SecurityGuard, 'userStatus' |
 
 /** Database user_status only — does not verify credentials. */
 export function isGuardUserStatusActive(guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'>): boolean {
-  return guard.isStaff || getGuardUserStatus(guard) === 'active';
+  if (guard.isStaff) return isStaffUserStatusActive(guard);
+  return getGuardUserStatus(guard) === 'active';
 }
 
 /** Pending or approved — not yet active for field work. */

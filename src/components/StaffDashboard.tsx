@@ -32,6 +32,8 @@ import {
   canActivateGuardAccounts,
   canVerifyCredentials,
   canManageStaffAccounts,
+  canProposeStaffAccounts,
+  canApproveStaffAccounts,
   canReviewJobRequests,
   canSuspendUsers,
   canStaffManageJobs,
@@ -182,11 +184,12 @@ interface StaffDashboardProps {
   platformSettings: PlatformSettings;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
   onAddStaffProfile: (
-    name: string,
     email: string,
     badgeNumber: string,
     staffRole: StaffRole
   ) => Promise<string>;
+  onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
+  onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onUpdateStaffRole: (
     staffId: string,
     staffRole: StaffRole
@@ -320,6 +323,8 @@ export function StaffDashboard({
   platformSettings,
   onUpdatePlatformSettings,
   onAddStaffProfile,
+  onApproveStaffAccount,
+  onRejectStaffAccount,
   onUpdateStaffRole,
   onAddGuardProfile,
   onAddClientProfile,
@@ -446,6 +451,9 @@ export function StaffDashboard({
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const canManageStaff = canManageStaffAccounts(currentUser);
+  const canProposeStaff = canProposeStaffAccounts(currentUser);
+  const canApproveStaff = canApproveStaffAccounts(currentUser);
+  const requiresDirectorApproval = canProposeStaff && !canApproveStaff;
   const canApproveGuardAccounts = canApproveGuards(currentUser);
   const canActivateApprovedGuards = canActivateGuardAccounts(currentUser);
   const canVerifyGuardCredentials = canVerifyCredentials(currentUser);
@@ -545,6 +553,8 @@ export function StaffDashboard({
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             onApproveClient={canManageClientAccounts ? onApproveClient : undefined}
             onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+            onApproveStaffAccount={canApproveStaff ? onApproveStaffAccount : undefined}
+            onRejectStaffAccount={canApproveStaff ? onRejectStaffAccount : undefined}
             onActivateGuardAccount={canActivateApprovedGuards ? onActivateGuardAccount : undefined}
             canActivateGuardAccounts={canActivateApprovedGuards}
             onApproveIdentityVerification={canVerifyGuardCredentials ? onApproveGuardIdentityVerification : undefined}
@@ -557,6 +567,7 @@ export function StaffDashboard({
             onDeleteCertification={canManageGuardAccounts ? onDeleteCertification : undefined}
             onAttachCertificationImage={canManageGuardAccounts ? onAttachCertificationImage : undefined}
             onUpdateCertification={canManageGuardAccounts ? onUpdateCertification : undefined}
+            canApproveStaffAccounts={canApproveStaff}
             canApproveGuardAccounts={canApproveGuardAccounts}
             canVerifyGuardCredentials={canVerifyGuardCredentials}
             canManageGuardAccounts={canManageGuardAccounts}
@@ -641,11 +652,13 @@ export function StaffDashboard({
             currentUserId={currentUser.id}
             currentUserRole={currentUser.role}
             canManageStaff={canManageStaff}
+            canProposeStaff={canProposeStaff}
+            requiresDirectorApproval={requiresDirectorApproval}
             onUpdateUserStatus={onUpdateGuardUserStatus}
             onAddStaff={
-              canManageStaff
+              canProposeStaff
                 ? (input) =>
-                    onAddStaffProfile(input.name, input.email, input.badgeNumber, input.staffRole)
+                    onAddStaffProfile(input.email, input.badgeNumber, input.staffRole)
                 : undefined
             }
             onUpdateStaffRole={canManageStaff ? onUpdateStaffRole : undefined}
@@ -817,7 +830,8 @@ export function StaffDashboard({
               currentUser={currentUser}
               platformSettings={platformSettings}
               onUpdatePlatformSettings={onUpdatePlatformSettings}
-              showStaffOnboard={canManageStaff}
+              showStaffOnboard={canProposeStaff}
+              requiresDirectorApproval={requiresDirectorApproval}
               onAddStaffProfile={onAddStaffProfile}
               guards={guards}
               clients={clients}

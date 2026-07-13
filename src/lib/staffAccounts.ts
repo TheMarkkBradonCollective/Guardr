@@ -52,11 +52,17 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
     userStatus:
       row.user_status === 'suspended' || row.user_status === 'blocked'
         ? row.user_status
-        : 'active',
+        : row.user_status === 'pending'
+          ? 'pending'
+          : 'active',
     themePreference: isThemeMode(row.theme_preference) ? row.theme_preference : undefined,
     password: row.password ?? undefined,
     mustChangePassword: row.must_change_password ?? false,
   };
+}
+
+export function getPendingStaffAccountReviews(guards: SecurityGuard[]): SecurityGuard[] {
+  return guards.filter((g) => g.isStaff && g.userStatus === 'pending');
 }
 
 export function isLegacyStaffGuardRow(row: {

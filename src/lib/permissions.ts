@@ -239,6 +239,16 @@ export function canManageStaffAccounts(user: Pick<SessionUser, 'role'>): boolean
   ]);
 }
 
+/** Administrator+ may submit new staff for onboarding */
+export function canProposeStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {
+  return hasPermission(user, 'admin.manage_users');
+}
+
+/** Director+ may approve pending staff and activate accounts immediately on create */
+export function canApproveStaffAccounts(user: Pick<SessionUser, 'role'>): boolean {
+  return canManageStaffAccounts(user);
+}
+
 export function canManageDirectorAccounts(user: Pick<SessionUser, 'role'>): boolean {
   return hasPermission(user, 'owner.manage_directors');
 }

@@ -18,7 +18,7 @@ import { countPendingGuardApplications, getOpenJobsWithApplications } from './jo
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
-import { PLATFORM_FEE_PER_HOUR } from './payments';
+import { getPendingStaffAccountReviews } from './staffAccounts';
 
 export type StaffSection =
   | 'overview'
@@ -130,6 +130,7 @@ export type ApprovalQueueId =
   | 'applications'
   | 'credentials'
   | 'guard-accounts'
+  | 'staff-accounts'
   | 'client-accounts'
   /** @deprecated Legacy URL — use guard-accounts or client-accounts */
   | 'accounts';
@@ -141,6 +142,7 @@ export const APPROVAL_QUEUE_TAB_ORDER: ApprovalQueueId[] = [
   'applications',
   'credentials',
   'guard-accounts',
+  'staff-accounts',
   'client-accounts',
 ];
 
@@ -154,6 +156,7 @@ export const APPROVAL_QUEUE_TAB_LABELS: Record<
   applications: 'Applications',
   credentials: 'Credentials',
   'guard-accounts': 'Guards',
+  'staff-accounts': 'Staff',
   'client-accounts': 'Clients',
 };
 
@@ -287,13 +290,15 @@ export function computePlatformStats(
   const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
+  const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
   const pendingApprovals =
     pendingJobApprovals +
     pendingScheduleChanges +
     pendingCertApprovals +
     pendingGuardApplicationJobs +
     pendingGuardAccounts +
-    pendingClientAccounts;
+    pendingClientAccounts +
+    pendingStaffAccounts;
   const pendingReviews = pendingApprovals;
   const activeIncidents = buildIncidents(requests, guards).filter((i) => i.status === 'open').length;
   const activeGuardIds = new Set(
@@ -529,6 +534,7 @@ export function buildOverviewActionQueue(
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
   const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
   const pendingClientAccounts = clients.filter((c) => isSelfSubmittedClientAccount(c)).length;
+  const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
   if (pendingGuardAccounts > 0) {
     items.push({
       id: 'pending-guard-accounts',
@@ -548,6 +554,17 @@ export function buildOverviewActionQueue(
       count: pendingClientAccounts,
       section: 'approvals',
       approvalQueue: 'client-accounts',
+      tone: 'urgent',
+    });
+  }
+  if (pendingStaffAccounts > 0) {
+    items.push({
+      id: 'pending-staff-accounts',
+      title: 'Approve staff onboarding',
+      description: 'Review administrator-submitted staff accounts before they can sign in',
+      count: pendingStaffAccounts,
+      section: 'approvals',
+      approvalQueue: 'staff-accounts',
       tone: 'urgent',
     });
   }

@@ -288,6 +288,48 @@ function guardAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
     });
 }
 
+function staffAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
+  return guards
+    .filter((g) => {
+      if (!g.isStaff) return false;
+      if (g.userStatus === 'pending') return true;
+      return Boolean(latestAudit(auditLog, g.id, ['staff_approved', 'staff_rejected']));
+    })
+    .map((member) => {
+      const userStatus = member.userStatus ?? 'active';
+      const pending = userStatus === 'pending';
+      const audit = latestAudit(auditLog, member.id, ['staff_approved', 'staff_rejected']);
+      const actor = actorLabel(audit);
+      const status: ApprovalFeedStatus = pending
+        ? 'pending'
+        : userStatus === 'suspended' || userStatus === 'blocked'
+          ? 'denied'
+          : 'approved';
+
+      return {
+        id: member.id,
+        queue: 'staff-accounts',
+        title: member.badgeNumber || member.name,
+        subtitle: `${member.staffRole ?? 'Staff'} · ${member.email}`,
+        status,
+        statusLabel: pending
+          ? 'Pending Director approval'
+          : userStatus === 'active'
+            ? 'Active'
+            : userStatus === 'suspended'
+              ? 'Suspended'
+              : userStatus === 'blocked'
+                ? 'Blocked'
+                : 'Reviewed',
+        submittedAt: member.id.includes('-') ? undefined : undefined,
+        reviewedAt: actor.at,
+        reviewedByName: actor.name,
+        reviewedByEmail: actor.email,
+        sortKey: new Date(actor.at ?? 0).getTime() || Date.now(),
+      };
+    });
+}
+
 function clientAccountItems(clients: Client[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return clients
     .filter(isSelfSignupClient)
@@ -331,6 +373,7 @@ export function buildStaffApprovalsFeed(input: StaffApprovalsFeedInput): Approva
     ...applicationItems(input.requests, auditLog),
     ...credentialItems(input.guards, auditLog),
     ...guardAccountItems(input.guards, auditLog),
+    ...staffAccountItems(input.guards, auditLog),
     ...clientAccountItems(input.clients, auditLog),
   ];
   return items.sort(compareFeedItems);
@@ -367,6 +410,7 @@ export function resolveApprovalFocusItemId(
   const guard = guards.find((g) => g.id === guardId);
   const matches = scoped.filter((item) => {
     if (item.queue === 'guard-accounts') return item.id === guardId;
+    if (item.queue === 'staff-accounts') return item.id === guardId;
     if (item.queue === 'credentials') {
       if (item.id === coiApprovalItemId(guardId)) return true;
       return guard?.certifications.some((cert) => cert.id === item.id) ?? false;
@@ -376,7 +420,7 @@ export function resolveApprovalFocusItemId(
   const pending = matches.find((item) => item.status === 'pending' || item.status === 'in_review');
   if (pending) return pending.id;
   if (matches[0]) return matches[0].id;
-  if (queue === 'guard-accounts' || queue === 'all') return guardId;
+  if (queue === 'guard-accounts' || queue === 'staff-accounts' || queue === 'all') return guardId;
   return null;
 }
 

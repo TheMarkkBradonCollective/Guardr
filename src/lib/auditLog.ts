@@ -9,6 +9,8 @@ export type AuditAction =
   | 'job_denied'
   | 'guard_approved'
   | 'guard_activated'
+  | 'staff_approved'
+  | 'staff_rejected'
   | 'client_approved'
   | 'cert_verified'
   | 'schedule_change_approved'

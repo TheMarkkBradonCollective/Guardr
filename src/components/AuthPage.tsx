@@ -494,6 +494,10 @@ export function AuthPage({
       setErrorMsg('Account blocked. Contact administration.');
       return;
     }
+    if (signInAttempt.status === 'pending_approval') {
+      setErrorMsg('Your staff account is awaiting Director approval.');
+      return;
+    }
     if (!isDbConnected) {
       setErrorMsg('Unable to verify your account right now. Check your connection and try again.');
       return;

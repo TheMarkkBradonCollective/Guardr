@@ -36,7 +36,8 @@ export type SignInAttemptResult =
   | { status: 'ok'; result: SignInResult }
   | { status: 'not_found' }
   | { status: 'invalid_password' }
-  | { status: 'blocked' };
+  | { status: 'blocked' }
+  | { status: 'pending_approval' };
 
 async function verifyStoredPassword(
   stored: string | null | undefined,
@@ -272,6 +273,10 @@ export async function signInWithCredentials(
 
   if (profile.guard?.userStatus === 'blocked') {
     return { status: 'blocked' };
+  }
+
+  if (profile.guard?.isStaff && profile.guard.userStatus === 'pending') {
+    return { status: 'pending_approval' };
   }
 
   const passwordOk = await verifyStoredPassword(profile.password, profile.passwordHash ?? undefined, password);

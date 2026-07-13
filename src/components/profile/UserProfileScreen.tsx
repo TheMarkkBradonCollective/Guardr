@@ -206,6 +206,21 @@ export function UserProfileScreen({
 
   const canBuildResume = isGuardAccount && !!guard && !guard.isStaff;
   const credentialsEditing = editing || !!(guard && isGuardAccountPreActive(guard));
+  const staffBadgeId = guard?.badgeNumber ?? currentUser.badgeNumber ?? '';
+
+  if (isStaffAccount) {
+    return (
+      <AppScreen>
+        <section className="flex flex-col items-center text-center px-5 pt-8 pb-7 border-b border-brand-border">
+          <ProfileAvatar src={avatar} name={staffBadgeId || roleLabel} size="xl" />
+          <h2 className="text-2xl font-black tracking-[-0.04em] leading-tight mt-4">{staffBadgeId || '—'}</h2>
+          <p className="text-sm text-brand-text-muted mt-1.5 font-semibold tracking-tight">Staff ID</p>
+          <p className="text-sm text-brand-text-muted mt-3 font-semibold tracking-tight">{roleLabel}</p>
+          <p className="text-xs text-brand-text-muted mt-0.5 font-medium">{currentUser.email}</p>
+        </section>
+      </AppScreen>
+    );
+  }
 
   return (
     <AppScreen>

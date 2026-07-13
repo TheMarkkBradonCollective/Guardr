@@ -32,7 +32,7 @@ import {
   GuardStandingCrewMember,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -3819,25 +3819,28 @@ export default function App() {
   };
 
   const handleAddStaffProfile = async (
-    name: string,
     email: string,
     badgeNumber: string,
     staffRole: StaffRole
   ): Promise<string> => {
-    if (!currentUser || !canAssignStaffRole(currentUser.role, staffRole)) {
+    if (!currentUser || !canProposeStaffAccounts(currentUser)) {
+      throw new Error('You do not have permission to add staff.');
+    }
+    if (!canAssignStaffRole(currentUser.role, staffRole)) {
       throw new Error('You cannot assign that staff role.');
     }
     const emailLower = assertEmailAvailable(email);
     const { password, mustChangePassword } = provisionedPasswordFields();
-    const normalized = personNameFromPayload(resolvePersonNameParts({ name }));
+    const staffId = badgeNumber.trim();
+    const requiresApproval = !canApproveStaffAccounts(currentUser);
+    const userStatus = requiresApproval ? ('pending' as const) : ('active' as const);
     const newStaff: SecurityGuard = {
       id: `staff-${Date.now()}`,
-      name: normalized.name,
-      firstName: normalized.firstName,
-      middleName: normalized.middleName,
-      lastName: normalized.lastName,
+      name: staffId,
+      firstName: staffId,
+      lastName: '',
       email: email.trim(),
-      badgeNumber: badgeNumber.trim(),
+      badgeNumber: staffId,
       avatar: '',
       phone: '',
       bio: `${staffRole} — Platform operations.`,
@@ -3851,7 +3854,7 @@ export default function App() {
       hourlyRateRequirement: 0,
       isStaff: true,
       staffRole,
-      userStatus: 'active',
+      userStatus,
       password,
       mustChangePassword,
     };
@@ -3862,15 +3865,15 @@ export default function App() {
           id: newStaff.id,
           name: newStaff.name,
           first_name: newStaff.firstName,
-          middle_name: newStaff.middleName ?? null,
-          last_name: newStaff.lastName,
+          middle_name: null,
+          last_name: newStaff.lastName || null,
           email: emailLower,
           badge_number: newStaff.badgeNumber,
           avatar: newStaff.avatar,
           phone: newStaff.phone,
           bio: newStaff.bio,
           staff_role: staffRole,
-          user_status: 'active',
+          user_status: userStatus,
           password,
           must_change_password: mustChangePassword,
         });
@@ -3880,8 +3883,74 @@ export default function App() {
         throw new Error('Could not save staff account to the database.');
       }
     }
-    setStoredPassword(emailLower, { password, mustChangePassword, role: 'guard' });
+    if (!requiresApproval) {
+      setStoredPassword(emailLower, { password, mustChangePassword, role: 'guard' });
+    }
     return newStaff.id;
+  };
+
+  const handleApproveStaffAccount = async (staffId: string) => {
+    if (!currentUser || !canApproveStaffAccounts(currentUser)) {
+      appToast('Only Directors and above can approve staff accounts.', 'error');
+      return;
+    }
+    const member = guards.find((g) => g.id === staffId && g.isStaff);
+    if (!member) throw new Error('Staff account not found.');
+    if (member.userStatus !== 'pending') {
+      throw new Error('This staff account is not awaiting approval.');
+    }
+
+    const approved: SecurityGuard = { ...member, userStatus: 'active' };
+    setGuards((prev) => prev.map((g) => (g.id === staffId ? approved : g)));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase.from('staff').update({ user_status: 'active' }).eq('id', staffId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
+        throw new Error(error.message || 'Could not approve staff account.');
+      }
+    }
+    if (member.email && member.password) {
+      setStoredPassword(member.email.trim().toLowerCase(), {
+        password: member.password,
+        mustChangePassword: member.mustChangePassword ?? false,
+        role: 'guard',
+      });
+    }
+    void writeAuditLog(currentUser, 'staff_approved', 'staff', staffId, {
+      email: member.email,
+      badgeNumber: member.badgeNumber,
+      staffRole: member.staffRole,
+    });
+    appToast(`${member.badgeNumber} approved. They can now sign in.`, 'success');
+  };
+
+  const handleRejectStaffAccount = async (staffId: string) => {
+    if (!currentUser || !canApproveStaffAccounts(currentUser)) {
+      appToast('Only Directors and above can reject staff accounts.', 'error');
+      return;
+    }
+    const member = guards.find((g) => g.id === staffId && g.isStaff);
+    if (!member) throw new Error('Staff account not found.');
+    if (member.userStatus !== 'pending') {
+      throw new Error('This staff account is not awaiting approval.');
+    }
+
+    setGuards((prev) => prev.filter((g) => g.id !== staffId));
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase.from('staff').delete().eq('id', staffId);
+      if (error) {
+        setGuards((prev) => [...prev, member]);
+        throw new Error(error.message || 'Could not reject staff account.');
+      }
+    }
+    void writeAuditLog(currentUser, 'staff_rejected', 'staff', staffId, {
+      email: member.email,
+      badgeNumber: member.badgeNumber,
+      staffRole: member.staffRole,
+    });
+    appToast(`${member.badgeNumber} rejected.`, 'info');
   };
 
   const handleUpdateStaffRole = async (
@@ -10232,6 +10301,8 @@ export default function App() {
           isDbConnected={isDbConnected}
           currentUser={currentUser}
           onAddStaffProfile={handleAddStaffProfile}
+          onApproveStaffAccount={handleApproveStaffAccount}
+          onRejectStaffAccount={handleRejectStaffAccount}
           onUpdateStaffRole={handleUpdateStaffRole}
           onAddGuardProfile={handleAddGuardProfile}
           onAddClientProfile={handleAddClientProfile}
