@@ -85,7 +85,7 @@ public/sw.js          — service worker shell cache
 
 - [x] Android APK build + download page (`/download/`)
 - [ ] Wire offline queue flush on `online` event in guard shift flow
-- [ ] Add Capacitor FCM push notification plugin (Web Push works in APK today)
+- [x] Add Capacitor FCM push notification plugin (native APK; Web/PWA still uses Web Push)
 - [ ] Generate PNG icon set (192, 512) for store requirements
 - [ ] Tablet split panels for staff live jobs (staff-ops branch)
 - [ ] E2E test PWA install on iOS Safari + Android Chrome

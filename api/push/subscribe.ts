@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isValidPushSubscriptionPayload } from '../../lib/push/fcm';
 
 type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';
 type PushRole = 'guard' | 'dispatch' | 'admin' | 'client';
@@ -292,7 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const subscription = body.subscription;
-    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+    if (!isValidPushSubscriptionPayload(subscription ?? {})) {
       return jsonError(res, 400, 'Valid push subscription is required');
     }
 

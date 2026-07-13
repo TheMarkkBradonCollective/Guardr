@@ -10,7 +10,7 @@ import { AppToastHost } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
-import { registerServiceWorker } from './lib/push';
+import { registerServiceWorker, initNativePushListeners } from './lib/push';
 import { initSentry } from './lib/sentry';
 import './index.css';
 
@@ -29,13 +29,16 @@ async function initNativeShell(): Promise<void> {
   await ensureNativePermissions();
   await registerNativeInstall();
   registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
+  initNativePushListeners();
 }
 
 void initNativeShell();
 
-void registerServiceWorker().catch((error) => {
-  console.warn('[pwa] service worker registration failed:', error);
-});
+if (!Capacitor.isNativePlatform()) {
+  void registerServiceWorker().catch((error) => {
+    console.warn('[pwa] service worker registration failed:', error);
+  });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
