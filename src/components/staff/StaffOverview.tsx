@@ -450,7 +450,7 @@ export function StaffOverview({
         status={healthStatus}
       />
 
-      <div className="staff-overview-focus-band">
+      <div className="staff-overview-focus-line-wrap">
         <RoleBadge role={staffRole} />
         <p className="staff-overview-focus-line">{config.focusLine}</p>
       </div>

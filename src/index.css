@@ -16047,3 +16047,284 @@ textarea.uber-input {
 }
 
 /* ─── END GUARDR V4 ──────────────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF NATIVE APP UI — flat page layout, tap rows (no nested boxes)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.staff-shell .staff-main-content {
+  background: var(--brand-bg) !important;
+}
+
+.staff-shell .app-dashboard-hero,
+.staff-shell .app-dashboard-zone {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.staff-shell .app-dashboard-zone-head {
+  padding: 0 0 0.5rem !important;
+  margin-bottom: 0.625rem !important;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.staff-shell .app-dashboard-zone-title {
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--brand-text-muted) !important;
+}
+
+/* Metrics: inline grid with hairline dividers only */
+.staff-shell .app-metric-strip {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+@media (min-width: 768px) {
+  .staff-shell .app-metric-strip--staff {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.staff-shell .app-metric-cell {
+  padding: 0.75rem 0.5rem !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+.staff-shell .app-metric-cell:nth-child(odd) {
+  padding-right: 0.75rem !important;
+}
+
+.staff-shell .app-metric-cell:nth-child(even) {
+  padding-left: 0.75rem !important;
+  border-left: 1px solid var(--brand-border) !important;
+}
+
+.staff-shell .app-metric-cell-accent {
+  background: transparent !important;
+}
+
+.staff-shell .app-metric-cell-clickable:active {
+  opacity: 0.72;
+}
+
+.staff-shell .app-metric-cell-value {
+  font-size: 1.25rem !important;
+}
+
+/* Clickable list rows — jobs, guards, actions */
+.staff-shell .app-item-card,
+.staff-shell .wf-list-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  padding: 0.875rem 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+}
+
+.staff-shell button.app-item-card:hover,
+.staff-shell a.app-item-card:hover,
+.staff-shell .wf-list-card-interactive:hover {
+  background: color-mix(in srgb, var(--brand-primary) 6%, transparent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.staff-shell .app-item-card-selected,
+.staff-shell .app-item-card.ring-2 {
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent) !important;
+  box-shadow: none !important;
+  border-color: var(--brand-border) !important;
+  border-left: 3px solid var(--brand-primary) !important;
+  padding-left: 0.5rem !important;
+}
+
+.staff-shell .app-item-card-stack {
+  gap: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+.staff-shell .app-list-row {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Overview: unbox everything except tap targets */
+.staff-shell .staff-overview-focus-band,
+.staff-shell .staff-overview-focus-line-wrap,
+.staff-shell .staff-overview-empty-card,
+.staff-shell .staff-overview-chart-card,
+.staff-shell .staff-overview-feed-card,
+.staff-shell .staff-overview-visual-card,
+.staff-shell .overview-visual-card,
+.staff-shell .staff-overview-metrics,
+.staff-shell .staff-payment-summary-grid,
+.staff-shell .staff-income-summary-grid {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.staff-shell .staff-overview-focus-band,
+.staff-shell .staff-overview-focus-line-wrap {
+  padding: 0.75rem 0 1rem !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.staff-shell .staff-overview-empty-card {
+  padding: 1rem 0 !important;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.staff-shell .staff-overview-quick-links {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0 1rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--brand-border);
+  -webkit-overflow-scrolling: touch;
+}
+
+.staff-shell .staff-overview-quick-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--brand-border);
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.staff-shell .staff-overview-quick-link:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+}
+
+.staff-shell .staff-summary-cell {
+  background: transparent !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  padding: 0.75rem 0 !important;
+}
+
+.staff-shell .overview-visual-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.staff-shell .overview-visual-card,
+.staff-shell .staff-overview-visual-card {
+  padding: 0.75rem 0 !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+}
+
+.staff-shell .staff-overview-feed-item {
+  padding: 0.625rem 0 !important;
+}
+
+/* Detail panes & forms — sections on the page, not cards */
+.staff-shell .app-form-section {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 0 1.25rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  border-radius: 0 !important;
+}
+
+.staff-shell .tablet-split-panel > div:last-child {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+@media (min-width: 1024px) {
+  .staff-shell .tablet-split-panel > div:last-child {
+    border-left: 1px solid var(--brand-border) !important;
+    padding-left: 1.25rem !important;
+  }
+}
+
+.staff-shell .staff-pane-header,
+.staff-shell .staff-detail-header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.staff-shell .app-empty-state,
+.staff-shell .app-empty-state--dashed {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 2rem 0 !important;
+}
+
+.staff-shell .staff-ops-card,
+.staff-shell .staff-detail-pane,
+.staff-shell .staff-detail-section,
+.staff-shell .staff-detail-panel,
+.staff-shell .app-card,
+.staff-shell .app-card-elevated,
+.staff-shell .app-flow-surface {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.staff-shell .wf-metric-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.staff-shell .wf-metric-cell {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--brand-border) !important;
+  padding: 0.75rem 0 !important;
+  box-shadow: none !important;
+}
+
+/* ─── END STAFF NATIVE APP UI ────────────────────────────────────────────── */
