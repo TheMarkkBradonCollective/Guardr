@@ -317,21 +317,20 @@ html.theme-grey {
   z-index: 50;
 }
 
-/* Mobile/tablet drawer — fixed overlay, never reserves flex width */
+/* Mobile/tablet menu — full-screen overlay, fade only (no horizontal slide) */
 .staff-shell--compact > .staff-sidebar--overlay {
   position: fixed !important;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: min(18rem, 88vw);
+  inset: 0;
+  width: 100% !important;
+  max-width: 100% !important;
   z-index: 1100;
-  transform: translateX(0);
-  transition: transform 0.22s ease-out;
-  box-shadow: var(--shadow-float);
+  transform: none !important;
+  transition: opacity 0.16s ease-out;
+  box-shadow: none;
 }
 
 .staff-shell--compact > .staff-sidebar--overlay.staff-sidebar-open {
-  transform: translateX(0);
+  transform: none !important;
 }
 
 .staff-shell--compact > .staff-main {
@@ -350,6 +349,8 @@ html.theme-grey {
 
 .staff-sidebar--docked {
   position: relative;
+  transform: none !important;
+  transition: none !important;
 }
 
 .staff-sidebar--docked .staff-sidebar-close {
@@ -389,6 +390,8 @@ html.theme-grey {
   background: rgba(0, 0, 0, 0.45);
   border: none;
   cursor: pointer;
+  animation: staff-nav-fade-in 0.16s ease-out;
+  touch-action: none;
 }
 
 .staff-sidebar-close {
@@ -16425,6 +16428,40 @@ textarea.uber-input {
 .staff-shell .app-subscreen-header {
   padding-inline: 0 !important;
   max-width: 100%;
+}
+
+/* Staff nav: no horizontal slide/drag — fixed dock or full-screen fade menu */
+.staff-shell {
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+}
+
+.staff-shell--nav-open {
+  overflow: hidden !important;
+}
+
+.staff-shell--compact > .staff-sidebar--overlay,
+.staff-shell--compact > .staff-sidebar--overlay.staff-sidebar-open {
+  animation: staff-nav-fade-in 0.16s ease-out;
+}
+
+@keyframes staff-nav-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.staff-sidebar--docked {
+  flex-shrink: 0;
+  touch-action: auto;
+}
+
+.staff-sidebar-nav {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 /* ─── END STAFF NATIVE APP UI ────────────────────────────────────────────── */
