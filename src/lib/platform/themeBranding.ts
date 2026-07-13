@@ -37,15 +37,20 @@ function upsertLink(id: string, rel: string, href: string, extra?: Record<string
 
 function upsertThemeColorMeta(color: string): void {
   if (typeof document === 'undefined') return;
-  const selector = 'meta[name="theme-color"][data-guardr-theme]';
-  let meta = document.querySelector(selector) as HTMLMetaElement | null;
-  if (!meta) {
-    meta = document.createElement('meta');
+  const metas = document.querySelectorAll('meta[name="theme-color"]');
+  if (metas.length === 0) {
+    const meta = document.createElement('meta');
     meta.name = 'theme-color';
     meta.setAttribute('data-guardr-theme', 'true');
+    meta.content = color;
     document.head.appendChild(meta);
+    return;
   }
-  meta.content = color;
+  metas.forEach((node) => {
+    const meta = node as HTMLMetaElement;
+    meta.content = color;
+    meta.setAttribute('data-guardr-theme', 'true');
+  });
 }
 
 /** Swap favicon + touch icons to match the active theme (saved locally via theme.ts). */

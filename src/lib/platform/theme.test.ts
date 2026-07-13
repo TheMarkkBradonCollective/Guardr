@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_THEME, loadTheme, saveTheme } from './theme.ts';
+import { DEFAULT_THEME, hasPerUserThemePreference, loadTheme, saveTheme } from './theme.ts';
 import { THEME_ICON_BACKGROUNDS, themeIconAssetPath } from './themeBranding.ts';
 
 describe('theme', () => {
@@ -28,6 +28,8 @@ describe('theme', () => {
       assert.equal(loadTheme('user-1'), 'dark');
       saveTheme('grey', 'user-1');
       assert.equal(loadTheme('user-1'), 'grey');
+      assert.equal(hasPerUserThemePreference('user-1'), true);
+      assert.equal(hasPerUserThemePreference('user-2'), false);
     } finally {
       Object.defineProperty(globalThis, 'localStorage', {
         configurable: true,

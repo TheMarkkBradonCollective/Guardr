@@ -1,4 +1,5 @@
 import { applyThemeBranding } from './themeBranding';
+import { applyNativeThemeChrome } from './nativeThemeChrome';
 
 export type ThemeMode = 'dark' | 'light' | 'grey';
 
@@ -24,6 +25,10 @@ const LEGACY_STORAGE_KEY = 'guardr_theme_mode';
 
 function userThemeKey(userId: string): string {
   return `${LEGACY_STORAGE_KEY}_${userId}`;
+}
+
+export function hasPerUserThemePreference(userId: string): boolean {
+  return isThemeMode(localStorage.getItem(userThemeKey(userId)));
 }
 
 export function isThemeMode(value: string | null | undefined): value is ThemeMode {
@@ -56,6 +61,7 @@ export function applyThemeToDocument(mode: ThemeMode): void {
   html.dataset.theme = mode;
   html.style.colorScheme = mode === 'light' || mode === 'grey' ? 'light' : 'dark';
   applyThemeBranding(mode);
+  void applyNativeThemeChrome(mode);
 }
 
 /** Read active theme from the document root (for maps, etc.) */
