@@ -6,7 +6,7 @@ import {
   Token,
 } from '@capacitor/push-notifications';
 import type { PushSubscriptionDto } from './push';
-import { isPushEnabledLocally } from './pushLocalState';
+import { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 
 export const FCM_NATIVE_ENDPOINT_PREFIX = 'fcm-native:';
 const NATIVE_PUSH_TOKEN_KEY = 'guardr_native_push_token';
@@ -21,6 +21,7 @@ type PendingRegistration = {
 
 let bridgeInstalled = false;
 let pendingRegistration: PendingRegistration | null = null;
+let registerInFlight: Promise<string> | null = null;
 
 export function isNativePushPlatform(): boolean {
   return Capacitor.isNativePlatform();
@@ -77,12 +78,27 @@ export function getStoredNativePushSubscription(): PushSubscriptionDto | null {
   return token ? nativePushSubscriptionFromToken(token) : null;
 }
 
-/** True when OS permission is granted and we have a stored FCM token + local opt-in. */
+/** True when OS permission is granted and this device has an FCM token. */
 export function isNativePushActive(
   permission: NotificationPermission | 'unsupported',
   token: string | null = getStoredNativePushToken()
 ): boolean {
-  return permission === 'granted' && !!token && isPushEnabledLocally();
+  return permission === 'granted' && !!token;
+}
+
+/** Keep local opt-in aligned with an existing native registration. */
+export function syncNativePushLocalState(
+  permission: NotificationPermission | 'unsupported',
+  token: string | null = getStoredNativePushToken()
+): boolean {
+  const active = isNativePushActive(permission, token);
+  if (active && !isPushEnabledLocally()) {
+    setPushEnabledLocally(true);
+  }
+  if (!active && isPushEnabledLocally()) {
+    setPushEnabledLocally(false);
+  }
+  return active;
 }
 
 function resolveNotificationUrl(rawUrl: unknown): string {
@@ -159,7 +175,9 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
   const existing = getStoredNativePushToken();
   if (existing) return existing;
 
-  return new Promise<string>((resolve, reject) => {
+  if (registerInFlight) return registerInFlight;
+
+  registerInFlight = new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pendingRegistration) {
         pendingRegistration = null;
@@ -191,20 +209,22 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
         console.warn('[native-push] register failed:', error);
       }
     });
+  }).finally(() => {
+    registerInFlight = null;
   });
+
+  return registerInFlight;
 }
 
 export async function restoreNativePushIfEnabled(): Promise<void> {
-  if (!isNativePushPlatform() || !isPushEnabledLocally() || !isNativeFcmConfigured()) return;
+  if (!isNativePushPlatform() || !isNativeFcmConfigured()) return;
 
   const permission = await getNativePushPermission();
-  if (permission !== 'granted') return;
+  const token = getStoredNativePushToken();
+  syncNativePushLocalState(permission, token);
 
-  try {
-    await waitForNativePushRegistration(12000);
-  } catch (error) {
-    console.warn('[native-push] restore on launch failed:', error);
-  }
+  // Never call PushNotifications.register() on cold boot — it can crash the WebView
+  // when Firebase is misconfigured. Registration happens only from Settings toggle.
 }
 
 export async function resolveNativePushToggleState(): Promise<{
@@ -219,20 +239,12 @@ export async function resolveNativePushToggleState(): Promise<{
   initNativePushBridge();
 
   const permission = await getNativePushPermission();
-  let token = getStoredNativePushToken();
-
-  if (permission === 'granted' && isPushEnabledLocally() && !token) {
-    try {
-      token = await waitForNativePushRegistration(12000);
-    } catch (error) {
-      console.warn('[native-push] token restore in settings failed:', error);
-    }
-  }
-
+  const token = getStoredNativePushToken();
   const subscription = token ? nativePushSubscriptionFromToken(token) : null;
+  const enabled = syncNativePushLocalState(permission, token);
   return {
     permission,
-    enabled: isNativePushActive(permission, token),
+    enabled,
     subscription,
   };
 }
@@ -244,12 +256,16 @@ export async function subscribeToNativePush(): Promise<PushSubscriptionDto> {
 
   initNativePushBridge();
 
-  const permission = await requestNativePushPermission();
+  let permission = await getNativePushPermission();
+  if (permission !== 'granted') {
+    permission = await requestNativePushPermission();
+  }
   if (permission !== 'granted') {
     throw new Error('Notification permission was not granted');
   }
 
   const token = await waitForNativePushRegistration();
+  setPushEnabledLocally(true);
   return nativePushSubscriptionFromToken(token);
 }
 
