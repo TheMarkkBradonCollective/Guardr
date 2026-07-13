@@ -3,11 +3,10 @@ import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const SVG = path.join(ROOT, 'logo.svg');
+const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
 const RES = path.join(ROOT, 'android/app/src/main/res');
 
-const BRAND_SAGE = '#5E7B61';
-const WHITE_LOGO = '#FFFFFF';
+const ICON_BACKGROUND = '#FFFFFF';
 
 /** Launcher mipmaps (legacy + round). */
 const LAUNCHER_SIZES = [
@@ -40,34 +39,67 @@ const SPLASH_SCREENS = [
   { dir: 'drawable-land-xxxhdpi', width: 1920, height: 1280 },
 ];
 
-async function logoSvgWithFill(fill) {
-  const svg = await readFile(SVG, 'utf8');
-  return Buffer.from(svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, `fill="${fill}"`));
+const BRAND_SAGE = '#5E7B61';
+
+async function removeBlackBackground(input) {
+  const { data, info } = await sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (r < 40 && g < 40 && b < 40) {
+      data[i + 3] = 0;
+    }
+  }
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  }).png();
 }
 
-async function whiteLogoPng(size) {
-  const svg = await logoSvgWithFill(WHITE_LOGO);
-  return sharp(svg).resize(size, size).png().toBuffer();
+async function trimAndSquare(input, paddingRatio = 0.08) {
+  const trimmed = await input.trim({ threshold: 10 }).toBuffer();
+  const meta = await sharp(trimmed).metadata();
+  const pad = Math.round(Math.max(meta.width, meta.height) * paddingRatio);
+  const side = Math.max(meta.width, meta.height) + pad * 2;
+  const left = Math.floor((side - meta.width) / 2);
+  const top = Math.floor((side - meta.height) / 2);
+  return sharp({
+    create: {
+      width: side,
+      height: side,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  }).composite([{ input: trimmed, left, top }]);
 }
 
-/** Sage background + centered white shield (maskable-style app icon). */
-async function renderLauncherIcon(size) {
+async function prepareIconMaster() {
+  const squared = await trimAndSquare(await removeBlackBackground(ICON_SOURCE));
+  return sharp(await squared.png().toBuffer());
+}
+
+async function coloredMarkPng(iconMaster, size) {
+  return iconMaster.clone().resize(size, size).png().toBuffer();
+}
+
+/** White background + centered sage shield (launcher icon). */
+async function renderLauncherIcon(iconMaster, size) {
   const logoSize = Math.round(size * 0.7);
   const offset = Math.round((size - logoSize) / 2);
-  const logo = await whiteLogoPng(logoSize);
+  const logo = await coloredMarkPng(iconMaster, logoSize);
   return sharp({
-    create: { width: size, height: size, channels: 4, background: BRAND_SAGE },
+    create: { width: size, height: size, channels: 4, background: ICON_BACKGROUND },
   })
     .composite([{ input: logo, left: offset, top: offset }])
     .png()
     .toBuffer();
 }
 
-/** Transparent layer with white shield for adaptive icon foreground. */
-async function renderForegroundIcon(size) {
+/** Transparent layer with colored shield for adaptive icon foreground. */
+async function renderForegroundIcon(iconMaster, size) {
   const logoSize = Math.round(size * 0.58);
   const offset = Math.round((size - logoSize) / 2);
-  const logo = await whiteLogoPng(logoSize);
+  const logo = await coloredMarkPng(iconMaster, logoSize);
   return sharp({
     create: {
       width: size,
@@ -81,12 +113,15 @@ async function renderForegroundIcon(size) {
     .toBuffer();
 }
 
-/** Branded splash — sage fill with centered shield. */
+/** Branded splash — sage fill with centered white shield. */
 async function renderSplash(width, height) {
+  const SVG = path.join(ROOT, 'logo.svg');
+  const svg = await readFile(SVG, 'utf8');
+  const whiteSvg = Buffer.from(svg.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FFFFFF"'));
   const logoSize = Math.round(Math.min(width, height) * 0.34);
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
-  const logo = await whiteLogoPng(logoSize);
+  const logo = await sharp(whiteSvg).resize(logoSize, logoSize).png().toBuffer();
   return sharp({
     create: { width, height, channels: 4, background: BRAND_SAGE },
   })
@@ -102,14 +137,16 @@ async function writePng(dir, filename, buffer) {
 }
 
 async function main() {
+  const iconMaster = await prepareIconMaster();
+
   for (const { dir, size } of LAUNCHER_SIZES) {
-    const icon = await renderLauncherIcon(size);
+    const icon = await renderLauncherIcon(iconMaster, size);
     await writePng(dir, 'ic_launcher.png', icon);
     await writePng(dir, 'ic_launcher_round.png', icon);
   }
 
   for (const { dir, size } of FOREGROUND_SIZES) {
-    const foreground = await renderForegroundIcon(size);
+    const foreground = await renderForegroundIcon(iconMaster, size);
     await writePng(dir, 'ic_launcher_foreground.png', foreground);
   }
 
@@ -118,12 +155,11 @@ async function main() {
     await writePng(dir, 'splash.png', splash);
   }
 
-  // Default splash reference used by styles.xml
   const defaultSplash = await renderSplash(480, 800);
   await writePng('drawable', 'splash.png', defaultSplash);
 
   console.log('Generated Guardr-branded Android icons and splash screens');
-  console.log(`Brand sage: ${BRAND_SAGE}, logo: white shield on sage`);
+  console.log(`Launcher icon background: ${ICON_BACKGROUND}, shield: brand sage mark`);
 }
 
 main().catch((err) => {

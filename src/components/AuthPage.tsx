@@ -201,7 +201,7 @@ export function AuthPage({
   onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
-  themeMode = 'dark',
+  themeMode = 'light',
   onChangeTheme,
   isDbConnected = true,
 }: AuthPageProps) {
