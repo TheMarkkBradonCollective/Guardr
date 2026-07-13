@@ -1235,7 +1235,7 @@ html.theme-grey {
 
 /* ─── BOTTOM NAVIGATION (wireframe task bar) ──────────────── */
 .bottom-nav-bar {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 .role-app-shell .bottom-nav-bar {
@@ -1251,7 +1251,7 @@ html.theme-grey {
 }
 
 .more-menu-panel {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 /* ─── SEGMENTED CONTROL (auth / theme toggles) ───────────── */
@@ -1846,7 +1846,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
   position: absolute;
   left: 0.875rem;
   right: auto;
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1rem + var(--app-safe-bottom));
   z-index: 1001;
   width: 40px;
   height: 40px;
@@ -2055,17 +2055,17 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 }
 
 .map-jobs-browse-card {
-  margin-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  margin-bottom: calc(0.75rem + var(--app-safe-bottom));
 }
 
 .client-map-offer-offset.map-jobs-browse-sheet,
 .map-jobs-browse-sheet.client-map-offer-offset {
-  bottom: calc(13px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(13px + var(--app-safe-bottom));
 }
 
 .client-map-offer-offset,
 .map-browse-offset {
-  bottom: calc(13px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(13px + var(--app-safe-bottom));
 }
 
 .map-selection-layer.map-browse-offset .map-offer-card,
@@ -2155,7 +2155,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 /* Client map: align New FAB with locate button */
 .client-map-layout .map-post-fab-layer.map-browse-offset {
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(1rem + var(--app-safe-bottom));
 }
 
 .map-browse-dock,
@@ -2175,7 +2175,7 @@ html.theme-grey .guardr-map-container .leaflet-tile-pane {
 
 .map-browse-dock-inner,
 .client-map-browse-dock-inner {
-  margin: 0 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  margin: 0 0 calc(0.5rem + var(--app-safe-bottom));
   padding: 0.5rem 0 0.25rem;
   background: linear-gradient(
     to top,
@@ -2587,12 +2587,12 @@ body[data-form-factor="desktop"] .guard-map-layout .map-route-banner {
   background: color-mix(in srgb, var(--brand-surface) 97%, transparent);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 .guardr-active-shift {
   bottom: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 .guardr-side-panel {
@@ -2782,12 +2782,39 @@ html.theme-light, .theme-light {
 }
 
 /* ─── CROSS-PLATFORM / PWA ───────────────────────────────────── */
+:root {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Native APK: env() is often 0 on Android — merge JS-measured insets from nativeSafeArea.ts */
+body.capacitor-native {
+  --app-safe-top: max(env(safe-area-inset-top, 0px), var(--gr-safe-area-top, 0px));
+  --app-safe-right: max(env(safe-area-inset-right, 0px), var(--gr-safe-area-right, 0px));
+  --app-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--gr-safe-area-bottom, 0px));
+  --app-safe-left: max(env(safe-area-inset-left, 0px), var(--gr-safe-area-left, 0px));
+}
+
+/* Lift fixed app shells above Android system navigation bar */
+body.capacitor-native .role-app-shell.fixed,
+body.capacitor-native .staff-shell.fixed {
+  bottom: var(--app-safe-bottom);
+}
+
+/* Shell bottom offset already clears system nav — avoid double padding in the tab bar */
+body.capacitor-native .bottom-nav-bar,
+body.capacitor-native .more-menu-panel {
+  padding-bottom: 0;
+}
+
 @supports (padding: env(safe-area-inset-top)) {
   body.pwa-standalone #root {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--app-safe-bottom);
+    padding-left: var(--app-safe-left);
+    padding-right: var(--app-safe-right);
   }
 
   /* Fixed role shells span the viewport — root safe-area padding double-insets them */
@@ -2806,7 +2833,7 @@ body[data-form-factor="mobile"] .guard-map-layout .guardr-map-root {
 }
 
 .guard-staff-sidebar {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 .guard-staff-embedded {
@@ -2905,7 +2932,7 @@ body[data-form-factor="desktop"] .client-map-layout .map-selection-layer.client-
   flex-direction: column;
   justify-content: flex-end;
   padding: 1rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
 
 body[data-form-factor="tablet"] .client-map-layout .map-selection-layer.client-map-offer-offset .map-offer-card,
@@ -4531,7 +4558,7 @@ html.theme-light .staff-ops-btn-primary:hover {
   max-width: 100%;
   width: 100%;
   margin-inline: 0;
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1.5rem, var(--app-safe-bottom));
 }
 
 .app-page-lead {
@@ -5857,7 +5884,7 @@ html.theme-light .app-chat-composer {
 }
 
 .app-chat-composer-inner {
-  padding: 0.625rem 0.75rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.625rem 0.75rem calc(0.625rem + var(--app-safe-bottom));
 }
 
 .app-chat-composer-field {
@@ -8890,13 +8917,13 @@ input, select, textarea, button {
 /* ─── LANDING PAGE: FORM-FACTOR LAYOUTS ─────────────────── */
 .landing-page {
   --landing-container: min(72rem, 100%);
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: var(--app-safe-bottom);
   background: var(--brand-bg);
   color: var(--brand-text);
 }
 
 .landing-page--mobile {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0));
+  padding-bottom: calc(5.5rem + var(--app-safe-bottom));
 }
 
 .landing-container {
@@ -9300,7 +9327,7 @@ input, select, textarea, button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0));
+  padding: 0.75rem 1rem calc(0.75rem + var(--app-safe-bottom));
   border-top: 1px solid var(--brand-border);
   background: color-mix(in srgb, var(--brand-bg) 94%, transparent);
   backdrop-filter: blur(16px);
@@ -11479,7 +11506,7 @@ html:has(#guardr-auth-root) #root {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 /* ─── GUARD JOB DETAIL CARD: FULL-WIDTH ─────────────────────────────────── */
@@ -15466,7 +15493,7 @@ html.theme-dark .role-side-nav-item-active {
 /* ─── Screen scroll regions ───────────────────────────────────────────────── */
 
 .app-screen {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(1rem + var(--app-safe-bottom));
 }
 
 .app-form-section {
@@ -16618,7 +16645,7 @@ textarea.uber-input {
   bottom: 0;
   z-index: 9999;
   padding: 0.75rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.75rem, var(--app-safe-bottom));
   pointer-events: none;
 }
 

@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { ensureNativePermissions } from './lib/platform/nativePermissions';
+import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
 import { registerNativeInstall, registerPwaInstall } from './lib/platform/installRegistry';
 import App from './App.tsx';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
@@ -20,6 +21,7 @@ void initSentry();
 
 async function initNativeShell(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
+  initNativeSafeArea();
   try {
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#5E7B61' });

@@ -16,6 +16,8 @@ const config = {
   },
   android: {
     allowMixedContent: false,
+    // Keep WebView above system nav (home/back/recents) on Android 15+ edge-to-edge.
+    adjustMarginsForEdgeToEdge: 'auto',
   },
   plugins: {
     SplashScreen: {
@@ -27,6 +29,7 @@ const config = {
     StatusBar: {
       style: 'DARK',
       backgroundColor: '#5E7B61',
+      overlaysWebView: false,
     },
   },
 };
