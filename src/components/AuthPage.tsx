@@ -20,7 +20,7 @@ import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { AppErrorBanner, AppFlowSurface } from './ui/app/AppPrimitives';
 import { personNameFromPayload } from '../lib/personName';
-import { SessionUser, SecurityGuard, Client } from '../types';
+import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
 import { ROLE_LABELS } from '../lib/permissions';
 import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME, SITE_NAME } from '../lib/siteConfig';
@@ -33,6 +33,13 @@ import {
 } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
+import { normalizeGuardServiceAreas } from '../lib/californiaCities';
+import {
+  GUARD_CARD_STATUS_OPTIONS,
+  guardArmedPreferenceFromSignup,
+  type GuardArmedPreference,
+  type GuardCardStatus,
+} from '../lib/guardApplicationIntake';
 
 const MIN_GUARD_HOURLY_RATE = 15;
 const MAX_GUARD_HOURLY_RATE = 300;
@@ -212,6 +219,15 @@ export function AuthPage({
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [hourlyRate, setHourlyRate] = useState('35');
+  const [guardYearsExperience, setGuardYearsExperience] = useState('');
+  const [guardSpecialties, setGuardSpecialties] = useState<string[]>([]);
+  const [guardArmedPreference, setGuardArmedPreference] = useState<GuardArmedPreference | ''>('');
+  const [guardPrimaryCity, setGuardPrimaryCity] = useState<string>(DEFAULT_CALIFORNIA_CITY);
+  const [guardExtraCities, setGuardExtraCities] = useState('');
+  const [guardSummary, setGuardSummary] = useState('');
+  const [guardAvailabilityNotes, setGuardAvailabilityNotes] = useState('');
+  const [guardCardStatus, setGuardCardStatus] = useState<GuardCardStatus | ''>('');
+  const [guardReliableTransport, setGuardReliableTransport] = useState<'' | 'yes' | 'no'>('');
 
   const [clientCompanyName, setClientCompanyName] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -275,6 +291,50 @@ export function AuthPage({
       ) {
         setErrorMsg('An account with this email already exists. Sign in instead.');
         return;
+      }
+
+      if (role === 'guard') {
+        if (!phone.trim()) {
+          setErrorMsg('Phone number is required for guard applications.');
+          return;
+        }
+        const years = parseInt(guardYearsExperience, 10);
+        if (!Number.isFinite(years) || years < 0 || years > 60) {
+          setErrorMsg('Enter your years of security experience (0–60).');
+          return;
+        }
+        if (guardSpecialties.length === 0) {
+          setErrorMsg('Select at least one type of security work you have done.');
+          return;
+        }
+        if (!guardArmedPreference) {
+          setErrorMsg('Select your armed work preference.');
+          return;
+        }
+        if (!guardPrimaryCity) {
+          setErrorMsg('Select your primary service area.');
+          return;
+        }
+        if (!guardCardStatus) {
+          setErrorMsg('Tell us your current guard card status.');
+          return;
+        }
+        if (!guardReliableTransport) {
+          setErrorMsg('Let us know if you have reliable transportation.');
+          return;
+        }
+        if (guardSummary.trim().length < 20) {
+          setErrorMsg('Describe your recent security roles and employers (at least a few sentences).');
+          return;
+        }
+        if (bio.trim().length < 20) {
+          setErrorMsg('Add a short professional background (at least a few sentences).');
+          return;
+        }
+        if (guardAvailabilityNotes.trim().length < 10) {
+          setErrorMsg('Share your general availability (days, times, or schedule).');
+          return;
+        }
       }
 
       const normalized = personNameFromPayload({
@@ -341,6 +401,13 @@ export function AuthPage({
         return;
       }
 
+      const armedSignup = guardArmedPreferenceFromSignup(guardArmedPreference as GuardArmedPreference);
+      const extraCities = guardExtraCities
+        .split(',')
+        .map((city) => city.trim())
+        .filter(Boolean);
+      const serviceAreas = normalizeGuardServiceAreas([guardPrimaryCity, ...extraCities]);
+
       const newGuardProfile: SecurityGuard = {
         id: randomId,
         name: normalized.name,
@@ -350,9 +417,17 @@ export function AuthPage({
         email,
         badgeNumber: `GR-${Math.floor(10000 + Math.random() * 90000)}`,
         avatar: '',
-        phone: phone || '',
-        bio: bio || 'Licensed security professional.',
-        isArmed: false,
+        phone: phone.trim(),
+        bio: bio.trim(),
+        summary: guardSummary.trim(),
+        yearsExperience: parseInt(guardYearsExperience, 10),
+        specialties: guardSpecialties,
+        serviceAreas,
+        availabilityNotes: guardAvailabilityNotes.trim(),
+        guardCardStatus: guardCardStatus as GuardCardStatus,
+        hasReliableTransportation: guardReliableTransport === 'yes',
+        armedPreference: armedSignup.armedPreference,
+        isArmed: armedSignup.isArmed,
         backgroundChecked: false,
         verified: false,
         rating: 0,
@@ -672,12 +747,26 @@ export function AuthPage({
               </div>
 
               {isSignUp && role === 'guard' && (
-                <div className="space-y-4 pt-4 border-t border-brand-border">
-                  <p className="uber-label">Guard details</p>
+                <div className="space-y-5 pt-4 border-t border-brand-border">
+                  <p className="uber-label">Guard application</p>
+                  <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
+                    A short application so staff can review your fit before you upload credentials.
+                  </p>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="uber-label block mb-2">Phone</label>
-                      <input type="tel" placeholder="+1 (555) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} className="uber-input" />
+                      <div className="relative">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <input
+                          type="tel"
+                          required
+                          placeholder="+1 (555) 000-0000"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="uber-input pl-10"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="uber-label block mb-2">Hourly rate ($)</label>
@@ -692,13 +781,168 @@ export function AuthPage({
                       />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Years in security</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={60}
+                        required
+                        placeholder="e.g. 3"
+                        value={guardYearsExperience}
+                        onChange={(e) => setGuardYearsExperience(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Armed work</label>
+                      <div className="relative">
+                        <select
+                          required
+                          value={guardArmedPreference}
+                          onChange={(e) => setGuardArmedPreference(e.target.value as GuardArmedPreference | '')}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">Select…</option>
+                          <option value="unarmed">Unarmed only</option>
+                          <option value="armed">Armed only</option>
+                          <option value="both">Open to armed & unarmed</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="uber-label block mb-2">Bio</label>
+                    <label className="uber-label block mb-2">Types of work you&apos;ve done</label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {GUARD_SPECIALTY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() =>
+                            setGuardSpecialties((prev) =>
+                              prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+                            )
+                          }
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            guardSpecialties.includes(opt)
+                              ? 'bg-brand-primary text-white border-brand-primary'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Primary service area</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                        <select
+                          required
+                          value={guardPrimaryCity}
+                          onChange={(e) => setGuardPrimaryCity(e.target.value)}
+                          className="uber-input pl-10 appearance-none pr-8"
+                        >
+                          {CALIFORNIA_CITIES.map((city) => (
+                            <option key={city} value={city}>
+                              {city}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">
+                        Other cities <span className="font-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="San Diego, Oakland"
+                        value={guardExtraCities}
+                        onChange={(e) => setGuardExtraCities(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="uber-label block mb-2">Guard card status</label>
+                      <div className="relative">
+                        <select
+                          required
+                          value={guardCardStatus}
+                          onChange={(e) => setGuardCardStatus(e.target.value as GuardCardStatus | '')}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">Select…</option>
+                          {GUARD_CARD_STATUS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="uber-label block mb-2">Reliable transportation?</label>
+                      <div className="relative">
+                        <select
+                          required
+                          value={guardReliableTransport}
+                          onChange={(e) => setGuardReliableTransport(e.target.value as '' | 'yes' | 'no')}
+                          className="uber-input appearance-none pr-8"
+                        >
+                          <option value="">Select…</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="uber-label block mb-2">Recent roles & employers</label>
                     <textarea
                       rows={3}
-                      placeholder="Experience, specialties, previous roles..."
+                      required
+                      placeholder="Last 1–2 employers, job titles, and the types of sites you covered…"
+                      value={guardSummary}
+                      onChange={(e) => setGuardSummary(e.target.value)}
+                      className="uber-input resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="uber-label block mb-2">Professional background</label>
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Training, licenses in progress, strengths, and what you are looking for on Guardr…"
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
+                      className="uber-input resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="uber-label block mb-2">Availability</label>
+                    <textarea
+                      rows={2}
+                      required
+                      placeholder="Days/times you usually work, overnight availability, etc."
+                      value={guardAvailabilityNotes}
+                      onChange={(e) => setGuardAvailabilityNotes(e.target.value)}
                       className="uber-input resize-none"
                     />
                   </div>

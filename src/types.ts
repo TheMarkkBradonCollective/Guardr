@@ -121,6 +121,9 @@ export const GUARD_SPECIALTY_OPTIONS = [
 
 export type GuardSpecialty = (typeof GUARD_SPECIALTY_OPTIONS)[number];
 
+export type GuardCardStatus = 'active' | 'in_progress' | 'none';
+export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
+
 /** A client account — stored separately from guards */
 export interface Client {
   id: string;
@@ -320,6 +323,12 @@ export interface SecurityGuard {
   experience: Experience[];
   education?: GuardEducation[];
   hourlyRateRequirement?: number;
+  /** Sign-up armed work preference */
+  armedPreference?: GuardArmedPreference;
+  /** Self-reported BSIS guard card status at application */
+  guardCardStatus?: GuardCardStatus;
+  /** Self-reported at application */
+  hasReliableTransportation?: boolean;
   isStaff?: boolean;
   staffRole?: StaffRole;
   userStatus?: 'pending' | 'approved' | 'active' | 'suspended' | 'blocked';
