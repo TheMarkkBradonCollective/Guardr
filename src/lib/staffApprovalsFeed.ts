@@ -17,6 +17,7 @@ import { isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
+import { jobNeedsStaffApplicationReview } from './jobApplications';
 
 export type ApprovalFeedQueue = Exclude<ApprovalQueueId, 'accounts' | 'all'>;
 
@@ -147,36 +148,32 @@ function scheduleChangeItems(requests: SecurityRequest[], auditLog: AuditLogEntr
 
 function applicationItems(requests: SecurityRequest[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return requests
-    .filter((r) => {
-      if (r.applicants.length === 0 && !r.staffApprovedGuardAt && !r.pendingGuardId) return false;
-      if (r.pendingGuardId) return true;
-      if (r.staffApprovedGuardAt) return true;
-      return r.status === 'open' && !r.assignedGuardId && r.applicants.length > 0;
-    })
+    .filter(jobNeedsStaffApplicationReview)
     .map((req) => {
-      const pending = Boolean(req.pendingGuardId);
-      const approved = Boolean(req.staffApprovedGuardAt);
       const audit = latestAudit(auditLog, req.id, ['job_approved']);
       const actor = actorLabel(audit);
-      const status: ApprovalFeedStatus = pending ? 'in_review' : approved ? 'approved' : 'pending';
       return {
         id: req.id,
         queue: 'applications',
         title: req.title,
         subtitle: `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}`,
-        status,
-        statusLabel: pending
-          ? 'Awaiting client'
-          : approved
-            ? 'Sent to client'
-            : 'Needs review',
+        status: 'pending' as const,
+        statusLabel: 'Needs review',
         submittedAt: req.openedAt ?? req.startDate,
-        reviewedAt: req.staffApprovedGuardAt ?? actor.at,
+        reviewedAt: undefined,
         reviewedByName: actor.name,
         reviewedByEmail: actor.email,
-        sortKey: new Date(req.staffApprovedGuardAt ?? req.openedAt ?? req.startDate).getTime(),
+        sortKey: new Date(req.openedAt ?? req.startDate).getTime(),
       };
     });
+}
+
+/** Applications queue only — job applicant review, not account approvals. */
+export function buildApplicationFeed(
+  requests: SecurityRequest[],
+  auditLog: AuditLogEntry[] = []
+): ApprovalFeedItem[] {
+  return applicationItems(requests, auditLog).sort(compareFeedItems);
 }
 
 function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {

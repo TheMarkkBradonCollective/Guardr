@@ -5,7 +5,9 @@ import {
   OpsActivityItem,
   OverviewActionItem,
   OverviewLiveJob,
+  OverviewNavigationSelection,
   PlatformStats,
+  resolveOverviewActionSelection,
   StaffSection,
 } from '../../lib/staffOps';
 import {
@@ -71,7 +73,7 @@ interface StaffOverviewProps {
   actionItems: OverviewActionItem[];
   liveJobs: OverviewLiveJob[];
   weeklyTrend: number[];
-  onNavigate: (section: StaffSection) => void;
+  onNavigate: (section: StaffSection, selection?: OverviewNavigationSelection) => void;
   onOpenJob?: (jobId: string) => void;
   canUpdateJobs?: boolean;
   staffName: string;
@@ -244,7 +246,12 @@ export function StaffOverview({
       ) : (
         <AppItemCardStack>
           {filteredActions.map((item) => (
-            <AppItemCard key={item.id} onClick={() => onNavigate(item.section)}>
+            <AppItemCard
+              key={item.id}
+              onClick={() =>
+                onNavigate(item.section, resolveOverviewActionSelection(item, { requests, guards, clients }))
+              }
+            >
               <div className="flex items-start gap-3 w-full text-left">
                 <span
                   className={`staff-overview-action-icon ${

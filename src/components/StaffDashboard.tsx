@@ -52,6 +52,8 @@ import {
   buildPlatformActivityFeed,
   computePlatformStats,
   computeWeeklyCompletedJobs,
+  getPendingClientAccounts,
+  getPendingGuardAccounts,
   isStaffOpsMapSection,
   isStaffMessagesSection,
   StaffSection,
@@ -508,10 +510,12 @@ export function StaffDashboard({
 
   const badges = useMemo(
     () => ({
-      applications: stats.pendingGuardApplications,
+      applications: stats.pendingGuardApplicationJobs,
       credentials:
         stats.pendingCertApprovals +
         guards.filter((g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending').length,
+      guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
+      clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
@@ -520,7 +524,7 @@ export function StaffDashboard({
       payments: openPayoutInvoices,
       crews: countStaffCrewsNeedingReview(requests),
     }),
-    [stats, guards, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
+    [stats, guards, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
 
   const renderSection = () => {

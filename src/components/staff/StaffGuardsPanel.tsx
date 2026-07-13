@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Certification,
   Experience,
@@ -11,15 +11,14 @@ import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout
 import { StaffGuardDetailPanel } from './StaffGuardDetailPanel';
 import { GuardRosterStatusBadges, guardRosterSortRank } from './GuardRosterStatusBadges';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
+import { WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { ProfileSavePayload } from '../profile/UserProfileScreen';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
-import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
-import { guardHasMissingWorkCredentials } from '../../lib/guardMissingCredentials';
+import { getPendingGuardAccounts } from '../../lib/staffOps';
 
 interface StaffGuardsPanelProps {
   guards: SecurityGuard[];
@@ -124,6 +123,7 @@ export function StaffGuardsPanel({
   onAddGuard,
 }: StaffGuardsPanelProps) {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending'>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -138,6 +138,10 @@ export function StaffGuardsPanel({
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
   const roster = guards.filter((g) => !g.isStaff);
+  const pendingGuardIds = useMemo(
+    () => new Set(getPendingGuardAccounts(roster).map((g) => g.id)),
+    [roster]
+  );
 
   const filtered = roster
     .filter(
@@ -146,6 +150,7 @@ export function StaffGuardsPanel({
         g.email.toLowerCase().includes(search.toLowerCase()) ||
         g.badgeNumber.toLowerCase().includes(search.toLowerCase())
     )
+    .filter((g) => statusFilter === 'all' || pendingGuardIds.has(g.id))
     .sort((a, b) => {
       const rank = guardRosterSortRank(a) - guardRosterSortRank(b);
       if (rank !== 0) return rank;
@@ -228,6 +233,23 @@ export function StaffGuardsPanel({
             placeholder="Search guards..."
             className="max-w-md"
           />
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`app-button-outline app-btn-sm ${statusFilter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              All ({roster.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('pending')}
+              className={`app-button-outline app-btn-sm ${statusFilter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              Needs action{pendingGuardIds.size > 0 ? ` (${pendingGuardIds.size})` : ''}
+            </button>
+          </div>
         </>
       )}
 
@@ -259,9 +281,6 @@ export function StaffGuardsPanel({
             const activeShift = requests.find(
               (r) => r.assignedGuardId === guard.id && (r.status === 'in-progress' || r.status === 'accepted')
             );
-            const pendingCerts = guard.certifications.filter((c) => c.status === 'pending').length;
-            const secondaryMeta =
-              pendingCerts > 0 || guardHasMissingWorkCredentials(guard) || Boolean(activeShift);
 
             return (
               <WfListCard
@@ -271,20 +290,10 @@ export function StaffGuardsPanel({
                 meta={
                   <div className="flex flex-col items-start gap-1.5 w-full">
                     <GuardRosterStatusBadges guard={guard} />
-                    {secondaryMeta && (
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {pendingCerts > 0 && (
-                          <WfBadge tone="warning">
-                            {pendingCerts} cred{pendingCerts === 1 ? '' : 's'} pending
-                          </WfBadge>
-                        )}
-                        <GuardMissingCredentialsBadge guard={guard} />
-                        {activeShift && (
-                          <WfBadge tone="primary" className="max-w-full truncate">
-                            On job: {activeShift.title}
-                          </WfBadge>
-                        )}
-                      </div>
+                    {activeShift && (
+                      <p className="text-[11px] text-brand-text-muted truncate max-w-full">
+                        On job: {activeShift.title}
+                      </p>
                     )}
                   </div>
                 }

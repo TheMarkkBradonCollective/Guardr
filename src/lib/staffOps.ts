@@ -15,7 +15,7 @@ import { isJobLocationCoordsMissing, jobsMissingMapCoordinates } from './jobLoca
 import { isNoSelfAuditFlagged, selfAuditPhotosComplete } from './selfAuditPhotos';
 import { getApprovedGuardsAwaitingActivation, getPendingGuardAccountReviews } from './guardAccountActivation';
 import { getPendingInsuranceReviews } from './guardInsurance';
-import { countPendingGuardApplications, getOpenJobsWithApplications } from './jobApplications';
+import { countPendingGuardApplications, getJobsNeedingStaffApplicationReview } from './jobApplications';
 import { paymentAttentionSummary } from './paymentPipeline';
 import { computeOperationalFinancials } from './operationalFinancials';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
@@ -325,7 +325,7 @@ export function computePlatformStats(
   const pendingGuardProfileApprovals = getPendingGuardAccountReviews(guards).length;
   const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards).length;
   const pendingGuardAccounts = pendingGuardProfileApprovals + approvedGuardsAwaitingActivation;
-  const pendingGuardApplicationJobs = getOpenJobsWithApplications(requests).length;
+  const pendingGuardApplicationJobs = getJobsNeedingStaffApplicationReview(requests).length;
   const pendingGuardApplications = countPendingGuardApplications(requests);
   const pendingClientAccounts = getPendingClientAccounts(clients).length;
   const pendingStaffAccounts = getPendingStaffAccountReviews(guards).length;
@@ -556,7 +556,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'guard-applications',
       title: 'Review guard applications',
-      description: `${stats.pendingGuardApplications} application${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} open job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
+      description: `${stats.pendingGuardApplications} applicant${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
       count: stats.pendingGuardApplications,
       section: 'applications',
       tone: 'urgent',
@@ -999,4 +999,34 @@ export function getPendingGuardAccounts(guards: SecurityGuard[]): SecurityGuard[
 
 export function getPendingClientAccounts(clients: Client[]): Client[] {
   return clients.filter((c) => isSelfSubmittedClientAccount(c));
+}
+
+export interface OverviewNavigationSelection {
+  guardId?: string | null;
+  clientId?: string | null;
+  jobId?: string | null;
+  credentialItemId?: string | null;
+}
+
+/** Deep-link overview action cards into the right list item when possible. */
+export function resolveOverviewActionSelection(
+  item: OverviewActionItem,
+  ctx: { requests: SecurityRequest[]; guards: SecurityGuard[]; clients: Client[] }
+): OverviewNavigationSelection {
+  switch (item.id) {
+    case 'guard-applications': {
+      const job = getJobsNeedingStaffApplicationReview(ctx.requests)[0];
+      return { jobId: job?.id ?? null };
+    }
+    case 'pending-guard-accounts': {
+      const guard = getPendingGuardAccounts(ctx.guards)[0];
+      return { guardId: guard?.id ?? null };
+    }
+    case 'pending-client-accounts': {
+      const client = getPendingClientAccounts(ctx.clients)[0];
+      return { clientId: client?.id ?? null };
+    }
+    default:
+      return {};
+  }
 }

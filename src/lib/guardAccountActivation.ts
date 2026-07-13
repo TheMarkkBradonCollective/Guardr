@@ -316,6 +316,9 @@ export function guardBelongsInAccountApprovalsQueue(guard: SecurityGuard): boole
 /** Staff guard roster — only show "Pending approval" after the guard submits for review. */
 export function getGuardRosterAccountLabel(guard: SecurityGuard): string {
   const status = getGuardUserStatus(guard);
+  if (status === 'active' || status === 'suspended' || status === 'blocked') {
+    return GUARD_USER_STATUS_LABELS[status];
+  }
   if (isGuardAccountApproved(guard)) return GUARD_USER_STATUS_LABELS.approved;
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
@@ -331,14 +334,14 @@ export function getGuardRosterAccountBadgeTone(
   guard: SecurityGuard
 ): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   const status = getGuardUserStatus(guard);
-  if (isGuardAccountApproved(guard)) return 'primary';
   if (status === 'active') return 'success';
+  if (status === 'suspended' || status === 'blocked') return 'danger';
+  if (isGuardAccountApproved(guard)) return 'primary';
   if (status === 'pending') {
     const checklist = getGuardActivationChecklist(guard);
     if (guardHasSubmittedItemsForStaffReview(guard) || checklist.canStaffApprove) return 'warning';
     return 'default';
   }
-  if (status === 'suspended' || status === 'blocked') return 'danger';
   return 'default';
 }
 
