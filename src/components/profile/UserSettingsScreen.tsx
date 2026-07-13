@@ -7,6 +7,8 @@ import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../../lib/legalContent';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { isNativeShell } from '../../lib/platform/device';
+import { SITE_URL } from '../../lib/siteConfig';
 import { TeamCodeJoinPanel } from '../guard/TeamCodeJoinPanel';
 
 interface UserSettingsScreenProps {
@@ -52,6 +54,22 @@ export function UserSettingsScreen({
           <LegalInfoCards onOpenLegal={onOpenLegal} />
         </AppFormSection>
       )}
+
+      <AppFormSection title="About">
+        <p className="text-sm text-brand-text-muted">
+          Guardr v{import.meta.env.VITE_APP_VERSION || '—'}
+          {isNativeShell() ? ' · Android app' : ' · Web'}
+        </p>
+        {isNativeShell() && (
+          <p className="text-xs text-brand-text-muted mt-2 leading-relaxed">
+            Updates ship with new APK builds. Compare with the live site at{' '}
+            <a href={`${SITE_URL}/download/`} className="text-brand-primary font-semibold underline">
+              {SITE_URL}/download/
+            </a>
+            .
+          </p>
+        )}
+      </AppFormSection>
     </AppScreen>
   );
 }

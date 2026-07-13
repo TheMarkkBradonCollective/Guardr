@@ -29,6 +29,9 @@ function run(cmd, args, options = {}) {
 console.log('→ Generating download version manifest…');
 run('npm', ['run', 'generate:download-version']);
 
+console.log('→ Auditing APK / site parity…');
+run('node', ['scripts/audit-apk-parity.mjs']);
+
 console.log('→ Generating Android launcher icons…');
 run('npm', ['run', 'generate:android-icons']);
 
@@ -53,6 +56,9 @@ const publicApk = path.join(publicDir, 'guardr.apk');
 
 await mkdir(publicDir, { recursive: true });
 await copyFile(releaseApk, publicApk);
+
+console.log('→ Post-build parity audit…');
+run('node', ['scripts/audit-apk-parity.mjs']);
 
 console.log(`\n✓ APK ready:\n  ${releaseApk}\n  ${publicApk}\n`);
 console.log('Share: https://guardr.co/download/');

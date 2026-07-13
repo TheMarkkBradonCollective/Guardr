@@ -39,7 +39,7 @@ Form factor is detected in `src/lib/platform/device.ts` and exposed via `useDevi
 ## Theme System
 
 - **Primary brand:** Sage green (`#84a279`)
-- **Themes:** Dark (default), Light, Grey — all keep sage as accent
+- **Themes:** Light (default), Dark, Grey — all keep sage as accent
 - **Persistence:** `localStorage` per user + `theme_preference` column on `guards` / `clients` (migration `20260608100000`)
 - **Sync:** On sign-in and theme change, preference writes to Supabase when connected
 

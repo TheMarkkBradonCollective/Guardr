@@ -1,7 +1,7 @@
 {
   "name": "guardr",
   "private": true,
-  "version": "1.0.26",
+  "version": "1.0.27",
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp && npm run generate:download-version",
@@ -19,6 +19,7 @@
     "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs",
     "generate:android-icons": "node scripts/generate-android-icons.mjs",
     "generate:download-version": "node scripts/generate-download-version.mjs",
+    "apk:audit": "node scripts/audit-apk-parity.mjs",
     "cap:sync": "npm run build && npx cap sync android",
     "android:apk": "node scripts/build-android-apk.mjs",
     "android:open": "npx cap open android"

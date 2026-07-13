@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
+import { isNativeShell } from '../lib/platform/device';
 import {
   Download,
   X,
@@ -17,6 +18,10 @@ export function InstallPrompt() {
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
+    if (isNativeShell()) {
+      return;
+    }
+
     const runningStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
@@ -73,7 +78,7 @@ export function InstallPrompt() {
     setIsVisible(false);
   };
 
-  if (isStandalone || !isVisible) {
+  if (isNativeShell() || isStandalone || !isVisible) {
     return null;
   }
 
