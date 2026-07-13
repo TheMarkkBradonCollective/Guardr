@@ -35,10 +35,21 @@ npm run android:apk
 
 This will:
 
-1. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
-2. Sync assets into `android/`
-3. Run `./gradlew assembleRelease`
-4. Copy the APK to `public/download/guardr.apk` for static hosting
+1. Sync `public/download/version.json` and `android/app/build.gradle` from `package.json`
+2. Run `npm run apk:audit` to catch version drift before building
+3. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
+4. Sync assets into `android/`
+5. Run `./gradlew assembleRelease`
+6. Copy the APK to `public/download/guardr.apk` for static hosting
+7. Re-run the parity audit (warnings if the bundled web assets are stale)
+
+### Verify without building
+
+```bash
+npm run apk:audit
+```
+
+Checks `package.json`, `version.json`, `build.gradle`, Capacitor plugins, and whether `public/download/guardr.apk` matches the current version.
 
 Output APK path:
 
