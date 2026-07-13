@@ -12,6 +12,9 @@ const version = pkg.version || '1.0.0';
 const parts = version.split('.').map((part) => Number.parseInt(part, 10) || 0);
 const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
 
+const cacheSlug = version.replace(/\./g, '-');
+const cacheName = `guardr-cache-v${cacheSlug}`;
+
 const manifest = {
   webVersion: version,
   apkVersion: version,
@@ -31,4 +34,13 @@ gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
 gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
 await writeFile(gradlePath, gradle);
 
+const swPath = path.join(ROOT, 'public/sw.js');
+let sw = await readFile(swPath, 'utf8');
+if (!/const CACHE_NAME = 'guardr-cache-v[^']+';/.test(sw)) {
+  throw new Error('public/sw.js missing CACHE_NAME constant');
+}
+sw = sw.replace(/const CACHE_NAME = 'guardr-cache-v[^']+';/, `const CACHE_NAME = '${cacheName}';`);
+await writeFile(swPath, sw);
+
 console.log(`Download manifest: web/apk v${version} (code ${versionCode})`);
+console.log(`Service worker cache: ${cacheName}`);
