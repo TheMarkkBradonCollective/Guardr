@@ -324,7 +324,12 @@ html.theme-grey {
   height: 100%;
   min-height: 0;
   padding: 1rem 0.75rem;
-  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 1023px) {
+  .staff-sidebar-inner {
+    padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  }
 }
 
 .staff-sidebar-brand {
@@ -15664,8 +15669,13 @@ textarea:focus-visible {
 .page-shell,
 .role-app-shell,
 .staff-shell {
-  position: relative;
   isolation: isolate;
+}
+
+/* Fixed app shells use Tailwind position:fixed — do not override here */
+.landing-page.page-shell,
+.page-shell:not(.fixed) {
+  position: relative;
 }
 
 .page-shell::before,
