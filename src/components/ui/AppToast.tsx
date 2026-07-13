@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export type AppToastTone = 'success' | 'error' | 'info';
@@ -70,7 +71,7 @@ export function AppToastHost() {
 
   if (!toast) return null;
 
-  return (
+  const host = (
     <div className="app-toast-host" role="status" aria-live="polite">
       <div className={`app-toast app-toast-${toast.tone}`}>
         {TOAST_ICONS[toast.tone]}
@@ -84,4 +85,7 @@ export function AppToastHost() {
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return host;
+  return createPortal(host, document.body);
 }

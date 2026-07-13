@@ -126,7 +126,7 @@ export function AppModal({
   panelClassName = '',
   zIndex = 1100,
   ariaLabelledBy,
-  position = 'fixed',
+  position: _position = 'fixed',
 }: AppModalProps) {
   useTopmostEscapeClose(open, onClose);
   useReturnFocusOnClose(open);
@@ -148,11 +148,11 @@ export function AppModal({
       ? { opacity: 0, y: 28, scale: 0.98 }
       : { opacity: 0, y: 10, scale: 0.98 };
 
-  return (
+  const modal = (
     <AnimatePresence>
       {open && (
         <motion.div
-          className={`${position} inset-0 flex items-end sm:items-center justify-center p-4 ${className}`.trim()}
+          className={`fixed inset-0 flex items-end sm:items-center justify-center p-4 ${className}`.trim()}
           style={{ zIndex }}
           role="dialog"
           aria-modal="true"
@@ -186,6 +186,9 @@ export function AppModal({
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return modal;
+  return createPortal(modal, document.body);
 }
 
 interface AppOverlaySheetProps {

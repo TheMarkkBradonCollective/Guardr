@@ -32,6 +32,7 @@ import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import type { SecurityRequest } from '../types';
 import { GuardActiveShift } from './guard/GuardActiveShift';
 import { GuardEarningsPanel } from './guard/GuardEarningsPanel';
+import { GuardStripeConnectSheet } from './guard/GuardStripeConnectSheet';
 import { GuardJobDetailView } from './guard/GuardJobDetailView';
 import { GuardMyJobsPanel } from './guard/GuardMyJobsPanel';
 import { GuardCrewHubPanel } from './guard/GuardCrewHubPanel';
@@ -365,6 +366,8 @@ export function GuardDashboard({
   const [cashRequestPending, setCashRequestPending] = useState(false);
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
+  const [connectSheetOpen, setConnectSheetOpen] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState(false);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
 
@@ -840,8 +843,14 @@ export function GuardDashboard({
     setRatingJob(activeShiftJob);
   };
 
-  const handleConnectStripe = async () => {
+  const handleConnectStripeClick = () => {
+    setConnectError(null);
+    setConnectSheetOpen(true);
+  };
+
+  const handleConnectStripeContinue = async () => {
     setConnectPending(true);
+    setConnectError(null);
     try {
       let accountId = guard.stripeConnectAccountId;
       if (!accountId) {
@@ -854,18 +863,16 @@ export function GuardDashboard({
         onUpdateStripeAccount?.(guard.id, accountId);
       }
       const { url } = await createConnectAccountLink(accountId);
-      window.location.href = url;
+      setConnectSheetOpen(false);
+      window.location.assign(url);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to start Stripe onboarding';
       if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
-        showAppToast('Stripe Connect not ready', {
-          tone: 'error',
-          body:
-            'Stripe Connect is not fully activated on the Guardr platform account yet. In Stripe Dashboard open Connect → Get started and complete your platform profile, then try again.',
-          durationMs: 9000,
-        });
+        setConnectError(
+          'Stripe Connect is not fully activated on the Guardr platform yet. Contact Guardr support if this persists.'
+        );
       } else {
-        showAppToast(message, { tone: 'error' });
+        setConnectError(message);
       }
     } finally {
       setConnectPending(false);
@@ -1128,7 +1135,7 @@ export function GuardDashboard({
                   stripeConnected={!!guard.stripeConnectAccountId}
                   stripeReady={connectReady}
                   connectPending={connectPending}
-                  onConnectStripe={handleConnectStripe}
+                  onConnectStripe={handleConnectStripeClick}
                   onRequestCashPayout={onRequestCashPayout ? handleRequestCashPayout : undefined}
                   onRequestStripePayout={onRequestStripePayout ? handleRequestStripePayout : undefined}
                   cashRequestPending={cashRequestPending}
@@ -1310,6 +1317,19 @@ export function GuardDashboard({
 
   const guardModals = (
     <>
+      <GuardStripeConnectSheet
+        open={connectSheetOpen}
+        onClose={() => {
+          if (connectPending) return;
+          setConnectSheetOpen(false);
+          setConnectError(null);
+        }}
+        onContinue={handleConnectStripeContinue}
+        pending={connectPending}
+        error={connectError}
+        resumeSetup={!!guard.stripeConnectAccountId}
+      />
+
       <GuardSelfAuditModal
         open={showSelfAudit}
         onClose={() => setShowSelfAudit(false)}
