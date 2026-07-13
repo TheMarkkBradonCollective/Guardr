@@ -10,6 +10,7 @@ import {
   listenForNativePushNavigation,
   restoreNativePushIfEnabled,
   resolveNativePushToggleState,
+  syncNativePushLocalState,
   subscribeToNativePush,
   unsubscribeFromNativePush,
 } from './nativePush';
@@ -19,6 +20,7 @@ export {
   isNativeFcmConfigured,
   NATIVE_FCM_NOT_CONFIGURED_MESSAGE,
   resolveNativePushToggleState,
+  syncNativePushLocalState,
 } from './nativePush';
 export { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 
