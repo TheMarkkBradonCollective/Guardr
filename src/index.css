@@ -314,8 +314,42 @@ html.theme-grey {
   flex-shrink: 0;
   background: var(--brand-bg-sec);
   border-right: 1px solid var(--brand-border);
-  position: relative;
   z-index: 50;
+}
+
+/* Mobile/tablet drawer — fixed overlay, never reserves flex width */
+.staff-shell--compact > .staff-sidebar--overlay {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(18rem, 88vw);
+  z-index: 1100;
+  transform: translateX(-100%);
+  transition: transform 0.22s ease-out;
+  box-shadow: var(--shadow-float);
+}
+
+.staff-shell--compact > .staff-sidebar--overlay.staff-sidebar-open {
+  transform: translateX(0);
+}
+
+.staff-shell--compact > .staff-main {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.staff-shell--compact .tablet-split-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem;
+  min-height: 0 !important;
+}
+
+.staff-sidebar--docked {
+  position: relative;
 }
 
 .staff-sidebar-inner {
@@ -382,31 +416,6 @@ html.theme-grey {
 .staff-main-content {
   background: var(--brand-bg);
   color: var(--brand-text);
-}
-
-@media (max-width: 1023px) {
-  .staff-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 1100;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease-out;
-    box-shadow: var(--shadow-float);
-  }
-
-  .staff-sidebar.staff-sidebar-open {
-    transform: translateX(0);
-  }
-
-  /* Sidebar is fixed/off-canvas — main column must use full width */
-  .staff-main {
-    width: 100%;
-    max-width: 100%;
-    flex: 1 1 100%;
-    min-width: 0;
-  }
 }
 
 /* Staff ops map — contained in main column (not guard shift side panel) */
@@ -2740,6 +2749,12 @@ html.theme-light, .theme-light {
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  /* Fixed role shells span the viewport — root safe-area padding double-insets them */
+  body.pwa-standalone #root:has(.staff-shell.fixed),
+  body.pwa-standalone #root:has(.role-app-shell.fixed) {
+    padding: 0;
   }
 }
 

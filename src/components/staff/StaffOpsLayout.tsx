@@ -7,6 +7,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AccountMenu } from '../layouts/AccountMenu';
 import { Logo } from '../Logo';
+import { useDevice } from '../../lib/platform';
 import {
   AlertTriangle,
   BarChart3,
@@ -86,6 +87,8 @@ export function StaffOpsLayout({
   headerActions,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { formFactor } = useDevice();
+  const dockedSidebar = formFactor === 'desktop';
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -163,20 +166,28 @@ export function StaffOpsLayout({
   );
 
   return (
-    <div className="staff-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text">
-      {mobileNavOpen && (
+    <div
+      className={`staff-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
+        dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
+      }`}
+    >
+      {!dockedSidebar && mobileNavOpen && (
         <button
           type="button"
-          className="staff-sidebar-backdrop lg:hidden"
+          className="staff-sidebar-backdrop"
           onClick={() => setMobileNavOpen(false)}
           aria-label="Close navigation"
         />
       )}
 
-      <aside className={`staff-sidebar staff-sidebar-${themeMode} ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}>
+      <aside
+        className={`staff-sidebar staff-sidebar-${themeMode} ${
+          dockedSidebar ? 'staff-sidebar--docked' : 'staff-sidebar--overlay'
+        } ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}
+      >
         <button
           type="button"
-          className="staff-sidebar-close lg:hidden"
+          className={`staff-sidebar-close${dockedSidebar ? ' hidden' : ''}`}
           onClick={() => setMobileNavOpen(false)}
           aria-label="Close menu"
         >
@@ -185,12 +196,12 @@ export function StaffOpsLayout({
         {sidebar}
       </aside>
 
-      <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0">
+      <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {hideHeader ? (
           <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
             <button
               type="button"
-              className="p-2 -ml-2 text-brand-text"
+              className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
             >
@@ -213,7 +224,7 @@ export function StaffOpsLayout({
           <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
             <button
               type="button"
-              className="lg:hidden p-2 -ml-2 text-brand-text"
+              className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
             >

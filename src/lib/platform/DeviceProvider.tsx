@@ -24,10 +24,12 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     const standaloneMq = window.matchMedia('(display-mode: standalone)');
 
     window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
     standaloneMq.addEventListener('change', () => setIsStandalone(isStandaloneDisplay()));
 
     return () => {
       window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
       standaloneMq.removeEventListener('change', () => setIsStandalone(isStandaloneDisplay()));
     };
   }, []);
