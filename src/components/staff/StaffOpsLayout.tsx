@@ -205,7 +205,7 @@ export function StaffOpsLayout({
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {hideHeader ? (
-          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
+          <header className="staff-main-header staff-main-header-compact shrink-0 flex items-center justify-between gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 border-b border-brand-border">
             <button
               type="button"
               className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
@@ -228,7 +228,7 @@ export function StaffOpsLayout({
             </div>
           </header>
         ) : (
-          <header className="staff-main-header shrink-0 flex items-center gap-3 px-4 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
+          <header className="staff-main-header shrink-0 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-brand-border">
             <button
               type="button"
               className={`p-2 -ml-2 text-brand-text${dockedSidebar ? ' hidden' : ''}`}
@@ -258,7 +258,11 @@ export function StaffOpsLayout({
           </header>
         )}
 
-        <main className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${bleed ? '' : 'px-4 py-4 sm:px-5 sm:py-5'}`}>
+        <main
+          className={`staff-main-content flex-1 min-h-0 min-w-0 overflow-hidden ${
+            bleed ? 'staff-main-content--bleed' : 'staff-main-content--padded'
+          }`}
+        >
           <div className={`h-full max-w-full min-w-0 ${bleed ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto overscroll-contain'}`}>
             {children}
           </div>
