@@ -399,6 +399,14 @@ html.theme-grey {
   .staff-sidebar.staff-sidebar-open {
     transform: translateX(0);
   }
+
+  /* Sidebar is fixed/off-canvas — main column must use full width */
+  .staff-main {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
 }
 
 /* Staff ops map — contained in main column (not guard shift side panel) */
@@ -15693,7 +15701,7 @@ textarea:focus-visible {
 }
 
 .role-app-shell > *,
-.staff-shell > *,
+.staff-shell > .staff-main,
 .page-shell > * {
   position: relative;
   z-index: 1;

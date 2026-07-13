@@ -27,7 +27,7 @@ export function useSplitListDetail(
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
   const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet' || formFactor === 'desktop';
+  const splitView = formFactor === 'desktop';
   const showDetailOnly = mobilePresentation === 'page' && Boolean(selectedId && !splitView);
 
   return { splitView, showDetailOnly };

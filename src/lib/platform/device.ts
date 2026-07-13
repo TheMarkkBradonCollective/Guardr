@@ -9,7 +9,13 @@ export type FormFactor = 'mobile' | 'tablet' | 'desktop';
 
 export function getViewportWidth(): number {
   if (typeof window === 'undefined') return BREAKPOINTS.lg;
-  return window.innerWidth;
+  const layoutWidth = window.innerWidth;
+  const visualWidth = window.visualViewport?.width;
+  if (visualWidth && visualWidth > 0) {
+    // Native WebViews can report an inflated layout width; prefer the visual viewport.
+    return Math.min(layoutWidth, visualWidth);
+  }
+  return layoutWidth;
 }
 
 export function resolveFormFactor(width = getViewportWidth()): FormFactor {
