@@ -31,6 +31,7 @@ export function GuardMessengerPanel({
         <ChatThreadPanel
           messages={sortedGuardMessages(messages)}
           currentUserId={currentUser.id}
+          viewerRole={currentUser.role}
           onSend={onSend}
           placeholder="Message other guards…"
           teamChat

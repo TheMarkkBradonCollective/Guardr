@@ -361,6 +361,7 @@ export function StaffMessagesPanel({
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
               currentUserId={currentUser.id}
+              viewerRole={currentUser.role}
               onSend={canPostGuardChat ? onSendGuardMessage : undefined}
               placeholder="Message the guard community…"
               guardChatLabels
@@ -386,6 +387,7 @@ export function StaffMessagesPanel({
             <ChatThreadPanel
               messages={sortedClientMessages(clientMessages)}
               currentUserId={currentUser.id}
+              viewerRole={currentUser.role}
               onSend={canPostClientChat ? onSendClientMessage : undefined}
               placeholder="Message the client community…"
               clientChatLabels
@@ -529,6 +531,7 @@ export function StaffMessagesPanel({
               createdAt: msg.createdAt,
             }))}
             currentUserId={currentUser.id}
+            viewerRole={currentUser.role}
             onSend={handleSend}
             placeholder={ticket.kind === 'report' ? 'Staff note or follow-up…' : 'Reply to user…'}
             teamChat

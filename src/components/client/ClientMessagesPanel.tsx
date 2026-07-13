@@ -16,7 +16,6 @@ import {
   supportStatusLabel,
   ticketsForUser,
 } from '../../lib/support';
-import { isStaffRole } from '../../lib/permissions';
 import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
@@ -411,6 +410,7 @@ export function ClientMessagesPanel({
             <ChatThreadPanel
               messages={sortedClientMessages(clientMessages)}
               currentUserId={currentUser.id}
+              viewerRole={currentUser.role}
               onSend={canPostClientChat ? onSendClientMessage : undefined}
               placeholder="Message the client community…"
               teamChat
@@ -466,12 +466,13 @@ export function ClientMessagesPanel({
                 messages={activeTicket.messages.map((msg) => ({
                   id: msg.id,
                   senderId: msg.senderId,
-                  senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+                  senderName: msg.senderName,
                   senderRole: msg.senderRole,
                   body: msg.body,
                   createdAt: msg.createdAt,
                 }))}
                 currentUserId={currentUser.id}
+                viewerRole={currentUser.role}
                 onSend={(body) => onSendSupportMessage(activeTicket.id, body)}
                 placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
                 readOnly={activeTicket.status === 'resolved'}

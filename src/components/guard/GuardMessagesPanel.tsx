@@ -25,7 +25,6 @@ import {
   supportStatusLabel,
   ticketsForUser,
 } from '../../lib/support';
-import { isStaffRole } from '../../lib/permissions';
 import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { TeamChatPanel } from '../messaging/TeamChatPanel';
@@ -438,6 +437,7 @@ export function GuardMessagesPanel({
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
               currentUserId={currentUser.id}
+              viewerRole={currentUser.role}
               onSend={canPostGuardChat ? onSendGuardMessage : undefined}
               placeholder="Message the guard community…"
               teamChat
@@ -513,12 +513,13 @@ export function GuardMessagesPanel({
                 messages={ticket.messages.map((msg) => ({
                   id: msg.id,
                   senderId: msg.senderId,
-                  senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+                  senderName: msg.senderName,
                   senderRole: msg.senderRole,
                   body: msg.body,
                   createdAt: msg.createdAt,
                 }))}
                 currentUserId={currentUser.id}
+                viewerRole={currentUser.role}
                 onSend={(body) => onSendSupportMessage(ticket.id, body)}
                 placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
                 readOnly={ticket.status === 'resolved'}

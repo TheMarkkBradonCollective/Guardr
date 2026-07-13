@@ -57,6 +57,7 @@ export function TeamChatPanel({
       <ChatThreadPanel
         messages={threadMessages}
         currentUserId={currentUser.id}
+        viewerRole={currentUser.role}
         onSend={onSend}
         placeholder="Message your crew…"
         readOnly={readOnly || !canChat}

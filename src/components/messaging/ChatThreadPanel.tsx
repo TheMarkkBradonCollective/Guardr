@@ -1,11 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CornerDownLeft, SmilePlus, MessageCircle, Lock } from 'lucide-react';
 import { PlatformRole } from '../../types';
-import { isStaffSender, senderLabel } from '../../lib/jobChat';
+import { isStaffSender } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
-import { guardChatSenderLabel } from '../../lib/guardMessenger';
-import { clientChatSenderLabel } from '../../lib/clientMessenger';
-import { ROLE_LABELS } from '../../lib/permissions';
+import {
+  avatarInitialForSender,
+  chatSenderLabelForViewer,
+  communityChatSenderLabel,
+  displaySenderNameForViewer,
+  maskReplySenderName,
+  staffRoleLabel,
+} from '../../lib/chatDisplay';
+import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { AppChatBubble, AppChatComposer } from '../ui/app/AppPrimitives';
 import type { AppChatBubbleTone, AppChatSender, ChatReplyContext } from '../ui/app/AppPrimitives';
 
@@ -106,6 +112,8 @@ interface ChatThreadPanelProps {
   guardChatLabels?: boolean;
   /** Client chat labels: Guardr · Role · Name */
   clientChatLabels?: boolean;
+  /** Who is reading — staff names are hidden from clients and guards. */
+  viewerRole?: PlatformRole;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -137,30 +145,47 @@ function messageSenderLabel(
   msg: ChatBubbleMessage,
   staffChatLabels: boolean,
   guardChatLabels: boolean,
-  clientChatLabels: boolean
+  clientChatLabels: boolean,
+  viewerRole: PlatformRole
 ): string {
   if (staffChatLabels) return staffChatSenderLabel(msg.senderRole, msg.senderName);
-  if (guardChatLabels) return guardChatSenderLabel(msg.senderRole, msg.senderName);
-  if (clientChatLabels) return clientChatSenderLabel(msg.senderRole, msg.senderName);
-  return senderLabel(msg.senderRole, msg.senderName);
+  if (guardChatLabels) {
+    return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Guard');
+  }
+  if (clientChatLabels) {
+    return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Client');
+  }
+  return chatSenderLabelForViewer(viewerRole, msg.senderRole, msg.senderName);
 }
 
 function messageSender(
   msg: ChatBubbleMessage,
   staffChatLabels: boolean,
   guardChatLabels: boolean,
-  clientChatLabels: boolean
+  clientChatLabels: boolean,
+  viewerRole: PlatformRole
 ): AppChatSender | undefined {
-  if (staffChatLabels || guardChatLabels || clientChatLabels) {
+  if (staffChatLabels) {
     const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
-    const displayName =
-      msg.senderName.trim() || (guardChatLabels ? 'Guard' : clientChatLabels ? 'Client' : 'Staff');
+    const displayName = msg.senderName.trim() || 'Staff';
+    return { name: displayName, roleLabel, showBrand: true };
+  }
+  if (guardChatLabels || clientChatLabels) {
+    const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
+    const peerFallback = guardChatLabels ? 'Guard' : 'Client';
+    const displayName = displaySenderNameForViewer(
+      viewerRole,
+      msg.senderRole,
+      msg.senderName,
+      peerFallback
+    );
     return { name: displayName, roleLabel, showBrand: true };
   }
   if (isStaffSender(msg.senderRole)) {
+    const displayName = displaySenderNameForViewer(viewerRole, msg.senderRole, msg.senderName, 'Staff');
     return {
-      name: msg.senderName.trim() || 'Guardr staff',
-      roleLabel: 'Staff',
+      name: displayName,
+      roleLabel: isStaffRole(viewerRole) ? 'Staff' : staffRoleLabel(msg.senderRole),
       showBrand: true,
     };
   }
@@ -182,6 +207,7 @@ export function ChatThreadPanel({
   staffChatLabels = false,
   guardChatLabels = false,
   clientChatLabels = false,
+  viewerRole = 'owner',
 }: ChatThreadPanelProps) {
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -272,11 +298,11 @@ export function ChatThreadPanel({
               const isStaff = tone === 'staff';
 
               const structuredSender = firstInGrp
-                ? messageSender(msg, staffChatLabels, guardChatLabels, clientChatLabels)
+                ? messageSender(msg, staffChatLabels, guardChatLabels, clientChatLabels, viewerRole)
                 : undefined;
               const label =
                 firstInGrp && !structuredSender && !mine
-                  ? messageSenderLabel(msg, staffChatLabels, guardChatLabels, clientChatLabels)
+                  ? messageSenderLabel(msg, staffChatLabels, guardChatLabels, clientChatLabels, viewerRole)
                   : undefined;
 
               const groupClass =
@@ -297,11 +323,19 @@ export function ChatThreadPanel({
                 .filter(Boolean)
                 .join(' ');
 
-              const avatarInitial = msg.senderName
-                ? msg.senderName.trim().charAt(0).toUpperCase()
-                : '?';
+              const avatarInitial = avatarInitialForSender(
+                viewerRole,
+                msg.senderRole,
+                msg.senderName
+              );
 
               const { text: bodyText, replyTo: parsedReply } = parseBody(msg.body);
+              const maskedReply = parsedReply
+                ? {
+                    ...parsedReply,
+                    senderName: maskReplySenderName(viewerRole, parsedReply.senderName, messages),
+                  }
+                : undefined;
               const msgReactions = reactions.get(msg.id) ?? {};
               const reactionEntries = Object.entries(msgReactions).filter(
                 ([, users]) => users.length > 0
@@ -311,7 +345,12 @@ export function ChatThreadPanel({
               const replyCtx: ReplyContext = {
                 senderName: mine
                   ? 'You'
-                  : msg.senderName.trim() || (isStaff ? 'Guardr staff' : 'User'),
+                  : displaySenderNameForViewer(
+                      viewerRole,
+                      msg.senderRole,
+                      msg.senderName,
+                      isStaff ? 'Staff' : 'User'
+                    ),
                 body: bodyText,
               };
 
@@ -394,7 +433,7 @@ export function ChatThreadPanel({
                         body={bodyText}
                         timestamp={lastInGrp ? formatChatTime(msg.createdAt) : undefined}
                         groupClass={groupClass}
-                        replyTo={parsedReply}
+                        replyTo={maskedReply}
                         readReceipt={mine && lastInGrp}
                       />
 

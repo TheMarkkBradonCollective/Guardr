@@ -60,6 +60,7 @@ export function JobChatPanel({
       <ChatThreadPanel
         messages={threadMessages}
         currentUserId={currentUser.id}
+        viewerRole={currentUser.role}
         onSend={onSend}
         placeholder="Message about this job…"
         readOnly={readOnly || !canChat}

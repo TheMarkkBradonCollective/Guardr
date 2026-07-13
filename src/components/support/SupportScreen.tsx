@@ -10,7 +10,6 @@ import {
   supportStatusLabel,
   ticketsForUser,
 } from '../../lib/support';
-import { isStaffRole } from '../../lib/permissions';
 import {
   AppChatHeader,
   AppDashboardZone,
@@ -106,7 +105,7 @@ export function SupportScreen({
     const threadMessages = activeTicket.messages.map((msg) => ({
       id: msg.id,
       senderId: msg.senderId,
-      senderName: isStaffRole(msg.senderRole) ? 'Guardr staff' : msg.senderName,
+      senderName: msg.senderName,
       senderRole: msg.senderRole,
       body: msg.body,
       createdAt: msg.createdAt,
@@ -131,6 +130,7 @@ export function SupportScreen({
             <ChatThreadPanel
               messages={threadMessages}
               currentUserId={currentUser.id}
+              viewerRole={currentUser.role}
               onSend={(body) => onSendMessage(activeTicket.id, body)}
               placeholder={isReport ? 'Add a follow-up note…' : 'Type a message to staff…'}
               readOnly={isReport ? activeTicket.status === 'resolved' : activeTicket.status === 'resolved'}
