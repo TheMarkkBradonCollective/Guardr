@@ -186,6 +186,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (supportMode === 'compose' || supportMode === 'report') nested.supportMode = supportMode;
   if (staffMessageTab === 'team' || staffMessageTab === 'jobs') nested.staffMessageTab = staffMessageTab;
   if (
+    staffApprovalQueue === 'all' ||
     staffApprovalQueue === 'accounts' ||
     staffApprovalQueue === 'guard-accounts' ||
     staffApprovalQueue === 'client-accounts' ||

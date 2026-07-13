@@ -3281,6 +3281,10 @@ export default function App() {
       }
     }
     if (currentUser && cert) {
+      void writeAuditLog(currentUser, 'cert_verified', 'certification', certId, {
+        guardId,
+        certName: cert.name,
+      });
       notifyAccountUpdate(
         currentUser,
         guardId,
@@ -3818,6 +3822,7 @@ export default function App() {
         return;
       }
     }
+    void writeAuditLog(currentUser, 'client_approved', 'client', clientId);
     void reportPushEvent(currentUser, {
       type: 'support_ticket_status',
       recipientUserId: clientId,
@@ -3887,6 +3892,7 @@ export default function App() {
         throw new Error(result.error);
       }
     }
+    void writeAuditLog(currentUser, 'guard_approved', 'guard', guardId, { email: guard.email });
     notifyAccountUpdate(
       currentUser,
       guardId,
@@ -3937,6 +3943,7 @@ export default function App() {
       }
     }
     if (currentUser) {
+      void writeAuditLog(currentUser, 'guard_activated', 'guard', guardId, { email: guard.email });
       notifyAccountUpdate(
         currentUser,
         guardId,
@@ -6087,6 +6094,10 @@ export default function App() {
       }).eq('id', requestId);
     }
     if (job) {
+      void writeAuditLog(currentUser, 'job_approved', 'security_request', requestId, {
+        title: job.title,
+        clientName: job.clientName,
+      });
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: job.clientId,
@@ -6106,9 +6117,14 @@ export default function App() {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'closed' } : r));
     if (isDbConnected) await supabase.from('security_requests').update({ status: 'closed' }).eq('id', requestId);
     if (job) {
+      void writeAuditLog(currentUser, 'job_denied', 'security_request', requestId, {
+        title: job.title,
+        clientName: job.clientName,
+      });
       void reportPushEvent(currentUser, {
-        type: 'support_ticket_status',
+        type: 'job_status_update',
         recipientUserId: job.clientId,
+        requestId,
         title: 'Job declined',
         body: `Guardr staff declined "${job.title}". Contact support if you need to revise and resubmit.`,
       });
@@ -6451,6 +6467,10 @@ export default function App() {
     const outcome = await processScheduleChangeResolution(requestId, existing, 'staff');
 
     if (outcome === 'applied' && currentUser) {
+      void writeAuditLog(currentUser, 'schedule_change_approved', 'security_request', requestId, {
+        title: existing.title,
+        outcome,
+      });
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: existing.clientId,
@@ -6459,8 +6479,20 @@ export default function App() {
       });
       appToast('Schedule change approved and guards notified.', 'success');
     } else if (outcome === 'awaiting_payment') {
+      if (currentUser) {
+        void writeAuditLog(currentUser, 'schedule_change_approved', 'security_request', requestId, {
+          title: existing.title,
+          outcome,
+        });
+      }
       appToast('Schedule change approved. Client must pay the extension before times go live.', 'success');
     } else if (outcome === 'pending_staff_billing') {
+      if (currentUser) {
+        void writeAuditLog(currentUser, 'schedule_change_approved', 'security_request', requestId, {
+          title: existing.title,
+          outcome,
+        });
+      }
       appToast('Schedule change awaiting billing confirmation.', 'success');
     }
   };
@@ -6483,6 +6515,10 @@ export default function App() {
 
     await applyApprovedScheduleChange(requestId, existing, pending);
     if (currentUser) {
+      void writeAuditLog(currentUser, 'schedule_change_approved', 'security_request', requestId, {
+        title: existing.title,
+        outcome: 'billing_confirmed',
+      });
       void reportPushEvent(currentUser, {
         type: 'support_ticket_status',
         recipientUserId: existing.clientId,

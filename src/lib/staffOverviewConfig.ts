@@ -152,6 +152,8 @@ function canActOnApprovalQueue(role: PlatformRole, queue?: ApprovalQueueId): boo
       return canManageGuards({ role });
     case 'client-accounts':
       return canManageClients({ role });
+    case 'all':
+      return true;
     default:
       return false;
   }

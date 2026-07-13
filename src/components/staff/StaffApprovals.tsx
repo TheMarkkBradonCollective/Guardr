@@ -8,31 +8,33 @@ import {
   APPROVAL_QUEUE_TAB_ORDER,
   normalizeApprovalQueueId,
 } from '../../lib/staffOps';
+import { loadAuditLog, type AuditLogEntry } from '../../lib/auditLog';
+import {
+  buildStaffApprovalsFeed,
+  filterApprovalsFeedByQueue,
+  findFeedItem,
+  formatApprovalTimestamp,
+  type ApprovalFeedItem,
+} from '../../lib/staffApprovalsFeed';
 import { formatDuration, formatShiftRange } from '../../lib/dates';
 import { canStaffEditJobTitleAndLocation, canStaffEditJobMapCoordinates, isJobScheduleLocked, canStaffReschedulePaidSchedule } from '../../lib/jobEditRules';
 import { jobPostingTypeLabel } from '../../lib/jobStatus';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
-import { getOpenJobsWithApplications, guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
+import { guardMeetsJobRequirements, rankApplicantGuards } from '../../lib/jobApplications';
 import { isAwaitingClientGuardApproval } from '../../lib/guardAssignment';
 import { isJobLocationCoordsMissing } from '../../lib/jobLocation';
-import { getPendingCertifications, getPendingClientAccounts, getPendingJobApprovals } from '../../lib/staffOps';
-import { getPendingScheduleChangeApprovals } from '../../lib/jobScheduleChange';
+import { getPendingJobApprovals } from '../../lib/staffOps';
 import {
-  getApprovedGuardsAwaitingActivation,
   getGuardActivationChecklist,
-  getPendingGuardAccountReviews,
   guardCanStaffActivateAccount,
   guardCanStaffApproveProfile,
-  guardActivationSummaryLabel,
 } from '../../lib/guardAccountActivation';
-import { isGuardAccountApproved } from '../../lib/accountStatus';
+import { isGuardAccountApproved, isGuardUserStatusActive } from '../../lib/accountStatus';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { GuardCredentialsPanel } from '../profile/GuardCredentialsPanel';
 import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
-import { GuardMissingCredentialsBadge } from './GuardMissingCredentialsBadge';
-import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
-import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { CertDetailModal } from '../credentials/CertDetailModal';
 import { CoiCredentialBadge } from '../credentials/CoiCredentialBadge';
 import { CredentialCategoryBadge } from '../credentials/CredentialCategoryBadge';
@@ -42,9 +44,7 @@ import type { CertUpdatePayload, CertUpdateResult } from '../credentials/CertDet
 import { certDisplayName } from '../../lib/certCatalog';
 import {
   certViewSectionLabel,
-  coiApprovalItemId,
   coiViewSectionLabel,
-  groupPendingCredentialApprovals,
   guardIdFromCoiApprovalItemId,
   isCoiApprovalItemId,
 } from '../../lib/guardCredentialSections';
@@ -119,6 +119,11 @@ const QUEUE_META: Record<
   Exclude<ApprovalQueueId, 'accounts'>,
   { title: string; description: string; icon: React.ReactNode }
 > = {
+  all: {
+    title: 'All approvals',
+    description: '',
+    icon: <ClipboardCheck className="w-4 h-4" />,
+  },
   'job-offers': {
     title: 'Job offers',
     description: '',
@@ -150,6 +155,67 @@ const QUEUE_META: Record<
     icon: <UserCheck className="w-4 h-4" />,
   },
 };
+
+function ApprovalReviewMeta({ item }: { item?: ApprovalFeedItem }) {
+  if (!item) return null;
+  const reviewer = item.reviewedByName || item.reviewedByEmail;
+  return (
+    <div className="rounded-lg border border-brand-border bg-brand-bg-sec/40 px-3 py-2.5 text-xs space-y-1">
+      <p>
+        <span className="font-semibold text-brand-text">Status: </span>
+        {item.statusLabel}
+      </p>
+      {item.reviewedAt && (
+        <p>
+          <span className="font-semibold text-brand-text">Reviewed: </span>
+          {formatApprovalTimestamp(item.reviewedAt)}
+        </p>
+      )}
+      {reviewer && (
+        <p>
+          <span className="font-semibold text-brand-text">By: </span>
+          {reviewer}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ApprovalFeedRow({
+  item,
+  onViewDetails,
+}: {
+  item: ApprovalFeedItem;
+  onViewDetails: () => void;
+}) {
+  const tone =
+    item.status === 'pending' || item.status === 'in_review'
+      ? 'warning'
+      : item.status === 'approved' || item.status === 'active'
+        ? 'success'
+        : 'danger';
+
+  return (
+    <ApprovalListRow
+      title={item.title}
+      subtitle={item.subtitle}
+      meta={
+        <div className="space-y-1">
+          <WfBadge tone={tone}>{item.statusLabel}</WfBadge>
+          {(item.reviewedAt || item.reviewedByName) &&
+            item.status !== 'pending' &&
+            item.status !== 'in_review' && (
+              <p className="text-[11px] text-brand-text-muted">
+                {item.reviewedAt ? formatApprovalTimestamp(item.reviewedAt) : ''}
+                {item.reviewedByName ? ` · ${item.reviewedByName}` : ''}
+              </p>
+            )}
+        </div>
+      }
+      onViewDetails={onViewDetails}
+    />
+  );
+}
 
 function ApprovalListRow({
   title,
@@ -240,15 +306,10 @@ export function StaffApprovals({
   onQueueChange,
 }: StaffApprovalsProps) {
   const pendingJobs = getPendingJobApprovals(requests);
-  const pendingScheduleChanges = getPendingScheduleChangeApprovals(requests);
-  const pendingCerts = getPendingCertifications(guards);
   const pendingInsuranceReviews = getPendingInsuranceReviews(guards);
-  const pendingGuardAccounts = getPendingGuardAccountReviews(guards);
-  const approvedGuardsAwaitingActivation = getApprovedGuardsAwaitingActivation(guards);
-  const pendingClientAccounts = getPendingClientAccounts(clients);
-  const jobsWithApplications = getOpenJobsWithApplications(requests);
 
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [viewCert, setViewCert] = useState<{ guard: SecurityGuard; cert: Certification } | null>(null);
   const [viewCoi, setViewCoi] = useState<SecurityGuard | null>(null);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
@@ -319,30 +380,10 @@ export function StaffApprovals({
       </div>
     ) : null;
 
-  const queueCounts = useMemo(
-    () => ({
-      'job-offers': pendingJobs.length,
-      'schedule-changes': pendingScheduleChanges.length,
-      applications: jobsWithApplications.length,
-      credentials: pendingCerts.length + pendingInsuranceReviews.length,
-      'guard-accounts': pendingGuardAccounts.length + approvedGuardsAwaitingActivation.length,
-      'client-accounts': pendingClientAccounts.length,
-    }),
-    [
-      pendingJobs.length,
-      pendingScheduleChanges.length,
-      jobsWithApplications.length,
-      pendingCerts.length,
-      pendingInsuranceReviews.length,
-      pendingGuardAccounts.length,
-      approvedGuardsAwaitingActivation.length,
-      pendingClientAccounts.length,
-    ]
-  );
-
   const permittedQueues = useMemo(
-    () =>
-      APPROVAL_QUEUE_TAB_ORDER.filter((id) => {
+    () => {
+      const specific = APPROVAL_QUEUE_TAB_ORDER.filter((id) => {
+        if (id === 'all') return false;
         if (id === 'credentials') return canVerifyGuardCredentials;
         if (id === 'job-offers' || id === 'schedule-changes' || id === 'applications') {
           return canReviewJobRequests;
@@ -350,7 +391,9 @@ export function StaffApprovals({
         if (id === 'guard-accounts') return canApproveGuardAccounts;
         if (id === 'client-accounts') return canManageClientAccounts;
         return false;
-      }),
+      });
+      return specific.length > 0 ? (['all', ...specific] as ApprovalQueueId[]) : [];
+    },
     [
       canVerifyGuardCredentials,
       canReviewJobRequests,
@@ -363,6 +406,35 @@ export function StaffApprovals({
     normalizeApprovalQueueId(initialQueue, permittedQueues)
   );
 
+  useEffect(() => {
+    let cancelled = false;
+    void loadAuditLog(400).then((entries) => {
+      if (!cancelled) setAuditLog(entries);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [requests, guards, clients]);
+
+  const approvalFeed = useMemo(
+    () =>
+      buildStaffApprovalsFeed({
+        requests,
+        guards,
+        clients,
+        auditLog,
+      }),
+    [requests, guards, clients, auditLog]
+  );
+
+  const queueCounts = useMemo(() => {
+    const counts: Partial<Record<ApprovalQueueId, number>> = { all: approvalFeed.length };
+    for (const item of approvalFeed) {
+      counts[item.queue] = (counts[item.queue] ?? 0) + 1;
+    }
+    return counts;
+  }, [approvalFeed]);
+
   const activeTabLabel =
     activeQueue && activeQueue !== 'accounts'
       ? APPROVAL_QUEUE_TAB_LABELS[activeQueue]
@@ -373,7 +445,7 @@ export function StaffApprovals({
       permittedQueues.map((id) => ({
         id,
         label:
-          queueCounts[id] > 0
+          (queueCounts[id] ?? 0) > 0
             ? `${APPROVAL_QUEUE_TAB_LABELS[id]} (${queueCounts[id]})`
             : APPROVAL_QUEUE_TAB_LABELS[id],
       })),
@@ -394,33 +466,9 @@ export function StaffApprovals({
   }, [permittedQueues, initialQueue]);
 
   useEffect(() => {
-    if (!activeItemId || !activeQueue || activeQueue === 'accounts') return;
-    const stillExists =
-      (activeQueue === 'job-offers' && pendingJobs.some((r) => r.id === activeItemId)) ||
-      (activeQueue === 'schedule-changes' && pendingScheduleChanges.some((r) => r.id === activeItemId)) ||
-      (activeQueue === 'applications' && jobsWithApplications.some((r) => r.id === activeItemId)) ||
-      (activeQueue === 'credentials' &&
-        (pendingCerts.some(({ cert }) => cert.id === activeItemId) ||
-          (isCoiApprovalItemId(activeItemId) &&
-            pendingInsuranceReviews.some((g) => coiApprovalItemId(g.id) === activeItemId)))) ||
-      (activeQueue === 'guard-accounts' &&
-        (pendingGuardAccounts.some((g) => g.id === activeItemId) ||
-          approvedGuardsAwaitingActivation.some((g) => g.id === activeItemId))) ||
-      (activeQueue === 'client-accounts' &&
-        pendingClientAccounts.some((c) => c.id === activeItemId));
-    if (!stillExists) setActiveItemId(null);
-  }, [
-    activeItemId,
-    activeQueue,
-    pendingJobs,
-    pendingScheduleChanges,
-    jobsWithApplications,
-    pendingCerts,
-    pendingInsuranceReviews,
-    pendingGuardAccounts,
-    approvedGuardsAwaitingActivation,
-    pendingClientAccounts,
-  ]);
+    if (!activeItemId) return;
+    if (!findFeedItem(approvalFeed, activeItemId)) setActiveItemId(null);
+  }, [activeItemId, approvalFeed]);
 
   const selectQueue = (queue: ApprovalQueueId) => {
     const next = normalizeApprovalQueueId(queue, permittedQueues);
@@ -447,13 +495,33 @@ export function StaffApprovals({
   const renderTabEmptyState = (queueId: Exclude<ApprovalQueueId, 'accounts'>) => {
     const meta = QUEUE_META[queueId];
     return (
-      <AppEmptyState dashed icon={meta.icon} title="All clear">
-        Nothing in {meta.title.toLowerCase()} right now.
+      <AppEmptyState dashed icon={meta.icon} title="No records yet">
+        {queueId === 'all'
+          ? 'Approval history will appear here as items are submitted and reviewed.'
+          : `Nothing in ${meta.title.toLowerCase()} yet.`}
       </AppEmptyState>
     );
   };
 
-  const renderJobOfferDetail = (req: SecurityRequest) => {
+  const renderFeedList = () => {
+    if (!activeQueue || activeQueue === 'accounts') return null;
+    const items = filterApprovalsFeedByQueue(approvalFeed, activeQueue);
+    if (items.length === 0) return renderTabEmptyState(activeQueue);
+    return (
+      <AppItemCardStack>
+        {items.map((item) => (
+          <ApprovalFeedRow
+            key={`${item.queue}-${item.id}`}
+            item={item}
+            onViewDetails={() => setActiveItemId(item.id)}
+          />
+        ))}
+      </AppItemCardStack>
+    );
+  };
+
+  const renderJobOfferDetail = (req: SecurityRequest, feedItem?: ApprovalFeedItem) => {
+    const isPending = feedItem?.status === 'pending';
     const coordsMissing = isJobLocationCoordsMissing(req);
     const showEditListing =
       canEditJobListing && onEditJobListing && staffRole && canStaffEditJobTitleAndLocation(req, staffRole);
@@ -468,7 +536,21 @@ export function StaffApprovals({
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <Briefcase className="w-4 h-4 text-brand-primary shrink-0" />
                 <p className="font-semibold text-sm">{req.title}</p>
-                <WfBadge tone="warning">Pending approval</WfBadge>
+                {feedItem ? (
+                  <WfBadge
+                    tone={
+                      feedItem.status === 'pending'
+                        ? 'warning'
+                        : feedItem.status === 'approved'
+                          ? 'success'
+                          : 'danger'
+                    }
+                  >
+                    {feedItem.statusLabel}
+                  </WfBadge>
+                ) : (
+                  <WfBadge tone="warning">Pending approval</WfBadge>
+                )}
                 <WfBadge tone="default">{jobPostingTypeLabel(req.requestType)}</WfBadge>
                 {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
               </div>
@@ -487,45 +569,50 @@ export function StaffApprovals({
               )}
             </div>
             <JobBillingSummaryFromRequest req={req} variant="staff" />
-            <div className="app-action-row--equal pt-2 border-t border-brand-border">
-              {showEdit && (
-                <button
-                  type="button"
-                  onClick={() => setEditingJobId(req.id)}
-                  className="app-button-outline app-btn-sm"
-                >
-                  <Pencil className="w-3.5 h-3.5" /> {showEditCoords && !showEditListing ? 'Add map coordinates' : 'Edit job listing'}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => onDenyRequest(req.id)}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-              >
-                <X className="w-3.5 h-3.5" /> Decline
-              </button>
-            </div>
-            {coordsMissing && (
-              <p className="text-xs text-amber-300/90 leading-relaxed">
-                Map coordinates are required before this job can go live. Moderator or above must add them, then an administrator can approve.
-              </p>
+            {isPending && (
+              <>
+                <div className="app-action-row--equal pt-2 border-t border-brand-border">
+                  {showEdit && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingJobId(req.id)}
+                      className="app-button-outline app-btn-sm"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> {showEditCoords && !showEditListing ? 'Add map coordinates' : 'Edit job listing'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onDenyRequest(req.id)}
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                  >
+                    <X className="w-3.5 h-3.5" /> Decline
+                  </button>
+                </div>
+                {coordsMissing && (
+                  <p className="text-xs text-amber-300/90 leading-relaxed">
+                    Map coordinates are required before this job can go live. Moderator or above must add them, then an administrator can approve.
+                  </p>
+                )}
+                <div className="pt-2">
+                  <SlideToConfirm
+                    label="Slide to approve job"
+                    confirmedLabel="Approved"
+                    tone="success"
+                    disabled={coordsMissing}
+                    disabledHint="Add map coordinates before approving"
+                    onConfirm={() => onApproveRequest(req.id)}
+                  />
+                </div>
+              </>
             )}
-            <div className="pt-2">
-              <SlideToConfirm
-                label="Slide to approve job"
-                confirmedLabel="Approved"
-                tone="success"
-                disabled={coordsMissing}
-                disabledHint="Add map coordinates before approving"
-                onConfirm={() => onApproveRequest(req.id)}
-              />
-            </div>
         </>
       </div>
     );
   };
 
-  const renderScheduleChangeDetail = (req: SecurityRequest) => {
+  const renderScheduleChangeDetail = (req: SecurityRequest, feedItem?: ApprovalFeedItem) => {
+    const isPending = feedItem?.status === 'pending';
     const currentRange = formatShiftRange(req.startDate, req.endDate);
     const requestedRange =
       req.pendingStartDate && req.pendingEndDate
@@ -564,27 +651,31 @@ export function StaffApprovals({
           )}
         </div>
         <JobBillingSummaryFromRequest req={req} variant="staff" />
-        <div className="app-action-row--equal pt-2 border-t border-brand-border">
-          {!isBilling && (
-            <button
-              type="button"
-              onClick={() => onRejectScheduleChange?.(req.id)}
-              className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
-            >
-              <X className="w-3.5 h-3.5" /> Decline
-            </button>
-          )}
-        </div>
-        <div className="pt-2">
-          <SlideToConfirm
-            label={isBilling ? 'Slide to confirm billing & publish' : 'Slide to approve new times'}
-            confirmedLabel={isBilling ? 'Confirmed' : 'Approved'}
-            tone="success"
-            onConfirm={() =>
-              isBilling ? onApproveScheduleChangeBilling?.(req.id) : onApproveScheduleChange?.(req.id)
-            }
-          />
-        </div>
+        {isPending && (
+          <>
+            <div className="app-action-row--equal pt-2 border-t border-brand-border">
+              {!isBilling && (
+                <button
+                  type="button"
+                  onClick={() => onRejectScheduleChange?.(req.id)}
+                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40"
+                >
+                  <X className="w-3.5 h-3.5" /> Decline
+                </button>
+              )}
+            </div>
+            <div className="pt-2">
+              <SlideToConfirm
+                label={isBilling ? 'Slide to confirm billing & publish' : 'Slide to approve new times'}
+                confirmedLabel={isBilling ? 'Confirmed' : 'Approved'}
+                tone="success"
+                onConfirm={() =>
+                  isBilling ? onApproveScheduleChangeBilling?.(req.id) : onApproveScheduleChange?.(req.id)
+                }
+              />
+            </div>
+          </>
+        )}
       </div>
     );
   };
@@ -594,115 +685,88 @@ export function StaffApprovals({
 
   const renderQueueList = () => {
     if (!activeQueue || activeQueue === 'accounts') return null;
+    if (!activeItemId) return renderFeedList();
 
-    if (activeQueue === 'job-offers') {
-      if (activeItemId) {
-        const req = pendingJobs.find((r) => r.id === activeItemId);
-        if (!req) return null;
-        return (
-          <ApprovalDetailScreen
-            title={req.title}
-            backLabel={activeTabLabel}
-            onBack={() => setActiveItemId(null)}
-          >
-            {renderJobOfferDetail(req)}
-          </ApprovalDetailScreen>
-        );
-      }
-      if (pendingJobs.length === 0) return renderTabEmptyState('job-offers');
+    const feedItem = findFeedItem(approvalFeed, activeItemId);
+    const effectiveQueue = feedItem?.queue ?? (activeQueue !== 'all' ? activeQueue : null);
+    if (!effectiveQueue) return null;
+
+    if (effectiveQueue === 'job-offers') {
+      const req = requests.find((r) => r.id === activeItemId);
+      if (!req) return null;
       return (
-        <AppItemCardStack>
-          {pendingJobs.map((req) => (
-            <ApprovalListRow
-              key={req.id}
-              title={req.title}
-              subtitle={`${req.clientName} · ${req.location}`}
-              meta={<WfBadge tone="warning">Review & approve</WfBadge>}
-              onViewDetails={() => setActiveItemId(req.id)}
-            />
-          ))}
-        </AppItemCardStack>
+        <ApprovalDetailScreen
+          title={req.title}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <ApprovalReviewMeta item={feedItem} />
+          {renderJobOfferDetail(req, feedItem)}
+        </ApprovalDetailScreen>
       );
     }
 
-    if (activeQueue === 'schedule-changes') {
-      if (activeItemId) {
-        const req = pendingScheduleChanges.find((r) => r.id === activeItemId);
-        if (!req) return null;
-        return (
-          <ApprovalDetailScreen
-            title={req.title}
-            backLabel={activeTabLabel}
-            onBack={() => setActiveItemId(null)}
-          >
-            {renderScheduleChangeDetail(req)}
-          </ApprovalDetailScreen>
-        );
-      }
-      if (pendingScheduleChanges.length === 0) return renderTabEmptyState('schedule-changes');
+    if (effectiveQueue === 'schedule-changes') {
+      const req = requests.find((r) => r.id === activeItemId);
+      if (!req) return null;
       return (
-        <AppItemCardStack>
-          {pendingScheduleChanges.map((req) => (
-            <ApprovalListRow
-              key={req.id}
-              title={req.title}
-              subtitle={`${req.clientName} · ${req.location}`}
-              meta={
-                <WfBadge tone="warning" className="w-fit">
-                  {req.scheduleChangeStatus === 'pending_staff_billing' ? 'Confirm billing' : 'Schedule change'}
-                </WfBadge>
-              }
-              onViewDetails={() => setActiveItemId(req.id)}
-            />
-          ))}
-        </AppItemCardStack>
+        <ApprovalDetailScreen
+          title={req.title}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <ApprovalReviewMeta item={feedItem} />
+          {renderScheduleChangeDetail(req, feedItem)}
+        </ApprovalDetailScreen>
       );
     }
 
-    if (activeQueue === 'applications') {
-      if (activeItemId) {
-        const req = jobsWithApplications.find((r) => r.id === activeItemId);
-        if (!req) return null;
-        const ranked = rankApplicantGuards(req, guards);
-        const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
-        const awaitingClientGuard = isAwaitingClientGuardApproval(req);
-        return (
-          <ApprovalDetailScreen
-            title={req.title}
-            backLabel={activeTabLabel}
-            onBack={() => setActiveItemId(null)}
-          >
-            <div className="staff-detail-pane space-y-3">
-              <p className="text-sm text-brand-text-muted">{req.clientName} · {req.location}</p>
-              {awaitingClientGuard && pendingGuard && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-                  <p className="text-sm font-medium text-amber-300">Awaiting client approval</p>
-                  <p className="text-xs text-brand-text-muted mt-1">
-                    {pendingGuard.name} was sent to {req.clientName} for confirmation.
-                  </p>
-                </div>
-              )}
-              <div className="space-y-2">
-                {ranked.map((guard, index) => {
-                  const meets = guardMeetsJobRequirements(guard, req);
-                  const isPending = req.pendingGuardId === guard.id;
-                  const anotherPending = !!req.pendingGuardId && !isPending;
-                  return (
-                    <WfListCard
-                      key={guard.id}
-                      avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
-                      title={`${index === 0 ? '★ ' : ''}${guard.name}`}
-                      subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
-                      meta={
-                        <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
-                          {isPending
-                            ? 'Awaiting client approval'
-                            : meets
-                              ? 'Meets job requirements'
-                              : 'Missing required credentials'}
-                        </span>
-                      }
-                      action={
+    if (effectiveQueue === 'applications') {
+      const req = requests.find((r) => r.id === activeItemId);
+      if (!req) return null;
+      const ranked = rankApplicantGuards(req, guards);
+      const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
+      const awaitingClientGuard = isAwaitingClientGuardApproval(req);
+      const canActOnApplications = feedItem?.status === 'pending' || feedItem?.status === 'in_review';
+      return (
+        <ApprovalDetailScreen
+          title={req.title}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <div className="staff-detail-pane space-y-3">
+            <ApprovalReviewMeta item={feedItem} />
+            <p className="text-sm text-brand-text-muted">{req.clientName} · {req.location}</p>
+            {awaitingClientGuard && pendingGuard && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                <p className="text-sm font-medium text-amber-300">Awaiting client approval</p>
+                <p className="text-xs text-brand-text-muted mt-1">
+                  {pendingGuard.name} was sent to {req.clientName} for confirmation.
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              {ranked.map((guard, index) => {
+                const meets = guardMeetsJobRequirements(guard, req);
+                const isPending = req.pendingGuardId === guard.id;
+                const anotherPending = !!req.pendingGuardId && !isPending;
+                return (
+                  <WfListCard
+                    key={guard.id}
+                    avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="xs" />}
+                    title={`${index === 0 ? '★ ' : ''}${guard.name}`}
+                    subtitle={`★ ${guard.rating.toFixed(1)} · ${guard.jobsCompleted} jobs`}
+                    meta={
+                      <span className={isPending ? 'text-amber-400' : meets ? 'text-emerald-400' : 'text-amber-400'}>
+                        {isPending
+                          ? 'Awaiting client approval'
+                          : meets
+                            ? 'Meets job requirements'
+                            : 'Missing required credentials'}
+                      </span>
+                    }
+                    action={
+                      canActOnApplications ? (
                         <div className="flex flex-col gap-1.5 shrink-0">
                           {isPending ? (
                             onDenyGuardApplication && (
@@ -734,34 +798,19 @@ export function StaffApprovals({
                             </button>
                           )}
                         </div>
-                      }
-                    />
-                  );
-                })}
-              </div>
+                      ) : undefined
+                    }
+                  />
+                );
+              })}
             </div>
-          </ApprovalDetailScreen>
-        );
-      }
-      if (jobsWithApplications.length === 0) return renderTabEmptyState('applications');
-      return (
-        <AppItemCardStack>
-          {jobsWithApplications.map((req) => (
-            <ApprovalListRow
-              key={req.id}
-              title={req.title}
-              subtitle={`${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}${
-                isAwaitingClientGuardApproval(req) ? ' · Awaiting client' : ''
-              }`}
-              onViewDetails={() => setActiveItemId(req.id)}
-            />
-          ))}
-        </AppItemCardStack>
+          </div>
+        </ApprovalDetailScreen>
       );
     }
 
-    if (activeQueue === 'credentials') {
-      if (activeItemId && isCoiApprovalItemId(activeItemId)) {
+    if (effectiveQueue === 'credentials') {
+      if (isCoiApprovalItemId(activeItemId)) {
         const guardId = guardIdFromCoiApprovalItemId(activeItemId);
         const guard =
           pendingInsuranceReviews.find((g) => g.id === guardId) ??
@@ -776,6 +825,7 @@ export function StaffApprovals({
             onBack={() => setActiveItemId(null)}
           >
             <div className="staff-detail-pane space-y-4">
+              <ApprovalReviewMeta item={feedItem} />
               <CoiCredentialBadge />
               <p className="text-sm text-brand-text-muted">
                 {coiViewSectionLabel()} · {formatCoiSummaryLine(policy)}
@@ -799,7 +849,7 @@ export function StaffApprovals({
                     Full profile
                   </button>
                 )}
-                {canVerifyGuardCredentials && onReviewGuardInsurance && (
+                {canVerifyGuardCredentials && onReviewGuardInsurance && policy.status === 'pending' && (
                   <>
                     <button
                       type="button"
@@ -840,630 +890,508 @@ export function StaffApprovals({
           </ApprovalDetailScreen>
         );
       }
-      if (activeItemId) {
-        const entry = pendingCerts.find(({ cert }) => cert.id === activeItemId);
-        if (!entry) return null;
-        const { guard, cert } = entry;
-        return (
-          <ApprovalDetailScreen
-            title={`${guard.name} — ${certDisplayName(cert)}`}
-            backLabel={activeTabLabel}
-            onBack={() => setActiveItemId(null)}
-          >
-            <div className="staff-detail-pane space-y-4">
-              <CredentialCategoryBadge cert={cert} />
-              <p className="text-sm text-brand-text-muted">
-                {certViewSectionLabel(cert)} · {cert.issuer} · #{cert.number}
-                {cert.state ? ` · ${cert.state}` : ''}
-              </p>
-              <div className="app-action-row--equal">
+      const guardWithCert = guards
+        .map((guard) => ({
+          guard,
+          cert: guard.certifications.find((c) => c.id === activeItemId),
+        }))
+        .find((entry) => entry.cert);
+      if (!guardWithCert?.cert) return null;
+      const { guard, cert } = guardWithCert;
+      return (
+        <ApprovalDetailScreen
+          title={`${guard.name} — ${certDisplayName(cert)}`}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <div className="staff-detail-pane space-y-4">
+            <ApprovalReviewMeta item={feedItem} />
+            <CredentialCategoryBadge cert={cert} />
+            <p className="text-sm text-brand-text-muted">
+              {certViewSectionLabel(cert)} · {cert.issuer} · #{cert.number}
+              {cert.state ? ` · ${cert.state}` : ''}
+            </p>
+            <div className="app-action-row--equal">
+              <button
+                type="button"
+                onClick={() => setViewCert({ guard, cert })}
+                className="app-button-outline app-btn-sm gap-1"
+              >
+                <Eye className="w-3.5 h-3.5" /> View document
+              </button>
+              {onViewGuard && (
                 <button
                   type="button"
-                  onClick={() => setViewCert({ guard, cert })}
-                  className="app-button-outline app-btn-sm gap-1"
+                  onClick={() => onViewGuard(guard.id)}
+                  className="app-button-outline app-btn-sm"
                 >
-                  <Eye className="w-3.5 h-3.5" /> View document
+                  Full profile
                 </button>
-                {onViewGuard && (
+              )}
+              {canVerifyGuardCredentials && cert.status === 'pending' && cert.imageUrl && onRequestCertImageResubmit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void (async () => {
+                      const note = await promptStaffResubmitNote(`${cert.name} photo`);
+                      if (note === null) return;
+                      onRequestCertImageResubmit(guard.id, cert.id, note);
+                      setActiveItemId(null);
+                    })();
+                  }}
+                  className="app-button-outline app-btn-sm"
+                >
+                  Request clearer photo
+                </button>
+              )}
+              {canVerifyGuardCredentials && cert.status === 'pending' && (
+                <>
                   <button
                     type="button"
-                    onClick={() => onViewGuard(guard.id)}
-                    className="app-button-outline app-btn-sm"
+                    disabled={actionPending}
+                    onClick={() => void runGuardedAction(async () => onRejectCert(guard.id, cert.id))}
+                    className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
                   >
-                    Full profile
+                    <X className="w-3.5 h-3.5" /> Reject
                   </button>
-                )}
-                {canVerifyGuardCredentials && cert.imageUrl && onRequestCertImageResubmit && (
                   <button
                     type="button"
-                    onClick={() => {
-                      void (async () => {
-                        const note = await promptStaffResubmitNote(`${cert.name} photo`);
-                        if (note === null) return;
-                        onRequestCertImageResubmit(guard.id, cert.id, note);
-                        setActiveItemId(null);
-                      })();
-                    }}
-                    className="app-button-outline app-btn-sm"
+                    disabled={actionPending || !staffCanVerifyCertification(cert)}
+                    title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
+                    onClick={() =>
+                      void runGuardedAction(
+                        async () => {
+                          await onApproveCert(guard.id, cert.id);
+                          setActiveItemId(null);
+                        },
+                        (message) => showAppToast(message || 'Could not verify credential.', { tone: 'error' })
+                      )
+                    }
+                    className="app-button-primary app-btn-sm disabled:opacity-50"
                   >
-                    Request clearer photo
+                    <Check className="w-3.5 h-3.5" /> Verify
                   </button>
-                )}
-                {canVerifyGuardCredentials && (
-                  <>
-                <button
-                  type="button"
-                  disabled={actionPending}
-                  onClick={() => void runGuardedAction(async () => onRejectCert(guard.id, cert.id))}
-                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
-                >
-                  <X className="w-3.5 h-3.5" /> Reject
-                </button>
-                <button
-                  type="button"
-                  disabled={actionPending || !staffCanVerifyCertification(cert)}
-                  title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
-                  onClick={() =>
-                    void runGuardedAction(
-                      async () => {
-                        await onApproveCert(guard.id, cert.id);
-                        setActiveItemId(null);
-                      },
-                      (message) => showAppToast(message || 'Could not verify credential.', { tone: 'error' })
-                    )
-                  }
-                  className="app-button-primary app-btn-sm disabled:opacity-50"
-                >
-                  <Check className="w-3.5 h-3.5" /> Verify
-                </button>
-                  </>
-                )}
-              </div>
-              {staffVerifyCertificationBlocker(cert) && (
-                <p className="text-xs text-amber-500 leading-relaxed">
-                  {staffVerifyCertificationBlocker(cert)}
-                </p>
+                </>
               )}
             </div>
-          </ApprovalDetailScreen>
-        );
-      }
-      const pendingSections = groupPendingCredentialApprovals(pendingCerts, pendingInsuranceReviews, {
-        hideEmpty: true,
-      });
-      if (queueCounts.credentials === 0) return renderTabEmptyState('credentials');
-      return (
-        <div className="space-y-5">
-            {pendingInsuranceReviews.length > 0 && (
-              <section className="credential-view-section space-y-2">
-                <div className="credential-view-section-header">
-                  <div>
-                    <h3 className="text-sm font-semibold">Certificate of Insurance (COI)</h3>
-                    <p className="text-xs text-brand-text-muted mt-1">
-                      General liability insurance — required for profile approval and marketplace work.
-                    </p>
-                  </div>
-                  <span className="credential-view-section-count">{pendingInsuranceReviews.length}</span>
-                </div>
-                <AppItemCardStack>
-                  {pendingInsuranceReviews.map((guard) => (
-                    <ApprovalListRow
-                      key={guard.id}
-                      title={guard.name}
-                      subtitle={formatCoiSummaryLine(guard.insurancePolicy)}
-                      meta={<WfBadge tone="warning">Pending review</WfBadge>}
-                      onViewDetails={() => setActiveItemId(`coi-${guard.id}`)}
-                    />
-                  ))}
-                </AppItemCardStack>
-              </section>
+            {cert.status === 'pending' && staffVerifyCertificationBlocker(cert) && (
+              <p className="text-xs text-amber-500 leading-relaxed">
+                {staffVerifyCertificationBlocker(cert)}
+              </p>
             )}
-            {pendingSections.map((section) => (
-              <section key={section.id} className="credential-view-section space-y-2">
-                <div className="credential-view-section-header">
-                  <div>
-                    <h3 className="text-sm font-semibold">{section.title}</h3>
-                    {section.subtitle && (
-                      <p className="text-xs text-brand-text-muted mt-1">{section.subtitle}</p>
-                    )}
-                  </div>
-                  <span className="credential-view-section-count">{section.entries.length}</span>
-                </div>
-                <AppItemCardStack>
-                  {section.entries.map((entry) =>
-                    entry.kind === 'coi' ? (
-                      <ApprovalListRow
-                        key={entry.guard.id}
-                        title={
-                          <div className="flex items-start justify-between gap-2 w-full">
-                            <p className="font-semibold text-sm truncate">{entry.guard.name}</p>
-                            <CoiCredentialBadge variant="category" className="shrink-0" />
-                          </div>
-                        }
-                        subtitle={formatCoiSummaryLine(entry.guard.insurancePolicy)}
-                        onViewDetails={() => setActiveItemId(coiApprovalItemId(entry.guard.id))}
-                      />
-                    ) : (
-                      <ApprovalListRow
-                        key={entry.cert.id}
-                        title={
-                          <div className="flex items-start justify-between gap-2 w-full">
-                            <p className="font-semibold text-sm truncate">{entry.guard.name}</p>
-                            <CredentialCategoryBadge cert={entry.cert} variant="category" className="shrink-0" />
-                          </div>
-                        }
-                        subtitle={`${certDisplayName(entry.cert)} · ${entry.cert.issuer} · #${entry.cert.number}`}
-                        onViewDetails={() => setActiveItemId(entry.cert.id)}
-                      />
-                    )
-                  )}
-                </AppItemCardStack>
-              </section>
-            ))}
-        </div>
+          </div>
+        </ApprovalDetailScreen>
       );
     }
 
-    if (activeQueue === 'guard-accounts') {
-      if (activeItemId) {
-        const guard =
-          pendingGuardAccounts.find((g) => g.id === activeItemId) ??
-          approvedGuardsAwaitingActivation.find((g) => g.id === activeItemId) ??
-          null;
+    if (effectiveQueue === 'guard-accounts') {
+      const guard = guards.find((g) => g.id === activeItemId) ?? null;
+      if (!guard) return null;
 
-        if (guard) {
-          const checklist = getGuardActivationChecklist(guard);
-          const isApprovedGuard = isGuardAccountApproved(guard);
-          const approvalBlockers = isApprovedGuard ? checklist.staffActivationBlockers : checklist.staffApprovalBlockers;
-          const canTakeAction = isApprovedGuard
-            ? guardCanStaffActivateAccount(guard)
-            : guardCanStaffApproveProfile(guard);
+      const checklist = getGuardActivationChecklist(guard);
+      const isApprovedGuard = isGuardAccountApproved(guard);
+      const approvalBlockers = isApprovedGuard ? checklist.staffActivationBlockers : checklist.staffApprovalBlockers;
+      const canTakeAction = isApprovedGuard
+        ? guardCanStaffActivateAccount(guard)
+        : guardCanStaffApproveProfile(guard);
+      const isPendingProfile = feedItem?.status === 'pending';
+      const isApprovedAwaitingActivation = feedItem?.status === 'approved' && !isGuardUserStatusActive(guard);
 
-          return (
-            <ApprovalDetailScreen
-              title={guard.name}
-              backLabel={activeTabLabel}
-              onBack={() => setActiveItemId(null)}
-            >
-              <div className="staff-detail-pane space-y-4">
-                <p className="text-sm text-brand-text-muted">{guard.email}</p>
-                <p className="text-xs text-brand-text-muted">
-                  {isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
-                </p>
-                <StaffGuardActivationChecklistView guard={guard} />
-                {approvalBlockers.length > 0 && (
-                  <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
-                    <p className="font-semibold">Before you can {isApprovedGuard ? 'activate' : 'approve'}:</p>
-                    <ul className="list-disc list-inside text-xs space-y-0.5">
-                      {approvalBlockers.map((blocker) => (
-                        <li key={blocker}>{blocker}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <GuardCredentialsPanel
-                  guard={guard}
-                  editing={false}
-                  staffMode={canManageGuardAccounts}
-                  onSubmitIdentityVerification={
-                    canManageGuardAccounts && onUpdateGuardIdImages
-                      ? (payload) => onUpdateGuardIdImages(guard.id, payload)
-                      : undefined
+      return (
+        <ApprovalDetailScreen
+          title={guard.name}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <div className="staff-detail-pane space-y-4">
+            <ApprovalReviewMeta item={feedItem} />
+            <p className="text-sm text-brand-text-muted">{guard.email}</p>
+            <p className="text-xs text-brand-text-muted">
+              {isApprovedGuard ? 'Guard account activation' : 'Guard profile approval'}
+            </p>
+            <StaffGuardActivationChecklistView guard={guard} />
+            {isPendingProfile && approvalBlockers.length > 0 && (
+              <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
+                <p className="font-semibold">Before you can approve:</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {approvalBlockers.map((blocker) => (
+                    <li key={blocker}>{blocker}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {isApprovedAwaitingActivation && approvalBlockers.length > 0 && (
+              <div className="text-sm text-amber-400 border border-amber-500/30 bg-amber-500/10 rounded-lg px-3 py-2 leading-relaxed space-y-1">
+                <p className="font-semibold">Before you can activate:</p>
+                <ul className="list-disc list-inside text-xs space-y-0.5">
+                  {approvalBlockers.map((blocker) => (
+                    <li key={blocker}>{blocker}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <GuardCredentialsPanel
+              guard={guard}
+              editing={false}
+              staffMode={canManageGuardAccounts}
+              onSubmitIdentityVerification={
+                canManageGuardAccounts && onUpdateGuardIdImages
+                  ? (payload) => onUpdateGuardIdImages(guard.id, payload)
+                  : undefined
+              }
+              onAddCertification={
+                canManageGuardAccounts && onAddCertification
+                  ? (cert) => onAddCertification(guard.id, cert)
+                  : undefined
+              }
+              onDeleteCertification={
+                canManageGuardAccounts && onDeleteCertification
+                  ? (certId) => onDeleteCertification(guard.id, certId)
+                  : undefined
+              }
+              onAttachCertificationImage={
+                canManageGuardAccounts && onAttachCertificationImage
+                  ? (certId, imageUrl) => onAttachCertificationImage(guard.id, certId, imageUrl)
+                  : undefined
+              }
+              onUpdateCertification={
+                onUpdateCertification
+                  ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
+                  : undefined
+              }
+              onReviewInsurance={
+                canVerifyGuardCredentials && onReviewGuardInsurance
+                  ? (status, rejectionReason) =>
+                      Promise.resolve(onReviewGuardInsurance(guard.id, status, rejectionReason))
+                  : undefined
+              }
+              staffIdReview={
+                canVerifyGuardCredentials ? (
+                  <StaffIdReviewSection
+                    guard={guard}
+                    canManage={canVerifyGuardCredentials}
+                    onApprove={onApproveIdentityVerification}
+                    onReject={
+                      onRejectIdentityVerification
+                        ? (guardId, reason) => onRejectIdentityVerification(guardId, reason)
+                        : undefined
+                    }
+                    onRequestResubmit={
+                      onRequestIdentityResubmit
+                        ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
+                        : undefined
+                    }
+                  />
+                ) : undefined
+              }
+              renderCertActions={(cert) => renderGuardAccountCertActions(guard, cert)}
+            />
+            <div className="app-action-row--equal pt-2 border-t border-brand-border">
+              {onViewGuard && (
+                <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
+                  Full profile
+                </button>
+              )}
+              {isApprovedAwaitingActivation && canActivateGuardAccounts && onActivateGuardAccount && (
+                <button
+                  type="button"
+                  disabled={!canTakeAction}
+                  title={
+                    canTakeAction
+                      ? 'Grant marketplace eligibility'
+                      : approvalBlockers.join(' · ') || 'All credentials must be verified before activation'
                   }
-                  onAddCertification={
-                    canManageGuardAccounts && onAddCertification
-                      ? (cert) => onAddCertification(guard.id, cert)
-                      : undefined
-                  }
-                  onDeleteCertification={
-                    canManageGuardAccounts && onDeleteCertification
-                      ? (certId) => onDeleteCertification(guard.id, certId)
-                      : undefined
-                  }
-                  onAttachCertificationImage={
-                    canManageGuardAccounts && onAttachCertificationImage
-                      ? (certId, imageUrl) => onAttachCertificationImage(guard.id, certId, imageUrl)
-                      : undefined
-                  }
-                  onUpdateCertification={
-                    onUpdateCertification
-                      ? (certId, payload) => onUpdateCertification(guard.id, certId, payload)
-                      : undefined
-                  }
-                  onReviewInsurance={
-                    canVerifyGuardCredentials && onReviewGuardInsurance
-                      ? (status, rejectionReason) =>
-                          Promise.resolve(
-                            onReviewGuardInsurance(guard.id, status, rejectionReason)
-                          )
-                      : undefined
-                  }
-                  staffIdReview={
-                    canVerifyGuardCredentials ? (
-                      <StaffIdReviewSection
-                        guard={guard}
-                        canManage={canVerifyGuardCredentials}
-                        onApprove={onApproveIdentityVerification}
-                        onReject={
-                          onRejectIdentityVerification
-                            ? (guardId, reason) => onRejectIdentityVerification(guardId, reason)
-                            : undefined
-                        }
-                        onRequestResubmit={
-                          onRequestIdentityResubmit
-                            ? (guardId, slots, staffNote) => onRequestIdentityResubmit(guardId, slots, staffNote)
-                            : undefined
-                        }
-                      />
-                    ) : undefined
-                  }
-                  renderCertActions={(cert) => renderGuardAccountCertActions(guard, cert)}
-                />
-                <div className="app-action-row--equal pt-2 border-t border-brand-border">
-                  {onViewGuard && (
-                    <button type="button" onClick={() => onViewGuard(guard.id)} className="app-button-outline app-btn-sm">
-                      Full profile
-                    </button>
-                  )}
-                  {isApprovedGuard && canActivateGuardAccounts && onActivateGuardAccount && (
-                    <button
-                      type="button"
-                      disabled={!canTakeAction}
-                      title={
-                        canTakeAction
-                          ? 'Grant marketplace eligibility'
-                          : approvalBlockers.join(' · ') || 'All credentials must be verified before activation'
+                  onClick={() => {
+                    void (async () => {
+                      if (!canTakeAction) return;
+                      try {
+                        await onActivateGuardAccount(guard.id);
+                        setActiveItemId(null);
+                      } catch (err) {
+                        showAppToast(
+                          err instanceof Error ? err.message : 'Could not grant marketplace eligibility.',
+                          { tone: 'error' }
+                        );
                       }
-                      onClick={() => {
-                        void (async () => {
-                          if (!canTakeAction) return;
-                          try {
-                            await onActivateGuardAccount(guard.id);
-                            setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not grant marketplace eligibility.', { tone: 'error' });
-                          }
-                        })();
-                      }}
-                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+                    })();
+                  }}
+                  className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+                >
+                  <Check className="w-3.5 h-3.5" /> Grant eligibility
+                </button>
+              )}
+            </div>
+            {isPendingProfile && canApproveGuardAccounts && onApproveGuardAccount && (
+              <div className="pt-2">
+                <SlideToConfirm
+                  label="Slide to approve application"
+                  confirmedLabel="Approved"
+                  tone="success"
+                  disabled={!canTakeAction}
+                  disabledHint={approvalBlockers.join(' · ') || 'Application must be pending and not blocked'}
+                  onConfirm={() => {
+                    void (async () => {
+                      if (!canTakeAction) return;
+                      try {
+                        await onApproveGuardAccount(guard.id);
+                        setActiveItemId(null);
+                      } catch (err) {
+                        showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+                      }
+                    })();
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </ApprovalDetailScreen>
+      );
+    }
+
+    if (effectiveQueue === 'client-accounts') {
+      const client = clients.find((c) => c.id === activeItemId) ?? null;
+      if (!client) return null;
+
+      const isPending = feedItem?.status === 'pending';
+      const budgetLabel: Record<string, string> = {
+        'under-500': 'Under $500',
+        '500-2000': '$500 – $2,000',
+        '2000-5000': '$2,000 – $5,000',
+        '5000-15000': '$5,000 – $15,000',
+        '15000+': '$15,000+',
+        ongoing: 'Ongoing / monthly contract',
+      };
+      const frequencyLabel: Record<string, string> = {
+        'one-time': 'One-time event',
+        recurring: 'Ongoing / recurring',
+        temporary: 'Temporary / short-term',
+      };
+      const armedLabel: Record<string, string> = {
+        armed: 'Armed',
+        unarmed: 'Unarmed',
+        'no-preference': 'No preference',
+      };
+
+      return (
+        <ApprovalDetailScreen
+          title={client.companyName || client.name}
+          backLabel={activeTabLabel}
+          onBack={() => setActiveItemId(null)}
+        >
+          <div className="staff-detail-pane space-y-5">
+            <ApprovalReviewMeta item={feedItem} />
+
+            <section className="space-y-2">
+              <p className="uber-label text-xs">Contact</p>
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold">{client.name}</p>
+                <p className="text-brand-text-muted flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 shrink-0 inline-block">@</span>
+                  {client.email}
+                </p>
+                {client.phone && (
+                  <p className="text-brand-text-muted flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 shrink-0" />
+                    {client.phone}
+                  </p>
+                )}
+                {client.website && (
+                  <p className="text-brand-text-muted flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 shrink-0" />
+                    <a
+                      href={client.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-primary hover:underline truncate"
                     >
-                      <Check className="w-3.5 h-3.5" /> Grant eligibility
-                    </button>
-                  )}
-                </div>
-                {!isApprovedGuard && canApproveGuardAccounts && onApproveGuardAccount && (
-                  <div className="pt-2">
-                    <SlideToConfirm
-                      label="Slide to approve application"
-                      confirmedLabel="Approved"
-                      tone="success"
-                      disabled={!canTakeAction}
-                      disabledHint={approvalBlockers.join(' · ') || 'Application must be pending and not blocked'}
-                      onConfirm={() => {
-                        void (async () => {
-                          if (!canTakeAction) return;
-                          try {
-                            await onApproveGuardAccount(guard.id);
-                            setActiveItemId(null);
-                          } catch (err) {
-                            showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
-                          }
-                        })();
-                      }}
-                    />
-                  </div>
+                      {client.website}
+                    </a>
+                  </p>
                 )}
               </div>
-            </ApprovalDetailScreen>
-          );
-        }
+            </section>
 
-        return null;
-      }
-
-      if (queueCounts['guard-accounts'] === 0) return renderTabEmptyState('guard-accounts');
-      return (
-        <AppItemCardStack>
-          {pendingGuardAccounts.map((guard) => (
-            <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-              <WfListCard
-                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                title={guard.name}
-                subtitle={`Profile approval · ${guardActivationSummaryLabel(guard)}`}
-                meta={
-                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                    <GuardRosterStatusBadges guard={guard} />
-                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                  </div>
-                }
-              />
-              <button
-                type="button"
-                onClick={() => setActiveItemId(guard.id)}
-                className="app-button-outline app-btn-sm gap-1.5 w-fit"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                View details
-              </button>
-            </div>
-          ))}
-          {approvedGuardsAwaitingActivation.map((guard) => (
-            <div key={guard.id} className="app-item-card flex-col !items-stretch gap-2.5 !cursor-default">
-              <WfListCard
-                avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="sm" rounded="lg" />}
-                title={guard.name}
-                subtitle={`Account activation · ${guardActivationSummaryLabel(guard)}`}
-                meta={
-                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                    <GuardRosterStatusBadges guard={guard} />
-                    <GuardMissingCredentialsBadge guard={guard} className="shrink-0" />
-                  </div>
-                }
-              />
-              <button
-                type="button"
-                onClick={() => setActiveItemId(guard.id)}
-                className="app-button-outline app-btn-sm gap-1.5 w-fit"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                View details
-              </button>
-            </div>
-          ))}
-        </AppItemCardStack>
-      );
-    }
-
-    if (activeQueue === 'client-accounts') {
-      if (activeItemId) {
-        const client = pendingClientAccounts.find((c) => c.id === activeItemId) ?? null;
-        if (!client) return null;
-
-        const budgetLabel: Record<string, string> = {
-            'under-500': 'Under $500',
-            '500-2000': '$500 – $2,000',
-            '2000-5000': '$2,000 – $5,000',
-            '5000-15000': '$5,000 – $15,000',
-            '15000+': '$15,000+',
-            'ongoing': 'Ongoing / monthly contract',
-          };
-          const frequencyLabel: Record<string, string> = {
-            'one-time': 'One-time event',
-            'recurring': 'Ongoing / recurring',
-            'temporary': 'Temporary / short-term',
-          };
-          const armedLabel: Record<string, string> = {
-            armed: 'Armed',
-            unarmed: 'Unarmed',
-            'no-preference': 'No preference',
-          };
-
-          return (
-            <ApprovalDetailScreen
-              title={client.companyName || client.name}
-              backLabel={activeTabLabel}
-              onBack={() => setActiveItemId(null)}
-            >
-              <div className="staff-detail-pane space-y-5">
-                <WfBadge tone="warning">Pending approval</WfBadge>
-
-                {/* ── Identity ── */}
-                <section className="space-y-2">
-                  <p className="uber-label text-xs">Contact</p>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-semibold">{client.name}</p>
-                    <p className="text-brand-text-muted flex items-center gap-1.5">
-                      <span className="w-3.5 h-3.5 shrink-0 inline-block">@</span>
-                      {client.email}
-                    </p>
-                    {client.phone && (
-                      <p className="text-brand-text-muted flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 shrink-0" />
-                        {client.phone}
-                      </p>
-                    )}
-                    {client.website && (
-                      <p className="text-brand-text-muted flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 shrink-0" />
-                        <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline truncate">{client.website}</a>
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                {/* ── Business info ── */}
-                {(client.businessType || (client.industries && client.industries.length > 0) || client.businessLicense) && (
-                  <section className="space-y-2 pt-3 border-t border-brand-border">
-                    <p className="uber-label text-xs">Business</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                      {client.businessType && (
-                        <>
-                          <span className="text-brand-text-muted">Type</span>
-                          <span>{client.businessType}</span>
-                        </>
-                      )}
-                      {client.businessLicense && (
-                        <>
-                          <span className="text-brand-text-muted">License / EIN</span>
-                          <span className="font-mono text-xs">{client.businessLicense}</span>
-                        </>
-                      )}
-                    </div>
-                    {client.industries && client.industries.length > 0 && (
-                      <div>
-                        <p className="text-xs text-brand-text-muted mb-1.5">Industry</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {client.industries.map((ind) => (
-                            <span key={ind} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
-                              {ind}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {/* ── Security needs ── */}
-                <section className="space-y-2 pt-3 border-t border-brand-border">
-                  <p className="uber-label text-xs">Security needs</p>
-                  {client.serviceDescription && (
-                    <p className="text-sm text-brand-text border-l-2 border-brand-primary pl-3 leading-relaxed">
-                      {client.serviceDescription}
-                    </p>
+            {(client.businessType || (client.industries && client.industries.length > 0) || client.businessLicense) && (
+              <section className="space-y-2 pt-3 border-t border-brand-border">
+                <p className="uber-label text-xs">Business</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  {client.businessType && (
+                    <>
+                      <span className="text-brand-text-muted">Type</span>
+                      <span>{client.businessType}</span>
+                    </>
                   )}
-                  {client.serviceTypes && client.serviceTypes.length > 0 && (
+                  {client.businessLicense && (
+                    <>
+                      <span className="text-brand-text-muted">License / EIN</span>
+                      <span className="font-mono text-xs">{client.businessLicense}</span>
+                    </>
+                  )}
+                </div>
+                {client.industries && client.industries.length > 0 && (
+                  <div>
+                    <p className="text-xs text-brand-text-muted mb-1.5">Industry</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {client.serviceTypes.map((t) => (
-                        <span key={t} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
-                          {t}
+                      {client.industries.map((ind) => (
+                        <span
+                          key={ind}
+                          className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30"
+                        >
+                          {ind}
                         </span>
                       ))}
                     </div>
-                  )}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                    {client.estimatedGuardsNeeded != null && (
-                      <>
-                        <span className="text-brand-text-muted">Guards needed</span>
-                        <span>{client.estimatedGuardsNeeded}</span>
-                      </>
-                    )}
-                    {client.armedPreference && (
-                      <>
-                        <span className="text-brand-text-muted">Armed preference</span>
-                        <span>{armedLabel[client.armedPreference] ?? client.armedPreference}</span>
-                      </>
-                    )}
-                    {client.serviceFrequencies && client.serviceFrequencies.length > 0 && (
-                        <>
-                          <span className="text-brand-text-muted">Engagement type</span>
-                          <span>{client.serviceFrequencies.map((f) => frequencyLabel[f] ?? f).join(', ')}</span>
-                        </>
-                      )}
-                    {client.estimatedStartDate && (
-                      <>
-                        <span className="text-brand-text-muted">Est. start</span>
-                        <span>{client.estimatedStartDate}</span>
-                      </>
-                    )}
-                    {client.budgetRange && (
-                      <>
-                        <span className="text-brand-text-muted">Budget range</span>
-                        <span>{budgetLabel[client.budgetRange] ?? client.budgetRange}</span>
-                      </>
-                    )}
                   </div>
-                </section>
-
-                {/* ── Location ── */}
-                {(client.serviceCity || client.serviceState || (client.propertyTypes && client.propertyTypes.length > 0)) && (
-                  <section className="space-y-2 pt-3 border-t border-brand-border">
-                    <p className="uber-label text-xs">Location</p>
-                    {(client.serviceCity || client.serviceState) && (
-                      <p className="text-sm flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-brand-text-muted shrink-0" />
-                        {[client.serviceCity, client.serviceState].filter(Boolean).join(', ')}
-                      </p>
-                    )}
-                    {client.propertyTypes && client.propertyTypes.length > 0 && (
-                      <div>
-                        <p className="text-xs text-brand-text-muted mb-1.5">Property type</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {client.propertyTypes.map((pt) => (
-                            <span key={pt} className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30">
-                              {pt}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </section>
                 )}
+              </section>
+            )}
 
-                {/* ── Prior experience ── */}
-                {(client.hasPriorSecurityService != null || client.specialRequirements) && (
-                  <section className="space-y-2 pt-3 border-t border-brand-border">
-                    <p className="uber-label text-xs">Background</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                      {client.hasPriorSecurityService != null && (
-                        <>
-                          <span className="text-brand-text-muted">Prior security</span>
-                          <span>
-                            {client.hasPriorSecurityService ? 'Yes' : 'No'}
-                            {client.priorSecurityProvider ? ` — ${client.priorSecurityProvider}` : ''}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {client.specialRequirements && (
-                      <p className="text-sm text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">
-                        {client.specialRequirements}
-                      </p>
-                    )}
-                  </section>
-                )}
-
-                {/* ── Referral / Discovery ── */}
-                {(client.referredBy || client.howHeardAboutUs) && (
-                  <section className="space-y-2 pt-3 border-t border-brand-border">
-                    <p className="uber-label text-xs">How they found us</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                      {client.referredBy && (
-                        <>
-                          <span className="text-brand-text-muted">Referred by</span>
-                          <span>
-                            {client.referredBy}
-                            {client.referredById && (
-                              <span className="text-xs text-brand-text-muted ml-1">(on platform)</span>
-                            )}
-                          </span>
-                        </>
-                      )}
-                      {client.howHeardAboutUs && (
-                        <>
-                          <span className="text-brand-text-muted">Source</span>
-                          <span>{client.howHeardAboutUs}</span>
-                        </>
-                      )}
-                    </div>
-                  </section>
-                )}
-
-                {/* ── Approve action ── */}
-                {onApproveClient && (
-                  <div className="pt-3 border-t border-brand-border">
-                    <button
-                      type="button"
-                      disabled={actionPending}
-                      onClick={() =>
-                        void runGuardedAction(async () => {
-                          onApproveClient(client.id);
-                          setActiveItemId(null);
-                        })
-                      }
-                      className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+            <section className="space-y-2 pt-3 border-t border-brand-border">
+              <p className="uber-label text-xs">Security needs</p>
+              {client.serviceDescription && (
+                <p className="text-sm text-brand-text border-l-2 border-brand-primary pl-3 leading-relaxed">
+                  {client.serviceDescription}
+                </p>
+              )}
+              {client.serviceTypes && client.serviceTypes.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {client.serviceTypes.map((t) => (
+                    <span
+                      key={t}
+                      className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30"
                     >
-                      <Check className="w-3.5 h-3.5" /> Approve client
-                    </button>
-                  </div>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                {client.estimatedGuardsNeeded != null && (
+                  <>
+                    <span className="text-brand-text-muted">Guards needed</span>
+                    <span>{client.estimatedGuardsNeeded}</span>
+                  </>
+                )}
+                {client.armedPreference && (
+                  <>
+                    <span className="text-brand-text-muted">Armed preference</span>
+                    <span>{armedLabel[client.armedPreference] ?? client.armedPreference}</span>
+                  </>
+                )}
+                {client.serviceFrequencies && client.serviceFrequencies.length > 0 && (
+                  <>
+                    <span className="text-brand-text-muted">Engagement type</span>
+                    <span>{client.serviceFrequencies.map((f) => frequencyLabel[f] ?? f).join(', ')}</span>
+                  </>
+                )}
+                {client.estimatedStartDate && (
+                  <>
+                    <span className="text-brand-text-muted">Est. start</span>
+                    <span>{client.estimatedStartDate}</span>
+                  </>
+                )}
+                {client.budgetRange && (
+                  <>
+                    <span className="text-brand-text-muted">Budget range</span>
+                    <span>{budgetLabel[client.budgetRange] ?? client.budgetRange}</span>
+                  </>
                 )}
               </div>
-            </ApprovalDetailScreen>
-          );
-      }
+            </section>
 
-      if (pendingClientAccounts.length === 0) return renderTabEmptyState('client-accounts');
-      return (
-        <AppItemCardStack>
-          {pendingClientAccounts.map((client) => (
-            <ApprovalListRow
-              key={client.id}
-              title={client.companyName || client.name}
-              subtitle="Client sign-up"
-              onViewDetails={() => setActiveItemId(client.id)}
-            />
-          ))}
-        </AppItemCardStack>
+            {(client.serviceCity || client.serviceState || (client.propertyTypes && client.propertyTypes.length > 0)) && (
+              <section className="space-y-2 pt-3 border-t border-brand-border">
+                <p className="uber-label text-xs">Location</p>
+                {(client.serviceCity || client.serviceState) && (
+                  <p className="text-sm flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-brand-text-muted shrink-0" />
+                    {[client.serviceCity, client.serviceState].filter(Boolean).join(', ')}
+                  </p>
+                )}
+                {client.propertyTypes && client.propertyTypes.length > 0 && (
+                  <div>
+                    <p className="text-xs text-brand-text-muted mb-1.5">Property type</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {client.propertyTypes.map((pt) => (
+                        <span
+                          key={pt}
+                          className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primary border border-brand-primary/30"
+                        >
+                          {pt}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {(client.hasPriorSecurityService != null || client.specialRequirements) && (
+              <section className="space-y-2 pt-3 border-t border-brand-border">
+                <p className="uber-label text-xs">Background</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  {client.hasPriorSecurityService != null && (
+                    <>
+                      <span className="text-brand-text-muted">Prior security</span>
+                      <span>
+                        {client.hasPriorSecurityService ? 'Yes' : 'No'}
+                        {client.priorSecurityProvider ? ` — ${client.priorSecurityProvider}` : ''}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {client.specialRequirements && (
+                  <p className="text-sm text-brand-text-muted leading-relaxed border-l-2 border-brand-border pl-3">
+                    {client.specialRequirements}
+                  </p>
+                )}
+              </section>
+            )}
+
+            {(client.referredBy || client.howHeardAboutUs) && (
+              <section className="space-y-2 pt-3 border-t border-brand-border">
+                <p className="uber-label text-xs">How they found us</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  {client.referredBy && (
+                    <>
+                      <span className="text-brand-text-muted">Referred by</span>
+                      <span>
+                        {client.referredBy}
+                        {client.referredById && (
+                          <span className="text-xs text-brand-text-muted ml-1">(on platform)</span>
+                        )}
+                      </span>
+                    </>
+                  )}
+                  {client.howHeardAboutUs && (
+                    <>
+                      <span className="text-brand-text-muted">Source</span>
+                      <span>{client.howHeardAboutUs}</span>
+                    </>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {isPending && onApproveClient && (
+              <div className="pt-3 border-t border-brand-border">
+                <button
+                  type="button"
+                  disabled={actionPending}
+                  onClick={() =>
+                    void runGuardedAction(async () => {
+                      onApproveClient(client.id);
+                      setActiveItemId(null);
+                    })
+                  }
+                  className="app-button-primary app-btn-sm gap-1 disabled:opacity-50"
+                >
+                  <Check className="w-3.5 h-3.5" /> Approve client
+                </button>
+              </div>
+            )}
+          </div>
+        </ApprovalDetailScreen>
       );
     }
 

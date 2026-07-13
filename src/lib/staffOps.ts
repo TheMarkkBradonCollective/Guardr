@@ -123,6 +123,7 @@ export interface OpsActivityItem {
 export type OverviewActionTone = 'urgent' | 'normal' | 'muted';
 
 export type ApprovalQueueId =
+  | 'all'
   | 'job-offers'
   | 'schedule-changes'
   | 'applications'
@@ -133,6 +134,7 @@ export type ApprovalQueueId =
   | 'accounts';
 
 export const APPROVAL_QUEUE_TAB_ORDER: ApprovalQueueId[] = [
+  'all',
   'job-offers',
   'schedule-changes',
   'applications',
@@ -145,6 +147,7 @@ export const APPROVAL_QUEUE_TAB_LABELS: Record<
   Exclude<ApprovalQueueId, 'accounts'>,
   string
 > = {
+  all: 'All',
   'job-offers': 'Jobs',
   'schedule-changes': 'Schedule',
   applications: 'Applications',
@@ -158,13 +161,17 @@ export function normalizeApprovalQueueId(
   queue: ApprovalQueueId | null | undefined,
   permitted: ApprovalQueueId[] = APPROVAL_QUEUE_TAB_ORDER
 ): ApprovalQueueId | null {
-  if (!queue) return permitted[0] ?? null;
+  if (!queue) {
+    if (permitted.includes('all')) return 'all';
+    return permitted[0] ?? null;
+  }
   if (queue === 'accounts') {
     if (permitted.includes('guard-accounts')) return 'guard-accounts';
     if (permitted.includes('client-accounts')) return 'client-accounts';
+    if (permitted.includes('all')) return 'all';
     return permitted[0] ?? null;
   }
-  return permitted.includes(queue) ? queue : permitted[0] ?? null;
+  return permitted.includes(queue) ? queue : permitted.includes('all') ? 'all' : permitted[0] ?? null;
 }
 
 export interface OverviewActionItem {
