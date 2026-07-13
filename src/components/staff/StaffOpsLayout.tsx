@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SessionUser } from '../../types';
 import { canAccessFinancialControls, canAccessStaffSettings, canHandleDisputes, ROLE_LABELS } from '../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesSection, StaffSection } from '../../lib/staffOps';
@@ -88,6 +88,15 @@ export function StaffOpsLayout({
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
+
+  useEffect(() => {
+    if (!mobileNavOpen || dockedSidebar) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileNavOpen, dockedSidebar]);
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -178,7 +187,7 @@ export function StaffOpsLayout({
     <div
       className={`staff-shell page-shell fixed inset-0 flex h-dvh max-h-dvh overflow-hidden bg-brand-bg text-brand-text ${
         dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
-      }`}
+      }${mobileNavOpen && !dockedSidebar ? ' staff-shell--nav-open' : ''}`}
     >
       {dockedSidebar ? (
         <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
