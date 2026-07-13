@@ -27,10 +27,63 @@ function resolvePlatformRole(input: {
   return 'guard';
 }
 
-async function verifyGuardSession(
+function isStaffPlatformRole(role: PlatformRole): boolean {
+  return role === 'moderator' || role === 'administrator' || role === 'director' || role === 'owner';
+}
+
+interface GuardChatSession {
+  userId: string;
+  email: string;
+  platformRole: PlatformRole;
+  canPost: boolean;
+}
+
+async function verifyStaffSession(
   db: SupabaseClient,
   credentials: { userId: string; email: string; role: string } | null | undefined
-): Promise<{ userId: string; email: string; platformRole: PlatformRole } | null> {
+): Promise<GuardChatSession | null> {
+  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
+    return null;
+  }
+
+  const email = credentials.email.trim().toLowerCase();
+  const { userId } = credentials;
+
+  let { data, error } = await db
+    .from('staff')
+    .select('id, email, staff_role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (!data && !error) {
+    const byEmail = await db
+      .from('staff')
+      .select('id, email, staff_role')
+      .eq('email', email)
+      .maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
+  }
+
+  if (!data && error?.code === '42P01') return null;
+  if (!data || data.email?.toLowerCase() !== email) return null;
+
+  const platformRole = resolvePlatformRole({
+    isStaff: true,
+    staffRole: data.staff_role ?? undefined,
+    legacyRole: 'staff',
+  });
+
+  if (!isStaffPlatformRole(platformRole)) return null;
+
+  return { userId: data.id, email, platformRole, canPost: true };
+}
+
+async function verifyActiveGuardSession(
+  db: SupabaseClient,
+  credentials: { userId: string; email: string; role: string } | null | undefined,
+  options: { requireActive: boolean }
+): Promise<GuardChatSession | null> {
   if (!credentials?.userId || !credentials?.email || !credentials?.role) {
     return null;
   }
@@ -40,14 +93,14 @@ async function verifyGuardSession(
 
   let { data, error } = await db
     .from('guards')
-    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+    .select('id, email, is_staff, user_status, migrated_to_staff_at')
     .eq('id', userId)
     .maybeSingle();
 
   if (!data && !error) {
     const byEmail = await db
       .from('guards')
-      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .select('id, email, is_staff, user_status, migrated_to_staff_at')
       .eq('email', email)
       .maybeSingle();
     data = byEmail.data ?? null;
@@ -56,17 +109,31 @@ async function verifyGuardSession(
 
   if (!data && error?.code === '42P01') return null;
   if (!data || data.email?.toLowerCase() !== email) return null;
-  if (data.migrated_to_staff_at) return null;
+  if (data.migrated_to_staff_at || data.is_staff) return null;
 
-  const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
-    staffRole: data.staff_role ?? undefined,
-    legacyRole: data.is_staff ? 'staff' : 'guard',
+  const platformRole = resolvePlatformRole({ legacyRole: 'guard' });
+  const isActive = data.user_status === 'active';
+  if (options.requireActive && !isActive) return null;
+
+  return {
+    userId: data.id,
+    email,
+    platformRole,
+    canPost: isActive,
+  };
+}
+
+async function verifyGuardChatSession(
+  db: SupabaseClient,
+  credentials: { userId: string; email: string; role: string } | null | undefined,
+  options: { requirePost: boolean }
+): Promise<GuardChatSession | null> {
+  const staff = await verifyStaffSession(db, credentials);
+  if (staff) return staff;
+
+  return verifyActiveGuardSession(db, credentials, {
+    requireActive: options.requirePost,
   });
-
-  if (platformRole !== 'guard') return null;
-
-  return { userId: data.id, email, platformRole };
 }
 
 interface GuardMessageRow {
@@ -121,13 +188,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'GET') {
       const query = req.query as { userId?: string; email?: string; role?: string };
-      const session = await verifyGuardSession(db, {
-        userId: String(query.userId ?? ''),
-        email: String(query.email ?? ''),
-        role: String(query.role ?? ''),
-      });
+      const session = await verifyGuardChatSession(
+        db,
+        {
+          userId: String(query.userId ?? ''),
+          email: String(query.email ?? ''),
+          role: String(query.role ?? ''),
+        },
+        { requirePost: false }
+      );
       if (!session) {
-        return res.status(401).json({ error: 'Unauthorized — guard sign-in required' });
+        return res.status(401).json({ error: 'Unauthorized — staff or active guard sign-in required' });
       }
 
       const { data, error } = await db
@@ -165,13 +236,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       };
 
-      const session = await verifyGuardSession(db, {
-        userId: body.userId ?? '',
-        email: body.email ?? '',
-        role: body.role ?? '',
-      });
+      const session = await verifyGuardChatSession(
+        db,
+        {
+          userId: body.userId ?? '',
+          email: body.email ?? '',
+          role: body.role ?? '',
+        },
+        { requirePost: true }
+      );
       if (!session) {
-        return res.status(401).json({ error: 'Unauthorized — guard sign-in required' });
+        return res.status(401).json({ error: 'Unauthorized — staff or active guard sign-in required' });
+      }
+      if (!session.canPost) {
+        return res.status(403).json({ error: 'Only active guards and staff can post to guard chat' });
       }
 
       const message = body.message;
@@ -179,7 +257,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Valid message payload is required' });
       }
       if (message.senderId && message.senderId !== session.userId) {
-        return res.status(403).json({ error: 'Sender does not match signed-in guard' });
+        return res.status(403).json({ error: 'Sender does not match signed-in account' });
       }
 
       const { error } = await db.from('guard_messages').upsert({

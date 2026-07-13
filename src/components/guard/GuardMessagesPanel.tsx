@@ -26,7 +26,7 @@ import {
   ticketsForUser,
 } from '../../lib/support';
 import { isStaffRole } from '../../lib/permissions';
-import { sortedGuardMessages } from '../../lib/guardMessenger';
+import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { TeamChatPanel } from '../messaging/TeamChatPanel';
 import { ChatThreadPanel } from '../messaging/ChatThreadPanel';
@@ -419,14 +419,17 @@ export function GuardMessagesPanel({
     </>
   );
 
+  const canPostGuardChat = canPostToGuardChat(currentUser, guard);
+
   // ── Detail view ──────────────────────────────────────────
   const detailView = (() => {
-    if (activeView.kind === 'guard-channel' && onSendGuardMessage) {
+    if (activeView.kind === 'guard-channel') {
       return (
         <div className="h-full flex flex-col min-h-0 app-full-page-screen">
           {!embedHeaderInShell && (
             <AppChatHeader
               title="Guard chat"
+              subtitle="All active guards and staff"
               onBack={backToList}
               hideBackOnDesktop
             />
@@ -435,10 +438,12 @@ export function GuardMessagesPanel({
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
               currentUserId={currentUser.id}
-              onSend={onSendGuardMessage}
-              placeholder="Message other guards…"
+              onSend={canPostGuardChat ? onSendGuardMessage : undefined}
+              placeholder="Message the guard community…"
               teamChat
               guardChatLabels
+              readOnly={!canPostGuardChat}
+              readOnlyMessage="Guard chat opens once your account is active on the marketplace."
             />
           </div>
         </div>

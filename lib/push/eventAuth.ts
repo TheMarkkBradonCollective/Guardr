@@ -96,7 +96,9 @@ export async function authorizePushEvent(
       return 'Only staff or the applying guard can send application notifications';
 
     case 'guard_message':
-      return session.platformRole === 'guard' ? null : 'Only guards can post to guard chat';
+      if (isStaffSession(session)) return null;
+      if (session.platformRole === 'guard') return null;
+      return 'Only staff or active guards can post to guard chat';
 
     case 'guard_checkin':
     case 'guard_clockout':

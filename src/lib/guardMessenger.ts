@@ -1,4 +1,6 @@
-import { PlatformRole, GuardMessage, SessionUser } from '../types';
+import { PlatformRole, GuardMessage, SecurityGuard, SessionUser } from '../types';
+import { isGuardUserStatusActive } from './accountStatus';
+import { isStaffRole } from './permissions';
 import { ROLE_LABELS } from './permissions';
 
 const STORAGE_KEY = 'guardr_guard_messages';
@@ -39,8 +41,25 @@ export function saveGuardMessagesToStorage(messages: GuardMessage[]): void {
   }
 }
 
+/** Staff and active guards may read the all-guards community channel. */
+export function canReadGuardChat(user: Pick<SessionUser, 'role'>): boolean {
+  return isStaffRole(user.role) || user.role === 'guard';
+}
+
+/** Staff may moderate; only marketplace-active guards may post as guards. */
+export function canPostToGuardChat(
+  user: Pick<SessionUser, 'role'>,
+  guard?: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null
+): boolean {
+  if (isStaffRole(user.role)) return true;
+  if (user.role !== 'guard') return false;
+  if (!guard) return false;
+  return isGuardUserStatusActive(guard);
+}
+
+/** @deprecated Use canReadGuardChat / canPostToGuardChat */
 export function canAccessGuardMessenger(role: PlatformRole): boolean {
-  return role === 'guard';
+  return role === 'guard' || isStaffRole(role);
 }
 
 export function buildGuardMessage(sender: SessionUser, body: string): GuardMessage {

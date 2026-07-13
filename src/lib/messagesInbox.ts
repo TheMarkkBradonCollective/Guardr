@@ -295,7 +295,7 @@ export function buildStaffInboxRows({
     channel: 'guard-community',
     title: 'Guard chat',
     subtitle: 'All-guards channel',
-    preview: 'Read and monitor the guard community channel',
+    preview: 'Community channel for active guards and staff',
     updatedAt: guardMessagesUpdatedAt ?? staffMessagesUpdatedAt ?? new Date(0).toISOString(),
     badge: 'Guards',
     badgeTone: 'default',

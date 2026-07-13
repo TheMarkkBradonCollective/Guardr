@@ -221,6 +221,7 @@ interface StaffDashboardProps {
     action: import('../lib/staffOps').DisputeResolutionAction
   ) => void | Promise<void>;
   onSendStaffMessage?: (body: string) => void | Promise<void>;
+  onSendGuardMessage?: (body: string) => void | Promise<void>;
   onRefreshStaffMessages?: () => void | Promise<void>;
   onSendJobChat?: (requestId: string, body: string) => void | Promise<void>;
   onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
@@ -337,6 +338,7 @@ export function StaffDashboard({
   onDeleteSupportTicket,
   onResolveDispute,
   onSendStaffMessage,
+  onSendGuardMessage,
   onRefreshStaffMessages,
   onSendJobChat,
   onSendTeamChatMessage,
@@ -703,6 +705,7 @@ export function StaffDashboard({
               onSendJobChat={onSendJobChat}
               onSendTeamChatMessage={onSendTeamChatMessage}
               onSendStaffMessage={onSendStaffMessage}
+              onSendGuardMessage={onSendGuardMessage}
               onSendSupportMessage={onSendSupportMessage}
               onUpdateSupportStatus={onUpdateSupportStatus}
               onDeleteSupportTicket={onDeleteSupportTicket}

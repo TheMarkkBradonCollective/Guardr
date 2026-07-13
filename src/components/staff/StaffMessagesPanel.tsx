@@ -12,7 +12,7 @@ import {
   TeamChatMessage,
   TeamChatThread,
 } from '../../types';
-import { sortedGuardMessages } from '../../lib/guardMessenger';
+import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenger';
 import { threadForRequest } from '../../lib/jobChat';
 import { threadForTeamRequest } from '../../lib/teamChat';
 import { buildStaffInboxRows, InboxRow } from '../../lib/messagesInbox';
@@ -62,6 +62,7 @@ interface StaffMessagesPanelProps {
   onSendJobChat: (requestId: string, body: string) => void | Promise<void>;
   onSendTeamChatMessage?: (requestId: string, body: string) => void | Promise<void>;
   onSendStaffMessage: (body: string) => void | Promise<void>;
+  onSendGuardMessage?: (body: string) => void | Promise<void>;
   onSendSupportMessage: (ticketId: string, body: string) => void | Promise<void>;
   onUpdateSupportStatus: (ticketId: string, status: SupportTicketStatus) => void | Promise<void>;
   onDeleteSupportTicket?: (ticketId: string) => void | Promise<void>;
@@ -97,6 +98,7 @@ export function StaffMessagesPanel({
   onSendJobChat,
   onSendTeamChatMessage,
   onSendStaffMessage,
+  onSendGuardMessage,
   onSendSupportMessage,
   onUpdateSupportStatus,
   onDeleteSupportTicket,
@@ -317,6 +319,7 @@ export function StaffMessagesPanel({
     if (!effectiveSelection) return null;
 
     if (effectiveSelection.kind === 'guard-channel') {
+      const canPostGuardChat = Boolean(onSendGuardMessage) && canPostToGuardChat(currentUser);
       return (
         <div className="flex flex-col h-full min-h-0 app-full-page-screen">
           <AppChatHeader
@@ -329,8 +332,11 @@ export function StaffMessagesPanel({
             <ChatThreadPanel
               messages={sortedGuardMessages(guardMessages)}
               currentUserId={currentUser.id}
-              placeholder="Staff monitor this channel — guards post here"
-              readOnly
+              onSend={canPostGuardChat ? onSendGuardMessage : undefined}
+              placeholder="Message the guard community…"
+              guardChatLabels
+              readOnly={!canPostGuardChat}
+              readOnlyMessage="Guard chat is open to active guards and staff moderators."
             />
           </div>
         </div>

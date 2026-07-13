@@ -263,6 +263,8 @@ import {
 import { clientMessagesBadge } from './lib/messagesInbox';
 import {
   buildGuardMessage,
+  canPostToGuardChat,
+  canReadGuardChat,
   loadGuardMessagesFromStorage,
   mergeGuardMessages,
   appendGuardMessage,
@@ -2075,7 +2077,7 @@ export default function App() {
   });
 
   const refreshGuardMessages = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'guard') return;
+    if (!currentUser || !canReadGuardChat(currentUser)) return;
 
     const applyRemote = (remote: GuardMessage[]) => {
       setGuardMessages((prev) => {
@@ -8972,6 +8974,11 @@ export default function App() {
     }
   };
 
+  const guardRecordForUser = (user: SessionUser) =>
+    user.role === 'guard'
+      ? verifiedGuards.find((g) => g.id === user.id) ?? guards.find((g) => g.id === user.id) ?? null
+      : null;
+
   const persistGuardMessageToDb = async (message: GuardMessage) => {
     let persisted = false;
     if (isDbConnected) {
@@ -8990,7 +8997,7 @@ export default function App() {
         console.warn('Guard message DB sync:', e);
       }
     }
-    if (!persisted && currentUser && currentUser.role === 'guard') {
+    if (!persisted && currentUser && canPostToGuardChat(currentUser, guardRecordForUser(currentUser))) {
       try {
         await postGuardMessageToApi(currentUser, message);
       } catch (e) {
@@ -9000,7 +9007,8 @@ export default function App() {
   };
 
   const handleSendGuardMessage = async (body: string) => {
-    if (!currentUser || !body.trim() || currentUser.role !== 'guard') return;
+    if (!currentUser || !body.trim()) return;
+    if (!canPostToGuardChat(currentUser, guardRecordForUser(currentUser))) return;
     const message = buildGuardMessage(currentUser, body);
     beginLocalMutation();
     setGuardMessages((prev) => {
@@ -10101,6 +10109,7 @@ export default function App() {
           staffMessages={staffMessages}
           guardMessages={guardMessages}
           onSendStaffMessage={handleSendStaffMessage}
+          onSendGuardMessage={handleSendGuardMessage}
           onRefreshStaffMessages={refreshStaffMessages}
           onSendJobChat={handleSendJobChatMessage}
           onSendTeamChatMessage={handleSendTeamChatMessage}
