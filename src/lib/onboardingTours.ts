@@ -155,13 +155,13 @@ export const STAFF_ONBOARDING_TOUR: OnboardingTour = {
       targetSelector: '[data-tour="staff-overview"]',
     },
     {
-      id: 'approvals',
-      title: 'Approvals queue',
-      body: 'Review pending jobs, accounts, credentials, and applications.',
+      id: 'applications',
+      title: 'Guard applications',
+      body: 'Review guards who applied to open jobs and send the best fit to the client.',
       detail:
-        'Your tutorial includes a sample pending job offer. Real items from clients and guards appear here the same way.',
-      targetSelector: '[data-tour="staff-approvals"]',
-      navigate: { staffSection: 'approvals' },
+        'Your tutorial includes a sample application. Real guard applicants appear here the same way.',
+      targetSelector: '[data-tour="staff-applications"]',
+      navigate: { staffSection: 'applications' },
     },
     {
       id: 'jobs',

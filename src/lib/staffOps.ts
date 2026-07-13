@@ -23,7 +23,7 @@ import { getPendingStaffAccountReviews } from './staffAccounts';
 
 export type StaffSection =
   | 'overview'
-  | 'approvals'
+  | 'applications'
   | 'jobs'
   | 'map'
   | 'guards'
@@ -58,14 +58,49 @@ export function isStaffOpsMapSection(section: StaffSection): boolean {
 export function normalizeStaffSection(section?: string): StaffSection | undefined {
   if (!section) return undefined;
   if (section === 'live-jobs') return 'jobs';
+  if (section === 'approvals') return 'applications';
   if (section === 'messages' || section === 'team-chat' || section === 'job-chats' || section === 'support') {
     return 'messages';
   }
   const valid: StaffSection[] = [
-    'overview', 'approvals', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
+    'overview', 'applications', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
     'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
+}
+
+/** Legacy /staff/approvals?aq=… deep links → the section that now owns that work. */
+export function staffSectionFromApprovalQueue(queue?: ApprovalQueueId | null): StaffSection {
+  switch (queue) {
+    case 'job-offers':
+    case 'schedule-changes':
+      return 'jobs';
+    case 'credentials':
+    case 'guard-accounts':
+    case 'accounts':
+      return 'guards';
+    case 'client-accounts':
+      return 'clients';
+    case 'staff-accounts':
+      return 'team';
+    case 'applications':
+    case 'all':
+    default:
+      return 'applications';
+  }
+}
+
+export function resolveStaffRouteSection(
+  staffSection?: string,
+  staffApprovalQueue?: ApprovalQueueId | null,
+  staffMessageTab?: 'team' | 'jobs' | null
+): StaffSection {
+  if (staffApprovalQueue) {
+    return staffSectionFromApprovalQueue(staffApprovalQueue);
+  }
+  const normalized = normalizeStaffSection(staffSection);
+  const resolved = resolveStaffSection(normalized, staffMessageTab);
+  return isStaffMessagesSection(resolved ?? 'overview') ? 'messages' : (resolved ?? 'overview');
 }
 
 /** Legacy /staff/messages and ?mtab= deep links */
@@ -409,9 +444,8 @@ export function buildOverviewMetricCells(
                 : null,
             ]
               .filter(Boolean)
-              .join(' · ') + ' in Approvals',
+              .join(' · ') + ' across jobs, guards, clients, and applications',
       accent: stats.pendingApprovals > 0,
-      navigateTo: 'approvals',
     },
     {
       label: 'Completed jobs',
@@ -477,8 +511,7 @@ export function buildOverviewActionQueue(
       title: 'Approve job offers before payment',
       description: `${stats.pendingJobApprovals} client job offer${stats.pendingJobApprovals === 1 ? '' : 's'} waiting — client cannot pay until approved`,
       count: stats.pendingJobApprovals,
-      section: 'approvals',
-      approvalQueue: 'job-offers',
+      section: 'jobs',
       tone: 'urgent',
     });
   }
@@ -489,8 +522,7 @@ export function buildOverviewActionQueue(
       title: 'Approve client schedule changes',
       description: `${stats.pendingScheduleChanges} paid job${stats.pendingScheduleChanges === 1 ? '' : 's'} with new times awaiting review`,
       count: stats.pendingScheduleChanges,
-      section: 'approvals',
-      approvalQueue: 'schedule-changes',
+      section: 'jobs',
       tone: 'urgent',
     });
   }
@@ -513,8 +545,7 @@ export function buildOverviewActionQueue(
       title: 'Verify guard credentials',
       description: 'Licenses and certs uploaded — review before guards can work',
       count: stats.pendingCertApprovals,
-      section: 'approvals',
-      approvalQueue: 'credentials',
+      section: 'guards',
       tone: 'urgent',
     });
   }
@@ -525,8 +556,7 @@ export function buildOverviewActionQueue(
       title: 'Review guard applications',
       description: `${stats.pendingGuardApplications} application${stats.pendingGuardApplications === 1 ? '' : 's'} on ${stats.pendingGuardApplicationJobs} open job${stats.pendingGuardApplicationJobs === 1 ? '' : 's'} — pick the best fit`,
       count: stats.pendingGuardApplications,
-      section: 'approvals',
-      approvalQueue: 'applications',
+      section: 'applications',
       tone: 'urgent',
     });
   }
@@ -542,8 +572,7 @@ export function buildOverviewActionQueue(
       title: 'Approve guard profiles',
       description: 'Review guard credentials and activate marketplace accounts',
       count: pendingGuardAccounts,
-      section: 'approvals',
-      approvalQueue: 'guard-accounts',
+      section: 'guards',
       tone: 'urgent',
     });
   }
@@ -553,8 +582,7 @@ export function buildOverviewActionQueue(
       title: 'Approve client sign-ups',
       description: 'Review new client accounts before they can post jobs',
       count: pendingClientAccounts,
-      section: 'approvals',
-      approvalQueue: 'client-accounts',
+      section: 'clients',
       tone: 'urgent',
     });
   }
@@ -564,8 +592,7 @@ export function buildOverviewActionQueue(
       title: 'Approve staff onboarding',
       description: 'Review administrator-submitted staff accounts before they can sign in',
       count: pendingStaffAccounts,
-      section: 'approvals',
-      approvalQueue: 'staff-accounts',
+      section: 'team',
       tone: 'urgent',
     });
   }
