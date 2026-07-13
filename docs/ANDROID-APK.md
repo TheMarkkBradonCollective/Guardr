@@ -88,9 +88,11 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 ### Push setup (APK)
 
 1. Create a Firebase project and add an Android app with package `com.signaturesecurity.guardr`
-2. Download `google-services.json` into `android/app/`
-3. Set `FCM_SERVER_KEY` on the Guardr server (Vercel env)
+2. Download `google-services.json` into `android/app/` (gitignored — do not commit)
+3. Set `FCM_SERVER_KEY` on the Guardr server (Vercel env) — Firebase Console → Project settings → Cloud Messaging → **Server key** (legacy HTTP API)
 4. Rebuild the APK: `npm run android:apk`
+
+**CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.
 
 ## Play Store (future)
 
@@ -102,3 +104,10 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 ## CI
 
 GitHub Actions workflow `.github/workflows/android-apk.yml` builds the APK on demand and uploads it as an artifact.
+
+Required secrets for a push-enabled APK:
+
+| Secret | Purpose |
+|--------|---------|
+| `GOOGLE_SERVICES_JSON` | Full `google-services.json` file (written to `android/app/` at build time) |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Optional; omitted values fall back to production keys in the client |
