@@ -1,19 +1,22 @@
 import { apiUrl } from './siteConfig';
 import type { SessionUser } from '../types';
+import { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 import { subscribePush } from './pushApi';
 import {
   getNativePushPermission,
   getStoredNativePushSubscription,
+  initNativePushBridge,
   isNativePushPlatform,
   listenForNativePushNavigation,
-  listenForNativePushReceived,
+  restoreNativePushIfEnabled,
+  resolveNativePushToggleState,
   subscribeToNativePush,
   unsubscribeFromNativePush,
 } from './nativePush';
 
-export { isNativePushPlatform };
+export { isNativePushPlatform, resolveNativePushToggleState } from './nativePush';
+export { isPushEnabledLocally, setPushEnabledLocally } from './pushLocalState';
 
-const PUSH_ENABLED_KEY = 'guardr_push_enabled';
 const VAPID_CACHE_KEY = 'guardr_vapid_public_key';
 
 export const SW_MESSAGE = {
@@ -108,18 +111,6 @@ export async function isPushConfigured(): Promise<boolean> {
   if (isNativePushPlatform()) return true;
   const key = await fetchVapidPublicKey();
   return !!key;
-}
-
-export function isPushEnabledLocally(): boolean {
-  try {
-    return localStorage.getItem(PUSH_ENABLED_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-export function setPushEnabledLocally(enabled: boolean): void {
-  localStorage.setItem(PUSH_ENABLED_KEY, enabled ? 'true' : 'false');
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
@@ -289,7 +280,6 @@ export async function syncPushSubscriptionWithServer(
 
 export function initNativePushListeners(): () => void {
   if (!isNativePushPlatform()) return () => undefined;
-  return listenForNativePushReceived((notification) => {
-    console.info('[native-push] received', notification.title ?? notification.id);
-  });
+  initNativePushBridge();
+  return () => undefined;
 }

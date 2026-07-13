@@ -12,6 +12,7 @@ import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
 import { applyThemeToDocument, loadTheme } from './lib/platform/theme';
 import { registerServiceWorker, initNativePushListeners } from './lib/push';
+import { initNativePushBridge, restoreNativePushIfEnabled } from './lib/nativePush';
 import { initSentry } from './lib/sentry';
 import './index.css';
 
@@ -22,6 +23,7 @@ void initSentry();
 async function initNativeShell(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   initNativeSafeArea();
+  initNativePushBridge();
   try {
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#5E7B61' });
@@ -29,6 +31,7 @@ async function initNativeShell(): Promise<void> {
     console.warn('[native] status bar setup failed:', error);
   }
   await ensureNativePermissions();
+  await restoreNativePushIfEnabled();
   await registerNativeInstall();
   registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
   initNativePushListeners();

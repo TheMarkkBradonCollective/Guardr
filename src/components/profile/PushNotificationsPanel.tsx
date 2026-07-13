@@ -8,6 +8,7 @@ import {
   isPushConfigured,
   isPushEnabledLocally,
   isPushSupported,
+  resolveNativePushToggleState,
   setPushEnabledLocally,
   subscribeToPush,
   unsubscribeFromPush,
@@ -57,14 +58,31 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     void (async () => {
+      if (isNativePushPlatform()) {
+        const state = await resolveNativePushToggleState();
+        if (cancelled) return;
+        setPermission(state.permission);
+        setEnabled(state.enabled);
+        setServerSynced(state.enabled && state.permission === 'granted');
+        return;
+      }
+
       const perm = await getPushPermission();
+      if (cancelled) return;
       setPermission(perm);
       const sub = await getExistingPushSubscription();
+      if (cancelled) return;
       const localOn = !!sub && isPushEnabledLocally();
       setEnabled(localOn);
       setServerSynced(localOn && perm === 'granted');
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -104,7 +122,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   };
 
   const handleToggle = async () => {
-    if (!supported || !configured) return;
+    if (!supported || !configured || busy) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -134,12 +152,15 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
           setPushEnabledLocally(false);
           setEnabled(false);
           setServerSynced(false);
-          throw err;
+          const msg = err instanceof Error ? err.message : 'Could not sync with server';
+          setMessage(msg);
+          return;
         }
         setPushEnabledLocally(true);
         setEnabled(true);
         setServerSynced(true);
-        setPermission('granted');
+        const perm = await getPushPermission();
+        setPermission(perm);
         setMessage('Push notifications enabled.');
         primeWalkieChirpSound();
         if (!isDbConnected) {
@@ -210,7 +231,11 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         <button
           type="button"
           disabled={busy || (!configured && !nativeApp)}
-          onClick={() => void handleToggle()}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void handleToggle();
+          }}
           className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
             enabled ? 'bg-brand-primary' : 'bg-brand-border'
           }`}
