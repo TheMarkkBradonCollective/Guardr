@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { FormFactor, getViewportWidth, isNativeShell, isStandaloneDisplay, resolveFormFactor } from './device';
+import { FormFactor, getViewportWidth, isNativeShell, isStandaloneDisplay, resolveFormFactor, BREAKPOINTS } from './device';
 
 interface DeviceContextValue {
   formFactor: FormFactor;
@@ -9,10 +9,10 @@ interface DeviceContextValue {
 }
 
 const DeviceContext = createContext<DeviceContextValue>({
-  formFactor: 'desktop',
+  formFactor: 'mobile',
   isStandalone: false,
   isNativeShell: false,
-  viewportWidth: 1024,
+  viewportWidth: BREAKPOINTS.md - 1,
 });
 
 export function DeviceProvider({ children }: { children: React.ReactNode }) {

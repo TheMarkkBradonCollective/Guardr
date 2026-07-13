@@ -5,3 +5,4 @@ export * from './installRegistry';
 export * from './offlineQueue';
 export * from './offlineSync';
 export { DeviceProvider, useDevice } from './DeviceProvider';
+export { useMediaQuery } from './useMediaQuery';

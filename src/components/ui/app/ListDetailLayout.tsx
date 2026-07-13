@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDevice } from '../../../lib/platform';
+import { BREAKPOINTS, useMediaQuery } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
 
 export type ListDetailMobilePresentation = 'inline' | 'page';
@@ -26,8 +26,7 @@ export function useSplitListDetail(
   selectedId: string | null,
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'desktop';
+  const splitView = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
   const showDetailOnly = mobilePresentation === 'page' && Boolean(selectedId && !splitView);
 
   return { splitView, showDetailOnly };

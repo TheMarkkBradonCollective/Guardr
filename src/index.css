@@ -325,7 +325,7 @@ html.theme-grey {
   bottom: 0;
   width: min(18rem, 88vw);
   z-index: 1100;
-  transform: translateX(-100%);
+  transform: translateX(0);
   transition: transform 0.22s ease-out;
   box-shadow: var(--shadow-float);
 }
@@ -350,6 +350,10 @@ html.theme-grey {
 
 .staff-sidebar--docked {
   position: relative;
+}
+
+.staff-sidebar--docked .staff-sidebar-close {
+  display: none;
 }
 
 .staff-sidebar-inner {

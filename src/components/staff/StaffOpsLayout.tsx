@@ -7,7 +7,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import type { LegalPageId } from '../../lib/legalContent';
 import { AccountMenu } from '../layouts/AccountMenu';
 import { Logo } from '../Logo';
-import { useDevice } from '../../lib/platform';
+import { BREAKPOINTS, useMediaQuery } from '../../lib/platform';
 import {
   AlertTriangle,
   BarChart3,
@@ -87,8 +87,7 @@ export function StaffOpsLayout({
   headerActions,
 }: StaffOpsLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { formFactor } = useDevice();
-  const dockedSidebar = formFactor === 'desktop';
+  const dockedSidebar = useMediaQuery(`(min-width: ${BREAKPOINTS.lg}px)`);
   const showFinance = canAccessFinancialControls(currentUser);
   const showSettings = canAccessStaffSettings(currentUser);
   const showDisputes = canHandleDisputes(currentUser);
@@ -123,46 +122,56 @@ export function StaffOpsLayout({
 
   const isDarkSidebar = themeMode === 'dark' || themeMode === 'grey';
 
-  const sidebar = (
-    <div className="staff-sidebar-inner">
-      <div className="staff-sidebar-brand">
-        <div className="flex items-center gap-2.5">
-          <Logo size={24} className="shrink-0" />
-          <span
-            className={`font-black text-xl tracking-[-0.04em] leading-none staff-sidebar-wordmark${
-              isDarkSidebar ? ' staff-sidebar-wordmark--on-dark' : ''
+  const sidebarPanel = (
+    <>
+      <button
+        type="button"
+        className="staff-sidebar-close"
+        onClick={() => setMobileNavOpen(false)}
+        aria-label="Close menu"
+      >
+        <X className="w-5 h-5" />
+      </button>
+      <div className="staff-sidebar-inner">
+        <div className="staff-sidebar-brand">
+          <div className="flex items-center gap-2.5">
+            <Logo size={24} className="shrink-0" />
+            <span
+              className={`font-black text-xl tracking-[-0.04em] leading-none staff-sidebar-wordmark${
+                isDarkSidebar ? ' staff-sidebar-wordmark--on-dark' : ''
+              }`}
+            >
+              Guardr
+            </span>
+            {isDbConnected && (
+              <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
+            )}
+          </div>
+          <p
+            className={`text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5 staff-sidebar-role${
+              isDarkSidebar ? ' staff-sidebar-role--on-dark' : ''
             }`}
           >
-            Guardr
-          </span>
-          {isDbConnected && (
-            <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shrink-0" aria-label="Connected" />
+            {ROLE_LABELS[currentUser.role]}
+          </p>
+        </div>
+        <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          <StaffSidebarNav
+            items={navItems}
+            activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
+            onNavigate={navigate}
+            showFinance={showFinance}
+            showSettings={showSettings}
+            showDisputes={showDisputes}
+          />
+        </div>
+        <div className="staff-sidebar-footer">
+          {onOpenLegal && (
+            <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
           )}
         </div>
-        <p
-          className={`text-[11px] font-semibold tracking-[0.04em] uppercase mt-1.5 staff-sidebar-role${
-            isDarkSidebar ? ' staff-sidebar-role--on-dark' : ''
-          }`}
-        >
-          {ROLE_LABELS[currentUser.role]}
-        </p>
       </div>
-      <div className="staff-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain">
-        <StaffSidebarNav
-          items={navItems}
-          activeSection={isStaffMessagesSection(activeSection) ? 'messages' : activeSection}
-          onNavigate={navigate}
-          showFinance={showFinance}
-          showSettings={showSettings}
-          showDisputes={showDisputes}
-        />
-      </div>
-      <div className="staff-sidebar-footer">
-        {onOpenLegal && (
-          <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
-        )}
-      </div>
-    </div>
+    </>
   );
 
   return (
@@ -171,30 +180,28 @@ export function StaffOpsLayout({
         dockedSidebar ? 'staff-shell--desktop' : 'staff-shell--compact'
       }`}
     >
-      {!dockedSidebar && mobileNavOpen && (
-        <button
-          type="button"
-          className="staff-sidebar-backdrop"
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Close navigation"
-        />
+      {dockedSidebar ? (
+        <aside className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--docked`}>{sidebarPanel}</aside>
+      ) : (
+        mobileNavOpen && (
+          <>
+            <button
+              type="button"
+              className="staff-sidebar-backdrop"
+              onClick={() => setMobileNavOpen(false)}
+              aria-label="Close navigation"
+            />
+            <aside
+              className={`staff-sidebar staff-sidebar-${themeMode} staff-sidebar--overlay staff-sidebar-open`}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Staff navigation"
+            >
+              {sidebarPanel}
+            </aside>
+          </>
+        )
       )}
-
-      <aside
-        className={`staff-sidebar staff-sidebar-${themeMode} ${
-          dockedSidebar ? 'staff-sidebar--docked' : 'staff-sidebar--overlay'
-        } ${mobileNavOpen ? 'staff-sidebar-open' : ''}`}
-      >
-        <button
-          type="button"
-          className={`staff-sidebar-close${dockedSidebar ? ' hidden' : ''}`}
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Close menu"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        {sidebar}
-      </aside>
 
       <div className="staff-main flex-1 flex flex-col min-w-0 min-h-0 w-full">
         {hideHeader ? (

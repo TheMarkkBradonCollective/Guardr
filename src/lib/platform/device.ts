@@ -19,6 +19,11 @@ export function getViewportWidth(): number {
 }
 
 export function resolveFormFactor(width = getViewportWidth()): FormFactor {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (window.matchMedia(`(min-width: ${BREAKPOINTS.lg}px)`).matches) return 'desktop';
+    if (window.matchMedia(`(min-width: ${BREAKPOINTS.md}px)`).matches) return 'tablet';
+    return 'mobile';
+  }
   if (width < BREAKPOINTS.md) return 'mobile';
   if (width < BREAKPOINTS.lg) return 'tablet';
   return 'desktop';
