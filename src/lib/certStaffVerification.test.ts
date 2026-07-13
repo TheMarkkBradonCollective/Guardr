@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Certification } from '../types';
+import type { Certification, SecurityGuard } from '../types';
 import { staffCanVerifyCertification, staffVerifyCertificationBlocker } from './certImagePolicy.ts';
 
 function cert(overrides: Partial<Certification> = {}): Certification {
@@ -15,6 +15,18 @@ function cert(overrides: Partial<Certification> = {}): Certification {
     imageUrl: 'scan',
     category: 'bsis-training',
     ...overrides,
+  };
+}
+
+function pendingApplicationGuard(): Pick<
+  SecurityGuard,
+  'name' | 'userStatus' | 'isStaff' | 'mustChangePassword'
+> {
+  return {
+    name: 'Jane Guard',
+    userStatus: 'pending',
+    isStaff: false,
+    mustChangePassword: false,
   };
 }
 
@@ -46,5 +58,13 @@ describe('staff credential verification', () => {
     const verified = cert({ status: 'verified' });
     assert.equal(staffCanVerifyCertification(verified), false);
     assert.equal(staffVerifyCertificationBlocker(verified), null);
+  });
+
+  it('blocks verification while guard application is pending', () => {
+    const pending = cert();
+    const guard = pendingApplicationGuard();
+    assert.equal(staffCanVerifyCertification(pending, guard), false);
+    assert.match(staffVerifyCertificationBlocker(pending, guard) ?? '', /application must be approved/i);
+    assert.match(staffVerifyCertificationBlocker(pending, guard) ?? '', /Jane Guard/);
   });
 });

@@ -408,8 +408,8 @@ export function StaffGuardDetailPanel({
           </button>
           <button
             type="button"
-            disabled={!staffCanVerifyCertification(cert)}
-            title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
+            disabled={!staffCanVerifyCertification(cert, guard)}
+            title={staffVerifyCertificationBlocker(cert, guard) ?? 'Verify credential'}
             onClick={() => {
               void (async () => {
                 try {
@@ -424,9 +424,9 @@ export function StaffGuardDetailPanel({
             <Check className="w-3 h-3" /> Verify
           </button>
         </div>
-        {staffVerifyCertificationBlocker(cert) && (
+        {staffVerifyCertificationBlocker(cert, guard) && (
           <p className="text-xs text-amber-500 leading-relaxed break-words">
-            {staffVerifyCertificationBlocker(cert)}
+            {staffVerifyCertificationBlocker(cert, guard)}
           </p>
         )}
       </div>

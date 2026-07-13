@@ -32,7 +32,7 @@ import {
   guardCanStaffApproveProfile,
 } from '../../lib/guardAccountActivation';
 import { isGuardAccountApproved, isGuardUserStatusActive } from '../../lib/accountStatus';
-import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
+import { guardApplicationCredentialVerificationBlocker } from '../../lib/guardApplicationIntake';
 import { StaffIdReviewSection } from './StaffIdReviewSection';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { GuardCoiDetailModal } from '../profile/GuardCoiDetailModal';
@@ -867,6 +867,10 @@ export function StaffApprovals({
           null;
         if (!guard?.insurancePolicy) return null;
         const policy = guard.insurancePolicy;
+        const coiVerifyBlocker = guardApplicationCredentialVerificationBlocker(
+          guard,
+          'Certificate of Insurance'
+        );
         return (
           <ApprovalDetailScreen
             title={`${guard.name} — ${coiViewSectionLabel()}`}
@@ -918,7 +922,8 @@ export function StaffApprovals({
                     </button>
                     <button
                       type="button"
-                      disabled={actionPending}
+                      disabled={actionPending || Boolean(coiVerifyBlocker)}
+                      title={coiVerifyBlocker ?? 'Verify COI'}
                       onClick={() =>
                         void runGuardedAction(
                           async () => {
@@ -935,6 +940,9 @@ export function StaffApprovals({
                   </>
                 )}
               </div>
+              {policy.status === 'pending' && coiVerifyBlocker && (
+                <p className="text-xs text-amber-500 leading-relaxed">{coiVerifyBlocker}</p>
+              )}
             </div>
           </ApprovalDetailScreen>
         );
@@ -947,6 +955,7 @@ export function StaffApprovals({
         .find((entry) => entry.cert);
       if (!guardWithCert?.cert) return null;
       const { guard, cert } = guardWithCert;
+      const certVerifyBlocker = staffVerifyCertificationBlocker(cert, guard);
       return (
         <ApprovalDetailScreen
           title={`${guard.name} — ${certDisplayName(cert)}`}
@@ -1005,8 +1014,8 @@ export function StaffApprovals({
                   </button>
                   <button
                     type="button"
-                    disabled={actionPending || !staffCanVerifyCertification(cert)}
-                    title={staffVerifyCertificationBlocker(cert) ?? 'Verify credential'}
+                    disabled={actionPending || !staffCanVerifyCertification(cert, guard)}
+                    title={certVerifyBlocker ?? 'Verify credential'}
                     onClick={() =>
                       void runGuardedAction(
                         async () => {
@@ -1023,10 +1032,8 @@ export function StaffApprovals({
                 </>
               )}
             </div>
-            {cert.status === 'pending' && staffVerifyCertificationBlocker(cert) && (
-              <p className="text-xs text-amber-500 leading-relaxed">
-                {staffVerifyCertificationBlocker(cert)}
-              </p>
+            {cert.status === 'pending' && certVerifyBlocker && (
+              <p className="text-xs text-amber-500 leading-relaxed">{certVerifyBlocker}</p>
             )}
           </div>
         </ApprovalDetailScreen>
