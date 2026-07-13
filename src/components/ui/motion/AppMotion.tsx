@@ -329,8 +329,8 @@ export function AppDrawer({ open, onClose, title, subtitle, children, footer }: 
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center transition-colors shrink-0 rounded-lg"
-                style={{ color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.08)' }}
+                className="app-chrome-btn shrink-0"
+                style={{ color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.08)' }}
                 aria-label="Close sidebar"
               >
                 <X className="w-4 h-4" />

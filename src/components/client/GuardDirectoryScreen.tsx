@@ -581,18 +581,18 @@ export function GuardDirectoryScreen({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 pt-1">
+          <div className="app-action-row app-action-row--equal pt-1">
             <button
               type="button"
               onClick={clearAllFilters}
-              className="flex-1 py-2 text-sm font-medium rounded-xl border border-brand-border text-brand-text-muted hover:border-brand-primary hover:text-brand-primary transition-colors"
+              className="app-button-outline app-btn-sm"
             >
               Clear all
             </button>
             <button
               type="button"
               onClick={() => setShowFilterPanel(false)}
-              className="flex-1 py-2 text-sm font-semibold rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors"
+              className="app-button-primary app-btn-sm"
             >
               Show {filtered.length} guard{filtered.length !== 1 ? 's' : ''}
             </button>
@@ -863,7 +863,7 @@ function GuardEmptyState({
         <button
           type="button"
           onClick={onClearFilters}
-          className="px-4 py-2 text-sm font-semibold rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover transition-colors"
+          className="app-button-primary app-btn-sm app-btn-inline"
         >
           Clear all filters
         </button>
