@@ -24,6 +24,7 @@ import { getPendingStaffAccountReviews } from './staffAccounts';
 export type StaffSection =
   | 'overview'
   | 'applications'
+  | 'credentials'
   | 'jobs'
   | 'map'
   | 'guards'
@@ -63,7 +64,7 @@ export function normalizeStaffSection(section?: string): StaffSection | undefine
     return 'messages';
   }
   const valid: StaffSection[] = [
-    'overview', 'applications', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
+    'overview', 'applications', 'credentials', 'jobs', 'map', 'guards', 'team', 'crews', 'clients',
     'incidents', 'messages', 'payments', 'disputes', 'analytics', 'settings', 'guide', 'dev-updates', 'profile', 'preferences',
   ];
   return valid.includes(section as StaffSection) ? (section as StaffSection) : undefined;
@@ -76,6 +77,7 @@ export function staffSectionFromApprovalQueue(queue?: ApprovalQueueId | null): S
     case 'schedule-changes':
       return 'jobs';
     case 'credentials':
+      return 'credentials';
     case 'guard-accounts':
     case 'accounts':
       return 'guards';
@@ -545,7 +547,7 @@ export function buildOverviewActionQueue(
       title: 'Verify guard credentials',
       description: 'Licenses and certs uploaded — review before guards can work',
       count: stats.pendingCertApprovals,
-      section: 'guards',
+      section: 'credentials',
       tone: 'urgent',
     });
   }

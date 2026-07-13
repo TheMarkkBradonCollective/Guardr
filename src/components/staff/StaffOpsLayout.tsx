@@ -23,6 +23,7 @@ import {
   Scale,
   Settings,
   Shield,
+  ShieldCheck,
   UserCheck,
   Users,
   UsersRound,
@@ -50,6 +51,7 @@ interface StaffOpsLayoutProps {
 const SECTION_TITLES: Record<StaffSection, string> = {
   overview: 'Overview',
   applications: 'Applications',
+  credentials: 'Credentials',
   jobs: 'Jobs',
   map: 'Operations map',
   guards: 'Field guards',
@@ -110,6 +112,7 @@ export function StaffOpsLayout({
     { id: 'map', label: 'Map', icon: Map },
     { id: 'jobs', label: 'Jobs', icon: Briefcase, badge: badges.jobs },
     { id: 'applications', label: 'Applications', icon: UserCheck, badge: badges.applications },
+    { id: 'credentials', label: 'Credentials', icon: ShieldCheck, badge: badges.credentials },
     { id: 'clients', label: 'Clients', icon: Building2 },
     { id: 'guards', label: 'Guards', icon: Shield },
     { id: 'crews', label: 'Teams', icon: UsersRound, badge: badges.crews },

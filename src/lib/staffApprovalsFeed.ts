@@ -1,9 +1,16 @@
-import type { Client, SecurityGuard, SecurityRequest } from '../types';
+import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { getClientAccountStatus } from './accountStatus';
 import { certDisplayName } from './certCatalog';
-import { coiApprovalItemId, govIdApprovalItemId, isCoiApprovalItemId } from './guardCredentialSections';
+import {
+  coiApprovalItemId,
+  govIdApprovalItemId,
+  guardIdFromCoiApprovalItemId,
+  guardIdFromGovIdApprovalItemId,
+  isCoiApprovalItemId,
+  isGovIdApprovalItemId,
+} from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
 import { isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
@@ -454,6 +461,33 @@ export function resolveApprovalFocusItemId(
 
 export function findFeedItem(feed: ApprovalFeedItem[], id: string): ApprovalFeedItem | undefined {
   return feed.find((item) => item.id === id || (isCoiApprovalItemId(id) && item.id === id));
+}
+
+export type CredentialFeedContext =
+  | { kind: 'cert'; guard: SecurityGuard; cert: Certification }
+  | { kind: 'coi'; guard: SecurityGuard }
+  | { kind: 'gov-id'; guard: SecurityGuard };
+
+/** Resolve a credentials-queue feed item to its guard and credential kind. */
+export function resolveCredentialFeedContext(
+  guards: SecurityGuard[],
+  itemId: string
+): CredentialFeedContext | null {
+  if (isCoiApprovalItemId(itemId)) {
+    const guardId = guardIdFromCoiApprovalItemId(itemId);
+    const guard = guards.find((g) => g.id === guardId);
+    return guard ? { kind: 'coi', guard } : null;
+  }
+  if (isGovIdApprovalItemId(itemId)) {
+    const guardId = guardIdFromGovIdApprovalItemId(itemId);
+    const guard = guards.find((g) => g.id === guardId);
+    return guard ? { kind: 'gov-id', guard } : null;
+  }
+  for (const guard of guards) {
+    const cert = guard.certifications.find((c) => c.id === itemId);
+    if (cert) return { kind: 'cert', guard, cert };
+  }
+  return null;
 }
 
 export function formatApprovalTimestamp(iso?: string): string {

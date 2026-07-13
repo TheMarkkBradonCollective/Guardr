@@ -95,8 +95,8 @@ export function resolveNotificationUrl(
       return '/staff/approvals?aq=client-accounts';
     case 'credential_pending':
       return options.guardId
-        ? `/staff/approvals?aq=credentials&g=${encodeURIComponent(options.guardId)}`
-        : '/staff/approvals?aq=credentials';
+        ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}`
+        : '/staff/credentials';
     case 'payment_attention':
       return options.requestId
         ? `/staff/payments?j=${encodeURIComponent(options.requestId)}`
