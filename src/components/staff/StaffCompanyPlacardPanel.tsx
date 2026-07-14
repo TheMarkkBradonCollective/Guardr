@@ -119,8 +119,9 @@ export function StaffCompanyPlacardPanel({
     <AppFormSection title="Company public placard">
       <div className="pb-6 space-y-5">
         <p className="text-sm text-brand-text-muted leading-relaxed">
-          Upload company licenses and insurance for the public homepage — like a placard on the
-          business wall. This is display-only and does not block platform operations.
+          Upload company registration and insurance for the public homepage — like a placard on the
+          business wall. Guardr is a technology marketplace, not a licensed security company. This is
+          display-only and does not block platform operations.
         </p>
 
         <div className="rounded-xl border border-brand-border bg-brand-surface-elevated p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
@@ -289,7 +290,7 @@ function CompanyDocumentEditor({
       <DocumentPhotoUploadField
         imageUrl={imageUrl || undefined}
         onImageUrlChange={setImageUrl}
-        label="Document photo (license, COI, or certificate)"
+        label="Document photo (registration, COI, or certificate)"
         previewAlt={`${typeDef.title} preview`}
       />
       <label className="flex items-center gap-2 text-sm">

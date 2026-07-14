@@ -11,8 +11,8 @@ import {
 
 const baseDoc = (patch: Partial<CompanyPublicDocument>): CompanyPublicDocument => ({
   id: 'cpd_1',
-  documentType: 'bsis_ppo_license',
-  title: 'BSIS PPO',
+  documentType: 'business_entity_registration',
+  title: 'Business Entity',
   displayOnHomepage: true,
   ...patch,
 });
@@ -20,7 +20,7 @@ const baseDoc = (patch: Partial<CompanyPublicDocument>): CompanyPublicDocument =
 test('companyDocumentHasContent detects uploaded fields', () => {
   assert.equal(companyDocumentHasContent(undefined), false);
   assert.equal(companyDocumentHasContent(baseDoc({})), false);
-  assert.equal(companyDocumentHasContent(baseDoc({ documentNumber: 'PPO-123' })), true);
+  assert.equal(companyDocumentHasContent(baseDoc({ documentNumber: 'LLC-123' })), true);
 });
 
 test('buildCompanyPlacardChecklist tracks required missing items', () => {
@@ -33,7 +33,7 @@ test('buildCompanyPlacardChecklist tracks required missing items', () => {
 
 test('getCompanyPlacardPublicItems respects public enabled flag', () => {
   const docs = [
-    baseDoc({ documentNumber: 'PPO-999', documentType: 'bsis_ppo_license' }),
+    baseDoc({ documentNumber: 'LLC-999', documentType: 'business_entity_registration' }),
     baseDoc({
       id: 'cpd_2',
       documentType: 'general_liability_insurance',
@@ -49,8 +49,9 @@ test('getCompanyPlacardPublicItems respects public enabled flag', () => {
 test('getCompanyPlacardPublicItems hides expired documents', () => {
   const docs = [
     baseDoc({
-      documentNumber: 'PPO-OLD',
+      documentNumber: 'GL-OLD',
       expiryDate: '2020-01-01',
+      documentType: 'general_liability_insurance',
     }),
   ];
   assert.equal(getCompanyPlacardPublicItems(docs, true, new Date('2026-01-01')).length, 0);

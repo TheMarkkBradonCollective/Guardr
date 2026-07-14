@@ -2,11 +2,11 @@ import { LEGAL_ENTITY_NAME } from './siteConfig';
 
 /** Catalog ids for company credentials shown on the public placard. */
 export type CompanyDocumentTypeId =
-  | 'bsis_ppo_license'
+  | 'business_entity_registration'
   | 'general_liability_insurance'
+  | 'professional_liability_insurance'
   | 'workers_comp_insurance'
-  | 'business_license'
-  | 'surety_bond';
+  | 'business_license';
 
 export interface CompanyDocumentTypeDef {
   id: CompanyDocumentTypeId;
@@ -44,19 +44,27 @@ export interface CompanyPlacardChecklistItem {
 
 export const COMPANY_DOCUMENT_TYPES: CompanyDocumentTypeDef[] = [
   {
-    id: 'bsis_ppo_license',
-    title: 'BSIS Private Patrol Operator (PPO) License',
+    id: 'business_entity_registration',
+    title: 'Business Entity Registration',
     description:
-      'California Bureau of Security and Investigative Services license to operate private patrol services.',
+      'State filing confirming Signature Security Specialist, LLC — Guardr is a technology marketplace, not a licensed security company.',
     required: true,
-    numberLabel: 'License number',
-    issuerLabel: 'Issuing authority',
+    numberLabel: 'Entity / filing number',
+    issuerLabel: 'State of formation',
   },
   {
     id: 'general_liability_insurance',
     title: 'General Liability Insurance (COI)',
-    description: 'Certificate of insurance covering general liability for security operations.',
+    description: 'Certificate of insurance covering general liability for platform operations.',
     required: true,
+    numberLabel: 'Policy number',
+    issuerLabel: 'Insurance carrier',
+  },
+  {
+    id: 'professional_liability_insurance',
+    title: 'Professional / E&O Liability Insurance',
+    description: 'Technology or errors-and-omissions coverage for the Guardr platform (optional).',
+    required: false,
     numberLabel: 'Policy number',
     issuerLabel: 'Insurance carrier',
   },
@@ -75,14 +83,6 @@ export const COMPANY_DOCUMENT_TYPES: CompanyDocumentTypeDef[] = [
     required: false,
     numberLabel: 'License number',
     issuerLabel: 'Issuing city or county',
-  },
-  {
-    id: 'surety_bond',
-    title: 'Surety Bond',
-    description: 'Required in some jurisdictions for private patrol operators.',
-    required: false,
-    numberLabel: 'Bond number',
-    issuerLabel: 'Surety company',
   },
 ];
 
@@ -228,7 +228,7 @@ export function formatPlacardDate(isoDate: string): string {
 }
 
 export function companyPlacardHeadline(): string {
-  return `${LEGAL_ENTITY_NAME} — Licensed & insured`;
+  return `${LEGAL_ENTITY_NAME} — Registered & insured`;
 }
 
 export function companyPublicDocumentFromRow(row: Record<string, unknown>): CompanyPublicDocument {

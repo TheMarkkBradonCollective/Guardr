@@ -55,7 +55,7 @@ export function CompanyPublicPlacard({ documents }: CompanyPublicPlacardProps) {
 
   return (
     <>
-      <section className="landing-section company-placard-section border-t border-brand-border bg-brand-bg" aria-label="Company license and insurance">
+      <section className="landing-section company-placard-section border-t border-brand-border bg-brand-bg" aria-label="Company registration and insurance">
         <div className="landing-container">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -68,8 +68,9 @@ export function CompanyPublicPlacard({ documents }: CompanyPublicPlacardProps) {
               <p className="experience-badge">Public credentials</p>
               <h2 className="company-placard-headline">{companyPlacardHeadline()}</h2>
               <p className="company-placard-lead">
-                {LEGAL_ENTITY_NAME} operates Guardr. These credentials are posted for public
-                reference — like a license placard at our place of business.
+                {LEGAL_ENTITY_NAME} operates the Guardr technology platform. Independent guards on
+                the marketplace hold their own licenses — these company credentials are posted for
+                public reference, like a placard at our place of business.
               </p>
             </div>
             <div className="company-placard-grid">
