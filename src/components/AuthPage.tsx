@@ -169,6 +169,7 @@ interface AuthPageProps {
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
+  isAppLoading?: boolean;
 }
 
 /** Lightweight person entry for the referredBy autocomplete */
@@ -203,7 +204,8 @@ export function AuthPage({
   initialMode = 'sign-in',
   themeMode = 'light',
   onChangeTheme,
-  isDbConnected = true,
+  isDbConnected = false,
+  isAppLoading = false,
 }: AuthPageProps) {
   const [isSignUp, setIsSignUp] = useState<boolean>(initialMode === 'sign-up');
   const [role, setRole] = useState<'guard' | 'client'>(initialRole === 'guard' ? 'guard' : 'client');
@@ -571,6 +573,10 @@ export function AuthPage({
     }
     if (signInAttempt.status === 'pending_approval') {
       setErrorMsg('Your staff account is awaiting Director approval.');
+      return;
+    }
+    if (!isDbConnected && isAppLoading) {
+      setErrorMsg('Still connecting to Guardr. Wait a moment and try again.');
       return;
     }
     if (!isDbConnected) {

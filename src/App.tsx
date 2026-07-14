@@ -1484,7 +1484,7 @@ export default function App() {
 
   // ── Load from Supabase on mount ────────────────────────────
   useEffect(() => {
-    const LOAD_TIMEOUT_MS = 12_000;
+    const LOAD_TIMEOUT_MS = 30_000;
 
     (async () => {
       try {
@@ -1619,14 +1619,20 @@ export default function App() {
       if (platformSettingsErr && platformSettingsErr.code !== '42P01') {
         console.warn('Platform settings load (run migration if missing):', platformSettingsErr);
       }
-      if (guardsErr || clientsErr || certsErr || expsErr || requestsErr || paymentsErr) {
-        console.error('Supabase load errors:', { guardsErr, clientsErr, certsErr, expsErr, requestsErr, paymentsErr });
+      if (guardsErr && clientsErr) {
+        console.error('Supabase load errors:', { guardsErr, clientsErr });
         setGuards([]);
         setClients([]);
         setRequests([]);
         setIsDbConnected(false);
         return;
       }
+      if (guardsErr) console.warn('Guards table load:', guardsErr);
+      if (clientsErr) console.warn('Clients table load:', clientsErr);
+      if (certsErr) console.warn('Certifications table load:', certsErr);
+      if (expsErr) console.warn('Experience table load:', expsErr);
+      if (requestsErr) console.warn('Security requests table load:', requestsErr);
+      if (paymentsErr) console.warn('Payments table load:', paymentsErr);
 
       if (staffErr && staffErr.code !== '42P01') {
         console.warn('Staff table load (run migration if missing):', staffErr);
@@ -1774,6 +1780,8 @@ export default function App() {
         favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
       };
       }));
+
+      setIsDbConnected(true);
 
       const { data: dbSlots, error: slotsErr } = await supabase.from('job_guard_slots').select('*');
       if (slotsErr && slotsErr.code !== '42P01') {
@@ -10125,6 +10133,7 @@ export default function App() {
             guardsList={guards}
             clientsList={clients}
             isDbConnected={isDbConnected}
+            isAppLoading={loading}
             onBackToHome={closeAuthView}
             onOpenLegal={openLegalPage}
             onOpenGuide={openPublicGuide}
