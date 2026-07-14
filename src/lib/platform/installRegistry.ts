@@ -1,10 +1,10 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { apiUrl } from '../siteConfig';
+import { apiUrl, SITE_URL } from '../siteConfig';
 import { isAndroid, isStandaloneDisplay } from './device';
 
 export const INSTALL_STORAGE_KEY = 'guardr_install_v1';
-export const INSTALL_REGISTER_ORIGIN = 'https://guardr.co';
+export const INSTALL_REGISTER_ORIGIN = SITE_URL;
 
 export interface InstallRecord {
   version: string;

@@ -71,7 +71,7 @@ if (existsSync(publicApk)) {
 console.log('→ Building web bundle for Android…');
 run('npm', ['run', 'build'], {
   env: {
-    VITE_APP_URL: process.env.VITE_APP_URL || 'https://guardr.co',
+    VITE_APP_URL: process.env.VITE_APP_URL || 'https://www.guardr.co',
     VITE_NATIVE_FCM_CONFIGURED: nativeFcmConfigured ? 'true' : 'false',
   },
 });

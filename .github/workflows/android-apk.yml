@@ -67,7 +67,7 @@ jobs:
       - name: Build APK
         run: npm run android:apk
         env:
-          VITE_APP_URL: https://guardr.co
+          VITE_APP_URL: https://www.guardr.co
           # Omit placeholder Supabase values — client falls back to production keys when unset/invalid.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
