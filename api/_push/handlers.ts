@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isValidPushSubscriptionPayload } from '../../lib/push/fcm';
 import { isPushConfigured } from './config';
 import { claimNotificationDedup, missedCheckinDedupKey } from './dedup';
 import { dispatchPushNotification } from './delivery';
@@ -43,7 +44,7 @@ export async function handlePushSubscribe(
     return { status: 401, body: { error: 'Unauthorized — invalid session' } };
   }
 
-  if (!body.subscription?.endpoint || !body.subscription?.keys?.p256dh || !body.subscription?.keys?.auth) {
+  if (!isValidPushSubscriptionPayload(body.subscription ?? {})) {
     return { status: 400, body: { error: 'Valid push subscription is required' } };
   }
 

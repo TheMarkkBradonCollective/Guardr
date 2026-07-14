@@ -161,6 +161,19 @@ export async function requestNativePushPermission(): Promise<NotificationPermiss
   return 'default';
 }
 
+function invokeNativeRegister(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Defer so Capacitor listeners are attached before Firebase is touched.
+    window.setTimeout(() => {
+      void PushNotifications.register()
+        .then(() => resolve())
+        .catch((error: unknown) => {
+          reject(error instanceof Error ? error : new Error('Push registration failed'));
+        });
+    }, 100);
+  });
+}
+
 export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<string> {
   if (!isNativePushPlatform()) {
     throw new Error('Native push is only available in the Guardr app');
@@ -200,7 +213,7 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
       },
     };
 
-    void PushNotifications.register().catch((error: unknown) => {
+    void invokeNativeRegister().catch((error: unknown) => {
       clearTimeout(timeout);
       if (pendingRegistration) {
         pendingRegistration = null;

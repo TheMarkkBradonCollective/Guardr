@@ -50,13 +50,24 @@ async function verifyStaffSession(
   userId: string,
   email: string
 ): Promise<VerifiedSession | null> {
-  const { data, error } = await db
+  let { data, error } = await db
     .from('staff')
     .select('id, email, staff_role')
     .eq('id', userId)
     .maybeSingle();
 
-  if (error || !data || data.email?.toLowerCase() !== email) return null;
+  if (!data && !error) {
+    const byEmail = await db
+      .from('staff')
+      .select('id, email, staff_role')
+      .eq('email', email)
+      .maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
+  }
+
+  if (!data && error?.code === '42P01') return null;
+  if (!data || data.email?.toLowerCase() !== email) return null;
 
   const platformRole = resolvePlatformRole({
     isStaff: true,
@@ -64,7 +75,7 @@ async function verifyStaffSession(
     legacyRole: 'staff',
   });
 
-  return { userId, email, role: platformRole, platformRole };
+  return { userId: data.id, email, role: platformRole, platformRole };
 }
 
 async function verifyFieldGuardSession(
@@ -73,23 +84,39 @@ async function verifyFieldGuardSession(
   email: string,
   credentialsRole: string
 ): Promise<VerifiedSession | null> {
-  const { data, error } = await db
+  let { data, error } = await db
     .from('guards')
-    .select('id, email')
+    .select('id, email, is_staff, staff_role, migrated_to_staff_at')
     .eq('id', userId)
     .maybeSingle();
 
-  if (error || !data || data.email?.toLowerCase() !== email) return null;
+  if (!data && !error) {
+    const byEmail = await db
+      .from('guards')
+      .select('id, email, is_staff, staff_role, migrated_to_staff_at')
+      .eq('email', email)
+      .maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
+  }
+
+  if (!data && error?.code === '42P01') return null;
+  if (!data || data.email?.toLowerCase() !== email) return null;
+  if (data.migrated_to_staff_at) return null;
 
   const platformRole = resolvePlatformRole({
-    legacyRole: 'guard',
+    isStaff: data.is_staff,
+    staffRole: data.staff_role ?? undefined,
+    legacyRole: data.is_staff ? 'staff' : 'guard',
   });
 
   if (platformRole !== credentialsRole && credentialsRole !== 'staff' && credentialsRole !== 'auditor') {
-    console.warn(`Session role mismatch for ${email}: client sent ${credentialsRole}, db has ${platformRole}`);
+    console.warn(
+      `Session role mismatch for ${email}: client sent ${credentialsRole}, db has ${platformRole}`
+    );
   }
 
-  return { userId, email, role: platformRole, platformRole };
+  return { userId: data.id, email, role: platformRole, platformRole };
 }
 
 export async function verifyAccountSession(
@@ -104,9 +131,13 @@ export async function verifyAccountSession(
   const { userId, role } = credentials;
 
   if (role === 'client') {
-    const { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
+    let { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
+    if (!data) {
+      const byEmail = await db.from('clients').select('id, email').eq('email', email).maybeSingle();
+      data = byEmail.data ?? null;
+    }
     if (!data || data.email?.toLowerCase() !== email) return null;
-    return { userId, email, role: 'client', platformRole: 'client' };
+    return { userId: data.id, email, role: 'client', platformRole: 'client' };
   }
 
   if (STAFF_PLATFORM_ROLES.has(role)) {

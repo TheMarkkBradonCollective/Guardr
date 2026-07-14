@@ -865,7 +865,8 @@ async function dispatchPushNotification(db, payload) {
 
 // api/_push/config.ts
 function isPushConfigured() {
-  return !!(process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim());
+  const vapidReady = !!(process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim());
+  return vapidReady || isFcmConfigured();
 }
 
 // api/_push/missedCheckins.ts

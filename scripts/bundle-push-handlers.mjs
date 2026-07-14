@@ -1,6 +1,9 @@
 import * as esbuild from 'esbuild';
 
 const routes = [
+  { entry: 'api/_push/entries/subscribe.ts', outfile: 'api/push/subscribe.ts' },
+  { entry: 'api/_push/entries/unsubscribe.ts', outfile: 'api/push/unsubscribe.ts' },
+  { entry: 'api/_push/entries/test.ts', outfile: 'api/push/test.ts' },
   { entry: 'api/_push/entries/events.ts', outfile: 'api/push/events.ts' },
   { entry: 'api/_push/entries/send.ts', outfile: 'api/push/send.ts' },
   { entry: 'api/_push/entries/missed-checkins.ts', outfile: 'api/cron/missed-checkins.ts' },
