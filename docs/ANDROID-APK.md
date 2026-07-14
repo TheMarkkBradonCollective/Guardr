@@ -68,7 +68,7 @@ npm run android:open
 
 - **One codebase** — same React app as the website, bundled into the APK
 - **API calls** — `apiUrl()` in `src/lib/siteConfig.ts` routes `/api/*` to `https://guardr.co` when running in the native shell
-- **Push notifications** — Web/PWA uses Web Push (VAPID). The Android APK uses native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVER_KEY`).
+- **Push notifications** — Web/PWA uses Web Push (VAPID). The Android APK uses native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVICE_ACCOUNT_JSON`).
 - **Runtime permissions** — location, camera, photos, and notifications are requested on first launch (see `src/lib/platform/nativePermissions.ts`)
 - **Release signing** — beta builds use the debug keystore for sideload distribution; replace with a production keystore before Play Store submission
 
@@ -89,7 +89,10 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 
 1. Create a Firebase project and add an Android app with package `com.signaturesecurity.guardr`
 2. Download `google-services.json` into `android/app/` (gitignored — do not commit)
-3. Set `FCM_SERVER_KEY` on the Guardr server (Vercel env) — Firebase Console → Project settings → Cloud Messaging → **Server key** (legacy HTTP API)
+3. Set `FCM_SERVICE_ACCOUNT_JSON` on the Guardr server (Vercel env):
+   - Firebase Console → Project settings → **Service accounts** → **Generate new private key**
+   - Paste the full JSON file contents as the env var value (single line is fine)
+   - Use the **Firebase Cloud Messaging API (V1)** — the legacy Server key is deprecated and disabled on new projects
 4. Rebuild the APK: `npm run android:apk`
 
 **CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.

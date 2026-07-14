@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   FCM_NATIVE_ENDPOINT_PREFIX,
   fcmTokenFromEndpoint,
+  isFcmConfigured,
   isFcmNativeEndpoint,
   isFcmNativeSubscription,
   isValidPushSubscriptionPayload,
@@ -22,6 +23,32 @@ describe('fcm native push', () => {
     };
     assert.equal(isFcmNativeSubscription(subscription), true);
     assert.equal(isValidPushSubscriptionPayload(subscription), true);
+  });
+
+  it('isFcmConfigured accepts service account JSON or legacy server key', () => {
+    const originalJson = process.env.FCM_SERVICE_ACCOUNT_JSON;
+    const originalKey = process.env.FCM_SERVER_KEY;
+    try {
+      delete process.env.FCM_SERVICE_ACCOUNT_JSON;
+      delete process.env.FCM_SERVER_KEY;
+      assert.equal(isFcmConfigured(), false);
+
+      process.env.FCM_SERVER_KEY = 'legacy-key';
+      assert.equal(isFcmConfigured(), true);
+      delete process.env.FCM_SERVER_KEY;
+
+      process.env.FCM_SERVICE_ACCOUNT_JSON = JSON.stringify({
+        project_id: 'guardr-test',
+        client_email: 'firebase-adminsdk@test.iam.gserviceaccount.com',
+        private_key: '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n',
+      });
+      assert.equal(isFcmConfigured(), true);
+    } finally {
+      if (originalJson === undefined) delete process.env.FCM_SERVICE_ACCOUNT_JSON;
+      else process.env.FCM_SERVICE_ACCOUNT_JSON = originalJson;
+      if (originalKey === undefined) delete process.env.FCM_SERVER_KEY;
+      else process.env.FCM_SERVER_KEY = originalKey;
+    }
   });
 
   it('still requires web push keys for standard endpoints', () => {

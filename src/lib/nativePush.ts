@@ -12,7 +12,7 @@ export const FCM_NATIVE_ENDPOINT_PREFIX = 'fcm-native:';
 const NATIVE_PUSH_TOKEN_KEY = 'guardr_native_push_token';
 
 export const NATIVE_FCM_NOT_CONFIGURED_MESSAGE =
-  'Push registration is not available in this app build yet. Add android/app/google-services.json from Firebase, set FCM_SERVER_KEY on the server, then rebuild the APK.';
+  'Push registration is not available in this app build yet. Add android/app/google-services.json from Firebase, set FCM_SERVICE_ACCOUNT_JSON on the server, then rebuild the APK.';
 
 type PendingRegistration = {
   resolve: (token: string) => void;
