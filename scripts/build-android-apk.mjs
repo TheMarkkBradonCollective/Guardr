@@ -6,7 +6,7 @@
  *   android/app/build/outputs/apk/release/app-release.apk
  *   public/download/guardr.apk  (copied for guardr.co/download)
  */
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, unlink } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -57,8 +57,16 @@ if (!isGoogleServicesConfigured()) {
 
 const nativeFcmConfigured = isGoogleServicesConfigured();
 
+const publicDir = path.join(ROOT, 'public/download');
+const publicApk = path.join(publicDir, 'guardr.apk');
+
 console.log('→ Generating Android launcher icons…');
 run('npm', ['run', 'generate:android-icons']);
+
+if (existsSync(publicApk)) {
+  console.log('→ Removing public/download/guardr.apk so the sideload binary is not embedded in the next APK…');
+  await unlink(publicApk);
+}
 
 console.log('→ Building web bundle for Android…');
 run('npm', ['run', 'build'], {
@@ -77,8 +85,6 @@ run(GRADLE, ['assembleRelease'], {
 });
 
 const releaseApk = path.join(ROOT, 'android/app/build/outputs/apk/release/app-release.apk');
-const publicDir = path.join(ROOT, 'public/download');
-const publicApk = path.join(publicDir, 'guardr.apk');
 
 await mkdir(publicDir, { recursive: true });
 await copyFile(releaseApk, publicApk);
