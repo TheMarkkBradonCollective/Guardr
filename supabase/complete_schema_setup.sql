@@ -1222,7 +1222,7 @@ BEGIN
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
     'platform_settings', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
-    'user_legal_acceptances', 'guard_insurance_policies',
+    'user_legal_acceptances', 'guard_insurance_policies', 'company_public_documents',
     'guard_standing_crew_members', 'user_notifications'
   ]
   LOOP
@@ -1388,6 +1388,28 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS insurance_verification_mo
 
 COMMENT ON COLUMN platform_settings.job_review_mode IS 'staff-all | trusted-auto | none';
 COMMENT ON COLUMN platform_settings.trusted_client_auto_publish IS 'When true, trusted clients skip job review when coords are ready';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS company_placard_public_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true, the public homepage shows the company license & insurance placard.';
+
+-- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
+CREATE TABLE IF NOT EXISTS company_public_documents (
+  id TEXT PRIMARY KEY,
+  document_type TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  document_number TEXT,
+  issuer TEXT,
+  issued_date DATE,
+  expiry_date DATE,
+  image_url TEXT,
+  display_on_homepage BOOLEAN NOT NULL DEFAULT TRUE,
+  notes TEXT DEFAULT '',
+  uploaded_at TIMESTAMPTZ,
+  uploaded_by TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_public_documents_type ON company_public_documents(document_type);
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
@@ -1678,7 +1700,7 @@ WHERE table_schema = 'public'
     'team_lead_bonus_per_guard_per_hour', 'team_lead_bonus_client_share_percent',
     'team_lead_bonus_platform_share_percent', 'owner_message', 'director_message',
     'job_review_mode', 'trusted_client_auto_publish', 'sms_notifications_enabled',
-    'background_check_provider', 'insurance_verification_mode')
+    'background_check_provider', 'insurance_verification_mode', 'company_placard_public_enabled')
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable

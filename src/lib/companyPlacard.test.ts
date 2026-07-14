@@ -1,0 +1,57 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  buildCompanyPlacardChecklist,
+  companyDocumentHasContent,
+  companyPlacardChecklistSummary,
+  getCompanyPlacardPublicItems,
+  shouldShowCompanyPlacard,
+  type CompanyPublicDocument,
+} from './companyPlacard';
+
+const baseDoc = (patch: Partial<CompanyPublicDocument>): CompanyPublicDocument => ({
+  id: 'cpd_1',
+  documentType: 'bsis_ppo_license',
+  title: 'BSIS PPO',
+  displayOnHomepage: true,
+  ...patch,
+});
+
+test('companyDocumentHasContent detects uploaded fields', () => {
+  assert.equal(companyDocumentHasContent(undefined), false);
+  assert.equal(companyDocumentHasContent(baseDoc({})), false);
+  assert.equal(companyDocumentHasContent(baseDoc({ documentNumber: 'PPO-123' })), true);
+});
+
+test('buildCompanyPlacardChecklist tracks required missing items', () => {
+  const checklist = buildCompanyPlacardChecklist([]);
+  const summary = companyPlacardChecklistSummary(checklist);
+  assert.equal(summary.requiredTotal, 2);
+  assert.equal(summary.requiredOnFile, 0);
+  assert.equal(summary.requiredMissing, 2);
+});
+
+test('getCompanyPlacardPublicItems respects public enabled flag', () => {
+  const docs = [
+    baseDoc({ documentNumber: 'PPO-999', documentType: 'bsis_ppo_license' }),
+    baseDoc({
+      id: 'cpd_2',
+      documentType: 'general_liability_insurance',
+      title: 'GL',
+      documentNumber: 'GL-1',
+    }),
+  ];
+  assert.equal(shouldShowCompanyPlacard(docs, true), true);
+  assert.equal(getCompanyPlacardPublicItems(docs, true).length, 2);
+  assert.equal(shouldShowCompanyPlacard(docs, false), false);
+});
+
+test('getCompanyPlacardPublicItems hides expired documents', () => {
+  const docs = [
+    baseDoc({
+      documentNumber: 'PPO-OLD',
+      expiryDate: '2020-01-01',
+    }),
+  ];
+  assert.equal(getCompanyPlacardPublicItems(docs, true, new Date('2026-01-01')).length, 0);
+});

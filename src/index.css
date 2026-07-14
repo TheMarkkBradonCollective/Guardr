@@ -16142,6 +16142,174 @@ textarea.uber-input {
   text-align: left;
 }
 
+.company-placard-card {
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--brand-border));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--brand-primary) 6%, var(--brand-surface)),
+    var(--brand-surface)
+  );
+  box-shadow: var(--shadow-card);
+  padding: 1.75rem 1.5rem;
+}
+
+.company-placard-header {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 1.5rem;
+}
+
+.company-placard-headline {
+  font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--brand-text);
+  margin-top: 0.5rem;
+}
+
+.company-placard-lead {
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+  line-height: 1.6;
+  margin-top: 0.75rem;
+}
+
+.company-placard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .company-placard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.company-placard-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.company-placard-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-bg);
+  min-height: 100%;
+}
+
+.company-placard-item-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.company-placard-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.company-placard-item-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--brand-text);
+  line-height: 1.35;
+}
+
+.company-placard-item-meta {
+  font-size: 0.75rem;
+  color: var(--brand-text-muted);
+  margin-top: 0.25rem;
+}
+
+.company-placard-item-meta span {
+  color: var(--brand-text);
+  font-weight: 600;
+}
+
+.company-placard-item-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.company-placard-view-doc {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-align: left;
+  padding: 0 0.25rem;
+}
+
+.company-placard-view-doc:hover {
+  text-decoration: underline;
+}
+
+.company-placard-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.company-placard-preview-panel {
+  width: min(100%, 42rem);
+  max-height: 90vh;
+  overflow: auto;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.company-placard-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.company-placard-preview-close {
+  padding: 0.25rem;
+  color: var(--brand-text-muted);
+}
+
+.company-placard-preview-close:hover {
+  color: var(--brand-text);
+}
+
+.company-placard-preview-image {
+  width: 100%;
+  display: block;
+  object-fit: contain;
+  max-height: 70vh;
+  background: var(--brand-bg-sec);
+}
+
 .legal-info-card {
   padding: 1.25rem !important;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease !important;

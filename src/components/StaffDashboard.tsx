@@ -259,6 +259,11 @@ interface StaffDashboardProps {
   onSelectedJobChatRequestIdChange?: (id: string | null) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   legalAcceptances?: import('../lib/legalAcceptance').LegalAcceptanceRecord[];
+  companyPublicDocuments?: import('../lib/companyPlacard').CompanyPublicDocument[];
+  onSaveCompanyPublicDocument?: (
+    doc: import('../lib/companyPlacard').CompanyPublicDocument
+  ) => Promise<void>;
+  onSetCompanyPlacardPublicEnabled?: (enabled: boolean) => Promise<void>;
   headerActions?: React.ReactNode;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
@@ -383,6 +388,9 @@ export function StaffDashboard({
   onSelectedJobChatRequestIdChange,
   onOpenLegal,
   legalAcceptances = [],
+  companyPublicDocuments = [],
+  onSaveCompanyPublicDocument,
+  onSetCompanyPlacardPublicEnabled,
   headerActions,
   tutorialAvailable,
   tutorialCompleted,
@@ -863,6 +871,9 @@ export function StaffDashboard({
               guards={guards}
               clients={clients}
               legalAcceptances={legalAcceptances}
+              companyPublicDocuments={companyPublicDocuments}
+              onSaveCompanyPublicDocument={onSaveCompanyPublicDocument}
+              onSetCompanyPlacardPublicEnabled={onSetCompanyPlacardPublicEnabled}
             />
             <StaffAuditLogPanel />
           </div>

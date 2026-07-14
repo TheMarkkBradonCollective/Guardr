@@ -32,7 +32,7 @@ import {
   GuardStandingCrewMember,
   UserNotification,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, hasExecutivePaymentControls, isStaffRole, canAssignStaffRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canActivateGuardAccounts, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -424,6 +424,12 @@ import {
   savePlatformSettingsToStorage,
   type PlatformSettings,
 } from './lib/platformSettings';
+import {
+  companyPublicDocumentFromRow,
+  companyPublicDocumentToDbRow,
+  getCompanyPlacardPublicItems,
+  type CompanyPublicDocument,
+} from './lib/companyPlacard';
 import { canEditJobListingDetails } from './lib/permissions';
 import {
   canGuardClockIn,
@@ -470,6 +476,7 @@ export default function App() {
   const [legalReturnAuth, setLegalReturnAuth] = useState(false);
   const [legalAcceptanceKeys, setLegalAcceptanceKeys] = useState<Set<string>>(() => new Set());
   const [legalAcceptanceRecords, setLegalAcceptanceRecords] = useState<LegalAcceptanceRecord[]>([]);
+  const [companyPublicDocuments, setCompanyPublicDocuments] = useState<CompanyPublicDocument[]>([]);
   const [tutorialState, setTutorialState] = useState<TutorialPersistedState | null>(null);
 
   // ── Theme ──────────────────────────────────────────────────
@@ -1547,12 +1554,18 @@ export default function App() {
       const { data: dbLegalAcceptances, error: legalAcceptancesErr } = await supabase
         .from('user_legal_acceptances')
         .select('*');
+      const { data: dbCompanyPublicDocuments, error: companyPublicDocumentsErr } = await supabase
+        .from('company_public_documents')
+        .select('*');
 
       if (insuranceErr && insuranceErr.code !== '42P01') {
         console.warn('Guard insurance load (run migration if missing):', insuranceErr);
       }
       if (legalAcceptancesErr && legalAcceptancesErr.code !== '42P01') {
         console.warn('Legal acceptances load (run migration if missing):', legalAcceptancesErr);
+      }
+      if (companyPublicDocumentsErr && companyPublicDocumentsErr.code !== '42P01') {
+        console.warn('Company public documents load (run migration if missing):', companyPublicDocumentsErr);
       }
 
       const insuranceByGuardId = new Map(
@@ -1568,6 +1581,14 @@ export default function App() {
         );
         setLegalAcceptanceRecords(records);
         setLegalAcceptanceKeys(indexLegalAcceptances(records));
+      }
+
+      if (dbCompanyPublicDocuments) {
+        setCompanyPublicDocuments(
+          dbCompanyPublicDocuments.map((row: Record<string, unknown>) =>
+            companyPublicDocumentFromRow(row)
+          )
+        );
       }
 
       if (eduErr) console.warn('Education table load (run migration if missing):', eduErr);
@@ -2437,6 +2458,15 @@ export default function App() {
   const clientPaymentGatesMemo = useMemo(
     () => clientPaymentGates(platformSettings),
     [platformSettings]
+  );
+
+  const companyPlacardPublicDocuments = useMemo(
+    () =>
+      getCompanyPlacardPublicItems(
+        companyPublicDocuments,
+        platformSettings.companyPlacardPublicEnabled !== false
+      ),
+    [companyPublicDocuments, platformSettings.companyPlacardPublicEnabled]
   );
 
   useEffect(() => {
@@ -6098,6 +6128,50 @@ export default function App() {
       await supabase.from('platform_settings').upsert(platformSettingsToDbRow(normalized));
     }
     appToast('Platform settings saved.', 'success');
+  };
+
+  const handleSaveCompanyPublicDocument = async (doc: CompanyPublicDocument) => {
+    if (!currentUser || !hasExecutivePaymentControls(currentUser)) {
+      appToast('Only Directors and the Founder can edit company placard credentials.', 'error');
+      return;
+    }
+    const row = companyPublicDocumentToDbRow({
+      ...doc,
+      uploadedBy: doc.uploadedBy ?? currentUser.email,
+      uploadedAt: doc.uploadedAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    setCompanyPublicDocuments((prev) => {
+      const next = prev.filter((item) => item.documentType !== doc.documentType);
+      next.push(companyPublicDocumentFromRow(row));
+      return next.sort((a, b) => a.title.localeCompare(b.title));
+    });
+    if (isDbConnected) {
+      const { error } = await supabase.from('company_public_documents').upsert(row);
+      if (error) {
+        appToast('Could not save company credential.', 'error');
+        throw error;
+      }
+    }
+  };
+
+  const handleSetCompanyPlacardPublicEnabled = async (enabled: boolean) => {
+    if (!currentUser || !hasExecutivePaymentControls(currentUser)) {
+      appToast('Only Directors and the Founder can change the public placard.', 'error');
+      return;
+    }
+    const next = {
+      ...platformSettings,
+      companyPlacardPublicEnabled: enabled,
+      updatedAt: new Date().toISOString(),
+    };
+    const normalized = normalizePlatformSettings(next);
+    if (!normalized) return;
+    setPlatformSettings(normalized);
+    savePlatformSettingsToStorage(normalized);
+    if (isDbConnected) {
+      await supabase.from('platform_settings').upsert(platformSettingsToDbRow(normalized));
+    }
   };
 
   const handleMakeGuardPayoutAvailable = async (
@@ -10072,6 +10146,7 @@ export default function App() {
           onChangeTheme={changeThemeMode}
           ownerMessage={platformSettings.ownerMessage}
           directorMessage={platformSettings.directorMessage}
+          companyPlacardDocuments={companyPlacardPublicDocuments}
           onNavigateToAuth={(role, mode) => {
             openAuthView(role ?? 'client', mode ?? 'sign-in');
           }}
@@ -10579,6 +10654,9 @@ export default function App() {
           onSendTeamChatMessage={handleSendTeamChatMessage}
           onOpenLegal={openLegalPage}
           legalAcceptances={legalAcceptanceRecords}
+          companyPublicDocuments={companyPublicDocuments}
+          onSaveCompanyPublicDocument={handleSaveCompanyPublicDocument}
+          onSetCompanyPlacardPublicEnabled={handleSetCompanyPlacardPublicEnabled}
           {...tutorialSettingsProps}
         />
         {passwordChangeOverlay}

@@ -22,8 +22,10 @@ import { AppFormSection } from '../ui/app/AppPrimitives';
 import { StaffAddStaffForm } from './StaffAddStaffForm';
 import { showAppToast } from '../ui/AppToast';
 import { StaffLegalCompliancePanel } from './StaffLegalCompliancePanel';
+import { StaffCompanyPlacardPanel } from './StaffCompanyPlacardPanel';
 import type { LegalAcceptanceRecord } from '../../lib/legalAcceptance';
 import type { Client, SecurityGuard } from '../../types';
+import type { CompanyPublicDocument } from '../../lib/companyPlacard';
 
 interface StaffSettingsPanelProps {
   currentUser: SessionUser;
@@ -39,6 +41,9 @@ interface StaffSettingsPanelProps {
   guards: SecurityGuard[];
   clients: Client[];
   legalAcceptances: LegalAcceptanceRecord[];
+  companyPublicDocuments?: CompanyPublicDocument[];
+  onSaveCompanyPublicDocument?: (doc: CompanyPublicDocument) => Promise<void>;
+  onSetCompanyPlacardPublicEnabled?: (enabled: boolean) => Promise<void>;
 }
 
 function FeePreviewTable({ config }: { config: PlatformFeeConfig }) {
@@ -80,6 +85,9 @@ export function StaffSettingsPanel({
   guards,
   clients,
   legalAcceptances,
+  companyPublicDocuments = [],
+  onSaveCompanyPublicDocument,
+  onSetCompanyPlacardPublicEnabled,
 }: StaffSettingsPanelProps) {
   const assignableRoles = getAssignableStaffRoles(currentUser.role);
   const canEditPaymentModes = canManagePlatformSettings(currentUser);
@@ -207,6 +215,16 @@ export function StaffSettingsPanel({
           guards={guards}
           clients={clients}
           legalAcceptances={legalAcceptances}
+        />
+      )}
+
+      {onSaveCompanyPublicDocument && onSetCompanyPlacardPublicEnabled && (
+        <StaffCompanyPlacardPanel
+          currentUser={currentUser}
+          documents={companyPublicDocuments}
+          publicEnabled={platformSettings.companyPlacardPublicEnabled !== false}
+          onSaveDocument={onSaveCompanyPublicDocument}
+          onSetPublicEnabled={onSetCompanyPlacardPublicEnabled}
         />
       )}
 

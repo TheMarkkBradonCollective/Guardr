@@ -31,6 +31,8 @@ import { LegalInfoCards } from './legal/LegalInfoCards';
 import type { LegalPageId } from '../lib/legalContent';
 import { LEGAL_DISCLAIMER_SHORT } from '../lib/legalContent';
 import { LEGAL_ENTITY_NAME } from '../lib/siteConfig';
+import { CompanyPublicPlacard } from './public/CompanyPublicPlacard';
+import type { CompanyPublicDocument } from '../lib/companyPlacard';
 
 interface HomePageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -40,6 +42,7 @@ interface HomePageProps {
   onOpenGuide?: () => void;
   ownerMessage?: string;
   directorMessage?: string;
+  companyPlacardDocuments?: CompanyPublicDocument[];
 }
 
 const CLIENT_FEATURES = [
@@ -235,6 +238,7 @@ export function HomePage({
   onOpenGuide,
   ownerMessage,
   directorMessage,
+  companyPlacardDocuments = [],
 }: HomePageProps) {
   const { formFactor } = useDevice();
   const isMobile = formFactor === 'mobile';
@@ -396,6 +400,10 @@ export function HomePage({
           <LandingProductPreview formFactor={formFactor} />
         </div>
       </section>
+
+      {companyPlacardDocuments.length > 0 && (
+        <CompanyPublicPlacard documents={companyPlacardDocuments} />
+      )}
 
       {!isMobile && (
         <section className="landing-trust-strip" aria-label="Platform highlights">
