@@ -5,7 +5,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import {defineConfig} from 'vite';
 
 const pkg = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
-const nativeFcmConfigured = existsSync(path.resolve(__dirname, 'android/app/google-services.json'));
+const googleServicesPath = path.resolve(__dirname, 'android/app/google-services.json');
+const nativeFcmConfigured =
+  process.env.VITE_NATIVE_FCM_CONFIGURED === 'true' ||
+  (process.env.VITE_NATIVE_FCM_CONFIGURED !== 'false' && existsSync(googleServicesPath));
 
 export default defineConfig(() => {
   return {

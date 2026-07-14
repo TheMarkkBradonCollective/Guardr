@@ -12,7 +12,7 @@ export const FCM_NATIVE_ENDPOINT_PREFIX = 'fcm-native:';
 const NATIVE_PUSH_TOKEN_KEY = 'guardr_native_push_token';
 
 export const NATIVE_FCM_NOT_CONFIGURED_MESSAGE =
-  'Push registration is not available in this app build yet. Add android/app/google-services.json from Firebase, set FCM_SERVER_KEY on the server, then rebuild the APK.';
+  'Push registration is not available in this app build yet. Add android/app/google-services.json from Firebase, set FCM_SERVICE_ACCOUNT_JSON on the server, then rebuild the APK.';
 
 type PendingRegistration = {
   resolve: (token: string) => void;
@@ -161,6 +161,19 @@ export async function requestNativePushPermission(): Promise<NotificationPermiss
   return 'default';
 }
 
+function invokeNativeRegister(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Defer so Capacitor listeners are attached before Firebase is touched.
+    window.setTimeout(() => {
+      void PushNotifications.register()
+        .then(() => resolve())
+        .catch((error: unknown) => {
+          reject(error instanceof Error ? error : new Error('Push registration failed'));
+        });
+    }, 100);
+  });
+}
+
 export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<string> {
   if (!isNativePushPlatform()) {
     throw new Error('Native push is only available in the Guardr app');
@@ -200,7 +213,7 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
       },
     };
 
-    void PushNotifications.register().catch((error: unknown) => {
+    void invokeNativeRegister().catch((error: unknown) => {
       clearTimeout(timeout);
       if (pendingRegistration) {
         pendingRegistration = null;

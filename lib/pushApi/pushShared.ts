@@ -131,7 +131,14 @@ export async function removePushSubscription(
 }
 
 export function isPushConfigured(): boolean {
-  return !!(process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim());
+  const vapidReady = !!(
+    process.env.VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim()
+  );
+  return (
+    vapidReady ||
+    !!process.env.FCM_SERVER_KEY?.trim() ||
+    !!process.env.FCM_SERVICE_ACCOUNT_JSON?.trim()
+  );
 }
 
 export function isInternalPushAuthorized(authHeader: string | undefined): boolean {
