@@ -163,6 +163,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: 'Crew chat',
     body: event.body || 'New message in crew chat',
   }),
+  company_placard_expiry: (event) => ({
+    title: event.title ?? 'Company placard reminder',
+    body: event.body || 'A company credential needs attention in Staff Settings',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -251,6 +255,10 @@ export async function buildEventDispatchPayloads(
   }
 
   if (event.type === 'support_ticket_status' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+
+  if (event.type === 'company_placard_expiry' && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
 

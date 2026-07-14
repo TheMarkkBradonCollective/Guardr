@@ -130,6 +130,8 @@ export function resolveNotificationUrl(
         : '/staff/messages?mtab=team';
     case 'standing_crew_invite':
       return '/guard/crew';
+    case 'company_placard_expiry':
+      return '/staff/settings';
     case 'test':
       return '/';
     default:
@@ -403,6 +405,8 @@ export function rolesForNotificationType(type: PushNotificationType): PushRole[]
       return ['guard', 'dispatch', 'admin'];
     case 'standing_crew_invite':
       return ['guard'];
+    case 'company_placard_expiry':
+      return ['dispatch', 'admin'];
     case 'test':
       return [];
     default:

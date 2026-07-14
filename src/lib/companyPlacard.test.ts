@@ -4,6 +4,7 @@ import {
   buildCompanyPlacardChecklist,
   companyDocumentHasContent,
   companyPlacardChecklistSummary,
+  companyPlacardExpiryAlertTier,
   getCompanyPlacardPublicItems,
   shouldShowCompanyPlacard,
   type CompanyPublicDocument,
@@ -44,6 +45,12 @@ test('getCompanyPlacardPublicItems respects public enabled flag', () => {
   assert.equal(shouldShowCompanyPlacard(docs, true), true);
   assert.equal(getCompanyPlacardPublicItems(docs, true).length, 2);
   assert.equal(shouldShowCompanyPlacard(docs, false), false);
+});
+
+test('companyPlacardExpiryAlertTier flags missing required docs', () => {
+  assert.equal(companyPlacardExpiryAlertTier(undefined, false, true), 'missing');
+  assert.equal(companyPlacardExpiryAlertTier('2026-08-25', true, true, new Date('2026-07-14')), '45');
+  assert.equal(companyPlacardExpiryAlertTier('2020-01-01', true, true, new Date('2026-07-14')), 'expired');
 });
 
 test('getCompanyPlacardPublicItems hides expired documents', () => {

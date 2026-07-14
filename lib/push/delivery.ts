@@ -45,6 +45,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
   account_update: 'support_ticket_status',
   job_status_update: 'assignment',
   payout_ready: 'assignment',
+  company_placard_expiry: 'company_placard_expiry',
 };
 
 async function isTypeEnabledForUser(

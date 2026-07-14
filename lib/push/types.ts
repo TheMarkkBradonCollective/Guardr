@@ -37,6 +37,7 @@ export type PushNotificationType =
   | 'account_update'
   | 'job_status_update'
   | 'payout_ready'
+  | 'company_placard_expiry'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

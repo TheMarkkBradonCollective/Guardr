@@ -104,6 +104,8 @@ function resolveNotificationUrl(type, options = {}) {
       return options.requestId ? `/staff/messages?mtab=team&jc=${encodeURIComponent(options.requestId)}` : "/staff/messages?mtab=team";
     case "standing_crew_invite":
       return "/guard/crew";
+    case "company_placard_expiry":
+      return "/staff/settings";
     case "test":
       return "/";
     default:
@@ -298,6 +300,8 @@ function rolesForNotificationType(type) {
       return ["guard", "dispatch", "admin"];
     case "standing_crew_invite":
       return ["guard"];
+    case "company_placard_expiry":
+      return ["dispatch", "admin"];
     case "test":
       return [];
     default:
@@ -426,7 +430,8 @@ var PREF_COLUMN = {
   job_relisted: "job_relisted",
   job_schedule_changed: "assignment",
   team_chat_message: "team_chat_message",
-  standing_crew_invite: "assignment"
+  standing_crew_invite: "assignment",
+  company_placard_expiry: "company_placard_expiry"
 };
 async function isTypeEnabledForUser(db, userId, type) {
   const column = PREF_COLUMN[type];
@@ -734,6 +739,10 @@ var EVENT_DEFAULTS = {
   team_chat_message: (event) => ({
     title: "Crew chat",
     body: event.body || "New message in crew chat"
+  }),
+  company_placard_expiry: (event) => ({
+    title: event.title ?? "Company placard reminder",
+    body: event.body || "A company credential needs attention in Staff Settings"
   })
 };
 function basePayload(event) {
@@ -795,6 +804,9 @@ async function buildEventDispatchPayloads(db, event) {
     return payloads;
   }
   if (event.type === "support_ticket_status" && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
+  }
+  if (event.type === "company_placard_expiry" && event.recipientUserId) {
     return [{ ...payload, userId: event.recipientUserId }];
   }
   if ((event.type === "guard_trusted_status" || event.type === "client_trusted_status" || event.type === "job_relisted" || event.type === "job_schedule_changed") && event.recipientUserId) {

@@ -88,6 +88,90 @@ export const COMPANY_DOCUMENT_TYPES: CompanyDocumentTypeDef[] = [
 
 const EXPIRING_SOON_DAYS = 45;
 
+/** Alert tiers used for executive notifications (cron + inbox). */
+export type CompanyPlacardAlertTier = 'missing' | 'expired' | '45' | '30' | '14' | '7' | '1';
+
+export function companyPlacardDaysUntilExpiry(expiryDate: string, now = new Date()): number | null {
+  const expiry = new Date(`${expiryDate}T23:59:59`);
+  if (Number.isNaN(expiry.getTime())) return null;
+  return (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+export function companyPlacardExpiryAlertTier(
+  expiryDate: string | undefined,
+  hasContent: boolean,
+  required: boolean,
+  now = new Date()
+): CompanyPlacardAlertTier | null {
+  if (!hasContent && required) return 'missing';
+  if (!expiryDate?.trim()) return null;
+  const daysUntil = companyPlacardDaysUntilExpiry(expiryDate, now);
+  if (daysUntil == null) return null;
+  if (daysUntil < 0) return 'expired';
+  if (daysUntil <= 1) return '1';
+  if (daysUntil <= 7) return '7';
+  if (daysUntil <= 14) return '14';
+  if (daysUntil <= 30) return '30';
+  if (daysUntil <= EXPIRING_SOON_DAYS) return '45';
+  return null;
+}
+
+export function companyPlacardAlertCopy(
+  documentTitle: string,
+  tier: CompanyPlacardAlertTier,
+  expiryDate?: string
+): { title: string; body: string; priority: 'normal' | 'high' } {
+  const formattedExpiry = expiryDate ? formatPlacardDate(expiryDate) : undefined;
+  switch (tier) {
+    case 'missing':
+      return {
+        title: 'Company placard item needed',
+        body: `${documentTitle} is required for the public company placard but has not been uploaded yet.`,
+        priority: 'high',
+      };
+    case 'expired':
+      return {
+        title: 'Company credential expired',
+        body: formattedExpiry
+          ? `${documentTitle} expired on ${formattedExpiry}. Update it in Staff Settings.`
+          : `${documentTitle} has expired. Update it in Staff Settings.`,
+        priority: 'high',
+      };
+    case '1':
+      return {
+        title: 'Company credential expires tomorrow',
+        body: formattedExpiry
+          ? `${documentTitle} expires on ${formattedExpiry}.`
+          : `${documentTitle} expires within 1 day.`,
+        priority: 'high',
+      };
+    case '7':
+      return {
+        title: 'Company credential expiring soon',
+        body: formattedExpiry
+          ? `${documentTitle} expires on ${formattedExpiry} (within 7 days).`
+          : `${documentTitle} expires within 7 days.`,
+        priority: 'high',
+      };
+    case '14':
+    case '30':
+    case '45':
+      return {
+        title: 'Company credential renewal reminder',
+        body: formattedExpiry
+          ? `${documentTitle} expires on ${formattedExpiry}.`
+          : `${documentTitle} is approaching its expiry date.`,
+        priority: tier === '14' ? 'normal' : 'normal',
+      };
+    default:
+      return {
+        title: 'Company placard update',
+        body: `${documentTitle} needs attention in Staff Settings.`,
+        priority: 'normal',
+      };
+  }
+}
+
 export function companyDocumentTypeById(id: string): CompanyDocumentTypeDef | undefined {
   return COMPANY_DOCUMENT_TYPES.find((t) => t.id === id);
 }

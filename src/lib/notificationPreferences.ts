@@ -206,6 +206,13 @@ export const NOTIFICATION_TYPE_OPTIONS: {
     description: 'Messages in coordinated crew chats for multi-guard jobs.',
     roles: ['guard', 'staff'],
   },
+  {
+    key: 'companyPlacardExpiry',
+    type: 'company_placard_expiry',
+    label: 'Company placard reminders',
+    description: 'Missing company credentials and upcoming insurance or registration expirations.',
+    roles: ['staff'],
+  },
 ];
 
 export function defaultNotificationPreferences(userId: string): NotificationPreferences {
@@ -240,6 +247,7 @@ export function defaultNotificationPreferences(userId: string): NotificationPref
     clientTrustedStatus: true,
     jobRelisted: true,
     teamChatMessage: true,
+    companyPlacardExpiry: true,
     updatedAt: now,
   };
 }
@@ -337,6 +345,7 @@ export function prefsToDbRow(prefs: NotificationPreferences) {
     job_relisted: prefs.jobRelisted,
     job_schedule_changed: prefs.assignment,
     team_chat_message: prefs.teamChatMessage,
+    company_placard_expiry: prefs.companyPlacardExpiry,
     updated_at: prefs.updatedAt,
   };
 }
@@ -372,6 +381,7 @@ export function prefsFromDbRow(row: Record<string, unknown>): NotificationPrefer
     clientTrustedStatus: row.client_trusted_status !== false,
     jobRelisted: row.job_relisted !== false,
     teamChatMessage: row.team_chat_message !== false,
+    companyPlacardExpiry: row.company_placard_expiry !== false,
     updatedAt: String(row.updated_at ?? new Date().toISOString()),
   };
 }

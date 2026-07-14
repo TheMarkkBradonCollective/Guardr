@@ -34,6 +34,7 @@ export type PushNotificationType =
   | 'job_schedule_changed'
   | 'team_chat_message'
   | 'standing_crew_invite'
+  | 'company_placard_expiry'
   | 'test';
 
 export type PlatformRole = 'client' | 'guard' | 'moderator' | 'administrator' | 'director' | 'owner';

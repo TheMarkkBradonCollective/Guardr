@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/missed-checkins",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/company-placard-expiry",
+      "schedule": "0 14 * * *"
     }
   ],
   "functions": {
@@ -26,6 +30,9 @@
       "maxDuration": 15
     },
     "api/cron/missed-checkins.ts": {
+      "maxDuration": 30
+    },
+    "api/cron/company-placard-expiry.ts": {
       "maxDuration": 30
     }
   },

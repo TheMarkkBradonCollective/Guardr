@@ -175,6 +175,10 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     title: event.title ?? 'Payout ready',
     body: event.body || 'Earnings are ready to collect in Pay',
   }),
+  company_placard_expiry: (event) => ({
+    title: event.title ?? 'Company placard reminder',
+    body: event.body || 'A company credential needs attention in Staff Settings',
+  }),
 };
 
 function basePayload(event: PushEventInput): PushSendPayload {
@@ -278,6 +282,10 @@ export async function buildEventDispatchPayloads(
       return [{ ...payload, userId: event.guardId }];
     }
     return [];
+  }
+
+  if (event.type === 'company_placard_expiry' && event.recipientUserId) {
+    return [{ ...payload, userId: event.recipientUserId }];
   }
 
   if (event.type === 'job_status_update') {

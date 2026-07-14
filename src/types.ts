@@ -1055,6 +1055,7 @@ export interface NotificationPreferences {
   clientTrustedStatus: boolean;
   jobRelisted: boolean;
   teamChatMessage: boolean;
+  companyPlacardExpiry: boolean;
   updatedAt: string;
 }
 

@@ -1143,6 +1143,9 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_arrived BOOL
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_left_site BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_open_to_guards BOOLEAN NOT NULL DEFAULT true;
 
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS company_placard_expiry BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.company_placard_expiry IS 'Director/Founder alert for company placard missing items or upcoming expirations';
+
 COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
 COMMENT ON COLUMN notification_preferences.job_open_to_guards IS 'Guard broadcast when a paid job is opened on the marketplace map';

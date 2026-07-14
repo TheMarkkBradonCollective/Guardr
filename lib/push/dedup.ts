@@ -7,6 +7,23 @@ export function missedCheckinDedupKey(requestId: string, hourBucket: number): st
   return `missed_checkin:${requestId}:${hourBucket}`;
 }
 
+export function companyPlacardExpiryDedupKey(
+  documentType: string,
+  tier: string,
+  expiryDate: string,
+  userId: string
+): string {
+  return `company_placard_expiry:${documentType}:${tier}:${expiryDate}:${userId}`;
+}
+
+export function companyPlacardMissingDedupKey(
+  documentType: string,
+  weekBucket: number,
+  userId: string
+): string {
+  return `company_placard_missing:${documentType}:${weekBucket}:${userId}`;
+}
+
 /**
  * Returns true when this notification was already sent for the dedup key.
  */

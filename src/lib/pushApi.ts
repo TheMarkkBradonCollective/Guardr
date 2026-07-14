@@ -142,6 +142,7 @@ export type PushEventType =
   | 'job_status_update'
   | 'payout_ready'
   | 'standing_crew_invite'
+  | 'company_placard_expiry'
   | 'test';
 
 export async function reportPushEvent(
