@@ -39,7 +39,8 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
   const [configured, setConfigured] = useState(
     !!((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_VAPID_PUBLIC_KEY ?? '').trim()
   );
-  const [enabled, setEnabled] = useState(isPushEnabledLocally());
+  const [enabled, setEnabled] = useState(false);
+  const [stateReady, setStateReady] = useState(false);
   const [serverSynced, setServerSynced] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [busy, setBusy] = useState(false);
@@ -59,31 +60,57 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     void isPushConfigured().then(setConfigured);
   }, []);
 
+  const refreshPushState = async () => {
+    if (isNativePushPlatform()) {
+      const state = await resolveNativePushToggleState();
+      setPermission(state.permission);
+      setEnabled(state.enabled);
+      setServerSynced(state.enabled && state.permission === 'granted');
+      setStateReady(true);
+      return;
+    }
+
+    if ('serviceWorker' in navigator) {
+      try {
+        await navigator.serviceWorker.ready;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const perm = await getPushPermission();
+    const sub = await getExistingPushSubscription();
+    const active = perm === 'granted' && !!sub;
+    if (active && !isPushEnabledLocally()) {
+      setPushEnabledLocally(true);
+    }
+    if (!active && isPushEnabledLocally()) {
+      setPushEnabledLocally(false);
+    }
+    setPermission(perm);
+    setEnabled(active);
+    setServerSynced(active);
+    setStateReady(true);
+  };
+
   useEffect(() => {
     let cancelled = false;
 
     void (async () => {
-      if (isNativePushPlatform()) {
-        const state = await resolveNativePushToggleState();
-        if (cancelled) return;
-        setPermission(state.permission);
-        setEnabled(state.enabled);
-        setServerSynced(state.enabled && state.permission === 'granted');
-        return;
-      }
-
-      const perm = await getPushPermission();
+      await refreshPushState();
       if (cancelled) return;
-      setPermission(perm);
-      const sub = await getExistingPushSubscription();
-      if (cancelled) return;
-      const localOn = !!sub && isPushEnabledLocally();
-      setEnabled(localOn);
-      setServerSynced(localOn && perm === 'granted');
     })();
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshPushState();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
@@ -134,7 +161,11 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     try {
       if (enabled) {
         const sub = await getExistingPushSubscription();
-        await unsubscribeFromPush();
+        try {
+          await unsubscribeFromPush();
+        } catch (err) {
+          console.warn('[push] native unsubscribe failed:', err);
+        }
         try {
           await unsubscribePush(currentUser, sub?.endpoint);
         } catch {
@@ -154,7 +185,11 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             quietHoursEnd: useQuietHours ? quietEnd : undefined,
           });
         } catch (err) {
-          await unsubscribeFromPush();
+          try {
+            await unsubscribeFromPush();
+          } catch {
+            /* ignore */
+          }
           setPushEnabledLocally(false);
           setEnabled(false);
           setServerSynced(false);
@@ -174,7 +209,9 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         }
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Push setup failed');
+      const msg = err instanceof Error ? err.message : 'Push setup failed';
+      setMessage(msg);
+      await refreshPushState();
     } finally {
       setBusy(false);
     }
@@ -211,7 +248,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
 
   const nativeApp = isNativePushPlatform();
   const nativeFcmReady = !nativeApp || isNativeFcmConfigured();
-  const canTogglePush = configured && nativeFcmReady && !busy;
+  const canTogglePush = configured && nativeFcmReady && !busy && stateReady;
   const osNotificationsAllowed = permission === 'granted';
 
   return (

@@ -52,6 +52,8 @@ import {
   buildPlatformActivityFeed,
   computePlatformStats,
   computeWeeklyCompletedJobs,
+  getPendingClientAccounts,
+  getPendingGuardAccounts,
   isStaffOpsMapSection,
   isStaffMessagesSection,
   StaffSection,
@@ -61,6 +63,7 @@ import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import { AppPageTransition } from './ui/motion/AppMotion';
 import { StaffOverview } from './staff/StaffOverview';
 import { StaffApplications } from './staff/StaffApplications';
+import { StaffCredentials } from './staff/StaffCredentials';
 import { StaffJobsPanel } from './staff/StaffJobsPanel';
 import { StaffGuardsPanel } from './staff/StaffGuardsPanel';
 import type { StaffAddGuardInput } from './staff/StaffAddGuardForm';
@@ -74,6 +77,7 @@ import { StaffMessagesPanel } from './staff/StaffMessagesPanel';
 import { openTicketCount } from '../lib/support';
 import { staffMessagesBadge } from '../lib/messagesInbox';
 import { countStaffCrewsNeedingReview } from '../lib/guardTeams';
+import { getGuardIdVerificationStatus } from '../lib/guardIdentityVerification';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import type { PlatformSettings } from '../lib/platformSettings';
 import { StaffPaymentsPanel } from './staff/StaffPaymentsPanel';
@@ -94,6 +98,7 @@ export interface StaffSectionSelection {
   clientId?: string | null;
   jobId?: string | null;
   teamId?: string | null;
+  credentialItemId?: string | null;
 }
 
 interface StaffDashboardProps {
@@ -142,9 +147,11 @@ interface StaffDashboardProps {
   onRequestCertImageResubmit?: (guardId: string, certId: string, staffNote?: string) => Promise<void>;
   onReviewGuardInsurance?: (
     guardId: string,
-    status: 'verified' | 'rejected',
+    status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => void | Promise<void>;
+  onUnverifyCert?: (guardId: string, certId: string) => void | Promise<void>;
+  onRevokeGuardIdentityVerification?: (guardId: string) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -240,6 +247,8 @@ interface StaffDashboardProps {
   onSelectedClientIdChange?: (id: string | null) => void;
   selectedJobId?: string | null;
   onSelectedJobIdChange?: (id: string | null) => void;
+  selectedCredentialItemId?: string | null;
+  onSelectedCredentialItemIdChange?: (id: string | null) => void;
   selectedTeamId?: string | null;
   onSelectedTeamIdChange?: (id: string | null) => void;
   staffGuardEdit?: boolean;
@@ -293,6 +302,8 @@ export function StaffDashboard({
   onRequestGuardIdResubmit,
   onRequestCertImageResubmit,
   onReviewGuardInsurance,
+  onUnverifyCert,
+  onRevokeGuardIdentityVerification,
   onUpdateGuardIdImages,
   onApproveCert,
   onRejectCert,
@@ -360,6 +371,8 @@ export function StaffDashboard({
   onSelectedClientIdChange,
   selectedJobId: controlledJobId,
   onSelectedJobIdChange,
+  selectedCredentialItemId: controlledCredentialItemId,
+  onSelectedCredentialItemIdChange,
   selectedTeamId: controlledTeamId,
   onSelectedTeamIdChange,
   staffGuardEdit: controlledStaffGuardEdit,
@@ -384,12 +397,15 @@ export function StaffDashboard({
   const [internalClientId, setInternalClientId] = useState<string | null>(null);
   const [internalJobId, setInternalJobId] = useState<string | null>(null);
   const [internalTeamId, setInternalTeamId] = useState<string | null>(null);
+  const [internalCredentialItemId, setInternalCredentialItemId] = useState<string | null>(null);
   const [internalCrewJobId, setInternalCrewJobId] = useState<string | null>(null);
 
   const selectedGuardId = controlledGuardId !== undefined ? controlledGuardId : internalGuardId;
   const selectedClientId = controlledClientId !== undefined ? controlledClientId : internalClientId;
   const selectedJobId = controlledJobId !== undefined ? controlledJobId : internalJobId;
   const selectedTeamId = controlledTeamId !== undefined ? controlledTeamId : internalTeamId;
+  const selectedCredentialItemId =
+    controlledCredentialItemId !== undefined ? controlledCredentialItemId : internalCredentialItemId;
 
   const setSelectedGuardId = (id: string | null) => {
     if (controlledGuardId === undefined) setInternalGuardId(id);
@@ -406,6 +422,10 @@ export function StaffDashboard({
   const setSelectedTeamId = (id: string | null) => {
     if (controlledTeamId === undefined) setInternalTeamId(id);
     onSelectedTeamIdChange?.(id);
+  };
+  const setSelectedCredentialItemId = (id: string | null) => {
+    if (controlledCredentialItemId === undefined) setInternalCredentialItemId(id);
+    onSelectedCredentialItemIdChange?.(id);
   };
 
   const openJob = (jobId: string) => {
@@ -426,17 +446,28 @@ export function StaffDashboard({
     const nextJobId = next === 'jobs' || next === 'applications'
       ? selection.jobId !== undefined ? selection.jobId : selectedJobId
       : null;
+    const nextCredentialItemId = next === 'credentials'
+      ? selection.credentialItemId !== undefined ? selection.credentialItemId : selectedCredentialItemId
+      : null;
+    const nextCredentialGuardId =
+      next === 'credentials' && !nextCredentialItemId && selection.guardId !== undefined
+        ? selection.guardId
+        : next === 'credentials' && !nextCredentialItemId
+          ? selectedGuardId
+          : null;
 
     setSelectedGuardId(nextGuardId ?? null);
     setSelectedTeamId(nextTeamId ?? null);
     setSelectedClientId(nextClientId ?? null);
     setSelectedJobId(nextJobId ?? null);
+    setSelectedCredentialItemId(nextCredentialItemId ?? null);
     if (next !== 'crews') setInternalCrewJobId(null);
     onSectionChange?.(next, {
-      guardId: nextGuardId ?? null,
+      guardId: next === 'credentials' ? nextCredentialGuardId ?? null : nextGuardId ?? null,
       teamId: nextTeamId ?? null,
       clientId: nextClientId ?? null,
       jobId: nextJobId ?? null,
+      credentialItemId: nextCredentialItemId ?? null,
     });
   };
 
@@ -479,7 +510,12 @@ export function StaffDashboard({
 
   const badges = useMemo(
     () => ({
-      applications: stats.pendingGuardApplications,
+      applications: stats.pendingGuardApplicationJobs,
+      credentials:
+        stats.pendingCertApprovals +
+        guards.filter((g) => !g.isStaff && getGuardIdVerificationStatus(g) === 'pending').length,
+      guards: getPendingGuardAccounts(guards.filter((g) => !g.isStaff)).length,
+      clients: getPendingClientAccounts(clients).length,
       jobs: requests.filter((r) => ['pending-review', 'open', 'accepted', 'in-progress'].includes(r.status)).length,
       incidents: incidents.filter((i) => i.status !== 'resolved').length,
       disputes: disputes.filter((d) => d.status === 'open').length,
@@ -488,7 +524,7 @@ export function StaffDashboard({
       payments: openPayoutInvoices,
       crews: countStaffCrewsNeedingReview(requests),
     }),
-    [stats, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
+    [stats, guards, clients, requests, incidents, disputes, supportTickets, jobChatThreads, openPayoutInvoices]
   );
 
   const renderSection = () => {
@@ -538,6 +574,27 @@ export function StaffDashboard({
             onDenyGuardApplication={canReviewJobs ? onDenyGuardApplication : undefined}
             canReviewJobRequests={canReviewJobs}
             initialJobId={selectedJobId}
+          />
+        );
+      case 'credentials':
+        return (
+          <StaffCredentials
+            guards={guards}
+            canVerifyCredentials={canVerifyGuardCredentials}
+            initialItemId={selectedCredentialItemId}
+            initialGuardId={selectedGuardId}
+            onApproveCert={onApproveCert}
+            onRejectCert={onRejectCert}
+            onUnverifyCert={onUnverifyCert}
+            onRequestCertImageResubmit={canVerifyGuardCredentials ? onRequestCertImageResubmit : undefined}
+            onApproveIdentityVerification={onApproveGuardIdentityVerification}
+            onRejectIdentityVerification={onRejectGuardIdentityVerification}
+            onRevokeIdentityVerification={onRevokeGuardIdentityVerification}
+            onRequestIdentityResubmit={onRequestGuardIdResubmit}
+            onReviewGuardInsurance={onReviewGuardInsurance}
+            onUpdateCertification={onUpdateCertification}
+            onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
+            onItemIdChange={setSelectedCredentialItemId}
           />
         );
       case 'jobs':

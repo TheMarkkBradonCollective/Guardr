@@ -1,5 +1,5 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v7';
+const CACHE_NAME = 'guardr-cache-v1-0-29';
 const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
 const OFFLINE_URLS = [
   '/',
@@ -119,6 +119,11 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname === '/manifest.json') {
     event.respondWith(networkFirst(event.request, '/manifest.json'));
+    return;
+  }
+
+  if (url.pathname === '/download/version.json') {
+    event.respondWith(networkFirst(event.request, '/download/version.json'));
     return;
   }
 

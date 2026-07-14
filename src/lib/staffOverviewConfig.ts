@@ -63,7 +63,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'No credentials or incidents waiting. Open the map to watch live coverage.',
-    quickLinkSections: ['map', 'guards', 'incidents', 'messages'],
+    quickLinkSections: ['map', 'credentials', 'guards', 'incidents', 'messages'],
   },
   administrator: {
     roleLabel: ROLE_LABELS.administrator,

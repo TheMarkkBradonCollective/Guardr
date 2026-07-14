@@ -18,8 +18,29 @@ export function getOpenJobsWithApplications(requests: SecurityRequest[]): Securi
     );
 }
 
+/** Open jobs where staff still picks an applicant (not awaiting client or already sent). */
+export function jobNeedsStaffApplicationReview(request: SecurityRequest): boolean {
+  return (
+    request.status === 'open' &&
+    !request.assignedGuardId &&
+    !request.pendingGuardId &&
+    !request.staffApprovedGuardAt &&
+    (request.applicants?.length ?? 0) > 0
+  );
+}
+
+export function getJobsNeedingStaffApplicationReview(requests: SecurityRequest[]): SecurityRequest[] {
+  return requests
+    .filter(jobNeedsStaffApplicationReview)
+    .sort(
+      (a, b) =>
+        (b.applicants?.length ?? 0) - (a.applicants?.length ?? 0) ||
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    );
+}
+
 export function countPendingGuardApplications(requests: SecurityRequest[]): number {
-  return getOpenJobsWithApplications(requests).reduce(
+  return getJobsNeedingStaffApplicationReview(requests).reduce(
     (sum, job) => sum + (job.applicants?.length ?? 0),
     0
   );

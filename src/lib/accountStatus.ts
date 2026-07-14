@@ -78,6 +78,16 @@ export const CLIENT_ACCOUNT_STATUS_LABELS: Record<ClientAccountStatus, string> =
   suspended: 'Suspended',
 };
 
+export function clientRosterSortRank(client: Pick<Client, 'accountStatus'>): number {
+  const status = getClientAccountStatus(client);
+  const rank: Record<ClientAccountStatus, number> = {
+    pending: 0,
+    active: 1,
+    suspended: 2,
+  };
+  return rank[status];
+}
+
 export const GUARD_USER_STATUS_LABELS: Record<GuardUserStatus, string> = {
   pending: 'Pending approval',
   approved: 'Approved',

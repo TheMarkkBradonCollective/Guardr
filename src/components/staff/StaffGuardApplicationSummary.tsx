@@ -50,7 +50,7 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
         <p className="text-sm font-semibold text-brand-text">Application details</p>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
           Sign-up answers stay here whether the application is pending, approved, or declined.
-          Uploaded credentials appear below and are reviewed separately under Guard credentials.
+          Uploaded credentials appear below and are reviewed separately in the Credentials tab.
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
         <div className="pt-2 border-t border-brand-border space-y-2">
           <p className="uber-label text-xs">Uploaded credentials</p>
           <p className="text-xs text-brand-text-muted leading-relaxed -mt-1">
-            Each item is reviewed on its own in the Guard credentials tab.
+            Each item is reviewed on its own in the Credentials tab.
           </p>
           <ChipList items={uploadedCredentialLabels} />
         </div>

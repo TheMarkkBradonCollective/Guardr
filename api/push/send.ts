@@ -68,7 +68,7 @@ function resolveNotificationUrl(type, options = {}) {
     case "client_pending_approval":
       return "/staff/approvals?aq=client-accounts";
     case "credential_pending":
-      return options.guardId ? `/staff/approvals?aq=credentials&g=${encodeURIComponent(options.guardId)}` : "/staff/approvals?aq=credentials";
+      return options.guardId ? `/staff/credentials?g=${encodeURIComponent(options.guardId)}` : "/staff/credentials";
     case "payment_attention":
       return options.requestId ? `/staff/payments?j=${encodeURIComponent(options.requestId)}` : "/staff/payments";
     case "support_ticket":

@@ -25,6 +25,8 @@ export interface AppRoute {
   staffJobId?: string;
   /** Staff team panel — selected staff member */
   staffTeamId?: string;
+  /** Staff credentials tab — selected credential feed item */
+  staffCredentialItemId?: string;
   /** Staff guard profile edit mode */
   staffEdit?: boolean;
   /** Client guards directory — viewing a guard profile */
@@ -160,6 +162,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const staffClientId = searchParams.get('c');
   const staffJobId = searchParams.get('j');
   const staffTeamId = searchParams.get('t');
+  const staffCredentialItemId = searchParams.get('ci');
   const staffEdit = searchParams.get('edit');
   const clientGuardId = searchParams.get('pg');
   const clientDirectGuardId = searchParams.get('dr');
@@ -176,6 +179,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (staffGuardId) nested.staffGuardId = staffGuardId;
   if (staffClientId) nested.staffClientId = staffClientId;
   if (staffJobId) nested.staffJobId = staffJobId;
+  if (staffCredentialItemId) nested.staffCredentialItemId = staffCredentialItemId;
   if (staffTeamId) nested.staffTeamId = staffTeamId;
   if (staffEdit === '1' || staffEdit === 'true') nested.staffEdit = true;
   if (clientGuardId) nested.clientGuardId = clientGuardId;
@@ -210,6 +214,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.staffGuardId) params.set('g', route.staffGuardId);
   if (route.staffClientId) params.set('c', route.staffClientId);
   if (route.staffJobId) params.set('j', route.staffJobId);
+  if (route.staffCredentialItemId) params.set('ci', route.staffCredentialItemId);
   if (route.staffTeamId) params.set('t', route.staffTeamId);
   if (route.staffEdit) params.set('edit', '1');
   if (route.clientGuardId) params.set('pg', route.clientGuardId);
@@ -517,6 +522,7 @@ export function routeWithoutNestedSelection(route: AppRoute): AppRoute {
     staffGuardId: undefined,
     staffClientId: undefined,
     staffJobId: undefined,
+    staffCredentialItemId: undefined,
     staffTeamId: undefined,
     staffEdit: undefined,
     clientGuardId: undefined,
