@@ -14,7 +14,7 @@ export default defineConfig(() => {
   return {
     define: {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
-      'import.meta.env.VITE_NATIVE_FCM_CONFIGURED': JSON.stringify(nativeFcmConfigured),
+      'import.meta.env.VITE_NATIVE_FCM_CONFIGURED': JSON.stringify(nativeFcmConfigured ? 'true' : 'false'),
     },
     plugins: [react(), tailwindcss()],
     resolve: {

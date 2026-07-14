@@ -29,9 +29,8 @@ export function isNativePushPlatform(): boolean {
 
 /** True when this APK was built with Firebase google-services.json present. */
 export function isNativeFcmConfigured(): boolean {
-  const flag = (import.meta as ImportMeta & { env?: Record<string, string> }).env
-    ?.VITE_NATIVE_FCM_CONFIGURED;
-  return flag === 'true';
+  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  return String(env?.VITE_NATIVE_FCM_CONFIGURED ?? '') === 'true';
 }
 
 export function isFcmNativeEndpoint(endpoint: string): boolean {
