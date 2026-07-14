@@ -118,6 +118,7 @@ import {
   type IdVerificationSlot,
 } from './lib/staffDocumentReview';
 import {
+  getGuardIdVerificationStatus,
   staffApproveIdVerificationBlocker,
   staffCanApproveIdVerification,
   staffCanRequestIdResubmit,
@@ -561,6 +562,9 @@ export default function App() {
   const [staffJobId, setStaffJobIdState] = useState<string | null>(
     () => initialRoute?.staffJobId ?? null
   );
+  const [staffCredentialItemId, setStaffCredentialItemIdState] = useState<string | null>(
+    () => initialRoute?.staffCredentialItemId ?? null
+  );
   const [staffTeamId, setStaffTeamIdState] = useState<string | null>(
     () => initialRoute?.staffTeamId ?? null
   );
@@ -623,6 +627,7 @@ export default function App() {
       staffGuardId: staffGuardId ?? undefined,
       staffClientId: staffClientId ?? undefined,
       staffJobId: staffJobId ?? undefined,
+      staffCredentialItemId: staffCredentialItemId ?? undefined,
       staffTeamId: staffTeamId ?? undefined,
       staffEdit: staffEdit || undefined,
       clientGuardId: clientGuardId ?? undefined,
@@ -661,6 +666,7 @@ export default function App() {
     setStaffGuardIdState(route.staffGuardId ?? null);
     setStaffClientIdState(route.staffClientId ?? null);
     setStaffJobIdState(route.staffJobId ?? null);
+    setStaffCredentialItemIdState(route.staffCredentialItemId ?? null);
     setStaffTeamIdState(route.staffTeamId ?? null);
     setStaffEditState(route.staffEdit ?? false);
     setClientGuardIdState(route.clientGuardId ?? null);
@@ -959,14 +965,23 @@ export default function App() {
   const setStaffSection = (section: StaffSection, selection: StaffSectionSelection = {}) => {
     const normalizedSection = isStaffMessagesSection(section) ? 'messages' : section;
     setStaffSectionState(normalizedSection);
-    const nextGuardId = normalizedSection === 'guards'
-      ? selection.guardId !== undefined ? selection.guardId ?? undefined : staffGuardId ?? undefined
-      : undefined;
-    const nextClientId = normalizedSection === 'clients'
-      ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
-      : undefined;
     const nextJobId = normalizedSection === 'jobs' || normalizedSection === 'applications'
       ? selection.jobId !== undefined ? selection.jobId ?? undefined : staffJobId ?? undefined
+      : undefined;
+    const nextCredentialItemId = normalizedSection === 'credentials'
+      ? selection.credentialItemId !== undefined
+        ? selection.credentialItemId ?? undefined
+        : staffCredentialItemId ?? undefined
+      : undefined;
+    const nextGuardId = normalizedSection === 'guards'
+      ? selection.guardId !== undefined ? selection.guardId ?? undefined : staffGuardId ?? undefined
+      : normalizedSection === 'credentials' && !nextCredentialItemId
+        ? selection.guardId !== undefined
+          ? selection.guardId ?? undefined
+          : staffGuardId ?? undefined
+        : undefined;
+    const nextClientId = normalizedSection === 'clients'
+      ? selection.clientId !== undefined ? selection.clientId ?? undefined : staffClientId ?? undefined
       : undefined;
     const nextTeamId = normalizedSection === 'team'
       ? selection.teamId !== undefined ? selection.teamId ?? undefined : staffTeamId ?? undefined
@@ -978,6 +993,7 @@ export default function App() {
     setStaffGuardIdState(nextGuardId ?? null);
     setStaffClientIdState(nextClientId ?? null);
     setStaffJobIdState(nextJobId ?? null);
+    setStaffCredentialItemIdState(nextCredentialItemId ?? null);
     setStaffTeamIdState(nextTeamId ?? null);
     if (!keepsMessages) setJobChatRequestIdState(null);
     if (!keepsMessages) setSupportTicketIdState(null);
@@ -989,6 +1005,7 @@ export default function App() {
         staffGuardId: nextGuardId,
         staffClientId: nextClientId,
         staffJobId: nextJobId,
+        staffCredentialItemId: nextCredentialItemId,
         staffTeamId: nextTeamId,
         staffEdit: nextEdit,
         jobChatRequestId: nextJobChatId,
@@ -1028,6 +1045,18 @@ export default function App() {
         role: 'staff',
         staffSection: 'jobs',
         staffJobId: jobId ?? undefined,
+      })
+    );
+  };
+
+  const setStaffCredentialItemId = (itemId: string | null) => {
+    setStaffCredentialItemIdState(itemId);
+    syncAppRoute(
+      buildAppRoute({
+        role: 'staff',
+        staffSection: 'credentials',
+        staffCredentialItemId: itemId ?? undefined,
+        staffGuardId: !itemId ? staffGuardId ?? undefined : undefined,
       })
     );
   };
@@ -2691,7 +2720,7 @@ export default function App() {
 
   const handleReviewGuardInsurance = async (
     guardId: string,
-    status: 'verified' | 'rejected',
+    status: 'verified' | 'rejected' | 'pending',
     rejectionReason?: string
   ) => {
     if (!currentUser || !canVerifyCredentials(currentUser)) {
@@ -2710,13 +2739,14 @@ export default function App() {
         return;
       }
     }
-    const reviewedAt = new Date().toISOString();
+    const reviewedAt = status === 'pending' ? undefined : new Date().toISOString();
     const nextPolicy: GuardInsurancePolicy = {
       ...guard.insurancePolicy,
-      status: status === 'verified' ? 'verified' : 'rejected',
+      status:
+        status === 'verified' ? 'verified' : status === 'rejected' ? 'rejected' : 'pending',
       rejectionReason: status === 'rejected' ? rejectionReason : undefined,
       reviewedAt,
-      reviewedBy: currentUser?.id,
+      reviewedBy: status === 'pending' ? undefined : currentUser?.id,
     };
     const resolved = { ...nextPolicy, status: resolveInsuranceStatus(nextPolicy) };
     if (isDbConnected) {
@@ -2725,17 +2755,23 @@ export default function App() {
         .update({
           status: resolved.status,
           rejection_reason: resolved.rejectionReason ?? null,
-          reviewed_at: reviewedAt,
-          reviewed_by: currentUser?.id ?? null,
-          updated_at: reviewedAt,
+          reviewed_at: reviewedAt ?? null,
+          reviewed_by: status === 'pending' ? null : currentUser?.id ?? null,
+          updated_at: new Date().toISOString(),
         })
         .eq('guard_id', guardId);
     }
     setGuards((prev) =>
       prev.map((g) => (g.id === guardId ? { ...g, insurancePolicy: resolved } : g))
     );
-    appToast(status === 'verified' ? 'Insurance verified.' : 'Insurance rejected.', 'success');
-    if (currentUser) {
+    if (status === 'verified') {
+      appToast('Insurance verified.', 'success');
+    } else if (status === 'rejected') {
+      appToast('Insurance rejected.', 'success');
+    } else {
+      appToast('Insurance moved back to pending review.', 'success');
+    }
+    if (currentUser && status !== 'pending') {
       notifyAccountUpdate(
         currentUser,
         guardId,
@@ -3471,6 +3507,112 @@ export default function App() {
         `Your ${cert.name} needs a clearer upload. Open your activation credentials to fix it.`
       );
     }
+  };
+
+  const handleUnverifyCert = async (guardId: string, certId: string) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify credentials.', 'error');
+      return;
+    }
+    const before = guards.find((g) => g.id === guardId);
+    const cert = before?.certifications.find((c) => c.id === certId);
+    if (!cert || !before) throw new Error('Credential not found.');
+    if (cert.status !== 'verified') throw new Error('Only verified credentials can be unverified.');
+
+    setGuards((prev) =>
+      prev.map((g) => {
+        if (g.id !== guardId) return g;
+        return syncGuardCredentialGraceState({
+          ...g,
+          certifications: g.certifications.map((c) =>
+            c.id === certId
+              ? { ...c, status: 'pending' as const, rejectionReason: undefined }
+              : c
+          ),
+        });
+      })
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      const result = await updateCertificationRow(supabase, certId, {
+        status: 'pending',
+        rejection_reason: null,
+      });
+      if (result.ok === false) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId && before ? { ...before } : g)));
+        throw new Error(result.error);
+      }
+      const after = syncGuardCredentialGraceState({
+        ...before,
+        certifications: before.certifications.map((c) =>
+          c.id === certId ? { ...c, status: 'pending' as const, rejectionReason: undefined } : c
+        ),
+      });
+      if (
+        after.credentialGraceDeadline !== before.credentialGraceDeadline ||
+        JSON.stringify(after.credentialGraceMissing ?? []) !==
+          JSON.stringify(before.credentialGraceMissing ?? [])
+      ) {
+        const graceResult = await updateGuardAccountRow(
+          supabase,
+          guardId,
+          {
+            credential_grace_deadline: after.credentialGraceDeadline ?? null,
+            credential_grace_missing: after.credentialGraceMissing ?? null,
+            credential_grace_hours: after.credentialGraceHours ?? null,
+          },
+          'activate'
+        );
+        if (graceResult.ok === false) {
+          setGuards((prev) => prev.map((g) => (g.id === guardId && before ? { ...before } : g)));
+          throw new Error(graceResult.error);
+        }
+      }
+    }
+    appToast('Credential moved back to pending review.', 'success');
+  };
+
+  const handleRevokeGuardIdentityVerification = async (guardId: string) => {
+    if (!currentUser || !canVerifyCredentials(currentUser)) {
+      appToast('Only Administrators and above can verify government ID.', 'error');
+      return;
+    }
+    const guard = guards.find((g) => g.id === guardId);
+    if (!guard) throw new Error('Guard not found.');
+    if (getGuardIdVerificationStatus(guard) !== 'verified') {
+      throw new Error('Government ID is not verified.');
+    }
+
+    const previous = { ...guard };
+    setGuards((prev) =>
+      prev.map((g) =>
+        g.id === guardId
+          ? {
+              ...g,
+              idVerificationStatus: 'pending' as const,
+              idVerificationReviewedAt: undefined,
+              idVerificationRejectionReason: undefined,
+            }
+          : g
+      )
+    );
+    if (isDbConnected) {
+      beginLocalMutation();
+      const { error } = await supabase
+        .from('guards')
+        .update({
+          id_verification_status: 'pending',
+          id_verification_reviewed_at: null,
+          id_verification_rejection_reason: null,
+        })
+        .eq('id', guardId);
+      if (error) {
+        setGuards((prev) => prev.map((g) => (g.id === guardId ? previous : g)));
+        console.error('ID verification revoke error:', error);
+        throw new Error('Could not unverify government ID. Please try again.');
+      }
+    }
+    appToast('Government ID moved back to pending review.', 'success');
   };
 
   // ── Guard approval ─────────────────────────────────────────
@@ -10316,6 +10458,8 @@ export default function App() {
           onSelectedClientIdChange={setStaffClientId}
           selectedJobId={staffJobId}
           onSelectedJobIdChange={setStaffJobId}
+          selectedCredentialItemId={staffCredentialItemId}
+          onSelectedCredentialItemIdChange={setStaffCredentialItemId}
           selectedTeamId={staffTeamId}
           onSelectedTeamIdChange={setStaffTeamId}
           staffGuardEdit={staffEdit}
@@ -10349,6 +10493,8 @@ export default function App() {
           onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
           onRequestCertImageResubmit={handleRequestCertImageResubmit}
           onReviewGuardInsurance={handleReviewGuardInsurance}
+          onUnverifyCert={handleUnverifyCert}
+          onRevokeGuardIdentityVerification={handleRevokeGuardIdentityVerification}
           onDeleteGuardAccount={handleDeleteGuardAccount}
           onDeleteClientAccount={handleDeleteClientAccount}
           onApproveCert={handleApproveCert}

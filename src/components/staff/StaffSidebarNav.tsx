@@ -28,6 +28,7 @@ const DASHBOARD_IDS: StaffSection[] = ['overview', 'map'];
 const OPERATIONS_IDS: StaffSection[] = [
   'jobs',
   'applications',
+  'credentials',
   'clients',
   'guards',
   'crews',

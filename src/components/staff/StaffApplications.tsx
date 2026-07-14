@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SecurityGuard, SecurityRequest } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
-  buildStaffApprovalsFeed,
-  filterApprovalsFeedByQueue,
+  buildApplicationFeed,
   findFeedItem,
   formatApprovalTimestamp,
   type ApprovalFeedItem,
@@ -116,10 +115,10 @@ export function StaffApplications({
     if (initialJobId) setActiveJobId(initialJobId);
   }, [initialJobId]);
 
-  const applicationFeed = useMemo(() => {
-    const feed = buildStaffApprovalsFeed({ requests, guards, clients: [], auditLog });
-    return filterApprovalsFeedByQueue(feed, 'applications');
-  }, [requests, guards, auditLog]);
+  const applicationFeed = useMemo(
+    () => buildApplicationFeed(requests, auditLog),
+    [requests, auditLog]
+  );
 
   useEffect(() => {
     if (!activeJobId) return;
@@ -242,7 +241,7 @@ export function StaffApplications({
     <div className="animate-fade-in space-y-4" data-tour="staff-applications">
       {applicationFeed.length === 0 ? (
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
-          No guard applications waiting for review.
+          No job applications waiting for staff review.
         </AppEmptyState>
       ) : (
         <AppItemCardStack>

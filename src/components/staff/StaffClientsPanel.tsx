@@ -6,7 +6,7 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfListCard, WfSearchBar } from '../ui/wireframe';
 import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
-import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
+import { CLIENT_ACCOUNT_STATUS_LABELS, clientRosterSortRank, getClientAccountStatus } from '../../lib/accountStatus';
 
 interface StaffClientsPanelProps {
   clients: Client[];
@@ -38,6 +38,7 @@ export function StaffClientsPanel({
   onAddClient,
 }: StaffClientsPanelProps) {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending'>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
   const selectedId = isControlled ? controlledSelectedId : internalSelectedId;
@@ -51,12 +52,21 @@ export function StaffClientsPanel({
     if (isControlled) return;
     setInternalSelectedId(initialSelectedId);
   }, [initialSelectedId, isControlled]);
-  const filtered = clients.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = clients
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.email.toLowerCase().includes(search.toLowerCase()) ||
+        (c.companyName ?? '').toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((c) => statusFilter === 'all' || getClientAccountStatus(c) === 'pending')
+    .sort((a, b) => {
+      const rank = clientRosterSortRank(a) - clientRosterSortRank(b);
+      if (rank !== 0) return rank;
+      return (a.companyName || a.name).localeCompare(b.companyName || b.name);
+    });
+
+  const pendingClientCount = clients.filter((c) => getClientAccountStatus(c) === 'pending').length;
 
   const { showDetailOnly } = useSplitListDetail(selectedId, 'page');
 
@@ -98,6 +108,23 @@ export function StaffClientsPanel({
             placeholder="Search clients..."
             className="max-w-md"
           />
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`app-button-outline app-btn-sm ${statusFilter === 'all' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              All ({clients.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('pending')}
+              className={`app-button-outline app-btn-sm ${statusFilter === 'pending' ? '!border-brand-primary !text-brand-primary' : ''}`}
+            >
+              Pending{pendingClientCount > 0 ? ` (${pendingClientCount})` : ''}
+            </button>
+          </div>
         </>
       )}
 
@@ -142,10 +169,18 @@ export function StaffClientsPanel({
                 subtitle={client.email}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span>{activeJobs} active</span>
-                    <WfBadge tone={accountStatus === 'pending' ? 'warning' : accountStatus === 'active' ? 'success' : 'danger'}>
+                    <WfBadge
+                      tone={
+                        accountStatus === 'pending'
+                          ? 'warning'
+                          : accountStatus === 'active'
+                            ? 'success'
+                            : 'danger'
+                      }
+                    >
                       {CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}
                     </WfBadge>
+                    <span className="text-[11px] text-brand-text-muted">{activeJobs} active job{activeJobs === 1 ? '' : 's'}</span>
                   </div>
                 }
                 onClick={onSelect}

@@ -1,15 +1,23 @@
-import type { Client, SecurityGuard, SecurityRequest } from '../types';
+import type { Certification, Client, SecurityGuard, SecurityRequest } from '../types';
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isSelfSubmittedGuardAccount } from './approvalSubmissions';
 import { getClientAccountStatus } from './accountStatus';
 import { certDisplayName } from './certCatalog';
-import { coiApprovalItemId, govIdApprovalItemId, isCoiApprovalItemId } from './guardCredentialSections';
+import {
+  coiApprovalItemId,
+  govIdApprovalItemId,
+  guardIdFromCoiApprovalItemId,
+  guardIdFromGovIdApprovalItemId,
+  isCoiApprovalItemId,
+  isGovIdApprovalItemId,
+} from './guardCredentialSections';
 import { formatCoiSummaryLine } from './guardInsurance';
 import { getGuardIdVerificationStatus, ID_VERIFICATION_STATUS_LABELS } from './guardIdentityVerification';
 import { isGuardAccountApproved, getGuardUserStatus } from './accountStatus';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import type { ApprovalQueueId } from './staffOps';
 import { getPendingScheduleChangeApprovals } from './jobScheduleChange';
+import { jobNeedsStaffApplicationReview } from './jobApplications';
 
 export type ApprovalFeedQueue = Exclude<ApprovalQueueId, 'accounts' | 'all'>;
 
@@ -140,36 +148,32 @@ function scheduleChangeItems(requests: SecurityRequest[], auditLog: AuditLogEntr
 
 function applicationItems(requests: SecurityRequest[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
   return requests
-    .filter((r) => {
-      if (r.applicants.length === 0 && !r.staffApprovedGuardAt && !r.pendingGuardId) return false;
-      if (r.pendingGuardId) return true;
-      if (r.staffApprovedGuardAt) return true;
-      return r.status === 'open' && !r.assignedGuardId && r.applicants.length > 0;
-    })
+    .filter(jobNeedsStaffApplicationReview)
     .map((req) => {
-      const pending = Boolean(req.pendingGuardId);
-      const approved = Boolean(req.staffApprovedGuardAt);
       const audit = latestAudit(auditLog, req.id, ['job_approved']);
       const actor = actorLabel(audit);
-      const status: ApprovalFeedStatus = pending ? 'in_review' : approved ? 'approved' : 'pending';
       return {
         id: req.id,
         queue: 'applications',
         title: req.title,
         subtitle: `${req.applicants.length} applicant${req.applicants.length === 1 ? '' : 's'} · ${req.location}`,
-        status,
-        statusLabel: pending
-          ? 'Awaiting client'
-          : approved
-            ? 'Sent to client'
-            : 'Needs review',
+        status: 'pending' as const,
+        statusLabel: 'Needs review',
         submittedAt: req.openedAt ?? req.startDate,
-        reviewedAt: req.staffApprovedGuardAt ?? actor.at,
+        reviewedAt: undefined,
         reviewedByName: actor.name,
         reviewedByEmail: actor.email,
-        sortKey: new Date(req.staffApprovedGuardAt ?? req.openedAt ?? req.startDate).getTime(),
+        sortKey: new Date(req.openedAt ?? req.startDate).getTime(),
       };
     });
+}
+
+/** Applications queue only — job applicant review, not account approvals. */
+export function buildApplicationFeed(
+  requests: SecurityRequest[],
+  auditLog: AuditLogEntry[] = []
+): ApprovalFeedItem[] {
+  return applicationItems(requests, auditLog).sort(compareFeedItems);
 }
 
 function credentialItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): ApprovalFeedItem[] {
@@ -454,6 +458,33 @@ export function resolveApprovalFocusItemId(
 
 export function findFeedItem(feed: ApprovalFeedItem[], id: string): ApprovalFeedItem | undefined {
   return feed.find((item) => item.id === id || (isCoiApprovalItemId(id) && item.id === id));
+}
+
+export type CredentialFeedContext =
+  | { kind: 'cert'; guard: SecurityGuard; cert: Certification }
+  | { kind: 'coi'; guard: SecurityGuard }
+  | { kind: 'gov-id'; guard: SecurityGuard };
+
+/** Resolve a credentials-queue feed item to its guard and credential kind. */
+export function resolveCredentialFeedContext(
+  guards: SecurityGuard[],
+  itemId: string
+): CredentialFeedContext | null {
+  if (isCoiApprovalItemId(itemId)) {
+    const guardId = guardIdFromCoiApprovalItemId(itemId);
+    const guard = guards.find((g) => g.id === guardId);
+    return guard ? { kind: 'coi', guard } : null;
+  }
+  if (isGovIdApprovalItemId(itemId)) {
+    const guardId = guardIdFromGovIdApprovalItemId(itemId);
+    const guard = guards.find((g) => g.id === guardId);
+    return guard ? { kind: 'gov-id', guard } : null;
+  }
+  for (const guard of guards) {
+    const cert = guard.certifications.find((c) => c.id === itemId);
+    if (cert) return { kind: 'cert', guard, cert };
+  }
+  return null;
 }
 
 export function formatApprovalTimestamp(iso?: string): string {
