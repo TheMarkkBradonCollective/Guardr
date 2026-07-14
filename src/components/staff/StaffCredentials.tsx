@@ -405,8 +405,9 @@ export function StaffCredentials({
                   staffMode
                   onReview={
                     onReviewGuardInsurance
-                      ? (status, rejectionReason) =>
-                          onReviewGuardInsurance(guard.id, status, rejectionReason)
+                      ? async (status, rejectionReason) => {
+                          await onReviewGuardInsurance(guard.id, status, rejectionReason);
+                        }
                       : undefined
                   }
                 />
@@ -426,8 +427,9 @@ export function StaffCredentials({
                     staffMode
                     onReview={
                       onReviewGuardInsurance
-                        ? (status, rejectionReason) =>
-                            onReviewGuardInsurance(guard.id, status, rejectionReason)
+                        ? async (status, rejectionReason) => {
+                            await onReviewGuardInsurance(guard.id, status, rejectionReason);
+                          }
                         : undefined
                     }
                   />

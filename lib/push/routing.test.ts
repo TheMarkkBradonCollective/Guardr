@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { rolesForNotificationType, resolveNotificationUrlForRole } from './routing.ts';
+import { rolesForNotificationType, resolveNotificationUrl, resolveNotificationUrlForRole } from './routing.ts';
 import { missedCheckinDedupKey } from './dedup.ts';
 import { isStaffSession } from './eventAuth.ts';
 
@@ -58,9 +58,14 @@ describe('resolveNotificationUrlForRole', () => {
     assert.equal(url, '/guard/map?jc=job-1');
   });
 
-  it('deep-links clients to job requests on payment status updates', () => {
-    const url = resolveNotificationUrlForRole('support_ticket_status', 'client', { requestId: 'job-1' });
-    assert.equal(url, '/client/requests?jc=job-1');
+  it('deep-links staff to applications tab for guard applications', () => {
+    const url = resolveNotificationUrlForRole('guard_application', 'administrator', { requestId: 'job-1' });
+    assert.equal(url, '/staff/applications?j=job-1');
+  });
+
+  it('deep-links staff to guards tab for pending guard accounts', () => {
+    const url = resolveNotificationUrl('guard_pending_approval', { guardId: 'guard-1' });
+    assert.equal(url, '/staff/guards?g=guard-1');
   });
 });
 
